@@ -49,6 +49,7 @@ impl Parse for ErrorTree {
 #[test] fn test_parse_advanced() {
 
     let input_str = r#"
+
         // Enumerate possible errors for capturing audio.
         pub enum PassiveAudioCaptureError {
             FormatError,
@@ -82,12 +83,12 @@ impl Parse for ErrorTree {
         }
 
         pub enum StreamError { 
-            StreamError(cpal::StreamError),
-            PauseStreamError(cpal::PauseStreamError),
-            BuildStreamError(cpal::BuildStreamError),
-            PlayStreamError(cpal::PlayStreamError),
-            SupportedStreamConfigsError(cpal::SupportedStreamConfigsError),
-            DefaultStreamConfigError(cpal::DefaultStreamConfigError),
+            StreamError(CpalStreamError),
+            PauseStreamError(CpalPauseStreamError),
+            BuildStreamError(CpalBuildStreamError),
+            PlayStreamError(CpalPlayStreamError),
+            SupportedStreamConfigsError(CpalSupportedStreamConfigsError),
+            DefaultStreamConfigError(CpalDefaultStreamConfigError),
         }
 
         pub enum DeviceError { 
@@ -95,16 +96,16 @@ impl Parse for ErrorTree {
                 device_name: String,
             },
 
-            Basic(cpal::DevicesError),
-            NameError(cpal::DeviceNameError),
+            Basic(CpalDevicesError),
+            NameError(CpalDeviceNameError),
         }
 
         pub enum WavError { 
-            Hound(hound::Error),
+            Hound(HoundError),
         }
 
         pub enum HostError { 
-            HostUnavailable(cpal::HostUnavailable),
+            HostUnavailable(CpalHostUnavailable),
         }
     "#;
 

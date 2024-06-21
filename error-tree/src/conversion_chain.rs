@@ -9,7 +9,8 @@ pub struct ConversionChainLayer {
 
 /// In the beginning, we have something like this:
 /// 
-/// ```rust
+/// ```rust,ignore
+///
 /// error_tree! {
 /// 
 ///     pub enum PassiveAudioCaptureError {
@@ -21,8 +22,8 @@ pub struct ConversionChainLayer {
 ///         DeviceNotAvailable {
 ///             device_name: String,
 ///         },
-///         Basic(cpal::DevicesError),
-///         NameError(cpal::DeviceNameError),
+///         Basic(CpalDevicesError),
+///         NameError(CpalDeviceNameError),
 ///     }
 /// 
 ///     pub enum IOError {
@@ -38,15 +39,16 @@ pub struct ConversionChainLayer {
 /// we want the error_tree! macro to generate the following
 /// code:
 /// 
-/// ```rust
-/// impl From<cpal::DeviceNameError> for DeviceError {
-///     fn from(x: cpal::DeviceNameError) -> Self {
+/// ```rust,ignore
+///
+/// impl From<CpalDeviceNameError> for DeviceError {
+///     fn from(x: CpalDeviceNameError) -> Self {
 ///         DeviceError::NameError(x)
 ///     }
 /// }
 /// 
-/// impl From<cpal::DevicesError> for DeviceError {
-///     fn from(x: cpal::DevicesError) -> Self {
+/// impl From<CpalDevicesError> for DeviceError {
+///     fn from(x: CpalDevicesError) -> Self {
 ///         DeviceError::Basic(x)
 ///     }
 /// }
@@ -69,14 +71,14 @@ pub struct ConversionChainLayer {
 ///     }
 /// }
 /// 
-/// impl From<cpal::DeviceNameError> for PassiveAudioCaptureError {
-///     fn from(x: cpal::DeviceNameError) -> Self {
+/// impl From<CpalDeviceNameError> for PassiveAudioCaptureError {
+///     fn from(x: CpalDeviceNameError) -> Self {
 ///         PassiveAudioCaptureError::DeviceError(DeviceError::NameError(x))
 ///     }
 /// }
 /// 
-/// impl From<cpal::DevicesError> for PassiveAudioCaptureError {
-///     fn from(x: cpal::DevicesError) -> Self {
+/// impl From<CpalDevicesError> for PassiveAudioCaptureError {
+///     fn from(x: CpalDevicesError) -> Self {
 ///         PassiveAudioCaptureError::DeviceError(DeviceError::Basic(x))
 ///     }
 /// }

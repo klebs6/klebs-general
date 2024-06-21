@@ -4,6 +4,32 @@ use std::sync::mpsc;
 #[test]
 fn test_error_tree() {
 
+    #[derive(Debug)]
+    pub enum CpalStreamError {
+        DeviceNotAvailable,
+    }
+    #[derive(Debug)]
+    pub struct CpalBackendSpecificError {
+        description: String,
+    }
+
+    impl From<CpalBackendSpecificError> for CpalDeviceNameError {
+
+        fn from(x: CpalBackendSpecificError) -> Self {
+            CpalDeviceNameError
+        }
+    }
+
+    #[derive(Debug)] pub struct CpalPauseStreamError;
+    #[derive(Debug)] pub struct CpalBuildStreamError;
+    #[derive(Debug)] pub struct CpalPlayStreamError;
+    #[derive(Debug)] pub struct CpalSupportedStreamConfigsError;
+    #[derive(Debug)] pub struct CpalDefaultStreamConfigError;
+    #[derive(Debug)] pub struct CpalDevicesError;
+    #[derive(Debug)] pub struct CpalDeviceNameError;
+    #[derive(Debug)] pub struct CpalHostUnavailable;
+    #[derive(Debug)] pub struct HoundError;
+
     error_tree!{
 
         // Enumerate possible errors for capturing audio.
@@ -40,12 +66,12 @@ fn test_error_tree() {
         }
 
         pub enum StreamError { 
-            StreamError(cpal::StreamError),
-            PauseStreamError(cpal::PauseStreamError),
-            BuildStreamError(cpal::BuildStreamError),
-            PlayStreamError(cpal::PlayStreamError),
-            SupportedStreamConfigsError(cpal::SupportedStreamConfigsError),
-            DefaultStreamConfigError(cpal::DefaultStreamConfigError),
+            StreamError(CpalStreamError),
+            PauseStreamError(CpalPauseStreamError),
+            BuildStreamError(CpalBuildStreamError),
+            PlayStreamError(CpalPlayStreamError),
+            SupportedStreamConfigsError(CpalSupportedStreamConfigsError),
+            DefaultStreamConfigError(CpalDefaultStreamConfigError),
         }
 
         pub enum DeviceError { 
@@ -53,23 +79,23 @@ fn test_error_tree() {
                 device_name: String,
             },
 
-            Basic(cpal::DevicesError),
-            NameError(cpal::DeviceNameError),
+            Basic(CpalDevicesError),
+            NameError(CpalDeviceNameError),
         }
 
         pub enum WavError { 
-            Hound(hound::Error),
+            Hound(HoundError),
         }
 
         pub enum HostError { 
-            HostUnavailable(cpal::HostUnavailable),
+            HostUnavailable(CpalHostUnavailable),
         }
     }
 
-    let e1 = cpal::StreamError::DeviceNotAvailable;
+    let e1 = CpalStreamError::DeviceNotAvailable;
 
-    let e2: cpal::DeviceNameError 
-        = cpal::BackendSpecificError { description: "error".into() }.into();
+    let e2: CpalDeviceNameError 
+        = CpalBackendSpecificError { description: "error".into() }.into();
 
     // Perform your assertions here
     // For example, to test if `DeviceError` can be converted to `PassiveAudioCaptureError`

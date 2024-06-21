@@ -10,11 +10,6 @@ repository = "https://github.com/klebs6/klebs-general"
 categories = ["development-tools", "macros", "errors"]
 
 
-[dev-dependencies.cpal]
-version = "0.3.4"
-[dev-dependencies.hound]
-version = "0.3.4"
-
 [dependencies]
 syn = "2.0.52"
 derive-error = "0.0.5"
