@@ -1,23 +1,23 @@
-`klebs-general`
+# `klebs-general`
 
 This is the workspace we use for crates which are broadly useful across a variety of projects.
 
-As of 6/21/2024, it contains the following crates:
+## As of 6/21/2024, it contains the following crates:
 
-`backoff-macro`
+### `backoff-macro`
 description = "Mark an async function with #[backoff] to get the default ExponentialBackoff behavior. (tokio compatible)"
 
-`disable-macro`
+### `disable-macro`
 description = "This simple crate lets us disable a block of code with an attribute #[disable]."
 
-`error-tree`
+### `error-tree`
 description = "This crate let's us use the `error_tree!` proc macro for ergonomic error hierarchy definition"
 
-`export-magic`
+### `export-magic`
 description = "A crate to simplify module management and re-exportation using macros."
 
-`traced-test`
+### `traced-test`
 description = "this crate lets us use #[traced_test] to automatically configure sane default tracing for a rust test"
 
-`tracing-setup`
+### `tracing-setup`
 description = "This crate helps us configure tracing for a rust project. It is designed to be used with the `traced-test` crate"
