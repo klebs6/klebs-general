@@ -1,6 +1,6 @@
 [package]
 name = "export-magic"
-version = "0.1.0"
+version = "0.3.1"
 authors = [ "klebs tpk3.mx@gmail.com" ]
 edition = "2021"
 description = "A crate to simplify module management and re-exportation using macros."
