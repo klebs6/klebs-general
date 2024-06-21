@@ -139,4 +139,4 @@ pub fn setup_buffered_tracing(tag: Option<&str>) -> Arc<BufferedSubscriberLayer<
 
 # License
 
-This project is licensed under the MIT License.
+This crate is licensed under the MIT License.

@@ -45,4 +45,4 @@ test function to return a Result.
 
 ## License
 
-This project is licensed under the MIT license.
+This crate is licensed under the MIT license.

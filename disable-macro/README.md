@@ -7,7 +7,7 @@
 - Completely remove the annotated item from the compiled code with a single attribute.
 - Easy integration into existing projects.
 
-This is mostly useful (IMO) for easily disabling tests without block commenting them out.
+This is mostly useful (IMO) for easily disabling tests without block comments.
 
 ## Usage
 

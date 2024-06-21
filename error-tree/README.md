@@ -84,4 +84,4 @@ This will automatically generate the necessary `From` implementations for error 
 Contributions to `error_tree` are welcome! Please read our [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines on how to contribute.
 
 ## License
-`error_tree` is distributed under the terms of MIT License.
+This crate is distributed under the terms of MIT License.
