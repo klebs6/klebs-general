@@ -11,9 +11,9 @@ categories = ["development-tools", "macros", "errors"]
 
 
 [dev-dependencies.cpal]
-version = "0.3.2"
+version = "0.15.3"
 [dev-dependencies.hound]
-version = "0.3.2"
+version = "3.5.1"
 
 [dependencies]
 syn = "2.0.52"
