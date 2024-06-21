@@ -1,0 +1,19 @@
+[package]
+name = "disable_macro"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+
+description = "This simple crate lets us disable a block of code with an attribute #[disable]."
+authors = [ "klebs tpk3.mx@gmail.com" ]
+keywords = ["macros", "disable", "shorthand" ]
+repository = "https://github.com/yourusername/disable"
+categories = ["development-tools", "macros", "disable"]
+
+[lib]
+proc-macro = true
+
+[dependencies]
+proc-macro2 = "1.0"
+quote = "1.0"
+syn = { version = "1.0", features = ["full"] }

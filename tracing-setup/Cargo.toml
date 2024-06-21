@@ -1,0 +1,17 @@
+[package]
+edition = "2021"
+name = "tracing-setup"
+version = "0.3.0"
+
+description = "this crate helps us configure tracing for a rust project. It is designed to be used with the `traced-test` crate"
+license = "MIT"
+authors = [ "klebs tpk3.mx@gmail.com" ]
+categories = ["development-tools", "macros", "tracing"]
+repository = "https://github.com/yourusername/tracing-setup"
+
+[dependencies]
+export-magic = "0.1.0"
+traced-test = "0.1.0"
+tracing = "0.1.40"
+tracing-subscriber = { version = "0.3", default-features = false, features = ["fmt", "std", "env-filter"] }
+colored = "2.1.0"

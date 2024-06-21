@@ -1,0 +1,22 @@
+[package]
+edition = "2021"
+name = "backoff-macro"
+version = "0.2.0"
+description = "Mark an async function with #[backoff] to get the default ExponentialBackoff behavior. (tokio compatible)"
+authors = [ "klebs tpk3.mx@gmail.com" ]
+license = "MIT"
+keywords = ["macros", "retry", "backoff", "tokio", "async"]
+repository = "https://github.com/yourusername/backoff-macro"
+categories = ["development-tools", "macros", "backoff", "async"]
+
+[dependencies]
+thiserror = "*"
+export-magic = "*"
+syn = "2.0.52"
+quote = "1.0"
+backoff = { version = "0.4.0", features = ["tokio"] }
+proc-macro2 = "1.0"
+tokio = { version = "1.37.0", features = ["full"] }
+
+[lib]
+proc-macro = true

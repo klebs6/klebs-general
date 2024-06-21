@@ -1,0 +1,227 @@
+pub struct BufferedLayer {
+    pub(crate) tag:    Option<String>,
+    pub(crate) buffer: Arc<Mutex<Vec<String>>>,
+}
+
+impl Clone for BufferedLayer {
+
+    fn clone(&self) -> Self {
+        Self {
+            tag:    self.tag.clone(),
+            buffer: Arc::clone(&self.buffer),
+        }
+    }
+}
+
+impl BufferedLayer {
+
+    pub fn new(tag: &str) -> Self {
+        Self {
+            tag:    Some(tag.to_string()),
+            buffer: Arc::new(Mutex::new(Vec::new())),
+        }
+    }
+}
+
+impl Default for BufferedLayer {
+
+    fn default() -> Self {
+        Self {
+            tag:    None,
+            buffer: Arc::new(Mutex::new(Vec::new())),
+        }
+    }
+}
+
+impl<S: Subscriber> tracing_subscriber::Layer<S> for BufferedLayer {
+
+    fn on_event(&self, event: &tracing::Event<'_>, _ctx: Context<'_, S>) {
+
+        use std::fmt::Write;
+
+        pub enum EventPrintType {
+            FullWithHeader,
+            LogLineAndContents,
+            JustTheContents,
+        }
+
+        if let Ok(mut buf) = self.buffer.lock() {
+
+            match EventPrintType::JustTheContents {
+
+                EventPrintType::FullWithHeader => {
+
+                    // Capture the event's formatted representation
+                    // and store it in the buffer
+                    //
+                    let mut message = String::new();
+
+                    let _ = write!(&mut message, "{:#?}", event); 
+
+                    buf.push(message);
+
+                },
+                EventPrintType::LogLineAndContents => {
+
+                    let metadata = event.metadata();
+
+                    let mut message = format!("[{}] {}: ", metadata.level(), metadata.target());
+
+                    // Visitor to collect fields
+                    struct FieldCollector(String);
+
+                    impl tracing::field::Visit for FieldCollector {
+                        fn record_debug(&mut self, field: &tracing::field::Field, value: &dyn std::fmt::Debug) {
+                            use std::fmt::Write;
+                            let _ = write!(self.0, "{} = {:?}, ", field.name(), value);
+                        }
+                    }
+
+                    let mut visitor = FieldCollector(String::new());
+
+                    event.record(&mut visitor);
+
+                    if !visitor.0.is_empty() {
+                        // Trim trailing comma and space
+                        message.push_str(&visitor.0[..visitor.0.len() - 2]);
+                    }
+
+                    buf.push(message);
+                },
+                EventPrintType::JustTheContents => {
+
+                    let metadata = event.metadata();
+
+                    //let mut message = format!("[{}] {}: ", metadata.level(), metadata.target());
+                    let mut message = format!("");
+
+                    // Visitor to collect fields
+                    struct FieldCollector(String);
+
+                    impl tracing::field::Visit for FieldCollector {
+                        fn record_debug(&mut self, field: &tracing::field::Field, value: &dyn std::fmt::Debug) {
+                            use std::fmt::Write;
+                            //let _ = write!(self.0, "{} = {:?}, ", field.name(), value);
+                            let _ = write!(self.0, "{:?}, ", value);
+                        }
+                    }
+
+                    let mut visitor = FieldCollector(String::new());
+
+                    event.record(&mut visitor);
+
+                    if !visitor.0.is_empty() {
+                        // Trim trailing comma and space
+                        message.push_str(&visitor.0[..visitor.0.len() - 2]);
+                    }
+
+                    buf.push(message);
+                }
+            }
+        }
+    }
+}
+
+pub trait BufferedSubscriber: Subscriber + Flushable {}
+
+pub struct BufferedSubscriberLayer<S> {
+    pub(crate) inner: tracing_subscriber::layer::Layered<BufferedLayer, S>,
+    pub(crate) buffered_layer: Arc<BufferedLayer>,
+}
+
+impl<S: Subscriber> Flushable for BufferedSubscriberLayer<S> {
+
+    fn flush(&self) {
+        self.buffered_layer.flush();
+    }
+}
+
+impl<S: Subscriber> Subscriber for BufferedSubscriberLayer<S> {
+    fn enabled(&self, metadata: &tracing::Metadata<'_>) -> bool {
+        self.inner.enabled(metadata)
+    }
+
+    fn new_span(&self, span: &tracing::span::Attributes<'_>) -> tracing::Id {
+        self.inner.new_span(span)
+    }
+
+    fn record(&self, span: &tracing::Id, values: &tracing::span::Record<'_>) {
+        self.inner.record(span, values);
+    }
+
+    fn record_follows_from(&self, span: &tracing::Id, follows: &tracing::Id) {
+        self.inner.record_follows_from(span, follows);
+    }
+
+    fn event(&self, event: &tracing::Event<'_>) {
+        self.inner.event(event);
+    }
+
+    fn enter(&self, span: &tracing::Id) {
+        self.inner.enter(span);
+    }
+
+    fn exit(&self, span: &tracing::Id) {
+        self.inner.exit(span);
+    }
+}
+
+pub trait Flushable {
+    fn flush(&self);
+}
+
+impl Flushable for BufferedLayer {
+
+    fn flush(&self) {
+
+        use colored::Colorize;
+
+        if let Ok(mut buf) = self.buffer.lock() {
+
+            if let Some(tag) = &self.tag {
+
+                let msg = format!("---------------------------------------------------------[trace_events: {}]", tag);
+
+                println!(
+                    "{}",
+                    msg.bright_blue(),
+                );
+            }
+
+            for message in &*buf {
+                println!("{}", message);
+            }
+            buf.clear();
+        }
+    }
+}
+
+/// Initializes the logging subscriber.
+pub fn configure_tracing() {
+
+    static INIT: std::sync::Once = std::sync::Once::new();
+
+    INIT.call_once(|| {
+        // Fall back to INFO if RUST_LOG is unset
+        let filter = tracing_subscriber::EnvFilter::from_default_env()
+            .add_directive(Level::DEBUG.into());  
+
+        tracing_subscriber::fmt()
+            .with_env_filter(filter)
+            .init();
+        }
+    );
+}
+
+pub fn setup_buffered_tracing(tag: Option<&str>) -> Arc<BufferedSubscriberLayer<Registry>> {
+
+    let buffered_layer = match tag { 
+        Some(tag) => BufferedLayer::new(tag), 
+        None      => BufferedLayer::default() 
+    };
+
+    Arc::new(BufferedSubscriberLayer {
+        inner: Registry::default().with(buffered_layer.clone()),
+        buffered_layer: buffered_layer.into(),
+    })
+}

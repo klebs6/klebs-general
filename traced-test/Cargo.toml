@@ -1,0 +1,21 @@
+[package]
+edition = "2021"
+name = "traced-test"
+version = "0.2.0"
+description = "this crate lets us use #[traced_test] to automatically configure sane default tracing for a rust test"
+license = "MIT"
+authors = [ "klebs tpk3.mx@gmail.com" ]
+categories = ["development-tools", "macros", "testing"]
+repository = "https://github.com/yourusername/traced-test"
+
+[dependencies]
+syn = "2.0.52"
+quote = "1.0"
+proc-macro2 = "1.0"
+export-magic = "0.1.0"
+tracing = "0.1.40"
+tracing-subscriber = { version = "0.3", default-features = false, features = ["fmt", "std", "env-filter"] }
+
+[lib]
+proc-macro = true
+

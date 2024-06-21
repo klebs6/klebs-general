@@ -1,0 +1,28 @@
+[package]
+edition = "2021"
+name = "error-tree"
+version = "0.1.0"
+description = "This crate let's us use the `error_tree!` proc macro for ergonomic error hierarchy definition"
+authors = [ "klebs tpk3.mx@gmail.com" ]
+license = "MIT"
+keywords = ["macros", "errors", "shorthand", "hierarchy", "reuse"]
+repository = "https://github.com/yourusername/error-tree"
+categories = ["development-tools", "macros", "errors"]
+
+
+[dev-dependencies.cpal]
+version = "0.15.3"
+[dev-dependencies.hound]
+version = "3.5.1"
+
+[dependencies]
+syn = "2.0.52"
+derive-error = "0.0.5"
+export-magic = "0.1.0"
+quote = "1.0"
+proc-macro2 = "1.0"
+tracing = "0.1.40"
+tracing-subscriber = { version = "0.3", default-features = false, features = ["fmt", "std", "env-filter"] }
+
+[lib]
+proc-macro = true

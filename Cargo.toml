@@ -1,0 +1,7 @@
+[profile.dev]
+debug = true
+[profile.release]
+debug = 1
+[workspace]
+members = [ "backoff-macro", "disable-macro", "error-tree", "export-magic", "traced-test", "tracing-setup", ]
+resolver = "2"

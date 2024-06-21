@@ -1,0 +1,13 @@
+[package]
+name = "export-magic"
+version = "0.1.0"
+authors = [ "klebs tpk3.mx@gmail.com" ]
+edition = "2021"
+description = "A crate to simplify module management and re-exportation using macros."
+license = "MIT"
+repository = "https://github.com/yourusername/export-magic"
+keywords = ["macros", "re-export", "module-management"]
+categories = ["development-tools", "macros"]
+
+[dependencies]
+
