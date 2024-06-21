@@ -1,4 +1,6 @@
-This is a workspace for crates which are broadly useful across a variety of projects. It contains the following crates:
+This is a workspace for crates which are broadly useful across a variety of projects. 
+
+Here we have the following crates:
 
 # `backoff-macro`
 description = "Mark an async function with #[backoff] to get the default ExponentialBackoff behavior. (tokio compatible)"
