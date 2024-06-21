@@ -6,7 +6,7 @@ description = "Mark an async function with #[backoff] to get the default Exponen
 authors = [ "klebs tpk3.mx@gmail.com" ]
 license = "MIT"
 keywords = ["macros", "retry", "backoff", "tokio", "async"]
-repository = "https://github.com/klebs-general/backoff-macro"
+repository = "https://github.com/klebs6/klebs-general"
 categories = ["development-tools", "macros", "backoff", "async"]
 
 [dependencies]

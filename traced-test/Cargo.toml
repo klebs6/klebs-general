@@ -6,7 +6,7 @@ description = "this crate lets us use #[traced_test] to automatically configure 
 license = "MIT"
 authors = [ "klebs tpk3.mx@gmail.com" ]
 categories = ["development-tools", "macros", "testing"]
-repository = "https://github.com/klebs-general/traced-test"
+repository = "https://github.com/klebs6/klebs-general"
 
 [dependencies]
 syn = "2.0.52"

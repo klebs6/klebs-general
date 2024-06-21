@@ -7,7 +7,7 @@ license = "MIT"
 description = "This simple crate lets us disable a block of code with an attribute #[disable]."
 authors = [ "klebs tpk3.mx@gmail.com" ]
 keywords = ["macros", "disable", "shorthand" ]
-repository = "https://github.com/klebs-general/disable"
+repository = "https://github.com/klebs6/klebs-general"
 categories = ["development-tools", "macros", "disable"]
 
 [lib]

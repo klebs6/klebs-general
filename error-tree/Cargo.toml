@@ -6,7 +6,7 @@ description = "This crate let's us use the `error_tree!` proc macro for ergonomi
 authors = [ "klebs tpk3.mx@gmail.com" ]
 license = "MIT"
 keywords = ["macros", "errors", "shorthand", "hierarchy", "reuse"]
-repository = "https://github.com/klebs-general/error-tree"
+repository = "https://github.com/klebs6/klebs-general"
 categories = ["development-tools", "macros", "errors"]
 
 
