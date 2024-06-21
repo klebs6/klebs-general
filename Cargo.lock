@@ -136,7 +136,7 @@ dependencies = [
 
 [[package]]
 name = "error-tree"
-version = "0.3.4"
+version = "0.3.5"
 dependencies = [
  "derive-error",
  "export-magic 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)",
