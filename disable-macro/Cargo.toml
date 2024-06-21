@@ -1,6 +1,6 @@
 [package]
 name = "disable_macro"
-version = "0.3.1"
+version = "0.3.6"
 edition = "2021"
 license = "MIT"
 
