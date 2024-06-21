@@ -7,7 +7,7 @@ description = "this crate helps us configure tracing for a rust project. It is d
 license = "MIT"
 authors = [ "klebs tpk3.mx@gmail.com" ]
 categories = ["development-tools", "macros", "tracing"]
-repository = "https://github.com/yourusername/tracing-setup"
+repository = "https://github.com/klebs-general/tracing-setup"
 
 [dependencies]
 export-magic = "0.1.0"
