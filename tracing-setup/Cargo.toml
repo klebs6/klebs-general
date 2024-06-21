@@ -10,8 +10,8 @@ categories = ["development-tools", "macros", "tracing"]
 repository = "https://github.com/klebs6/klebs-general"
 
 [dependencies]
-export-magic = "0.3.1"
-traced-test = "0.3.1"
+export-magic = "0.1.0"
+traced-test = "0.1.0"
 tracing = "0.1.40"
 tracing-subscriber = { version = "0.3", default-features = false, features = ["fmt", "std", "env-filter"] }
 colored = "2.1.0"
