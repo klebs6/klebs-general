@@ -1,13 +1,17 @@
 [package]
 name = "resume-generator"
+description = "does what it says. quick way to generate a latex resume"
+license = "MIT"
+authors = [ "klebs tpk3.mx@gmail.com" ]
+keywords = ["resume", "utility", "generator", "builder" ]
 version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-export-magic = "*"
-error-tree   = "*"
-structopt    = "*"
-indoc        = "*"
-delegate     = "*"
-chrono       = "*"
-lazy_static  = "*"
+export-magic = "0.3.6"
+error-tree   = "0.3.6"
+structopt    = "0.3.26"
+indoc        = "2.0.5"
+delegate     = "0.12.0"
+chrono       = "0.4.38"
+lazy_static  = "1.5.0"
