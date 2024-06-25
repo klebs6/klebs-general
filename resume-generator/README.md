@@ -4,6 +4,7 @@ This project is a Rust-based library for generating LaTeX-formatted resumes.
 
 The resume information is structured using various Rust structs, and the final output is a LaTeX file that can be compiled to produce a professional resume.
 
+
 ## Features
 
 - Struct-based approach for organizing resume data
@@ -156,3 +157,7 @@ Contributions are welcome! Please submit a pull request or open an issue to disc
 ## License
 
 This project is licensed under the MIT License. See the LICENSE file for details.
+
+## Notes
+
+This project was written to help a non-programmer friend who does not know latex.  The goal here is to abstract over the latex compilation syntax so that folks can quickly get something up and running.
