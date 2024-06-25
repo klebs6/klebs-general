@@ -21,4 +21,4 @@ Here we have the following crates:
 - This crate helps us configure tracing for a rust project. It is designed to be used with the `traced-test` crate
 
 ### `resume-generator`
-- Basic functionality -- does what it says -- made for a non-programming friend -- relies on `pdflatex`
+- Basic functionality -- does what it says -- relies on `pdflatex`
