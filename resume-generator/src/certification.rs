@@ -1,6 +1,45 @@
 crate::ix!();
 
-#[derive(Debug)]
+#[derive(Debug,Clone)]
+pub struct ResumeCertifications(Vec<ResumeCertification>);
+
+impl From<Vec<ResumeCertification>> for ResumeCertifications {
+    fn from(x: Vec<ResumeCertification>) -> Self {
+        Self(x)
+    }
+}
+
+impl ResumeCertifications {
+    delegate!{
+        to self.0 {
+            pub fn is_empty(&self) -> bool;
+            pub fn len(&self) -> usize;
+        }
+    }
+}
+
+impl LatexSectionItem for ResumeCertifications {
+
+    fn render_latex_snippet(&self) -> String {
+
+        let mut result = String::new();
+
+        if !self.0.is_empty() {
+
+            result.push_str(r#"\section*{Certifications}\begin{itemize}[leftmargin=*, label=-]"#);
+
+            for cert in &self.0 {
+                result.push_str(&cert.render_latex_snippet());
+            }
+
+            result.push_str(r#"\end{itemize}\vspace{2pt}"#);
+        }
+
+        result
+    }
+}
+
+#[derive(Debug,Clone)]
 pub struct ResumeCertification {
     name:                 String,
     issuing_organization: String,
@@ -9,7 +48,7 @@ pub struct ResumeCertification {
 
 impl LatexSectionItem for ResumeCertification {
     fn render_latex_snippet(&self) -> String {
-        format!(r#"    \\item {}, {} \hfill \textit{{{}}}\n"#, self.name, self.issuing_organization, self.date)
+        format!(r#"    \item {}, {} \hfill \textit{{{}}} \\"#, self.name, self.issuing_organization, self.date)
     }
 }
 

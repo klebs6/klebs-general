@@ -1,4 +1,4 @@
-use storefront_resume_builder::*;
+use resume_generator::*;
 use std::fs::File;
 use std::io::Write;
 

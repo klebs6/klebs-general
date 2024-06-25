@@ -6,10 +6,10 @@ pub struct Resume {
     work_experience:  Vec<ResumeWorkExperience>,
     education:        Vec<ResumeEducationInfo>,
     skills:           Option<ResumeSkills>,
-    projects:         Vec<ResumeProject>,
-    certifications:   Vec<ResumeCertification>,
-    languages:        Vec<Language>,
-    interests:        Vec<ResumeInterest>,
+    projects:         Option<ResumeProjects>,
+    certifications:   Option<ResumeCertifications>,
+    languages:        Option<ResumeLanguages>,
+    interests:        Option<ResumeInterests>,
 }
 
 impl RenderLatex for Resume {
@@ -34,19 +34,19 @@ impl RenderLatex for Resume {
             sections.push(skills_section);
         }
 
-        if let Some(projects_section) = render_latex_section(&self.projects, "Projects") {
+        if let Some(projects_section) = self.projects.as_ref().map(|projects| projects.render_latex_snippet()) {
             sections.push(projects_section);
         }
 
-        if let Some(certifications_section) = render_latex_section(&self.certifications, "Certifications") {
+        if let Some(certifications_section) = self.certifications.as_ref().map(|certifications| certifications.render_latex_snippet()) {
             sections.push(certifications_section);
         }
 
-        if let Some(languages_section) = render_latex_section(&self.languages, "Languages") {
+        if let Some(languages_section) = self.languages.as_ref().map(|languages| languages.render_latex_snippet()) {
             sections.push(languages_section);
         }
 
-        if let Some(interests_section) = render_latex_section(&self.interests, "Interests") {
+        if let Some(interests_section) = self.interests.as_ref().map(|interests| interests.render_latex_snippet()) {
             sections.push(interests_section);
         }
 
@@ -81,19 +81,19 @@ impl Resume {
         &self.skills
     }
 
-    pub fn projects(&self) -> &[ResumeProject] {
+    pub fn projects(&self) -> &Option<ResumeProjects> {
         &self.projects
     }
 
-    pub fn certifications(&self) -> &[ResumeCertification] {
+    pub fn certifications(&self) -> &Option<ResumeCertifications> {
         &self.certifications
     }
 
-    pub fn languages(&self) -> &[Language] {
+    pub fn languages(&self) -> &Option<ResumeLanguages> {
         &self.languages
     }
 
-    pub fn interests(&self) -> &[ResumeInterest] {
+    pub fn interests(&self) -> &Option<ResumeInterests> {
         &self.interests
     }
 
@@ -110,19 +110,19 @@ impl Resume {
     }
 
     pub fn has_projects(&self) -> bool {
-        !self.projects.is_empty()
+        self.projects.is_some() && !self.projects.as_ref().unwrap().is_empty()
     }
 
     pub fn has_certifications(&self) -> bool {
-        !self.certifications.is_empty()
+        self.certifications.is_some() && !self.certifications.as_ref().unwrap().is_empty()
     }
 
     pub fn has_languages(&self) -> bool {
-        !self.languages.is_empty()
+        self.languages.is_some() && !self.languages.as_ref().unwrap().is_empty()
     }
 
     pub fn has_interests(&self) -> bool {
-        !self.interests.is_empty()
+        self.interests.is_some() && !self.interests.as_ref().unwrap().is_empty()
     }
 }
 
@@ -133,10 +133,10 @@ pub struct ResumeBuilder {
     work_experience:  Vec<ResumeWorkExperience>,
     education:        Vec<ResumeEducationInfo>,
     skills:           Option<ResumeSkills>,
-    projects:         Vec<ResumeProject>,
-    certifications:   Vec<ResumeCertification>,
-    languages:        Vec<Language>,
-    interests:        Vec<ResumeInterest>,
+    projects:         Option<ResumeProjects>,
+    certifications:   Option<ResumeCertifications>,
+    languages:        Option<ResumeLanguages>,
+    interests:        Option<ResumeInterests>,
 }
 
 impl ResumeBuilder {
@@ -177,22 +177,46 @@ impl ResumeBuilder {
     }
 
     pub fn projects(mut self, projects: Vec<ResumeProject>) -> Self {
-        self.projects = projects;
+
+        if projects.is_empty() {
+            self.projects = None;
+            return self;
+        }
+
+        self.projects = Some(ResumeProjects::from(projects));
         self
     }
 
     pub fn certifications(mut self, certifications: Vec<ResumeCertification>) -> Self {
-        self.certifications = certifications;
+
+        if certifications.is_empty() {
+            self.certifications = None;
+            return self;
+        }
+
+        self.certifications = Some(ResumeCertifications::from(certifications));
         self
     }
 
     pub fn languages(mut self, languages: Vec<Language>) -> Self {
-        self.languages = languages;
+
+        if languages.is_empty() {
+            self.languages = None;
+            return self;
+        }
+
+        self.languages = Some(ResumeLanguages::from(languages));
         self
     }
 
     pub fn interests(mut self, interests: Vec<ResumeInterest>) -> Self {
-        self.interests = interests;
+
+        if interests.is_empty() {
+            self.interests = None;
+            return self;
+        }
+
+        self.interests = Some(ResumeInterests::from(interests));
         self
     }
 

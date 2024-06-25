@@ -1,5 +1,5 @@
 use structopt::*;
-use storefront_resume_builder::*;
+use resume_generator::*;
 
 fn main() -> Result<(), ResumeBuilderError> {
 
@@ -59,13 +59,38 @@ fn generate_resume(output_filename: &str, output_directory: &str) -> Result<(), 
                     "Description of the project and your role in it".to_string(),
                 ])
                 .build(),
+            ResumeProject::builder()
+                .title("Project2 Title".to_string())
+                .dates(date_range!(start => (2024, 1, 1), end => (2024, 12, 31)))
+                .description(vec![
+                    "Description of the second project and your role in it".to_string(),
+                ])
+                .build(),
+
+            ResumeProject::builder()
+                .title("Project3 Title".to_string())
+                .dates(date_range!(start => (2024, 3, 1), end => (2025, 12, 31)))
+                .description(vec![
+                    "Description of the third project and your role in it".to_string(),
+                ])
+                .build(),
             // Add more projects as needed
         ])
         .certifications(vec![
             ResumeCertification::builder()
                 .name("Certification Name".to_string())
-                .issuing_organization("Issuing Organization".to_string())
+                .issuing_organization("First Issuing Organization".to_string())
                 .date(date!(2020, 6, 1))
+                .build(),
+            ResumeCertification::builder()
+                .name("Certification2 Name".to_string())
+                .issuing_organization("Second Issuing Organization".to_string())
+                .date(date!(2021, 8, 10))
+                .build(),
+            ResumeCertification::builder()
+                .name("Certification3 Name".to_string())
+                .issuing_organization("Third Issuing Organization".to_string())
+                .date(date!(2023, 2, 14))
                 .build(),
             // Add more certifications as needed
         ])

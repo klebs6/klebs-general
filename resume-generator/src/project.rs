@@ -1,6 +1,45 @@
 crate::ix!();
 
-#[derive(Debug)]
+#[derive(Debug,Clone)]
+pub struct ResumeProjects(Vec<ResumeProject>);
+
+impl From<Vec<ResumeProject>> for ResumeProjects {
+    fn from(x: Vec<ResumeProject>) -> Self {
+        Self(x)
+    }
+}
+
+impl ResumeProjects {
+    delegate!{
+        to self.0 {
+            pub fn is_empty(&self) -> bool;
+            pub fn len(&self) -> usize;
+        }
+    }
+}
+
+impl LatexSectionItem for ResumeProjects {
+
+    fn render_latex_snippet(&self) -> String {
+
+        let mut result = String::new();
+
+        if !self.0.is_empty() {
+
+            result.push_str(r#"\section*{Projects}\begin{itemize}[leftmargin=*, label=-]"#);
+
+            for project in &self.0 {
+                result.push_str(&project.render_latex_snippet());
+            }
+
+            result.push_str(r#"\end{itemize}\vspace{2pt}"#);
+        }
+
+        result
+    }
+}
+
+#[derive(Debug,Clone)]
 pub struct ResumeProject {
     title:       String,
     dates:       DateRange,
@@ -13,7 +52,7 @@ impl LatexSectionItem for ResumeProject {
         let mut result = String::new();
         result.push_str(&format!(
             indoc! {r#"
-            \textbf{{{}}} \hfill \textit{{{}}} \\
+            \item \textbf{{{}}} \hfill \textit{{{}}} \\
             "#},
             self.title, format_date_range(&self.dates)
         ));

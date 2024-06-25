@@ -1,6 +1,46 @@
 crate::ix!();
 
-#[derive(Debug)]
+#[derive(Debug,Clone)]
+pub struct ResumeLanguages(Vec<Language>);
+
+impl From<Vec<Language>> for ResumeLanguages {
+    fn from(x: Vec<Language>) -> Self {
+        Self(x)
+    }
+}
+
+impl ResumeLanguages {
+    delegate!{
+        to self.0 {
+            pub fn is_empty(&self) -> bool;
+            pub fn len(&self) -> usize;
+        }
+    }
+}
+
+impl LatexSectionItem for ResumeLanguages {
+
+    fn render_latex_snippet(&self) -> String {
+
+        let mut result = String::new();
+
+        if !self.0.is_empty() {
+
+            result.push_str(r#"\section*{Languages}\begin{itemize}[leftmargin=*, label=-]"#);
+
+            for lang in &self.0 {
+                let text = lang.render_latex_snippet();
+                result.push_str(&text);
+            }
+
+            result.push_str(r#"\end{itemize}\vspace{2pt}"#);
+        }
+
+        result
+    }
+}
+
+#[derive(Debug,Clone)]
 pub struct Language {
     name:        LanguageName,
     proficiency: ProficiencyLevel,
@@ -27,7 +67,7 @@ impl Language {
 }
 
 
-#[derive(Debug)]
+#[derive(Debug,Clone)]
 pub enum LanguageName {
     English,
     Spanish,
@@ -50,7 +90,7 @@ impl fmt::Display for LanguageName {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug,Clone)]
 pub enum ProficiencyLevel {
     Native,
     Fluent,
