@@ -160,4 +160,4 @@ This project is licensed under the MIT License. See the LICENSE file for details
 
 ## Notes
 
-This project was written to help a non-programmer friend who does not know latex.  The goal here is to abstract over the latex compilation syntax so that folks can quickly get something up and running.
+This project was written to help a friend who does not know latex.  The goal here is to abstract over the compilation syntax so that folks can quickly get up and running.
