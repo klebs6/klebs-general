@@ -1,0 +1,1485 @@
+
+
+#[derive(Debug)]
+pub struct ResumeCertification {
+    name:                 String,
+    issuing_organization: String,
+    date:                 NaiveDate,
+}
+
+impl LatexSectionItem for ResumeCertification {
+    fn render_latex_snippet(&self) -> String {
+        format!(r#"    \\item {}, {} \hfill \textit{{{}}}\n"#, self.name, self.issuing_organization, self.date)
+    }
+}
+
+impl ResumeCertification {
+
+    pub fn new(name: String, issuing_organization: String, date: NaiveDate) -> Self {
+        Self { name, issuing_organization, date }
+    }
+
+    pub fn name(&self) -> &str {
+        &self.name
+    }
+
+    pub fn issuing_organization(&self) -> &str {
+        &self.issuing_organization
+    }
+
+    pub fn date(&self) -> NaiveDate {
+        self.date
+    }
+}
+
+#[derive(StructOpt, Debug)]
+#[structopt(name = "resume_generator")]
+pub struct Cli {
+    /// Output filename
+    #[structopt(long)]
+    output_filename: String,
+
+    /// Output directory
+    #[structopt(long)]
+    output_directory: String,
+}
+
+impl Cli {
+
+    pub fn output_filename(&self) -> &str {
+        &self.output_filename
+    }
+
+    pub fn output_directory(&self) -> &str {
+        &self.output_directory
+    }
+}
+
+pub struct ContactInfo {
+    name:     String,
+    email:    Email,
+    linkedin: LinkedInInfo,
+    github:   GitHubInfo,
+    phone:    PhoneNumber,
+    location: String,
+}
+
+impl ContactInfo {
+    pub fn new(
+        name: String,
+        email: Email,
+        linkedin: LinkedInInfo,
+        github: GitHubInfo,
+        phone: PhoneNumber,
+        location: String,
+    ) -> Self {
+        Self {
+            name,
+            email,
+            linkedin,
+            github,
+            phone,
+            location,
+        }
+    }
+
+    pub fn builder() -> ContactInfoBuilder {
+        ContactInfoBuilder::default()
+    }
+}
+
+#[derive(Default)]
+pub struct ContactInfoBuilder {
+    name:     Option<String>,
+    email:    Option<Email>,
+    linkedin: Option<LinkedInInfo>,
+    github:   Option<GitHubInfo>,
+    phone:    Option<PhoneNumber>,
+    location: Option<String>,
+}
+
+impl ContactInfoBuilder {
+    pub fn name(mut self, name: String) -> Self {
+        self.name = Some(name);
+        self
+    }
+
+    pub fn email(mut self, email: Email) -> Self {
+        self.email = Some(email);
+        self
+    }
+
+    pub fn linkedin(mut self, linkedin: LinkedInInfo) -> Self {
+        self.linkedin = Some(linkedin);
+        self
+    }
+
+    pub fn github(mut self, github: GitHubInfo) -> Self {
+        self.github = Some(github);
+        self
+    }
+
+    pub fn phone(mut self, phone: PhoneNumber) -> Self {
+        self.phone = Some(phone);
+        self
+    }
+
+    pub fn location(mut self, location: String) -> Self {
+        self.location = Some(location);
+        self
+    }
+
+    pub fn build(self) -> Result<ContactInfo, &'static str> {
+        Ok(ContactInfo {
+            name: self.name.ok_or("Name is required")?,
+            email: self.email.ok_or("Email is required")?,
+            linkedin: self.linkedin.ok_or("LinkedInInfo is required")?,
+            github: self.github.ok_or("GitHubInfo is required")?,
+            phone: self.phone.ok_or("PhoneNumber is required")?,
+            location: self.location.ok_or("Location is required")?,
+        })
+    }
+}
+
+impl LatexSectionItem for ContactInfo {
+    fn render_latex_snippet(&self) -> String {
+        let contact_info = indoc! {r#"
+            % Contact Information
+            \begin{center}
+                {\LARGE NAME_PLACEHOLDER} \\
+                \vspace{5pt}
+                \href{mailto:EMAIL_PLACEHOLDER}{EMAIL_PLACEHOLDER} \\
+                \href{LINKEDIN_PLACEHOLDER}{LINKEDIN_PLACEHOLDER} \\
+                \href{GITHUB_PLACEHOLDER}{GITHUB_PLACEHOLDER} \\
+                PHONE_PLACEHOLDER \\
+                LOCATION_PLACEHOLDER \\
+            \end{center}
+
+            \vspace{20pt}
+        "#};
+
+        contact_info
+            .replace("NAME_PLACEHOLDER", &self.name)
+            .replace("EMAIL_PLACEHOLDER", &self.email.to_string())
+            .replace("LINKEDIN_PLACEHOLDER", &self.linkedin.to_string())
+            .replace("GITHUB_PLACEHOLDER", &self.github.to_string())
+            .replace("PHONE_PLACEHOLDER", &self.phone.to_string())
+            .replace("LOCATION_PLACEHOLDER", &self.location)
+    }
+}
+
+#[derive(Debug,Clone)]
+pub struct DateRange {
+    start: NaiveDate,
+    end:   Option<NaiveDate>,
+}
+
+impl DateRange {
+    pub fn builder() -> DateRangeBuilder {
+        DateRangeBuilder::default()
+    }
+
+    pub fn start(&self) -> NaiveDate {
+        self.start
+    }
+
+    pub fn end(&self) -> Option<NaiveDate> {
+        self.end
+    }
+}
+
+#[derive(Default)]
+pub struct DateRangeBuilder {
+    start: Option<NaiveDate>,
+    end:   Option<NaiveDate>,
+}
+
+impl DateRangeBuilder {
+    pub fn start(mut self, start: NaiveDate) -> Self {
+        self.start = Some(start);
+        self
+    }
+
+    pub fn end(mut self, end: Option<NaiveDate>) -> Self {
+        self.end = end;
+        self
+    }
+
+    pub fn build(self) -> DateRange {
+        DateRange {
+            start: self.start.expect("Start date is required"),
+            end: self.end,
+        }
+    }
+}
+
+pub fn format_date_range(dates: &DateRange) -> String {
+    let end_date = match dates.end() {
+        Some(date) => date.to_string(),
+        None => "Present".to_string(),
+    };
+    format!("{} - {}", dates.start(), end_date)
+}
+
+pub fn date(year: i32, month: u32, day: u32) -> Result<NaiveDate, ResumeBuilderError> {
+    Ok(NaiveDate::from_ymd_opt(year, month, day).ok_or(ResumeBuilderError::CouldNotParseDate)?)
+}
+
+#[macro_export]
+macro_rules! date {
+    ($year:expr, $month:expr, $day:expr) => {
+        date($year, $month, $day).unwrap()
+    };
+}
+
+#[macro_export]
+macro_rules! date_range {
+    (start => $start:expr) => {
+        DateRange::builder()
+            .start(date!($start.0, $start.1, $start.2))
+            .end(None)
+            .build()
+    };
+    (start => $start:expr, end => $end:expr) => {
+        DateRange::builder()
+            .start(date!($start.0, $start.1, $start.2))
+            .end(Some(date!($end.0, $end.1, $end.2)))
+            .build()
+    };
+}
+
+#[derive(Debug,Clone)]
+pub struct ResumeEducationInfo {
+    institution:     String,
+    location:        String,
+    degree:          String,
+    dates:           DateRange,
+    additional_info: Vec<String>,
+}
+
+impl LatexSectionItem for ResumeEducationInfo {
+    fn render_latex_snippet(&self) -> String {
+        let mut result = String::new();
+        result.push_str(&format!(
+            indoc! {r#"
+            \textbf{{{}, {}}} \hfill \textit{{{}}} \\
+            \textit{{{}}} \\
+            "#},
+            self.institution, self.location, self.degree, format_date_range(&self.dates)
+        ));
+        if !self.additional_info.is_empty() {
+            result.push_str(r#"\begin{itemize}[leftmargin=*, label=-]"#);
+            for info in &self.additional_info {
+                result.push_str(&format!("    \\item {}\n", info));
+            }
+            result.push_str(r#"\end{itemize}"#);
+        }
+        result
+    }
+}
+
+impl ResumeEducationInfo {
+
+    pub fn builder() -> ResumeEducationInfoBuilder {
+        ResumeEducationInfoBuilder::default()
+    }
+
+    pub fn institution(&self) -> &str {
+        &self.institution
+    }
+
+    pub fn location(&self) -> &str {
+        &self.location
+    }
+
+    pub fn degree(&self) -> &str {
+        &self.degree
+    }
+
+    pub fn dates(&self) -> &DateRange {
+        &self.dates
+    }
+
+    pub fn additional_info(&self) -> &[String] {
+        &self.additional_info
+    }
+}
+
+#[derive(Default)]
+pub struct ResumeEducationInfoBuilder {
+    institution:     Option<String>,
+    location:        Option<String>,
+    degree:          Option<String>,
+    dates:           Option<DateRange>,
+    additional_info: Vec<String>,
+}
+
+impl ResumeEducationInfoBuilder {
+    pub fn institution(mut self, institution: String) -> Self {
+        self.institution = Some(institution);
+        self
+    }
+
+    pub fn location(mut self, location: String) -> Self {
+        self.location = Some(location);
+        self
+    }
+
+    pub fn degree(mut self, degree: String) -> Self {
+        self.degree = Some(degree);
+        self
+    }
+
+    pub fn dates(mut self, dates: DateRange) -> Self {
+        self.dates = Some(dates);
+        self
+    }
+
+    pub fn additional_info(mut self, additional_info: Vec<String>) -> Self {
+        self.additional_info = additional_info;
+        self
+    }
+
+    pub fn build(self) -> ResumeEducationInfo {
+        ResumeEducationInfo {
+            institution: self.institution.expect("Institution is required"),
+            location: self.location.expect("Location is required"),
+            degree: self.degree.expect("Degree is required"),
+            dates: self.dates.expect("Dates are required"),
+            additional_info: self.additional_info,
+        }
+    }
+}
+
+#[derive(Debug)]
+pub struct Email(String);
+
+impl Email {
+    pub fn new(email: String) -> Self {
+        Self(email)
+    }
+
+    pub fn address(&self) -> &str {
+        &self.0
+    }
+}
+
+impl fmt::Display for Email {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
+
+error_tree!{
+
+    pub enum CliError {
+        NoOutputFilenameProvided,
+        NoOutputDirectoryProvided,
+    }
+
+    pub enum ResumeBuilderError {
+        CouldNotParseDate,
+        CliError(CliError),
+        IoError(std::io::Error),
+    }
+}
+
+#[derive(Debug)]
+pub struct GitHubInfo(String);
+
+impl GitHubInfo {
+    pub fn new(github: String) -> Self {
+        Self(github)
+    }
+
+    pub fn url(&self) -> &str {
+        &self.0
+    }
+}
+
+impl fmt::Display for GitHubInfo {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
+pub(crate) use export_magic::*;
+pub(crate) use indoc::indoc;
+pub(crate) use std::io::Write;
+pub(crate) use chrono::NaiveDate;
+pub(crate) use std::fmt;
+pub(crate) use error_tree::*;
+pub(crate) use lazy_static::*;
+pub(crate) use structopt::StructOpt;
+pub(crate) use std::fs::File;
+pub(crate) use std::process::Command;
+pub(crate) use delegate::delegate;
+
+#[derive(Debug)]
+pub struct ResumeInterest {
+    name: String,
+}
+
+impl LatexSectionItem for ResumeInterest {
+    fn render_latex_snippet(&self) -> String {
+        format!("    \\item {}\n", self.name)
+    }
+}
+
+impl ResumeInterest {
+    pub fn new(name: String) -> Self {
+        Self { name }
+    }
+
+    pub fn name(&self) -> &str {
+        &self.name
+    }
+}
+
+#[derive(Debug)]
+pub struct Language {
+    name:        LanguageName,
+    proficiency: ProficiencyLevel,
+}
+
+impl LatexSectionItem for Language {
+    fn render_latex_snippet(&self) -> String {
+        format!("    \\item {} - {}\n", self.name, self.proficiency)
+    }
+}
+
+impl Language {
+    pub fn new(name: LanguageName, proficiency: ProficiencyLevel) -> Self {
+        Self { name, proficiency }
+    }
+
+    pub fn name(&self) -> &LanguageName {
+        &self.name
+    }
+
+    pub fn proficiency(&self) -> &ProficiencyLevel {
+        &self.proficiency
+    }
+}
+
+
+#[derive(Debug)]
+pub enum LanguageName {
+    English,
+    Spanish,
+    French,
+    German,
+    Chinese,
+    Other(String),
+}
+
+impl fmt::Display for LanguageName {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            LanguageName::English => write!(f, "English"),
+            LanguageName::Spanish => write!(f, "Spanish"),
+            LanguageName::French => write!(f, "French"),
+            LanguageName::German => write!(f, "German"),
+            LanguageName::Chinese => write!(f, "Chinese"),
+            LanguageName::Other(name) => write!(f, "{}", name),
+        }
+    }
+}
+
+#[derive(Debug)]
+pub enum ProficiencyLevel {
+    Native,
+    Fluent,
+    Professional,
+    Intermediate,
+    Basic,
+}
+
+impl fmt::Display for ProficiencyLevel {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            ProficiencyLevel::Native => write!(f, "Native"),
+            ProficiencyLevel::Fluent => write!(f, "Fluent"),
+            ProficiencyLevel::Professional => write!(f, "Professional"),
+            ProficiencyLevel::Intermediate => write!(f, "Intermediate"),
+            ProficiencyLevel::Basic => write!(f, "Basic"),
+        }
+    }
+}
+
+pub trait LatexSectionItem {
+
+    fn render_latex_snippet(&self) -> String;
+}
+
+pub fn render_latex_section<T: LatexSectionItem>(items: &[T], title: &str, sections: &mut Vec<String>) {
+    if !items.is_empty() {
+        let mut section = format!(r#"\section*{{{}}}"#, title);
+        for item in items {
+            section.push_str(&item.render_latex_snippet());
+        }
+        section.push_str(r#"\vspace{20pt}"#);
+        sections.push(section);
+    }
+}
+#![allow(unused_imports)]
+
+#[macro_use] mod imports; use imports::*;
+
+x!{certification}
+x!{date_range}
+x!{education}
+x!{email}
+x!{render_latex}
+x!{github}
+x!{interest}
+x!{language}
+x!{linkedin}
+x!{phone}
+x!{project}
+x!{resume}
+x!{skill}
+x!{work_experience}
+x!{errors}
+x!{cli}
+x!{pdflatex}
+x!{write_content}
+x!{contact_info}
+x!{latex_section}
+
+#[derive(Debug)]
+pub struct LinkedInInfo(String);
+
+impl LinkedInInfo {
+    pub fn new(linkedin: String) -> Self {
+        Self(linkedin)
+    }
+
+    pub fn url(&self) -> &str {
+        &self.0
+    }
+}
+
+impl fmt::Display for LinkedInInfo {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
+use std::fs::File;
+use std::io::Write;
+use chrono::NaiveDate;
+
+use storefront_resume_builder::*;
+
+fn main() -> Result<(),ResumeBuilderError> {
+
+    let output_filename = get_output_filename()?;
+
+    let resume = ResumeBuilder::new()
+        .name("Your Name".to_string())
+        .email(Email::new("youremail@example.com".to_string()))
+        .linkedin(LinkedInInfo::new("https://www.linkedin.com/in/yourprofile".to_string()))
+        .github(GitHubInfo::new("https://github.com/yourprofile".to_string()))
+        .phone(PhoneNumber::new("Your Phone Number".to_string()))
+        .location("City, State, ZIP Code".to_string())
+        .abstract_text("A brief summary about yourself, your skills, and your career goals.".to_string())
+        .work_experience(vec![
+            ResumeWorkExperience::new(
+                "Company Name".to_string(),
+                "Location".to_string(),
+                "Role".to_string(),
+                DateRange::new(date(2020, 1, 1)?, Some(date(2021, 12, 31)?)),
+                vec![
+                    "Responsibility or achievement 1".to_string(),
+                    "Responsibility or achievement 2".to_string(),
+                    "Responsibility or achievement 3".to_string(),
+                ],
+            ),
+            // Add more work experience as needed
+        ])
+        .education(vec![
+            ResumeEducationInfo::new(
+                "Institution Name".to_string(),
+                "Location".to_string(),
+                "Degree Title".to_string(),
+                DateRange::new(date(2016, 9, 1)?, Some(date(2020, 6, 30)?)),
+                vec![
+                    "Additional information or achievements (if any)".to_string(),
+                ],
+            ),
+            // Add more education as needed
+        ])
+        .skills(vec![
+            ResumeSkill::new("Skill 1".to_string()),
+            ResumeSkill::new("Skill 2".to_string()),
+            ResumeSkill::new("Skill 3".to_string()),
+            ResumeSkill::new("Skill 4".to_string()),
+        ])
+        .projects(vec![
+            ResumeProject::new(
+                "Project Title".to_string(),
+                DateRange::new(date(2019, 1, 1)?, Some(date(2019, 12, 31)?)),
+                vec![
+                    "Description of the project and your role in it".to_string(),
+                ],
+            ),
+            // Add more projects as needed
+        ])
+        .certifications(vec![
+            ResumeCertification::new(
+                "Certification Name".to_string(),
+                "Issuing Organization".to_string(),
+                date(2020, 6, 1)?,
+            ),
+            // Add more certifications as needed
+        ])
+        .languages(vec![
+            Language::new(LanguageName::English, ProficiencyLevel::Native),
+            // Add more languages as needed
+        ])
+        .interests(vec![
+            ResumeInterest::new("Interest 1".to_string()),
+            ResumeInterest::new("Interest 2".to_string()),
+            ResumeInterest::new("Interest 3".to_string()),
+            ResumeInterest::new("Interest 4".to_string()),
+        ])
+        .build()
+        .expect("Failed to build resume");
+
+    let latex_content = generate_latex(&resume);
+
+    let mut file = File::create(output_filename).expect("Could not create file");
+    file.write_all(latex_content.as_bytes()).expect("Could not write to file");
+
+    println!("Resume LaTeX file generated successfully.");
+
+    Ok(())
+}
+
+pub fn pdflatex(output_directory: &str, output_path: &str) -> Result<(),std::io::Error> {
+
+    // Run pdflatex command with output directory specified
+    Command::new("pdflatex")
+        .arg(format!("-output-directory={}", output_directory))
+        .arg(&output_path)
+        .status()?;
+
+    Ok(())
+}
+
+#[derive(Debug)]
+pub struct PhoneNumber(String);
+
+impl PhoneNumber {
+    pub fn new(phone: String) -> Self {
+        Self(phone)
+    }
+
+    pub fn number(&self) -> &str {
+        &self.0
+    }
+}
+
+impl fmt::Display for PhoneNumber {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
+
+#[derive(Debug)]
+pub struct ResumeProject {
+    title:       String,
+    dates:       DateRange,
+    description: Vec<String>,
+}
+
+impl LatexSectionItem for ResumeProject {
+
+    fn render_latex_snippet(&self) -> String {
+        let mut result = String::new();
+        result.push_str(&format!(
+            indoc! {r#"
+            \textbf{{{}}} \hfill \textit{{{}}} \\
+            "#},
+            self.title, format_date_range(&self.dates)
+        ));
+        if !self.description.is_empty() {
+            result.push_str(r#"\begin{itemize}[leftmargin=*, label=-]"#);
+            for desc in &self.description {
+                result.push_str(&format!("    \\item {}\n", desc));
+            }
+            result.push_str(r#"\end{itemize}"#);
+        }
+        result
+    }
+}
+
+impl ResumeProject {
+    pub fn new(title: String, dates: DateRange, description: Vec<String>) -> Self {
+        Self { title, dates, description }
+    }
+
+    pub fn title(&self) -> &str {
+        &self.title
+    }
+
+    pub fn dates(&self) -> &DateRange {
+        &self.dates
+    }
+
+    pub fn description(&self) -> &[String] {
+        &self.description
+    }
+}
+
+pub trait RenderLatex {
+
+    fn latex(&self) -> String;
+
+    fn begin_document(&self) -> String {
+        indoc! {r#"
+            \documentclass[a4paper,10pt]{article}
+            \usepackage[utf8]{inputenc}
+            \usepackage{geometry}
+            \usepackage{enumitem}
+            \usepackage{hyperref}
+            \usepackage{titlesec}
+
+            % Adjusting the margins
+            \geometry{left=1in, right=1in, top=1in, bottom=1in}
+
+            % Customizing sections
+            \titleformat{\section}{\large\bfseries}{}{0em}{}[\titlerule]
+            \titleformat{\subsection}{\bfseries}{}{0em}{}
+
+            \begin{document}
+        "#}.to_string()
+    }
+
+    fn end_document(&self) -> String {
+        r#"\end{document}"#.to_string()
+    }
+}
+
+pub struct Resume {
+    contact_info:     ContactInfo,
+    abstract_text:    String,
+    work_experience:  Vec<ResumeWorkExperience>,
+    education:        Vec<ResumeEducationInfo>,
+    skills:           Option<ResumeSkills>,
+    projects:         Vec<ResumeProject>,
+    certifications:   Vec<ResumeCertification>,
+    languages:        Vec<Language>,
+    interests:        Vec<ResumeInterest>,
+}
+
+impl RenderLatex for Resume {
+    fn latex(&self) -> String {
+        let contact_info = self.contact_info().render_latex_snippet();
+
+        let abstract_section = format!(indoc! {r#"
+            \section*{{Abstract}}
+            {}
+
+            \vspace{{20pt}}
+        "#}, self.abstract_text());
+
+        let mut sections = vec![self.begin_document(), contact_info, abstract_section];
+
+        render_latex_section(&self.work_experience(), "Work Experience", &mut sections);
+        render_latex_section(&self.education(), "Education", &mut sections);
+
+        if let Some(skills) = self.skills() {
+
+            sections.push(skills.render_latex_snippet());
+        }
+
+        render_latex_section(&self.projects(), "Projects", &mut sections);
+        render_latex_section(&self.certifications(), "Certifications", &mut sections);
+        render_latex_section(&self.languages(), "Languages", &mut sections);
+        render_latex_section(&self.interests(), "Interests", &mut sections);
+
+        sections.push(self.end_document());
+
+        sections.join("\n")
+    }
+}
+
+impl Resume {
+
+    pub fn builder() -> ResumeBuilder {
+        ResumeBuilder::default()
+    }
+
+    pub fn contact_info(&self) -> &ContactInfo {
+        &self.contact_info
+    }
+
+    pub fn abstract_text(&self) -> &str {
+        &self.abstract_text
+    }
+
+    pub fn work_experience(&self) -> &[ResumeWorkExperience] {
+        &self.work_experience
+    }
+
+    pub fn education(&self) -> &[ResumeEducationInfo] {
+        &self.education
+    }
+
+    pub fn skills(&self) -> &Option<ResumeSkills> {
+        &self.skills
+    }
+
+    pub fn projects(&self) -> &[ResumeProject] {
+        &self.projects
+    }
+
+    pub fn certifications(&self) -> &[ResumeCertification] {
+        &self.certifications
+    }
+
+    pub fn languages(&self) -> &[Language] {
+        &self.languages
+    }
+
+    pub fn interests(&self) -> &[ResumeInterest] {
+        &self.interests
+    }
+
+    pub fn has_work_experience(&self) -> bool {
+        !self.work_experience.is_empty()
+    }
+
+    pub fn has_education(&self) -> bool {
+        !self.education.is_empty()
+    }
+
+    pub fn has_skills(&self) -> bool {
+        self.skills.is_some() && !self.skills.as_ref().unwrap().is_empty()
+    }
+
+    pub fn has_projects(&self) -> bool {
+        !self.projects.is_empty()
+    }
+
+    pub fn has_certifications(&self) -> bool {
+        !self.certifications.is_empty()
+    }
+
+    pub fn has_languages(&self) -> bool {
+        !self.languages.is_empty()
+    }
+
+    pub fn has_interests(&self) -> bool {
+        !self.interests.is_empty()
+    }
+}
+
+#[derive(Default)]
+pub struct ResumeBuilder {
+    contact_info:     Option<ContactInfo>,
+    abstract_text:    Option<String>,
+    work_experience:  Vec<ResumeWorkExperience>,
+    education:        Vec<ResumeEducationInfo>,
+    skills:           Option<ResumeSkills>,
+    projects:         Vec<ResumeProject>,
+    certifications:   Vec<ResumeCertification>,
+    languages:        Vec<Language>,
+    interests:        Vec<ResumeInterest>,
+}
+
+impl ResumeBuilder {
+
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    pub fn contact_info(mut self, contact_info: ContactInfo) -> Self {
+        self.contact_info = Some(contact_info);
+        self
+    }
+
+    pub fn abstract_text(mut self, abstract_text: String) -> Self {
+        self.abstract_text = Some(abstract_text);
+        self
+    }
+
+    pub fn work_experience(mut self, work_experience: Vec<ResumeWorkExperience>) -> Self {
+        self.work_experience = work_experience;
+        self
+    }
+
+    pub fn education(mut self, education: Vec<ResumeEducationInfo>) -> Self {
+        self.education = education;
+        self
+    }
+
+    pub fn skills(mut self, skills: Vec<ResumeSkill>) -> Self {
+
+        if skills.is_empty() {
+            self.skills = None;
+            return self;
+        }
+
+        self.skills = Some(ResumeSkills::from(skills));
+        self
+    }
+
+    pub fn projects(mut self, projects: Vec<ResumeProject>) -> Self {
+        self.projects = projects;
+        self
+    }
+
+    pub fn certifications(mut self, certifications: Vec<ResumeCertification>) -> Self {
+        self.certifications = certifications;
+        self
+    }
+
+    pub fn languages(mut self, languages: Vec<Language>) -> Self {
+        self.languages = languages;
+        self
+    }
+
+    pub fn interests(mut self, interests: Vec<ResumeInterest>) -> Self {
+        self.interests = interests;
+        self
+    }
+
+    pub fn build(self) -> Result<Resume, &'static str> {
+        Ok(Resume {
+            contact_info:  self.contact_info.ok_or("ContactInfo is required")?,
+            abstract_text: self.abstract_text.ok_or("Abstract text is required")?,
+            work_experience: self.work_experience,
+            education: self.education,
+            skills: self.skills,
+            projects: self.projects,
+            certifications: self.certifications,
+            languages: self.languages,
+            interests: self.interests,
+        })
+    }
+}
+
+#[derive(Debug,Clone)]
+pub struct ResumeSkills(Vec<ResumeSkill>);
+
+impl From<Vec<ResumeSkill>> for ResumeSkills {
+    fn from(x: Vec<ResumeSkill>) -> Self {
+        Self(x)
+    }
+}
+
+impl ResumeSkills {
+    delegate!{
+        to self.0 {
+            pub fn is_empty(&self) -> bool;
+            pub fn len(&self) -> usize;
+        }
+    }
+}
+
+impl LatexSectionItem for ResumeSkills {
+    fn render_latex_snippet(&self) -> String {
+        let mut result = String::new();
+        if !self.0.is_empty() {
+            result.push_str(r#"\section*{Skills}\begin{itemize}[leftmargin=*, label=-]"#);
+            for skill in &self.0 {
+                result.push_str(&format!("    \\item {}\n", skill.name()));
+            }
+            result.push_str(r#"\end{itemize}\vspace{20pt}"#);
+        }
+        result
+    }
+}
+
+#[derive(Debug,Clone)]
+pub struct ResumeSkill {
+    name: String,
+}
+
+impl ResumeSkill {
+    pub fn builder() -> ResumeSkillBuilder {
+        ResumeSkillBuilder::default()
+    }
+
+    pub fn name(&self) -> &str {
+        &self.name
+    }
+}
+
+#[derive(Default)]
+pub struct ResumeSkillBuilder {
+    name: Option<String>,
+}
+
+impl ResumeSkillBuilder {
+    pub fn name(mut self, name: String) -> Self {
+        self.name = Some(name);
+        self
+    }
+
+    pub fn build(self) -> ResumeSkill {
+        ResumeSkill {
+            name: self.name.expect("Name is required"),
+        }
+    }
+}
+
+#[macro_export]
+macro_rules! skill {
+    ($name:expr) => {
+        ResumeSkill::builder().name($name.to_string()).build()
+    };
+}
+
+#[derive(Debug,Clone)]
+pub struct ResumeWorkExperience {
+    company:          String,
+    location:         String,
+    role:             String,
+    dates:            DateRange,
+    responsibilities: Vec<String>,
+}
+
+impl LatexSectionItem for ResumeWorkExperience {
+    fn render_latex_snippet(&self) -> String {
+        let mut result = String::new();
+        result.push_str(&format!(
+            indoc! {r#"
+            \textbf{{{}, {}}} \hfill \textit{{{}}} \\
+            \textit{{{}}} \\
+            "#},
+            self.company, self.location, self.role, format_date_range(&self.dates)
+        ));
+        if !self.responsibilities.is_empty() {
+            result.push_str(r#"\begin{itemize}[leftmargin=*, label=-]"#);
+            for responsibility in &self.responsibilities {
+                result.push_str(&format!("    \\item {}\n", responsibility));
+            }
+            result.push_str(r#"\end{itemize}"#);
+        }
+        result
+    }
+}
+
+impl ResumeWorkExperience {
+
+    pub fn builder() -> ResumeWorkExperienceBuilder {
+        ResumeWorkExperienceBuilder::default()
+    }
+
+    pub fn company(&self) -> &str {
+        &self.company
+    }
+
+    pub fn location(&self) -> &str {
+        &self.location
+    }
+
+    pub fn role(&self) -> &str {
+        &self.role
+    }
+
+    pub fn dates(&self) -> &DateRange {
+        &self.dates
+    }
+
+    pub fn responsibilities(&self) -> &[String] {
+        &self.responsibilities
+    }
+}
+
+#[derive(Default)]
+pub struct ResumeWorkExperienceBuilder {
+    company:          Option<String>,
+    location:         Option<String>,
+    role:             Option<String>,
+    dates:            Option<DateRange>,
+    responsibilities: Vec<String>,
+}
+
+impl ResumeWorkExperienceBuilder {
+    pub fn company(mut self, company: String) -> Self {
+        self.company = Some(company);
+        self
+    }
+
+    pub fn location(mut self, location: String) -> Self {
+        self.location = Some(location);
+        self
+    }
+
+    pub fn role(mut self, role: String) -> Self {
+        self.role = Some(role);
+        self
+    }
+
+    pub fn dates(mut self, dates: DateRange) -> Self {
+        self.dates = Some(dates);
+        self
+    }
+
+    pub fn responsibilities(mut self, responsibilities: Vec<String>) -> Self {
+        self.responsibilities = responsibilities;
+        self
+    }
+
+    pub fn build(self) -> ResumeWorkExperience {
+        ResumeWorkExperience {
+            company: self.company.expect("Company is required"),
+            location: self.location.expect("Location is required"),
+            role: self.role.expect("Role is required"),
+            dates: self.dates.expect("Dates are required"),
+            responsibilities: self.responsibilities,
+        }
+    }
+}
+
+pub fn write_content(content: &str, path: &str) -> Result<(),std::io::Error> {
+    let mut file = File::create(&path).expect("Could not create file");
+    file.write_all(content.as_bytes()).expect("Could not write to file");
+    Ok(())
+}
+
+
+use storefront_resume_builder::*;
+use std::fs::File;
+use std::io::Write;
+
+fn main() -> Result<(), ResumeBuilderError> {
+
+    let output_filename = get_output_filename()?;
+
+    let resume = ResumeBuilder::new()
+        .name("Chris Doe".to_string())
+        .email(Email::new("chris.doe@example.com".to_string()))
+        .linkedin(LinkedInInfo::new("https://www.linkedin.com/in/chrisdoe".to_string()))
+        .github(GitHubInfo::new("https://github.com/chrisdoe".to_string()))
+        .phone(PhoneNumber::new("123-456-7890".to_string()))
+        .location("San Francisco, CA".to_string())
+        .abstract_text("Experienced software engineer with a passion for developing innovative programs that expedite the efficiency and effectiveness of organizational success.".to_string())
+        .work_experience(vec![
+            ResumeWorkExperience::new(
+                "Tech Company".to_string(),
+                "San Francisco, CA".to_string(),
+                "Senior Software Engineer".to_string(),
+                DateRange::new(date(2018, 5, 1)?, None),
+                vec![
+                    "Led a team of 10 software engineers to develop scalable applications".to_string(),
+                    "Improved system performance by 20%".to_string(),
+                    "Implemented CI/CD pipelines".to_string(),
+                ],
+            ),
+            ResumeWorkExperience::new(
+                "Another Tech Company".to_string(),
+                "San Jose, CA".to_string(),
+                "Software Engineer".to_string(),
+                DateRange::new(date(2015, 6, 1)?, Some(date(2018, 4, 30)?)),
+                vec![
+                    "Developed web applications using Rust and JavaScript".to_string(),
+                    "Collaborated with cross-functional teams to define project requirements".to_string(),
+                    "Conducted code reviews and provided mentorship to junior engineers".to_string(),
+                ],
+            ),
+        ])
+        .education(vec![
+            ResumeEducationInfo::new(
+                "University of California, Berkeley".to_string(),
+                "Berkeley, CA".to_string(),
+                "Bachelor of Science in Computer Science".to_string(),
+                DateRange::new(date(2011, 9, 1)?, Some(date(2015, 5, 31)?)),
+                vec![
+                    "Graduated with honors".to_string(),
+                    "Member of the Computer Science Club".to_string(),
+                ],
+            ),
+        ])
+        .skills(vec![
+            ResumeSkill::new("Rust".to_string()),
+            ResumeSkill::new("JavaScript".to_string()),
+            ResumeSkill::new("CI/CD".to_string()),
+            ResumeSkill::new("Team Leadership".to_string()),
+        ])
+        .projects(vec![
+            ResumeProject::new(
+                "Open Source Contribution".to_string(),
+                DateRange::new(date(2019, 1, 1)?, None),
+                vec![
+                    "Contributed to open source projects on GitHub".to_string(),
+                    "Fixed bugs and implemented new features".to_string(),
+                ],
+            ),
+        ])
+        .certifications(vec![
+            ResumeCertification::new(
+                "Certified Kubernetes Administrator".to_string(),
+                "The Linux Foundation".to_string(),
+                date(2020, 8, 1)?,
+            ),
+        ])
+        .languages(vec![
+            Language::new(LanguageName::English, ProficiencyLevel::Native),
+            Language::new(LanguageName::Spanish, ProficiencyLevel::Intermediate),
+        ])
+        .interests(vec![
+            ResumeInterest::new("Hiking".to_string()),
+            ResumeInterest::new("Photography".to_string()),
+            ResumeInterest::new("Traveling".to_string()),
+            ResumeInterest::new("Open Source Contribution".to_string()),
+        ])
+        .build()
+        .expect("Failed to build resume");
+
+    let latex_content = generate_latex(&resume);
+
+    let mut file = File::create(output_filename).expect("Could not create file");
+    file.write_all(latex_content.as_bytes()).expect("Could not write to file");
+
+    println!("Chris's Resume LaTeX file generated successfully.");
+
+    Ok(())
+}
+use storefront_resume_builder::*;
+use lazy_static::*;
+use indoc::*;
+use structopt::StructOpt;
+
+lazy_static! {
+    pub static ref BETHESDA:       String = "Bethesda, MD".to_string();
+    pub static ref CHEVY_CHASE:    String = "Chevy Chase, MD".to_string();
+    pub static ref WASHINGTON_DC:  String = "Washington, DC".to_string();
+    pub static ref SALT_LAKE_CITY: String = "Salt Lake City, UT".to_string();
+
+    pub static ref CHRIS_ABSTRACT: String = indoc!{"
+        Accomplished professional with a diverse background spanning business
+        administration, marketing, and extensive expertise in social media
+        management. 
+
+        Formerly excelled as the Billing Manager at Washington Institute
+        of Surgery, where I oversaw a team handling billing for multiple medical
+        professionals. 
+
+        Proven track record in project management, system
+        implementation, and enhancing operational efficiency through strategic
+        upgrades. 
+
+        Former General Manager and Social Media Manager at Bethesda
+        Boards, with hands-on experience in new location setup, digital marketing,
+        and content creation across major platforms. Founder and CEO of Zorc Media
+        LLC, specializing in brand development and social media strategy for diverse
+        clientele. 
+
+        Adept at integrating AI technologies to optimize business
+        processes. 
+
+        Possess a solid educational foundation in Business Administration
+        and Marketing.
+        "
+    }.to_string();
+
+    pub static ref WASHINGTON_INSTITUTE_OF_SURGERY: ResumeWorkExperience = ResumeWorkExperience::builder()
+        .company("Washington Institute of Surgery".to_string())
+        .location(CHEVY_CHASE.clone())
+        .role("Billing Manager".to_string())
+        .dates(date_range!(start => (2019, 1, 1), end => (2024, 5, 31)))
+        .responsibilities(vec![
+            "Manage a team of five billing associates handling billing cycles for 4 doctors, 3 physician assistants, 1 nurse practitioner, and 3 nurses.".to_string(),
+            "Direct responsibility for incoming payments, patient statements, and office-patient communications.".to_string(),
+            "Project manager overseeing website, software, and hardware upgrades; serve as super-user for all systems.".to_string(),
+        ])
+        .build();
+
+    pub static ref BETHESDA_BOARDS: ResumeWorkExperience = ResumeWorkExperience::builder()
+        .company("Bethesda Boards".to_string())
+        .location(BETHESDA.clone())
+        .role("General Manager, Social Media Manager".to_string())
+        .dates(date_range!(start => (2021, 1, 1), end => (2022, 12, 31)))
+        .responsibilities(vec![
+            "Led the opening of a new location, including buildout, website creation, and inventory digitalization.".to_string(),
+            "Created and managed content for TikTok, Instagram, and Facebook, doubling some metrics including engagement, views, and brought in purchases from the West Coast within 6 months.".to_string(),
+        ])
+        .build();
+
+    pub static ref ZORC_MEDIA_LLC: ResumeWorkExperience = ResumeWorkExperience::builder()
+        .company("Zorc Media LLC".to_string())
+        .location(BETHESDA.clone())
+        .role("Owner, Founder, CEO".to_string())
+        .dates(date_range!(start => (2017, 1, 1), end => (2023, 12, 31)))
+        .responsibilities(vec![
+            "Developed and managed social media profiles and branding for artists, businesses, nonprofits, and personal pages.".to_string(),
+            "Implemented AI strategies to optimize social media campaigns, enhancing client visibility and engagement.".to_string(),
+        ])
+        .build();
+
+    pub static ref RAYMOND_JAMES: ResumeWorkExperience = ResumeWorkExperience::builder()
+        .company("Raymond James".to_string())
+        .location(WASHINGTON_DC.clone())
+        .role("Branch Operations Specialist".to_string())
+        .dates(date_range!(start => (2017, 1, 1), end => (2017, 12, 31)))
+        .responsibilities(vec![
+            "Supported daily operations for the Complex Operations Manager and Complex Manager.".to_string(),
+            "Utilized LinkedIn and print marketing to promote financial services and events.".to_string(),
+        ])
+        .build();
+
+    pub static ref DICKS_SPORTING_GOODS: ResumeWorkExperience = ResumeWorkExperience::builder()
+        .company("Dick’s Sporting Goods".to_string())
+        .location(SALT_LAKE_CITY.clone())
+        .role("Customer Specialist".to_string())
+        .dates(date_range!(start => (2015, 1, 1), end => (2016, 12, 31)))
+        .responsibilities(vec![
+            "Managed store cash office procedures and provided high-level customer service.".to_string(),
+        ])
+        .build();
+
+    pub static ref TOMMY_BAHAMA: ResumeWorkExperience = ResumeWorkExperience::builder()
+        .company("Tommy Bahama".to_string())
+        .location(BETHESDA.clone())
+        .role("Floor Supervisor".to_string())
+        .dates(date_range!(start => (2013, 1, 1), end => (2014, 12, 31)))
+        .responsibilities(vec![
+            "Supervised sales activities, inventory management, and cash reconciliation.".to_string(),
+            "Trained staff on effective sales techniques and customer service strategies.".to_string(),
+        ])
+        .build();
+
+    pub static ref MUSSEL_BAR: ResumeWorkExperience = ResumeWorkExperience::builder()
+        .company("Mussel Bar".to_string())
+        .location(BETHESDA.clone())
+        .role("Host, Food Runner, Barback, Dishwasher, Customer Service".to_string())
+        .dates(date_range!(start => (2011, 1, 1), end => (2013, 12, 31)))
+        .responsibilities(vec![
+            "Worked my way through several front-of-house positions which I enjoyed, especially backing up the bartenders and servers with my hosting, food running, and customer service skills.".to_string(),
+        ])
+        .build();
+
+    pub static ref KENWOOD_COUNTRY_CLUB: ResumeWorkExperience = ResumeWorkExperience::builder()
+        .company("Kenwood Country Club".to_string())
+        .location(BETHESDA.clone())
+        .role("Indoor and Outdoor Lifeguard".to_string())
+        .dates(date_range!(start => (2007, 1, 1), end => (2009, 12, 31)))
+        .responsibilities(vec![
+            "Began as an indoor lifeguard during the winter season and assimilated well into working as an outdoor lifeguard on a rotating 3 pool schedule.".to_string(),
+        ])
+        .build();
+
+    pub static ref MIT: ResumeEducationInfo = ResumeEducationInfo::builder()
+        .institution("M.I.T.".to_string())
+        .location("Online".to_string())
+        .degree(r#"Generative Artificial Intelligence \& the Digital Transformation"#.to_string())
+        .dates(date_range!(start => (2024, 3, 1)))
+        .additional_info(vec![
+            "Student".to_string(),
+        ])
+        .build();
+
+    pub static ref FORDHAM_UNIVERSITY: ResumeEducationInfo = ResumeEducationInfo::builder()
+        .institution("Fordham University".to_string())
+        .location("Bronx, NY".to_string())
+        .degree("Business Management".to_string())
+        .dates(date_range!(start => (2015, 1, 1), end => (2016, 12, 31)))
+        .additional_info(vec![
+            "Student".to_string(),
+        ])
+        .build();
+
+    pub static ref MONTGOMERY_COLLEGE: ResumeEducationInfo = ResumeEducationInfo::builder()
+        .institution("Montgomery College".to_string())
+        .location("Rockville, MD".to_string())
+        .degree(r#"Business Administration \& Marketing"#.to_string())
+        .dates(date_range!(start => (2012, 1, 1), end => (2015, 12, 31)))
+        .additional_info(vec![
+            "Graduate".to_string(),
+        ])
+        .build();
+
+    pub static ref TULANE_UNIVERSITY: ResumeEducationInfo = ResumeEducationInfo::builder()
+        .institution("Tulane University".to_string())
+        .location("New Orleans, LA".to_string())
+        .degree("Architecture".to_string())
+        .dates(date_range!(start => (2011, 1, 1), end => (2011, 12, 31)))
+        .additional_info(vec![
+            "Student".to_string(),
+        ])
+        .build();
+
+    pub static ref GEORGETOWN_PREP: ResumeEducationInfo = ResumeEducationInfo::builder()
+        .institution("Georgetown Prep".to_string())
+        .location("Rockville, MD".to_string())
+        .degree("".to_string())
+        .dates(date_range!(start => (2007, 1, 1), end => (2011, 12, 31)))
+        .additional_info(vec![])
+        .build();
+
+     pub static ref CHRIS_SKILLS: Vec<ResumeSkill> = vec![
+         skill!("Social Media Management"),
+         skill!("Content Creation (TikTok, Instagram, Facebook)"),
+         skill!("Brand Development"),
+         skill!("Project Management"),
+         skill!("Billing and Accounts Receivable"),
+         skill!("Team Leadership and Training"),
+         skill!("AI Integration in Business Processes"),
+         skill!("Digital Marketing Strategies"),
+         skill!("Customer Service Excellence"),
+         skill!("Inventory Management"),
+     ];
+}
+
+fn main() -> Result<(), ResumeBuilderError> {
+    let opt = Cli::from_args();
+
+    generate_resume(opt.output_filename(), opt.output_directory())
+}
+
+fn generate_resume(output_filename: &str, output_directory: &str) -> Result<(), ResumeBuilderError> {
+
+    let contact_info = ContactInfo::builder()
+        .name("Chris Doe".to_string())
+        .email(Email::new("chris.doe@example.com".to_string()))
+        .linkedin(LinkedInInfo::new("https://www.linkedin.com/in/chrisdoe".to_string()))
+        .github(GitHubInfo::new("https://github.com/chrisdoe".to_string()))
+        .phone(PhoneNumber::new("123-456-7890".to_string()))
+        .location("San Francisco, CA".to_string())
+        .build()
+        .expect("Failed to build ContactInfo");
+
+    let resume = Resume::builder()
+        .contact_info(contact_info)
+        .abstract_text(CHRIS_ABSTRACT.clone())
+        .work_experience(vec![
+            WASHINGTON_INSTITUTE_OF_SURGERY.clone(),
+            BETHESDA_BOARDS.clone(),
+            ZORC_MEDIA_LLC.clone(),
+            RAYMOND_JAMES.clone(),
+            DICKS_SPORTING_GOODS.clone(),
+            TOMMY_BAHAMA.clone(),
+            MUSSEL_BAR.clone(),
+            KENWOOD_COUNTRY_CLUB.clone(),
+        ])
+        .education(vec![
+            MIT.clone(),
+            FORDHAM_UNIVERSITY.clone(),
+            MONTGOMERY_COLLEGE.clone(),
+            TULANE_UNIVERSITY.clone(),
+            GEORGETOWN_PREP.clone(),
+        ])
+        .skills(CHRIS_SKILLS.clone())
+        .projects(vec![])
+        .certifications(vec![])
+        .languages(vec![])
+        .interests(vec![])
+        .build()
+        .expect("Failed to build resume");
+
+    let latex_content = resume.latex();
+
+    let output_path = format!("{}/{}", output_directory, output_filename);
+
+    write_content(&latex_content,&output_path)?;
+
+    pdflatex(&output_directory,&output_path)?;
+
+    println!("Chris's Resume LaTeX file generated and compiled successfully.");
+
+    Ok(())
+}

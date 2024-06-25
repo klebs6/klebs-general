@@ -1,0 +1,13 @@
+[package]
+name = "resume-generator"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+export-magic = "*"
+error-tree   = "*"
+structopt    = "*"
+indoc        = "*"
+delegate     = "*"
+chrono       = "*"
+lazy_static  = "*"
