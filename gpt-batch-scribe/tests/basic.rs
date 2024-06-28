@@ -16,7 +16,5 @@ fn basic_functionality() -> Result<(),GptBatchCreationError> {
 
     info!("{}", json);
 
-    assert!(false); // this triggers the tracing
-
     Ok(())
 }
