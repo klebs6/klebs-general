@@ -8,7 +8,7 @@ authors     = [ "klebs tpk3.mx@gmail.com" ]
 license     = "MIT"
 keywords    = ["shorthand", "ai", "gpt", "openai", "api"]
 repository  = "https://github.com/klebs6/klebs-general"
-categories  = ["ai", "requests", "batch"]
+categories = ["template-engine", "text-processing", "parsing"]
 
 [dependencies]
 export-magic  = "0.3.6"
