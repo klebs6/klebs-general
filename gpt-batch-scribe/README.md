@@ -1,4 +1,4 @@
-# `gpt-token-scribe`
+# `gpt-batch-scribe`
 
 A Rust crate for handling batch API requests to GPT models. This crate provides structures and enumerations to construct, serialize, and deserialize JSON requests and handle errors appropriately.
 
@@ -15,7 +15,7 @@ A Rust crate for handling batch API requests to GPT models. This crate provides 
 ### Basic Example
 
 ```rust
-use gpt_token_scribe::{GptBatchAPIRequest, HttpMethod, GptApiUrl, GptRequestBody, GptMessage, GptModelType};
+use gpt_batch_scribe::{GptBatchAPIRequest, HttpMethod, GptApiUrl, GptRequestBody, GptMessage, GptModelType};
 
 let request = GptBatchAPIRequest::new_basic(
     1,
