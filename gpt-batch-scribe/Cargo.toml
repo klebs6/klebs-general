@@ -6,7 +6,7 @@ edition = "2021"
 description = "contains the GptBatchAPIRequest struct which helps create gpt4 batch requests."
 authors     = [ "klebs tpk3.mx@gmail.com" ]
 license     = "MIT"
-keywords    = ["shorthand", "ai", "gpt", "openai", "api"]
+keywords    = ["shorthand", "ai", "llm" ]
 repository  = "https://github.com/klebs6/klebs-general"
 categories = ["template-engine", "text-processing", "parsing"]
 
