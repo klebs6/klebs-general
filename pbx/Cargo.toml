@@ -1,0 +1,10 @@
+[package]
+name = "pbx"
+version = "0.1.0"
+edition = "2021"
+description = "pbx is a Rust crate providing convenient macros and utility functions for creating and managing boxed, atomic reference-counted, and default-initialized values. The crate simplifies common patterns in Rust, especially useful in asynchronous programming, concurrent access, and interfacing with C libraries."
+license = "MIT"
+authors = [ "klebs tpk3.mx@gmail.com" ]
+keywords = ["utility", "shorthand", "pbx" ]
+
+[dependencies]

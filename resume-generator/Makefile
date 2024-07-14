@@ -5,7 +5,7 @@ CHRIS_TEX    := chris.tex
 
 PDFLATEX := pdflatex --output-directory=renders
 
-default: template
+default: zorc
 
 template:
 	cargo run --example example_template_resume -- --output-directory $(OUTPUT_DIRECTORY) --output-filename $(TEMPLATE_TEX)

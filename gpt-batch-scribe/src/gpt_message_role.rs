@@ -36,5 +36,3 @@ pub(crate) mod message_role {
         }
     }
 }
-
-
