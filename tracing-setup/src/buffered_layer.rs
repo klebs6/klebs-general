@@ -41,6 +41,7 @@ impl<S: Subscriber> tracing_subscriber::Layer<S> for BufferedLayer {
 
         use std::fmt::Write;
 
+        #[allow(dead_code)]
         pub enum EventPrintType {
             FullWithHeader,
             LogLineAndContents,
@@ -92,16 +93,16 @@ impl<S: Subscriber> tracing_subscriber::Layer<S> for BufferedLayer {
                 },
                 EventPrintType::JustTheContents => {
 
-                    let metadata = event.metadata();
+                    let _metadata = event.metadata();
 
-                    //let mut message = format!("[{}] {}: ", metadata.level(), metadata.target());
+                    //let mut message = format!("[{}] {}: ", _metadata.level(), _metadata.target());
                     let mut message = format!("");
 
                     // Visitor to collect fields
                     struct FieldCollector(String);
 
                     impl tracing::field::Visit for FieldCollector {
-                        fn record_debug(&mut self, field: &tracing::field::Field, value: &dyn std::fmt::Debug) {
+                        fn record_debug(&mut self, _field: &tracing::field::Field, value: &dyn std::fmt::Debug) {
                             use std::fmt::Write;
                             //let _ = write!(self.0, "{} = {:?}, ", field.name(), value);
                             let _ = write!(self.0, "{:?}, ", value);

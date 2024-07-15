@@ -1,0 +1,13 @@
+[package]
+name = "str-shorthand"
+version = "0.1.0"
+edition = "2021"
+
+description = "A Rust crate that provides utility functions for string manipulation. Includes a function to bisect a string into two halves, handling multi-byte UTF-8 characters correctly."
+authors = [ "klebs tpk3.mx@gmail.com" ]
+license = "MIT"
+keywords = ["shorthand", "strings" ]
+repository = "https://github.com/klebs6/klebs-general"
+categories = ["development-tools"]
+
+[dependencies]
