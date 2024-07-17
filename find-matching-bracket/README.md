@@ -16,17 +16,17 @@ Add this crate to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-find-matching-bracket = "0.1.0"
+find-matching-bracket = "0.2.0"
 ```
 
 ## Example
 
 ```rust
-use find_matching_bracket::{find_matching_curly_bracket, find_matching_square_bracket, find_matching_paren};
+use find_matching_bracket::{find_matching_curly_brace, find_matching_square_bracket, find_matching_paren};
 
 fn main() {
     let text = "{content}";
-    let position = find_matching_curly_bracket(text, 0);
+    let position = find_matching_curly_brace(text, 0);
     println!("Matching position: {:?}", position); // Output: Matching position: Some(8)
 }
 ```
@@ -45,7 +45,7 @@ Finds the matching closing bracket for the given opening bracket in a string.
 #### Returns
 - `Option<usize>`: The position of the matching closing bracket, or None if no matching bracket is found.
 
-### `find_matching_curly_bracket`
+### `find_matching_curly_brace`
 Finds the matching closing curly bracket {} for the given opening bracket in a string.
 
 #### Parameters
@@ -78,7 +78,7 @@ Finds the matching closing parenthesis () for the given opening bracket in a str
 ## Example
 ```rust
 let text = "{[()][]}";
-let position = find_matching_curly_bracket(text, 0);
+let position = find_matching_curly_brace(text, 0);
 assert_eq!(position, Some(7));
 ```
 

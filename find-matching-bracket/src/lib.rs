@@ -44,7 +44,7 @@ pub fn find_matching_bracket(text: &str, start: usize, bracket_type: BracketType
     None
 }
 
-pub fn find_matching_curly_bracket(text: &str, start: usize) -> Option<usize> {
+pub fn find_matching_curly_brace(text: &str, start: usize) -> Option<usize> {
     find_matching_bracket(text, start, BracketType::Curly)
 }
 
@@ -64,7 +64,7 @@ mod test_find_matching_bracket {
     #[test]
     fn test_curly_braces() {
         let text = "{content}";
-        assert_eq!(find_matching_curly_bracket(text, 0), Some(8));
+        assert_eq!(find_matching_curly_brace(text, 0), Some(8));
     }
 
     #[test]
@@ -82,7 +82,7 @@ mod test_find_matching_bracket {
     #[test]
     fn test_nested_brackets() {
         let text = "{[()][]}";
-        assert_eq!(find_matching_curly_bracket(text, 0), Some(7));
+        assert_eq!(find_matching_curly_brace(text, 0), Some(7));
         assert_eq!(find_matching_square_bracket(text, 1), Some(4));
         assert_eq!(find_matching_paren(text, 2), Some(3));
     }
@@ -98,7 +98,7 @@ mod test_find_matching_bracket {
         let mut text = "{".to_string();
         text.push_str(&"a".repeat(10000));  // Long sequence of 'a's
         text.push_str("}");
-        assert_eq!(find_matching_curly_bracket(&text, 0), Some(10001));
+        assert_eq!(find_matching_curly_brace(&text, 0), Some(10001));
     }
 
     #[test]
@@ -111,7 +111,7 @@ mod test_find_matching_bracket {
         let start_paren  = text.char_indices().nth(6).map(|(i, _)| i).unwrap();
         let end_paren    = text.char_indices().nth(8).map(|(i, _)| i).unwrap();
 
-        assert_eq!(find_matching_curly_bracket(text, 0), Some(text.len() - 1));
+        assert_eq!(find_matching_curly_brace(text, 0), Some(text.len() - 1));
         assert_eq!(find_matching_square_bracket(text, start_square), Some(end_square));
         assert_eq!(find_matching_paren(text, start_paren), Some(end_paren));
     }
@@ -119,13 +119,13 @@ mod test_find_matching_bracket {
     #[test]
     fn test_edge_cases() {
         // Empty string
-        assert_eq!(find_matching_curly_bracket("", 0), None);
+        assert_eq!(find_matching_curly_brace("", 0), None);
 
         // Start index beyond string length
         let text = "{content}";
-        assert_eq!(find_matching_curly_bracket(text, text.len()), None);
+        assert_eq!(find_matching_curly_brace(text, text.len()), None);
 
         // Start index way beyond string length
-        assert_eq!(find_matching_curly_bracket(text, text.len() + 100), None);
+        assert_eq!(find_matching_curly_brace(text, text.len() + 100), None);
     }
 }

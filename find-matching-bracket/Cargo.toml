@@ -1,6 +1,6 @@
 [package]
 name = "find-matching-bracket"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 
 description = "Finds the matching closing bracket for a given opening bracket in a string. Supports curly braces, square brackets, and parentheses. This crate is useful for parsing code, validating expressions, and more."
