@@ -1,0 +1,13 @@
+[package]
+name = "find-matching-bracket"
+version = "0.1.0"
+edition = "2021"
+
+description = "Finds the matching closing bracket for a given opening bracket in a string. Supports curly braces, square brackets, and parentheses. This crate is useful for parsing code, validating expressions, and more."
+authors = [ "klebs tpk3.mx@gmail.com" ]
+license = "MIT"
+keywords = ["strings", "utility" ]
+repository = "https://github.com/klebs6/klebs-general"
+categories = ["development-tools"]
+
+[dependencies]
