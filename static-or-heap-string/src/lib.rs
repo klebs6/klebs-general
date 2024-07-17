@@ -1,7 +1,12 @@
+#![no_std]
+
+extern crate alloc;
+
+use alloc::string::{String,ToString};
 use serde::*;
-use std::fmt;
-use std::cmp::Ordering;
-use std::hash::{Hash,Hasher};
+use core::fmt;
+use core::cmp::Ordering;
+use core::hash::{Hash, Hasher};
 
 /// A string type that can either be a static string slice or an owned heap-allocated string.
 #[derive(Clone, Eq)]
@@ -62,6 +67,32 @@ impl StaticOrHeapString {
             StaticOrHeapString::Heap(s) => s.as_str(),
         }
     }
+
+    /// Returns the mutable string slice representation of the enum variant.
+    pub fn as_mut_str(&mut self) -> &mut str {
+        match self {
+            StaticOrHeapString::Static(s) => {
+                // Convert the static str to a heap-allocated String for mutation
+                let heap_string = s.to_string();
+                *self = StaticOrHeapString::Heap(heap_string);
+                match self {
+                    StaticOrHeapString::Heap(s) => s.as_mut_str(),
+                    _ => unreachable!(),
+                }
+            }
+            StaticOrHeapString::Heap(s) => s.as_mut_str(),
+        }
+    }
+
+    /// Returns true if the string is empty.
+    pub fn is_empty(&self) -> bool {
+        self.as_str().is_empty()
+    }
+
+    /// Returns the length of the string.
+    pub fn len(&self) -> usize {
+        self.as_str().len()
+    }
 }
 
 impl Hash for StaticOrHeapString {
@@ -70,11 +101,26 @@ impl Hash for StaticOrHeapString {
     }
 }
 
+impl From<&'static str> for StaticOrHeapString {
+    fn from(s: &'static str) -> Self {
+        StaticOrHeapString::Static(s)
+    }
+}
+
+impl From<String> for StaticOrHeapString {
+    fn from(s: String) -> Self {
+        StaticOrHeapString::Heap(s)
+    }
+}
 
 #[cfg(test)]
 mod tests {
     use super::*;
     use serde_json;
+    use core::hash::Hash;
+    use core::hash::{BuildHasherDefault,BuildHasher};
+    use twox_hash::XxHash64;
+    use alloc::format;
 
     #[test]
     fn test_static_or_heap_string_can_serde_roundtrip() {
@@ -160,17 +206,16 @@ mod tests {
 
     #[test]
     fn test_static_or_heap_string_hash() {
-        use std::collections::hash_map::DefaultHasher;
-        use std::hash::{Hash, Hasher};
+        type MyHasher = BuildHasherDefault<XxHash64>;
 
         let static_str = StaticOrHeapString::Static("hello");
         let heap_str = StaticOrHeapString::Heap(String::from("hello"));
 
-        let mut hasher1 = DefaultHasher::new();
+        let mut hasher1 = MyHasher::default().build_hasher();
         static_str.hash(&mut hasher1);
         let hash1 = hasher1.finish();
 
-        let mut hasher2 = DefaultHasher::new();
+        let mut hasher2 = MyHasher::default().build_hasher();
         heap_str.hash(&mut hasher2);
         let hash2 = hasher2.finish();
 

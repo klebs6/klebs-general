@@ -2,8 +2,26 @@
 name = "static-or-heap-string"
 version = "0.1.0"
 edition = "2021"
+description = "An enum type for handling both static and heap-allocated strings."
+license = "MIT"
+authors = [ "klebs tpk3.mx@gmail.com" ]
+keywords = ["shorthand", "strings", "simple", "easy"]
+repository = "https://github.com/klebs6/klebs-general"
+categories = ["development-tools", "strings" ]
+
 
 [dependencies]
-serde      = { version = "*", features = [ "rc" ] }
-serde_json = "*"
-tracing-setup = "0.2.0"
+serde = { version = "1.0", features = [ "derive", "alloc" ] }
+twox-hash = { version = "1.6", default-features = false }
+
+[dev-dependencies]
+serde_json = "1.0"
+criterion = { version = "0.4", features = ["html_reports"] }
+
+[[bench]]
+name = "bench"
+harness = false
+
+[features]
+default = ["std"]
+std = ["serde/std"]
