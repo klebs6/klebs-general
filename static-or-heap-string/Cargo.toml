@@ -7,7 +7,7 @@ license = "MIT"
 authors = [ "klebs tpk3.mx@gmail.com" ]
 keywords = ["shorthand", "strings", "simple", "easy"]
 repository = "https://github.com/klebs6/klebs-general"
-categories = ["development-tools", "strings" ]
+categories = ["data-structures" ]
 
 
 [dependencies]
