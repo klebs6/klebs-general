@@ -1,0 +1,9 @@
+[package]
+name = "static-or-heap-string"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+serde      = { version = "*", features = [ "rc" ] }
+serde_json = "*"
+tracing-setup = "0.2.0"
