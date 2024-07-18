@@ -1,0 +1,104 @@
+// Initialize event loop
+let event_loop = EventLoop::new();
+let window = WindowBuilder::new()
+    .with_title("PDF Viewer")
+    .build(&event_loop)
+    .unwrap();
+
+// Initialize Egui platform
+let mut platform = Platform::new(PlatformDescriptor {
+    physical_width: window.inner_size().width,
+    physical_height: window.inner_size().height,
+    scale_factor: window.scale_factor(),
+    font_definitions: egui::FontDefinitions::default(),
+    style: Default::default(),
+});
+
+// Initialize WGPS
+let instance = wgpu::Instance::new(wgpu::Backends::PRIMARY);
+let surface = unsafe { instance.create_surface(&window) };
+let adapter = futures::executor::block_on(instance.request_adapter(&wgpu::RequestAdapterOptions {
+    power_preference: wgpu::PowerPreference::HighPerformance,
+    compatible_surface: Some(&surface),
+})).unwrap();
+
+let (device, queue) = futures::executor::block_on(adapter.request_device(&wgpu::DeviceDescriptor {
+    features: wgpu::Features::empty(),
+    limits: wgpu::Limits::default(),
+    label: None,
+}, None)).unwrap();
+
+let surface_format = surface.get_supported_formats(&adapter)[0];
+let mut config = wgpu::SurfaceConfiguration {
+    usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
+    format: surface_format,
+    width: window.inner_size().width,
+    height: window.inner_size().height,
+    present_mode: wgpu::PresentMode::Fifo,
+};
+surface.configure(&device, &config);
+
+let mut egui_rpass = RenderPass::new(&device, surface_format, 1);
+
+event_loop.run(move |event, _, control_flow| {
+    *control_flow = ControlFlow::Poll;
+
+    platform.handle_event(&event);
+
+    match event {
+        Event::WindowEvent { event, .. } => match event {
+            WindowEvent::CloseRequested => *control_flow = ControlFlow::Exit,
+            WindowEvent::Resized(size) => {
+                config.width = size.width;
+                config.height = size.height;
+                surface.configure(&device, &config);
+            }
+            WindowEvent::ScaleFactorChanged { new_inner_size, .. } => {
+                config.width = new_inner_size.width;
+                config.height = new_inner_size.height;
+                surface.configure(&device, &config);
+            }
+            _ => (),
+        },
+        Event::RedrawRequested(_) => {
+            platform.update_time();
+
+            let output = platform.end_frame(Some(&window));
+            let paint_jobs = platform.context().tessellate(output.shapes);
+
+            let mut encoder = device.create_command_encoder(&wgpu::CommandEncoderDescriptor {
+                label: Some("encoder"),
+            });
+
+            let screen_descriptor = ScreenDescriptor {
+                physical_width: config.width,
+                physical_height: config.height,
+                scale_factor: window.scale_factor() as f32,
+            };
+
+            egui_rpass.update_texture(&device, &queue, &output.textures_delta);
+            egui_rpass.update_user_textures(&device, &queue);
+            egui_rpass.update_buffers(&device, &queue, &mut encoder, &paint_jobs, &screen_descriptor);
+
+            {
+                let frame = surface
+                    .get_current_texture()
+                    .expect("Failed to acquire next swap chain texture");
+                let view = frame
+                    .texture
+                    .create_view(&wgpu::TextureViewDescriptor::default());
+                egui_rpass.execute(
+                    &mut encoder,
+                    &view,
+                    &paint_jobs,
+                    &screen_descriptor,
+                    Some(wgpu::Color::BLACK),
+                );
+
+                queue.submit(std::iter::once(encoder.finish()));
+                frame.present();
+            }
+        }
+        _ => (),
+    }
+});

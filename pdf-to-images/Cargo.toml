@@ -1,0 +1,21 @@
+[package]
+name = "pdf-to-images"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+poppler       = { version = "*", features = ["render"] }
+#egui-wgpu     = { version = "*", features = [ "winit" ] }
+egui              = "*"
+egui-winit        = "*"
+image             = "*"
+export-magic      = "*"
+winit             = "*"
+cairo-rs          = "*"
+error-tree        = "*"
+futures           = "*"
+vulkano           = "*"
+vulkano-shaders   = "*"
+raw-window-handle = "*"
+objc_id           = "*"
+objc              = "*"

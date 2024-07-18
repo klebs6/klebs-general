@@ -1,0 +1,33 @@
+#!/usr/bin/env raku
+use Config::TOML;
+use File::Find;
+use Data::Dump::Tree;
+
+my $preamble = qq:to/END/;
+This is a workspace for crates which are broadly useful across a variety of projects. 
+
+Here we have the following crates:
+END
+
+my @cargo-tomls = 
+find(dir => ".", :recursive)
+.grep(/Cargo.toml/)
+.grep({ $_ !~~ /target|vendor/});
+
+say $preamble;
+
+for @cargo-tomls -> $cargo-toml {
+    my $crate-name = $cargo-toml.Str.split("/")[0];
+    my %cargo-toml = from-toml($cargo-toml.IO.slurp);
+    my $crate-description = %cargo-toml{"package"}{"description"};
+
+    if $crate-description.Bool {
+
+        my $item = qq:to/END/;
+        ### `$crate-name`
+        - $crate-description
+        END
+
+        say $item;
+    }
+}
