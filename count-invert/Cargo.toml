@@ -1,0 +1,15 @@
+[package]
+name = "count-invert"
+version = "0.1.0"
+edition = "2021"
+
+description = "A Rust crate providing utility functions for counting elements in a vector and inverting a HashMap based on those counts."
+license = "MIT"
+authors = ["klebs tpk3.mx@gmail.com"]
+keywords = ["utility", "shorthand", "maps", "counting"]
+repository = "https://github.com/klebs6/klebs-general"
+documentation = "https://docs.rs/count-invert"
+
+[dependencies]
+itertools = "0.13.0"
+
