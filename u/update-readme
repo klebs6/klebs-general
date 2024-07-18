@@ -12,7 +12,8 @@ END
 my @cargo-tomls = 
 find(dir => ".", :recursive)
 .grep(/Cargo.toml/)
-.grep({ $_ !~~ /target|vendor/});
+.grep({ $_ !~~ /target|vendor/})
+.sort;
 
 say $preamble;
 
