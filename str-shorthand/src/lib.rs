@@ -1,1 +1,1 @@
-mod bisect; pub use bisect::bisect;
+mod bisect; pub use bisect::Bisect;
