@@ -14,5 +14,6 @@ export-magic = "0.3.6"
 traced-test = "0.3.6"
 tracing = { version = "0.1.40", features = ["log"] }
 tracing-subscriber = { version = "0.3", default-features = false, features = ["fmt", "std", "env-filter"] }
+tracing-appender = "0.2"
 colored = "2.1.0"
 env_logger = "0.11.3"

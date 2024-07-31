@@ -1,66 +1,117 @@
 crate::ix!();
 
-use system::*;
+pub struct FileLoggingConfiguration {
+    pub log_path: Option<PathBuf>,
+    pub log_level: Level,
+    pub rotation: Option<Rotation>,
+}
 
-pub fn init_file_logging() {
+impl Default for FileLoggingConfiguration {
+    fn default() -> Self {
+        Self {
+            log_path: Some(PathBuf::from("default.log")),
+            log_level: Level::INFO,
+            rotation: Some(Rotation::DAILY),
+        }
+    }
+}
 
-    let logpath = std::env::var("LOGFILE").ok();
-    let logflag = std::env::var("LOGFLAG").ok();
+impl FileLoggingConfiguration {
+    pub fn new(log_path: Option<PathBuf>, log_level: Level, rotation: Option<Rotation>) -> Self {
+        Self {
+            log_path,
+            log_level,
+            rotation,
+        }
+    }
 
-    let msg = format!{
-        "in function init_file_logging with LOGFILE={} and LOGFLAG={}",
-        logpath.as_ref().unwrap(),
-        logflag.as_ref().unwrap(),
-    };
+    pub fn create_writer(&self) -> BoxMakeWriter {
+        match &self.log_path {
+            Some(log_path) => {
+                if let Some(rotation) = &self.rotation {
+                    let file_appender = RollingFileAppender::new(rotation.clone(), ".", log_path);
+                    BoxMakeWriter::new(file_appender)
+                } else {
+                    let file = File::create(log_path).expect("Could not create log file");
+                    BoxMakeWriter::new(Arc::new(file))
+                }
+            }
+            None => BoxMakeWriter::new(io::stderr),
+        }
+    }
+}
 
-    let file = match logpath {
-        Some(p) => match File::create(p) {
-            Ok(f)  => Some(f),
-            Err(_e) => None,
-        },
-        None    => None,
-    };
+pub fn init_file_logging(config: FileLoggingConfiguration) {
+    let writer = config.create_writer();
 
-    let writer = match file {
-        Some(file) => BoxMakeWriter::new(Arc::new(file)),
-        None       => BoxMakeWriter::new(io::stderr),
-    };
+    let env_filter = std::env::var("LOGFLAG").unwrap_or_else(|_| "info".to_string());
 
-    // a builder for `FmtSubscriber`.
     let subscriber = FmtSubscriber::builder()
-        // all spans/events with a level higher
-        // than TRACE (e.g, debug, info, warn,
-        // etc.) will be written to stdout.
-        .with_max_level(Level::TRACE)
-        .with_env_filter(EnvFilter::from_env("LOGFLAG"))
-        .json()
+        .with_max_level(config.log_level)
+        .with_env_filter(EnvFilter::new(env_filter))
         .with_writer(writer)
-        // completes the builder.
         .finish();
 
     tracing::subscriber::set_global_default(subscriber)
         .expect("setting default subscriber failed");
 
-    tracing::info!("test trace info from get-me-tables!");
+    tracing::info!("Logging initialized with file rotation");
 }
 
-/*
-pub fn alt_setup_logging() {
-
-    // Configure a custom event formatter
-    let format = fmt::format()
-        .json()
-        .with_level(false)       // don't include levels in formatted output
-        .with_target(false)      // don't include targets
-        .with_thread_ids(true)   // include the thread ID of the current thread
-        .with_thread_names(true) // include the name of the current thread
-        .compact();              // use the `Compact` formatting style.
-
-    // Create a `fmt` subscriber that uses our
-    // custom event format, and set it as the
-    // default.
-    tracing_subscriber::fmt()
-        .event_format(format)
-        .init();
+pub fn init_default_file_logging() {
+    let config = FileLoggingConfiguration::default();
+    init_file_logging(config);
 }
-*/
+
+#[cfg(test)]
+mod file_logging_tests {
+    use super::*;
+    use std::fs;
+    use std::path::PathBuf;
+    use tracing_subscriber::fmt::MakeWriter;
+
+    #[test]
+    fn test_create_writer_with_rotation() {
+        let config = FileLoggingConfiguration::new(
+            Some(PathBuf::from("test_rotation.log")),
+            Level::DEBUG,
+            Some(Rotation::DAILY),
+        );
+        let writer = config.create_writer();
+        // Verify the writer is created successfully
+        let _ = writer.make_writer();
+        // Clean up
+        let _ = fs::remove_file("test_rotation.log");
+    }
+
+    #[test]
+    fn test_create_writer_without_rotation() {
+        let config = FileLoggingConfiguration::new(
+            Some(PathBuf::from("test_no_rotation.log")),
+            Level::DEBUG,
+            None,
+        );
+        let writer = config.create_writer();
+        // Verify the writer is created successfully
+        let _ = writer.make_writer();
+        // Clean up
+        let _ = fs::remove_file("test_no_rotation.log");
+    }
+
+    #[test]
+    fn test_default_logging_configuration() {
+        let config = FileLoggingConfiguration::default();
+        assert_eq!(config.log_path.unwrap().to_str(), Some("default.log"));
+        assert_eq!(config.log_level, Level::INFO);
+        assert!(matches!(config.rotation, Some(Rotation::DAILY)));
+    }
+
+    #[test]
+    fn test_init_file_logging_with_defaults() {
+        init_default_file_logging();
+        tracing::info!("This is a default log message.");
+        tracing::debug!("This is a debug message, but won't appear with default level.");
+        // Clean up
+        let _ = fs::remove_file("default.log");
+    }
+}

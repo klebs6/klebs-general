@@ -18,7 +18,8 @@ pub struct GptRequestBody {
 impl GptRequestBody {
 
     pub fn default_max_tokens() -> u32 {
-        1024 
+        //1024 
+        2048
     }
 
     pub fn default_max_tokens_given_image(_image_b64: &str) -> u32 {
