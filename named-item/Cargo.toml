@@ -1,0 +1,8 @@
+[dependencies]
+export-magic = "*"
+regex = "*"
+language-enum = "*"
+[package]
+edition = "2021"
+name = "named-item"
+version = "0.1.0"
