@@ -3,6 +3,7 @@ export-magic = "0.3.6"
 regex = "1.10.6"
 language-enum = "0.1.0"
 [package]
+description = "A crate providing traits for managing named items, including support for aliases, name history, validation, and more."
 edition = "2021"
 authors = ["klebs tpk3.mx@gmail.com"]
 license = "MIT OR Apache-2.0"
