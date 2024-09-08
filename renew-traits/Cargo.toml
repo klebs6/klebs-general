@@ -9,4 +9,4 @@ description = "A collection of utility traits for initializing, filling, and man
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/klebs6/klebs-general"
 keywords = ["collections", "initialization", "utility", "traits"]
-categories = ["data-structures", "utilities"]
+categories = ["data-structures"]
