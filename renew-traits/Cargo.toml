@@ -1,0 +1,12 @@
+[dependencies]
+export-magic = "0.3.6"
+[package]
+name = "renew-traits"
+version = "0.1.0"
+authors = ["klebs tpk3.mx@gmail.com"]
+edition = "2021"
+description = "A collection of utility traits for initializing, filling, and managing collections or data structures."
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/klebs6/klebs-general"
+keywords = ["collections", "initialization", "utility", "traits"]
+categories = ["data-structures", "utilities"]
