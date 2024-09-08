@@ -26,8 +26,17 @@ Here we have the following crates:
 ### `gpt-batch-scribe`
 - contains the GptBatchAPIRequest struct which helps create gpt4 batch requests.
 
+### `language-enum`
+- A robust enum representing languages for global and regional applications.
+
+### `named-item`
+- A crate providing traits for managing named items, including support for aliases, name history, validation, and more.
+
 ### `pbx`
 - pbx is a Rust crate providing convenient macros and utility functions for creating and managing boxed, atomic reference-counted, and default-initialized values. The crate simplifies common patterns in Rust, especially useful in asynchronous programming, concurrent access, and interfacing with C libraries.
+
+### `renew-traits`
+- A collection of utility traits for initializing, filling, and managing collections or data structures.
 
 ### `resume-generator`
 - does what it says. quick way to generate a latex resume
