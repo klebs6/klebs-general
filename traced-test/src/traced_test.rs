@@ -1,5 +1,9 @@
 crate::ix!();
 
+pub(crate) fn is_async_function(function: &syn::ItemFn) -> bool {
+    function.sig.asyncness.is_some()
+}
+
 pub(crate) fn ensure_no_test_attribute(function: &ItemFn) -> Result<(), TokenStream> {
     let has_test_attr = function.attrs.iter().any(|attr| attr.path().is_ident("test"));
 
