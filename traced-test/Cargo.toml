@@ -5,7 +5,8 @@ version = "0.4.0"
 description = "this crate lets us use #[traced_test] to automatically configure sane default tracing for a rust test"
 license = "MIT"
 authors = [ "klebs tpk3.mx@gmail.com" ]
-categories = ["development-tools", "macros", "testing"]
+categories = ["development-tools"]
+keywords = ["macros", "testing"]
 repository = "https://github.com/klebs6/klebs-general"
 
 [dependencies]
