@@ -4,16 +4,9 @@ pub(crate) fn is_async_function(function: &syn::ItemFn) -> bool {
     function.sig.asyncness.is_some()
 }
 
-pub(crate) fn ensure_no_test_attribute(function: &ItemFn) -> Result<(), TokenStream> {
-    let has_test_attr = function.attrs.iter().any(|attr| attr.path().is_ident("test"));
-
-    if has_test_attr {
-        Err(TokenStream::from(quote! {
-            compile_error!("The `traced_test` attribute should be used in place of `#[test]`, not alongside it.");
-        }))
-    } else {
-        Ok(())
-    }
+/// Retain the original attributes and remove the `test` attribute
+pub(crate) fn all_attributes_except_test(function: &syn::ItemFn) -> Vec<syn::Attribute> {
+    function.attrs.iter().filter(|attr| !attr.path().is_ident("test")).cloned().collect()
 }
 
 pub(crate) fn is_return_type_result(function: &syn::ItemFn) -> bool {
@@ -29,48 +22,69 @@ pub(crate) fn is_return_type_result(function: &syn::ItemFn) -> bool {
     }
 }
 
-pub(crate) fn generate_traced_block(
-    function_returns_result: bool, 
-    original_block: &syn::Block, 
-    test_name: &str
-
+pub(crate) fn generate_test_block(
+    function_is_async: bool,
+    function_returns_result: bool,
+    original_block: &syn::Block,
+    test_name: &str,
 ) -> proc_macro2::TokenStream {
-
-    quote!({
-
-        use tracing::*;
-        use std::panic::AssertUnwindSafe;
-
-        let local_subscriber = setup_buffered_tracing(Some(#test_name));
-        let local_subscriber_clone = local_subscriber.clone();
-        let _guard = tracing::subscriber::set_default(local_subscriber.clone());
-
-        let span = span!(Level::INFO, "test_trace", test_name = #test_name);
-
-        let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-            let outcome = span.in_scope(|| {
-                #original_block
-            });
-            if let Err(_) = &outcome {
-                local_subscriber_clone.flush();
-            }
-            outcome
-        }));
-
-        if result.is_err() {
-            local_subscriber.flush();
-        }
-        result.unwrap()
-    })
-}
-
-/// Retain the original attributes and remove the `test` attribute
-pub(crate) fn all_attributes_except_test(function: &syn::ItemFn) -> Vec<syn::Attribute> {
-    function.attrs.iter().filter(|attr| !attr.path().is_ident("test")).cloned().collect()
+    match (function_is_async, function_returns_result) {
+        (true, true)   => generate_traced_block_async_with_result(original_block, test_name),
+        (true, false)  => generate_traced_block_async_no_result(original_block, test_name),
+        (false, true)  => generate_traced_block_sync_with_result(original_block, test_name),
+        (false, false) => generate_traced_block_sync_no_result(original_block, test_name),
+    }
 }
 
 pub(crate) fn parse_or_compile_error(block: proc_macro2::TokenStream) -> syn::Block {
     syn::parse2(block).unwrap_or_else(|e| {
         panic!("Failed to parse block: {}", e);
     })
+}
+
+pub(crate) fn generate_function_with_test_attr(
+    function_is_async: bool,
+    attrs: &[syn::Attribute],
+    function: &syn::ItemFn,
+) -> proc_macro2::TokenStream {
+    if function_is_async {
+        quote! {
+            #(#attrs)*
+            #[tokio::test]
+            #function
+        }
+    } else {
+        quote! {
+            #(#attrs)*
+            #[test]
+            #function
+        }
+    }
+}
+
+pub(crate) fn ensure_no_test_attribute(function: &ItemFn) -> Result<(), TokenStream> {
+    let has_test_attr = function.attrs.iter().any(|attr| attr.path().is_ident("test") || attr.path().is_ident("tokio::test"));
+
+    if has_test_attr {
+        Err(TokenStream::from(quote! {
+            compile_error!("The `traced_test` attribute should be used in place of `#[test]` or `#[tokio::test]`, not alongside them.");
+        }))
+    } else {
+        Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+
+    #[test]
+    fn test_error_handling_in_proc_macro() {
+        // Intentionally trigger the error condition in ensure_no_test_attribute
+        let function = syn::parse_quote! {
+            #[test]
+            fn sample_test() {}
+        };
+
+        assert!(crate::ensure_no_test_attribute(&function).is_err());
+    }
 }
