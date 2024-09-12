@@ -138,7 +138,7 @@ Add `traced-test` to your `Cargo.toml` dependencies:
 
 ```toml
 [dependencies]
-traced-test = "0.1"
+traced-test = "0.5"
 ```
 
 ## License
