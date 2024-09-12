@@ -12,6 +12,8 @@ repository = "https://github.com/klebs6/klebs-general"
 [dependencies]
 syn = "2.0.52"
 quote = "1.0"
+error-tree = "*"
+named-item = "*"
 proc-macro2 = "1.0"
 export-magic = "0.3.1"
 tracing = "0.1.40"
@@ -21,7 +23,6 @@ tracing-subscriber = { version = "0.3", default-features = false, features = ["f
 proc-macro = true
 
 [dev-dependencies]
-tracing-setup = "*"
-traced-test = "*"
 tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
 tracing = "0.1"
+tracing-setup = "*"

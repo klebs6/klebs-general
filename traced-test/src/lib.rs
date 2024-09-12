@@ -1,40 +1,34 @@
+#![allow(dead_code)]
+#![allow(unused_imports)]
 extern crate proc_macro;
 
 #[macro_use] mod imports; use imports::*;
 
+xp!{check_is_function_async}
+xp!{ensure_item_has_no_test_attribute}
+xp!{errors}
+xp!{extract_all_attributes_except_test_attribute}
+xp!{is_return_type_result}
+xp!{is_test_attribute}
+xp!{should_panic}
 xp!{traced_test}
-xp!{sync_test_block}
-xp!{async_test_block}
+xp!{generate_new_block}
 
 #[proc_macro_attribute]
 pub fn traced_test(_attr: TokenStream, item: TokenStream) -> TokenStream {
+
+    let item_fn = parse_macro_input!(item as ItemFn);
+
     // Parse the input tokens into a syntax tree
-    let mut function = parse_macro_input!(item as ItemFn);
+    let generator = match TracedTestGenerator::new(item_fn) {
+        Ok(test) => test,
+        Err(e)   => panic!("traced_test generator error: {:#?}", e),
+    };
 
-    ensure_no_test_attribute(&function).unwrap();
+    let output = match generator.write() {
+        Ok(output_fn) => output_fn,
+        Err(e) => panic!("traced_test generator error: {:#?}", e),
+    };
 
-    let name = function.sig.ident.to_string();
-
-    let attrs = all_attributes_except_test(&function);
-
-    // Determine if the function is async or not
-    let function_is_async = is_async_function(&function);
-
-    // Determine if the return type is Result<T, E>
-    let function_returns_result = is_return_type_result(&function);
-
-    // Use the generate_test_block to delegate between async/sync traced blocks
-    let new_block = generate_test_block(
-        function_is_async,
-        function_returns_result,
-        &function.block,
-        &name,
-    );
-
-    function.block = Box::new(parse_or_compile_error(new_block));
-
-    // Generate the modified function with the correct test attribute
-    let output_fn = generate_function_with_test_attr(function_is_async, &attrs, &function);
-
-    output_fn.into()
+    output.into()
 }

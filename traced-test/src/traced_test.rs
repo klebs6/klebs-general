@@ -1,90 +1,94 @@
 crate::ix!();
 
-pub(crate) fn is_async_function(function: &syn::ItemFn) -> bool {
-    function.sig.asyncness.is_some()
+pub struct TracedTestGenerator {
+    orig:           ItemFn,
+    name:           String,
+    attrs:          Vec<syn::Attribute>,
+
+    /// does the orig function have `should_panic`
+    should_panic:   Option<ShouldPanicAttr>,
+
+    /// is the orig function async or not
+    is_async:       bool,
+
+    /// is the return type Result<T, E>
+    returns_result: bool,
 }
 
-/// Retain the original attributes and remove the `test` attribute
-pub(crate) fn all_attributes_except_test(function: &syn::ItemFn) -> Vec<syn::Attribute> {
-    function.attrs.iter().filter(|attr| !attr.path().is_ident("test")).cloned().collect()
-}
+impl IsAsync for TracedTestGenerator {
 
-pub(crate) fn is_return_type_result(function: &syn::ItemFn) -> bool {
-    match &function.sig.output {
-        syn::ReturnType::Type(_, ty) => {
-            if let syn::Type::Path(type_path) = &**ty {
-                type_path.path.segments.last().map_or(false, |segment| segment.ident == "Result")
-            } else {
-                false
-            }
-        },
-        _ => false,
+    fn is_async(&self) -> bool {
+        self.is_async
     }
 }
 
-pub(crate) fn generate_test_block(
-    function_is_async: bool,
-    function_returns_result: bool,
-    original_block: &syn::Block,
-    test_name: &str,
-) -> proc_macro2::TokenStream {
-    match (function_is_async, function_returns_result) {
-        (true, true)   => generate_traced_block_async_with_result(original_block, test_name),
-        (true, false)  => generate_traced_block_async_no_result(original_block, test_name),
-        (false, true)  => generate_traced_block_sync_with_result(original_block, test_name),
-        (false, false) => generate_traced_block_sync_no_result(original_block, test_name),
+impl ReturnsResult for TracedTestGenerator {
+
+    fn returns_result(&self) -> bool {
+        self.returns_result
     }
 }
 
-pub(crate) fn parse_or_compile_error(block: proc_macro2::TokenStream) -> syn::Block {
-    syn::parse2(block).unwrap_or_else(|e| {
-        panic!("Failed to parse block: {}", e);
-    })
-}
+impl HasPanicMessage for TracedTestGenerator {
 
-pub(crate) fn generate_function_with_test_attr(
-    function_is_async: bool,
-    attrs: &[syn::Attribute],
-    function: &syn::ItemFn,
-) -> proc_macro2::TokenStream {
-    if function_is_async {
-        quote! {
-            #(#attrs)*
-            #[tokio::test]
-            #function
-        }
-    } else {
-        quote! {
-            #(#attrs)*
-            #[test]
-            #function
+    fn panic_message(&self) -> Cow<'_,str> {
+        match self.should_panic {
+            Some(ref should) => should.panic_message(),
+            None => Cow::from(format!("This test panicked! name={}",self.name())),
         }
     }
 }
 
-pub(crate) fn ensure_no_test_attribute(function: &ItemFn) -> Result<(), TokenStream> {
-    let has_test_attr = function.attrs.iter().any(|attr| attr.path().is_ident("test") || attr.path().is_ident("tokio::test"));
-
-    if has_test_attr {
-        Err(TokenStream::from(quote! {
-            compile_error!("The `traced_test` attribute should be used in place of `#[test]` or `#[tokio::test]`, not alongside them.");
-        }))
-    } else {
-        Ok(())
+impl Named for TracedTestGenerator {
+    fn name(&self) -> Cow<'_,str> {
+        Cow::Borrowed(&self.name)
     }
 }
 
-#[cfg(test)]
-mod tests {
+impl TracedTestGenerator {
 
-    #[test]
-    fn test_error_handling_in_proc_macro() {
-        // Intentionally trigger the error condition in ensure_no_test_attribute
-        let function = syn::parse_quote! {
-            #[test]
-            fn sample_test() {}
+    pub fn original_block(&self) -> Box<syn::Block> {
+        self.orig.block.clone()
+    }
+
+    pub fn new(orig: ItemFn) -> Result<Self,TracedTestError> {
+
+        orig.ensure_no_test_attribute()?;
+
+        let attrs          = orig.extract_all_attributes_except_test_attribute();
+        let should_panic   = attrs.as_slice().maybe_get_should_panic_attr()?;
+        let name           = orig.sig.ident.to_string();
+        let is_async       = orig.is_async();
+        let returns_result = orig.returns_result();
+
+        Ok(Self {
+            orig,
+            name,
+            attrs,
+            should_panic,
+            is_async,
+            returns_result,
+        })
+    }
+
+    pub fn write(&self) -> Result<TokenStream2,TracedTestError> {
+
+        let test_attr = match self.is_async {
+            true  => quote! { #[tokio::test] },
+            false => quote! { #[test] },
         };
 
-        assert!(crate::ensure_no_test_attribute(&function).is_err());
+        let mut traced_test = self.orig.clone();
+        traced_test.block   = self.generate_new_block()?;
+
+        let attrs       = &self.attrs;
+
+        let output_fn = quote! {
+            #(#attrs)*
+            #test_attr
+            #traced_test
+        };
+
+        Ok(output_fn)
     }
 }
