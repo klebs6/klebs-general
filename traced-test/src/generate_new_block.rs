@@ -11,29 +11,29 @@ impl GenerateNewBlock for TracedTestGenerator {
 
     type Error = TracedTestError;
 
-    fn generate_new_block(&self) -> Result<Box<syn::Block>,Self::Error> {
+    fn generate_new_block(&self) -> Result<Box<syn::Block>, Self::Error> {
 
         let new_use_statements               = self.use_statements_for_new_block();
-        let setup_local_subscriber_and_clone = self.setup_local_subscriber_and_clone();
+        let setup_local_subscriber_and_clone = self.setup_local_subscriber();
         let setup_info_level_span            = self.setup_info_level_span();
-        let captured_result                  = self.captured_result_from_the_original_block();
-        let maybe_unwrap_result              = self.maybe_unwrap_result();
+        let captured_result                  = self.wrap_the_original_block()?;
+        let result_handling_tokens           = self.result_handling_tokens();
+        let flush_tracing                    = self.maybe_flush_tracing();
 
         // Generate the test block
-        let new_block = quote!{{
+        let new_block = quote! {
+            {
+                #new_use_statements
+                #setup_local_subscriber_and_clone
+                #setup_info_level_span
 
-            #new_use_statements
-            #setup_local_subscriber_and_clone
-            #setup_info_level_span
+                let result = #captured_result;
 
-            let result = #captured_result ;
+                #flush_tracing
 
-            if result.is_err() {
-                local_subscriber.flush();
+                #result_handling_tokens
             }
-
-            #maybe_unwrap_result
-        }};
+        };
 
         Ok(Box::new(parse_or_compile_error(new_block)?))
     }
@@ -41,59 +41,21 @@ impl GenerateNewBlock for TracedTestGenerator {
 
 impl TracedTestGenerator {
 
-    fn maybe_unwrap_result(&self) -> TokenStream2 {
+    fn maybe_flush_tracing(&self) -> TokenStream2 {
 
-        let panic_message = self.panic_message();
+        // Check if we should flush the local subscriber
+        let should_flush = if let Some(ref should_fail_attr) = self.should_fail_attr() {
+            !should_fail_attr.should_trace()
+        } else {
+            true // Default behavior
+        };
 
-        match self.returns_result() {
-            true => {
-                quote!({
-                    match result {
-                        Ok(res) => {
-                            local_subscriber.flush();
-                            res // Ensure the result is returned properly
-                        }
-                        Err(_) => {
-                            local_subscriber.flush();
-                            panic!("{}", #panic_message); // Explicit panic on unexpected error
-                        }
-                    }
-                })
-            },
-            false => {
-                quote!{{
-                    if result.is_err() {
-                        local_subscriber.flush();
-                        panic!("{}", #panic_message); // Explicit panic on unexpected error
-                    }
-                }}
+        if should_flush {
+            quote! {
+                local_subscriber.flush();
             }
-        }
-    }
-
-    fn captured_result_from_the_original_block(&self) -> TokenStream2 {
-
-        let original_block = self.original_block();
-
-        match self.is_async() {
-
-            true => quote!{{
-
-                let task = async move {
-                    span.in_scope(|| #original_block)
-                };
-                task::spawn(task).await
-
-            }},
-
-            false => quote!{{
-
-                let task = || {
-                    span.in_scope(|| #original_block)
-                };
-
-                std::panic::catch_unwind(AssertUnwindSafe(task))
-            }}
+        } else {
+            quote! {}
         }
     }
 
@@ -106,7 +68,7 @@ impl TracedTestGenerator {
         }
     }
 
-    fn setup_local_subscriber_and_clone(&self) -> TokenStream2 {
+    fn setup_local_subscriber(&self) -> TokenStream2 {
 
         let test_name = self.name();
 

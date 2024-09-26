@@ -22,7 +22,7 @@ impl ReturnsResult for syn::ItemFn {
 }
 
 #[cfg(test)]
-mod tests {
+mod check_return_type_tests {
     use super::*;
     use syn::{ItemFn, parse_quote};
 

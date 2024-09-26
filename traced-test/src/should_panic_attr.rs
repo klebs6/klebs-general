@@ -1,12 +1,19 @@
 crate::ix!();
 
-#[derive(Clone,Debug)]
+#[derive(Clone, Debug)]
 pub struct ShouldPanicAttr {
-    expected: String,
+    expected: Option<String>,
 }
 
-//--------------------------------------------[try-from-attribute]
+impl MaybeHasPanicMessage for ShouldPanicAttr {
+
+    fn panic_message(&self) -> Option<Cow<'_, str>> {
+        self.expected.as_deref().map(Cow::Borrowed)
+    }
+}
+
 impl TryFrom<syn::Attribute> for ShouldPanicAttr {
+
     type Error = ShouldPanicAttrError;
 
     fn try_from(attr: syn::Attribute) -> Result<Self, Self::Error> {
@@ -14,57 +21,44 @@ impl TryFrom<syn::Attribute> for ShouldPanicAttr {
             return Err(ShouldPanicAttrError::NotShouldPanicAttr);
         }
 
-        let mut parsed_attr = None;
+        // Check if the attribute has no arguments (no parentheses)
+        if let syn::Meta::Path(_) = attr.meta {
+            // No arguments, so expected is None
+            return Ok(ShouldPanicAttr { expected: None });
+        }
 
-        // Parse the nested meta attributes
-        attr.parse_nested_meta(|meta| {
-            if meta.path.is_ident("expected") {
-                // Attempt to extract the value
-                let value = meta.value();
-                // Check if the value is missing
-                if value.is_err() {
-                    return Err(syn::Error::new(meta.input.span(), "Invalid expected value format"));
-                }
-
-                // Parse the value into a literal
-                let lit = value?.parse::<syn::Lit>()?;
-                if let syn::Lit::Str(lit_str) = lit {
-                    parsed_attr = Some(ShouldPanicAttr {
-                        expected: lit_str.value(),
-                    });
-                    return Ok(());
-                } else {
-                    // If the value is not a string literal, raise InvalidExpectedValueFormat
-                    return Err(syn::Error::new(meta.input.span(), "Invalid expected value format"));
-                }
+        // Otherwise, parse the arguments
+        let parser = |input: ParseStream| {
+            let ident: Ident = input.parse()?;
+            if ident != "expected" {
+                return Err(syn::Error::new(ident.span(), "unknown key, expected `expected`"));
             }
-
-            // If the `expected` key was not found, raise ExpectedValueMissing
-            Err(syn::Error::new(meta.input.span(), "expected key not found"))
-        })
-        // Convert syn::Error to ShouldPanicAttrError using map_err
-        .map_err(|err| {
-            if err.to_string().contains("Invalid expected value format") {
-                ShouldPanicAttrError::InvalidExpectedValueFormat
+            input.parse::<Token![=]>()?;
+            let lit: syn::Lit = input.parse()?;
+            if let syn::Lit::Str(lit_str) = lit {
+                Ok(ShouldPanicAttr {
+                    expected: Some(lit_str.value()),
+                })
             } else {
-                ShouldPanicAttrError::ExpectedValueMissing
+                Err(syn::Error::new(lit.span(), "expected string literal for `expected` value"))
             }
-        })?;
+        };
 
-        parsed_attr.ok_or(ShouldPanicAttrError::ExpectedValueMissing)
+        attr.parse_args_with(parser).map_err(|err| {
+            let msg = err.to_string();
+            if msg.contains("expected string literal for `expected` value") {
+                ShouldPanicAttrError::InvalidExpectedValueFormat
+            } else if msg.contains("expected `=`") || msg.contains("expected string literal") || msg.contains("unexpected end of input") {
+                ShouldPanicAttrError::ExpectedValueMissing
+            } else {
+                ShouldPanicAttrError::MetaParseError(err)
+            }
+        })
     }
 }
 
 //--------------------------------------------[extract-from-attributes]
-pub trait CheckForAndRetrieveTheUniqueShouldPanicAttr {
-
-    /// Returns `Some(ShouldPanicAttr)` if the attribute is found.
-    /// Returns `Err` if there's a duplicate or any other error while parsing.
-    fn maybe_get_should_panic_attr(&self) -> Result<Option<ShouldPanicAttr>, ShouldPanicAttrError>;
-}
-
 impl CheckForAndRetrieveTheUniqueShouldPanicAttr for &[syn::Attribute] {
-
     fn maybe_get_should_panic_attr(&self) -> Result<Option<ShouldPanicAttr>, ShouldPanicAttrError> {
         let mut should_panic_attr = None;
 
@@ -85,25 +79,38 @@ impl CheckForAndRetrieveTheUniqueShouldPanicAttr for &[syn::Attribute] {
     }
 }
 
-//--------------------------------------------[has-panic-message]
-pub trait HasPanicMessage {
-
-    fn panic_message(&self) -> Cow<'_,str>;
-}
-
-impl HasPanicMessage for ShouldPanicAttr {
-
-    fn panic_message(&self) -> Cow<'_,str> {
-        Cow::Borrowed(&self.expected)
-    }
-}
-
-
-//--------------------------------------------[tests]
 #[cfg(test)]
-mod should_panic_attr_tests {
+mod retrieve_should_panic_attr_tests {
+    use crate::ShouldPanicAttrError;
     use super::*;
     use syn::{Attribute, parse_quote};
+
+    #[test]
+    fn test_should_panic_attr_missing_expected_key() {
+        let attrs: Vec<Attribute> = vec![
+            parse_quote!(#[should_panic]),
+        ];
+
+        let result = attrs.as_slice().maybe_get_should_panic_attr();
+        assert!(result.is_ok());
+        let attr = result.unwrap();
+        assert!(attr.is_some());
+        assert!(attr.unwrap().expected.is_none());
+    }
+
+    #[test]
+    fn test_should_panic_attr_with_missing_expected_value() {
+        let attrs: Vec<Attribute> = vec![
+            parse_quote!(#[should_panic(expected)]),
+        ];
+
+        let result = attrs.as_slice().maybe_get_should_panic_attr();
+        assert!(result.is_err());
+        if let Err(ShouldPanicAttrError::ExpectedValueMissing) = result {
+        } else {
+            panic!("Expected ExpectedValueMissing error");
+        }
+    }
 
     #[test]
     fn test_single_should_panic_attr_with_expected() {
@@ -115,7 +122,7 @@ mod should_panic_attr_tests {
         assert!(result.is_ok());
         let attr = result.unwrap();
         assert!(attr.is_some());
-        assert_eq!(attr.unwrap().expected, "some error");
+        assert_eq!(attr.unwrap().expected.unwrap(), "some error");
     }
 
     #[test]
@@ -129,20 +136,6 @@ mod should_panic_attr_tests {
         if let Err(ShouldPanicAttrError::InvalidExpectedValueFormat) = result {
         } else {
             panic!("Expected InvalidExpectedValueFormat error");
-        }
-    }
-
-    #[test]
-    fn test_should_panic_attr_missing_expected_key() {
-        let attrs: Vec<Attribute> = vec![
-            parse_quote!(#[should_panic]),
-        ];
-
-        let result = attrs.as_slice().maybe_get_should_panic_attr();
-        assert!(result.is_err());
-        if let Err(ShouldPanicAttrError::ExpectedValueMissing) = result {
-        } else {
-            panic!("Expected ExpectedValueMissing error");
         }
     }
 
@@ -195,7 +188,7 @@ mod should_panic_attr_tests {
         assert!(result.is_ok());
         let attr = result.unwrap();
         assert!(attr.is_some());
-        assert_eq!(attr.unwrap().expected, "valid error");
+        assert_eq!(attr.unwrap().expected.unwrap(), "valid error");
     }
 
     #[test]
@@ -208,20 +201,6 @@ mod should_panic_attr_tests {
         assert!(result.is_ok());
         let attr = result.unwrap();
         assert!(attr.is_some());
-        assert_eq!(attr.unwrap().expected, "");
-    }
-
-    #[test]
-    fn test_should_panic_attr_with_missing_expected_value() {
-        let attrs: Vec<Attribute> = vec![
-            parse_quote!(#[should_panic(expected)]),
-        ];
-
-        let result = attrs.as_slice().maybe_get_should_panic_attr();
-        assert!(result.is_err());
-        if let Err(ShouldPanicAttrError::InvalidExpectedValueFormat) = result {
-        } else {
-            panic!("Expected InvalidExpectedValueFormat error");
-        }
+        assert_eq!(attr.unwrap().expected.unwrap(), "");
     }
 }

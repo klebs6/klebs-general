@@ -18,11 +18,13 @@ proc-macro2 = "1.0"
 export-magic = "0.3.1"
 tracing = "0.1.40"
 tracing-subscriber = { version = "0.3", default-features = false, features = ["fmt", "std", "env-filter"] }
+maplit = "*"
 
 [lib]
 proc-macro = true
 
 [dev-dependencies]
-tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
+tokio = { version = "1", features = ["macros", "rt-multi-thread","time"] }
 tracing = "0.1"
 tracing-setup = "0.3.6"
+disable_macro = "*"

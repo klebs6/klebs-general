@@ -17,7 +17,7 @@ impl EnsureItemHasNoTestAttribute for ItemFn {
     }
 
     fn ensure_no_test_attribute(&self) -> Result<(), String> {
-        let has_test_attr = self.attrs.iter().any(|attr| attr.is_test_attribute());
+        let has_test_attr = self.attrs.iter().any(|attr| attr.is_test_attr());
 
         if has_test_attr {
             return Err(Self::generate_error());
@@ -39,7 +39,7 @@ impl EnsureItemHasNoTestAttribute for ItemFn {
     }
 
     fn ensure_no_test_attribute(&self) -> Result<(), Self::Error> {
-        let has_test_attr = self.attrs.iter().any(|attr| attr.is_test_attribute());
+        let has_test_attr = self.attrs.iter().any(|attr| attr.is_test_attr());
 
         if has_test_attr {
             return Err(Self::generate_error());

@@ -2,12 +2,12 @@ crate::ix!();
 
 pub trait IsTestAttribute {
 
-    fn is_test_attribute(&self) -> bool;
+    fn is_test_attr(&self) -> bool;
 }
 
 impl IsTestAttribute for syn::Attribute {
 
-    fn is_test_attribute(&self) -> bool {
+    fn is_test_attr(&self) -> bool {
         if self.path().is_ident("test") {
             return true;
         }
@@ -35,18 +35,18 @@ mod test_is_test_attribute {
     #[test]
     fn test_attr_is_test_attribute_with_test() {
         let attr: Attribute = parse_quote!(#[test]);
-        assert!(attr.is_test_attribute());
+        assert!(attr.is_test_attr());
     }
 
     #[test]
     fn test_attr_is_test_attribute_with_tokio_test() {
         let attr: Attribute = parse_quote!(#[tokio::test]);
-        assert!(attr.is_test_attribute());
+        assert!(attr.is_test_attr());
     }
 
     #[test]
     fn test_attr_is_test_attribute_with_non_test_attribute() {
         let attr: Attribute = parse_quote!(#[some_other_attr]);
-        assert!(!attr.is_test_attribute());
+        assert!(!attr.is_test_attr());
     }
 }
