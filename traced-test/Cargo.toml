@@ -10,7 +10,7 @@ keywords = ["macros", "testing"]
 repository = "https://github.com/klebs6/klebs-general"
 
 [dependencies]
-syn = "2.0.52"
+syn = { version = "2.0.52", features = ["full"] }
 quote = "1.0"
 error-tree = "0.3.6"
 named-item = "0.1.0"
@@ -19,6 +19,7 @@ export-magic = "0.3.1"
 tracing = "0.1.40"
 tracing-subscriber = { version = "0.3", default-features = false, features = ["fmt", "std", "env-filter"] }
 maplit = "*"
+tracing-setup = "0.3.6"
 
 [lib]
 proc-macro = true
@@ -28,3 +29,5 @@ tokio = { version = "1", features = ["macros", "rt-multi-thread","time"] }
 tracing = "0.1"
 tracing-setup = "0.3.6"
 disable_macro = "*"
+trybuild = "1.0"
+

@@ -6,6 +6,7 @@ pub struct AsynchronousTest {
 }
 
 impl AsynchronousTest {
+
     /// Creates a new `AsynchronousTestBuilder`.
     pub fn builder() -> AsynchronousTestBuilder {
         AsynchronousTestBuilder::default()

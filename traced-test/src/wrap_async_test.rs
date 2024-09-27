@@ -4,27 +4,55 @@ impl WrapBlock for AsynchronousTest {
 
     fn wrap_block(&self, generator: &TracedTestGenerator) -> TokenStream2 {
 
-        let original_block   = self.original_block();
-        let tracing_setup    = generator.tracing_setup_tokens();
-        let tracing_teardown = generator.tracing_teardown_tokens();
+        let original_block = self.original_block();
 
         if generator.returns_result() {
+
             let return_type_tokens = generator.return_type_tokens();
 
             quote! {
                 {
-                    #tracing_setup
-                    let result = async move { #original_block }.await;
-                    #tracing_teardown
-                    result
+                    use tracing::Instrument;
+
+                    let handle = tokio::spawn(async {
+                        #original_block
+                    }.instrument(tracing::Span::current()));
+
+                    let result = handle.await;
+                    match result {
+                        Ok(val) => val,
+                        Err(err) => {
+                            if err.is_panic() {
+                                std::panic::resume_unwind(err.into_panic())
+                            } else {
+                                panic!("Task was cancelled");
+                            }
+                        },
+                    }
                 }
             }
+
         } else {
+
             quote! {
                 {
-                    #tracing_setup
-                    #original_block
-                    #tracing_teardown
+                    use tracing::Instrument;
+
+                    let handle = tokio::spawn(async {
+                        #original_block
+                    }.instrument(tracing::Span::current()));
+
+                    let result = handle.await;
+                    match result {
+                        Ok(_) => {},
+                        Err(err) => {
+                            if err.is_panic() {
+                                std::panic::resume_unwind(err.into_panic())
+                            } else {
+                                panic!("Task was cancelled");
+                            }
+                        },
+                    }
                 }
             }
         }
@@ -34,118 +62,82 @@ impl WrapBlock for AsynchronousTest {
 impl WrapBlock for AsynchronousTestShouldFail {
 
     fn wrap_block(&self, generator: &TracedTestGenerator) -> TokenStream2 {
-
-        let original_block   = self.original_block();
-        let expected_message = self.expected_failure_message().unwrap_or(Cow::Borrowed(""));
-        let tracing_setup    = generator.tracing_setup_tokens();
-        let tracing_teardown = generator.tracing_teardown_tokens();
+        let original_block    = self.original_block();
+        let expected_message  = self.expected_failure_message().unwrap_or(Cow::Borrowed(""));
+        let handle_panic_fn   = generator.handle_panic_fn_tokens();
 
         if generator.returns_result() {
-
             let return_type_tokens = generator.return_type_tokens();
 
-            quote! {
+            let tokens = quote! {
                 {
-                    #tracing_setup
+                    use tracing::Instrument;
 
-                    let result: #return_type_tokens = async move { #original_block }.await;
+                    // Specify the return type of the async block
+                    let task = async move {
+                        // Explicitly specify the result type
+                        let result: #return_type_tokens = #original_block;
+                        result
+                    }
+                    .instrument(tracing::Span::current());
 
-                    #tracing_teardown
+                    let handle = tokio::spawn(task);
 
-                    result
+                    // Await the handle, which gives us a Result of the task's output or a JoinError
+                    let result = handle.await;
+
+                    #handle_panic_fn
+
+                    let final_result: #return_type_tokens = match result {
+                        Ok(val)  => val,
+                        Err(err) => {
+                            // The task panicked or was cancelled
+                            if err.is_panic() {
+                                let panic_err = err.into_panic();
+                                handle_panic(panic_err, #expected_message);
+                                // Return the expected error
+                                Err(#expected_message.to_string())
+                            } else {
+                                panic!("Task was cancelled");
+                            }
+                        },
+                    };
+
+                    final_result
                 }
-            }
+            };
 
+            // Optionally, print the generated tokens for debugging
+            // println!("Generated tokens: {}", tokens);
 
+            tokens
         } else {
-
-            let handle_panic_fn = generator.handle_panic_fn_tokens();
-
+            // Existing code for non-Result return types remains unchanged
             quote! {
                 {
-                    #tracing_setup
-                    let result = tokio::spawn(async { #original_block }).await;
-                    #tracing_teardown
+                    use tracing::Instrument;
+
+                    let handle = tokio::spawn(async {
+                        #original_block
+                    }.instrument(tracing::Span::current()));
+
+                    let result = handle.await;
 
                     #handle_panic_fn
 
                     match result {
-                        Ok(_) => panic!("[AAA] Expected test to fail, but it succeeded"),
+                        Ok(_) => panic!("Expected test to fail, but it succeeded"),
                         Err(err) => {
                             if err.is_panic() {
                                 let panic_err = err.into_panic();
                                 handle_panic(panic_err, #expected_message);
                             } else {
-                                panic!("Task was cancelled: {:?}", err);
+                                panic!("Task was cancelled");
                             }
-                        }
+                        },
                     }
                 }
             }
         }
     }
 }
-
-// this is what we had earlier when it should panic
-//
-/*
-todo!("async and should panic");
-let expected_panic_message = should.panic_message();
-
-quote! {{
-
-    use tokio::task::JoinError;
-
-    let _enter = span.enter();
-
-    // Define the async task separately
-    let async_task = async move {
-        // Run the original async block
-        #original_block
-    };
-
-    // Spawn the async task and wait for it to complete
-    let result: Result<#task_return_type,JoinError> = tokio::task::spawn(async_task).await;
-
-    if result.is_err() {
-        panic!("Test panicked unexpectedly!");
-    }
-
-    let result: #task_return_type = result.unwrap();
-
-    /*
-
-    if let Err(panic_info) = result {
-
-        let panic_message = panic_info.downcast_ref::<&str>().unwrap_or(&"");
-
-        assert!(
-            panic_message.contains(#expected_panic_message), 
-            "Expected panic message: {}", 
-            #expected_panic_message
-        );
-    }
-
-    */
-
-    result
-}}
-
-*/
-
-/*
-//todo!("async without should panic");
-quote! {
-    {
-        let _enter = span.enter();
-
-        // Define the async task separately
-        let async_task = async move {
-            #original_block
-        };
-
-        // Spawn the async task and wait for it to complete
-        tokio::task::spawn(async_task).await
-    }
-}
-*/

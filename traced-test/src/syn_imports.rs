@@ -12,4 +12,5 @@ pub(crate) use syn::{
     ItemFn,
     Ident, 
     LitStr,
+    Lit,
 };

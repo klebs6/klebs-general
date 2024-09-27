@@ -7,7 +7,9 @@ pub trait WrapBlock {
 
 impl TracedTestGenerator {
 
-    pub(crate) fn wrap_the_original_block(&self) -> Result<TokenStream2, TracedTestError> {
+    pub(crate) fn wrap_the_original_block(&self) 
+        -> Result<TokenStream2, TracedTestError> 
+    {
         let mut builder = TestBuilder::new()
             .return_type(self.return_type())
             .original_block(self.original_block());
@@ -21,6 +23,7 @@ impl TracedTestGenerator {
         }
 
         let test = builder.build()?;
+
         Ok(test.wrap_block(self))
     }
 }

@@ -1,0 +1,13 @@
+error: custom attribute panicked
+ --> tests/ui/force_trace.rs:3:1
+  |
+3 | #[traced_test(trace = true)]
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  |
+  = help: message: not yet implemented: force trace on/off attribute still must be implemented
+
+error[E0601]: `main` function not found in crate `$CRATE`
+ --> tests/ui/force_trace.rs:7:2
+  |
+7 | }
+  |  ^ consider adding a `main` function to `$DIR/tests/ui/force_trace.rs`

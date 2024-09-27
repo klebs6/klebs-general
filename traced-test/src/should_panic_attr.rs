@@ -59,6 +59,7 @@ impl TryFrom<syn::Attribute> for ShouldPanicAttr {
 
 //--------------------------------------------[extract-from-attributes]
 impl CheckForAndRetrieveTheUniqueShouldPanicAttr for &[syn::Attribute] {
+
     fn maybe_get_should_panic_attr(&self) -> Result<Option<ShouldPanicAttr>, ShouldPanicAttrError> {
         let mut should_panic_attr = None;
 

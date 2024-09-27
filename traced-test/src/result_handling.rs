@@ -30,14 +30,18 @@ impl TracedTestGenerator {
         }
 
         if let Some(expected_failure_message) = self.expected_failure_message() {
+
             let handle_result_fn = self.handle_result_fn_tokens();
 
             let tokens = quote! {
                 #handle_result_fn
                 handle_result(result, #expected_failure_message)
             };
+
             Some(tokens)
+
         } else {
+
             // No `should_fail` attribute; return the result as-is
             Some(quote!(result))
         }
