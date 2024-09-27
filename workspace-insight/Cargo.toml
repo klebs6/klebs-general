@@ -1,0 +1,21 @@
+[package]
+name = "workspace-insight"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+export-magic = "0.3.6"
+error-tree = "*"
+traced-test = "1.0.1"
+tracing-setup = "*"
+semver = "*"
+toml = "*"
+petgraph = "*"
+cargo_metadata = "*"
+tokio = {version = "*", features = ["full"] }
+async-trait = "*"
+tracing = "0.1.40"
+uuid = {version = "*", features = ["v4"] }
+tracing-subscriber = { version = "0.3", default-features = false, features = ["fmt", "std", "env-filter"] }
+[dev-dependencies]
+indoc = "*"
