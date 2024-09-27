@@ -1,0 +1,48 @@
+To enhance the flexibility and functionality of
+your tracing-setup crate, consider the following
+additions and configurations:
+
+Customizable Event Formatters:
+
+Allow users to specify their own formatters to
+capture events in different formats like JSON,
+plain text, or XML.
+
+Multiple Layers Support:
+
+Allow stacking multiple layers for different
+purposes, such as writing to both a file and
+a console with different filters.
+
+Dynamic Configuration:
+
+Support runtime configuration changes, for
+instance, changing log levels or adding/removing
+layers dynamically.
+
+File Rotation:
+
+Implement file rotation for logging to prevent
+logs from growing indefinitely.
+
+Contextual Logging:
+
+Enhance context propagation to include additional
+metadata like request IDs or user IDs.
+
+Support for Metrics:
+
+Integrate with metrics libraries to capture
+performance-related data alongside logging.
+
+Async Support:
+
+Ensure that logging is non-blocking and supports
+asynchronous operations, which is crucial for
+high-performance applications.
+
+Filter by Target and Level:
+
+Provide more granular control over logging
+filters, allowing users to specify which modules
+and levels they are interested in.
