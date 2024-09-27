@@ -6,7 +6,6 @@
 ## Features
 
 - **Automatic Tracing Setup**: Automatically initializes a tracing subscriber for each test, capturing logs emitted during test execution.
-- **Selective Log Output**: Configurable options to output logs only on test failure or success.
 - **Supports Async Tests**: Works with both synchronous and asynchronous test functions.
 - **Custom Failure Messages**: Provides a `#[should_fail]` attribute to specify expected failure messages.
 
@@ -17,13 +16,6 @@ Add `traced-test` to your `Cargo.toml`:
 ```toml
 [dev-dependencies]
 traced-test = "1.0.0"
-```
-
-Ensure that you also have the `tracing` crate included:
-
-```toml
-[dependencies]
-tracing = "0.1"
 ```
 
 ## Usage
@@ -52,27 +44,6 @@ use tracing::info;
 #[traced_test]
 async fn my_async_test() {
     info!("This is an async traced test");
-    assert!(true);
-}
-```
-
-### Configuration Options
-
-You can control the tracing behavior using the `trace` option:
-
-- `trace = true`: Always output logs, regardless of test outcome.
-- `trace = false`: Never output logs.
-- By default, logs are output only on test failure.
-
-NOTE: this feature is currently not available in 1.0.0 but remains to be implemented. Pull requests finishing the feature are welcome. For now, to force tracing ON we can assert at the end of the test. To force tracing OFF we can fallback to #[test] instead of #[traced_test].
-
-```rust
-use traced_test::traced_test;
-use tracing::info;
-
-#[traced_test(trace = true)]
-fn always_trace_test() {
-    info!("Logs will always be output");
     assert!(true);
 }
 ```
@@ -136,28 +107,6 @@ async fn async_test_should_fail() {
 }
 ```
 
-## Integration with `tracing`
-
-To make full use of `traced_test`, ensure that your application or test emits logs using the `tracing` crate.
-
-```rust
-use traced_test::traced_test;
-use tracing::{info, Level};
-use tracing_subscriber::FmtSubscriber;
-
-#[traced_test]
-fn test_with_tracing() {
-    // Set up a tracing subscriber (optional if already set globally)
-    let subscriber = FmtSubscriber::builder()
-        .with_max_level(Level::INFO)
-        .finish();
-    tracing::subscriber::set_global_default(subscriber).expect("Failed to set subscriber");
-
-    info!("This log will be captured by traced_test");
-    assert!(true);
-}
-```
-
 ## Error Handling
 
 When using `#[should_fail]`, you can provide an expected failure message. The test will pass only if it fails with the specified message.
@@ -174,6 +123,33 @@ fn test_with_expected_failure() {
 ```
 
 If the test does not fail or fails with a different message, it will be marked as failed.
+
+### Configuration Options
+
+You can control the tracing behavior using the `trace` option:
+
+- `trace = true`: Always output logs, regardless of test outcome.
+- `trace = false`: Never output logs.
+- By default, logs are output only on test failure.
+
+NOTE: this feature is not fully implemented in 1.0.0 but remains todo. 
+
+Pull requests finishing the feature are welcome. 
+
+For now, to force tracing ON we can assert at the end of the test. 
+
+To force tracing OFF we can fallback to #[test] instead of #[traced_test].
+
+```rust
+use traced_test::traced_test;
+use tracing::info;
+
+#[traced_test(trace = true)]
+fn always_trace_test() {
+    info!("Logs will always be output");
+    assert!(true);
+}
+```
 
 ## Contributing
 
