@@ -6,5 +6,5 @@ x!{configure_tracing}
 x!{flushable}
 x!{init_test_logger}
 x!{init_file_logging}
-x!{dynamic_level}
+//x!{dynamic_level}
 x!{log_level}

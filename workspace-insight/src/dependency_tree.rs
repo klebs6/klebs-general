@@ -3,6 +3,7 @@ crate::ix!();
 type DependencyGraph = DiGraphMap<String, ()>;
 
 impl Workspace {
+
     /// Generates a dependency tree for all crates in the workspace.
     pub async fn generate_dependency_tree(&self) -> Result<DependencyGraph, WorkspaceError> {
         // Use cargo_metadata to get the metadata
@@ -55,4 +56,3 @@ impl Workspace {
         Ok(format!("{:?}", dot))
     }
 }
-

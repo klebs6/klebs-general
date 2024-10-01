@@ -1,7 +1,7 @@
 [package]
 edition = "2021"
 name = "traced-test"
-version = "1.0.1"
+version = "1.0.2"
 description = "this crate lets us use #[traced_test] to automatically configure sane default tracing for a rust test"
 license = "MIT"
 authors = [ "klebs tpk3.mx@gmail.com" ]
@@ -19,15 +19,13 @@ export-magic = "0.3.1"
 tracing = "0.1.40"
 tracing-subscriber = { version = "0.3", default-features = false, features = ["fmt", "std", "env-filter"] }
 maplit = "1.0.2"
-tracing-setup = "0.3.6"
+tracing-setup = {version = "1.0.2", path = "../tracing-setup" }
 
 [lib]
 proc-macro = true
 
 [dev-dependencies]
 tokio = { version = "1", features = ["macros", "rt-multi-thread","time"] }
-tracing = "0.1"
-tracing-setup = "0.3.6"
 disable_macro = "0.3.6"
 trybuild = "1.0"
 
