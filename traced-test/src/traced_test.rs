@@ -49,54 +49,6 @@ impl ShouldTrace for TracedTestGenerator {
     }
 }
 
-impl TracedTestGenerator {
-
-    pub fn from_item_fn(orig: ItemFn, traced_test_attr: TracedTestAttr) -> Result<Self, TracedTestError> {
-
-        orig.ensure_no_test_attribute()?;
-
-        let mut attrs = orig.extract_all_attributes_except(&[AttributeKind::TestAttr]);
-
-        let should_panic = attrs.as_slice()
-            .maybe_get_should_panic_attr()
-            .map_err(|e| TracedTestError::ShouldPanicAttrAccessError)?;
-
-        if should_panic.is_some() {
-            return Err(TracedTestError::ShouldPanicAttrNotSupportedWithTracedTest);
-        }
-
-        let should_fail  = attrs.as_slice().maybe_get_should_fail_attr()?;
-
-        // Remove `should_fail` and `should_panic` attributes from `attrs`
-        attrs = attrs.iter()
-            .filter(|a| a.kind() != AttributeKind::ShouldFailAttr)
-            .cloned()
-            .collect();
-
-        let name           = orig.sig.ident.to_string();
-        let is_async       = orig.is_async();
-        let returns_result = orig.returns_result();
-
-        if traced_test_attr.specified() {
-            todo!("force trace on/off attribute still must be implemented");
-        }
-
-        let generator = Self {
-            orig,
-            name,
-            attrs,
-            should_fail,
-            is_async,
-            returns_result,
-            traced_test_attr,
-        };
-
-        //println!("created generator: {:#?}", generator);
-
-        Ok(generator)
-    }
-}
-
 impl IsAsync for TracedTestGenerator {
 
     fn is_async(&self) -> bool {
@@ -161,5 +113,53 @@ impl HasShouldFailAttr for TracedTestGenerator {
 
     fn should_fail_attr(&self) -> Option<ShouldFailAttr> {
         self.should_fail.clone()
+    }
+}
+
+impl TracedTestGenerator {
+
+    pub fn from_item_fn(orig: ItemFn, traced_test_attr: TracedTestAttr) -> Result<Self, TracedTestError> {
+
+        orig.ensure_no_test_attribute()?;
+
+        let mut attrs = orig.extract_all_attributes_except(&[AttributeKind::TestAttr]);
+
+        let should_panic = attrs.as_slice()
+            .maybe_get_should_panic_attr()
+            .map_err(|e| TracedTestError::ShouldPanicAttrAccessError)?;
+
+        if should_panic.is_some() {
+            return Err(TracedTestError::ShouldPanicAttrNotSupportedWithTracedTest);
+        }
+
+        let should_fail  = attrs.as_slice().maybe_get_should_fail_attr()?;
+
+        // Remove `should_fail` and `should_panic` attributes from `attrs`
+        attrs = attrs.iter()
+            .filter(|a| a.kind() != AttributeKind::ShouldFailAttr)
+            .cloned()
+            .collect();
+
+        let name           = orig.sig.ident.to_string();
+        let is_async       = orig.is_async();
+        let returns_result = orig.returns_result();
+
+        if traced_test_attr.specified() {
+            todo!("force trace on/off attribute still must be implemented");
+        }
+
+        let generator = Self {
+            orig,
+            name,
+            attrs,
+            should_fail,
+            is_async,
+            returns_result,
+            traced_test_attr,
+        };
+
+        //println!("created generator: {:#?}", generator);
+
+        Ok(generator)
     }
 }

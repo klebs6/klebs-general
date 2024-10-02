@@ -1,7 +1,6 @@
 crate::ix!();
 
 pub trait EnsureItemHasNoTestAttribute {
-
     type Error;
     fn ensure_no_test_attribute(&self) -> Result<(),Self::Error>;
     fn generate_error() -> Self::Error;

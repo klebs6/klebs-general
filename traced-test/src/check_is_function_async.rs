@@ -5,6 +5,7 @@ pub trait IsAsync {
 }
 
 impl IsAsync for syn::ItemFn {
+
     fn is_async(&self) -> bool {
         self.sig.asyncness.is_some()
     }

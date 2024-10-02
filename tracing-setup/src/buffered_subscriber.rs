@@ -2,9 +2,10 @@ crate::ix!();
 
 pub trait BufferedSubscriber: Subscriber + Flushable {}
 
+#[derive(Debug)]
 pub struct BufferedSubscriberLayer<S> {
-    pub(crate) inner: tracing_subscriber::layer::Layered<BufferedLayer, S>,
-    pub(crate) buffered_layer: Arc<BufferedLayer>,
+    inner:          tracing_subscriber::layer::Layered<BufferedLayer, S>,
+    buffered_layer: Arc<BufferedLayer>,
 }
 
 impl<S: Subscriber> Flushable for BufferedSubscriberLayer<S> {
@@ -42,4 +43,17 @@ impl<S: Subscriber> Subscriber for BufferedSubscriberLayer<S> {
     fn exit(&self, span: &tracing::Id) {
         self.inner.exit(span);
     }
+}
+
+pub fn setup_buffered_tracing(tag: Option<&str>) -> Arc<BufferedSubscriberLayer<Registry>> {
+
+    let buffered_layer = match tag { 
+        Some(tag) => BufferedLayer::new_with_tag(tag), 
+        None      => BufferedLayer::default() 
+    };
+
+    Arc::new(BufferedSubscriberLayer {
+        inner: Registry::default().with(buffered_layer.clone()),
+        buffered_layer: buffered_layer.into(),
+    })
 }

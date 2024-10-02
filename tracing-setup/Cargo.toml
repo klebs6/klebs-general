@@ -11,9 +11,11 @@ repository = "https://github.com/klebs6/klebs-general"
 
 [dependencies]
 export-magic = "0.3.6"
-traced-test = "1.0.1"
 tracing = { version = "0.1.40", features = ["log"] }
 tracing-subscriber = { version = "0.3", default-features = false, features = ["fmt", "std", "env-filter"] }
 tracing-appender = "0.2"
 colored = "2.1.0"
 env_logger = "0.11.3"
+disable_macro = "0.3.6"
+serial_test = "0.5"
+chrono = "0.4"

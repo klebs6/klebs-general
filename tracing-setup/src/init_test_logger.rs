@@ -39,7 +39,6 @@ pub fn init_test_logger_with_max_level_filter() {
         .try_init();
 }
 
-
 #[macro_export] macro_rules! setup_test_logger {
     () => {
         init_test_logger(LevelFilter::Info, true);

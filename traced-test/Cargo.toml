@@ -13,6 +13,7 @@ repository = "https://github.com/klebs6/klebs-general"
 syn = { version = "2.0.52", features = ["full"] }
 quote = "1.0"
 error-tree = "0.3.6"
+colored = "2.1.0"
 named-item = "0.1.0"
 proc-macro2 = "1.0"
 export-magic = "0.3.1"

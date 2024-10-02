@@ -1,54 +1,44 @@
 crate::ix!();
 
-#[test] fn test_dynamic_tracing() {
-
-    let dynamic_layer = setup_dynamic_tracing(Level::INFO);
-
-    // Dynamically set the logging level to DEBUG
-    dynamic_layer.set_level(Level::DEBUG);
-
-    tracing::info!("This is an info message");
-    tracing::debug!("This is a debug message");
-}
-
-#[derive(Clone)]
-pub struct DynamicLevelLayer {
-    level: Arc<AtomicUsize>,
-}
-
-impl DynamicLevelLayer {
-    pub fn new(initial_level: Level) -> Self {
-        Self {
-            level: Arc::new(AtomicUsize::new(LogLevel::from(initial_level) as usize)),
-        }
-    }
-
-    pub fn set_level(&self, level: Level) {
-        self.level.store(LogLevel::from(level) as usize, Ordering::SeqCst);
-    }
-}
-
-impl<S> SubscriberLayer<S> for DynamicLevelLayer
-where
-    S: Subscriber,
+pub fn setup_dynamic_tracing(initial_level: Level) 
+    -> reload::Handle<EnvFilter, impl tracing::Subscriber + Send + Sync> 
 {
-    fn enabled(&self, metadata: &tracing::Metadata<'_>, _ctx: Context<'_, S>) -> bool {
-        let current_level = self.level.load(Ordering::SeqCst);
-        metadata.level() <= &Level::from(unsafe { std::mem::transmute::<usize, LogLevel>(current_level) })
-    }
+    // Create an EnvFilter with the initial level
+    let filter = EnvFilter::from_default_env()
+        .add_directive(initial_level.into());
+
+    // Create a reloadable layer
+    let (filter_layer, reload_handle) = reload::Layer::new(filter);
+
+    // Build the subscriber
+    let subscriber = tracing_subscriber::fmt()
+        .with_max_level(initial_level)
+        .finish()
+        .with(filter_layer);
+
+    tracing::subscriber::set_global_default(subscriber).expect("Failed to set subscriber");
+
+    reload_handle
 }
 
-// Function to set up dynamic tracing
-pub fn setup_dynamic_tracing(initial_level: Level) -> Box<DynamicLevelLayer> {
-    let dynamic_layer = Box::new(DynamicLevelLayer::new(initial_level));
+#[cfg(test)]
+mod dynamic_tracing_tests {
+    use super::*;
+    use tracing::Level;
+    use tracing_subscriber::EnvFilter;
 
-    let filter = EnvFilter::try_from_default_env()
-        .unwrap_or_else(|_| EnvFilter::new("info"));
+    #[test]
+    fn test_dynamic_tracing() {
+        // Set up dynamic tracing with initial level INFO
+        let reload_handle = setup_dynamic_tracing(Level::INFO);
 
-    tracing_subscriber::registry()
-        .with(dynamic_layer.clone())
-        .with(filter)
-        .init();
+        // Log messages at different levels
+        tracing::info!("This is an info message");
+        tracing::debug!("This debug message should NOT appear at INFO level");
 
-    dynamic_layer
+        // Dynamically set the logging level to DEBUG
+        reload_handle.reload(EnvFilter::new("debug")).unwrap();
+
+        tracing::debug!("This debug message should appear at DEBUG level");
+    }
 }

@@ -1,5 +1,5 @@
 pub(crate) use proc_macro::TokenStream;
-pub(crate) use quote::{quote};
+pub(crate) use quote::{ToTokens,quote};
 pub(crate) use std::sync::{Arc,Mutex};
 pub(crate) use tracing_setup::Flushable;
 pub(crate) use export_magic::*;

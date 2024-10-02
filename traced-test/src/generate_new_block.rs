@@ -12,10 +12,10 @@ impl GenerateNewBlock for TracedTestGenerator {
     type Error = TracedTestError;
 
     fn generate_new_block(&self) -> Result<Box<syn::Block>, Self::Error> {
-        let use_statements            = self.use_statements_for_new_block();
-        let captured_result           = self.wrap_the_original_block()?;
-        let result_handling_tokens    = self.result_handling_tokens();
-        let tracing_setup             = self.tracing_setup_tokens();
+        let use_statements         = self.use_statements_for_new_block();
+        let captured_result        = self.wrap_the_original_block()?;
+        let result_handling_tokens = self.result_handling_tokens();
+        let tracing_setup          = self.tracing_setup_tokens();
 
         let new_block = if self.is_async() {
             quote! {

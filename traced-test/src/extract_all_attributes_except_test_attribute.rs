@@ -1,10 +1,13 @@
 crate::ix!();
 
 pub trait ExtractAllAttributesExcept {
-    fn extract_all_attributes_except(&self, kinds: &[AttributeKind]) -> Vec<Attribute>;
+
+    fn extract_all_attributes_except(&self, kinds: &[AttributeKind]) 
+        -> Vec<Attribute>;
 }
 
 impl ExtractAllAttributesExcept for ItemFn {
+
     /// Retain original attributes, removing attributes that match any in the `kinds` set
     fn extract_all_attributes_except(&self, kinds: &[AttributeKind]) -> Vec<Attribute> {
         self.attrs

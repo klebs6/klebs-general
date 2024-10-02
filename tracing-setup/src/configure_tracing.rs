@@ -13,16 +13,3 @@ pub fn configure_tracing() {
             .init();
     });
 }
-
-pub fn setup_buffered_tracing(tag: Option<&str>) -> Arc<BufferedSubscriberLayer<Registry>> {
-
-    let buffered_layer = match tag { 
-        Some(tag) => BufferedLayer::new(tag), 
-        None      => BufferedLayer::default() 
-    };
-
-    Arc::new(BufferedSubscriberLayer {
-        inner: Registry::default().with(buffered_layer.clone()),
-        buffered_layer: buffered_layer.into(),
-    })
-}

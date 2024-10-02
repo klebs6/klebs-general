@@ -47,6 +47,14 @@ mod good {
         assert!(true, "This test should pass.");
     }
 
+    #[traced_test]
+    fn check_fundamental_behavior() -> Result<(),String> {
+        debug!("we don't need to see logs when a test passes");
+        assert!(true, "This test should pass.");
+        //Err("we should see the logs if we uncomment this line and return the error".into())
+        Ok(())
+    }
+
     // Test that ensures panics are handled in synchronous
     // tests.
     //
@@ -208,10 +216,11 @@ mod good {
 //
 #[disable]
 mod expect_failure {
+    use super::*;
 
     #[traced_test]
-    fn EXPECT_FAiLURE_sync_test_failure_assertion_should_trigger_logging() {
-        info!("This log should be displayed because the test fails unexpectedly.");
+    fn EXPECT_FAILURE_sync_test_failure_assertion_should_trigger_logging() {
+        info!("EXPECT_FAILURE_sync_test_failure_assertion_should_trigger_logging -- This log should be displayed because the test fails unexpectedly.");
         assert!(false, "This test should fail.");
     }
 
@@ -227,61 +236,61 @@ mod expect_failure {
     //
     #[traced_test]
     fn EXPECT_FAILURE_sync_test_failure_assertion_must_trigger_logging() {
-        info!("we must see this log message because the test fails with a false assertion");
+        info!("EXPECT_FAILURE_sync_test_failure_assertion_must_trigger_logging -- we must see this log message because the test fails with a false assertion");
         assert!(false, "This test should fail.");
     }
 
     #[traced_test]
     async fn EXPECT_FAILURE_async_test_uncaught_failure() {
-        info!("we should see this log message because the test fails");
+        info!("EXPECT_FAILURE_async_test_uncaught_failure -- we should see this log message because the test fails");
         assert!(false, "This test should fail.");
     }
 
     #[traced_test]
     #[should_fail(message = "This test should fail.")]
     async fn EXPECT_FAILURE_async_test_failure_with_unexpected_error_message() {
-        info!("we should see this log message because the test fails with a message we did not expect");
+        info!("EXPECT_FAILURE_async_test_failure_with_unexpected_error_message -- we should see this log message because the test fails with a message we did not expect");
         assert!(false, "unexpected error message");
     }
 
     #[traced_test]
     fn EXPECT_FAILURE_sync_test_failure_we_need_to_see_the_tracing() {
-        info!("we must see this log message because the test fails unexpectedly");
+        info!("EXPECT_FAILURE_sync_test_failure_we_need_to_see_the_tracing -- we must see this log message because the test fails unexpectedly");
         assert!(false, "sync test failure");
     }
 
     #[traced_test]
-    async fn EXPECT_FAILURE_async_test_failure_we_need_to_see_the_traing() {
-        info!("we must see this log message because the test fails unexpectedly");
+    async fn EXPECT_FAILURE_async_test_failure_we_need_to_see_the_tracing() {
+        info!("EXPECT_FAILURE_async_test_failure_we_need_to_see_the_tracing -- we must see this log message because the test fails unexpectedly");
         assert!(false, "async test failure");
     }
 
     // Test with async panic after a delay to ensure delayed panics are caught
     #[traced_test]
     async fn EXPECT_FAILURE_async_test_with_delayed_panic() {
-        info!("Test started, waiting for async operation... (we should see this log message because an unexpected panic occurs)");
+        info!("EXPECT_FAILURE_async_test_with_delayed_panic -- Test started, waiting for async operation... (we should see this log message because an unexpected panic occurs)");
         sleep(Duration::from_millis(50)).await; // Simulate async delay
-        info!("Async operation completed... (we should see this log message because an unexpected panic occurs)");
+        info!("EXPECT_FAILURE_async_test_with_delayed_panic -- Async operation completed... (we should see this log message because an unexpected panic occurs)");
         panic!("Delayed panic occurred.");
     }
 
     #[traced_test]
     fn EXPECT_FAILURE_test_sync_fail_no_should_fail() {
-        info!("This log should be displayed because the test fails unexpectedly.");
+        info!("EXPECT_FAILURE_test_sync_fail_no_should_fail -- This log should be displayed because the test fails unexpectedly.");
         assert!(false, "Unexpected failure");
     }
 
     #[traced_test]
     #[should_fail(message = "Expected failure")]
     fn EXPECT_FAILURE_test_sync_pass_with_should_fail() {
-        info!("This log should be displayed because the test passes unexpectedly.");
+        info!("EXPECT_FAILURE_test_sync_pass_with_should_fail -- This log should be displayed because the test passes unexpectedly.");
         assert!(true);
     }
 
     #[traced_test]
     #[should_fail(message = "Expected failure")]
     fn EXPECT_FAILURE_test_sync_fail_with_non_matching_should_fail() {
-        info!("This log should be displayed because the test fails with an unexpected message.");
+        info!("EXPECT_FAILURE_test_sync_fail_with_non_matching_should_fail -- This log should be displayed because the test fails with an unexpected message.");
         panic!("Different failure message");
     }
 }

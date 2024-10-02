@@ -7,6 +7,7 @@ pub struct AsynchronousTestShouldFail {
 }
 
 impl AsynchronousTestShouldFail {
+
     /// Creates a new `AsynchronousTestShouldFailBuilder`.
     pub fn builder() -> AsynchronousTestShouldFailBuilder {
         AsynchronousTestShouldFailBuilder::default()
@@ -46,6 +47,7 @@ impl Default for AsynchronousTestShouldFailBuilder {
 }
 
 impl AsynchronousTestShouldFailBuilder {
+
     /// Sets the return type.
     pub fn return_type(mut self, return_type: Option<Box<syn::Type>>) -> Self {
         self.return_type = return_type;

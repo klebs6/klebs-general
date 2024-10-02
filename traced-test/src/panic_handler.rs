@@ -16,10 +16,18 @@ pub trait MaybeHasPanicMessage {
 
 impl TracedTestGenerator {
 
-    /// Generates the `handle_panic` function definition.
     pub fn handle_panic_fn_tokens(&self) -> TokenStream2 {
         quote! {
-            fn handle_panic(err: Box<dyn std::any::Any + Send>, expected_message: &str) {
+            fn handle_panic<TSubscriber>(
+                err:                  Box<dyn std::any::Any + Send>,
+                expected_message:     Option<&str>,
+                test_failed:          &std::sync::Arc<std::sync::Mutex<bool>>,
+                local_subscriber:     &std::sync::Arc<TSubscriber>,
+                logs_already_flushed: &std::sync::Arc<std::sync::Mutex<bool>>,
+            )
+            where
+                TSubscriber: Flushable + Send + Sync + 'static,
+            {
                 let panic_message = if let Some(s) = err.downcast_ref::<&str>() {
                     s.to_string()
                 } else if let Some(s) = err.downcast_ref::<String>() {
@@ -27,10 +35,17 @@ impl TracedTestGenerator {
                 } else {
                     "Unknown panic message".to_string()
                 };
-                if panic_message == expected_message {
-                    // Test passes
+                if let Some(expected) = expected_message {
+                    if panic_message == expected {
+                        *test_failed.lock().unwrap() = false;
+                    } else {
+                        *test_failed.lock().unwrap() = true;
+                        flush_logs_if_needed(local_subscriber, logs_already_flushed);
+                        panic!("Unexpected panic occurred: {}", panic_message);
+                    }
                 } else {
-                    panic!("Unexpected panic occurred: {}", panic_message);
+                    // No expected message; accept any panic
+                    *test_failed.lock().unwrap() = false;
                 }
             }
         }
