@@ -6,7 +6,7 @@ version = "1.0.2"
 description = "this crate helps us configure tracing for a rust project. It is designed to be used with the `traced-test` crate"
 license = "MIT"
 authors = [ "klebs tpk3.mx@gmail.com" ]
-categories = ["development-tools", "macros", "tracing"]
+categories = ["development-tools"]
 repository = "https://github.com/klebs6/klebs-general"
 
 [dependencies]
