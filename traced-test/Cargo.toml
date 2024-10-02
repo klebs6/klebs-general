@@ -20,7 +20,7 @@ export-magic = "0.3.1"
 tracing = "0.1.40"
 tracing-subscriber = { version = "0.3", default-features = false, features = ["fmt", "std", "env-filter"] }
 maplit = "1.0.2"
-tracing-setup = {version = "1.0.2", path = "../tracing-setup" }
+tracing-setup = {version = "1.0.2" }
 
 [lib]
 proc-macro = true
