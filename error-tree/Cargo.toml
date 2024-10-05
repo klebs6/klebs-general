@@ -7,7 +7,7 @@ authors = [ "klebs tpk3.mx@gmail.com" ]
 license = "MIT"
 keywords = ["macros", "errors", "shorthand", "hierarchy", "reuse"]
 repository = "https://github.com/klebs6/klebs-general"
-categories = ["development-tools", "macros", "errors"]
+categories = ["development-tools"]
 
 
 [dependencies]
