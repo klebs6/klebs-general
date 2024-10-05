@@ -2,6 +2,7 @@ use workspace_insight::*;
 use tracing_setup::*;
 use traced_test::*;
 use tokio::fs;
+use tokio::io::AsyncWriteExt;
 use indoc::*;
 use uuid::*;
 
@@ -45,7 +46,7 @@ mod workspace_integrity {
                 authors = ["author@example.com"]
                 license = "MIT"
             "# }
-        ).await?;
+        ).await.map_err(|e| CargoTomlWriteError::WritePackageSectionError { io: e })?;
 
         let valid_cargo_toml = workspace_path.join("valid_crate").join("Cargo.toml");
         fs::write(&valid_cargo_toml, 
@@ -56,7 +57,7 @@ mod workspace_integrity {
                 authors = ["author@example.com"]
                 license = "MIT"
             "# }
-        ).await?;
+        ).await.map_err(|e| CargoTomlWriteError::WritePackageSectionError { io: e })?;
 
         let workspace = Workspace::new_and_validate(&workspace_path).await;
 
@@ -114,7 +115,7 @@ mod workspace_integrity {
                 authors = ["author@example.com"]
                 license = "MIT"
             "# }
-        ).await?;
+        ).await.map_err(|e| CargoTomlWriteError::WritePackageSectionError { io: e })?;
 
         let workspace = Workspace::new_and_validate(&workspace_path).await;
 
@@ -147,7 +148,7 @@ mod workspace_integrity {
                 authors = ["author@example.com"]
                 license = "MIT"
             "# }
-        ).await?;
+        ).await.map_err(|e| CargoTomlWriteError::WritePackageSectionError { io: e })?;
 
         let workspace = Workspace::new_and_validate(&workspace_path).await;
 
@@ -181,7 +182,7 @@ mod workspace_integrity {
                 authors = ["author@example.com"]
                 license = "MIT"
             "# }
-        ).await?;
+        ).await.map_err(|e| CargoTomlWriteError::WritePackageSectionError { io: e })?;
 
         // Validate the workspace, expecting an error
         let workspace = Workspace::new_and_validate(&workspace_path).await;
@@ -244,8 +245,14 @@ mod workspace_integrity {
 
         // Simulate a crate with both `lib.rs` and `main.rs`
         let src_dir = workspace_path.join("crate_with_both_lib_and_main").join("src");
-        fs::write(src_dir.join("lib.rs"), "pub fn lib_func() {}").await?;
-        fs::write(src_dir.join("main.rs"), "fn main() {}").await?;
+
+        fs::write(src_dir.join("lib.rs"), "pub fn lib_func() {}")
+            .await
+            .map_err(|e| FileError::WriteError { io: e })?;
+
+        fs::write(src_dir.join("main.rs"), "fn main() {}")
+            .await
+            .map_err(|e| FileError::WriteError { io: e })?;
 
         let workspace = Workspace::new_and_validate(&workspace_path).await?;
 
@@ -266,7 +273,7 @@ mod workspace_integrity {
 
         // Simulate an invalid TOML file
         let cargo_toml_path = workspace_path.join("crate_with_invalid_toml").join("Cargo.toml");
-        fs::write(&cargo_toml_path, "invalid_toml").await?;
+        fs::write(&cargo_toml_path, "invalid_toml").await.map_err(|e| CargoTomlWriteError::WriteError { io: e })?;
 
         let workspace = Workspace::new_and_validate(&workspace_path).await;
 
@@ -331,7 +338,7 @@ mod workspace_integrity {
                 license = "MIT"
             "# },
         )
-        .await?;
+        .await.map_err(|e| CargoTomlWriteError::WritePackageSectionError { io: e })?;
 
         let workspace = Workspace::new_and_validate(&workspace_path).await;
 
@@ -553,12 +560,12 @@ mod cleanup_tests {
 
         // Create a mock target directory
         let target_dir = workspace_path.join("target");
-        fs::create_dir_all(&target_dir).await?;
+        fs::create_dir_all(&target_dir).await.map_err(|e| DirectoryError::CreateDirAllError { io: e })?;
 
         // Create a dummy file in the target directory
         let dummy_file_path = target_dir.join("dummy_file.txt");
-        let mut dummy_file = fs::File::create(&dummy_file_path).await?;
-        dummy_file.write_all(b"dummy content").await?;
+        let mut dummy_file = fs::File::create(&dummy_file_path).await.map_err(|e| FileError::CreationError { io: e })?;
+        dummy_file.write_all(b"dummy content").await.map_err(|e| FileError::WriteError { io: e })?;
 
         // Ensure the target directory exists
         assert!(fs::metadata(&target_dir).await.is_ok(), "target directory should exist before cleanup");
@@ -601,6 +608,85 @@ mod cleanup_tests {
 
 mod dependency_tests {
     use super::*;
+    use petgraph::graph::{DiGraph, NodeIndex};
+    use std::collections::HashMap;
+
+    #[tokio::test]
+    async fn test_generate_dependency_tree_dot() -> Result<(), WorkspaceError> {
+        // Create a mock workspace similar to the previous test
+        let workspace_path = create_mock_workspace(vec![
+            CrateConfig::new("crate_a")
+                .with_src_files()
+                .with_readme(),
+            CrateConfig::new("crate_b")
+                .with_src_files()
+                .with_readme(),
+        ]).await?;
+
+        // Add a dependency: crate_b depends on crate_a
+        let cargo_toml_b = workspace_path.join("crate_b").join("Cargo.toml");
+        let cargo_toml_b_content = indoc! { r#"
+            [package]
+            name = "crate_b"
+            version = "0.1.0"
+            authors = ["author@example.com"]
+            license = "MIT"
+            edition = "2018"
+
+            [dependencies]
+            crate_a = { path = "../crate_a" }
+        "# };
+        fs::write(&cargo_toml_b, cargo_toml_b_content).await.map_err(|e| FileError::WriteError { io: e })?;
+
+        // Initialize the workspace
+        let workspace = Workspace::new(&workspace_path).await?;
+
+        // Generate the DOT format
+        let dot_output = workspace.generate_dependency_tree_dot().await?;
+
+        // For debugging, you can print the DOT output
+        println!("Dependency Graph DOT:\n{}", dot_output);
+
+        // Simple checks on the DOT output
+        // Instead of checking for exact "crate_b -> crate_a", we check for the labeled representation
+        assert!(dot_output.contains("crate_a"), "DOT output should contain crate_a label");
+        assert!(dot_output.contains("crate_b"), "DOT output should contain crate_b label");
+        assert!(dot_output.contains("1 -> 0"), "DOT output should contain the edge crate_b -> crate_a");
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_graph_contains_nodes_and_edges() {
+        // Create a graph
+        let mut graph: DiGraph<String, ()> = DiGraph::new();
+
+        // Create a map to track node names and their corresponding NodeIndex
+        let mut node_map: HashMap<String, NodeIndex> = HashMap::new();
+
+        // Add nodes to the graph and store their NodeIndex in the map
+        let node_a = graph.add_node("crate_a".to_string());
+        let node_b = graph.add_node("crate_b".to_string());
+        let node_c = graph.add_node("crate_c".to_string());
+
+        node_map.insert("crate_a".to_string(), node_a);
+        node_map.insert("crate_b".to_string(), node_b);
+        node_map.insert("crate_c".to_string(), node_c);
+
+        // Add edges
+        graph.add_edge(node_b, node_a, ());
+        graph.add_edge(node_c, node_b, ());
+
+        // Test if the graph contains nodes
+        assert!(node_map.contains_key("crate_a"), "Graph should contain node crate_a");
+        assert!(node_map.contains_key("crate_b"), "Graph should contain node crate_b");
+        assert!(node_map.contains_key("crate_c"), "Graph should contain node crate_c");
+
+        // Test if the graph contains specific edges using NodeIndex
+        assert!(graph.contains_edge(node_map["crate_b"], node_map["crate_a"]), "crate_b should depend on crate_a");
+        assert!(graph.contains_edge(node_map["crate_c"], node_map["crate_b"]), "crate_c should depend on crate_b");
+        assert!(!graph.contains_edge(node_map["crate_a"], node_map["crate_b"]), "crate_a should not depend on crate_b");
+    }
 
     #[tokio::test]
     async fn test_generate_dependency_tree() -> Result<(), WorkspaceError> {
@@ -631,7 +717,7 @@ mod dependency_tests {
             [dependencies]
             crate_a = { path = "../crate_a" }
         "# };
-        fs::write(&cargo_toml_b, cargo_toml_b_content).await?;
+        fs::write(&cargo_toml_b, cargo_toml_b_content).await.map_err(|e| FileError::WriteError { io: e })?;
 
         // crate_c depends on crate_b
         let cargo_toml_c = workspace_path.join("crate_c").join("Cargo.toml");
@@ -646,7 +732,7 @@ mod dependency_tests {
             [dependencies]
             crate_b = { path = "../crate_b" }
         "# };
-        fs::write(&cargo_toml_c, cargo_toml_c_content).await?;
+        fs::write(&cargo_toml_c, cargo_toml_c_content).await.map_err(|e| FileError::WriteError { io: e })?;
 
         // Initialize the workspace
         let workspace = Workspace::new(&workspace_path).await?;
@@ -654,25 +740,41 @@ mod dependency_tests {
         // Generate the dependency tree
         let graph = workspace.generate_dependency_tree().await?;
 
+        // Create a map to store the NodeIndex of each crate
+        let mut node_map: HashMap<String, NodeIndex> = HashMap::new();
+
+        // Populate node_map with nodes in the graph (example approach)
+        for node_idx in graph.node_indices() {
+            let node_name = graph[node_idx].clone();  // Get the node name (String)
+            node_map.insert(node_name, node_idx);     // Map the name to its NodeIndex
+        }
+
         // Check that the graph contains the correct nodes
         let expected_nodes = vec!["crate_a", "crate_b", "crate_c"];
         for node in expected_nodes {
-            assert!(graph.contains_node(node), "Graph should contain node {}", node);
+            assert!(node_map.contains_key(node), "Graph should contain node {}", node);
         }
 
         // Check that the edges are correct
-        assert!(graph.contains_edge("crate_b", "crate_a"), "crate_b should depend on crate_a");
-        assert!(graph.contains_edge("crate_c", "crate_b"), "crate_c should depend on crate_b");
+        assert!(graph.contains_edge(node_map["crate_b"], node_map["crate_a"]), "crate_b should depend on crate_a");
+        assert!(graph.contains_edge(node_map["crate_c"], node_map["crate_b"]), "crate_c should depend on crate_b");
 
         // Optionally, check that there are no unexpected edges
-        assert!(!graph.contains_edge("crate_a", "crate_b"), "crate_a should not depend on crate_b");
+        assert!(!graph.contains_edge(node_map["crate_a"], node_map["crate_b"]), "crate_a should not depend on crate_b");
 
         Ok(())
     }
+}
 
-    #[tokio::test]
-    async fn test_generate_dependency_tree_dot() -> Result<(), WorkspaceError> {
-        // Create a mock workspace similar to the previous test
+mod circular_dependency_tests {
+    use super::*;
+    use std::fs;
+    
+    #[traced_test]
+    async fn test_simple_circular_dependency() -> Result<(), WorkspaceError> {
+
+        info!("Create a mock workspace with a simple circular dependency: crate_a -> crate_b -> crate_a");
+
         let workspace_path = create_mock_workspace(vec![
             CrateConfig::new("crate_a")
                 .with_src_files()
@@ -682,7 +784,8 @@ mod dependency_tests {
                 .with_readme(),
         ]).await?;
 
-        // Add a dependency: crate_b depends on crate_a
+        info!("crate_b depends on crate_a");
+
         let cargo_toml_b = workspace_path.join("crate_b").join("Cargo.toml");
         let cargo_toml_b_content = indoc! { r#"
             [package]
@@ -695,22 +798,686 @@ mod dependency_tests {
             [dependencies]
             crate_a = { path = "../crate_a" }
         "# };
-        fs::write(&cargo_toml_b, cargo_toml_b_content).await?;
+        fs::write(&cargo_toml_b, cargo_toml_b_content).map_err(|e| FileError::WriteError { io: e })?;
 
-        // Initialize the workspace
+        info!("crate_a depends on crate_b (creating a cycle)");
+
+        let cargo_toml_a = workspace_path.join("crate_a").join("Cargo.toml");
+        let cargo_toml_a_content = indoc! { r#"
+            [package]
+            name = "crate_a"
+            version = "0.1.0"
+            authors = ["author@example.com"]
+            license = "MIT"
+            edition = "2018"
+
+            [dependencies]
+            crate_b = { path = "../crate_b" }
+        "# };
+        fs::write(&cargo_toml_a, cargo_toml_a_content).map_err(|e| FileError::WriteError { io: e })?;
+
+        info!("Initialize the workspace");
+
         let workspace = Workspace::new(&workspace_path).await?;
 
-        // Generate the DOT format
-        let dot_output = workspace.generate_dependency_tree_dot().await?;
+        info!("Assert circular dependencies are detected");
 
-        // For debugging, you can print the DOT output
-        println!("Dependency Graph DOT:\n{}", dot_output);
-
-        // Simple checks on the DOT output
-        assert!(dot_output.contains("crate_a"));
-        assert!(dot_output.contains("crate_b"));
-        assert!(dot_output.contains("\"crate_b\" -> \"crate_a\""));
+        match workspace.detect_circular_dependencies().await {
+            Ok(_) => panic!("Expected circular dependencies but found none."),
+            Err(WorkspaceError::CargoMetadataError(e)) => {
+                assert!(e.is_cyclic_package_dependency_error(), "Expected cyclic package dependency error, got: {}", e);
+            }
+            Err(e) => {
+                panic!("Expected CargoMetadataError but found some other error: {:#?}", e);
+            }
+        }
 
         Ok(())
     }
 }
+
+mod workspace_docs_tests {
+    use super::*;
+    use std::fs;
+
+    #[traced_test]
+    async fn test_generate_workspace_docs_success() -> Result<(), WorkspaceError> {
+        info!("Creating a mock workspace with valid crates");
+
+        let workspace_path = create_mock_workspace(vec![
+            CrateConfig::new("crate_a")
+                .with_src_files()
+                .with_readme(),
+            CrateConfig::new("crate_b")
+                .with_src_files()
+                .with_readme(),
+        ]).await?;
+
+        info!("Initializing the workspace");
+        
+        let workspace = Workspace::new(&workspace_path).await?;
+
+        info!("Running cargo doc and asserting success");
+
+        assert!(workspace.generate_workspace_docs().await.is_ok(), "Expected documentation generation to succeed");
+
+        info!("Test completed successfully");
+
+        Ok(())
+    }
+
+    #[traced_test]
+    async fn test_generate_workspace_docs_failure_invalid_version() -> Result<(), WorkspaceError> {
+        info!("creating a mock workspace with one valid crate and one crate with an invalid version format");
+
+        let workspace_path = create_mock_workspace(vec![
+            CrateConfig::new("valid_crate")
+                .with_src_files()
+                .with_readme(),
+            CrateConfig::new("invalid_crate")
+                .with_src_files()
+                .with_readme(),
+        ]).await?;
+
+        info!("simulating an invalid version format for invalid_crate");
+
+        let invalid_cargo_toml = workspace_path.join("invalid_crate").join("Cargo.toml");
+        fs::write(&invalid_cargo_toml, indoc! { r#"
+            [package]
+            name = "invalid_crate"
+            version = "not-a-semver"
+            authors = ["author@example.com"]
+            license = "MIT"
+        "# }).map_err(|e| CargoTomlWriteError::WritePackageSectionError { io: e })?;
+
+        info!("Initializing the workspace");
+
+        let workspace = Workspace::new(&workspace_path).await?;
+
+        info!("running cargo doc and asserting failure due to invalid version");
+
+        match workspace.generate_workspace_docs().await {
+            Ok(_) => panic!("Expected documentation generation to fail due to invalid version format"),
+            Err(WorkspaceError::CargoDocError(CargoDocError::UnknownError { stderr, stdout: _ })) => {
+                let stderr = stderr.expect("expected to see a stderr field");
+                info!("asserting that the error message contains the relevant failure details -- stderr: {:#?}", stderr);
+                assert!(stderr.contains("failed to load manifest"), "Expected failure in Cargo.toml parsing");
+                assert!(stderr.contains("not-a-semver"), "Expected invalid version format to be mentioned");
+            }
+            Err(e) => panic!("Unexpected error: {:?}", e),
+        }
+
+        info!("test completed successfully");
+
+        Ok(())
+    }
+
+    #[traced_test]
+    async fn test_generate_workspace_docs_failure_invalid_cargo_toml() -> Result<(), WorkspaceError> {
+        info!("Creating a mock workspace with one crate having an invalid Cargo.toml");
+
+        // Create a mock workspace where one crate has an invalid Cargo.toml file
+        let workspace_path = create_mock_workspace(vec![
+            CrateConfig::new("crate_with_invalid_toml")
+                .with_src_files(),
+            CrateConfig::new("valid_crate")
+                .with_src_files()
+                .with_readme(),
+        ]).await?;
+
+        info!("Simulating an invalid Cargo.toml format for crate_with_invalid_toml");
+
+        // Write an invalid Cargo.toml file to simulate a failure in documentation generation
+        let invalid_cargo_toml = workspace_path.join("crate_with_invalid_toml").join("Cargo.toml");
+        fs::write(&invalid_cargo_toml, indoc! { r#"
+            [package]
+            name = "crate_with_invalid_toml"
+            version = "0.1.0"
+            authors = ["author@example.com"]
+            license = "MIT"
+            # Introducing invalid syntax here by removing the closing bracket of [dependencies]
+            [dependencies
+        "# }).map_err(|e| FileError::WriteError { io: e })?;
+
+        info!("Initializing the workspace and expecting an error due to invalid Cargo.toml");
+
+        // Now we expect the workspace initialization to fail due to the invalid Cargo.toml syntax
+        match Workspace::new(&workspace_path).await {
+            Ok(_) => panic!("Expected workspace initialization to fail due to invalid Cargo.toml"),
+            Err(WorkspaceError::InvalidCargoToml(CargoTomlError::TomlParseError { toml_parse_error, cargo_toml_file })) => {
+                info!("Assert the failure is due to the invalid Cargo.toml syntax");
+                assert!(toml_parse_error.to_string().contains("invalid table header"), "Expected a TOML parse error");
+                assert!(cargo_toml_file.ends_with("Cargo.toml"), "Expected the error to be associated with the Cargo.toml file");
+            }
+            Err(e) => panic!("Unexpected error: {:?}", e),
+        }
+
+        info!("Test completed successfully");
+
+        Ok(())
+    }
+
+    #[traced_test]
+    async fn test_generate_workspace_docs_success_without_readme() -> Result<(), WorkspaceError> {
+        info!("Creating a mock workspace with one crate missing a README");
+
+        // Create a mock workspace where one crate is missing a README file
+        let workspace_path = create_mock_workspace(vec![
+            CrateConfig::new("crate_without_readme")
+            .with_src_files(),
+            CrateConfig::new("valid_crate")
+            .with_src_files()
+            .with_readme(),
+        ]).await?;
+
+        info!("Initializing the workspace");
+
+        let workspace = Workspace::new(&workspace_path).await?;
+
+        info!("Running cargo doc and asserting success even with missing README");
+
+        // We expect cargo doc to succeed even though one crate is missing a README
+        match workspace.generate_workspace_docs().await {
+            Ok(_) => info!("cargo doc ran successfully even without a README"),
+            Err(e) => panic!("Expected documentation generation to succeed, but got an error: {:?}", e),
+        }
+
+        info!("Test completed successfully");
+
+        Ok(())
+    }
+}
+
+mod workspace_linting_tests {
+    use super::*;
+    use std::fs;
+
+    #[traced_test]
+    async fn test_run_linting_success() -> Result<(), WorkspaceError> {
+        info!("Creating a mock workspace with valid crates for linting");
+
+        // Create a mock workspace with valid crates
+        let workspace_path = create_mock_workspace(vec![
+            CrateConfig::new("crate_a")
+                .with_src_files()
+                .with_readme(),
+            CrateConfig::new("crate_b")
+                .with_src_files()
+                .with_readme(),
+        ]).await?;
+
+        info!("Writing valid code to src/lib.rs for both crates");
+
+        // Write valid code to avoid linting errors
+        let src_dir_a = workspace_path.join("crate_a").join("src");
+        let src_dir_b = workspace_path.join("crate_b").join("src");
+        fs::write(src_dir_a.join("lib.rs"), "pub fn greet() { println!(\"Hello, world!\"); }").map_err(|e| FileError::WriteError { io: e })?;
+        fs::write(src_dir_b.join("lib.rs"), "pub fn farewell() { println!(\"Goodbye, world!\"); }").map_err(|e| FileError::WriteError { io: e })?;
+
+        info!("Initializing the workspace");
+
+        let workspace = Workspace::new(&workspace_path).await?;
+
+        info!("Running cargo clippy and asserting success");
+
+        // Run `cargo clippy` and assert that linting succeeds
+        let lint_report = workspace.run_linting().await?;
+        assert!(lint_report.success(), "Expected linting to succeed");
+
+        // We no longer require output if clippy succeeds without warnings
+        if lint_report.stdout().is_empty() && lint_report.stderr().is_empty() {
+            info!("Clippy ran successfully with no warnings or errors.");
+        } else {
+            info!("Clippy produced some output: stdout or stderr.");
+        }
+
+        info!("Test completed successfully");
+
+        Ok(())
+    }
+
+    #[traced_test]
+    async fn test_run_linting_failure() -> Result<(), WorkspaceError> {
+        info!("Creating a mock workspace with linting issues");
+
+        // Create a mock workspace where one crate has linting errors
+        let workspace_path = create_mock_workspace(vec![
+            CrateConfig::new("crate_with_lint_error")
+                .with_src_files()
+                .with_readme(),
+        ]).await?;
+
+        info!("Simulating a linting error in crate_with_lint_error");
+
+        // Simulate a linting issue by writing code with a lint error
+        let src_dir = workspace_path.join("crate_with_lint_error").join("src");
+
+        fs::write(src_dir.join("lib.rs"), "fn unused_function() {}")
+            .map_err(|e| FileError::WriteError { io: e })?;
+
+        info!("Initializing the workspace");
+
+        let workspace = Workspace::new(&workspace_path).await?;
+
+        info!("Running cargo clippy and expecting a failure");
+
+        // We expect cargo clippy to fail due to the linting issue
+        match workspace.run_linting().await {
+
+            Ok(_) => panic!("Expected linting to fail due to issues in the code"),
+
+            Err(LintingError::UnknownError { stderr, stdout: _ }) => {
+
+                let stderr = stderr.expect("expected stderr");
+
+                info!("Assert the failure is due to linting errors");
+
+                assert!(
+                    stderr.contains("warning") || stderr.contains("error"), 
+                    "Expected a warning or error related to linting"
+                );
+            }
+
+            Err(e) => panic!("Unexpected error: {:?}", e),
+        }
+
+        info!("Test completed successfully");
+
+        Ok(())
+    }
+}
+
+mod workspace_coverage_tests {
+    use super::*;
+    use std::fs;
+
+    #[traced_test]
+    async fn test_run_tests_with_coverage_success() -> Result<(), WorkspaceError> {
+        info!("Creating a mock workspace with valid crates for test coverage");
+
+        // Create a mock workspace with valid crates
+        let workspace_path = create_mock_workspace(vec![
+            CrateConfig::new("crate_a")
+                .with_src_files()
+                .with_readme(),
+            CrateConfig::new("crate_b")
+                .with_src_files()
+                .with_readme(),
+        ]).await?;
+
+        info!("Writing valid code and tests for both crates");
+
+        // Write valid code and tests for both crates
+        let src_dir_a = workspace_path.join("crate_a").join("src");
+        let src_dir_b = workspace_path.join("crate_b").join("src");
+        fs::write(src_dir_a.join("lib.rs"), r#"
+            pub fn greet() { 
+                println!("Hello, world!"); 
+            }
+            #[cfg(test)]
+            mod tests {
+                #[test]
+                fn test_greet() {
+                    super::greet();
+                }
+            }
+        "#).map_err(|e| FileError::WriteError { io: e })?;
+
+        fs::write(src_dir_b.join("lib.rs"), r#"
+            pub fn farewell() { 
+                println!("Goodbye, world!"); 
+            }
+            #[cfg(test)]
+            mod tests {
+                #[test]
+                fn test_farewell() {
+                    super::farewell();
+                }
+            }
+        "#).map_err(|e| FileError::WriteError { io: e })?;
+
+        info!("Initializing the workspace");
+
+        let workspace = Workspace::new(&workspace_path).await?;
+
+        info!("Running tests with coverage");
+
+        // Run tests and assert that coverage is reported successfully
+        let coverage_report = workspace.run_tests_with_coverage().await?;
+
+        assert!(coverage_report.total_coverage() > 0.0, "Expected some coverage");
+
+        assert_eq!(
+            coverage_report.total_lines(), 
+            coverage_report.covered_lines() + coverage_report.missed_lines(), 
+            "Total lines should be the sum of covered and missed lines"
+        );
+
+        info!("Test completed successfully");
+
+        Ok(())
+    }
+
+    #[traced_test]
+    async fn test_run_tests_with_coverage_failure() -> Result<(), WorkspaceError> {
+        info!("Creating a mock workspace with test failures");
+
+        // Create a mock workspace where one crate has failing tests
+        let workspace_path = create_mock_workspace(vec![
+            CrateConfig::new("crate_with_failing_tests")
+                .with_src_files()
+                .with_readme(),
+        ]).await?;
+
+        info!("Simulating a failing test case");
+
+        // Simulate a failing test
+        let src_dir = workspace_path.join("crate_with_failing_tests").join("src");
+        fs::write(src_dir.join("lib.rs"), r#"
+            #[cfg(test)]
+            mod tests {
+                #[test]
+                fn test_fail() {
+                    panic!("This function always fails");
+                }
+            }
+        "#).map_err(|e| FileError::WriteError { io: e })?;
+
+        info!("Initializing the workspace");
+
+        let workspace = Workspace::new(&workspace_path).await?;
+
+        info!("Running tests with coverage and expecting a failure");
+
+        // We expect test failures, which should trigger the `TestFailure` error
+        match workspace.run_tests_with_coverage().await {
+            Ok(_) => panic!("Expected an error related to the failing test"),
+            Err(WorkspaceError::TestFailure(TestFailure::UnknownError { stderr, stdout: _ })) => {
+                let stderr = stderr.expect("expected to see a stderr");
+                info!("Assert the failure is due to test failures");
+                assert!(stderr.contains("Test failed during run"), "Expected a test failure error");
+            }
+            Err(e) => panic!("Unexpected error: {:?}", e),
+        }
+
+        info!("Test completed successfully");
+
+        Ok(())
+    }
+}
+
+#[cfg(test)]
+mod workspace_watch_and_reload_tests {
+    use super::*;
+    use std::fs;
+    use std::time::Duration;
+    use tracing::info;
+    use tokio::sync::mpsc;
+    use std::sync::Arc;
+    use tokio::time::timeout;
+
+    #[tokio::test]
+    async fn test_watch_and_reload_on_relevant_file_change() -> Result<(), WorkspaceError> {
+        info!("Creating a mock workspace");
+
+        // Create a mock workspace with a simple crate
+        let workspace_path = create_mock_workspace(vec![
+            CrateConfig::new("crate_a")
+                .with_src_files()
+                .with_readme(),
+        ]).await?;
+
+        // Initialize the workspace
+        let workspace = Workspace::new(&workspace_path).await?;
+
+        // Capture the output for verification
+        let (tx, mut rx) = mpsc::channel(1);
+        let watch_handle = tokio::spawn({
+            let workspace = Arc::new(workspace);
+            async move {
+                workspace.watch_and_reload(Some(tx)).await.unwrap();
+            }
+        });
+
+        info!("Simulating a file change in src/lib.rs");
+
+        // Simulate a file change in the src/ directory
+        let src_dir = workspace_path.join("crate_a").join("src");
+        fs::write(src_dir.join("lib.rs"), "fn updated_function() {}").map_err(|e| FileError::WriteError { io: e })?;
+
+        // Wait for the change event to be processed
+        if let Some(result) = rx.recv().await {
+            assert!(result.is_ok(), "Expected a rebuild and test to be triggered");
+        } else {
+            panic!("Did not receive any rebuild or test trigger");
+        }
+
+        watch_handle.abort();  // Stop the watcher
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_watch_and_reload_on_irrelevant_file_change() -> Result<(), WorkspaceError> {
+        info!("Creating a mock workspace");
+
+        // Create a mock workspace with a simple crate
+        let workspace_path = create_mock_workspace(vec![
+            CrateConfig::new("crate_a")
+                .with_src_files()
+                .with_readme(),
+        ]).await?;
+
+        // Initialize the workspace
+        let workspace = Workspace::new(&workspace_path).await?;
+
+        // Capture the output for verification
+        let (tx, mut rx) = mpsc::channel(1);
+        let watch_handle = tokio::spawn({
+            let workspace = Arc::new(workspace);
+            async move {
+                workspace.watch_and_reload(Some(tx)).await.unwrap();
+            }
+        });
+
+        info!("Simulating a file change in README.md");
+
+        // Simulate a file change in an irrelevant file (README.md)
+        let readme_file = workspace_path.join("crate_a").join("README.md");
+        fs::write(readme_file, "# Updated README").map_err(|e| FileError::WriteError { io: e })?;
+
+        // Wait to see if any messages are received
+        let duration = Duration::from_secs(2);
+        match timeout(duration, rx.recv()).await {
+            Ok(Some(_)) => panic!("Expected no rebuild or test to be triggered for irrelevant file changes"),
+            Ok(None) => panic!("Channel closed unexpectedly"),
+            Err(_) => {
+                // No message received within the timeout duration, which is expected
+                assert!(true);
+            }
+        }
+
+        watch_handle.abort();  // Stop the watcher
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_watch_and_reload_with_successful_rebuild_and_tests() -> Result<(), WorkspaceError> {
+        info!("Creating a mock workspace");
+
+        // Create a mock workspace with valid code and tests
+        let workspace_path = create_mock_workspace(vec![
+            CrateConfig::new("crate_a")
+                .with_src_files()
+                .with_readme(),
+        ]).await?;
+
+        info!("Writing valid code to src/lib.rs");
+
+        // Write valid code and tests for the crate
+        let src_dir = workspace_path.join("crate_a").join("src");
+        fs::write(src_dir.join("lib.rs"), r#"
+            pub fn greet() {
+                println!("Hello, world!");
+            }
+            #[cfg(test)]
+            mod tests {
+                #[test]
+                fn test_greet() {
+                    super::greet();
+                }
+            }
+        "#).map_err(|e| FileError::WriteError { io: e })?;
+
+        info!("Initializing the workspace");
+
+        let workspace = Workspace::new(&workspace_path).await?;
+
+        // Capture the output for verification
+        let (tx, mut rx) = mpsc::channel(1);
+        let watch_handle = tokio::spawn({
+            let workspace = Arc::new(workspace);
+            async move {
+                workspace.watch_and_reload(Some(tx)).await.unwrap();
+            }
+        });
+
+        info!("Simulating a file change in src/lib.rs");
+
+        // Simulate a file change in the src directory
+        fs::write(src_dir.join("lib.rs"), r#"
+            pub fn greet_updated() {
+                println!("Updated!");
+            }
+            #[cfg(test)]
+            mod tests {
+                #[test]
+                fn test_greet_updated() {
+                    super::greet_updated();
+                }
+            }
+        "#).map_err(|e| FileError::WriteError { io: e })?;
+
+        // Wait for the change event to be processed
+        if let Some(result) = rx.recv().await {
+            assert!(result.is_ok(), "Expected a successful rebuild and test run");
+        } else {
+            panic!("Did not receive any rebuild or test trigger");
+        }
+
+        watch_handle.abort();  // Stop the watcher
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_watch_and_reload_with_failed_rebuild() -> Result<(), WorkspaceError> {
+        info!("Creating a mock workspace");
+
+        // Create a mock workspace with invalid code
+        let workspace_path = create_mock_workspace(vec![
+            CrateConfig::new("crate_a")
+                .with_src_files()
+                .with_readme(),
+        ]).await?;
+
+        info!("Writing invalid code to src/lib.rs");
+
+        // Write invalid code to cause a rebuild failure
+        let src_dir = workspace_path.join("crate_a").join("src");
+        fs::write(src_dir.join("lib.rs"), "fn invalid_code {").map_err(|e| FileError::WriteError { io: e })?;
+
+        info!("Initializing the workspace");
+
+        let workspace = Workspace::new(&workspace_path).await?;
+
+        // Capture the output for verification
+        let (tx, mut rx) = mpsc::channel(1);
+        let watch_handle = tokio::spawn({
+            let workspace = Arc::new(workspace);
+            async move {
+                workspace.watch_and_reload(Some(tx)).await.unwrap();
+            }
+        });
+
+        // Simulate a file change to trigger the watcher
+        fs::write(src_dir.join("lib.rs"), "fn invalid_code {").map_err(|e| FileError::WriteError { io: e })?;
+
+        // Wait for the change event to be processed
+        if let Some(result) = rx.recv().await {
+            assert!(matches!(result, Err(WorkspaceError::BuildError(_))), "Expected a build failure");
+        } else {
+            panic!("Did not receive any rebuild or test trigger");
+        }
+
+        watch_handle.abort();  // Stop the watcher
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_watch_and_reload_with_failed_tests() -> Result<(), WorkspaceError> {
+        info!("Creating a mock workspace");
+
+        // Create a mock workspace with a failing test
+        let workspace_path = create_mock_workspace(vec![
+            CrateConfig::new("crate_a")
+                .with_src_files()
+                .with_readme(),
+        ]).await?;
+
+        info!("Writing code with a failing test");
+
+        // Write valid code but with a test that always fails
+        let src_dir = workspace_path.join("crate_a").join("src");
+        fs::write(src_dir.join("lib.rs"), r#"
+            pub fn always_fail() {
+                panic!("This always fails");
+            }
+            #[cfg(test)]
+            mod tests {
+                #[test]
+                fn test_fail() {
+                    super::always_fail();
+                }
+            }
+        "#).map_err(|e| FileError::WriteError { io: e })?;
+
+        info!("Initializing the workspace");
+
+        let workspace = Workspace::new(&workspace_path).await?;
+
+        // Capture the output for verification
+        let (tx, mut rx) = mpsc::channel(1);
+        let watch_handle = tokio::spawn({
+            let workspace = Arc::new(workspace);
+            async move {
+                workspace.watch_and_reload(Some(tx)).await.unwrap();
+            }
+        });
+
+        info!("Simulating a file change in src/lib.rs");
+
+        // Simulate a file change in the src directory
+        fs::write(src_dir.join("lib.rs"), r#"
+            pub fn always_fail() {
+                panic!("This always fails");
+            }
+            #[cfg(test)]
+            mod tests {
+                #[test]
+                fn test_fail() {
+                    super::always_fail();
+                }
+            }
+        "#).map_err(|e| FileError::WriteError { io: e })?;
+
+        // Wait for the change event to be processed
+        if let Some(result) = rx.recv().await {
+            assert!(matches!(result, Err(WorkspaceError::TestFailure(_))), "Expected a test failure");
+        } else {
+            panic!("Did not receive any rebuild or test trigger");
+        }
+
+        watch_handle.abort();  // Stop the watcher
+        Ok(())
+    }
+}
+

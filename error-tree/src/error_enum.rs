@@ -2,6 +2,7 @@ crate::ix!();
 
 #[derive(Clone,Debug,PartialEq)]
 pub struct ErrorEnum {
+    pub attrs:      Vec<Attribute>,
     pub visibility: syn::Visibility,
     pub ident:      Ident, // Enum name
     pub variants:   Vec<ErrorVariant>, // Variants
@@ -10,8 +11,7 @@ pub struct ErrorEnum {
 impl ToTokens for ErrorEnum {
 
     fn to_tokens(&self, tokens: &mut TokenStream2) {
-
-        let ErrorEnum { visibility, ident, variants: _ } = &self;
+        let ErrorEnum { attrs, visibility, ident, variants: _ } = &self;
 
         // Generate enum definitions
         let variant_defs = self.variant_defs();
@@ -19,6 +19,7 @@ impl ToTokens for ErrorEnum {
         tokens.extend(
             quote! {
                 // Enum definition
+                #(#attrs)*
                 #[derive(Debug)]
                 #visibility enum #ident {
                     #(#variant_defs),*
@@ -61,17 +62,19 @@ impl ErrorEnum {
 impl Parse for ErrorEnum {
 
     fn parse(input: ParseStream) -> SynResult<Self> {
+        // Parse attributes
+        let attrs: Vec<Attribute> = input.call(Attribute::parse_outer)?;
 
-        // Parsing visibility specifier (like `pub`)
+        // Parse visibility specifier (like `pub`)
         let visibility: syn::Visibility = input.parse()?;
 
-        // Parsing the `enum` keyword
+        // Parse the `enum` keyword
         let _enum_token: Token![enum] = input.parse()?;
 
-        // Parsing the identifier (name of the enum)
+        // Parse the identifier (name of the enum)
         let ident: Ident = input.parse()?;
 
-        // Parsing the curly braces and the content within them
+        // Parse the curly braces and the content within them
         let content;
         let _ = braced!(content in input);
 
@@ -84,6 +87,7 @@ impl Parse for ErrorEnum {
         }
 
         Ok(ErrorEnum {
+            attrs,
             visibility,
             ident,
             variants,
@@ -131,8 +135,31 @@ impl Validate for ErrorEnum {
 mod test_error_enum {
 
     use super::*;
-    use syn::{parse_str, Ident, Type, parse_quote};
+    use syn::{parse_str, Ident, parse_quote};
     use proc_macro2::Span;
+
+    #[test]
+    fn test_parse() {
+        let input_str = r#"
+            #[derive(Clone)]
+            pub enum FirstError {
+                FormatError,
+                IOError(std::io::Error),
+                DeviceNotAvailable { device_name: String }
+            }
+            #[derive(PartialEq)]
+            pub enum SecondError {
+                AnotherError
+            }
+        "#;
+
+        let parse_result: Result<ErrorTree, syn::Error> = syn::parse_str(input_str);
+
+        match parse_result {
+            Ok(parsed_tree) => println!("Parsed successfully: {:#?}", parsed_tree),
+            Err(e) => panic!("Failed to parse: {}", e),
+        }
+    }
 
     fn test_error_enum(input_str: &str, vis: syn::Visibility, ident: Ident, variants: Vec<ErrorVariant>) {
         match parse_str::<ErrorEnum>(input_str) {

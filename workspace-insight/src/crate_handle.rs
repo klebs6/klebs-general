@@ -174,8 +174,15 @@ impl GetFilesInDirectoryWithExclusions for CrateHandle {
 
         let mut files = vec![];
 
-        let mut entries = fs::read_dir(dir_path).await?;
-        while let Some(entry) = entries.next_entry().await? {
+        let mut entries = fs::read_dir(dir_path)
+            .await
+            .map_err(|e| DirectoryError::ReadDirError {io: e })?;
+
+        while let Some(entry) 
+            = entries.next_entry()
+            .await
+            .map_err(|e| DirectoryError::GetNextEntryError {io: e })? 
+        {
             let path = entry.path();
             let file_name = path.file_name().and_then(|n| n.to_str()).ok_or_else(|| {
                 WorkspaceError::FailedToGetFileNameForPath {

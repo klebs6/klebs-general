@@ -1,12 +1,18 @@
 crate::ix!();
 
-pub struct CargoMetadata {
-
-}
-
 impl Workspace {
-    pub fn crate_metadata(&self) -> Result<CargoMetadata, WorkspaceError> {
-        // Parse Cargo.toml to retrieve metadata like name, version, authors, etc.
-        todo!();
+
+    /// Helper method to get cargo metadata asynchronously
+    pub async fn get_cargo_metadata(&self) -> Result<Metadata, WorkspaceError> {
+        let path = self.path().to_path_buf();
+        let metadata = task::spawn_blocking(move || {
+            MetadataCommand::new()
+                .current_dir(&path)
+                .exec()
+                .map_err(|e| CargoMetadataError::MetadataError { error: e })
+        })
+        .await
+        .map_err(|e| TokioError::JoinError { join_error: e })??;
+        Ok(metadata)
     }
 }

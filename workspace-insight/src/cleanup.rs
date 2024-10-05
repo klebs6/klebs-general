@@ -4,8 +4,9 @@ impl Workspace {
 
     /// Asynchronously cleans up unnecessary files and directories in the workspace.
     pub async fn cleanup_workspace(&self) -> Result<(), WorkspaceError> {
+
         // Directories and files to clean up
-        let dirs_to_clean = vec![self.path().join("target")];
+        let dirs_to_clean  = vec![self.path().join("target")];
         let files_to_clean = vec![self.path().join("Cargo.lock")];
 
         // Remove directories

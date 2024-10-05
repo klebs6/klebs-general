@@ -15,6 +15,10 @@ impl Workspace {
     pub fn n_crates(&self) -> usize {
         self.crates.len()
     }
+
+    pub fn crates(&self) -> &[CrateHandle] {
+        &self.crates
+    }
 }
 
 impl ValidateIntegrity for Workspace {
@@ -105,7 +109,6 @@ impl AsyncIsValid for Workspace {
 
 #[async_trait]
 impl AsyncFindItemsFromPath for Workspace {
-
     type Item = CrateHandle;
     type Error = WorkspaceError;
 
@@ -113,10 +116,13 @@ impl AsyncFindItemsFromPath for Workspace {
     async fn find_items(path: &Path) -> Result<Vec<Self::Item>, Self::Error> {
         let mut crates = vec![];
 
-        let mut entries = fs::read_dir(path).await?;
-        while let Some(entry) = entries.next_entry().await? {
+        let mut entries = fs::read_dir(path)
+            .await
+            .map_err(|e| DirectoryError::ReadDirError { io: e })?;
+
+        while let Some(entry) = entries.next_entry().await.map_err(|e| DirectoryError::GetNextEntryError { io: e })? {
             let crate_path = entry.path();
-            
+
             if fs::metadata(crate_path.join("Cargo.toml")).await.is_ok() {
                 crates.push(CrateHandle::new(&crate_path).await?);
             }

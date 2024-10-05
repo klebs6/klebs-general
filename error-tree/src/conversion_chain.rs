@@ -271,6 +271,7 @@ impl ConversionChain {
 mod conversion_chain_tests {
 
     use super::*;
+    use syn::parse_quote;
 
     #[test]
     fn test_empty_conversion_chain() {

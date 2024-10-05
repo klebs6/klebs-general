@@ -16,6 +16,7 @@ impl TracedTestGenerator {
 
         quote! {
             use colored::Colorize;
+            use ::std::sync::{Arc,Mutex};
             #def_should_trace_trait
             #def_backtrace_guard
             #def_flush_logs_if_needed
@@ -24,34 +25,23 @@ impl TracedTestGenerator {
 
             println!("{}", format!("===== BEGIN_TEST: {} =====", #test_name).blue().bold());
 
-            let local_subscriber = setup_buffered_tracing(Some(#test_name));
-            let _guard           = tracing::subscriber::set_default(local_subscriber.clone());
-            let span             = tracing::span!(tracing::Level::INFO, "test_trace", test_name = #test_name);
-            let _enter           = span.enter();
-
-            let test_failed = ::std::sync::Arc::new(::std::sync::Mutex::new(false));
-            let test_failed_clone = test_failed.clone();
-
-            let logs_already_flushed = ::std::sync::Arc::new(::std::sync::Mutex::new(false));
-
-            let _end_of_test_guard = EndOfTestGuard;
-
-            // Set RUST_BACKTRACE to "0" to suppress default panic backtrace
-            let _backtrace_guard = {
-                let previous_value = std::env::var("RUST_BACKTRACE").ok();
-                // Set RUST_BACKTRACE to "0" to suppress default backtrace
-                std::env::set_var("RUST_BACKTRACE", "0");
-
-                BacktraceGuard { previous_value, test_name: #test_name.to_string() }
-            };
+            let local_subscriber     = setup_buffered_tracing(Some(#test_name));
+            let _guard               = tracing::subscriber::set_default(local_subscriber.clone());
+            let span                 = tracing::span!(tracing::Level::INFO, "test_trace", test_name = #test_name);
+            let _enter               = span.enter();
+            let test_failed          = Arc::new(Mutex::new(false));
+            let test_failed_clone    = test_failed.clone();
+            let logs_already_flushed = Arc::new(Mutex::new(false));
+            let _end_of_test_guard   = EndOfTestGuard;
+            let _backtrace_guard     = BacktraceGuard::new(#test_name.to_string());
 
             // Instantiate TracingGuard to ensure logs are flushed conditionally
             let _tracing_guard = TracingGuard {
-                local_subscriber: local_subscriber.clone(),
-                test_failed: test_failed.clone(),
+                local_subscriber:        local_subscriber.clone(),
+                test_failed:             test_failed.clone(),
                 should_trace_on_success: #should_trace_on_success,
                 should_trace_on_failure: #should_trace_on_failure,
-                logs_already_flushed: logs_already_flushed.clone(),
+                logs_already_flushed:    logs_already_flushed.clone(),
             };
         }
     }

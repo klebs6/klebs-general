@@ -1,8 +1,5 @@
-
-
-
-#![warn(dead_code)]
-#![warn(unused_imports)]
+//#![warn(unused_imports)]
+//#![allow(dead_code)]
 extern crate proc_macro;
 
 #[macro_use] mod imports; use imports::*;

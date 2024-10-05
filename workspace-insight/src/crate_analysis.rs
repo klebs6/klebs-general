@@ -39,7 +39,7 @@ impl CrateAnalysis {
 
         for file in source_files {
 
-            let file_size     = fs::metadata(&file).await?.len();
+            let file_size     = file.file_size().await?;
             let lines_of_code = count_lines_in_file(&file).await?;
 
             total_file_size     += file_size;
@@ -57,7 +57,7 @@ impl CrateAnalysis {
 
             for file in test_files {
 
-                let file_size     = fs::metadata(&file).await?.len();
+                let file_size     = file.file_size().await?;
                 let lines_of_code = count_lines_in_file(&file).await?;
 
                 total_file_size     += file_size;

@@ -51,7 +51,7 @@ impl Parse for ErrorVariant {
 mod test_error_variant {
 
     use super::*;
-    use syn::{parse_str, Ident, Type};
+    use syn::{parse_str, Ident};
     use proc_macro2::Span;
 
     #[test]

@@ -67,7 +67,7 @@ impl FromImplGenerationConfigEmitter {
         Ok(())
     }
 
-    #[cfg(debug)]
+    #[allow(dead_code)]
     fn print_stack_path(&self) {
         let path: Vec<_> = self.stack.iter().map(|e| e.ident.to_string()).collect();
         println!("Current Path: {:?}", path);

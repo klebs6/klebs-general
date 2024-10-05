@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use error_tree::error_tree;
 use std::sync::mpsc;
 
@@ -15,7 +17,7 @@ fn test_error_tree() {
 
     impl From<CpalBackendSpecificError> for CpalDeviceNameError {
 
-        fn from(x: CpalBackendSpecificError) -> Self {
+        fn from(_x: CpalBackendSpecificError) -> Self {
             CpalDeviceNameError
         }
     }

@@ -13,7 +13,9 @@ impl CargoToml {
     pub async fn new<P>(cargo_toml_path: P) -> Result<Self, CargoTomlError> 
         where P: AsRef<Path>
     {
-        let cargo_content = fs::read_to_string(&cargo_toml_path).await?;
+        let cargo_content = fs::read_to_string(&cargo_toml_path).await
+            .map_err(|e| CargoTomlError::ReadError { io: e })?;
+
         let parsed: toml::Value = toml::from_str(&cargo_content).map_err(|toml_parse_error| {
             CargoTomlError::TomlParseError {
                 cargo_toml_file: cargo_toml_path.as_ref().to_path_buf(),

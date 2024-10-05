@@ -214,7 +214,7 @@ mod good {
 // during testing, we can re-enable these tests just to make sure we get the
 // expected failures we anticipate
 //
-#[disable]
+//#[disable]
 mod expect_failure {
     use super::*;
 

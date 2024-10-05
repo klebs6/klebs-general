@@ -1,8 +1,14 @@
+#![allow(unused_imports)]
+#![allow(unused_variables)]
 #[macro_use] pub mod imports; use imports::*;
 
 x!{analyze_workspace}
+x!{async_traits}
 x!{cargo_publish}
+x!{cargo_toml_handle}
+x!{cargo_toml_traits}
 x!{cleanup}
+x!{contained_files}
 x!{count_lines_in_file}
 x!{crate_analysis}
 x!{crate_handle}
@@ -13,17 +19,17 @@ x!{generate_docs}
 x!{integrity}
 x!{linting}
 x!{metadata}
+x!{get_file_size}
 x!{mock}
 x!{mock_crate_config}
+x!{readme}
+x!{report}
 x!{test_coverage}
+x!{test_coverage_command}
+x!{test_coverage_report}
+x!{test_files}
+x!{validate_toml}
+x!{version_traits}
 x!{watch_and_reload}
 x!{workspace}
 x!{workspace_analysis}
-x!{cargo_toml_handle}
-x!{readme}
-x!{contained_files}
-x!{test_files}
-x!{cargo_toml_traits}
-x!{version_traits}
-x!{async_traits}
-x!{validate_toml}

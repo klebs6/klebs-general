@@ -8,7 +8,7 @@ build:
 	cargo build
 
 test:
-	cargo test
+	RUST_BACKTRACE=1 cargo test
 
 trybuild: 
 	TRYBUILD=overwrite cargo test --test compile_fail_tests
