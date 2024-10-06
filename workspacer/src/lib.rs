@@ -33,3 +33,4 @@ x!{watch_and_reload}
 x!{workspace}
 x!{workspace_analysis}
 x!{workspace_interface}
+x!{consolidate_crate_interface}

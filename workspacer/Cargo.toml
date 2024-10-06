@@ -36,6 +36,8 @@ tracing = "0.1.40"
 uuid = {version = "1.10.0", features = ["v4"] }
 tracing-subscriber = { version = "0.3", default-features = false, features = ["fmt", "std", "env-filter"] }
 disable_macro = "0.3.6"
+ra_ap_syntax = "*"
+scan-crate-for-typedefs = "*"
 [dev-dependencies]
 indoc = "2.0.5"
 mockall = "0.11.4"

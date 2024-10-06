@@ -5,6 +5,7 @@ pub trait CrateHandleInterface<P>
 + ReadyForCargoPublish
 + CheckIfSrcDirectoryContainsValidFiles
 + CheckIfReadmeExists
++ ConsolidateCrateInterface
 + GetReadmePath
 + GetSourceFilesWithExclusions
 + GetTestFiles
@@ -25,6 +26,12 @@ where
 
     WorkspaceError: From<<P as HasCargoTomlPathBuf>::Error>,
 {}
+
+#[async_trait]
+pub trait ConsolidateCrateInterface {
+
+    async fn consolidate_crate_interface(&self) -> Result<ConsolidatedCrateInterface, WorkspaceError>;
+}
 
 #[async_trait]
 pub trait GetTestFiles {

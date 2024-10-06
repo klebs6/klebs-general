@@ -31,3 +31,12 @@ pub(crate) use tokio_stream::{StreamExt,wrappers::ReceiverStream};
 pub(crate) use async_channel;
 pub(crate) use tokio_util::sync::CancellationToken;
 pub(crate) use disable_macro::*;
+pub(crate) use ra_ap_syntax::*;
+pub(crate) use ra_ap_syntax::ast;
+
+pub(crate) use ra_ap_syntax::ast::{
+    HasName,
+    HasVisibility,
+};
+
+pub(crate) use scan_crate_for_typedefs::is_node_public;
