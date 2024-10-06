@@ -6,28 +6,10 @@ pub struct Workspace {
     crates: Vec<CrateHandle>,
 }
 
-pub trait WorkspaceInterface<P>
-: GetCrates
-+ NumCrates
-+ CleanupWorkspace
-+ WatchAndReload
-+ RunTestsWithCoverage
-+ GetCargoMetadata
-+ RebuildOrTest
-+ Analyze
-+ GenerateDocs
-+ RunLinting
-+ DetectCircularDependencies
-+ GenerateDependencyTree
-+ ValidateIntegrity
-+ ReadyForCargoPublish
-+ AsyncTryFrom<P>
-+ AsyncIsValid
-+ AsyncFindItems
-+ AsRef<Path>
+impl<P> WorkspaceInterface<P> for Workspace 
 where 
-for<'async_trait> P: AsRef<Path> + Send + Sync + 'async_trait
-{}
+    for<'async_trait> P: AsRef<Path> + Send + Sync + 'async_trait 
+{ }
 
 #[disable]
 impl Into<PathBuf> for Workspace {

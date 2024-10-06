@@ -1,9 +1,28 @@
 crate::ix!();
 
-impl<P> WorkspaceInterface<P> for Workspace 
+pub trait WorkspaceInterface<P>
+: GetCrates
++ NumCrates
++ CleanupWorkspace
++ WatchAndReload
++ RunTestsWithCoverage
++ GetCargoMetadata
++ RebuildOrTest
++ Analyze
++ GenerateDocs
++ RunLinting
++ DetectCircularDependencies
++ GenerateDependencyTree
++ ValidateIntegrity
++ ReadyForCargoPublish
++ AsyncTryFrom<P>
++ AsyncIsValid
++ AsyncFindItems
++ AsRef<Path>
 where 
-    for<'async_trait> P: AsRef<Path> + Send + Sync + 'async_trait 
-{ }
+for<'async_trait> P: AsRef<Path> + Send + Sync + 'async_trait
+{}
+
 
 pub trait GetCrates {
     fn crates(&self) -> &[CrateHandle];
