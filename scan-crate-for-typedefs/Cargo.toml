@@ -1,3 +1,17 @@
+[package]
+authors = ["klebs tpk3.mx@gmail.com"]
+categories = ["development-tools"]
+description = "simple crate -- lets us scan crate(s) for locally defined structs, enums, types, fns, and traits"
+documentation = "https://docs.rs/scan-crate-for-typedefs"
+edition = "2021"
+homepage   = "https://github.com/klebs6/klebs-general"
+keywords = ["workspace", "crate", "scan", "typedefs", "syntax"]
+license = "MIT"
+name = "scan-crate-for-typedefs"
+readme = "README.md"
+repository = "https://github.com/klebs6/klebs-general"
+version = "0.8.1"
+
 [dependencies]
 delegate = "0.10.0"
 indoc = "2.0.3"
@@ -17,10 +31,3 @@ version = "0.10.0"
 [dependencies.tracing-subscriber]
 features = [ "env-filter", "std" ]
 version = "0.3.17"
-[package]
-description = "simple crate -- lets us scan crate(s) for locally defined structs, enums, types, fns, and traits"
-edition = "2021"
-license = "MIT"
-name = "scan-crate-for-typedefs"
-readme = "README.md"
-version = "0.8.1"
