@@ -10,7 +10,7 @@ documentation = "https://docs.rs/workspacer"
 readme = "README.md"
 license = "MIT"
 keywords = ["workspace", "crate", "validation", "coverage", "dependency"]
-categories = ["development-tools", "cargo-plugins", "build-tools"]
+categories = ["development-tools"]
 
 [dependencies]
 export-magic = "0.3.6"
