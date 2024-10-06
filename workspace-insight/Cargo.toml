@@ -9,6 +9,8 @@ error-tree = "*"
 traced-test = "1.0.2"
 tracing-setup = "*"
 serde = "*"
+mockall = "*"
+async-channel = "*"
 serde_json = "*"
 regex = "*"
 notify = "*"
@@ -18,6 +20,7 @@ petgraph = "*"
 cargo_metadata = "*"
 tokio = {version = "*", features = ["full"] }
 tokio-stream = "*"
+tokio-util = "*"
 futures = "*"
 async-trait = "*"
 tracing = "0.1.40"
@@ -25,3 +28,5 @@ uuid = {version = "*", features = ["v4"] }
 tracing-subscriber = { version = "0.3", default-features = false, features = ["fmt", "std", "env-filter"] }
 [dev-dependencies]
 indoc = "*"
+mockall = "*"
+disable_macro = "*"

@@ -2,6 +2,7 @@ crate::ix!();
 
 error_tree!{
 
+    #[derive(Clone)]
     pub enum TestFailure {
         UnknownError {
             stdout: Option<String>,
@@ -9,88 +10,95 @@ error_tree!{
         }
     }
 
+    #[derive(Clone)]
     pub enum TokioError {
         JoinError {
-            join_error: tokio::task::JoinError,
+            join_error: Arc<tokio::task::JoinError>,
         },
     }
 
+    #[derive(Clone)]
     pub enum DirectoryError {
         CreateDirAllError {
-            io: io::Error,
+            io: Arc<io::Error>,
         },
         ReadDirError {
-            io: io::Error,
+            io: Arc<io::Error>,
         },
         GetNextEntryError {
-            io: io::Error,
+            io: Arc<io::Error>,
         },
     }
 
+    #[derive(Clone)]
     pub enum FileError {
         CreationError {
-            io: io::Error,
+            io: Arc<io::Error>,
         },
         WriteError {
-            io: io::Error,
+            io: Arc<io::Error>,
         },
         GetMetadataError {
-            io: io::Error,
+            io: Arc<io::Error>,
         },
         OpenError {
-            io: io::Error,
+            io: Arc<io::Error>,
         },
         GetNextLineError {
-            io: io::Error,
+            io: Arc<io::Error>,
         },
     }
 
+    #[derive(Clone)]
     pub enum ReadmeWriteError {
         WriteBlankReadmeError {
-            io: io::Error,
+            io: Arc<io::Error>,
         },
     }
 
+    #[derive(Clone)]
     pub enum CrateWriteError {
         ReadmeWriteError(ReadmeWriteError),
         WriteDummyMainError {
-            io: io::Error,
+            io: Arc<io::Error>,
         },
         WriteDummyTestError {
-            io: io::Error,
+            io: Arc<io::Error>,
         },
         WriteLibRsFileError {
-            io: io::Error,
+            io: Arc<io::Error>,
         },
         WriteMainFnError {
-            io: io::Error,
+            io: Arc<io::Error>,
         },
     }
 
+    #[derive(Clone)]
     pub enum CargoTomlWriteError {
         WriteWorkspaceHeaderError {
-            io: io::Error,
+            io: Arc<io::Error>,
         },
         OpenWorkspaceMembersFieldError {
-            io: io::Error,
+            io: Arc<io::Error>,
         },
         WritePackageSectionError {
-            io: io::Error,
+            io: Arc<io::Error>,
         },
         WriteWorkspaceMember {
-            io: io::Error,
+            io: Arc<io::Error>,
         },
         CloseWorkspaceMembersFieldError {
-            io: io::Error,
+            io: Arc<io::Error>,
         },
         WriteError {
-            io: io::Error,
+            io: Arc<io::Error>,
         },
     }
 
+    #[derive(Clone)]
     pub enum CargoTomlError {
         ReadError {
-            io: io::Error,
+            io: Arc<io::Error>,
         },
         CargoTomlWriteError(CargoTomlWriteError),
         MissingRequiredFieldForPublishing {
@@ -119,6 +127,7 @@ error_tree!{
         },
     }
 
+    #[derive(Clone)]
     pub enum TestCoverageError {
         TestFailure {
             stdout: Option<String>,
@@ -130,13 +139,14 @@ error_tree!{
         },
         CoverageParseError,
         CommandError {
-            io: io::Error,
+            io: Arc<io::Error>,
         },
     }
 
+    #[derive(Clone)]
     pub enum CargoDocError {
         CommandError {
-            io: io::Error,
+            io: Arc<io::Error>,
         },
         UnknownError {
             stdout: Option<String>,
@@ -144,9 +154,10 @@ error_tree!{
         }
     }
 
+    #[derive(Clone)]
     pub enum LintingError {
         CommandError {
-            io: io::Error,
+            io: Arc<io::Error>,
         },
         UnknownError {
             stdout: Option<String>,
@@ -154,24 +165,28 @@ error_tree!{
         }
     }
 
+    #[derive(Clone)]
     pub enum CargoMetadataError {
         MetadataError {
-            error: cargo_metadata::Error,
+            error: Arc<cargo_metadata::Error>,
         },
         CircularDependency,
+        CyclicPackageDependency,
     }
 
+    #[derive(Clone)]
     pub enum WatchError {
-        NotifyError(notify::Error),
+        NotifyError(Arc<notify::Error>),
         IoError {
-            io: io::Error,
+            io: Arc<io::Error>,
         },
         ChannelRecvError(std::sync::mpsc::RecvError),
     }
 
+    #[derive(Clone)]
     pub enum BuildError {
         CommandError {
-            io: io::Error,
+            io: Arc<io::Error>,
         },
         BuildFailed {
             stderr: String,
@@ -179,7 +194,15 @@ error_tree!{
     }
 
     // Enum representing possible errors in the `workspace-detail` crate.
+    #[derive(Clone)]
     pub enum WorkspaceError {
+
+        TokioJoinError {
+            join_error: Arc<tokio::task::JoinError>,
+        },
+        IoError {
+            io_error: Arc<io::Error>,
+        },
 
         // Error indicating that a directory was not found.
         DirectoryNotFound {
@@ -221,8 +244,26 @@ error_tree!{
         DirectoryError(DirectoryError),
         WorkspaceNotReadyForCargoPublish,
         FileWatchError,
+        TestTimeout,
     }
 }
+
+impl From<tokio::task::JoinError> for WorkspaceError {
+    fn from(join_error: tokio::task::JoinError) -> Self {
+        WorkspaceError::TokioJoinError {
+            join_error: Arc::new(join_error),
+        }
+    }
+}
+
+impl From<io::Error> for WorkspaceError {
+    fn from(io_error: io::Error) -> Self {
+        WorkspaceError::IoError {
+            io_error: Arc::new(io_error),
+        }
+    }
+}
+
 
 impl CargoMetadataError {
 

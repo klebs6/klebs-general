@@ -118,9 +118,9 @@ impl AsyncFindItemsFromPath for Workspace {
 
         let mut entries = fs::read_dir(path)
             .await
-            .map_err(|e| DirectoryError::ReadDirError { io: e })?;
+            .map_err(|e| DirectoryError::ReadDirError { io: e.into() })?;
 
-        while let Some(entry) = entries.next_entry().await.map_err(|e| DirectoryError::GetNextEntryError { io: e })? {
+        while let Some(entry) = entries.next_entry().await.map_err(|e| DirectoryError::GetNextEntryError { io: e.into() })? {
             let crate_path = entry.path();
 
             if fs::metadata(crate_path.join("Cargo.toml")).await.is_ok() {

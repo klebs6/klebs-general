@@ -14,7 +14,7 @@ impl CargoToml {
         where P: AsRef<Path>
     {
         let cargo_content = fs::read_to_string(&cargo_toml_path).await
-            .map_err(|e| CargoTomlError::ReadError { io: e })?;
+            .map_err(|e| CargoTomlError::ReadError { io: e.into() })?;
 
         let parsed: toml::Value = toml::from_str(&cargo_content).map_err(|toml_parse_error| {
             CargoTomlError::TomlParseError {

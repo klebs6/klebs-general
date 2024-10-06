@@ -41,7 +41,7 @@ impl Workspace {
             .current_dir(workspace_path)
             .output()
             .await
-            .map_err(|e| LintingError::CommandError { io: e })?;  // Handle any I/O error from the process execution.
+            .map_err(|e| LintingError::CommandError { io: e.into() })?;  // Handle any I/O error from the process execution.
 
         // Capture the linting results in LintReport.
         let report = LintReport {

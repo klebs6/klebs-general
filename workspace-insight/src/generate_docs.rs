@@ -12,7 +12,7 @@ impl Workspace {
             .current_dir(workspace_path)
             .output()
             .await
-            .map_err(|e| CargoDocError::CommandError { io: e })?;  // Handle any I/O error from the process execution.
+            .map_err(|e| CargoDocError::CommandError { io: e.into() })?;  // Handle any I/O error from the process execution.
 
         if !output.status.success() {
             // If the command failed, return an error with the captured output.

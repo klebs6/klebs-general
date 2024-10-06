@@ -30,6 +30,8 @@ x!{test_coverage_report}
 x!{test_files}
 x!{validate_toml}
 x!{version_traits}
-x!{watch_and_reload}
 x!{workspace}
 x!{workspace_analysis}
+x!{watch_and_reload}
+x!{command_runner}
+x!{exit_status}

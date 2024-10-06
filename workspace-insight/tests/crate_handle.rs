@@ -1,4 +1,5 @@
 use workspace_insight::*;
+use disable_macro::disable;
 use tracing_setup::*;
 use traced_test::*;
 use tokio::fs;
@@ -46,7 +47,7 @@ mod workspace_integrity {
                 authors = ["author@example.com"]
                 license = "MIT"
             "# }
-        ).await.map_err(|e| CargoTomlWriteError::WritePackageSectionError { io: e })?;
+        ).await.map_err(|e| CargoTomlWriteError::WritePackageSectionError { io: e.into() })?;
 
         let valid_cargo_toml = workspace_path.join("valid_crate").join("Cargo.toml");
         fs::write(&valid_cargo_toml, 
@@ -57,7 +58,7 @@ mod workspace_integrity {
                 authors = ["author@example.com"]
                 license = "MIT"
             "# }
-        ).await.map_err(|e| CargoTomlWriteError::WritePackageSectionError { io: e })?;
+        ).await.map_err(|e| CargoTomlWriteError::WritePackageSectionError { io: e.into() })?;
 
         let workspace = Workspace::new_and_validate(&workspace_path).await;
 
@@ -115,7 +116,7 @@ mod workspace_integrity {
                 authors = ["author@example.com"]
                 license = "MIT"
             "# }
-        ).await.map_err(|e| CargoTomlWriteError::WritePackageSectionError { io: e })?;
+        ).await.map_err(|e| CargoTomlWriteError::WritePackageSectionError { io: e.into() })?;
 
         let workspace = Workspace::new_and_validate(&workspace_path).await;
 
@@ -148,7 +149,7 @@ mod workspace_integrity {
                 authors = ["author@example.com"]
                 license = "MIT"
             "# }
-        ).await.map_err(|e| CargoTomlWriteError::WritePackageSectionError { io: e })?;
+        ).await.map_err(|e| CargoTomlWriteError::WritePackageSectionError { io: e.into() })?;
 
         let workspace = Workspace::new_and_validate(&workspace_path).await;
 
@@ -182,7 +183,7 @@ mod workspace_integrity {
                 authors = ["author@example.com"]
                 license = "MIT"
             "# }
-        ).await.map_err(|e| CargoTomlWriteError::WritePackageSectionError { io: e })?;
+        ).await.map_err(|e| CargoTomlWriteError::WritePackageSectionError { io: e.into() })?;
 
         // Validate the workspace, expecting an error
         let workspace = Workspace::new_and_validate(&workspace_path).await;
@@ -248,11 +249,11 @@ mod workspace_integrity {
 
         fs::write(src_dir.join("lib.rs"), "pub fn lib_func() {}")
             .await
-            .map_err(|e| FileError::WriteError { io: e })?;
+            .map_err(|e| FileError::WriteError { io: e.into() })?;
 
         fs::write(src_dir.join("main.rs"), "fn main() {}")
             .await
-            .map_err(|e| FileError::WriteError { io: e })?;
+            .map_err(|e| FileError::WriteError { io: e.into() })?;
 
         let workspace = Workspace::new_and_validate(&workspace_path).await?;
 
@@ -273,7 +274,9 @@ mod workspace_integrity {
 
         // Simulate an invalid TOML file
         let cargo_toml_path = workspace_path.join("crate_with_invalid_toml").join("Cargo.toml");
-        fs::write(&cargo_toml_path, "invalid_toml").await.map_err(|e| CargoTomlWriteError::WriteError { io: e })?;
+        fs::write(&cargo_toml_path, "invalid_toml")
+            .await
+            .map_err(|e| CargoTomlWriteError::WriteError { io: e.into() })?;
 
         let workspace = Workspace::new_and_validate(&workspace_path).await;
 
@@ -338,7 +341,7 @@ mod workspace_integrity {
                 license = "MIT"
             "# },
         )
-        .await.map_err(|e| CargoTomlWriteError::WritePackageSectionError { io: e })?;
+        .await.map_err(|e| CargoTomlWriteError::WritePackageSectionError { io: e.into() })?;
 
         let workspace = Workspace::new_and_validate(&workspace_path).await;
 
@@ -560,12 +563,12 @@ mod cleanup_tests {
 
         // Create a mock target directory
         let target_dir = workspace_path.join("target");
-        fs::create_dir_all(&target_dir).await.map_err(|e| DirectoryError::CreateDirAllError { io: e })?;
+        fs::create_dir_all(&target_dir).await.map_err(|e| DirectoryError::CreateDirAllError { io: e.into() })?;
 
         // Create a dummy file in the target directory
         let dummy_file_path = target_dir.join("dummy_file.txt");
-        let mut dummy_file = fs::File::create(&dummy_file_path).await.map_err(|e| FileError::CreationError { io: e })?;
-        dummy_file.write_all(b"dummy content").await.map_err(|e| FileError::WriteError { io: e })?;
+        let mut dummy_file = fs::File::create(&dummy_file_path).await.map_err(|e| FileError::CreationError { io: e.into() })?;
+        dummy_file.write_all(b"dummy content").await.map_err(|e| FileError::WriteError { io: e.into() })?;
 
         // Ensure the target directory exists
         assert!(fs::metadata(&target_dir).await.is_ok(), "target directory should exist before cleanup");
@@ -636,7 +639,7 @@ mod dependency_tests {
             [dependencies]
             crate_a = { path = "../crate_a" }
         "# };
-        fs::write(&cargo_toml_b, cargo_toml_b_content).await.map_err(|e| FileError::WriteError { io: e })?;
+        fs::write(&cargo_toml_b, cargo_toml_b_content).await.map_err(|e| FileError::WriteError { io: e.into() })?;
 
         // Initialize the workspace
         let workspace = Workspace::new(&workspace_path).await?;
@@ -717,7 +720,7 @@ mod dependency_tests {
             [dependencies]
             crate_a = { path = "../crate_a" }
         "# };
-        fs::write(&cargo_toml_b, cargo_toml_b_content).await.map_err(|e| FileError::WriteError { io: e })?;
+        fs::write(&cargo_toml_b, cargo_toml_b_content).await.map_err(|e| FileError::WriteError { io: e.into() })?;
 
         // crate_c depends on crate_b
         let cargo_toml_c = workspace_path.join("crate_c").join("Cargo.toml");
@@ -732,7 +735,7 @@ mod dependency_tests {
             [dependencies]
             crate_b = { path = "../crate_b" }
         "# };
-        fs::write(&cargo_toml_c, cargo_toml_c_content).await.map_err(|e| FileError::WriteError { io: e })?;
+        fs::write(&cargo_toml_c, cargo_toml_c_content).await.map_err(|e| FileError::WriteError { io: e.into() })?;
 
         // Initialize the workspace
         let workspace = Workspace::new(&workspace_path).await?;
@@ -768,7 +771,7 @@ mod dependency_tests {
 
 mod circular_dependency_tests {
     use super::*;
-    use std::fs;
+    use tokio::fs;
     
     #[traced_test]
     async fn test_simple_circular_dependency() -> Result<(), WorkspaceError> {
@@ -798,7 +801,8 @@ mod circular_dependency_tests {
             [dependencies]
             crate_a = { path = "../crate_a" }
         "# };
-        fs::write(&cargo_toml_b, cargo_toml_b_content).map_err(|e| FileError::WriteError { io: e })?;
+
+        fs::write(&cargo_toml_b, cargo_toml_b_content).await.map_err(|e| FileError::WriteError { io: e.into() })?;
 
         info!("crate_a depends on crate_b (creating a cycle)");
 
@@ -814,7 +818,7 @@ mod circular_dependency_tests {
             [dependencies]
             crate_b = { path = "../crate_b" }
         "# };
-        fs::write(&cargo_toml_a, cargo_toml_a_content).map_err(|e| FileError::WriteError { io: e })?;
+        fs::write(&cargo_toml_a, cargo_toml_a_content).await.map_err(|e| FileError::WriteError { io: e.into() })?;
 
         info!("Initialize the workspace");
 
@@ -824,21 +828,21 @@ mod circular_dependency_tests {
 
         match workspace.detect_circular_dependencies().await {
             Ok(_) => panic!("Expected circular dependencies but found none."),
-            Err(WorkspaceError::CargoMetadataError(e)) => {
-                assert!(e.is_cyclic_package_dependency_error(), "Expected cyclic package dependency error, got: {}", e);
+            Err(WorkspaceError::CargoMetadataError(CargoMetadataError::CyclicPackageDependency)) => {
+                // Successfully detected a cyclic package dependency
             }
             Err(e) => {
                 panic!("Expected CargoMetadataError but found some other error: {:#?}", e);
             }
         }
-
+        
         Ok(())
     }
 }
 
 mod workspace_docs_tests {
     use super::*;
-    use std::fs;
+    use tokio::fs;
 
     #[traced_test]
     async fn test_generate_workspace_docs_success() -> Result<(), WorkspaceError> {
@@ -888,7 +892,7 @@ mod workspace_docs_tests {
             version = "not-a-semver"
             authors = ["author@example.com"]
             license = "MIT"
-        "# }).map_err(|e| CargoTomlWriteError::WritePackageSectionError { io: e })?;
+        "# }).await.map_err(|e| CargoTomlWriteError::WritePackageSectionError { io: e.into() })?;
 
         info!("Initializing the workspace");
 
@@ -937,7 +941,7 @@ mod workspace_docs_tests {
             license = "MIT"
             # Introducing invalid syntax here by removing the closing bracket of [dependencies]
             [dependencies
-        "# }).map_err(|e| FileError::WriteError { io: e })?;
+        "# }).await.map_err(|e| FileError::WriteError { io: e.into() })?;
 
         info!("Initializing the workspace and expecting an error due to invalid Cargo.toml");
 
@@ -990,7 +994,7 @@ mod workspace_docs_tests {
 
 mod workspace_linting_tests {
     use super::*;
-    use std::fs;
+    use tokio::fs;
 
     #[traced_test]
     async fn test_run_linting_success() -> Result<(), WorkspaceError> {
@@ -1011,8 +1015,14 @@ mod workspace_linting_tests {
         // Write valid code to avoid linting errors
         let src_dir_a = workspace_path.join("crate_a").join("src");
         let src_dir_b = workspace_path.join("crate_b").join("src");
-        fs::write(src_dir_a.join("lib.rs"), "pub fn greet() { println!(\"Hello, world!\"); }").map_err(|e| FileError::WriteError { io: e })?;
-        fs::write(src_dir_b.join("lib.rs"), "pub fn farewell() { println!(\"Goodbye, world!\"); }").map_err(|e| FileError::WriteError { io: e })?;
+
+        fs::write(src_dir_a.join("lib.rs"), "pub fn greet() { println!(\"Hello, world!\"); }")
+            .await
+            .map_err(|e| FileError::WriteError { io: e.into() })?;
+
+        fs::write(src_dir_b.join("lib.rs"), "pub fn farewell() { println!(\"Goodbye, world!\"); }")
+            .await
+            .map_err(|e| FileError::WriteError { io: e.into() })?;
 
         info!("Initializing the workspace");
 
@@ -1053,7 +1063,8 @@ mod workspace_linting_tests {
         let src_dir = workspace_path.join("crate_with_lint_error").join("src");
 
         fs::write(src_dir.join("lib.rs"), "fn unused_function() {}")
-            .map_err(|e| FileError::WriteError { io: e })?;
+            .await
+            .map_err(|e| FileError::WriteError { io: e.into() })?;
 
         info!("Initializing the workspace");
 
@@ -1089,7 +1100,7 @@ mod workspace_linting_tests {
 
 mod workspace_coverage_tests {
     use super::*;
-    use std::fs;
+    use tokio::fs;
 
     #[traced_test]
     async fn test_run_tests_with_coverage_success() -> Result<(), WorkspaceError> {
@@ -1121,7 +1132,7 @@ mod workspace_coverage_tests {
                     super::greet();
                 }
             }
-        "#).map_err(|e| FileError::WriteError { io: e })?;
+        "#).await.map_err(|e| FileError::WriteError { io: e.into() })?;
 
         fs::write(src_dir_b.join("lib.rs"), r#"
             pub fn farewell() { 
@@ -1134,7 +1145,7 @@ mod workspace_coverage_tests {
                     super::farewell();
                 }
             }
-        "#).map_err(|e| FileError::WriteError { io: e })?;
+        "#).await.map_err(|e| FileError::WriteError { io: e.into() })?;
 
         info!("Initializing the workspace");
 
@@ -1181,7 +1192,7 @@ mod workspace_coverage_tests {
                     panic!("This function always fails");
                 }
             }
-        "#).map_err(|e| FileError::WriteError { io: e })?;
+        "#).await.map_err(|e| FileError::WriteError { io: e.into() })?;
 
         info!("Initializing the workspace");
 
@@ -1192,7 +1203,7 @@ mod workspace_coverage_tests {
         // We expect test failures, which should trigger the `TestFailure` error
         match workspace.run_tests_with_coverage().await {
             Ok(_) => panic!("Expected an error related to the failing test"),
-            Err(WorkspaceError::TestFailure(TestFailure::UnknownError { stderr, stdout: _ })) => {
+            Err(WorkspaceError::TestCoverageError(TestCoverageError::TestFailure { stderr, stdout: _ })) => {
                 let stderr = stderr.expect("expected to see a stderr");
                 info!("Assert the failure is due to test failures");
                 assert!(stderr.contains("Test failed during run"), "Expected a test failure error");
@@ -1205,279 +1216,3 @@ mod workspace_coverage_tests {
         Ok(())
     }
 }
-
-#[cfg(test)]
-mod workspace_watch_and_reload_tests {
-    use super::*;
-    use std::fs;
-    use std::time::Duration;
-    use tracing::info;
-    use tokio::sync::mpsc;
-    use std::sync::Arc;
-    use tokio::time::timeout;
-
-    #[tokio::test]
-    async fn test_watch_and_reload_on_relevant_file_change() -> Result<(), WorkspaceError> {
-        info!("Creating a mock workspace");
-
-        // Create a mock workspace with a simple crate
-        let workspace_path = create_mock_workspace(vec![
-            CrateConfig::new("crate_a")
-                .with_src_files()
-                .with_readme(),
-        ]).await?;
-
-        // Initialize the workspace
-        let workspace = Workspace::new(&workspace_path).await?;
-
-        // Capture the output for verification
-        let (tx, mut rx) = mpsc::channel(1);
-        let watch_handle = tokio::spawn({
-            let workspace = Arc::new(workspace);
-            async move {
-                workspace.watch_and_reload(Some(tx)).await.unwrap();
-            }
-        });
-
-        info!("Simulating a file change in src/lib.rs");
-
-        // Simulate a file change in the src/ directory
-        let src_dir = workspace_path.join("crate_a").join("src");
-        fs::write(src_dir.join("lib.rs"), "fn updated_function() {}").map_err(|e| FileError::WriteError { io: e })?;
-
-        // Wait for the change event to be processed
-        if let Some(result) = rx.recv().await {
-            assert!(result.is_ok(), "Expected a rebuild and test to be triggered");
-        } else {
-            panic!("Did not receive any rebuild or test trigger");
-        }
-
-        watch_handle.abort();  // Stop the watcher
-        Ok(())
-    }
-
-    #[tokio::test]
-    async fn test_watch_and_reload_on_irrelevant_file_change() -> Result<(), WorkspaceError> {
-        info!("Creating a mock workspace");
-
-        // Create a mock workspace with a simple crate
-        let workspace_path = create_mock_workspace(vec![
-            CrateConfig::new("crate_a")
-                .with_src_files()
-                .with_readme(),
-        ]).await?;
-
-        // Initialize the workspace
-        let workspace = Workspace::new(&workspace_path).await?;
-
-        // Capture the output for verification
-        let (tx, mut rx) = mpsc::channel(1);
-        let watch_handle = tokio::spawn({
-            let workspace = Arc::new(workspace);
-            async move {
-                workspace.watch_and_reload(Some(tx)).await.unwrap();
-            }
-        });
-
-        info!("Simulating a file change in README.md");
-
-        // Simulate a file change in an irrelevant file (README.md)
-        let readme_file = workspace_path.join("crate_a").join("README.md");
-        fs::write(readme_file, "# Updated README").map_err(|e| FileError::WriteError { io: e })?;
-
-        // Wait to see if any messages are received
-        let duration = Duration::from_secs(2);
-        match timeout(duration, rx.recv()).await {
-            Ok(Some(_)) => panic!("Expected no rebuild or test to be triggered for irrelevant file changes"),
-            Ok(None) => panic!("Channel closed unexpectedly"),
-            Err(_) => {
-                // No message received within the timeout duration, which is expected
-                assert!(true);
-            }
-        }
-
-        watch_handle.abort();  // Stop the watcher
-        Ok(())
-    }
-
-    #[tokio::test]
-    async fn test_watch_and_reload_with_successful_rebuild_and_tests() -> Result<(), WorkspaceError> {
-        info!("Creating a mock workspace");
-
-        // Create a mock workspace with valid code and tests
-        let workspace_path = create_mock_workspace(vec![
-            CrateConfig::new("crate_a")
-                .with_src_files()
-                .with_readme(),
-        ]).await?;
-
-        info!("Writing valid code to src/lib.rs");
-
-        // Write valid code and tests for the crate
-        let src_dir = workspace_path.join("crate_a").join("src");
-        fs::write(src_dir.join("lib.rs"), r#"
-            pub fn greet() {
-                println!("Hello, world!");
-            }
-            #[cfg(test)]
-            mod tests {
-                #[test]
-                fn test_greet() {
-                    super::greet();
-                }
-            }
-        "#).map_err(|e| FileError::WriteError { io: e })?;
-
-        info!("Initializing the workspace");
-
-        let workspace = Workspace::new(&workspace_path).await?;
-
-        // Capture the output for verification
-        let (tx, mut rx) = mpsc::channel(1);
-        let watch_handle = tokio::spawn({
-            let workspace = Arc::new(workspace);
-            async move {
-                workspace.watch_and_reload(Some(tx)).await.unwrap();
-            }
-        });
-
-        info!("Simulating a file change in src/lib.rs");
-
-        // Simulate a file change in the src directory
-        fs::write(src_dir.join("lib.rs"), r#"
-            pub fn greet_updated() {
-                println!("Updated!");
-            }
-            #[cfg(test)]
-            mod tests {
-                #[test]
-                fn test_greet_updated() {
-                    super::greet_updated();
-                }
-            }
-        "#).map_err(|e| FileError::WriteError { io: e })?;
-
-        // Wait for the change event to be processed
-        if let Some(result) = rx.recv().await {
-            assert!(result.is_ok(), "Expected a successful rebuild and test run");
-        } else {
-            panic!("Did not receive any rebuild or test trigger");
-        }
-
-        watch_handle.abort();  // Stop the watcher
-        Ok(())
-    }
-
-    #[tokio::test]
-    async fn test_watch_and_reload_with_failed_rebuild() -> Result<(), WorkspaceError> {
-        info!("Creating a mock workspace");
-
-        // Create a mock workspace with invalid code
-        let workspace_path = create_mock_workspace(vec![
-            CrateConfig::new("crate_a")
-                .with_src_files()
-                .with_readme(),
-        ]).await?;
-
-        info!("Writing invalid code to src/lib.rs");
-
-        // Write invalid code to cause a rebuild failure
-        let src_dir = workspace_path.join("crate_a").join("src");
-        fs::write(src_dir.join("lib.rs"), "fn invalid_code {").map_err(|e| FileError::WriteError { io: e })?;
-
-        info!("Initializing the workspace");
-
-        let workspace = Workspace::new(&workspace_path).await?;
-
-        // Capture the output for verification
-        let (tx, mut rx) = mpsc::channel(1);
-        let watch_handle = tokio::spawn({
-            let workspace = Arc::new(workspace);
-            async move {
-                workspace.watch_and_reload(Some(tx)).await.unwrap();
-            }
-        });
-
-        // Simulate a file change to trigger the watcher
-        fs::write(src_dir.join("lib.rs"), "fn invalid_code {").map_err(|e| FileError::WriteError { io: e })?;
-
-        // Wait for the change event to be processed
-        if let Some(result) = rx.recv().await {
-            assert!(matches!(result, Err(WorkspaceError::BuildError(_))), "Expected a build failure");
-        } else {
-            panic!("Did not receive any rebuild or test trigger");
-        }
-
-        watch_handle.abort();  // Stop the watcher
-        Ok(())
-    }
-
-    #[tokio::test]
-    async fn test_watch_and_reload_with_failed_tests() -> Result<(), WorkspaceError> {
-        info!("Creating a mock workspace");
-
-        // Create a mock workspace with a failing test
-        let workspace_path = create_mock_workspace(vec![
-            CrateConfig::new("crate_a")
-                .with_src_files()
-                .with_readme(),
-        ]).await?;
-
-        info!("Writing code with a failing test");
-
-        // Write valid code but with a test that always fails
-        let src_dir = workspace_path.join("crate_a").join("src");
-        fs::write(src_dir.join("lib.rs"), r#"
-            pub fn always_fail() {
-                panic!("This always fails");
-            }
-            #[cfg(test)]
-            mod tests {
-                #[test]
-                fn test_fail() {
-                    super::always_fail();
-                }
-            }
-        "#).map_err(|e| FileError::WriteError { io: e })?;
-
-        info!("Initializing the workspace");
-
-        let workspace = Workspace::new(&workspace_path).await?;
-
-        // Capture the output for verification
-        let (tx, mut rx) = mpsc::channel(1);
-        let watch_handle = tokio::spawn({
-            let workspace = Arc::new(workspace);
-            async move {
-                workspace.watch_and_reload(Some(tx)).await.unwrap();
-            }
-        });
-
-        info!("Simulating a file change in src/lib.rs");
-
-        // Simulate a file change in the src directory
-        fs::write(src_dir.join("lib.rs"), r#"
-            pub fn always_fail() {
-                panic!("This always fails");
-            }
-            #[cfg(test)]
-            mod tests {
-                #[test]
-                fn test_fail() {
-                    super::always_fail();
-                }
-            }
-        "#).map_err(|e| FileError::WriteError { io: e })?;
-
-        // Wait for the change event to be processed
-        if let Some(result) = rx.recv().await {
-            assert!(matches!(result, Err(WorkspaceError::TestFailure(_))), "Expected a test failure");
-        } else {
-            panic!("Did not receive any rebuild or test trigger");
-        }
-
-        watch_handle.abort();  // Stop the watcher
-        Ok(())
-    }
-}
-

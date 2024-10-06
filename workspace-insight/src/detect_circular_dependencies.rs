@@ -9,11 +9,12 @@ impl Workspace {
             // No circular dependencies detected if metadata is fetched successfully.
             Ok(_) => Ok(()),
 
+            // Check if the error contains specific cyclic dependency information.
             Err(WorkspaceError::CargoMetadataError(CargoMetadataError::MetadataError { error: ref e }))
                 if e.to_string().contains("cyclic package dependency") =>
                 {
-                    // If `cargo metadata` reported a cyclic dependency, return a user-friendly error.
-                    Err(WorkspaceError::CargoMetadataError(CargoMetadataError::CircularDependency))
+                    // If `cargo metadata` reported a cyclic dependency, return the expected error.
+                    Err(WorkspaceError::CargoMetadataError(CargoMetadataError::CyclicPackageDependency))
                 }
 
             // Propagate other errors.
@@ -21,3 +22,4 @@ impl Workspace {
         }
     }
 }
+

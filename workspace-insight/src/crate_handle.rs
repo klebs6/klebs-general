@@ -176,12 +176,12 @@ impl GetFilesInDirectoryWithExclusions for CrateHandle {
 
         let mut entries = fs::read_dir(dir_path)
             .await
-            .map_err(|e| DirectoryError::ReadDirError {io: e })?;
+            .map_err(|e| DirectoryError::ReadDirError {io: e.into() })?;
 
         while let Some(entry) 
             = entries.next_entry()
             .await
-            .map_err(|e| DirectoryError::GetNextEntryError {io: e })? 
+            .map_err(|e| DirectoryError::GetNextEntryError {io: e.into() })? 
         {
             let path = entry.path();
             let file_name = path.file_name().and_then(|n| n.to_str()).ok_or_else(|| {

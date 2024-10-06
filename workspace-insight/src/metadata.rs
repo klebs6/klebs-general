@@ -9,10 +9,10 @@ impl Workspace {
             MetadataCommand::new()
                 .current_dir(&path)
                 .exec()
-                .map_err(|e| CargoMetadataError::MetadataError { error: e })
+                .map_err(|e| CargoMetadataError::MetadataError { error: e.into() })
         })
         .await
-        .map_err(|e| TokioError::JoinError { join_error: e })??;
+        .map_err(|e| TokioError::JoinError { join_error: e.into() })??;
         Ok(metadata)
     }
 }
