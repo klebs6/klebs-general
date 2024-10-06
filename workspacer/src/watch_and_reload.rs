@@ -1,69 +1,19 @@
 crate::ix!();
 
-impl Workspace {
+#[async_trait]
+impl WatchAndReload for Workspace {
 
-    pub async fn rebuild_or_test(&self, runner: &dyn CommandRunner) -> Result<(), WorkspaceError> {
+    type Error = WorkspaceError;
 
-        let workspace_path = self.path();
-
-        info!("Running cargo build...");
-
-        let mut build_cmd = Command::new("cargo");
-        build_cmd.arg("build").current_dir(&workspace_path);
-
-        let output = runner.run_command(build_cmd).await??;
-
-        if !output.status.success() {
-            error!("Build failed: {}", String::from_utf8_lossy(&output.stderr));
-            return Err(WorkspaceError::from(BuildError::BuildFailed {
-                stderr: String::from_utf8_lossy(&output.stderr).to_string(),
-            }));
-        }
-
-        info!("Rebuild succeeded, running tests...");
-
-        let mut test_cmd = Command::new("cargo");
-        test_cmd.arg("test").current_dir(&workspace_path);
-
-        let test_output = runner.run_command(test_cmd).await??;
-
-        if !test_output.status.success() {
-            let stdout = Some(String::from_utf8_lossy(&test_output.stdout).to_string());
-            let stderr = Some(String::from_utf8_lossy(&test_output.stderr).to_string());
-
-            error!("Tests failed: {:#?}", stderr);
-            return Err(WorkspaceError::from(TestFailure::UnknownError { stdout, stderr }));
-        }
-
-        info!("Tests passed successfully.");
-        Ok(())
-    }
-
-    /// Determines if a file change is relevant (e.g., in `src/` or `Cargo.toml` files).
-    fn is_relevant_change(&self, path: &Path) -> bool {
-        // Check if the path ends with 'Cargo.toml'
-        if path.file_name() == Some(std::ffi::OsStr::new("Cargo.toml")) {
-            return true;
-        }
-
-        // Check if the path is within any crate's 'src/' directory
-        for crate_handle in self.crates() {
-            let crate_src_path = crate_handle.as_ref().join("src");
-            if path.starts_with(&crate_src_path) {
-                return true;
-            }
-        }
-
-        false
-    }
-
-    pub async fn watch_and_reload(
+    async fn watch_and_reload(
         &self,
-        tx: Option<mpsc::Sender<Result<(), WorkspaceError>>>,
-        runner: Arc<dyn CommandRunner + Send + Sync + 'static>,
+        tx:           Option<mpsc::Sender<Result<(), WorkspaceError>>>,
+        runner:       Arc<dyn CommandRunner + Send + Sync + 'static>,
         cancel_token: CancellationToken,
+
     ) -> Result<(), WorkspaceError> {
-        let workspace_path = self.path().clone();
+
+        let workspace_path = self.as_ref().to_path_buf();
 
         // Channel for receiving file change events
         let (notify_tx, notify_rx) = async_channel::unbounded();
@@ -130,5 +80,23 @@ impl Workspace {
         }
 
         Ok(())
+    }
+
+    /// Determines if a file change is relevant (e.g., in `src/` or `Cargo.toml` files).
+    fn is_relevant_change(&self, path: &Path) -> bool {
+        // Check if the path ends with 'Cargo.toml'
+        if path.file_name() == Some(std::ffi::OsStr::new("Cargo.toml")) {
+            return true;
+        }
+
+        // Check if the path is within any crate's 'src/' directory
+        for crate_handle in self.crates() {
+            let crate_src_path = crate_handle.as_ref().join("src");
+            if path.starts_with(&crate_src_path) {
+                return true;
+            }
+        }
+
+        false
     }
 }

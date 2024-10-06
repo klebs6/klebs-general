@@ -6,8 +6,22 @@ pub struct CrateHandle {
     cargo_toml_handle: CargoToml,
 }
 
+impl<P> CrateHandleInterface<P> for CrateHandle 
+where 
+    for<'async_trait> 
+    P
+    : HasCargoTomlPathBuf 
+    + AsRef<Path> 
+    + Send 
+    + Sync
+    + 'async_trait,
+
+    WorkspaceError: From<<P as HasCargoTomlPathBuf>::Error>,
+
+{}
+
 #[async_trait]
-impl<P> AsyncCreateWith<P> for CrateHandle 
+impl<P> AsyncTryFrom<P> for CrateHandle 
 where 
     for<'async_trait> 
     P
@@ -49,24 +63,6 @@ impl ValidateIntegrity for CrateHandle {
 
         self.check_src_directory_contains_valid_files()?;
         self.check_readme_exists()?;
-
-        Ok(())
-    }
-}
-
-#[async_trait]
-impl ReadyForCargoPublish for CrateHandle {
-
-    type Error = WorkspaceError;
-
-    /// Checks if the crate is ready for Cargo publishing
-    async fn ready_for_cargo_publish(&self) -> Result<(), Self::Error> {
-
-        let cargo_toml = self.cargo_toml();
-        cargo_toml.ready_for_cargo_publish().await?;
-
-        self.check_readme_exists()?;
-        self.check_src_directory_contains_valid_files()?;
 
         Ok(())
     }
@@ -210,5 +206,23 @@ impl AsRef<Path> for CrateHandle {
     /// Allows CrateHandle to be used as a path by referencing crate_path
     fn as_ref(&self) -> &Path {
         &self.crate_path
+    }
+}
+
+#[async_trait]
+impl ReadyForCargoPublish for CrateHandle {
+
+    type Error = WorkspaceError;
+
+    /// Checks if the crate is ready for Cargo publishing
+    async fn ready_for_cargo_publish(&self) -> Result<(), Self::Error> {
+
+        let cargo_toml = self.cargo_toml();
+        cargo_toml.ready_for_cargo_publish().await?;
+
+        self.check_readme_exists()?;
+        self.check_src_directory_contains_valid_files()?;
+
+        Ok(())
     }
 }

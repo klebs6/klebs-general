@@ -1,14 +1,6 @@
 crate::ix!();
 
 #[async_trait]
-pub trait Analyze {
-    type Analysis;
-    type Error;
-
-    async fn analyze(&self) -> Result<Self::Analysis, Self::Error>;
-}
-
-#[async_trait]
 impl Analyze for Workspace {
 
     type Analysis = WorkspaceSizeAnalysis;

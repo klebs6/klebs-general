@@ -1,10 +1,13 @@
 crate::ix!();
 
-impl Workspace {
+#[async_trait]
+impl GetCargoMetadata for Workspace {
+
+    type Error = WorkspaceError;
 
     /// Helper method to get cargo metadata asynchronously
-    pub async fn get_cargo_metadata(&self) -> Result<Metadata, WorkspaceError> {
-        let path = self.path().to_path_buf();
+    async fn get_cargo_metadata(&self) -> Result<Metadata, Self::Error> {
+        let path = self.as_ref().to_path_buf();
         let metadata = task::spawn_blocking(move || {
             MetadataCommand::new()
                 .current_dir(&path)

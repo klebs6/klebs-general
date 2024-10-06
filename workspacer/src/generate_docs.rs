@@ -1,10 +1,13 @@
 crate::ix!();
 
-impl Workspace {
+#[async_trait]
+impl GenerateDocs for Workspace {
+
+    type Error = WorkspaceError;
 
     /// Generates the documentation for the entire workspace by running `cargo doc`.
-    pub async fn generate_workspace_docs(&self) -> Result<(), WorkspaceError> {
-        let workspace_path = self.path();  // Assuming `self.path()` returns the workspace root path.
+    async fn generate_docs(&self) -> Result<(), WorkspaceError> {
+        let workspace_path = self.as_ref();  // Assuming `self.path()` returns the workspace root path.
         
         // Execute `cargo doc` in the workspace directory.
         let output = Command::new("cargo")

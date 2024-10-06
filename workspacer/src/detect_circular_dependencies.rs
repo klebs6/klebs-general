@@ -1,9 +1,12 @@
 crate::ix!();
 
-impl Workspace {
+#[async_trait]
+impl DetectCircularDependencies for Workspace {
+
+    type Error = WorkspaceError;
 
     /// Detects circular dependencies in the workspace by leveraging `cargo metadata`.
-    pub async fn detect_circular_dependencies(&self) -> Result<(), WorkspaceError> {
+    async fn detect_circular_dependencies(&self) -> Result<(), WorkspaceError> {
         match self.get_cargo_metadata().await {
 
             // No circular dependencies detected if metadata is fetched successfully.

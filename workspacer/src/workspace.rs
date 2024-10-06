@@ -6,17 +6,47 @@ pub struct Workspace {
     crates: Vec<CrateHandle>,
 }
 
-impl Workspace {
+pub trait WorkspaceInterface<P>
+: GetCrates
++ NumCrates
++ CleanupWorkspace
++ WatchAndReload
++ RunTestsWithCoverage
++ GetCargoMetadata
++ RebuildOrTest
++ Analyze
++ GenerateDocs
++ RunLinting
++ DetectCircularDependencies
++ GenerateDependencyTree
++ ValidateIntegrity
++ ReadyForCargoPublish
++ AsyncTryFrom<P>
++ AsyncIsValid
++ AsyncFindItems
++ AsRef<Path>
+where 
+for<'async_trait> P: AsRef<Path> + Send + Sync + 'async_trait
+{}
 
-    pub fn path(&self) -> PathBuf {
-        self.path.clone()
+#[disable]
+impl Into<PathBuf> for Workspace {
+
+    fn into(self) -> PathBuf {
+        self.path
     }
+}
 
-    pub fn n_crates(&self) -> usize {
+impl NumCrates for Workspace {
+
+    fn n_crates(&self) -> usize {
         self.crates.len()
     }
+}
 
-    pub fn crates(&self) -> &[CrateHandle] {
+impl GetCrates for Workspace {
+
+    fn crates(&self) -> &[CrateHandle] {
         &self.crates
     }
 }
@@ -68,15 +98,10 @@ impl<'a> IntoIterator for &'a Workspace {
 }
 
 #[async_trait]
-impl<P> AsyncCreateWith<P> for Workspace
+impl<P> AsyncTryFrom<P> for Workspace
 
 where 
-for<'async_trait> 
-P:
-AsRef<Path>
-+ Send
-+ Sync
-+ 'async_trait
+for<'async_trait> P: AsRef<Path> + Send + Sync + 'async_trait
 
 {
     type Error = WorkspaceError;
@@ -108,8 +133,8 @@ impl AsyncIsValid for Workspace {
 }
 
 #[async_trait]
-impl AsyncFindItemsFromPath for Workspace {
-    type Item = CrateHandle;
+impl AsyncFindItems for Workspace {
+    type Item  = CrateHandle;
     type Error = WorkspaceError;
 
     /// Asynchronously finds all the crates in the workspace

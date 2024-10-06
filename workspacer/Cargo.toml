@@ -1,5 +1,5 @@
 [package]
-name = "workspace-insight"
+name = "workspacer"
 version = "0.1.0"
 edition = "2021"
 
@@ -26,7 +26,7 @@ async-trait = "*"
 tracing = "0.1.40"
 uuid = {version = "*", features = ["v4"] }
 tracing-subscriber = { version = "0.3", default-features = false, features = ["fmt", "std", "env-filter"] }
+disable_macro = "*"
 [dev-dependencies]
 indoc = "*"
 mockall = "*"
-disable_macro = "*"

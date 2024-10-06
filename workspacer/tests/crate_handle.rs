@@ -1,5 +1,4 @@
-use workspace_insight::*;
-use disable_macro::disable;
+use workspacer::*;
 use tracing_setup::*;
 use traced_test::*;
 use tokio::fs;
@@ -863,7 +862,7 @@ mod workspace_docs_tests {
 
         info!("Running cargo doc and asserting success");
 
-        assert!(workspace.generate_workspace_docs().await.is_ok(), "Expected documentation generation to succeed");
+        assert!(workspace.generate_docs().await.is_ok(), "Expected documentation generation to succeed");
 
         info!("Test completed successfully");
 
@@ -900,7 +899,7 @@ mod workspace_docs_tests {
 
         info!("running cargo doc and asserting failure due to invalid version");
 
-        match workspace.generate_workspace_docs().await {
+        match workspace.generate_docs().await {
             Ok(_) => panic!("Expected documentation generation to fail due to invalid version format"),
             Err(WorkspaceError::CargoDocError(CargoDocError::UnknownError { stderr, stdout: _ })) => {
                 let stderr = stderr.expect("expected to see a stderr field");
@@ -981,7 +980,7 @@ mod workspace_docs_tests {
         info!("Running cargo doc and asserting success even with missing README");
 
         // We expect cargo doc to succeed even though one crate is missing a README
-        match workspace.generate_workspace_docs().await {
+        match workspace.generate_docs().await {
             Ok(_) => info!("cargo doc ran successfully even without a README"),
             Err(e) => panic!("Expected documentation generation to succeed, but got an error: {:?}", e),
         }

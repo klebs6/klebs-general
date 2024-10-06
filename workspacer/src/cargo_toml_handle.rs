@@ -7,6 +7,8 @@ pub struct CargoToml {
     content: toml::Value,  // Parsed TOML content
 }
 
+impl CargoTomlInterface for CargoToml {}
+
 impl CargoToml {
 
     /// Creates a new handle from the path to `Cargo.toml`
@@ -39,8 +41,10 @@ impl AsRef<Path> for CargoToml {
 
 impl GetPackageSection for CargoToml {
 
+    type Error = CargoTomlError;
+
     /// Helper to retrieve the `package` section from `Cargo.toml`
-    fn get_package_section(&self) -> Result<&toml::Value, CargoTomlError> {
+    fn get_package_section(&self) -> Result<&toml::Value, Self::Error> {
         self.content.get("package").ok_or_else(|| CargoTomlError::MissingPackageSection {
             cargo_toml_file: self.path.clone(),
         })
@@ -55,16 +59,99 @@ impl IsValidVersion for CargoToml {
     }
 }
 
-#[async_trait]
-impl ReadyForCargoPublish for CargoToml {
+impl CheckExistence for CargoToml {
 
     type Error = CargoTomlError;
 
-    /// Checks if the crate is ready for Cargo publishing
-    async fn ready_for_cargo_publish(&self) -> Result<(), Self::Error> {
-        self.validate_integrity()?;
-        self.check_required_fields_for_publishing()?;
-        self.check_version_validity_for_publishing()?;
+    fn check_existence(&self) -> Result<(), Self::Error> {
+        if !self.path.exists() {
+            return Err(CargoTomlError::FileNotFound {
+                missing_file: self.path.clone()
+            });
+        }
+        Ok(())
+    }
+}
+
+impl CheckRequiredFieldsForPublishing for CargoToml {
+
+    type Error = CargoTomlError;
+
+    /// Checks if `Cargo.toml` has required fields for publishing
+    fn check_required_fields_for_publishing(&self) -> Result<(), Self::Error> {
+        let package = self.get_package_section()?;
+
+        let required_fields = ["name", "version", "authors", "license"];
+        for field in &required_fields {
+            if package.get(field).is_none() {
+                return Err(CargoTomlError::MissingRequiredFieldForPublishing {
+                    cargo_toml_file: self.path.clone(),
+                    field: field.to_string(),
+                });
+            }
+        }
+
+        Ok(())
+    }
+}
+
+impl CheckVersionValidityForPublishing for CargoToml {
+
+    type Error = CargoTomlError;
+
+    /// Ensures that the version field is valid
+    fn check_version_validity_for_publishing(&self) -> Result<(), Self::Error> {
+        let package = self.get_package_section()?;
+        if let Some(version) = package.get("version").and_then(|v| v.as_str()) {
+            if !Self::is_valid_version(version) {
+                return Err(CargoTomlError::InvalidVersionFormat {
+                    cargo_toml_file: self.path.clone(),
+                    version: version.to_string(),
+                });
+            }
+        }
+
+        Ok(())
+    }
+}
+
+impl CheckRequiredFieldsForIntegrity for CargoToml {
+
+    type Error = CargoTomlError;
+
+    /// Checks if `Cargo.toml` has required fields for integrity purposes
+    fn check_required_fields_for_integrity(&self) -> Result<(), Self::Error> {
+        let package = self.get_package_section()?;
+
+        let required_fields = ["name", "version"];
+        for field in &required_fields {
+            if package.get(field).is_none() {
+                return Err(CargoTomlError::MissingRequiredFieldForIntegrity {
+                    cargo_toml_file: self.path.clone(),
+                    field: field.to_string(),
+                });
+            }
+        }
+
+        Ok(())
+    }
+}
+
+impl CheckVersionValidityForIntegrity for CargoToml {
+
+    type Error = CargoTomlError;
+
+    /// Ensures that the version field is valid for integrity purposes
+    fn check_version_validity_for_integrity(&self) -> Result<(), Self::Error> {
+        let package = self.get_package_section()?;
+        if let Some(version) = package.get("version").and_then(|v| v.as_str()) {
+            if !Self::is_valid_version(version) {
+                return Err(CargoTomlError::InvalidVersionFormat {
+                    cargo_toml_file: self.path.clone(),
+                    version: version.to_string(),
+                });
+            }
+        }
         Ok(())
     }
 }
@@ -82,77 +169,16 @@ impl ValidateIntegrity for CargoToml {
     }
 }
 
-impl CargoToml {
+#[async_trait]
+impl ReadyForCargoPublish for CargoToml {
 
-    pub fn check_existence(&self) -> Result<(), CargoTomlError> {
-        if !self.path.exists() {
-            return Err(CargoTomlError::FileNotFound {
-                missing_file: self.path.clone()
-            });
-        }
-        Ok(())
-    }
+    type Error = CargoTomlError;
 
-    /// Checks if `Cargo.toml` has required fields for publishing
-    pub fn check_required_fields_for_publishing(&self) -> Result<(), CargoTomlError> {
-        let package = self.get_package_section()?;
-
-        let required_fields = ["name", "version", "authors", "license"];
-        for field in &required_fields {
-            if package.get(field).is_none() {
-                return Err(CargoTomlError::MissingRequiredFieldForPublishing {
-                    cargo_toml_file: self.path.clone(),
-                    field: field.to_string(),
-                });
-            }
-        }
-
-        Ok(())
-    }
-
-    /// Ensures that the version field is valid
-    pub fn check_version_validity_for_publishing(&self) -> Result<(), CargoTomlError> {
-        let package = self.get_package_section()?;
-        if let Some(version) = package.get("version").and_then(|v| v.as_str()) {
-            if !Self::is_valid_version(version) {
-                return Err(CargoTomlError::InvalidVersionFormat {
-                    cargo_toml_file: self.path.clone(),
-                    version: version.to_string(),
-                });
-            }
-        }
-
-        Ok(())
-    }
-
-        /// Checks if `Cargo.toml` has required fields for integrity purposes
-    pub fn check_required_fields_for_integrity(&self) -> Result<(), CargoTomlError> {
-        let package = self.get_package_section()?;
-
-        let required_fields = ["name", "version"];
-        for field in &required_fields {
-            if package.get(field).is_none() {
-                return Err(CargoTomlError::MissingRequiredFieldForIntegrity {
-                    cargo_toml_file: self.path.clone(),
-                    field: field.to_string(),
-                });
-            }
-        }
-
-        Ok(())
-    }
-
-    /// Ensures that the version field is valid for integrity purposes
-    pub fn check_version_validity_for_integrity(&self) -> Result<(), CargoTomlError> {
-        let package = self.get_package_section()?;
-        if let Some(version) = package.get("version").and_then(|v| v.as_str()) {
-            if !Self::is_valid_version(version) {
-                return Err(CargoTomlError::InvalidVersionFormat {
-                    cargo_toml_file: self.path.clone(),
-                    version: version.to_string(),
-                });
-            }
-        }
+    /// Checks if the crate is ready for Cargo publishing
+    async fn ready_for_cargo_publish(&self) -> Result<(), Self::Error> {
+        self.validate_integrity()?;
+        self.check_required_fields_for_publishing()?;
+        self.check_version_validity_for_publishing()?;
         Ok(())
     }
 }

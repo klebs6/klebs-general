@@ -2,10 +2,14 @@ crate::ix!();
 
 pub type WorkspaceDependencyGraph = DiGraph<String, ()>;
 
-impl Workspace {
+#[async_trait]
+impl GenerateDependencyTree for Workspace {
+
+    type Tree = WorkspaceDependencyGraph;
+    type Error = WorkspaceError;
 
     /// Generates a dependency tree for all crates in the workspace.
-    pub async fn generate_dependency_tree(&self) -> Result<WorkspaceDependencyGraph, WorkspaceError> {
+    async fn generate_dependency_tree(&self) -> Result<WorkspaceDependencyGraph, WorkspaceError> {
         // Use cargo_metadata to get the metadata
         let metadata = self.get_cargo_metadata().await?;
 
@@ -40,7 +44,7 @@ impl Workspace {
     }
 
     /// Generates the dependency tree and returns it in DOT format.
-    pub async fn generate_dependency_tree_dot(&self) -> Result<String, WorkspaceError> {
+    async fn generate_dependency_tree_dot(&self) -> Result<String, WorkspaceError> {
         let graph = self.generate_dependency_tree().await?;
         let dot = Dot::with_config(&graph, &[DotConfig::EdgeNoLabel]);
         Ok(format!("{:?}", dot))

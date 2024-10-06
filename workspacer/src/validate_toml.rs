@@ -14,4 +14,3 @@ pub fn validate_toml(toml_value: &toml::Value) -> Result<(), CargoTomlError> {
     }
     Ok(())
 }
-
