@@ -9,7 +9,7 @@ repository = "https://github.com/klebs6/klebs-general"
 documentation = "https://docs.rs/workspacer"
 readme = "README.md"
 license = "MIT"
-keywords = ["workspace", "crate", "management", "validation", "test", "coverage", "dependency"]
+keywords = ["workspace", "crate", "validation", "coverage", "dependency"]
 categories = ["development-tools", "cargo-plugins", "build-tools"]
 
 [dependencies]
