@@ -1215,3 +1215,157 @@ mod workspace_coverage_tests {
         Ok(())
     }
 }
+
+
+#[cfg(test)]
+mod consolidate_crate_interface_tests {
+    use super::*;
+    use tokio::fs;
+    use ra_ap_syntax::ast::HasName;
+
+    #[tokio::test]
+    async fn test_consolidate_interface_with_functions() {
+        let crate_config = CrateConfig::new("crate_with_functions")
+            .with_src_files();
+
+        // Create the mock workspace with the configured crate
+        let workspace_path = create_mock_workspace(vec![crate_config]).await.unwrap();
+
+        // Simulate writing source code to the crate's `lib.rs`
+        let src_path = workspace_path.join("crate_with_functions").join("src").join("lib.rs");
+        fs::write(src_path, r#"
+            /// A function that adds two numbers.
+            pub fn add(a: i32, b: i32) -> i32 {
+                a + b
+            }
+
+            /// A private function that subtracts two numbers.
+            fn subtract(a: i32, b: i32) -> i32 {
+                a - b
+            }
+        "#).await.unwrap();
+
+        // Use CrateHandle to consolidate the interface
+        let crate_handle = CrateHandle::new(&workspace_path.join("crate_with_functions")).await.unwrap();
+        let interface = crate_handle.consolidate_crate_interface().await.unwrap();
+
+        assert_eq!(interface.get_fns().len(), 1, "Should have 1 public function");
+        let public_fn = &interface.get_fns()[0];
+        assert_eq!(public_fn.get_docs().unwrap().trim(), "/// A function that adds two numbers.");
+        assert!(public_fn.get_item().name().unwrap().to_string() == "add");
+    }
+
+    #[tokio::test]
+    async fn test_consolidate_interface_with_structs_and_enums() {
+        let crate_config = CrateConfig::new("crate_with_structs_and_enums")
+            .with_src_files();
+
+        // Create the mock workspace with the configured crate
+        let workspace_path = create_mock_workspace(vec![crate_config]).await.unwrap();
+
+        // Simulate writing source code to the crate's `lib.rs`
+        let src_path = workspace_path.join("crate_with_structs_and_enums").join("src").join("lib.rs");
+        fs::write(src_path, r#"
+            /// A public struct.
+            pub struct Point {
+                x: i32,
+                y: i32,
+            }
+
+            /// An enum that represents colors.
+            pub enum Color {
+                Red,
+                Green,
+                Blue,
+            }
+
+            // Private struct should not be included
+            struct Hidden;
+        "#).await.unwrap();
+
+        // Use CrateHandle to consolidate the interface
+        let crate_handle = CrateHandle::new(&workspace_path.join("crate_with_structs_and_enums")).await.unwrap();
+        let interface = crate_handle.consolidate_crate_interface().await.unwrap();
+
+        // Validate struct extraction
+        assert_eq!(interface.get_structs().len(), 1, "Should have 1 public struct");
+        let public_struct = &interface.get_structs()[0];
+        assert_eq!(public_struct.get_docs().unwrap().trim(), "/// A public struct.");
+        assert!(public_struct.get_item().name().unwrap().to_string() == "Point");
+
+        // Validate enum extraction
+        assert_eq!(interface.get_enums().len(), 1, "Should have 1 public enum");
+        let public_enum = &interface.get_enums()[0];
+        assert_eq!(public_enum.get_docs().unwrap().trim(), "/// An enum that represents colors.");
+        assert!(public_enum.get_item().name().unwrap().to_string() == "Color");
+    }
+
+    #[tokio::test]
+    async fn test_consolidate_interface_with_macros() {
+        let crate_config = CrateConfig::new("crate_with_macros")
+            .with_src_files();
+
+        // Create the mock workspace with the configured crate
+        let workspace_path = create_mock_workspace(vec![crate_config]).await.unwrap();
+
+        // Simulate writing source code to the crate's `lib.rs`
+        let src_path = workspace_path.join("crate_with_macros").join("src").join("lib.rs");
+        fs::write(src_path, r#"
+            /// A macro to print hello.
+            #[macro_export]
+            macro_rules! hello {
+                () => {
+                    println!("Hello, world!");
+                };
+            }
+
+            // Private macro should not be included
+            macro_rules! hidden {
+                () => {
+                    println!("Hidden!");
+                };
+            }
+        "#).await.unwrap();
+
+        // Use CrateHandle to consolidate the interface
+        let crate_handle = CrateHandle::new(&workspace_path.join("crate_with_macros")).await.unwrap();
+        let interface = crate_handle.consolidate_crate_interface().await.unwrap();
+
+        assert_eq!(interface.get_macros().len(), 1, "Should have 1 public macro");
+        let public_macro = &interface.get_macros()[0];
+        assert_eq!(public_macro.get_docs().unwrap().trim(), "/// A macro to print hello.");
+        assert!(public_macro.get_item().name().unwrap().to_string() == "hello");
+    }
+
+    #[tokio::test]
+    async fn test_display_implementation() {
+        let crate_config = CrateConfig::new("crate_with_display")
+            .with_src_files();
+
+        // Create the mock workspace with the configured crate
+        let workspace_path = create_mock_workspace(vec![crate_config]).await.unwrap();
+
+        // Simulate writing source code to the crate's `lib.rs`
+        let src_path = workspace_path.join("crate_with_display").join("src").join("lib.rs");
+        fs::write(src_path, r#"
+            /// A function that adds two numbers.
+            pub fn add(a: i32, b: i32) -> i32 {
+                a + b
+            }
+
+            /// A public struct.
+            pub struct Point {
+                x: i32,
+                y: i32,
+            }
+        "#).await.unwrap();
+
+        // Use CrateHandle to consolidate the interface
+        let crate_handle = CrateHandle::new(&workspace_path.join("crate_with_display")).await.unwrap();
+        let interface = crate_handle.consolidate_crate_interface().await.unwrap();
+
+        let output = format!("{}", interface);
+        assert!(output.contains("pub fn add(a: i32, b: i32) -> i32"));
+        assert!(output.contains("pub struct Point"));
+    }
+}

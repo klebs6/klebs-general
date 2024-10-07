@@ -1,0 +1,32 @@
+[package]
+name = "rck"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+path = "src/main.rs"
+name = "rck"
+
+[dependencies]
+export-magic = "*"
+named-item = "*"
+tracing = "0.1.37"
+tracing-setup = "*"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+git2 = "0.14"
+rayon = "1.5"
+clap = { version = "4.0", features = ["derive"] }
+log = "0.4"
+env_logger = "0.10"
+error-tree = "*"
+derive_builder = "0.10"
+
+[dependencies.tracing-subscriber]
+features = [ "env-filter", "std" ]
+version = "0.3.17"
+
+[dev-dependencies]
+mockall = "0.11"
+tempfile = "3.3"
+assert_cmd = "2.0"
