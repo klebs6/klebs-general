@@ -1,6 +1,7 @@
 use rck::*;
 use std::io::Write;
 use tempfile::NamedTempFile;
+use std::path::PathBuf;
 
 #[test]
 fn test_load_manifest() {
@@ -34,7 +35,7 @@ fn test_load_manifest() {
     let repo = manifest.repo(0).unwrap();
     assert_eq!(repo.name(), "test-repo");
     assert_eq!(repo.url(), "https://example.com/repo.git");
-    assert_eq!(repo.path(), "repo/test-repo");
+    assert_eq!(repo.path(), PathBuf::from("repo/test-repo"));
     assert_eq!(repo.branch(), "main");
     assert_eq!(repo.remote(), "origin");
 }

@@ -26,8 +26,8 @@ impl Repo {
         &self.url
     }
 
-    pub fn path(&self) -> &str {
-        &self.path
+    pub fn path(&self) -> PathBuf {
+        PathBuf::from(&self.path)
     }
 
     pub fn branch(&self) -> &str {
@@ -39,24 +39,7 @@ impl Repo {
     }
 }
 
-impl GitStatusClean for Repo {
-
-    fn git_status_clean(&self) -> Result<bool, git2::Error> {
-        let repo_path = Path::new(&self.path);
-        if repo_path.exists() && repo_path.is_dir() {
-            let repository = Repository::open(repo_path)?;
-            let statuses = repository.statuses(None)?;
-            let is_clean = statuses.is_empty();
-            Ok(is_clean)
-        } else {
-            warn!("{} does not exist", self.path);
-            Ok(false)
-        }
-    }
-}
-
 impl IsPushedUpstream for Repo {
-
     fn is_pushed_upstream(&self) -> Result<bool, git2::Error> {
         let repo_path = Path::new(&self.path);
         if repo_path.exists() && repo_path.is_dir() {

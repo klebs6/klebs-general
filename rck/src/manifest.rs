@@ -25,51 +25,80 @@ impl Manifest {
 }
 
 impl ProcessRepos for Manifest {
-
     fn process_repos(&self, operation: RepoOperation) -> Result<(), git2::Error> {
+        let mut clean_repos = Vec::new();
+        let mut warning_repos = Vec::new();
 
-        self.repos.par_iter().for_each(|repo| {
-            info!("Processing repo: {}", repo.name());
+        self.repos.iter().for_each(|repo| {
+            let repo_name = repo.name().to_string();
+            let status_result = match operation {
+                RepoOperation::Status => repo.check_status(),
+                RepoOperation::Sync => repo.sync_repo(),
+            };
 
-            // Check status
-            if operation == RepoOperation::Status || operation == RepoOperation::Sync {
-
-                match repo.git_status_clean() {
-                    Ok(clean) => {
-                        if clean {
-                            info!("{} is clean", repo.name());
-                        } else {
-                            warn!("{} has uncommitted changes", repo.name());
-                        }
-                    }
-                    Err(e) => {
-                        error!("Error checking status for {}: {}", repo.name(), e);
-                    }
-                }
-
-                match repo.is_pushed_upstream() {
-                    Ok(pushed) => {
-                        if pushed {
-                            info!("{} is pushed upstream", repo.name());
-                        } else {
-                            warn!("{} has local commits not pushed", repo.name());
-                        }
-                    }
-                    Err(e) => {
-                        error!("Error checking if pushed upstream for {}: {}", repo.name(), e);
+            match status_result {
+                Ok(status) => {
+                    if status.is_clean && status.is_pushed {
+                        clean_repos.push(repo_name);
+                    } else {
+                        warning_repos.push((repo_name, status));
                     }
                 }
-            }
-
-            // Sync if operation is "sync"
-            if operation == RepoOperation::Sync {
-                if let Err(e) = repo.git_sync() {
-                    error!("Error syncing repo {}: {}", repo.name(), e);
+                Err(e) => {
+                    error!("Error processing repo {}: {}", repo_name, e);
                 }
             }
         });
 
+        // Log clean repos
+        if !clean_repos.is_empty() {
+            info!("The following repositories are clean and pushed upstream:\n");
+            for repo in &clean_repos {
+                info!("{}", repo);
+            }
+            info!("All clean repositories processed successfully.\n");
+        }
+
+        // Log repos with warnings
+        if !warning_repos.is_empty() {
+            warn!("The following repositories have issues that need to be addressed:\n");
+            for (repo_name, status) in &warning_repos {
+                let mut dirty_loop = false;
+                if !status.unstaged_changes.is_empty() {
+                    dirty_loop = true;
+                    warn!("{} has unstaged changes in the following files:", repo_name);
+                    for file in &status.unstaged_changes {
+                        warn!("- {}", file);
+                    }
+                }
+
+                if !status.untracked_files.is_empty() {
+                    dirty_loop = true;
+                    warn!("{} has untracked files or directories:", repo_name);
+                    for file in &status.untracked_files {
+                        warn!("- {}", file);
+                    }
+                }
+
+                if !status.staged_changes.is_empty() {
+                    dirty_loop = true;
+                    warn!("{} has staged changes ready for commit:", repo_name);
+                    for file in &status.staged_changes {
+                        warn!("- {}", file);
+                    }
+                }
+
+                if status.unpushed_commits {
+                    dirty_loop = true;
+                    warn!("{} has local commits that need to be pushed.", repo_name);
+                }
+
+                if dirty_loop {
+                    println!("");
+                }
+            }
+        }
+
         Ok(())
     }
 }
-

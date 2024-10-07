@@ -1,8 +1,12 @@
 use rck::*;
 use clap::{Arg, Command};
 use tracing::*;
+use std::io::Write;
 
 fn main() -> Result<(), RckError> {
+
+    setup_logging();
+
     let matches = Command::new("rck")
         .version("1.0")
         .author("Author <email@example.com>")

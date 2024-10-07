@@ -2,7 +2,7 @@ crate::ix!();
 
 pub trait GitStatusClean {
 
-    fn git_status_clean(&self) -> Result<bool, git2::Error>;
+    fn git_status_clean(&self) -> Result<RepoStatus, git2::Error>;
 }
 
 pub trait IsPushedUpstream {
