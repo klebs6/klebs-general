@@ -1221,7 +1221,11 @@ mod workspace_coverage_tests {
 mod consolidate_crate_interface_tests {
     use super::*;
     use tokio::fs;
+    use std::path::PathBuf;
+    use std::fs::File;
     use ra_ap_syntax::ast::HasName;
+
+    // Debugging is added to log file content, parsed nodes, and detected public items.
 
     #[tokio::test]
     async fn test_consolidate_interface_with_functions() {
@@ -1233,8 +1237,8 @@ mod consolidate_crate_interface_tests {
 
         // Simulate writing source code to the crate's `lib.rs`
         let src_path = workspace_path.join("crate_with_functions").join("src").join("lib.rs");
-        fs::write(src_path, r#"
-            /// A function that adds two numbers.
+        fs::write(src_path.clone(), r#"
+            /// A public function that adds two numbers.
             pub fn add(a: i32, b: i32) -> i32 {
                 a + b
             }
@@ -1243,15 +1247,22 @@ mod consolidate_crate_interface_tests {
             fn subtract(a: i32, b: i32) -> i32 {
                 a - b
             }
-        "#).await.unwrap();
+     "#).await.unwrap();
+
+        // Debugging: Print the content of the file
+        let file_content = fs::read_to_string(src_path).await.unwrap();
+        println!("Source file content:\n{}", file_content);
 
         // Use CrateHandle to consolidate the interface
         let crate_handle = CrateHandle::new(&workspace_path.join("crate_with_functions")).await.unwrap();
         let interface = crate_handle.consolidate_crate_interface().await.unwrap();
 
+        // Debugging: Output the number of functions detected
+        println!("Detected {} public functions.", interface.get_fns().len());
+
         assert_eq!(interface.get_fns().len(), 1, "Should have 1 public function");
         let public_fn = &interface.get_fns()[0];
-        assert_eq!(public_fn.get_docs().unwrap().trim(), "/// A function that adds two numbers.");
+        assert_eq!(public_fn.get_docs().unwrap().trim(), "/// A public function that adds two numbers.");
         assert!(public_fn.get_item().name().unwrap().to_string() == "add");
     }
 
@@ -1265,7 +1276,7 @@ mod consolidate_crate_interface_tests {
 
         // Simulate writing source code to the crate's `lib.rs`
         let src_path = workspace_path.join("crate_with_structs_and_enums").join("src").join("lib.rs");
-        fs::write(src_path, r#"
+        fs::write(src_path.clone(), r#"
             /// A public struct.
             pub struct Point {
                 x: i32,
@@ -1283,9 +1294,17 @@ mod consolidate_crate_interface_tests {
             struct Hidden;
         "#).await.unwrap();
 
+        // Debugging: Print the content of the file
+        let file_content = fs::read_to_string(src_path).await.unwrap();
+        println!("Source file content:\n{}", file_content);
+
         // Use CrateHandle to consolidate the interface
         let crate_handle = CrateHandle::new(&workspace_path.join("crate_with_structs_and_enums")).await.unwrap();
         let interface = crate_handle.consolidate_crate_interface().await.unwrap();
+
+        // Debugging: Output the number of structs and enums detected
+        println!("Detected {} public structs.", interface.get_structs().len());
+        println!("Detected {} public enums.", interface.get_enums().len());
 
         // Validate struct extraction
         assert_eq!(interface.get_structs().len(), 1, "Should have 1 public struct");
@@ -1310,7 +1329,7 @@ mod consolidate_crate_interface_tests {
 
         // Simulate writing source code to the crate's `lib.rs`
         let src_path = workspace_path.join("crate_with_macros").join("src").join("lib.rs");
-        fs::write(src_path, r#"
+        fs::write(src_path.clone(), r#"
             /// A macro to print hello.
             #[macro_export]
             macro_rules! hello {
@@ -1327,9 +1346,16 @@ mod consolidate_crate_interface_tests {
             }
         "#).await.unwrap();
 
+        // Debugging: Print the content of the file
+        let file_content = fs::read_to_string(src_path).await.unwrap();
+        println!("Source file content:\n{}", file_content);
+
         // Use CrateHandle to consolidate the interface
         let crate_handle = CrateHandle::new(&workspace_path.join("crate_with_macros")).await.unwrap();
         let interface = crate_handle.consolidate_crate_interface().await.unwrap();
+
+        // Debugging: Output the number of macros detected
+        println!("Detected {} public macros.", interface.get_macros().len());
 
         assert_eq!(interface.get_macros().len(), 1, "Should have 1 public macro");
         let public_macro = &interface.get_macros()[0];
@@ -1347,8 +1373,8 @@ mod consolidate_crate_interface_tests {
 
         // Simulate writing source code to the crate's `lib.rs`
         let src_path = workspace_path.join("crate_with_display").join("src").join("lib.rs");
-        fs::write(src_path, r#"
-            /// A function that adds two numbers.
+        fs::write(src_path.clone(), r#"
+            /// A public function that adds two numbers.
             pub fn add(a: i32, b: i32) -> i32 {
                 a + b
             }
@@ -1360,11 +1386,18 @@ mod consolidate_crate_interface_tests {
             }
         "#).await.unwrap();
 
+        // Debugging: Print the content of the file
+        let file_content = fs::read_to_string(src_path).await.unwrap();
+        println!("Source file content:\n{}", file_content);
+
         // Use CrateHandle to consolidate the interface
         let crate_handle = CrateHandle::new(&workspace_path.join("crate_with_display")).await.unwrap();
         let interface = crate_handle.consolidate_crate_interface().await.unwrap();
 
+        // Debugging: Print the Display output of the interface
         let output = format!("{}", interface);
+        println!("Display output:\n{}", output);
+
         assert!(output.contains("pub fn add(a: i32, b: i32) -> i32"));
         assert!(output.contains("pub struct Point"));
     }

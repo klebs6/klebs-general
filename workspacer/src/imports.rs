@@ -39,4 +39,4 @@ pub(crate) use ra_ap_syntax::ast::{
     HasVisibility,
 };
 
-pub(crate) use scan_crate_for_typedefs::is_node_public;
+//pub(crate) use scan_crate_for_typedefs::is_node_public;

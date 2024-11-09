@@ -38,3 +38,4 @@ x!{consolidated_crate_interface}
 x!{extract_docs_from_ast_node}
 x!{generate_signature_for_ast_node}
 x!{crate_interface_item}
+x!{public}
