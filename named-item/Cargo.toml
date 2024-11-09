@@ -9,6 +9,6 @@ authors = ["klebs tpk3.mx@gmail.com"]
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/klebs6/klebs-general"
 name = "named-item"
-version = "0.2.0"
+version = "0.3.0"
 keywords = ["names", "utilities", "traits", "history", "validation"]
 categories = ["data-structures"]
