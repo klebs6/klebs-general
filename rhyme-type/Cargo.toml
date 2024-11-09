@@ -1,0 +1,17 @@
+[package]
+name          = "rhyme-type"
+version       = "0.1.0"
+authors       = [ "klebs tpk3.mx@gmail.com" ]
+edition       = "2021"
+description   = "A crate for representing and generating different types of rhymes."
+license       = "MIT OR Apache-2.0"
+repository    = "https://github.com/klebs6/klebs-general"
+documentation = "https://docs.rs/rhyme-type"
+homepage      = "https://github.com/klebs6/klebs-general"
+
+[dependencies]
+export-magic = "0.3.6"
+rand         = "0.8.5"
+serde        = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+named-item   = "0.3.0"
