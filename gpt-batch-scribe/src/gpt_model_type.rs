@@ -1,11 +1,14 @@
 crate::ix!();
 
 /// Supported model types.
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Copy,Clone,Debug, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum GptModelType {
     Gpt4o,
+    Gpt4oMini,
     Gpt4Turbo,
+    O1Preview,
+    O1Mini,
 }
 
 impl fmt::Display for GptModelType {
@@ -13,7 +16,10 @@ impl fmt::Display for GptModelType {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             GptModelType::Gpt4o     => write!(f, "gpt-4o"),
-            GptModelType::Gpt4Turbo => write!(f, "gpt-4-turbo-2024-04-09"),
+            GptModelType::Gpt4oMini => write!(f, "gpt-4o-mini"),
+            GptModelType::Gpt4Turbo => write!(f, "gpt-4-turbo"),
+            GptModelType::O1Preview => write!(f, "o1-preview"),
+            GptModelType::O1Mini    => write!(f, "o1-mini"),
         }
     }
 }
@@ -35,9 +41,12 @@ pub(crate) mod model_type {
     {
         let s: String = Deserialize::deserialize(deserializer)?;
         match s.as_ref() {
-            "gpt-4o" => Ok(GptModelType::Gpt4o),
-            "gpt-4" => Ok(GptModelType::Gpt4Turbo),
-            _ => Err(serde::de::Error::custom("unknown model type")),
+            "gpt-4o"      => Ok(GptModelType::Gpt4o),
+            "gpt-4o-mini" => Ok(GptModelType::Gpt4oMini),
+            "gpt-4-turbo" => Ok(GptModelType::Gpt4Turbo),
+            "o1-preview"  => Ok(GptModelType::O1Preview),
+            "o1-mini"     => Ok(GptModelType::O1Mini),
+            _             => Err(serde::de::Error::custom("unknown model type")),
         }
     }
 }

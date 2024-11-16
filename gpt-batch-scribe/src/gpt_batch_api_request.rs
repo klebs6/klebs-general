@@ -35,23 +35,73 @@ pub struct GptBatchAPIRequest {
     body: GptRequestBody,
 }
 
+impl From<GptBatchAPIRequest> for BatchRequestInput {
+
+    fn from(request: GptBatchAPIRequest) -> Self {
+        BatchRequestInput {
+            custom_id: request.custom_id,
+            method: BatchRequestInputMethod::POST,
+            url: match request.url {
+                GptApiUrl::ChatCompletions => BatchEndpoint::V1ChatCompletions,
+            },
+            body: Some(serde_json::to_value(&request.body).unwrap()),
+        }
+    }
+}
+
+pub fn create_batch_input_file(
+    requests:             &[GptBatchAPIRequest],
+    batch_input_filename: impl AsRef<Path>,
+
+) -> Result<(), Box<dyn std::error::Error>> {
+
+    use std::io::{BufWriter,Write};
+    use std::fs::File;
+
+    let file = File::create(batch_input_filename.as_ref())?;
+    let mut writer = BufWriter::new(file);
+
+    for request in requests {
+        let batch_input = BatchRequestInput {
+            custom_id: request.custom_id.clone(),
+            method: match request.method {
+                HttpMethod::Post => BatchRequestInputMethod::POST,
+                _ => unimplemented!("Only POST method is supported"),
+            },
+            url: match request.url {
+                GptApiUrl::ChatCompletions => BatchEndpoint::V1ChatCompletions,
+                // Handle other endpoints if necessary
+            },
+            body: Some(serde_json::to_value(&request.body)?),
+        };
+        let line = serde_json::to_string(&batch_input)?;
+        writeln!(writer, "{}", line)?;
+    }
+
+    Ok(())
+}
+
 impl GptBatchAPIRequest {
 
-    pub fn new_basic(idx: usize, system_message: &str, user_message: &str) -> Self {
+    pub fn requests_from_query_strings(system_message: &str, model: GptModelType, queries: &[String]) -> Vec<Self> {
+        queries.iter().enumerate().map(|(idx,query)| Self::new_basic(model,idx,system_message,&query)).collect()
+    }
+
+    pub fn new_basic(model: GptModelType, idx: usize, system_message: &str, user_message: &str) -> Self {
         Self {
             custom_id: Self::custom_id_for_idx(idx),
             method:    HttpMethod::Post,
             url:       GptApiUrl::ChatCompletions,
-            body:      GptRequestBody::new_basic(system_message,user_message),
+            body:      GptRequestBody::new_basic(model,system_message,user_message),
         }
     }
 
-    pub fn new_with_image(idx: usize, system_message: &str, user_message: &str, image_b64: &str) -> Self {
+    pub fn new_with_image(model: GptModelType, idx: usize, system_message: &str, user_message: &str, image_b64: &str) -> Self {
         Self {
             custom_id: Self::custom_id_for_idx(idx),
             method:    HttpMethod::Post,
             url:       GptApiUrl::ChatCompletions,
-            body:      GptRequestBody::new_with_image(system_message,user_message,image_b64),
+            body:      GptRequestBody::new_with_image(model,system_message,user_message,image_b64),
         }
     }
 }

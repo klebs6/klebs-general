@@ -27,9 +27,9 @@ impl GptRequestBody {
         2048
     }
 
-    pub fn new_basic(system_message: &str, user_message: &str) -> Self {
+    pub fn new_basic(model: GptModelType, system_message: &str, user_message: &str) -> Self {
         Self {
-            model: GptModelType::Gpt4Turbo,
+            model,
             messages: vec![
                 GptMessage::system_message(system_message),
                 GptMessage::user_message(user_message),
@@ -38,9 +38,9 @@ impl GptRequestBody {
         }
     }
 
-    pub fn new_with_image(system_message: &str, user_message: &str, image_b64: &str) -> Self {
+    pub fn new_with_image(model: GptModelType, system_message: &str, user_message: &str, image_b64: &str) -> Self {
         Self {
-            model: GptModelType::Gpt4o,
+            model,
             messages: vec![
                 GptMessage::system_message(system_message),
                 GptMessage::user_message_with_image(user_message,image_b64),

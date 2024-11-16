@@ -16,6 +16,9 @@ pub(crate) use std::fmt::{self,Display};
 pub(crate) use async_openai::{
     types::{
         Image,
+        BatchRequestInput,
+        BatchRequestInputMethod,
+        BatchEndpoint,
         ChatCompletionRequestUserMessageContent,
         ChatCompletionRequestMessageContentPart,
         ChatCompletionRequestMessageContentPartImage,
