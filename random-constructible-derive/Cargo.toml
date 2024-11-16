@@ -25,4 +25,4 @@ rand = "0.8"
 
 [dev-dependencies]
 trybuild = "1.0"
-random-constructible = "*"
+random-constructible = "0.1.0"
