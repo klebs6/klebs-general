@@ -10,7 +10,7 @@ homepage      = "https://github.com/klebs6/klebs-general"
 documentation = "https://docs.rs/random-constructible"
 readme        = "README.md"
 keywords      = ["randomness", "enums", "simulation", "ergonomics"]
-categories    = ["development_tools"]
+categories    = ["game-development", "simulation", "rust-patterns"]
 
 
 [dependencies]
