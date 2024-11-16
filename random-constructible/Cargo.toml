@@ -2,6 +2,16 @@
 name = "random-constructible"
 version = "0.1.0"
 edition = "2021"
+authors       = [ "klebs tpk3.mx@gmail.com" ]
+description   = "Provides a trait for creating random instances of enums with weighted probabilities"
+license       = "MIT OR Apache-2.0"
+repository    = "https://github.com/klebs6/klebs-general"
+homepage      = "https://github.com/klebs6/klebs-general"
+documentation = "https://docs.rs/random-constructible"
+readme        = "README.md"
+keywords      = ["randomness", "enums", "simulation", "ergonomics"]
+categories    = ["development_tools"]
+
 
 [dependencies]
 rand = "0.8"
