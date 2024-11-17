@@ -6,7 +6,7 @@
 
 - **Automatic Trait Implementation**: Derive `RandConstruct` and `RandConstructEnum` for your structs and enums.
 - **Customizable Probabilities**: Specify default unnormalized construction probabilities for enum variants using attributes.
-- **Support for Environments**: Derive `RandConstructEnvironment` for your custom environments.
+- **Support for Environments**: Derive `RandConstructEnv` for your custom environments.
 - **Easy Integration**: Seamlessly integrates with the `RandConstruct` crate for a smooth development experience.
 
 ## Getting Started
@@ -88,15 +88,15 @@ fn main() {
 - All fields in the struct must implement `RandConstruct`.
 - For primitive types, you may need to implement `RandConstruct` or use existing implementations.
 
-### Deriving `RandConstructEnvironment`
+### Deriving `RandConstructEnv`
 
-You can also derive `RandConstructEnvironment` for your custom environments:
+You can also derive `RandConstructEnv` for your custom environments:
 
 ```rust
-use random_constructible::{RandConstructEnvironment, RandConstructProbabilityMapProvider};
-use random_constructible_derive::RandConstructEnvironment;
+use random_constructible::{RandConstructEnv, RandConstructProbabilityMapProvider};
+use random_constructible_derive::RandConstructEnv;
 
-#[derive(RandConstructEnvironment)]
+#[derive(RandConstructEnv)]
 struct MyEnvironment;
 
 fn main() {
@@ -178,9 +178,9 @@ Random Point: Point { x: 42, y: -17 }
 ```rust
 use random_constructible::{
     random_constructible_probability_map_provider, RandConstruct,
-    RandConstructEnum, RandConstructEnvironment,
+    RandConstructEnum, RandConstructEnv,
 };
-use random_constructible_derive::{RandConstruct, RandConstructEnvironment};
+use random_constructible_derive::{RandConstruct, RandConstructEnv};
 use std::collections::HashMap;
 use std::sync::Arc;
 
@@ -194,7 +194,7 @@ enum Fruit {
     Cherry,
 }
 
-#[derive(RandConstructEnvironment)]
+#[derive(RandConstructEnv)]
 struct FruitEnvironment;
 
 random_constructible_probability_map_provider!(FruitEnvironment => Fruit {
@@ -259,9 +259,9 @@ When you derive `RandConstruct` for a struct:
 
 ### Environments
 
-When you derive `RandConstructEnvironment`:
+When you derive `RandConstructEnv`:
 
-- The macro implements `RandConstructEnvironment` for the struct.
+- The macro implements `RandConstructEnv` for the struct.
 - Allows you to define custom environments with specific probability maps.
 
 ## Limitations

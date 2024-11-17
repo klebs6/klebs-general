@@ -2,7 +2,7 @@ error: proc-macro derive panicked
  --> tests/ui/02-non-unit-variants.rs:7:10
   |
 7 | #[derive(RandConstruct, Copy, Clone, Debug, PartialEq, Eq, Hash)]
-  |          ^^^^^^^^^^^^^^^^^^^
+  |          ^^^^^^^^^^^^^
   |
   = help: message: RandConstructEnum can only be derived for enums with unit variants
 

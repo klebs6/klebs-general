@@ -7,52 +7,6 @@ use syn::{
     parse_macro_input, Attribute, Data, DeriveInput, Fields, Lit, Meta, MetaNameValue, Variant,
 };
 
-#[proc_macro_derive(RandomSuite)]
-pub fn derive_random_suite(input: TokenStream) -> TokenStream {
-
-    let input = parse_macro_input!(input as DeriveInput);
-
-    if let Data::Union(_) = input.data {
-        // Handle union case or emit an error (unions are rarely used)
-        return syn::Error::new_spanned(input, "Unions are not supported for RandomSuite")
-            .to_compile_error()
-            .into();
-    }
-
-    let attrs    = input.attrs; // Existing attributes
-    let vis      = input.vis;     // Visibility (e.g., `pub`)
-    let ident    = input.ident; // Type name
-    let generics = input.generics; // Generics
-
-    // Handle the data field (struct or enum)
-    let data = match &input.data {
-        Data::Struct(data_struct) => {
-            // If it's a struct, directly emit its fields
-            let fields = &data_struct.fields;
-            quote! {
-                #fields
-            }
-        }
-        Data::Enum(data_enum) => {
-            // If it's an enum, directly emit its variants
-            let variants = &data_enum.variants;
-            quote! {
-                #variants
-            }
-        }
-        _ => unreachable!(), 
-    };
-
-    // Reconstruct the type with additional derives
-    let output = quote! {
-        #[derive(Default, Copy, Clone, PartialEq, Eq, Hash, RandConstruct)]
-        #(#attrs)*
-        #vis struct #ident #generics #data
-    };
-
-    TokenStream::from(output)
-}
-
 #[proc_macro_derive(RandConstructEnvironment)]
 pub fn derive_random_constructible_environment(input: TokenStream) -> TokenStream {
 
