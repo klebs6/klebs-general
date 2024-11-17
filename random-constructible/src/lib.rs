@@ -12,18 +12,18 @@ pub trait RandConstruct {
     fn uniform() -> Self;
 }
 
-impl<E: RandConstructionEnum> RandConstruct for E {
+impl<E: RandConstructEnum> RandConstruct for E {
 
     fn random() -> Self {
-        <Self as RandConstructionEnum>::random_variant()
+        <Self as RandConstructEnum>::random_variant()
     }
 
     fn uniform() -> Self {
-        <Self as RandConstructionEnum>::uniform_variant()
+        <Self as RandConstructEnum>::uniform_variant()
     }
 }
 
-pub trait RandConstructionEnum: Default + Eq + Hash + Sized + Copy {
+pub trait RandConstructEnum: Default + Eq + Hash + Sized + Copy {
 
     //-----------------------------------------------------------------[provided by the proc macro crate]
     fn default_weight(&self) -> f64;
@@ -46,12 +46,12 @@ pub trait RandConstructionEnum: Default + Eq + Hash + Sized + Copy {
         *variants.choose(&mut rng).unwrap()
     }
 
-    fn random_with_provider<P: RandConstructionProbabilityMapProvider<Self>>() -> Self {
+    fn random_with_provider<P: RandConstructProbabilityMapProvider<Self>>() -> Self {
         let mut rng = rand::thread_rng();
         Self::sample_from_provider::<P,_>(&mut rng)
     }
 
-    fn random_uniform_with_provider<P: RandConstructionProbabilityMapProvider<Self>>() -> Self {
+    fn random_uniform_with_provider<P: RandConstructProbabilityMapProvider<Self>>() -> Self {
         let mut rng = rand::thread_rng();
         Self::sample_uniformly_from_provider::<P,_>(&mut rng)
     }
@@ -65,12 +65,12 @@ pub trait RandConstructionEnum: Default + Eq + Hash + Sized + Copy {
     }
 
     // Helper function to sample from a provider using the given RNG
-    fn sample_from_provider<P: RandConstructionProbabilityMapProvider<Self>, RNG: Rng + ?Sized>(rng: &mut RNG) -> Self {
+    fn sample_from_provider<P: RandConstructProbabilityMapProvider<Self>, RNG: Rng + ?Sized>(rng: &mut RNG) -> Self {
         let probs = P::probability_map();
         Self::sample_with_probabilities(rng,&probs)
     }
 
-    fn sample_uniformly_from_provider<P: RandConstructionProbabilityMapProvider<Self>, RNG: Rng + ?Sized>(rng: &mut RNG) -> Self {
+    fn sample_uniformly_from_provider<P: RandConstructProbabilityMapProvider<Self>, RNG: Rng + ?Sized>(rng: &mut RNG) -> Self {
         let probs = P::uniform_probability_map();
         Self::sample_with_probabilities(rng,&probs)
     }
@@ -81,24 +81,24 @@ pub trait RandConstructionEnum: Default + Eq + Hash + Sized + Copy {
     }
 }
 
-pub trait RandConstructionProbabilityMapProvider<R: RandConstructionEnum> {
+pub trait RandConstructProbabilityMapProvider<R: RandConstructEnum> {
     fn probability_map() -> Arc<HashMap<R, f64>>;
     fn uniform_probability_map() -> Arc<HashMap<R, f64>>;
 }
 
-pub trait RandConstructionEnvironment {
+pub trait RandConstructEnvironment {
     fn create_random<R>() -> R
     where
-        R: RandConstructionEnum,
-        Self: RandConstructionProbabilityMapProvider<R> + Sized,
+        R: RandConstructEnum,
+        Self: RandConstructProbabilityMapProvider<R> + Sized,
     {
         R::random_with_provider::<Self>()
     }
 
     fn create_random_uniform<R>() -> R
     where
-        R: RandConstructionEnum,
-        Self: RandConstructionProbabilityMapProvider<R> + Sized,
+        R: RandConstructEnum,
+        Self: RandConstructProbabilityMapProvider<R> + Sized,
     {
         R::random_uniform_with_provider::<Self>()
     }
@@ -107,7 +107,7 @@ pub trait RandConstructionEnvironment {
 #[macro_export]
 macro_rules! random_constructible_probability_map_provider {
     ($provider:ident => $enum:ty { $($variant:ident => $weight:expr),* $(,)? }) => {
-        impl $crate::RandConstructionProbabilityMapProvider<$enum> for $provider {
+        impl $crate::RandConstructProbabilityMapProvider<$enum> for $provider {
             fn probability_map() -> std::sync::Arc<std::collections::HashMap<$enum, f64>> {
                 use once_cell::sync::Lazy;
                 static PROBABILITY_MAP: Lazy<std::sync::Arc<std::collections::HashMap<$enum, f64>>> = Lazy::new(|| {
@@ -143,7 +143,7 @@ mod tests {
     use std::collections::HashMap;
     use std::sync::Arc;
 
-    // Define a test enum and manually implement RandConstructionEnum
+    // Define a test enum and manually implement RandConstructEnum
     #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
     enum ManualTestEnum {
         VariantX,
@@ -157,7 +157,7 @@ mod tests {
         }
     }
 
-    impl RandConstructionEnum for ManualTestEnum {
+    impl RandConstructEnum for ManualTestEnum {
         fn all_variants() -> Vec<Self> {
             vec![Self::VariantX, Self::VariantY, Self::VariantZ]
         }
