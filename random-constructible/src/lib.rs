@@ -46,12 +46,12 @@ pub trait RandConstructEnum: Default + Eq + Hash + Sized + Copy {
         *variants.choose(&mut rng).unwrap()
     }
 
-    fn random_with_provider<P: RandConstructProbabilityMapProvider<Self>>() -> Self {
+    fn random_with_env<P: RandConstructProbabilityMapProvider<Self>>() -> Self {
         let mut rng = rand::thread_rng();
         Self::sample_from_provider::<P,_>(&mut rng)
     }
 
-    fn random_uniform_with_provider<P: RandConstructProbabilityMapProvider<Self>>() -> Self {
+    fn random_uniform_with_env<P: RandConstructProbabilityMapProvider<Self>>() -> Self {
         let mut rng = rand::thread_rng();
         Self::sample_uniformly_from_provider::<P,_>(&mut rng)
     }
@@ -92,7 +92,7 @@ pub trait RandConstructEnvironment {
         R: RandConstructEnum,
         Self: RandConstructProbabilityMapProvider<R> + Sized,
     {
-        R::random_with_provider::<Self>()
+        R::random_with_env::<Self>()
     }
 
     fn create_random_uniform<R>() -> R
@@ -100,12 +100,12 @@ pub trait RandConstructEnvironment {
         R: RandConstructEnum,
         Self: RandConstructProbabilityMapProvider<R> + Sized,
     {
-        R::random_uniform_with_provider::<Self>()
+        R::random_uniform_with_env::<Self>()
     }
 }
 
 #[macro_export]
-macro_rules! random_constructible_probability_map_provider {
+macro_rules! rand_construct_env {
     ($provider:ident => $enum:ty { $($variant:ident => $weight:expr),* $(,)? }) => {
         impl $crate::RandConstructProbabilityMapProvider<$enum> for $provider {
             fn probability_map() -> std::sync::Arc<std::collections::HashMap<$enum, f64>> {
@@ -178,7 +178,7 @@ mod tests {
     // Implement the default provider using the macro
     struct DefaultProvider;
 
-    random_constructible_probability_map_provider!(DefaultProvider => ManualTestEnum {
+    rand_construct_env!(DefaultProvider => ManualTestEnum {
         VariantX => 2.0,
         VariantY => 3.0,
         VariantZ => 5.0,
@@ -187,7 +187,7 @@ mod tests {
     // Implement a custom probability provider using the macro
     struct CustomProvider;
 
-    random_constructible_probability_map_provider!(CustomProvider => ManualTestEnum {
+    rand_construct_env!(CustomProvider => ManualTestEnum {
         VariantX => 1.0,
         VariantY => 1.0,
         VariantZ => 8.0,

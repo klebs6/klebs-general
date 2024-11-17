@@ -177,7 +177,7 @@ Random Point: Point { x: 42, y: -17 }
 
 ```rust
 use random_constructible::{
-    random_constructible_probability_map_provider, RandConstruct,
+    rand_construct_env, RandConstruct,
     RandConstructEnum, RandConstructEnv,
 };
 use random_constructible_derive::{RandConstruct, RandConstructEnv};
@@ -197,7 +197,7 @@ enum Fruit {
 #[derive(RandConstructEnv)]
 struct FruitEnvironment;
 
-random_constructible_probability_map_provider!(FruitEnvironment => Fruit {
+rand_construct_env!(FruitEnvironment => Fruit {
     Apple => 1.0,
     Banana => 1.0,
     Cherry => 8.0,

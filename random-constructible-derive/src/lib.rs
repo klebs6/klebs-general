@@ -161,6 +161,31 @@ fn derive_random_constructible_for_struct(input: &DeriveInput) -> TokenStream {
                         }
                     }
                 }
+
+                impl #name {
+
+                    pub fn random_with_env<ENV>() -> Self 
+                    where 
+                        #( ENV: RandConstructProbabilityMapProvider<#field_types>, )*
+                    {
+                        Self {
+                            #(
+                                #field_names: #field_types::random_with_env::<ENV>(),
+                            )*
+                        }
+                    }
+
+                    pub fn random_uniform_with_env<ENV>() -> Self 
+                    where 
+                        #( ENV: RandConstructProbabilityMapProvider<#field_types>, )*
+                    {
+                        Self {
+                            #(
+                                #field_names: #field_types::random_uniform_with_env::<ENV>(),
+                            )*
+                        }
+                    }
+                }
             };
 
             TokenStream::from(expanded)
@@ -188,6 +213,24 @@ fn derive_random_constructible_for_struct(input: &DeriveInput) -> TokenStream {
                         Self(RandConstruct::uniform())
                     }
                 }
+
+                impl #name {
+
+                    pub fn random_with_env<ENV>() -> Self 
+                    where 
+                        ENV: RandConstructProbabilityMapProvider< #field_type >
+                    {
+                        Self(#field_type::random_with_env::<ENV>())
+                    }
+
+                    pub fn random_uniform_with_env<ENV>() -> Self 
+                    where 
+                        ENV: RandConstructProbabilityMapProvider< #field_type >
+                    {
+                        Self(#field_type::random_uniform_with_env::<ENV>())
+                    }
+                }
+
             };
 
             TokenStream::from(expanded)
@@ -200,6 +243,17 @@ fn derive_random_constructible_for_struct(input: &DeriveInput) -> TokenStream {
                     }
 
                     fn uniform() -> Self {
+                        Self
+                    }
+                }
+
+                impl #name {
+
+                    fn random_with_env<ENV>() -> Self {
+                        Self
+                    }
+
+                    fn random_uniform_with_env<ENV>() -> Self {
                         Self
                     }
                 }

@@ -27,7 +27,7 @@ enum MagicItem {
 #[derive(RandConstructEnvironment)]
 pub struct Env;
 
-random_constructible_probability_map_provider!{Env => ProbabilityEnum {
+rand_construct_env!{Env => ProbabilityEnum {
     VariantX       => 1.0,
     VariantY       => 2.0,
 }}

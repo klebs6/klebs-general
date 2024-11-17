@@ -73,14 +73,14 @@ impl RandConstructEnum for MyEnum {
 
 ### Define a Probability Map Provider
 
-Use the `random_constructible_probability_map_provider!` macro to define a provider for your enum:
+Use the `rand_construct_env!` macro to define a provider for your enum:
 
 ```rust
-use random_constructible::random_constructible_probability_map_provider;
+use random_constructible::rand_construct_env;
 
 struct DefaultProvider;
 
-random_constructible_probability_map_provider!(DefaultProvider => MyEnum {
+rand_construct_env!(DefaultProvider => MyEnum {
     VariantA => 1.0,
     VariantB => 2.0,
     VariantC => 3.0,
@@ -108,7 +108,7 @@ You can define custom providers to alter the probabilities:
 ```rust
 struct CustomProvider;
 
-random_constructible_probability_map_provider!(CustomProvider => MyEnum {
+rand_construct_env!(CustomProvider => MyEnum {
     VariantA => 5.0,
     VariantB => 1.0,
     VariantC => 1.0,
@@ -145,12 +145,12 @@ Allows custom probability maps:
 - `fn probability_map() -> Arc<HashMap<R, f64>>`: Returns the custom probability map.
 - `fn uniform_probability_map() -> Arc<HashMap<R, f64>>`: Returns a uniform probability map.
 
-### `random_constructible_probability_map_provider!` Macro
+### `rand_construct_env!` Macro
 
 Simplifies the creation of probability map providers:
 
 ```rust
-random_constructible_probability_map_provider!(ProviderName => EnumType {
+rand_construct_env!(ProviderName => EnumType {
     Variant1 => weight1,
     Variant2 => weight2,
     // ...
@@ -162,7 +162,7 @@ random_constructible_probability_map_provider!(ProviderName => EnumType {
 ### Full Example
 
 ```rust
-use random_constructible::{RandConstruct, RandConstructEnum, random_constructible_probability_map_provider};
+use random_constructible::{RandConstruct, RandConstructEnum, rand_construct_env};
 use std::collections::HashMap;
 use std::sync::Arc;
 
@@ -199,7 +199,7 @@ impl RandConstructEnum for Fruit {
 
 struct DefaultFruitProvider;
 
-random_constructible_probability_map_provider!(DefaultFruitProvider => Fruit {
+rand_construct_env!(DefaultFruitProvider => Fruit {
     Apple => 1.0,
     Banana => 1.0,
     Cherry => 1.0,
@@ -217,7 +217,7 @@ fn main() {
 ### Using a Custom Environment
 
 ```rust
-use random_constructible::{RandConstructEnum, RandConstructProbabilityMapProvider, RandConstructEnvironment, random_constructible_probability_map_provider};
+use random_constructible::{RandConstructEnum, RandConstructProbabilityMapProvider, RandConstructEnvironment, rand_construct_env};
 use std::collections::HashMap;
 use std::sync::Arc;
 
@@ -252,7 +252,7 @@ struct ColorfulEnvironment;
 
 impl RandConstructEnvironment for ColorfulEnvironment {}
 
-random_constructible_probability_map_provider!(ColorfulEnvironment => Color {
+rand_construct_env!(ColorfulEnvironment => Color {
     Red => 2.0,
     Green => 3.0,
     Blue => 5.0,

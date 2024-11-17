@@ -25,4 +25,5 @@ rand = "0.8"
 
 [dev-dependencies]
 trybuild = "1.0"
-random-constructible = "0.3.0"
+#random-constructible = "0.3.0"
+random-constructible = { version = "0.3.0", path = "../random-constructible" }
