@@ -1,6 +1,6 @@
-# RandomConstructible
+random-constructible
 
-**RandomConstructible** is a Rust crate that provides traits and utilities to easily generate random instances of enums with customizable probabilities. It allows you to:
+**random-constructible** is a Rust crate that provides traits and utilities to easily generate random instances of enums with customizable probabilities. It allows you to:
 
 - Define enums that can be randomly instantiated.
 - Assign default weights to enum variants.
@@ -9,11 +9,11 @@
 
 ## Features
 
-- **RandomConstructible Trait**: A trait that provides methods to generate random instances.
-- **RandomConstructibleEnum Trait**: Extends `RandomConstructible` for enums, allowing for default weights and custom probability maps.
-- **RandomConstructibleProbabilityMapProvider Trait**: Allows for custom probability maps to be provided.
+- **RandConstruct Trait**: A trait that provides methods to generate random instances.
+- **RandConstructEnum Trait**: Extends `RandConstruct` for enums, allowing for default weights and custom probability maps.
+- **RandConstructProbabilityMapProvider Trait**: Allows for custom probability maps to be provided.
 - **Macro for Probability Map Providers**: A convenient macro to define custom probability map providers.
-- **Support for Custom Environments**: Use `RandomConstructibleEnvironment` to define environments with specific probability maps.
+- **Support for Custom Environments**: Use `RandConstructEnvironment` to define environments with specific probability maps.
 
 ## Getting Started
 
@@ -26,16 +26,16 @@ Add the following to your `Cargo.toml`:
 random_constructible = "0.1.0"
 ```
 
-### Derive `RandomConstructibleEnum` for Your Enum
+### Derive `RandConstructEnum` for Your Enum
 
-First, define your enum and implement `RandomConstructibleEnum` for it. You'll need to provide:
+First, define your enum and implement `RandConstructEnum` for it. You'll need to provide:
 
 - A `default_weight` for each variant.
 - A list of all variants.
 - A default probability map (usually via a provider).
 
 ```rust
-use random_constructible::{RandomConstructible, RandomConstructibleEnum};
+use random_constructible::{RandConstruct, RandConstructEnum};
 use std::collections::HashMap;
 use std::sync::Arc;
 
@@ -52,7 +52,7 @@ impl Default for MyEnum {
     }
 }
 
-impl RandomConstructibleEnum for MyEnum {
+impl RandConstructEnum for MyEnum {
     fn default_weight(&self) -> f64 {
         match self {
             Self::VariantA => 1.0,
@@ -122,23 +122,23 @@ fn main() {
 
 ## Traits and Macros
 
-### `RandomConstructible` Trait
+### `RandConstruct` Trait
 
 Provides basic methods to generate random instances:
 
 - `fn random() -> Self`: Generates a random instance based on default probabilities.
 - `fn uniform() -> Self`: Generates a random instance with uniform probability.
 
-### `RandomConstructibleEnum` Trait
+### `RandConstructEnum` Trait
 
-Extends `RandomConstructible` for enums:
+Extends `RandConstruct` for enums:
 
 - `fn default_weight(&self) -> f64`: Returns the default weight of a variant.
 - `fn all_variants() -> Vec<Self>`: Returns all variants of the enum.
 - `fn create_default_probability_map() -> Arc<HashMap<Self, f64>>`: Creates the default probability map.
 - Additional methods to sample with custom probabilities and providers.
 
-### `RandomConstructibleProbabilityMapProvider` Trait
+### `RandConstructProbabilityMapProvider` Trait
 
 Allows custom probability maps:
 
@@ -162,7 +162,7 @@ random_constructible_probability_map_provider!(ProviderName => EnumType {
 ### Full Example
 
 ```rust
-use random_constructible::{RandomConstructible, RandomConstructibleEnum, random_constructible_probability_map_provider};
+use random_constructible::{RandConstruct, RandConstructEnum, random_constructible_probability_map_provider};
 use std::collections::HashMap;
 use std::sync::Arc;
 
@@ -179,7 +179,7 @@ impl Default for Fruit {
     }
 }
 
-impl RandomConstructibleEnum for Fruit {
+impl RandConstructEnum for Fruit {
     fn default_weight(&self) -> f64 {
         match self {
             Self::Apple => 1.0,
@@ -217,7 +217,7 @@ fn main() {
 ### Using a Custom Environment
 
 ```rust
-use random_constructible::{RandomConstructibleEnum, RandomConstructibleProbabilityMapProvider, RandomConstructibleEnvironment, random_constructible_probability_map_provider};
+use random_constructible::{RandConstructEnum, RandConstructProbabilityMapProvider, RandConstructEnvironment, random_constructible_probability_map_provider};
 use std::collections::HashMap;
 use std::sync::Arc;
 
@@ -234,7 +234,7 @@ impl Default for Color {
     }
 }
 
-impl RandomConstructibleEnum for Color {
+impl RandConstructEnum for Color {
     fn default_weight(&self) -> f64 {
         1.0
     }
@@ -250,7 +250,7 @@ impl RandomConstructibleEnum for Color {
 
 struct ColorfulEnvironment;
 
-impl RandomConstructibleEnvironment for ColorfulEnvironment {}
+impl RandConstructEnvironment for ColorfulEnvironment {}
 
 random_constructible_probability_map_provider!(ColorfulEnvironment => Color {
     Red => 2.0,

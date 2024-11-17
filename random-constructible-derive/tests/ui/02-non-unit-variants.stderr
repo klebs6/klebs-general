@@ -1,10 +1,10 @@
 error: proc-macro derive panicked
  --> tests/ui/02-non-unit-variants.rs:7:10
   |
-7 | #[derive(RandomConstructible, Copy, Clone, Debug, PartialEq, Eq, Hash)]
+7 | #[derive(RandConstruct, Copy, Clone, Debug, PartialEq, Eq, Hash)]
   |          ^^^^^^^^^^^^^^^^^^^
   |
-  = help: message: RandomConstructibleEnum can only be derived for enums with unit variants
+  = help: message: RandConstructEnum can only be derived for enums with unit variants
 
 warning: unused import: `random_constructible::*`
  --> tests/ui/02-non-unit-variants.rs:4:5

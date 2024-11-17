@@ -4,7 +4,7 @@ extern crate random_constructible_derive;
 use random_constructible::*;
 use random_constructible_derive::*;
 
-#[derive(Debug,Default,RandomConstructible, Copy, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug,Default,RandConstruct, Copy, Clone, PartialEq, Eq, Hash)]
 enum ProbabilityEnum {
     #[default]
     #[default_unnormalized_construction_probability = 2.0]
@@ -14,7 +14,7 @@ enum ProbabilityEnum {
     VariantZ, // Default probability should be 1.0
 }
 
-#[derive(Debug,Default,RandomConstructible, Copy, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug,Default,RandConstruct, Copy, Clone, PartialEq, Eq, Hash)]
 enum MagicItem {
     #[default]
     #[default_unnormalized_construction_probability = 2.0]
@@ -24,7 +24,7 @@ enum MagicItem {
     Watermelon, // Default probability should be 1.0
 }
 
-#[derive(RandomConstructibleEnvironment)]
+#[derive(RandConstructEnvironment)]
 pub struct Env;
 
 random_constructible_probability_map_provider!{Env => ProbabilityEnum {

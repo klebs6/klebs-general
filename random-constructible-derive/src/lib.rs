@@ -45,7 +45,7 @@ pub fn derive_random_suite(input: TokenStream) -> TokenStream {
 
     // Reconstruct the type with additional derives
     let output = quote! {
-        #[derive(Default, Copy, Clone, PartialEq, Eq, Hash, RandomConstructible)]
+        #[derive(Default, Copy, Clone, PartialEq, Eq, Hash, RandConstruct)]
         #(#attrs)*
         #vis struct #ident #generics #data
     };
@@ -53,18 +53,18 @@ pub fn derive_random_suite(input: TokenStream) -> TokenStream {
     TokenStream::from(output)
 }
 
-#[proc_macro_derive(RandomConstructibleEnvironment)]
+#[proc_macro_derive(RandConstructEnvironment)]
 pub fn derive_random_constructible_environment(input: TokenStream) -> TokenStream {
 
     let input = parse_macro_input!(input as DeriveInput);
     let name  = input.ident;
 
     TokenStream::from(quote!{
-        impl RandomConstructibleEnvironment for #name {}
+        impl RandConstructEnvironment for #name {}
     })
 }
 
-#[proc_macro_derive(RandomConstructible, attributes(default_unnormalized_construction_probability))]
+#[proc_macro_derive(RandConstruct, attributes(default_unnormalized_construction_probability))]
 pub fn derive_random_constructible(input: TokenStream) -> TokenStream {
     // Parse the input tokens into a syntax tree
     let input_ast = parse_macro_input!(input as DeriveInput);
@@ -72,7 +72,7 @@ pub fn derive_random_constructible(input: TokenStream) -> TokenStream {
     let expanded = match input_ast.data {
         Data::Enum(_) => derive_random_constructible_for_enum(&input_ast),
         Data::Struct(_) => derive_random_constructible_for_struct(&input_ast),
-        _ => panic!("RandomConstructible can only be derived for enums and structs"),
+        _ => panic!("RandConstruct can only be derived for enums and structs"),
     };
 
     expanded
@@ -95,7 +95,7 @@ fn derive_random_constructible_for_enum(input: &DeriveInput) -> TokenStream {
 
         // Check that the variant is a unit variant
         if !matches!(variant.fields, Fields::Unit) {
-            panic!("RandomConstructibleEnum can only be derived for enums with unit variants");
+            panic!("RandConstructEnum can only be derived for enums with unit variants");
         }
 
         // Extract the probability from the attribute, if present
@@ -126,9 +126,9 @@ fn derive_random_constructible_for_enum(input: &DeriveInput) -> TokenStream {
     // Split variant_probs into separate vectors
     let (variant_idents, probs): (Vec<_>, Vec<_>) = variant_probs.iter().cloned().unzip();
 
-    // Generate the implementation of RandomConstructibleEnum
+    // Generate the implementation of RandConstructEnum
     let expanded = quote! {
-        impl RandomConstructibleEnum for #name {
+        impl RandConstructEnum for #name {
             fn all_variants() -> Vec<Self> {
                 vec![
                     #(Self::#variant_idents),*
@@ -185,16 +185,16 @@ fn derive_random_constructible_for_struct(input: &DeriveInput) -> TokenStream {
                 .collect::<Vec<_>>();
 
             let expanded = quote! {
-                impl RandomConstructible for #name
+                impl RandConstruct for #name
                 where
                     #(
-                        #field_types : RandomConstructible,
+                        #field_types : RandConstruct,
                     )*
                 {
                     fn random() -> Self {
                         Self {
                             #(
-                                #field_names: RandomConstructible::random(),
+                                #field_names: RandConstruct::random(),
                             )*
                         }
                     }
@@ -202,7 +202,7 @@ fn derive_random_constructible_for_struct(input: &DeriveInput) -> TokenStream {
                     fn uniform() -> Self {
                         Self {
                             #(
-                                #field_names: RandomConstructible::uniform(),
+                                #field_names: RandConstruct::uniform(),
                             )*
                         }
                     }
@@ -223,15 +223,15 @@ fn derive_random_constructible_for_struct(input: &DeriveInput) -> TokenStream {
             let field_type = &field_types[0];
 
             let expanded = quote! {
-                impl RandomConstructible for #name
-                where #field_type : RandomConstructible
+                impl RandConstruct for #name
+                where #field_type : RandConstruct
                 {
                     fn random() -> Self {
-                        Self(RandomConstructible::random())
+                        Self(RandConstruct::random())
                     }
 
                     fn uniform() -> Self {
-                        Self(RandomConstructible::uniform())
+                        Self(RandConstruct::uniform())
                     }
                 }
             };
@@ -240,7 +240,7 @@ fn derive_random_constructible_for_struct(input: &DeriveInput) -> TokenStream {
         }
         Fields::Unit => {
             let expanded = quote! {
-                impl RandomConstructible for #name {
+                impl RandConstruct for #name {
                     fn random() -> Self {
                         Self
                     }

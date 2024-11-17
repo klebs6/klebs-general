@@ -1,6 +1,6 @@
 [package]
 name = "random-constructible-derive"
-version = "0.2.0"
+version = "0.3.0"
 edition = "2021"
 
 authors       = [ "klebs tpk3.mx@gmail.com" ]
@@ -25,4 +25,4 @@ rand = "0.8"
 
 [dev-dependencies]
 trybuild = "1.0"
-random-constructible = { version = "0.1.0", path = "../random-constructible" }
+random-constructible = "0.3.0"

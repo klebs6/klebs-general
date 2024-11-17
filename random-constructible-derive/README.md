@@ -1,13 +1,13 @@
-# RandomConstructible-Derive
+# random-constructible-derive
 
-**RandomConstructible-Derive** is a Rust procedural macro crate that provides custom derives to automatically implement the `RandomConstructible` and `RandomConstructibleEnum` traits from the [RandomConstructible](https://crates.io/crates/random_constructible) crate. This allows you to easily generate random instances of your structs and enums without manually implementing the necessary traits.
+**random-constructible-derive** is a Rust procedural macro crate that provides custom derives to automatically implement the `RandConstruct` and `RandConstructEnum` traits from the [RandConstruct](https://crates.io/crates/random_constructible) crate. This allows you to easily generate random instances of your structs and enums without manually implementing the necessary traits.
 
 ## Features
 
-- **Automatic Trait Implementation**: Derive `RandomConstructible` and `RandomConstructibleEnum` for your structs and enums.
+- **Automatic Trait Implementation**: Derive `RandConstruct` and `RandConstructEnum` for your structs and enums.
 - **Customizable Probabilities**: Specify default unnormalized construction probabilities for enum variants using attributes.
-- **Support for Environments**: Derive `RandomConstructibleEnvironment` for your custom environments.
-- **Easy Integration**: Seamlessly integrates with the `RandomConstructible` crate for a smooth development experience.
+- **Support for Environments**: Derive `RandConstructEnvironment` for your custom environments.
+- **Easy Integration**: Seamlessly integrates with the `RandConstruct` crate for a smooth development experience.
 
 ## Getting Started
 
@@ -28,21 +28,21 @@ Ensure that you include both the `random-constructible` and `random-constructibl
 In your Rust file, import the necessary traits and macros:
 
 ```rust
-use random_constructible::{RandomConstructible, RandomConstructibleEnum};
-use random_constructible_derive::RandomConstructible;
+use random_constructible::{RandConstruct, RandConstructEnum};
+use random_constructible_derive::RandConstruct;
 ```
 
 ## Usage
 
-### Deriving `RandomConstructible` for Enums
+### Deriving `RandConstruct` for Enums
 
-You can automatically implement `RandomConstructibleEnum` for your enums by using the `#[derive(RandomConstructible)]` macro. You can also specify default unnormalized construction probabilities for each variant using the `#[default_unnormalized_construction_probability = "value"]` attribute.
+You can automatically implement `RandConstructEnum` for your enums by using the `#[derive(RandConstruct)]` macro. You can also specify default unnormalized construction probabilities for each variant using the `#[default_unnormalized_construction_probability = "value"]` attribute.
 
 ```rust
-use random_constructible::{RandomConstructible, RandomConstructibleEnum};
-use random_constructible_derive::RandomConstructible;
+use random_constructible::{RandConstruct, RandConstructEnum};
+use random_constructible_derive::RandConstruct;
 
-#[derive(RandomConstructible, Debug)]
+#[derive(RandConstruct, Debug)]
 enum MyEnum {
     #[default_unnormalized_construction_probability = "2.0"]
     VariantA,
@@ -60,18 +60,18 @@ fn main() {
 
 #### Explanation
 
-- `#[derive(RandomConstructible)]`: Automatically implements `RandomConstructibleEnum` for `MyEnum`.
+- `#[derive(RandConstruct)]`: Automatically implements `RandConstructEnum` for `MyEnum`.
 - `#[default_unnormalized_construction_probability = "value"]`: Sets the default weight for each variant.
 
-### Deriving `RandomConstructible` for Structs
+### Deriving `RandConstruct` for Structs
 
-For structs, you can derive `RandomConstructible`, and the macro will automatically implement the trait by generating random instances of each field.
+For structs, you can derive `RandConstruct`, and the macro will automatically implement the trait by generating random instances of each field.
 
 ```rust
-use random_constructible::RandomConstructible;
-use random_constructible_derive::RandomConstructible;
+use random_constructible::RandConstruct;
+use random_constructible_derive::RandConstruct;
 
-#[derive(RandomConstructible, Debug)]
+#[derive(RandConstruct, Debug)]
 struct MyStruct {
     x: i32,
     y: f64,
@@ -85,18 +85,18 @@ fn main() {
 
 #### Note
 
-- All fields in the struct must implement `RandomConstructible`.
-- For primitive types, you may need to implement `RandomConstructible` or use existing implementations.
+- All fields in the struct must implement `RandConstruct`.
+- For primitive types, you may need to implement `RandConstruct` or use existing implementations.
 
-### Deriving `RandomConstructibleEnvironment`
+### Deriving `RandConstructEnvironment`
 
-You can also derive `RandomConstructibleEnvironment` for your custom environments:
+You can also derive `RandConstructEnvironment` for your custom environments:
 
 ```rust
-use random_constructible::{RandomConstructibleEnvironment, RandomConstructibleProbabilityMapProvider};
-use random_constructible_derive::RandomConstructibleEnvironment;
+use random_constructible::{RandConstructEnvironment, RandConstructProbabilityMapProvider};
+use random_constructible_derive::RandConstructEnvironment;
 
-#[derive(RandomConstructibleEnvironment)]
+#[derive(RandConstructEnvironment)]
 struct MyEnvironment;
 
 fn main() {
@@ -109,11 +109,11 @@ fn main() {
 ### Full Enum Example
 
 ```rust
-use random_constructible::{RandomConstructible, RandomConstructibleEnum};
-use random_constructible_derive::RandomConstructible;
+use random_constructible::{RandConstruct, RandConstructEnum};
+use random_constructible_derive::RandConstruct;
 use std::fmt;
 
-#[derive(RandomConstructible, Debug)]
+#[derive(RandConstruct, Debug)]
 enum Color {
     #[default_unnormalized_construction_probability = "1.0"]
     Red,
@@ -142,16 +142,16 @@ Uniform Color: Green
 ### Full Struct Example
 
 ```rust
-use random_constructible::RandomConstructible;
-use random_constructible_derive::RandomConstructible;
+use random_constructible::RandConstruct;
+use random_constructible_derive::RandConstruct;
 
-#[derive(RandomConstructible, Debug)]
+#[derive(RandConstruct, Debug)]
 struct Point {
     x: i32,
     y: i32,
 }
 
-impl RandomConstructible for i32 {
+impl RandConstruct for i32 {
     fn random() -> Self {
         rand::random::<i32>()
     }
@@ -177,14 +177,14 @@ Random Point: Point { x: 42, y: -17 }
 
 ```rust
 use random_constructible::{
-    random_constructible_probability_map_provider, RandomConstructible,
-    RandomConstructibleEnum, RandomConstructibleEnvironment,
+    random_constructible_probability_map_provider, RandConstruct,
+    RandConstructEnum, RandConstructEnvironment,
 };
-use random_constructible_derive::{RandomConstructible, RandomConstructibleEnvironment};
+use random_constructible_derive::{RandConstruct, RandConstructEnvironment};
 use std::collections::HashMap;
 use std::sync::Arc;
 
-#[derive(RandomConstructible, Debug)]
+#[derive(RandConstruct, Debug)]
 enum Fruit {
     #[default_unnormalized_construction_probability = "1.0"]
     Apple,
@@ -194,7 +194,7 @@ enum Fruit {
     Cherry,
 }
 
-#[derive(RandomConstructibleEnvironment)]
+#[derive(RandConstructEnvironment)]
 struct FruitEnvironment;
 
 random_constructible_probability_map_provider!(FruitEnvironment => Fruit {
@@ -226,7 +226,7 @@ Random Fruit from Environment: Cherry
 #### Example
 
 ```rust
-#[derive(RandomConstructible)]
+#[derive(RandConstruct)]
 enum Vehicle {
     #[default_unnormalized_construction_probability = "5.0"]
     Car,
@@ -240,9 +240,9 @@ enum Vehicle {
 
 ### Enums
 
-When you derive `RandomConstructible` for an enum:
+When you derive `RandConstruct` for an enum:
 
-- The macro implements `RandomConstructibleEnum` for the enum.
+- The macro implements `RandConstructEnum` for the enum.
 - It generates:
 
   - A method to return all variants.
@@ -251,38 +251,38 @@ When you derive `RandomConstructible` for an enum:
 
 ### Structs
 
-When you derive `RandomConstructible` for a struct:
+When you derive `RandConstruct` for a struct:
 
-- The macro implements `RandomConstructible` for the struct.
+- The macro implements `RandConstruct` for the struct.
 - It recursively generates random instances of each field.
-- Requires all fields to implement `RandomConstructible`.
+- Requires all fields to implement `RandConstruct`.
 
 ### Environments
 
-When you derive `RandomConstructibleEnvironment`:
+When you derive `RandConstructEnvironment`:
 
-- The macro implements `RandomConstructibleEnvironment` for the struct.
+- The macro implements `RandConstructEnvironment` for the struct.
 - Allows you to define custom environments with specific probability maps.
 
 ## Limitations
 
 - **Enums with Non-Unit Variants**: The derive macro for enums only supports unit variants (variants without associated data).
 - **Unions**: The derive macros do not support unions.
-- **Field Types**: All fields in structs must implement `RandomConstructible`.
+- **Field Types**: All fields in structs must implement `RandConstruct`.
 
-## Integration with `RandomConstructible` Crate
+## Integration with `RandConstruct` Crate
 
 Ensure that you have the `random-constructible` crate in your dependencies and that you import the necessary traits:
 
 ```rust
-use random_constructible::{RandomConstructible, RandomConstructibleEnum};
+use random_constructible::{RandConstruct, RandConstructEnum};
 ```
 
 ## Advanced Usage
 
 ### Custom Implementations
 
-If you need more control, you can manually implement `RandomConstructibleEnum` or `RandomConstructible` for your types.
+If you need more control, you can manually implement `RandConstructEnum` or `RandConstruct` for your types.
 
 ### Using Custom Rng
 
