@@ -5,7 +5,7 @@ edition = "2021"
 
 authors       = [ "klebs tpk3.mx@gmail.com" ]
 description   = "Encapsulates the random-constructible and random-constructible-derive crates which are used for creating random instances of data structures with weighted probabilities"
-license       = "MIT OR Apache-2.0"
+license       = "Apache-2.0"
 repository    = "https://github.com/klebs6/klebs-general"
 homepage      = "https://github.com/klebs6/klebs-general"
 documentation = "https://docs.rs/random-constructible-derive"
