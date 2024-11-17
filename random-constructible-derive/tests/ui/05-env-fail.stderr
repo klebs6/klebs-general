@@ -1,0 +1,33 @@
+error[E0277]: the trait bound `Env: RandomConstructibleProbabilityMapProvider<MagicItem>` is not satisfied
+  --> tests/ui/05-env-fail.rs:50:17
+   |
+50 |         let x = Env::create_random::<MagicItem>();
+   |                 ^^^ the trait `RandomConstructibleProbabilityMapProvider<MagicItem>` is not implemented for `Env`
+   |
+   = help: the trait `RandomConstructibleProbabilityMapProvider<ProbabilityEnum>` is implemented for `Env`
+   = help: for that trait implementation, expected `ProbabilityEnum`, found `MagicItem`
+note: required by a bound in `create_random`
+  --> /Users/kleb/bethesda/work/repo/klebs-general/random-constructible/src/lib.rs:93:15
+   |
+90 |     fn create_random<R>() -> R
+   |        ------------- required by a bound in this associated function
+...
+93 |         Self: RandomConstructibleProbabilityMapProvider<R> + Sized,
+   |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ required by this bound in `RandomConstructibleEnvironment::create_random`
+
+error[E0277]: the trait bound `Env: RandomConstructibleProbabilityMapProvider<MagicItem>` is not satisfied
+   --> tests/ui/05-env-fail.rs:51:17
+    |
+51  |         let y = Env::create_random_uniform::<MagicItem>();
+    |                 ^^^ the trait `RandomConstructibleProbabilityMapProvider<MagicItem>` is not implemented for `Env`
+    |
+    = help: the trait `RandomConstructibleProbabilityMapProvider<ProbabilityEnum>` is implemented for `Env`
+    = help: for that trait implementation, expected `ProbabilityEnum`, found `MagicItem`
+note: required by a bound in `create_random_uniform`
+   --> /Users/kleb/bethesda/work/repo/klebs-general/random-constructible/src/lib.rs:101:15
+    |
+98  |     fn create_random_uniform<R>() -> R
+    |        --------------------- required by a bound in this associated function
+...
+101 |         Self: RandomConstructibleProbabilityMapProvider<R> + Sized,
+    |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ required by this bound in `RandomConstructibleEnvironment::create_random_uniform`
