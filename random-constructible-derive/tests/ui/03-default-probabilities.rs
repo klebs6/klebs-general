@@ -15,8 +15,7 @@ enum ProbabilityEnum {
 }
 
 fn main() {
-    let provider = ProbabilityEnum::default_probability_provider();
-    let map = provider.probability_map();
+    let map = ProbabilityEnum::create_default_probability_map();
     assert_eq!(map.get(&ProbabilityEnum::VariantX), Some(&2.0));
     assert_eq!(map.get(&ProbabilityEnum::VariantY), Some(&3.0));
     assert_eq!(map.get(&ProbabilityEnum::VariantZ), Some(&1.0));

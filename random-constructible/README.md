@@ -1,43 +1,223 @@
-# Random Constructible
+# RandomConstructible
 
-[![Crates.io](https://img.shields.io/crates/v/random-constructible.svg)](https://crates.io/crates/random-constructible)
-[![Documentation](https://docs.rs/random-constructible/badge.svg)](https://docs.rs/random-constructible)
-[![License](https://img.shields.io/crates/l/random-constructible.svg)](https://crates.io/crates/random-constructible)
+**RandomConstructible** is a Rust crate that provides traits and utilities to easily generate random instances of enums with customizable probabilities. It allows you to:
 
-The `random-constructible` crate provides a trait for creating random instances of enums with weighted probabilities. It's designed to work seamlessly with the companion crate [`random-constructible-derive`](https://crates.io/crates/random-constructible-derive), which provides a procedural macro to automatically implement the trait for your enums.
+- Define enums that can be randomly instantiated.
+- Assign default weights to enum variants.
+- Use custom probability maps to influence the randomness.
+- Generate random instances uniformly or based on specified probabilities.
 
 ## Features
 
-- Generate random enum variants based on default or custom probability distributions.
-- Support for both uniform and weighted random selection.
-- Flexible API allowing the use of custom random number generators (RNGs).
-- Ability to define custom probability providers for different contexts or environments.
+- **RandomConstructible Trait**: A trait that provides methods to generate random instances.
+- **RandomConstructibleEnum Trait**: Extends `RandomConstructible` for enums, allowing for default weights and custom probability maps.
+- **RandomConstructibleProbabilityMapProvider Trait**: Allows for custom probability maps to be provided.
+- **Macro for Probability Map Providers**: A convenient macro to define custom probability map providers.
+- **Support for Custom Environments**: Use `RandomConstructibleEnvironment` to define environments with specific probability maps.
 
-## Installation
+## Getting Started
+
+### Add Dependency
 
 Add the following to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-random-constructible = "0.1.0"
+random_constructible = "0.1.0"
 ```
 
-Ensure you also include the `rand` crate if you're not already using it:
+### Derive `RandomConstructibleEnum` for Your Enum
 
-```toml
-[dependencies]
-rand = "0.8"
-```
+First, define your enum and implement `RandomConstructibleEnum` for it. You'll need to provide:
 
-## Usage
-
-First, define your enum and implement the `RandomConstructible` trait. You can do this manually or by using the `random-constructible-derive` crate to automatically generate the implementation (recommended).
-
-### Example with Manual Implementation
+- A `default_weight` for each variant.
+- A list of all variants.
+- A default probability map (usually via a provider).
 
 ```rust
-use random_constructible::{RandomConstructible, RandomConstructibleProbabilityMapProvider};
-use rand::Rng;
+use random_constructible::{RandomConstructible, RandomConstructibleEnum};
+use std::collections::HashMap;
+use std::sync::Arc;
+
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
+enum MyEnum {
+    VariantA,
+    VariantB,
+    VariantC,
+}
+
+impl Default for MyEnum {
+    fn default() -> Self {
+        Self::VariantA
+    }
+}
+
+impl RandomConstructibleEnum for MyEnum {
+    fn default_weight(&self) -> f64 {
+        match self {
+            Self::VariantA => 1.0,
+            Self::VariantB => 2.0,
+            Self::VariantC => 3.0,
+        }
+    }
+
+    fn all_variants() -> Vec<Self> {
+        vec![Self::VariantA, Self::VariantB, Self::VariantC]
+    }
+
+    fn create_default_probability_map() -> Arc<HashMap<Self, f64>> {
+        DefaultProvider::probability_map()
+    }
+}
+```
+
+### Define a Probability Map Provider
+
+Use the `random_constructible_probability_map_provider!` macro to define a provider for your enum:
+
+```rust
+use random_constructible::random_constructible_probability_map_provider;
+
+struct DefaultProvider;
+
+random_constructible_probability_map_provider!(DefaultProvider => MyEnum {
+    VariantA => 1.0,
+    VariantB => 2.0,
+    VariantC => 3.0,
+});
+```
+
+### Generate Random Instances
+
+Now you can generate random instances of your enum:
+
+```rust
+fn main() {
+    let random_variant = MyEnum::random();
+    println!("Random Variant: {:?}", random_variant);
+
+    let uniform_variant = MyEnum::uniform();
+    println!("Uniform Variant: {:?}", uniform_variant);
+}
+```
+
+### Use Custom Probability Maps
+
+You can define custom providers to alter the probabilities:
+
+```rust
+struct CustomProvider;
+
+random_constructible_probability_map_provider!(CustomProvider => MyEnum {
+    VariantA => 5.0,
+    VariantB => 1.0,
+    VariantC => 1.0,
+});
+
+fn main() {
+    let custom_random_variant = MyEnum::random_with_provider::<CustomProvider>();
+    println!("Custom Random Variant: {:?}", custom_random_variant);
+}
+```
+
+## Traits and Macros
+
+### `RandomConstructible` Trait
+
+Provides basic methods to generate random instances:
+
+- `fn random() -> Self`: Generates a random instance based on default probabilities.
+- `fn uniform() -> Self`: Generates a random instance with uniform probability.
+
+### `RandomConstructibleEnum` Trait
+
+Extends `RandomConstructible` for enums:
+
+- `fn default_weight(&self) -> f64`: Returns the default weight of a variant.
+- `fn all_variants() -> Vec<Self>`: Returns all variants of the enum.
+- `fn create_default_probability_map() -> Arc<HashMap<Self, f64>>`: Creates the default probability map.
+- Additional methods to sample with custom probabilities and providers.
+
+### `RandomConstructibleProbabilityMapProvider` Trait
+
+Allows custom probability maps:
+
+- `fn probability_map() -> Arc<HashMap<R, f64>>`: Returns the custom probability map.
+- `fn uniform_probability_map() -> Arc<HashMap<R, f64>>`: Returns a uniform probability map.
+
+### `random_constructible_probability_map_provider!` Macro
+
+Simplifies the creation of probability map providers:
+
+```rust
+random_constructible_probability_map_provider!(ProviderName => EnumType {
+    Variant1 => weight1,
+    Variant2 => weight2,
+    // ...
+});
+```
+
+## Examples
+
+### Full Example
+
+```rust
+use random_constructible::{RandomConstructible, RandomConstructibleEnum, random_constructible_probability_map_provider};
+use std::collections::HashMap;
+use std::sync::Arc;
+
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
+enum Fruit {
+    Apple,
+    Banana,
+    Cherry,
+}
+
+impl Default for Fruit {
+    fn default() -> Self {
+        Self::Apple
+    }
+}
+
+impl RandomConstructibleEnum for Fruit {
+    fn default_weight(&self) -> f64 {
+        match self {
+            Self::Apple => 1.0,
+            Self::Banana => 1.0,
+            Self::Cherry => 1.0,
+        }
+    }
+
+    fn all_variants() -> Vec<Self> {
+        vec![Self::Apple, Self::Banana, Self::Cherry]
+    }
+
+    fn create_default_probability_map() -> Arc<HashMap<Self, f64>> {
+        DefaultFruitProvider::probability_map()
+    }
+}
+
+struct DefaultFruitProvider;
+
+random_constructible_probability_map_provider!(DefaultFruitProvider => Fruit {
+    Apple => 1.0,
+    Banana => 1.0,
+    Cherry => 1.0,
+});
+
+fn main() {
+    let random_fruit = Fruit::random();
+    println!("Random Fruit: {:?}", random_fruit);
+
+    let custom_random_fruit = Fruit::random_with_provider::<DefaultFruitProvider>();
+    println!("Custom Random Fruit: {:?}", custom_random_fruit);
+}
+```
+
+### Using a Custom Environment
+
+```rust
+use random_constructible::{RandomConstructibleEnum, RandomConstructibleProbabilityMapProvider, RandomConstructibleEnvironment, random_constructible_probability_map_provider};
 use std::collections::HashMap;
 use std::sync::Arc;
 
@@ -54,134 +234,50 @@ impl Default for Color {
     }
 }
 
-impl RandomConstructible for Color {
+impl RandomConstructibleEnum for Color {
+    fn default_weight(&self) -> f64 {
+        1.0
+    }
+
     fn all_variants() -> Vec<Self> {
         vec![Self::Red, Self::Green, Self::Blue]
     }
 
-    fn default_weight(&self) -> f64 {
-        match self {
-            Self::Red => 1.0,
-            Self::Green => 2.0,
-            Self::Blue => 3.0,
-        }
-    }
-
-    fn default_probability_provider() -> Arc<dyn RandomConstructibleProbabilityMapProvider<Self>> {
-        use once_cell::sync::Lazy;
-
-        static DEFAULT_PROVIDER: Lazy<Arc<DefaultProvider>> = Lazy::new(|| Arc::new(DefaultProvider));
-
-        struct DefaultProvider;
-
-        impl RandomConstructibleProbabilityMapProvider<Color> for DefaultProvider {
-            fn probability_map(&self) -> Arc<HashMap<Color, f64>> {
-                let mut map = HashMap::new();
-                map.insert(Color::Red, 1.0);
-                map.insert(Color::Green, 2.0);
-                map.insert(Color::Blue, 3.0);
-                Arc::new(map)
-            }
-        }
-
-        Arc::clone(&DEFAULT_PROVIDER)
+    fn create_default_probability_map() -> Arc<HashMap<Self, f64>> {
+        ColorfulEnvironment::probability_map()
     }
 }
+
+struct ColorfulEnvironment;
+
+impl RandomConstructibleEnvironment for ColorfulEnvironment {}
+
+random_constructible_probability_map_provider!(ColorfulEnvironment => Color {
+    Red => 2.0,
+    Green => 3.0,
+    Blue => 5.0,
+});
 
 fn main() {
-    let random_color = Color::random();
-    println!("Random Color: {:?}", random_color);
+    let color = ColorfulEnvironment::create_random::<Color>();
+    println!("Random Color from Environment: {:?}", color);
 }
 ```
 
-### Example with `random-constructible-derive` Crate
+## Testing
 
-Using the `random-constructible-derive` crate simplifies the process by automatically generating the required implementations.
+The crate includes a comprehensive set of tests to ensure correctness. The tests cover:
 
-```toml
-[dependencies]
-random-constructible = "0.1.0"
-random-constructible-derive = "0.1.0"
-rand = "0.8"
-```
-
-```rust
-use random_constructible::{RandomConstructible, RandomConstructibleProbabilityMapProvider};
-use random_constructible_derive::RandomConstructible;
-use std::sync::Arc;
-use std::collections::HashMap;
-
-#[derive(RandomConstructible, Copy, Clone, Debug, PartialEq, Eq, Hash)]
-enum PotionEffect {
-    #[default_unnormalized_construction_probability = 5.0]
-    Healing,
-    #[default_unnormalized_construction_probability = 2.0]
-    Poison,
-    Strength,
-}
-
-impl Default for PotionEffect {
-    fn default() -> Self {
-        Self::Healing
-    }
-}
-
-fn main() {
-    let random_effect = PotionEffect::random();
-    println!("Random Potion Effect: {:?}", random_effect);
-}
-```
-
-## API Overview
-
-### Trait: `RandomConstructible`
-
-The `RandomConstructible` trait provides methods to generate random instances of an enum.
-
-#### Methods
-
-- `random() -> Self`: Generates a random instance using the default probability distribution.
-- `random_with_rng<RNG: Rng + ?Sized>(rng: &mut RNG) -> Self`: Same as `random`, but uses the provided RNG.
-- `random_with_probabilities(provider: &dyn RandomConstructibleProbabilityMapProvider<Self>) -> Self`: Generates a random instance using a custom probability provider.
-- `random_with_probabilities_rng<RNG: Rng + ?Sized>(provider: &dyn RandomConstructibleProbabilityMapProvider<Self>, rng: &mut RNG) -> Self`: Same as `random_with_probabilities`, but uses the provided RNG.
-- `uniform() -> Self`: Generates a random instance with a uniform distribution across all variants.
-- `all_variants() -> Vec<Self>`: Returns a vector of all enum variants.
-- `default_weight(&self) -> f64`: Returns the default weight for the variant.
-- `default_probability_provider() -> Arc<dyn RandomConstructibleProbabilityMapProvider<Self>>`: Returns the default probability provider.
-
-### Trait: `RandomConstructibleProbabilityMapProvider`
-
-Defines a provider for probability maps used in random generation.
-
-#### Method
-
-- `probability_map(&self) -> Arc<HashMap<R, f64>>`: Returns an `Arc` to a `HashMap` containing the probabilities for each variant.
-
-## Custom Probability Providers
-
-You can define custom probability providers to alter the random generation based on different contexts or environments.
-
-```rust
-struct ForestEnvironment;
-
-impl RandomConstructibleProbabilityMapProvider<PotionEffect> for ForestEnvironment {
-    fn probability_map(&self) -> Arc<HashMap<PotionEffect, f64>> {
-        let mut map = HashMap::new();
-        map.insert(PotionEffect::Healing, 5.0);
-        map.insert(PotionEffect::Poison, 1.0);
-        Arc::new(map)
-    }
-}
-
-fn main() {
-    let effect = PotionEffect::random_with_probabilities(&ForestEnvironment);
-    println!("Potion Effect in Forest: {:?}", effect);
-}
-```
+- Validation of all variants.
+- Correct default weights.
+- Random generation based on default probabilities.
+- Uniform random generation.
+- Random generation using custom probability maps.
+- Sampling using custom providers.
 
 ## License
 
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## Contribution
 
@@ -189,5 +285,9 @@ Contributions are welcome! Please open an issue or submit a pull request on GitH
 
 ## Acknowledgments
 
-- [rand](https://crates.io/crates/rand) crate for random number generation.
-- [once_cell](https://crates.io/crates/once_cell) crate for lazy static initialization.
+- Inspired by the need for customizable random generation in Rust enums.
+- Utilizes the `rand` crate for randomness and `once_cell` for lazy static initialization.
+
+# Contact
+
+For questions or suggestions, feel free to open an issue or contact the maintainer.

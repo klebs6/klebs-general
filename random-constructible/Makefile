@@ -3,5 +3,5 @@ default: test
 build:
 	cargo build
 
-test:
+test: build
 	cargo test

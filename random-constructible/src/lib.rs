@@ -1,69 +1,149 @@
-use std::collections::HashMap;
-use std::sync::Arc;
-
+#![allow(unused_imports)]
 use rand::distributions::Distribution;
 use rand::prelude::SliceRandom;
 use rand::Rng;
 use std::hash::Hash;
+use once_cell::sync::Lazy;
+use std::sync::Arc;
+use std::collections::HashMap;
 
-pub trait RandomConstructible: Default + Eq + Hash + Sized + Copy {
+pub trait RandomConstructible {
+    fn random() -> Self;
+    fn uniform() -> Self;
+}
 
-    fn random_with_probabilities(
-        provider: &dyn RandomConstructibleProbabilityMapProvider<Self>,
-    ) -> Self {
-        let mut rng = rand::thread_rng();
-        Self::sample_from_provider(provider, &mut rng)
-    }
+impl<E: RandomConstructibleEnum> RandomConstructible for E {
 
     fn random() -> Self {
-        let provider = Self::default_probability_provider();
-        let mut rng = rand::thread_rng();
-        Self::sample_from_provider(&*provider, &mut rng)
-    }
-
-    fn random_with_rng<RNG: Rng + ?Sized>(rng: &mut RNG) -> Self {
-        let provider = Self::default_probability_provider();
-        Self::sample_from_provider(&*provider, rng)
+        <Self as RandomConstructibleEnum>::random_variant()
     }
 
     fn uniform() -> Self {
+        <Self as RandomConstructibleEnum>::uniform_variant()
+    }
+}
+
+pub trait RandomConstructibleEnum: Default + Eq + Hash + Sized + Copy {
+
+    //-----------------------------------------------------------------[provided by the proc macro crate]
+    fn default_weight(&self) -> f64;
+
+    fn all_variants() -> Vec<Self>;
+
+    // this is implemented in the proc macro so that we by default get once_cell behavior
+    fn create_default_probability_map() -> Arc<HashMap<Self,f64>>;
+
+    //-----------------------------------------------------------------[main user-interface]
+    fn random_variant() -> Self {
+        let map = Self::create_default_probability_map();
+        let mut rng = rand::thread_rng();
+        Self::sample_with_probabilities(&mut rng, &map)
+    }
+
+    fn uniform_variant() -> Self {
         let variants = Self::all_variants();
         let mut rng = rand::thread_rng();
         *variants.choose(&mut rng).unwrap()
     }
 
-    fn all_variants() -> Vec<Self>;
+    fn random_with_provider<P: RandomConstructibleProbabilityMapProvider<Self>>() -> Self {
+        let mut rng = rand::thread_rng();
+        Self::sample_from_provider::<P,_>(&mut rng)
+    }
 
-    fn default_weight(&self) -> f64;
+    fn random_uniform_with_provider<P: RandomConstructibleProbabilityMapProvider<Self>>() -> Self {
+        let mut rng = rand::thread_rng();
+        Self::sample_uniformly_from_provider::<P,_>(&mut rng)
+    }
 
-    fn default_probability_provider() -> Arc<dyn RandomConstructibleProbabilityMapProvider<Self>>;
-
-    // Helper function to sample from a provider using the given RNG
-    fn sample_from_provider<RNG: Rng + ?Sized>(
-        provider: &dyn RandomConstructibleProbabilityMapProvider<Self>,
-        rng: &mut RNG,
-    ) -> Self {
-        let probs = provider.probability_map();
+    //-----------------------------------------------------------------[helper-methods]
+    fn sample_with_probabilities<RNG: Rng + ?Sized>(rng: &mut RNG, probs: &HashMap<Self,f64>) -> Self {
         let variants: Vec<_> = probs.keys().cloned().collect();
-        let weights: Vec<_> = variants.iter().map(|v| probs[v]).collect();
+        let weights:  Vec<_> = variants.iter().map(|v| probs[v]).collect();
         let dist = rand::distributions::WeightedIndex::new(&weights).unwrap();
         variants[dist.sample(rng)]
     }
+
+    // Helper function to sample from a provider using the given RNG
+    fn sample_from_provider<P: RandomConstructibleProbabilityMapProvider<Self>, RNG: Rng + ?Sized>(rng: &mut RNG) -> Self {
+        let probs = P::probability_map();
+        Self::sample_with_probabilities(rng,&probs)
+    }
+
+    fn sample_uniformly_from_provider<P: RandomConstructibleProbabilityMapProvider<Self>, RNG: Rng + ?Sized>(rng: &mut RNG) -> Self {
+        let probs = P::uniform_probability_map();
+        Self::sample_with_probabilities(rng,&probs)
+    }
+
+    fn random_with_rng<RNG: Rng + ?Sized>(rng: &mut RNG) -> Self {
+        let map = Self::create_default_probability_map();
+        Self::sample_with_probabilities(rng, &map)
+    }
 }
 
-pub trait RandomConstructibleProbabilityMapProvider<R: RandomConstructible> {
-    fn probability_map(&self) -> Arc<HashMap<R, f64>>;
+pub trait RandomConstructibleProbabilityMapProvider<R: RandomConstructibleEnum> {
+    fn probability_map() -> Arc<HashMap<R, f64>>;
+    fn uniform_probability_map() -> Arc<HashMap<R, f64>>;
+}
+
+pub trait RandomConstructibleEnvironment {
+    fn create_random<R>() -> R
+    where
+        R: RandomConstructibleEnum,
+        Self: RandomConstructibleProbabilityMapProvider<R> + Sized,
+    {
+        R::random_with_provider::<Self>()
+    }
+
+    fn create_random_uniform<R>() -> R
+    where
+        R: RandomConstructibleEnum,
+        Self: RandomConstructibleProbabilityMapProvider<R> + Sized,
+    {
+        R::random_uniform_with_provider::<Self>()
+    }
+}
+
+#[macro_export]
+macro_rules! random_constructible_probability_map_provider {
+    ($provider:ident => $enum:ty { $($variant:ident => $weight:expr),* $(,)? }) => {
+        impl $crate::RandomConstructibleProbabilityMapProvider<$enum> for $provider {
+            fn probability_map() -> std::sync::Arc<std::collections::HashMap<$enum, f64>> {
+                use once_cell::sync::Lazy;
+                static PROBABILITY_MAP: Lazy<std::sync::Arc<std::collections::HashMap<$enum, f64>>> = Lazy::new(|| {
+                    let mut map = std::collections::HashMap::new();
+                    $(
+                        map.insert(<$enum>::$variant, $weight);
+                    )*
+                    std::sync::Arc::new(map)
+                });
+                std::sync::Arc::clone(&PROBABILITY_MAP)
+            }
+
+            fn uniform_probability_map() -> std::sync::Arc<std::collections::HashMap<$enum, f64>> {
+                use once_cell::sync::Lazy;
+                static UNIFORM_PROBABILITY_MAP: Lazy<std::sync::Arc<std::collections::HashMap<$enum, f64>>> = Lazy::new(|| {
+                    let mut map = std::collections::HashMap::new();
+                    $(
+                        map.insert(<$enum>::$variant, 1.0);
+                    )*
+                    std::sync::Arc::new(map)
+                });
+                std::sync::Arc::clone(&UNIFORM_PROBABILITY_MAP)
+            }
+        }
+    };
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
     use rand::rngs::StdRng;
-    use rand::{SeedableRng};
+    use rand::SeedableRng;
     use std::collections::HashMap;
     use std::sync::Arc;
 
-    // Define a test enum and manually implement RandomConstructible
+    // Define a test enum and manually implement RandomConstructibleEnum
     #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
     enum ManualTestEnum {
         VariantX,
@@ -77,7 +157,7 @@ mod tests {
         }
     }
 
-    impl RandomConstructible for ManualTestEnum {
+    impl RandomConstructibleEnum for ManualTestEnum {
         fn all_variants() -> Vec<Self> {
             vec![Self::VariantX, Self::VariantY, Self::VariantZ]
         }
@@ -90,40 +170,28 @@ mod tests {
             }
         }
 
-        fn default_probability_provider(
-        ) -> Arc<dyn RandomConstructibleProbabilityMapProvider<Self>> {
-            use once_cell::sync::Lazy;
-
-            static DEFAULT_PROVIDER: Lazy<Arc<DefaultProvider>> = Lazy::new(|| {
-                Arc::new(DefaultProvider)
-            });
-
-            struct DefaultProvider;
-
-            impl RandomConstructibleProbabilityMapProvider<ManualTestEnum> for DefaultProvider {
-                fn probability_map(&self) -> Arc<HashMap<ManualTestEnum, f64>> {
-                    let mut map = HashMap::new();
-                    map.insert(ManualTestEnum::VariantX, 2.0);
-                    map.insert(ManualTestEnum::VariantY, 3.0);
-                    map.insert(ManualTestEnum::VariantZ, 5.0);
-                    Arc::new(map)
-                }
-            }
-            Arc::clone(&*DEFAULT_PROVIDER) as Arc<dyn RandomConstructibleProbabilityMapProvider<Self>>
+        fn create_default_probability_map() -> Arc<HashMap<Self, f64>> {
+            DefaultProvider::probability_map()
         }
     }
 
-    // Implement a custom probability provider
+    // Implement the default provider using the macro
+    struct DefaultProvider;
+
+    random_constructible_probability_map_provider!(DefaultProvider => ManualTestEnum {
+        VariantX => 2.0,
+        VariantY => 3.0,
+        VariantZ => 5.0,
+    });
+
+    // Implement a custom probability provider using the macro
     struct CustomProvider;
-    impl RandomConstructibleProbabilityMapProvider<ManualTestEnum> for CustomProvider {
-        fn probability_map(&self) -> Arc<HashMap<ManualTestEnum, f64>> {
-            let mut map = HashMap::new();
-            map.insert(ManualTestEnum::VariantX, 1.0);
-            map.insert(ManualTestEnum::VariantY, 1.0);
-            map.insert(ManualTestEnum::VariantZ, 8.0);
-            Arc::new(map)
-        }
-    }
+
+    random_constructible_probability_map_provider!(CustomProvider => ManualTestEnum {
+        VariantX => 1.0,
+        VariantY => 1.0,
+        VariantZ => 8.0,
+    });
 
     #[test]
     fn test_manual_all_variants() {
@@ -180,11 +248,34 @@ mod tests {
 
     #[test]
     fn test_manual_random_with_probabilities() {
-        let provider = CustomProvider;
+        let mut rng = StdRng::seed_from_u64(42);
+        let probs = CustomProvider::probability_map();
+
         let mut counts = HashMap::new();
 
         for _ in 0..10000 {
-            let variant = ManualTestEnum::random_with_probabilities(&provider);
+            let variant = ManualTestEnum::sample_with_probabilities(&mut rng, &probs);
+            *counts.entry(variant).or_insert(0) += 1;
+        }
+
+        // Expected probabilities: X: 0.1, Y: 0.1, Z: 0.8
+        let total = counts.values().sum::<usize>() as f64;
+        let prob_x = *counts.get(&ManualTestEnum::VariantX).unwrap_or(&0) as f64 / total;
+        let prob_y = *counts.get(&ManualTestEnum::VariantY).unwrap_or(&0) as f64 / total;
+        let prob_z = *counts.get(&ManualTestEnum::VariantZ).unwrap_or(&0) as f64 / total;
+
+        assert!((prob_x - 0.1).abs() < 0.02);
+        assert!((prob_y - 0.1).abs() < 0.02);
+        assert!((prob_z - 0.8).abs() < 0.05);
+    }
+
+    #[test]
+    fn test_manual_sample_from_provider() {
+        let mut rng = StdRng::seed_from_u64(42);
+        let mut counts = HashMap::new();
+
+        for _ in 0..10000 {
+            let variant = ManualTestEnum::sample_from_provider::<CustomProvider, _>(&mut rng);
             *counts.entry(variant).or_insert(0) += 1;
         }
 
