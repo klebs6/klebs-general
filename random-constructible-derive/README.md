@@ -36,7 +36,7 @@ use random_constructible_derive::RandConstruct;
 
 ### Deriving `RandConstruct` for Enums
 
-You can automatically implement `RandConstructEnum` for your enums by using the `#[derive(RandConstruct)]` macro. You can also specify default unnormalized construction probabilities for each variant using the `#[default_unnormalized_construction_probability = "value"]` attribute.
+You can automatically implement `RandConstructEnum` for your enums by using the `#[derive(RandConstruct)]` macro. You can also specify default unnormalized construction probabilities for each variant using the `#[rand_construct(p = value)]` attribute.
 
 ```rust
 use random_constructible::{RandConstruct, RandConstructEnum};
@@ -44,11 +44,11 @@ use random_constructible_derive::RandConstruct;
 
 #[derive(RandConstruct, Debug)]
 enum MyEnum {
-    #[default_unnormalized_construction_probability = "2.0"]
+    #[rand_construct(p = 2.0)]
     VariantA,
-    #[default_unnormalized_construction_probability = "3.0"]
+    #[rand_construct(p = 3.0)]
     VariantB,
-    #[default_unnormalized_construction_probability = "5.0"]
+    #[rand_construct(p = 5.0)]
     VariantC,
 }
 
@@ -61,7 +61,7 @@ fn main() {
 #### Explanation
 
 - `#[derive(RandConstruct)]`: Automatically implements `RandConstructEnum` for `MyEnum`.
-- `#[default_unnormalized_construction_probability = "value"]`: Sets the default weight for each variant.
+- `#[rand_construct(p = value)]`: Sets the default weight for each variant.
 
 ### Deriving `RandConstruct` for Structs
 
@@ -115,11 +115,11 @@ use std::fmt;
 
 #[derive(RandConstruct, Debug)]
 enum Color {
-    #[default_unnormalized_construction_probability = "1.0"]
+    #[rand_construct(p = 1.0)]
     Red,
-    #[default_unnormalized_construction_probability = "2.0"]
+    #[rand_construct(p = 2.0)]
     Green,
-    #[default_unnormalized_construction_probability = "3.0"]
+    #[rand_construct(p = 3.0)]
     Blue,
 }
 
@@ -186,11 +186,11 @@ use std::sync::Arc;
 
 #[derive(RandConstruct, Debug)]
 enum Fruit {
-    #[default_unnormalized_construction_probability = "1.0"]
+    #[rand_construct(p = 1.0)]
     Apple,
-    #[default_unnormalized_construction_probability = "1.0"]
+    #[rand_construct(p = 1.0)]
     Banana,
-    #[default_unnormalized_construction_probability = "8.0"]
+    #[rand_construct(p = 8.0)]
     Cherry,
 }
 
@@ -217,7 +217,7 @@ Random Fruit from Environment: Cherry
 
 ## Attributes
 
-### `#[default_unnormalized_construction_probability = "value"]`
+### `#[rand_construct(p = value)]`
 
 - **Applies to**: Enum variants.
 - **Purpose**: Sets the default weight (unnormalized probability) for the variant.
@@ -228,9 +228,9 @@ Random Fruit from Environment: Cherry
 ```rust
 #[derive(RandConstruct)]
 enum Vehicle {
-    #[default_unnormalized_construction_probability = "5.0"]
+    #[rand_construct(p = 5.0)]
     Car,
-    #[default_unnormalized_construction_probability = "2.0"]
+    #[rand_construct(p = 2.0)]
     Bike,
     Truck, // Default weight is 1.0
 }

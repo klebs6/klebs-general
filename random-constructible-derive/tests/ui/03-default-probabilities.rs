@@ -7,9 +7,9 @@ use random_constructible_derive::RandConstruct;
 #[derive(Default,RandConstruct, Copy, Clone, Debug, PartialEq, Eq, Hash)]
 enum ProbabilityEnum {
     #[default]
-    #[default_unnormalized_construction_probability = 2.0]
+    #[rand_construct(p = 2.0)]
     VariantX,
-    #[default_unnormalized_construction_probability = 3.0]
+    #[rand_construct(p = 3.0)]
     VariantY,
     VariantZ, // Default probability should be 1.0
 }

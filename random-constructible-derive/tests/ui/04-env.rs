@@ -7,9 +7,9 @@ use random_constructible_derive::*;
 #[derive(Debug,Default,RandConstruct, Copy, Clone, PartialEq, Eq, Hash)]
 enum ProbabilityEnum {
     #[default]
-    #[default_unnormalized_construction_probability = 2.0]
+    #[rand_construct(p = 2.0)]
     VariantX,
-    #[default_unnormalized_construction_probability = 3.0]
+    #[rand_construct(p = 3.0)]
     VariantY,
     VariantZ, // Default probability should be 1.0
 }
@@ -17,9 +17,9 @@ enum ProbabilityEnum {
 #[derive(Debug,Default,RandConstruct, Copy, Clone, PartialEq, Eq, Hash)]
 enum MagicItem {
     #[default]
-    #[default_unnormalized_construction_probability = 2.0]
+    #[rand_construct(p = 2.0)]
     Cake,
-    #[default_unnormalized_construction_probability = 3.0]
+    #[rand_construct(p = 3.0)]
     Banana,
     Watermelon, // Default probability should be 1.0
 }

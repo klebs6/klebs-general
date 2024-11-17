@@ -4,7 +4,7 @@ extern crate proc_macro;
 use proc_macro::TokenStream;
 use quote::quote;
 use syn::{
-    parse_macro_input, Attribute, Data, DeriveInput, Fields, Lit, Meta, MetaNameValue, Variant,
+    parse_macro_input, NestedMeta,Attribute,Data,DeriveInput,Fields,Lit,Meta,MetaNameValue,Variant,
 };
 
 #[proc_macro_derive(RandConstructEnvironment)]
@@ -18,7 +18,7 @@ pub fn derive_random_constructible_environment(input: TokenStream) -> TokenStrea
     })
 }
 
-#[proc_macro_derive(RandConstruct, attributes(default_unnormalized_construction_probability))]
+#[proc_macro_derive(RandConstruct, attributes(rand_construct))]
 pub fn derive_random_constructible(input: TokenStream) -> TokenStream {
     // Parse the input tokens into a syntax tree
     let input_ast = parse_macro_input!(input as DeriveInput);
@@ -55,18 +55,24 @@ fn derive_random_constructible_for_enum(input: &DeriveInput) -> TokenStream {
         // Extract the probability from the attribute, if present
         let mut prob = None;
         for attr in &variant.attrs {
-            if attr.path.is_ident("default_unnormalized_construction_probability") {
+            if attr.path.is_ident("rand_construct") {
                 let meta = attr.parse_meta().unwrap();
-                if let Meta::NameValue(MetaNameValue { lit, .. }) = meta {
-                    match lit {
-                        Lit::Float(ref lit_float) => {
-                            prob = Some(lit_float.base10_parse::<f64>().unwrap());
-                        }
-                        Lit::Int(ref lit_int) => {
-                            prob = Some(lit_int.base10_parse::<f64>().unwrap());
-                        }
-                        _ => {
-                            panic!("Expected a float or int literal in default_unnormalized_construction_probability");
+                if let Meta::List(meta_list) = meta {
+                    for nested_meta in meta_list.nested {
+                        if let NestedMeta::Meta(Meta::NameValue(MetaNameValue { path, lit, .. })) = nested_meta {
+                            if path.is_ident("p") {
+                                match lit {
+                                    Lit::Float(ref lit_float) => {
+                                        prob = Some(lit_float.base10_parse::<f64>().unwrap());
+                                    }
+                                    Lit::Int(ref lit_int) => {
+                                        prob = Some(lit_int.base10_parse::<f64>().unwrap());
+                                    }
+                                    _ => {
+                                        panic!("Expected a float or int literal in rand_construct(p = ...)");
+                                    }
+                                }
+                            }
                         }
                     }
                 }
