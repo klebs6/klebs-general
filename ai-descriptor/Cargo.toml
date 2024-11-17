@@ -1,0 +1,28 @@
+[package]
+name = "ai-descriptor"
+version = "0.1.0"
+edition = "2021"
+
+authors       = [ "klebs tpk3.mx@gmail.com" ]
+description   = "Provides a proc macro we can use to annotate enums for facilitating itemization and description using an AI model"
+license       = "MIT OR Apache-2.0"
+repository    = "https://github.com/klebs6/klebs-general"
+homepage      = "https://github.com/klebs6/klebs-general"
+documentation = "https://docs.rs/ai-descriptor"
+readme        = "README.md"
+keywords      = ["ai", "enums", "simulation", "ergonomics"]
+categories    = ["game-development", "simulation", "rust-patterns"]
+
+[lib]
+proc-macro = true
+
+[dependencies]
+proc-macro2 = "1.0"
+quote = "1.0"
+syn = { version = "1.0", features = ["full"] }
+#once_cell = "1.16"
+#rand = "0.8"
+
+[dev-dependencies]
+trybuild = "1.0"
+named-item = "0.3.0"
