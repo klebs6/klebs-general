@@ -1,4 +1,5 @@
 use lyrical_meter::*;
+use rand_construct::*;
 use named_item::AIDescriptor;
 use rand::rngs::StdRng;
 use rand::SeedableRng;
@@ -8,7 +9,7 @@ use serde_json;
 #[test]
 fn test_metrical_foot_distribution() {
     let mut rng = StdRng::seed_from_u64(42);
-    let foot: MetricalFoot = rng.gen();
+    let foot = MetricalFoot::random_with_rng(&mut rng);
     assert!(matches!(
         foot,
         MetricalFoot::Iamb
@@ -43,7 +44,7 @@ fn test_metrical_foot_ai_descriptor() {
 #[test]
 fn test_line_length_distribution() {
     let mut rng = StdRng::seed_from_u64(42);
-    let length: LineLength = rng.gen();
+    let length = LineLength::random_with_rng(&mut rng);
     assert!(matches!(
         length,
         LineLength::Monometer
@@ -71,7 +72,7 @@ fn test_line_length_ai_descriptor() {
 #[test]
 fn test_other_meter_distribution() {
     let mut rng = StdRng::seed_from_u64(42);
-    let other_meter: OtherMeter = rng.gen();
+    let other_meter = OtherMeter::random_with_rng(&mut rng);
     assert!(matches!(
         other_meter,
         OtherMeter::ClimbingRhyme
@@ -370,20 +371,20 @@ fn test_random_generation_consistency() {
     let mut rng1 = StdRng::seed_from_u64(42);
     let mut rng2 = StdRng::seed_from_u64(42);
 
-    let foot1: MetricalFoot = rng1.gen();
-    let foot2: MetricalFoot = rng2.gen();
+    let foot1 = MetricalFoot::random_with_rng(&mut rng1);
+    let foot2 = MetricalFoot::random_with_rng(&mut rng2);
     assert_eq!(foot1, foot2);
 
-    let length1: LineLength = rng1.gen();
-    let length2: LineLength = rng2.gen();
+    let length1 = LineLength::random_with_rng(&mut rng1);
+    let length2 = LineLength::random_with_rng(&mut rng2);
     assert_eq!(length1, length2);
 
-    let other_meter1: OtherMeter = rng1.gen();
-    let other_meter2: OtherMeter = rng2.gen();
+    let other_meter1 = OtherMeter::random_with_rng(&mut rng1);
+    let other_meter2 = OtherMeter::random_with_rng(&mut rng2);
     assert_eq!(other_meter1, other_meter2);
 
-    let lyrical_meter1: LyricalMeter = rng1.gen();
-    let lyrical_meter2: LyricalMeter = rng2.gen();
+    let lyrical_meter1 = LyricalMeter::random_with_rng(&mut rng1);
+    let lyrical_meter2 = LyricalMeter::random_with_rng(&mut rng2);
     assert_eq!(lyrical_meter1, lyrical_meter2);
 
     let meter1: Meter = rng1.gen();

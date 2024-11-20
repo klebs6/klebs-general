@@ -1,29 +1,15 @@
 crate::ix!();
 
 /// Enum representing any type of meter, either standard or other.
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(AIDescriptor,RandConstruct,Debug,Clone,Serialize,Deserialize,PartialEq,Eq)]
+#[ai(Display)]
 pub enum Meter {
+
+    #[rand_construct(p=0.7)]
     Standard(LyricalMeter),
+
+    #[rand_construct(p=0.3)]
     Other(OtherMeter),
-}
-
-impl AIDescriptor for Meter {
-    fn ai(&self) -> Cow<'_, str> {
-        match self {
-            Meter::Standard(ref lyrical_meter) => lyrical_meter.ai(),
-            Meter::Other(ref other_meter) => other_meter.ai(),
-        }
-    }
-}
-
-impl Distribution<Meter> for distributions::Standard {
-    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Meter {
-        if rng.gen_bool(0.7) {
-            Meter::Standard(rng.gen())
-        } else {
-            Meter::Other(rng.gen())
-        }
-    }
 }
 
 impl Meter {
@@ -47,15 +33,6 @@ impl Meter {
             Some(other_meter)
         } else {
             None
-        }
-    }
-}
-
-impl fmt::Display for Meter {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Meter::Standard(ref lyrical_meter) => write!(f, "{}", lyrical_meter),
-            Meter::Other(ref other_meter) => write!(f, "{}", other_meter),
         }
     }
 }

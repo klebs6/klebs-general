@@ -7,6 +7,7 @@ pub struct MeterBuilder {
 }
 
 impl MeterBuilder {
+
     /// Starts building a `Standard` meter.
     pub fn standard() -> LyricalMeterBuilder {
         LyricalMeterBuilder::default()

@@ -1,18 +1,10 @@
 crate::ix!();
 
 /// Builder for `LyricalMeter`.
+#[derive(Default)]
 pub struct LyricalMeterBuilder {
     foot:   MetricalFoot,
     length: Option<LineLength>,
-}
-
-impl Default for LyricalMeterBuilder {
-    fn default() -> Self {
-        LyricalMeterBuilder {
-            foot: MetricalFoot::Iamb,
-            length: None,
-        }
-    }
 }
 
 impl LyricalMeterBuilder {
