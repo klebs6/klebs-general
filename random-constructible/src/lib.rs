@@ -1,139 +1,12 @@
 #![allow(unused_imports)]
-use rand::distributions::Distribution;
-use rand::prelude::SliceRandom;
-use rand::Rng;
-use std::hash::Hash;
-use once_cell::sync::Lazy;
-use std::sync::Arc;
-use std::collections::HashMap;
 
-pub trait RandConstruct {
-    fn random() -> Self;
-    fn uniform() -> Self;
-}
+#[macro_use] mod imports; use imports::*;
 
-impl<E: RandConstructEnum> RandConstruct for E {
-
-    fn random() -> Self {
-        <Self as RandConstructEnum>::random_variant()
-    }
-
-    fn uniform() -> Self {
-        <Self as RandConstructEnum>::uniform_variant()
-    }
-}
-
-pub trait RandConstructEnum: Default + Eq + Hash + Sized + Copy {
-
-    //-----------------------------------------------------------------[provided by the proc macro crate]
-    fn default_weight(&self) -> f64;
-
-    fn all_variants() -> Vec<Self>;
-
-    // this is implemented in the proc macro so that we by default get once_cell behavior
-    fn create_default_probability_map() -> Arc<HashMap<Self,f64>>;
-
-    //-----------------------------------------------------------------[main user-interface]
-    fn random_variant() -> Self {
-        let map = Self::create_default_probability_map();
-        let mut rng = rand::thread_rng();
-        Self::sample_with_probabilities(&mut rng, &map)
-    }
-
-    fn uniform_variant() -> Self {
-        let variants = Self::all_variants();
-        let mut rng = rand::thread_rng();
-        *variants.choose(&mut rng).unwrap()
-    }
-
-    fn random_with_env<P: RandConstructProbabilityMapProvider<Self>>() -> Self {
-        let mut rng = rand::thread_rng();
-        Self::sample_from_provider::<P,_>(&mut rng)
-    }
-
-    fn random_uniform_with_env<P: RandConstructProbabilityMapProvider<Self>>() -> Self {
-        let mut rng = rand::thread_rng();
-        Self::sample_uniformly_from_provider::<P,_>(&mut rng)
-    }
-
-    //-----------------------------------------------------------------[helper-methods]
-    fn sample_with_probabilities<RNG: Rng + ?Sized>(rng: &mut RNG, probs: &HashMap<Self,f64>) -> Self {
-        let variants: Vec<_> = probs.keys().cloned().collect();
-        let weights:  Vec<_> = variants.iter().map(|v| probs[v]).collect();
-        let dist = rand::distributions::WeightedIndex::new(&weights).unwrap();
-        variants[dist.sample(rng)]
-    }
-
-    // Helper function to sample from a provider using the given RNG
-    fn sample_from_provider<P: RandConstructProbabilityMapProvider<Self>, RNG: Rng + ?Sized>(rng: &mut RNG) -> Self {
-        let probs = P::probability_map();
-        Self::sample_with_probabilities(rng,&probs)
-    }
-
-    fn sample_uniformly_from_provider<P: RandConstructProbabilityMapProvider<Self>, RNG: Rng + ?Sized>(rng: &mut RNG) -> Self {
-        let probs = P::uniform_probability_map();
-        Self::sample_with_probabilities(rng,&probs)
-    }
-
-    fn random_with_rng<RNG: Rng + ?Sized>(rng: &mut RNG) -> Self {
-        let map = Self::create_default_probability_map();
-        Self::sample_with_probabilities(rng, &map)
-    }
-}
-
-pub trait RandConstructProbabilityMapProvider<R: RandConstructEnum> {
-    fn probability_map() -> Arc<HashMap<R, f64>>;
-    fn uniform_probability_map() -> Arc<HashMap<R, f64>>;
-}
-
-pub trait RandConstructEnvironment {
-    fn create_random<R>() -> R
-    where
-        R: RandConstructEnum,
-        Self: RandConstructProbabilityMapProvider<R> + Sized,
-    {
-        R::random_with_env::<Self>()
-    }
-
-    fn create_random_uniform<R>() -> R
-    where
-        R: RandConstructEnum,
-        Self: RandConstructProbabilityMapProvider<R> + Sized,
-    {
-        R::random_uniform_with_env::<Self>()
-    }
-}
-
-#[macro_export]
-macro_rules! rand_construct_env {
-    ($provider:ident => $enum:ty { $($variant:ident => $weight:expr),* $(,)? }) => {
-        impl $crate::RandConstructProbabilityMapProvider<$enum> for $provider {
-            fn probability_map() -> std::sync::Arc<std::collections::HashMap<$enum, f64>> {
-                use once_cell::sync::Lazy;
-                static PROBABILITY_MAP: Lazy<std::sync::Arc<std::collections::HashMap<$enum, f64>>> = Lazy::new(|| {
-                    let mut map = std::collections::HashMap::new();
-                    $(
-                        map.insert(<$enum>::$variant, $weight);
-                    )*
-                    std::sync::Arc::new(map)
-                });
-                std::sync::Arc::clone(&PROBABILITY_MAP)
-            }
-
-            fn uniform_probability_map() -> std::sync::Arc<std::collections::HashMap<$enum, f64>> {
-                use once_cell::sync::Lazy;
-                static UNIFORM_PROBABILITY_MAP: Lazy<std::sync::Arc<std::collections::HashMap<$enum, f64>>> = Lazy::new(|| {
-                    let mut map = std::collections::HashMap::new();
-                    $(
-                        map.insert(<$enum>::$variant, 1.0);
-                    )*
-                    std::sync::Arc::new(map)
-                });
-                std::sync::Arc::clone(&UNIFORM_PROBABILITY_MAP)
-            }
-        }
-    };
-}
+x!{rand_construct}
+x!{rand_construct_enum}
+x!{rand_construct_env}
+x!{prim_traits}
+x!{sample}
 
 #[cfg(test)]
 mod tests {
@@ -144,18 +17,15 @@ mod tests {
     use std::sync::Arc;
 
     // Define a test enum and manually implement RandConstructEnum
-    #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
+    #[derive(Default,Copy, Clone, Debug, PartialEq, Eq, Hash)]
     enum ManualTestEnum {
+        #[default]
         VariantX,
         VariantY,
         VariantZ,
     }
 
-    impl Default for ManualTestEnum {
-        fn default() -> Self {
-            Self::VariantX
-        }
-    }
+    impl RandConstructEnumWithEnv for ManualTestEnum {}
 
     impl RandConstructEnum for ManualTestEnum {
         fn all_variants() -> Vec<Self> {
@@ -254,7 +124,7 @@ mod tests {
         let mut counts = HashMap::new();
 
         for _ in 0..10000 {
-            let variant = ManualTestEnum::sample_with_probabilities(&mut rng, &probs);
+            let variant = sample_variants_with_probabilities(&mut rng, &probs);
             *counts.entry(variant).or_insert(0) += 1;
         }
 

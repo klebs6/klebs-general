@@ -1,25 +1,13 @@
 crate::ix!();
 
 /// Builder for `RhymeType`.
+#[derive(Default)]
 pub struct RhymeTypeBuilder {
     quality:  RhymeQuality,
     position: Option<RhymePosition>,
     stress:   Option<RhymeStress>,
     scheme:   Option<RhymeScheme>,
     special:  Option<SpecialRhyme>,
-}
-
-impl Default for RhymeTypeBuilder {
-
-    fn default() -> Self {
-        RhymeTypeBuilder {
-            quality:  RhymeQuality::Perfect,
-            position: None,
-            stress:   None,
-            scheme:   None,
-            special:  None,
-        }
-    }
 }
 
 impl RhymeTypeBuilder {

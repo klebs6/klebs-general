@@ -7,12 +7,12 @@ error[E0277]: the trait bound `Env: RandConstructProbabilityMapProvider<MagicIte
    = help: the trait `RandConstructProbabilityMapProvider<ProbabilityEnum>` is implemented for `Env`
    = help: for that trait implementation, expected `ProbabilityEnum`, found `MagicItem`
 note: required by a bound in `create_random`
-  --> $CARGO/random-constructible-0.4.0/src/lib.rs
+  --> /Users/kleb/bethesda/work/repo/klebs-general/random-constructible/src/rand_construct_env.rs:7:15
    |
-   |     fn create_random<R>() -> R
+4  |     fn create_random<R>() -> R
    |        ------------- required by a bound in this associated function
 ...
-   |         Self: RandConstructProbabilityMapProvider<R> + Sized,
+7  |         Self: RandConstructProbabilityMapProvider<R> + Sized,
    |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ required by this bound in `RandConstructEnvironment::create_random`
 
 error[E0277]: the trait bound `Env: RandConstructProbabilityMapProvider<MagicItem>` is not satisfied
@@ -24,10 +24,10 @@ error[E0277]: the trait bound `Env: RandConstructProbabilityMapProvider<MagicIte
    = help: the trait `RandConstructProbabilityMapProvider<ProbabilityEnum>` is implemented for `Env`
    = help: for that trait implementation, expected `ProbabilityEnum`, found `MagicItem`
 note: required by a bound in `create_random_uniform`
-  --> $CARGO/random-constructible-0.4.0/src/lib.rs
+  --> /Users/kleb/bethesda/work/repo/klebs-general/random-constructible/src/rand_construct_env.rs:15:15
    |
-   |     fn create_random_uniform<R>() -> R
+12 |     fn create_random_uniform<R>() -> R
    |        --------------------- required by a bound in this associated function
 ...
-   |         Self: RandConstructProbabilityMapProvider<R> + Sized,
+15 |         Self: RandConstructProbabilityMapProvider<R> + Sized,
    |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ required by this bound in `RandConstructEnvironment::create_random_uniform`

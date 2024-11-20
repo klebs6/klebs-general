@@ -1,25 +1,21 @@
 crate::ix!();
 
 /// Struct representing a rhyme with its various aspects.
-#[derive(Debug,Clone,Serialize,Deserialize,PartialEq,Eq)]
+#[derive(Default,AIDescriptor,RandConstruct,Debug,Clone,Serialize,Deserialize,PartialEq,Eq)]
 pub struct RhymeType {
     quality:  RhymeQuality,
-    position: Option<RhymePosition>,
-    stress:   Option<RhymeStress>,
-    scheme:   Option<RhymeScheme>,
-    special:  Option<SpecialRhyme>,
-}
 
-impl Default for RhymeType {
-    fn default() -> Self {
-        Self {
-            quality:  RhymeQuality::Perfect,
-            position: None,
-            stress:   None,
-            scheme:   None,
-            special:  None,
-        }
-    }
+    #[rand_construct(some=0.5)]
+    position: Option<RhymePosition>,
+
+    #[rand_construct(some=0.5)]
+    stress:   Option<RhymeStress>,
+
+    #[rand_construct(some=0.5)]
+    scheme:   Option<RhymeScheme>,
+
+    #[rand_construct(some=0.5)]
+    special:  Option<SpecialRhyme>,
 }
 
 impl RhymeType {
@@ -82,51 +78,5 @@ impl RhymeType {
     pub fn set_rhyme_special(&mut self, special: Option<SpecialRhyme>) -> &mut Self {
         self.special = special;
         self
-    }
-}
-
-impl AIDescriptor for RhymeType {
-
-    /// Generates a description of the rhyme type suitable for instructing an AI.
-    fn ai(&self) -> Cow<'_,str> {
-
-        let mut descriptors = vec![];
-
-        // Describe the rhyme quality
-        descriptors.push(self.quality.ai());
-
-        // Describe the rhyme position if present
-        if let Some(ref position) = self.position {
-            descriptors.push(position.ai());
-        }
-
-        // Describe the rhyme stress if present
-        if let Some(ref stress) = self.stress {
-            descriptors.push(stress.ai());
-        }
-
-        // Describe the rhyme scheme if present
-        if let Some(ref scheme) = self.scheme {
-            descriptors.push(scheme.ai());
-        }
-
-        // Describe any special rhyme types
-        if let Some(ref special) = self.special {
-            descriptors.push(special.ai());
-        }
-
-        Cow::Owned(descriptors.join(" "))
-    }
-}
-
-impl Distribution<RhymeType> for distributions::Standard {
-    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> RhymeType {
-        RhymeType {
-            quality: rng.gen(),
-            position: if rng.gen_bool(0.5) { Some(rng.gen()) } else { None },
-            stress:   if rng.gen_bool(0.5) { Some(rng.gen()) } else { None },
-            scheme:   if rng.gen_bool(0.5) { Some(rng.gen()) } else { None },
-            special:  if rng.gen_bool(0.5) { Some(rng.gen()) } else { None },
-        }
     }
 }

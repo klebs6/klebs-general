@@ -16,3 +16,5 @@ categories    = ["game-development", "simulation", "rust-patterns"]
 [dependencies]
 rand = "0.8"
 once_cell = "1.16"
+num-traits = "*"
+export-magic = "*"
