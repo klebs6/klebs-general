@@ -1,13 +1,13 @@
 crate::ix!();
 
-/// Struct representing a lyrical meter, combining foot and line length.
-#[derive(Default,AIDescriptor,RandConstruct,Debug,Clone,Serialize,Deserialize,PartialEq,Eq)]
+#[derive(Default,AIItemWithFeatures,RandConstruct,Debug,Clone,Serialize,Deserialize,PartialEq,Eq)]
+#[ai("A Lyrical meter, consisting of a foot and a line length.")]
 #[ai(Display)]
 pub struct LyricalMeter {
     foot:   MetricalFoot,
 
-    #[ai(none="The number of feet per line is flexible.")]
     #[rand_construct(some=0.5)]
+    #[ai(feature_if_none="The number of feet per line is flexible.")]
     length: Option<LineLength>,
 }
 

@@ -1,11 +1,5 @@
 crate::ix!();
 
-/// Trait for types that can generate a description of themselves. 
-/// Typically used as an instruction to be sent to an AI model.
-pub trait AIDescriptor {
-    fn ai(&self) -> Cow<'_,str>;
-}
-
 /// Trait for getting the name of an item.
 pub trait Named {
     /// Returns the name associated with `self`. 

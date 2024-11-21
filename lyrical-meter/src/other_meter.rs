@@ -1,8 +1,7 @@
 crate::ix!();
 
 /// Enum for other types of meters that don't fit into the regular pattern.
-#[derive(AIDescriptor,RandConstruct,Default,Hash,Debug,Clone,Copy,Serialize,Deserialize,PartialEq,Eq)]
-#[ai(Display)]
+#[derive(AIItemFeature,RandConstruct,Default,Hash,Debug,Clone,Copy,Serialize,Deserialize,PartialEq,Eq)]
 pub enum OtherMeter {
     #[default]
     #[ai("Write in free verse, without a consistent meter or rhyme scheme.")]        FreeVerse,     

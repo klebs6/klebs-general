@@ -1,15 +1,20 @@
 crate::ix!();
 
-#[derive(AIDescriptor,Hash,Debug,Clone,Serialize,Deserialize,PartialEq,Eq)]
-#[ai("Follow a custom rhyme scheme: {0}.")]
+#[derive(AIItemFeature,Hash,Debug,Clone,Serialize,Deserialize,PartialEq,Eq)]
+#[ai("Follows a custom rhyme scheme: {0}.")]
 pub struct CustomRhymeScheme(String);
 
 impl RandConstruct for CustomRhymeScheme {
+
+    fn random_with_rng<RNG: Rng + ?Sized>(rng: &mut RNG) -> Self {
+        let custom_schemes = ["ABCD", "AABCCB", "ABACAD"];
+        let scheme = custom_schemes.choose(rng).unwrap().to_string();
+        Self(scheme)
+    }
+
     fn random() -> Self {
         let mut rng = rand::thread_rng();
-        let custom_schemes = ["ABCD", "AABCCB", "ABACAD"];
-        let scheme = custom_schemes.choose(&mut rng).unwrap().to_string();
-        Self(scheme)
+        Self::random_with_rng(&mut rng)
     }
 
     fn uniform() -> Self {
@@ -18,7 +23,7 @@ impl RandConstruct for CustomRhymeScheme {
 }
 
 /// Enum representing specific rhyme schemes.
-#[derive(AIDescriptor,RandConstruct,Default,Hash,Debug,Clone,Serialize,Deserialize,PartialEq,Eq)]
+#[derive(AIItemFeature,RandConstruct,Default,Hash,Debug,Clone,Serialize,Deserialize,PartialEq,Eq)]
 pub enum RhymeScheme {
     #[default]
     #[ai("Follow a couplet rhyme scheme (AABB).")]                               Couplet,             

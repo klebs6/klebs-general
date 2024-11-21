@@ -1,8 +1,7 @@
 crate::ix!();
 
 /// Enum representing any type of meter, either standard or other.
-#[derive(AIDescriptor,RandConstruct,Debug,Clone,Serialize,Deserialize,PartialEq,Eq)]
-#[ai(Display)]
+#[derive(AIItemFeature,RandConstruct,Debug,Clone,Serialize,Deserialize,PartialEq,Eq)]
 pub enum Meter {
 
     #[rand_construct(p=0.7)]
