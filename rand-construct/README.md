@@ -17,7 +17,7 @@ Add the following to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-rand-construct = "0.1.0"  # Replace with the latest version
+rand-construct = "0.6.0"  # Replace with the latest version
 ```
 
 ### Import the Crate
