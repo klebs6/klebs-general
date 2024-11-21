@@ -18,7 +18,7 @@ mod tests {
     use std::sync::Arc;
 
     // Define a test enum and manually implement RandConstructEnum
-    #[derive(Default,Copy, Clone, Debug, PartialEq, Eq, Hash)]
+    #[derive(Default,Clone, Debug, PartialEq, Eq, Hash)]
     enum ManualTestEnum {
         #[default]
         VariantX,

@@ -1,11 +1,11 @@
 crate::ix!();
 
-pub trait RandConstructProbabilityMapProvider<R: Eq + Hash + Copy + Sized> {
+pub trait RandConstructProbabilityMapProvider<R: Eq + Hash + Sized> {
     fn probability_map() -> Arc<HashMap<R, f64>>;
     fn uniform_probability_map() -> Arc<HashMap<R, f64>>;
 }
 
-pub trait RandConstructEnumWithEnv: Sized + Eq + Hash + Copy {
+pub trait RandConstructEnumWithEnv: Sized + Clone + Eq + Hash {
 
     fn random_with_env<P: RandConstructProbabilityMapProvider<Self>>() -> Self {
         let mut rng = rand::thread_rng();
@@ -29,7 +29,7 @@ pub trait RandConstructEnumWithEnv: Sized + Eq + Hash + Copy {
     }
 }
 
-pub trait RandConstructEnum: Default + Eq + Hash + Sized + Copy {
+pub trait RandConstructEnum: Clone + Default + Eq + Hash + Sized {
 
     //-----------------------------------------------------------------[provided by the proc macro crate]
     fn default_weight(&self) -> f64;
@@ -49,7 +49,7 @@ pub trait RandConstructEnum: Default + Eq + Hash + Sized + Copy {
     fn uniform_variant() -> Self {
         let variants = Self::all_variants();
         let mut rng = rand::thread_rng();
-        *variants.choose(&mut rng).unwrap()
+        variants.choose(&mut rng).unwrap().clone()
     }
 
     //-----------------------------------------------------------------[helper-methods]

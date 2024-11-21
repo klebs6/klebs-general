@@ -124,7 +124,7 @@ pub fn derive_for_named_fields(name: &Ident, fields_named: &FieldsNamed) -> Toke
                                 #[allow(unused_imports)]
                                 use rand::Rng;
                                 if rand::thread_rng().gen::<f64>() < 0.5 {
-                                    Some(<#field_types as RandConstruct>::random_with_env::<ENV>())
+                                    Some(#field_types::random_with_env::<ENV>())
                                 } else {
                                     None
                                 }
@@ -147,7 +147,7 @@ pub fn derive_for_named_fields(name: &Ident, fields_named: &FieldsNamed) -> Toke
                                 #[allow(unused_imports)]
                                 use rand::Rng;
                                 if rand::thread_rng().gen::<f64>() < 0.5 {
-                                    Some(<#field_types as RandConstruct>::random_uniform_with_env::<ENV>())
+                                    Some(field_types::random_uniform_with_env::<ENV>())
                                 } else {
                                     None
                                 }

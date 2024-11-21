@@ -81,7 +81,7 @@ pub fn derive_for_unnamed_fields(
                 #( ENV: RandConstructProbabilityMapProvider<#field_types>, )*
             {
                 Self(#(
-                    <#field_types as RandConstruct>::random_with_env::<ENV>()
+                    #field_types::random_with_env::<ENV>()
                 ),*)
             }
 
@@ -90,7 +90,7 @@ pub fn derive_for_unnamed_fields(
                 #( ENV: RandConstructProbabilityMapProvider<#field_types>, )*
             {
                 Self(#(
-                    <#field_types as RandConstruct>::random_uniform_with_env::<ENV>()
+                    #field_types::random_uniform_with_env::<ENV>()
                 ),*)
             }
         }
