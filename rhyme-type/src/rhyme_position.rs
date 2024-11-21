@@ -1,7 +1,7 @@
 crate::ix!();
 
 /// Enum representing the position of the rhyme within the line or stanza.
-#[derive(RandConstrut,AIDescriptor,Default,Debug,Clone,Copy,Serialize,Deserialize,PartialEq,Eq)]
+#[derive(RandConstruct,Hash,AIDescriptor,Default,Debug,Clone,Copy,Serialize,Deserialize,PartialEq,Eq)]
 pub enum RhymePosition {
 
     #[default]

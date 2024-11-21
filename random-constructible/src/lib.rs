@@ -7,6 +7,7 @@ x!{rand_construct_enum}
 x!{rand_construct_env}
 x!{prim_traits}
 x!{sample}
+x!{impl_for_optiont}
 
 #[cfg(test)]
 mod tests {

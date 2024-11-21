@@ -1,13 +1,14 @@
 crate::ix!();
 
-#[derive(AIDescriptor,Debug,Clone,Serialize,Deserialize,PartialEq,Eq)]
+#[derive(AIDescriptor,Hash,Debug,Copy,Clone,Serialize,Deserialize,PartialEq,Eq)]
 #[ai("Follow a custom rhyme scheme: {0}.")]
 pub struct CustomRhymeScheme(String);
 
 impl RandConstruct for CustomRhymeScheme {
     fn random() -> Self {
+        let mut rng = rand::thread_rng();
         let custom_schemes = ["ABCD", "AABCCB", "ABACAD"];
-        let scheme = custom_schemes.choose(rng).unwrap().to_string();
+        let scheme = custom_schemes.choose(&mut rng).unwrap().to_string();
         Self(scheme)
     }
 
@@ -17,8 +18,9 @@ impl RandConstruct for CustomRhymeScheme {
 }
 
 /// Enum representing specific rhyme schemes.
-#[derive(AIDescriptor,RandConstruct,Debug,Clone,Serialize,Deserialize,PartialEq,Eq)]
+#[derive(AIDescriptor,RandConstruct,Default,Copy,Hash,Debug,Clone,Serialize,Deserialize,PartialEq,Eq)]
 pub enum RhymeScheme {
+    #[default]
     #[ai("Follow a couplet rhyme scheme (AABB).")]                               Couplet,             
     #[ai("Follow an alternate rhyme scheme (ABAB).")]                            Alternate,           
     #[ai("Follow an enclosed rhyme scheme (ABBA).")]                             Enclosed,            

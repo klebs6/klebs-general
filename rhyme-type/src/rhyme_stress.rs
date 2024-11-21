@@ -1,7 +1,7 @@
 crate::ix!();
 
 /// Enum representing syllable stress patterns in the rhyme.
-#[derive(Default,AIDescriptor,RandConstruct,Debug,Clone,Copy,Serialize,Deserialize,PartialEq,Eq)]
+#[derive(Default,Hash,AIDescriptor,RandConstruct,Debug,Clone,Copy,Serialize,Deserialize,PartialEq,Eq)]
 pub enum RhymeStress {
 
     #[default]

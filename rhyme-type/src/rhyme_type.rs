@@ -1,20 +1,20 @@
 crate::ix!();
 
 /// Struct representing a rhyme with its various aspects.
-#[derive(Default,AIDescriptor,RandConstruct,Debug,Clone,Serialize,Deserialize,PartialEq,Eq)]
+#[derive(Default,AIDescriptor,RandConstruct,Debug,Copy,Clone,Serialize,Deserialize,PartialEq,Eq)]
 pub struct RhymeType {
     quality:  RhymeQuality,
 
-    #[rand_construct(some=0.5)]
+    #[rand_construct(psome=0.5)]
     position: Option<RhymePosition>,
 
-    #[rand_construct(some=0.5)]
+    #[rand_construct(psome=0.5)]
     stress:   Option<RhymeStress>,
 
-    #[rand_construct(some=0.5)]
+    #[rand_construct(psome=0.5)]
     scheme:   Option<RhymeScheme>,
 
-    #[rand_construct(some=0.3)]
+    #[rand_construct(psome=0.3)]
     special:  Option<SpecialRhyme>,
 }
 
