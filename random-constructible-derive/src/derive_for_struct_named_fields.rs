@@ -3,81 +3,75 @@ crate::ix!();
 pub fn derive_for_named_fields(name: &Ident, fields_named: &FieldsNamed) -> TokenStream2 {
     let mut field_names = Vec::new();
     let mut field_types = Vec::new();
-    let mut field_random_initializers  = Vec::new();
+    let mut inner_field_types = Vec::new();
+    let mut field_random_initializers = Vec::new();
     let mut field_uniform_initializers = Vec::new();
+    let mut field_random_with_env_initializers = Vec::new();
+    let mut field_uniform_with_env_initializers = Vec::new();
     let mut rand_construct_bounds = Vec::new();
 
     for field in &fields_named.named {
         let field_name = field.ident.clone().unwrap();
         let field_type = field.ty.clone();
 
-        // Check if field is Option<T>
-        if let Type::Path(TypePath { path, .. }) = &field_type {
-            if path.segments.last().unwrap().ident == "Option" {
-                // Extract T from Option<T>
-                if let syn::PathArguments::AngleBracketed(ref args) = path.segments.last().unwrap().arguments {
-                    if let Some(syn::GenericArgument::Type(inner_type)) = args.args.first() {
-                        // Parse attributes to get the 'some' probability
-                        let mut some_prob = None;
-                        for attr in &field.attrs {
-                            if attr.path.is_ident("rand_construct") {
-                                // Parse the attribute content
-                                let meta = attr.parse_meta().unwrap();
-                                if let syn::Meta::List(meta_list) = meta {
-                                    for nested_meta in meta_list.nested {
-                                        if let syn::NestedMeta::Meta(syn::Meta::NameValue(nv)) = nested_meta {
-                                            if nv.path.is_ident("psome") {
-                                                if let syn::Lit::Float(lit_float) = &nv.lit {
-                                                    some_prob = Some(lit_float.base10_parse::<f64>().unwrap());
-                                                } else if let syn::Lit::Int(lit_int) = &nv.lit {
-                                                    some_prob = Some(lit_int.base10_parse::<f64>().unwrap());
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                        let some_prob = some_prob.unwrap_or(0.5);
+        if let Some(inner_type) = is_option_type(&field_type) {
+            let some_prob = parse_some_probability(&field.attrs).unwrap_or(0.5);
 
-                        // For random(), use the specified probability
-                        let random_initializer = quote! {
-                            if rand::random::<f64>() < #some_prob {
-                                Some(<#inner_type as RandConstruct>::random())
-                            } else {
-                                None
-                            }
-                        };
-
-                        // For uniform(), use probability 0.5
-                        let uniform_initializer = quote! {
-                            if rand::random::<f64>() < 0.5 {
-                                Some(<#inner_type as RandConstruct>::uniform())
-                            } else {
-                                None
-                            }
-                        };
-
-                        field_names.push(field_name);
-                        field_types.push(field_type.clone());
-                        field_random_initializers.push(random_initializer);
-                        field_uniform_initializers.push(uniform_initializer);
-                        rand_construct_bounds.push(quote! { #inner_type: RandConstruct });
-                        continue;
-                    }
+            let random_initializer = quote! {
+                if rand::random::<f64>() < #some_prob {
+                    Some(<#inner_type>::random())
+                } else {
+                    None
                 }
-            }
+            };
+
+            let uniform_initializer = quote! {
+                if rand::random::<f64>() < 0.5 {
+                    Some(<#inner_type>::uniform())
+                } else {
+                    None
+                }
+            };
+
+            let random_with_env_initializer = quote! {
+                if rand::random::<f64>() < #some_prob {
+                    Some(<#inner_type>::random_with_env::<ENV>())
+                } else {
+                    None
+                }
+            };
+
+            let uniform_with_env_initializer = quote! {
+                if rand::random::<f64>() < 0.5 {
+                    Some(<#inner_type>::random_uniform_with_env::<ENV>())
+                } else {
+                    None
+                }
+            };
+
+            field_names.push(field_name);
+            field_types.push(field_type.clone());
+            inner_field_types.push(inner_type.clone());
+            field_random_initializers.push(random_initializer);
+            field_uniform_initializers.push(uniform_initializer);
+            field_random_with_env_initializers.push(random_with_env_initializer);
+            field_uniform_with_env_initializers.push(uniform_with_env_initializer);
+            rand_construct_bounds.push(quote! { #inner_type: RandConstruct });
+        } else {
+            let random_initializer = quote! { <#field_type>::random() };
+            let uniform_initializer = quote! { <#field_type>::uniform() };
+            let random_with_env_initializer = quote! { <#field_type>::random_with_env::<ENV>() };
+            let uniform_with_env_initializer = quote! { <#field_type>::random_uniform_with_env::<ENV>() };
+
+            field_names.push(field_name.clone());
+            field_types.push(field_type.clone());
+            field_random_initializers.push(random_initializer);
+            field_uniform_initializers.push(uniform_initializer);
+            field_random_with_env_initializers.push(random_with_env_initializer);
+            field_uniform_with_env_initializers.push(uniform_with_env_initializer);
+            rand_construct_bounds.push(quote! { #field_type: RandConstruct });
         }
-
-        // Default handling for other fields
-        field_names.push(field_name.clone());
-        field_types.push(field_type.clone());
-        field_random_initializers.push(quote! { <#field_type as RandConstruct>::random() });
-        field_uniform_initializers.push(quote! { <#field_type as RandConstruct>::uniform() });
-        rand_construct_bounds.push(quote! { #field_type: RandConstruct });
     }
-
-    let has_primitive_field_type: bool = contains_primitive_type(&field_types);
 
     let expanded_rand_construct_impl = quote! {
         impl RandConstruct for #name
@@ -95,7 +89,7 @@ pub fn derive_for_named_fields(name: &Ident, fields_named: &FieldsNamed) -> Toke
             fn random_with_rng<R: rand::Rng + ?Sized>(rng: &mut R) -> Self {
                 Self {
                     #(
-                        #field_names: <#field_types as RandConstruct>::random_with_rng(rng),
+                        #field_names: <#field_types>::random_with_rng(rng),
                     )*
                 }
             }
@@ -114,51 +108,33 @@ pub fn derive_for_named_fields(name: &Ident, fields_named: &FieldsNamed) -> Toke
         impl #name {
             pub fn random_with_env<ENV>() -> Self
             where
+                #(#rand_construct_bounds,)*
                 #( ENV: RandConstructProbabilityMapProvider<#field_types>, )*
+                #( ENV: RandConstructProbabilityMapProvider<#inner_field_types>, )*
             {
                 Self {
                     #(
-                        #field_names: {
-                            // Handle Option<T> fields
-                            let value = {
-                                #[allow(unused_imports)]
-                                use rand::Rng;
-                                if rand::thread_rng().gen::<f64>() < 0.5 {
-                                    Some(#field_types::random_with_env::<ENV>())
-                                } else {
-                                    None
-                                }
-                            };
-                            value
-                        },
+                        #field_names: #field_random_with_env_initializers,
                     )*
                 }
             }
 
             pub fn random_uniform_with_env<ENV>() -> Self
             where
+                #(#rand_construct_bounds,)*
                 #( ENV: RandConstructProbabilityMapProvider<#field_types>, )*
+                #( ENV: RandConstructProbabilityMapProvider<#inner_field_types>, )*
             {
                 Self {
                     #(
-                        #field_names: {
-                            // Similar handling as above
-                            let value = {
-                                #[allow(unused_imports)]
-                                use rand::Rng;
-                                if rand::thread_rng().gen::<f64>() < 0.5 {
-                                    Some(field_types::random_uniform_with_env::<ENV>())
-                                } else {
-                                    None
-                                }
-                            };
-                            value
-                        },
+                        #field_names: #field_uniform_with_env_initializers,
                     )*
                 }
             }
         }
     };
+
+    let has_primitive_field_type: bool = contains_primitive_type(&field_types);
 
     match has_primitive_field_type {
         true => TokenStream2::from(expanded_rand_construct_impl),

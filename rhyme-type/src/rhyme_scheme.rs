@@ -1,6 +1,6 @@
 crate::ix!();
 
-#[derive(AIDescriptor,Hash,Debug,Copy,Clone,Serialize,Deserialize,PartialEq,Eq)]
+#[derive(AIDescriptor,Hash,Debug,Clone,Serialize,Deserialize,PartialEq,Eq)]
 #[ai("Follow a custom rhyme scheme: {0}.")]
 pub struct CustomRhymeScheme(String);
 
@@ -18,7 +18,7 @@ impl RandConstruct for CustomRhymeScheme {
 }
 
 /// Enum representing specific rhyme schemes.
-#[derive(AIDescriptor,RandConstruct,Default,Copy,Hash,Debug,Clone,Serialize,Deserialize,PartialEq,Eq)]
+#[derive(AIDescriptor,RandConstruct,Default,Hash,Debug,Clone,Serialize,Deserialize,PartialEq,Eq)]
 pub enum RhymeScheme {
     #[default]
     #[ai("Follow a couplet rhyme scheme (AABB).")]                               Couplet,             
