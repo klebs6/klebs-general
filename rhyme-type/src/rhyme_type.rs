@@ -14,7 +14,7 @@ pub struct RhymeType {
     #[rand_construct(some=0.5)]
     scheme:   Option<RhymeScheme>,
 
-    #[rand_construct(some=0.5)]
+    #[rand_construct(some=0.3)]
     special:  Option<SpecialRhyme>,
 }
 

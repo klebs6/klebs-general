@@ -10,6 +10,7 @@ pub(crate) use syn::{
     Data,
     DeriveInput,
     Lit,
+    Generics,
     TypePath,
     Meta,
     MetaNameValue,

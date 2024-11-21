@@ -1,53 +1,97 @@
 crate::ix!();
 
-pub fn derive_for_unnamed_fields(name: &Ident, fields_unnamed: &FieldsUnnamed) -> TokenStream2 {
-    let field_types = fields_unnamed
-        .unnamed
-        .iter()
-        .map(|f| f.ty.clone())
-        .collect::<Vec<_>>();
+pub fn derive_for_unnamed_fields(
+    name:           &Ident, 
+    fields_unnamed: &FieldsUnnamed, 
+    generics:       &Generics
+
+) -> TokenStream2 {
+
+    let mut field_types = Vec::new();
+    let mut field_random_initializers = Vec::new();
+    let mut field_uniform_initializers = Vec::new();
+    let mut rand_construct_bounds = Vec::new();
+
+    for field in &fields_unnamed.unnamed {
+        let field_type = &field.ty;
+
+        // Check if field is Option<T>
+        if let Some(inner_type) = is_option_type(field_type) {
+            // Parse attributes to get the 'some' probability
+            let some_prob = parse_some_probability(&field.attrs).unwrap_or(0.5);
+
+            // For random(), use the specified probability
+            let random_initializer = quote! {
+                if rand::random::<f64>() < #some_prob {
+                    Some(<#inner_type as RandConstruct>::random())
+                } else {
+                    None
+                }
+            };
+
+            // For uniform(), use probability 0.5
+            let uniform_initializer = quote! {
+                if rand::random::<f64>() < 0.5 {
+                    Some(<#inner_type as RandConstruct>::uniform())
+                } else {
+                    None
+                }
+            };
+
+            field_types.push(field_type.clone());
+            field_random_initializers.push(random_initializer);
+            field_uniform_initializers.push(uniform_initializer);
+            rand_construct_bounds.push(quote! { #inner_type: RandConstruct });
+        } else {
+            // Default handling for other fields
+            field_types.push(field_type.clone());
+            field_random_initializers.push(quote! { <#field_type as RandConstruct>::random() });
+            field_uniform_initializers.push(quote! { <#field_type as RandConstruct>::uniform() });
+            rand_construct_bounds.push(quote! { #field_type: RandConstruct });
+        }
+    }
 
     let has_primitive_field_type: bool = contains_primitive_type(&field_types);
 
-    assert!(
-        field_types.len() == 1,
-        "Unnamed fields structs are expected to have exactly one field"
-    );
-
-    let field_type = &field_types[0];
-
     let expanded_rand_construct_impl = quote! {
-        impl RandConstruct for #name
-        where #field_type : RandConstruct
+        impl #generics RandConstruct for #name #generics
+        where
+            #(#rand_construct_bounds,)*
         {
             fn random() -> Self {
-                Self(RandConstruct::random())
+                Self(#(#field_random_initializers),*)
             }
 
             fn random_with_rng<R: rand::Rng + ?Sized>(rng: &mut R) -> Self {
-                Self(RandConstruct::random_with_rng(rng))
+                Self(#(
+                    <#field_types as RandConstruct>::random_with_rng(rng)
+                ),*)
             }
 
             fn uniform() -> Self {
-                Self(RandConstruct::uniform())
+                Self(#(#field_uniform_initializers),*)
             }
         }
     };
 
     let expanded_rand_env_impl = quote! {
-        impl #name {
+        impl #generics #name #generics {
             pub fn random_with_env<ENV>() -> Self
             where
-                ENV: RandConstructProbabilityMapProvider< #field_type >
+                #( ENV: RandConstructProbabilityMapProvider<#field_types>, )*
             {
-                Self(#field_type::random_with_env::<ENV>())
+                Self(#(
+                    <#field_types as RandConstruct>::random_with_env::<ENV>()
+                ),*)
             }
 
             pub fn random_uniform_with_env<ENV>() -> Self
             where
-                ENV: RandConstructProbabilityMapProvider< #field_type >
+                #( ENV: RandConstructProbabilityMapProvider<#field_types>, )*
             {
-                Self(#field_type::random_uniform_with_env::<ENV>())
+                Self(#(
+                    <#field_types as RandConstruct>::random_uniform_with_env::<ENV>()
+                ),*)
             }
         }
     };
@@ -73,7 +117,7 @@ mod tests {
 
         if let syn::Data::Struct(ref data_struct) = input.data {
             if let Fields::Unnamed(ref fields_unnamed) = data_struct.fields {
-                let output = derive_for_unnamed_fields(&input.ident, fields_unnamed);
+                let output = derive_for_unnamed_fields(&input.ident, fields_unnamed, &input.generics);
                 let output_str = token_stream_to_string(&output);
 
                 // Assert that the output contains the expected impl blocks
@@ -91,7 +135,7 @@ mod tests {
 
         if let syn::Data::Struct(ref data_struct) = input.data {
             if let Fields::Unnamed(ref fields_unnamed) = data_struct.fields {
-                let output = derive_for_unnamed_fields(&input.ident, fields_unnamed);
+                let output = derive_for_unnamed_fields(&input.ident, fields_unnamed, &input.generics);
                 let output_str = token_stream_to_string(&output);
 
                 // Assert that the output contains both impl blocks
@@ -102,16 +146,41 @@ mod tests {
     }
 
     #[test]
-    #[should_panic(expected = "Unnamed fields structs are expected to have exactly one field")]
-    fn test_derive_for_unnamed_fields_multiple_fields() {
+    fn test_derive_for_unnamed_fields_option_with_probability() {
         let input: DeriveInput = parse_quote! {
-            struct TestStruct(u8, String);
+            struct MyStruct<T>(#[rand_construct(psome=0.8)] Option<T>);
         };
 
         if let syn::Data::Struct(ref data_struct) = input.data {
             if let Fields::Unnamed(ref fields_unnamed) = data_struct.fields {
-                // This should panic due to assertion
-                derive_for_unnamed_fields(&input.ident, fields_unnamed);
+                let output = derive_for_unnamed_fields(&input.ident, fields_unnamed, &input.generics);
+                let output_str = token_stream_to_string(&output);
+
+                // Assert that the output contains the expected impl blocks
+                assert!(output_str.contains("impl < T > RandConstruct for MyStruct < T >"));
+                assert!(output_str.contains("where T : RandConstruct"));
+                // Check that the probability is correctly used
+                assert!(output_str.contains("if rand :: random :: < f64 > () < 0.8f64"));
+            }
+        }
+    }
+
+    #[test]
+    fn test_derive_for_unnamed_fields_multiple_fields() {
+        let input: DeriveInput = parse_quote! {
+            struct MyStruct<T>(u8, #[rand_construct(psome=0.7)] Option<T>, String);
+        };
+
+        if let syn::Data::Struct(ref data_struct) = input.data {
+            if let Fields::Unnamed(ref fields_unnamed) = data_struct.fields {
+                let output = derive_for_unnamed_fields(&input.ident, fields_unnamed, &input.generics);
+                let output_str = token_stream_to_string(&output);
+
+                // Check that the generated code includes all fields
+                assert!(output_str.contains("impl < T > RandConstruct for MyStruct < T >"));
+                assert!(output_str.contains("T : RandConstruct"));
+                // Check that probabilities are correctly used
+                assert!(output_str.contains("if rand :: random :: < f64 > () < 0.7f64"));
             }
         }
     }

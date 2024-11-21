@@ -8,6 +8,43 @@ pub fn parse_probability_literal(lit: &Lit) -> f64 {
     }
 }
 
+pub fn is_option_type(ty: &Type) -> Option<&Type> {
+    if let Type::Path(TypePath { path, .. }) = ty {
+        if let Some(segment) = path.segments.last() {
+            if segment.ident == "Option" {
+                if let syn::PathArguments::AngleBracketed(ref args) = segment.arguments {
+                    if let Some(syn::GenericArgument::Type(inner_type)) = args.args.first() {
+                        return Some(inner_type);
+                    }
+                }
+            }
+        }
+    }
+    None
+}
+
+pub fn parse_some_probability(attrs: &[syn::Attribute]) -> Option<f64> {
+    for attr in attrs {
+        if attr.path.is_ident("rand_construct") {
+            let meta = attr.parse_meta().ok()?;
+            if let syn::Meta::List(meta_list) = meta {
+                for nested_meta in meta_list.nested {
+                    if let syn::NestedMeta::Meta(syn::Meta::NameValue(nv)) = nested_meta {
+                        if nv.path.is_ident("psome") {
+                            if let syn::Lit::Float(lit_float) = &nv.lit {
+                                return lit_float.base10_parse::<f64>().ok();
+                            } else if let syn::Lit::Int(lit_int) = &nv.lit {
+                                return lit_int.base10_parse::<f64>().ok();
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    None
+}
+
 #[cfg(test)]
 pub fn token_stream_to_string(ts: &TokenStream2) -> String {
     ts.to_string()
