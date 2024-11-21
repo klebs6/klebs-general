@@ -1,0 +1,16 @@
+[package]
+name = "ai-generate-the-readmes"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+workspacer = { version = "*", path = "../workspacer" }
+scan-crate-for-typedefs = "*"
+gpt-batch-scribe = "*"
+export-magic = "*"
+error-tree = "*"
+tokio = { version = "*", features = ["full"] }
+
+[[bin]]
+path = "src/main.rs"
+name = "ai-generate-the-readmes"
