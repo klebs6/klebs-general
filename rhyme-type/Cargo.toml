@@ -10,10 +10,10 @@ documentation = "https://docs.rs/rhyme-type"
 homepage      = "https://github.com/klebs6/klebs-general"
 
 [dependencies]
-export-magic = "0.3.6"
-rand         = "0.8.5"
-serde        = { version = "1.0", features = ["derive"] }
-serde_json = "1.0"
-named-item   = "0.3.0"
-rand-construct = "0.8.0"
-ai-descriptor = "*"
+export-magic   = "0.3.6"
+rand           = "0.8.5"
+serde          = { version = "1.0", features = ["derive"] }
+serde_json     = "1.0"
+named-item     = "0.3.0"
+rand-construct = { version = "*", path   = "/Users/kleb/bethesda/work/repo/klebs-general/rand-construct" }
+ai-descriptor  = "*"
