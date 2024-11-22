@@ -13,9 +13,9 @@ keywords      = ["poetry", "metrical", "verse", "literature", "text"]
 categories    = ["text-processing", "data-structures"]
 
 [dependencies]
-rand-construct = "*"
-export-magic = "0.3.6"
-rand         = "0.8.5"
-serde        = { version = "1.0", features = ["derive"] }
-serde_json   = "1.0"
-named-item   = "0.3.0"
+rand-construct = "0.10.0"
+export-magic   = "0.3.6"
+rand           = "0.8.5"
+serde          = { version = "1.0", features = ["derive"] }
+serde_json     = "1.0"
+ai-descriptor  = "0.8.0"
