@@ -1,14 +1,13 @@
 use rhyme_type::*;
-use named_item::AIDescriptor;
+use rand_construct::*;
+use ai_descriptor::*;
 use rand::rngs::StdRng;
 use rand::SeedableRng;
-use rand::Rng;
 use serde_json;
 
 #[test]
 fn test_rhyme_position_distribution() {
-    let mut rng = StdRng::seed_from_u64(42);
-    let position: RhymePosition = rng.gen();
+    let position = RhymePosition::random();
     assert!(matches!(
         position,
         RhymePosition::End
@@ -22,18 +21,17 @@ fn test_rhyme_position_distribution() {
 }
 
 #[test]
-fn test_rhyme_position_ai() {
+fn test_rhyme_position_text() {
     let position = RhymePosition::End;
     assert_eq!(
-        position.ai(),
+        position.text(),
         "The rhymes should occur at the end of lines."
     );
 }
 
 #[test]
 fn test_rhyme_quality_distribution() {
-    let mut rng = StdRng::seed_from_u64(42);
-    let quality: RhymeQuality = rng.gen();
+    let quality = RhymeQuality::random();
     assert!(matches!(
         quality,
         RhymeQuality::Perfect
@@ -54,15 +52,14 @@ fn test_rhyme_quality_distribution() {
 fn test_rhyme_quality_ai() {
     let quality = RhymeQuality::Perfect;
     assert_eq!(
-        quality.ai(),
+        quality.text(),
         "Use perfect rhymes, where both consonant and vowel sounds match exactly."
     );
 }
 
 #[test]
 fn test_rhyme_scheme_distribution() {
-    let mut rng = StdRng::seed_from_u64(42);
-    let scheme: RhymeScheme = rng.gen();
+    let scheme = RhymeScheme::random();
     match scheme {
         RhymeScheme::Custom(ref pattern) => {
             assert!(["ABCD", "AABCCB", "ABACAD"].contains(&pattern.as_str()));
@@ -90,21 +87,20 @@ fn test_rhyme_scheme_distribution() {
 fn test_rhyme_scheme_ai() {
     let scheme = RhymeScheme::Couplet;
     assert_eq!(
-        scheme.ai(),
+        scheme.text(),
         "Follow a couplet rhyme scheme (AABB)."
     );
 
-    let custom_scheme = RhymeScheme::Custom("ABCD".to_string());
+    let custom_scheme = RhymeScheme::Custom(CustomRhymeScheme::from("ABCD"));
     assert_eq!(
-        custom_scheme.ai(),
-        "Follow a custom rhyme scheme: ABCD."
+        custom_scheme.text(),
+        "Follows a custom rhyme scheme: ABCD."
     );
 }
 
 #[test]
 fn test_rhyme_stress_distribution() {
-    let mut rng = StdRng::seed_from_u64(42);
-    let stress: RhymeStress = rng.gen();
+    let stress = RhymeStress::random();
     assert!(matches!(
         stress,
         RhymeStress::Masculine | RhymeStress::Feminine | RhymeStress::Triple
@@ -115,15 +111,14 @@ fn test_rhyme_stress_distribution() {
 fn test_rhyme_stress_ai() {
     let stress = RhymeStress::Masculine;
     assert_eq!(
-        stress.ai(),
+        stress.text(),
         "The rhymes should be masculine, rhyming the final stressed syllable."
     );
 }
 
 #[test]
 fn test_special_rhyme_distribution() {
-    let mut rng = StdRng::seed_from_u64(42);
-    let special: SpecialRhyme = rng.gen();
+    let special = SpecialRhyme::random();
     assert!(matches!(
         special,
         SpecialRhyme::Cross
@@ -139,15 +134,14 @@ fn test_special_rhyme_distribution() {
 fn test_special_rhyme_ai() {
     let special = SpecialRhyme::Cross;
     assert_eq!(
-        special.ai(),
+        special.text(),
         "Use cross rhymes, rhyming in a cross pattern like ABBA."
     );
 }
 
 #[test]
 fn test_rhyme_type_distribution() {
-    let mut rng = StdRng::seed_from_u64(42);
-    let rhyme_type: RhymeType = rng.gen();
+    let rhyme_type = RhymeType::random();
     // Since fields are optional, we can only assert that `quality` is valid
     assert!(matches!(
         rhyme_type.rhyme_quality(),
@@ -205,7 +199,7 @@ fn test_rhyme_scheme_serialization() {
     let deserialized: RhymeScheme = serde_json::from_str(&serialized).unwrap();
     assert_eq!(scheme, deserialized);
 
-    let custom_scheme = RhymeScheme::Custom("ABCD".to_string());
+    let custom_scheme = RhymeScheme::Custom(CustomRhymeScheme::from("ABCD"));
     let serialized_custom = serde_json::to_string(&custom_scheme).unwrap();
     let deserialized_custom: RhymeScheme = serde_json::from_str(&serialized_custom).unwrap();
     assert_eq!(custom_scheme, deserialized_custom);
@@ -262,8 +256,8 @@ fn test_rhyme_type_equality() {
 fn test_rhyme_type_randomness() {
     let mut rng1 = StdRng::seed_from_u64(1);
     let mut rng2 = StdRng::seed_from_u64(1);
-    let rhyme_type1: RhymeType = rng1.gen();
-    let rhyme_type2: RhymeType = rng2.gen();
+    let rhyme_type1 = RhymeType::random_with_rng(&mut rng1);
+    let rhyme_type2 = RhymeType::random_with_rng(&mut rng2);
     assert_eq!(rhyme_type1, rhyme_type2);
 }
 
@@ -284,7 +278,7 @@ fn test_ais_not_empty() {
         RhymeQuality::Macaronic,
     ];
     for quality in &qualities {
-        let desc = quality.ai();
+        let desc = quality.text();
         assert!(!desc.is_empty());
     }
 
@@ -298,7 +292,7 @@ fn test_ais_not_empty() {
         RhymePosition::Tail,
     ];
     for position in &positions {
-        let desc = position.ai();
+        let desc = position.text();
         assert!(!desc.is_empty());
     }
 
@@ -308,7 +302,7 @@ fn test_ais_not_empty() {
         RhymeStress::Triple,
     ];
     for stress in &stresses {
-        let desc = stress.ai();
+        let desc = stress.text();
         assert!(!desc.is_empty());
     }
 
@@ -321,15 +315,14 @@ fn test_ais_not_empty() {
         SpecialRhyme::Acrostic,
     ];
     for special in &specials {
-        let desc = special.ai();
+        let desc = special.text();
         assert!(!desc.is_empty());
     }
 }
 
 #[test]
 fn test_rhyme_type_fields() {
-    let mut rng = StdRng::seed_from_u64(42);
-    let rhyme_type: RhymeType = rng.gen();
+    let rhyme_type = RhymeType::random();
 
     // Test that quality is always present and valid
     assert!(matches!(
@@ -403,5 +396,3 @@ fn test_rhyme_type_fields() {
         ));
     }
 }
-
-

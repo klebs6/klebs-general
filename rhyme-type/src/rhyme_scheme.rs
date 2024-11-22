@@ -4,6 +4,20 @@ crate::ix!();
 #[ai("Follows a custom rhyme scheme: {0}.")]
 pub struct CustomRhymeScheme(String);
 
+impl From<&str> for CustomRhymeScheme {
+
+    fn from(x: &str) -> Self {
+        Self(x.to_string())
+    }
+}
+
+impl CustomRhymeScheme {
+
+    pub fn as_str(&self) -> &str {
+        self.0.as_str()
+    }
+}
+
 impl RandConstruct for CustomRhymeScheme {
 
     fn random_with_rng<RNG: Rng + ?Sized>(rng: &mut RNG) -> Self {
