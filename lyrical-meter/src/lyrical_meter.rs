@@ -1,12 +1,12 @@
 crate::ix!();
 
-#[derive(Default,AIItemWithFeatures,RandConstruct,Debug,Clone,Serialize,Deserialize,PartialEq,Eq)]
+#[derive(Default,ItemWithFeatures,RandConstruct,Debug,Clone,Serialize,Deserialize,PartialEq,Eq)]
 #[ai("A Lyrical meter, consisting of a foot and a line length.")]
 #[ai(Display)]
 pub struct LyricalMeter {
     foot:   MetricalFoot,
 
-    #[rand_construct(some=0.5)]
+    #[rand_construct(psome=0.5)]
     #[ai(feature_if_none="The number of feet per line is flexible.")]
     length: Option<LineLength>,
 }

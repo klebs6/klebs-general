@@ -1,7 +1,7 @@
 crate::ix!();
 
 /// Enum representing different metrical feet.
-#[derive(Default,Hash,AIItemFeature,RandConstruct,Debug,Clone,Copy,Serialize,Deserialize,PartialEq,Eq)]
+#[derive(Default,Hash,ItemFeature,RandConstruct,Debug,Clone,Copy,Serialize,Deserialize,PartialEq,Eq)]
 pub enum MetricalFoot {
     #[default]
     #[ai("Uses iambic meter, with unstressed-stressed syllables.")]                                 Iamb,

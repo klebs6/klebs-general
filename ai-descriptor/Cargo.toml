@@ -1,6 +1,6 @@
 [package]
 name          = "ai-descriptor"
-version       = "0.3.0"
+version       = "0.4.0"
 edition       = "2021"
 authors       = [ "klebs tpk3.mx@gmail.com" ]
 description   = "Provides a proc macro we can use to annotate enums for facilitating itemization and description using an AI model"

@@ -18,5 +18,5 @@ rand         = "0.8.5"
 serde        = { version = "1.0", features = ["derive"] }
 serde_json   = "1.0"
 named-item   = "0.3.0"
-ai-descriptor = "*"
-rand-construct = "*"
+ai-descriptor = "0.3.0"
+rand-construct = "0.9.0"

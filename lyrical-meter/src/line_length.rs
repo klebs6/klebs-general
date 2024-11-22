@@ -1,7 +1,7 @@
 crate::ix!();
 
 /// Enum representing the number of feet per line.
-#[derive(Default,AIItemFeature,RandConstruct,Hash,Debug,Clone,Copy,Serialize,Deserialize,PartialEq,Eq)]
+#[derive(Default,ItemFeature,RandConstruct,Hash,Debug,Clone,Copy,Serialize,Deserialize,PartialEq,Eq)]
 pub enum LineLength {
     #[default]
     #[ai("Each line should have one foot (monometer).")]    Monometer,

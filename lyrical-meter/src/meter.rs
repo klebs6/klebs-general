@@ -1,7 +1,7 @@
 crate::ix!();
 
 /// Enum representing any type of meter, either standard or other.
-#[derive(AIItemFeature,RandConstruct,Debug,Clone,Serialize,Deserialize,PartialEq,Eq)]
+#[derive(ItemFeature,RandConstruct,Hash,Debug,Clone,Serialize,Deserialize,PartialEq,Eq)]
 pub enum Meter {
 
     #[rand_construct(p=0.7)]
@@ -9,6 +9,12 @@ pub enum Meter {
 
     #[rand_construct(p=0.3)]
     Other(OtherMeter),
+}
+
+impl Default for Meter {
+    fn default() -> Self {
+        Self::Standard(LyricalMeter::default())
+    }
 }
 
 impl Meter {

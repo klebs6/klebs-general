@@ -1,19 +1,19 @@
 crate::ix!();
 
-pub trait ItemFeature {
+pub trait ItemFeatureTrait {
     fn text(&self) -> Cow<'_,str>;
 }
 
-pub trait ItemWithFeatures {
+pub trait ItemWithFeaturesTrait {
     fn header(&self) -> Cow<'_,str>;
-    fn features(&self) -> Vec<Cow<'_, str>>;
+    fn features(&self) -> &[Cow<'_, str>];
 }
 
 pub trait AIDescriptor {
     fn ai(&self) -> Cow<'_,str>;
 }
 
-impl<T: ItemWithFeatures> AIDescriptor for T {
+impl<T: ItemWithFeaturesTrait> AIDescriptor for T {
 
     fn ai(&self) -> Cow<'_,str> {
         let mut lines: Vec<String> = vec![];
@@ -32,16 +32,16 @@ mod tests {
     use super::*;
 
     struct TestItem {
-        header: String,
+        header:   String,
         features: Vec<Cow<'static, str>>,
     }
 
-    impl ItemWithFeatures for TestItem {
+    impl ItemWithFeaturesTrait for TestItem {
         fn header(&self) -> Cow<'_, str> {
             Cow::Borrowed(&self.header)
         }
 
-        fn features(&self) -> Vec<Cow<'_, str>> {
+        fn features(&self) -> &[Cow<'_, str>] {
             &self.features
         }
     }
