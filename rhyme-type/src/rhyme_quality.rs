@@ -1,7 +1,7 @@
 crate::ix!();
 
 /// Enum representing the quality of the rhyme based on sound similarity.
-#[derive(AIDescriptor,Hash,RandConstruct,Default,Debug,Clone,Serialize,Deserialize,PartialEq,Eq)]
+#[derive(ItemFeature,Hash,RandConstruct,Default,Debug,Clone,Serialize,Deserialize,PartialEq,Eq)]
 pub enum RhymeQuality {
 
     #[default]

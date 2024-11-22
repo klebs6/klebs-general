@@ -1,7 +1,7 @@
 crate::ix!();
 
 /// Enum representing special rhyme types that don't fit into other categories.
-#[derive(AIDescriptor,Hash,Default,RandConstruct,Debug,Clone,Serialize,Deserialize,PartialEq,Eq)]
+#[derive(ItemFeature,Hash,Default,RandConstruct,Debug,Clone,Serialize,Deserialize,PartialEq,Eq)]
 pub enum SpecialRhyme {
 
     #[default]

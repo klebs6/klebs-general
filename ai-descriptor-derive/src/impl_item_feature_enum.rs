@@ -1,6 +1,6 @@
 crate::ix!();
 
-pub(crate) fn impl_item_feature(input: &DeriveInput, data: &DataEnum) -> TokenStream2 {
+pub(crate) fn impl_item_feature_enum(input: &DeriveInput, data: &DataEnum) -> TokenStream2 {
     let enum_name = &input.ident;
     let mut variant_matches = vec![];
 
@@ -23,4 +23,3 @@ pub(crate) fn impl_item_feature(input: &DeriveInput, data: &DataEnum) -> TokenSt
 
     TokenStream2::from(expanded)
 }
-

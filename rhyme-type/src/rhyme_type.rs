@@ -1,7 +1,8 @@
 crate::ix!();
 
 /// Struct representing a rhyme with its various aspects.
-#[derive(Default,AIDescriptor,RandConstruct,Debug,Clone,Serialize,Deserialize,PartialEq,Eq)]
+#[derive(Default,ItemWithFeatures,RandConstruct,Debug,Clone,Serialize,Deserialize,PartialEq,Eq)]
+#[ai("A RhymeType")]
 pub struct RhymeType {
     quality:  RhymeQuality,
 

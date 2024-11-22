@@ -9,28 +9,19 @@ xp!{get_option_inner_type}
 xp!{has_ai_display}
 xp!{is_option_type}
 xp!{item_with_features}
-xp!{item_with_feature}
+xp!{impl_item_feature}
+xp!{impl_item_feature_enum}
+xp!{impl_item_feature_struct}
 xp!{process_field}
 xp!{process_variant}
 
 #[proc_macro_derive(ItemFeature, attributes(ai))]
 pub fn item_feature_derive(input: TokenStream) -> TokenStream {
-
     // Parse the input tokens into a syntax tree
     let input = parse_macro_input!(input as DeriveInput);
 
-    // Ensure the input is an enum
-    let enum_data = match &input.data {
-        Data::Enum(data) => data,
-        _ => {
-            return Error::new_spanned(input.ident, "ItemFeature can only be derived for enums")
-                .to_compile_error()
-                .into();
-        }
-    };
-
     // Generate the implementation
-    impl_item_feature(&input, enum_data).into()
+    impl_item_feature(&input).into()
 }
 
 #[proc_macro_derive(ItemWithFeatures, attributes(ai))]
