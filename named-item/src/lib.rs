@@ -3,7 +3,6 @@
 #[macro_use] mod imports; use imports::*;
 
 x!{errors}
-x!{ai_descriptor}
 x!{history}
 x!{multilingual_name}
 x!{name_validator}

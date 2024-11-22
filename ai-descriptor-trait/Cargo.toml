@@ -1,0 +1,16 @@
+[package]
+name = "ai-descriptor-trait"
+version = "0.1.0"
+edition = "2021"
+
+authors       = [ "klebs tpk3.mx@gmail.com" ]
+description   = "Provides an interface for the proc macro we can use to annotate enums for facilitating itemization and description using an AI model"
+license       = "MIT OR Apache-2.0"
+repository    = "https://github.com/klebs6/klebs-general"
+homepage      = "https://github.com/klebs6/klebs-general"
+documentation = "https://docs.rs/ai-descriptor"
+readme        = "README.md"
+keywords      = ["ai", "enums", "simulation", "ergonomics"]
+categories    = ["game-development", "simulation", "rust-patterns"]
+
+[dependencies]

@@ -1,4 +1,4 @@
-crate::ix!();
+use std::borrow::Cow;
 
 pub trait ItemFeatureTrait {
     fn text(&self) -> Cow<'_,str>;
@@ -67,4 +67,3 @@ It has the following features:
         assert_eq!(item.ai(), expected_output);
     }
 }
-
