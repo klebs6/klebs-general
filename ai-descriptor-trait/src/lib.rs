@@ -11,6 +11,9 @@ pub trait ItemWithFeatures {
 
 pub trait AIDescriptor {
     fn ai(&self) -> Cow<'_,str>;
+    fn ai_alt(&self) -> Cow<'_,str> {
+        unimplemented!("can implement this function for ai_alt() function")
+    }
 }
 
 impl<T: ItemWithFeatures> AIDescriptor for T {
@@ -24,6 +27,15 @@ impl<T: ItemWithFeatures> AIDescriptor for T {
             lines.push(format!("- {}", feature));
         }
         Cow::Owned(lines.join("\n"))
+    }
+
+    fn ai_alt(&self) -> Cow<'_,str> {
+        let mut lines: Vec<String> = vec![];
+
+        for feature in self.features() {
+            lines.push(feature.into());
+        }
+        Cow::Owned(lines.join(" "))
     }
 }
 

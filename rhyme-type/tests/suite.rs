@@ -175,7 +175,7 @@ The rhymes should be masculine, rhyming the final stressed syllable. \
 Follow a couplet rhyme scheme (AABB). \
 Use cross rhymes, rhyming in a cross pattern like ABBA.";
 
-    assert_eq!(rhyme_type.ai(), expected);
+    assert_eq!(rhyme_type.ai_text(), expected);
 }
 
 #[test]

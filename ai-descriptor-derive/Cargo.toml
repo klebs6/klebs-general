@@ -1,6 +1,6 @@
 [package]
 name = "ai-descriptor-derive"
-version = "0.4.0"
+version = "0.5.0"
 edition = "2021"
 
 authors       = [ "klebs tpk3.mx@gmail.com" ]
@@ -26,5 +26,5 @@ export-magic = "0.3.6"
 
 [dev-dependencies]
 trybuild = "1.0"
-ai-descriptor-trait = "0.2.0"
+ai-descriptor-trait = "0.3.0"
 #ai-descriptor-trait = { version = "*", path = "../ai-descriptor-trait" }
