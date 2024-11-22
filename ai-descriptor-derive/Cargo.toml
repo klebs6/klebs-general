@@ -26,5 +26,5 @@ export-magic = "0.3.6"
 
 [dev-dependencies]
 trybuild = "1.0"
-#named-item = "0.5.0"
-named-item = { version = "*", path = "/Users/kleb/bethesda/work/repo/klebs-general/named-item" }
+ai-descriptor-trait = "0.2.0"
+#ai-descriptor-trait = { version = "*", path = "../ai-descriptor-trait" }

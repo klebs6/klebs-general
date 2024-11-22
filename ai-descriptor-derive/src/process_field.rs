@@ -153,5 +153,6 @@ mod tests {
             features.push(self.count.text());
         };
         // As before, note that this might cause an error elsewhere if `i32` doesn't implement `ItemFeature`.
+        assert_eq!(result.unwrap().to_string(), expected.to_string());
     }
 }

@@ -1,5 +1,5 @@
 use ai_descriptor_derive::*;
-use named_item::{ItemWithFeatures};
+use ai_descriptor_trait::*;
 
 #[derive(ItemWithFeatures)]
 #[ai("Potion")]

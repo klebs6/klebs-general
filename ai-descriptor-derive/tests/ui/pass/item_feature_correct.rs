@@ -1,5 +1,5 @@
 use ai_descriptor_derive::*;
-use named_item::ItemFeature;
+use ai_descriptor_trait::*;
 use std::borrow::Cow;
 
 #[derive(ItemFeature)]

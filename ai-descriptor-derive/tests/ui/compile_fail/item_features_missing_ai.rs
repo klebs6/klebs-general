@@ -1,6 +1,6 @@
 #![allow(unused_imports)]
 use ai_descriptor_derive::*;
-use named_item::{ItemFeature, ItemWithFeatures};
+use ai_descriptor_trait::*;
 use std::borrow::Cow;
 
 #[derive(ItemWithFeatures)]
