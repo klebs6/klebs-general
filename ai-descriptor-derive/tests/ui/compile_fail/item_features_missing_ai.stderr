@@ -1,0 +1,5 @@
+error: Structs deriving ItemWithFeatures must have an #[ai("...")] attribute for the header
+ --> tests/ui/compile_fail/item_features_missing_ai.rs:7:8
+  |
+7 | struct Potion {
+  |        ^^^^^^

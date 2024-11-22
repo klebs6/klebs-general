@@ -1,0 +1,5 @@
+error: ItemWithFeatures can only be derived for structs with named fields
+ --> tests/ui/compile_fail/item_features_unnamed_fields.rs:8:8
+  |
+8 | struct Potion(PotionEffect, Duration); // Unnamed fields
+  |        ^^^^^^
