@@ -6,7 +6,7 @@ pub trait ItemFeature {
 
 pub trait ItemWithFeatures {
     fn header(&self) -> Cow<'_,str>;
-    fn features(&self) -> &[Cow<'_,str>];
+    fn features(&self) -> Vec<Cow<'_, str>>;
 }
 
 pub trait AIDescriptor {
@@ -41,7 +41,7 @@ mod tests {
             Cow::Borrowed(&self.header)
         }
 
-        fn features(&self) -> &[Cow<'_, str>] {
+        fn features(&self) -> Vec<Cow<'_, str>> {
             &self.features
         }
     }
