@@ -1,6 +1,6 @@
 [package]
 name          = "ai-descriptor"
-version       = "0.4.0"
+version       = "0.5.0"
 edition       = "2021"
 authors       = [ "klebs tpk3.mx@gmail.com" ]
 description   = "Provides a proc macro we can use to annotate enums for facilitating itemization and description using an AI model"
@@ -14,4 +14,4 @@ categories    = ["game-development", "simulation", "rust-patterns"]
 
 [dependencies]
 ai-descriptor-derive = "0.2.0"
-named-item           = "0.4.0"
+ai-descriptor-trait  = "0.1.0"
