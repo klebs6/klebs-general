@@ -1,2 +1,2 @@
-pub use ai_descriptor_derive::{ItemFeature,ItemWithFeatures};
-pub use ai_descriptor_trait::{AIDescriptor,ItemFeatureTrait,ItemWithFeaturesTrait};
+pub use ai_descriptor_derive::*;
+pub use ai_descriptor_trait::*;
