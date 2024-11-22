@@ -1,9 +1,8 @@
 use lyrical_meter::*;
 use rand_construct::*;
-use named_item::AIDescriptor;
+use ai_descriptor::*;
 use rand::rngs::StdRng;
 use rand::SeedableRng;
-use rand::Rng;
 use serde_json;
 
 #[test]
@@ -36,8 +35,8 @@ fn test_metrical_foot_distribution() {
 fn test_metrical_foot_ai_descriptor() {
     let foot = MetricalFoot::Iamb;
     assert_eq!(
-        foot.ai(),
-        "Use iambic meter, with unstressed-stressed syllables."
+        foot.text(),
+        "Uses iambic meter, with unstressed-stressed syllables."
     );
 }
 
@@ -64,7 +63,7 @@ fn test_line_length_distribution() {
 fn test_line_length_ai_descriptor() {
     let length = LineLength::Pentameter;
     assert_eq!(
-        length.ai(),
+        length.text(),
         "Each line should have five feet (pentameter)."
     );
 }
@@ -87,7 +86,7 @@ fn test_other_meter_distribution() {
 fn test_other_meter_ai_descriptor() {
     let other_meter = OtherMeter::FreeVerse;
     assert_eq!(
-        other_meter.ai(),
+        other_meter.text(),
         "Write in free verse, without a consistent meter or rhyme scheme."
     );
 }
@@ -95,7 +94,7 @@ fn test_other_meter_ai_descriptor() {
 #[test]
 fn test_lyrical_meter_distribution() {
     let mut rng = StdRng::seed_from_u64(42);
-    let lyrical_meter: LyricalMeter = rng.gen();
+    let lyrical_meter = LyricalMeter::random_with_rng(&mut rng);
     // We can't predict the exact values, but we can check that the foot is valid
     assert!(matches!(
         lyrical_meter.foot(),
@@ -126,14 +125,14 @@ fn test_lyrical_meter_ai_descriptor() {
         .length(LineLength::Hexameter)
         .build();
 
-    let expected = "Use dactylic meter, with stressed-unstressed-unstressed syllables. Each line should have six feet (hexameter).";
-    assert_eq!(lyrical_meter.ai(), expected);
+    let expected = "Uses dactylic meter, with stressed-unstressed-unstressed syllables. Each line should have six feet (hexameter).";
+    assert_eq!(lyrical_meter.ai_alt(), expected);
 }
 
 #[test]
 fn test_meter_distribution() {
     let mut rng = StdRng::seed_from_u64(42);
-    let meter: Meter = rng.gen();
+    let meter = Meter::random_with_rng(&mut rng);
     match meter {
         Meter::Standard(ref lyrical_meter) => {
             assert!(matches!(
@@ -330,7 +329,7 @@ fn test_display_implementations() {
 
     let other_meter = OtherMeter::FreeVerse;
     assert_eq!(
-        format!("{}", other_meter),
+        format!("{}", other_meter.text()),
         "Write in free verse, without a consistent meter or rhyme scheme."
     );
 
@@ -338,14 +337,14 @@ fn test_display_implementations() {
         .foot(MetricalFoot::Dactyl)
         .length(LineLength::Hexameter)
         .build();
-    assert_eq!(format!("{}", lyrical_meter), "Dactyl in Hexameter");
+    assert_eq!(format!("{}", lyrical_meter.ai_alt()), "Uses dactylic meter, with stressed-unstressed-unstressed syllables. Each line should have six feet (hexameter).");
 
     let meter = Meter::Standard(lyrical_meter);
-    assert_eq!(format!("{}", meter), "Dactyl in Hexameter");
+    assert_eq!(format!("{}", meter.ai_alt()), "Uses dactylic meter, with stressed-unstressed-unstressed syllables. Each line should have six feet (hexameter).");
 
     let meter = Meter::Other(OtherMeter::BlankVerse);
     assert_eq!(
-        format!("{}", meter),
+        format!("{}", meter.ai()),
         "Write in blank verse, using unrhymed iambic pentameter."
     );
 }
@@ -387,8 +386,8 @@ fn test_random_generation_consistency() {
     let lyrical_meter2 = LyricalMeter::random_with_rng(&mut rng2);
     assert_eq!(lyrical_meter1, lyrical_meter2);
 
-    let meter1: Meter = rng1.gen();
-    let meter2: Meter = rng2.gen();
+    let meter1 = Meter::random_with_rng(&mut rng1);
+    let meter2 = Meter::random_with_rng(&mut rng2);
     assert_eq!(meter1, meter2);
 }
 
@@ -414,7 +413,7 @@ fn test_ai_descriptors_not_empty() {
         MetricalFoot::Aeolic,
     ];
     for foot in &feet {
-        assert!(!foot.ai().is_empty());
+        assert!(!foot.text().is_empty());
     }
 
     let lengths = [
@@ -430,7 +429,7 @@ fn test_ai_descriptors_not_empty() {
         LineLength::Decameter,
     ];
     for length in &lengths {
-        assert!(!length.ai().is_empty());
+        assert!(!length.text().is_empty());
     }
 
     let other_meters = [
@@ -441,7 +440,7 @@ fn test_ai_descriptors_not_empty() {
         OtherMeter::BlankVerse,
     ];
     for other_meter in &other_meters {
-        assert!(!other_meter.ai().is_empty());
+        assert!(!other_meter.text().is_empty());
     }
 }
 

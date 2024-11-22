@@ -1,6 +1,6 @@
 crate::ix!();
 
-#[derive(Default,ItemWithFeatures,RandConstruct,Debug,Clone,Serialize,Deserialize,PartialEq,Eq)]
+#[derive(Default,ItemWithFeatures,RandConstruct,Hash,Debug,Clone,Serialize,Deserialize,PartialEq,Eq)]
 #[ai("A Lyrical meter, consisting of a foot and a line length.")]
 #[ai(Display)]
 pub struct LyricalMeter {

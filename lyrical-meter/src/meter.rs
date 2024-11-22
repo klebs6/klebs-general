@@ -1,7 +1,7 @@
 crate::ix!();
 
 /// Enum representing any type of meter, either standard or other.
-#[derive(ItemFeature,RandConstruct,Hash,Debug,Clone,Serialize,Deserialize,PartialEq,Eq)]
+#[derive(RandConstruct,Hash,Debug,Clone,Serialize,Deserialize,PartialEq,Eq)]
 pub enum Meter {
 
     #[rand_construct(p=0.7)]
@@ -9,6 +9,25 @@ pub enum Meter {
 
     #[rand_construct(p=0.3)]
     Other(OtherMeter),
+}
+
+impl AIDescriptor for Meter {
+
+    //TODO: this is a temporary hack for now until the 
+    //      ai-descriptor-derive crate is updated
+    fn ai(&self) -> Cow<'_,str> {
+        match self {
+            Meter::Standard(ref meter) => meter.ai(),
+            Meter::Other(ref meter) => meter.text(),
+        }
+    }
+
+    fn ai_alt(&self) -> Cow<'_,str> {
+        match self {
+            Meter::Standard(ref meter) => meter.ai_alt(),
+            Meter::Other(ref meter) => meter.text(),
+        }
+    }
 }
 
 impl Default for Meter {

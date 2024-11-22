@@ -1,6 +1,6 @@
 [package]
 name          = "lyrical-meter"
-version       = "0.1.0"
+version       = "0.2.0"
 edition       = "2021"
 authors       = [ "klebs tpk3.mx@gmail.com" ]
 description   = "A Rust crate for representing and working with various poetic meters."
@@ -17,6 +17,5 @@ export-magic = "0.3.6"
 rand         = "0.8.5"
 serde        = { version = "1.0", features = ["derive"] }
 serde_json   = "1.0"
-named-item   = "0.3.0"
-ai-descriptor = "0.3.0"
-rand-construct = "0.9.0"
+ai-descriptor = "0.8.0"
+rand-construct = "0.10.0"
