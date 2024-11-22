@@ -1,6 +1,6 @@
 [package]
 name          = "rhyme-type"
-version       = "0.1.0"
+version       = "0.2.0"
 authors       = [ "klebs tpk3.mx@gmail.com" ]
 edition       = "2021"
 description   = "A crate for representing and generating different types of rhymes."
@@ -14,7 +14,6 @@ export-magic   = "0.3.6"
 rand           = "0.8.5"
 serde          = { version = "1.0", features = ["derive"] }
 serde_json     = "1.0"
-named-item     = "0.3.0"
-#rand-construct = { version = "0.9.0", path   = "../rand-construct" }
 rand-construct = "0.10.0"
-ai-descriptor  = "*"
+#rand-construct = { version = "0.10.0", path   = "../rand-construct" }
+ai-descriptor  = "0.8.0"
