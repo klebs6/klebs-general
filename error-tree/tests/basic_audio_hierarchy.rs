@@ -1,4 +1,5 @@
 #![allow(dead_code)]
+#![allow(unused_variables)]
 
 use error_tree::error_tree;
 use std::sync::mpsc;
@@ -108,6 +109,7 @@ fn test_error_tree() {
     match f1 {
         PassiveAudioCaptureError::StreamError(e) => {
             println!("e1 {:#?}",e);
+            println!("e1(display) {}",e);
         },
         _ => {}
     }
@@ -115,6 +117,7 @@ fn test_error_tree() {
     match f2 {
         PassiveAudioCaptureError::DeviceError(e) => {
             println!("e2 {:#?}",e);
+            println!("e2(display) {}",e);
         },
         _ => {}
     }

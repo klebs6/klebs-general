@@ -1,4 +1,5 @@
 pub(crate) use export_magic::*;
+pub(crate) use std::sync::Arc;
 pub(crate) use error_tree::*;
 pub(crate) use tracing_setup::*;
 pub(crate) use serde_json::Value as Json;

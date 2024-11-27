@@ -9,53 +9,265 @@ pub struct ErrorEnum {
 }
 
 impl ToTokens for ErrorEnum {
-
     fn to_tokens(&self, tokens: &mut TokenStream2) {
-        let ErrorEnum { attrs, visibility, ident, variants: _ } = &self;
+        let ErrorEnum {
+            attrs,
+            visibility,
+            ident,
+            variants: _,
+        } = &self;
 
-        // Generate enum definitions
-        let variant_defs = self.variant_defs();
+        // Process attributes
+        let mut other_attrs = Vec::new();
+        let mut derives = Vec::new();
+        let mut has_partial_eq = false;
 
-        tokens.extend(
-            quote! {
-                // Enum definition
-                #(#attrs)*
-                #[derive(Debug)]
-                #visibility enum #ident {
-                    #(#variant_defs),*
+        for attr in &self.attrs {
+            if attr.path().is_ident("derive") {
+                let paths: syn::punctuated::Punctuated<syn::Path, syn::token::Comma> =
+                    attr.parse_args_with(syn::punctuated::Punctuated::parse_terminated)
+                        .unwrap_or_default();
+                for path in paths.iter() {
+                    if path.is_ident("PartialEq") {
+                        has_partial_eq = true;
+                    } else {
+                        derives.push(path.clone());
+                    }
                 }
+            } else {
+                other_attrs.push(attr.clone());
             }
-        )
+        }
+
+        // Ensure `Debug` is included
+        if !derives.iter().any(|path| path.is_ident("Debug")) {
+            derives.push(parse_quote!(Debug));
+        }
+
+        // Generate enum definition
+        let variant_defs = self.variant_defs();
+        tokens.extend(quote! {
+            #(#other_attrs)*
+            #[derive(#(#derives),*)]
+            #visibility enum #ident {
+                #(#variant_defs),*
+            }
+        });
+
+        // Generate impl Display
+        let display_impl = self.generate_display_impl();
+        tokens.extend(display_impl);
+
+        // Conditionally generate PartialEq implementation
+        if has_partial_eq {
+            if let Some(partial_eq_impl) = self.generate_partial_eq_impl() {
+                tokens.extend(partial_eq_impl);
+            }
+        }
     }
 }
 
+
 impl ErrorEnum {
+
+    fn has_derive_partial_eq(&self) -> bool {
+        for attr in &self.attrs {
+            if attr.path().is_ident("derive") {
+                let mut found = false;
+                attr.parse_nested_meta(|meta| {
+                    if meta.path.is_ident("PartialEq") {
+                        found = true;
+                    }
+                    Ok(())
+                }).expect("Failed to parse nested meta");
+                if found {
+                    return true;
+                }
+            }
+        }
+        false
+    }
+
+    pub fn variant_defs(&self) -> Vec<TokenStream2> {
+        self.variants.iter().map(|variant| {
+            let attrs = variant.attrs();
+
+            match variant {
+                // Basic variants remain unchanged
+                ErrorVariant::Basic { ident, .. } => quote! {
+                    #(#attrs)*
+                    #ident
+                },
+                // Wrapped variants generate tuple variants
+                ErrorVariant::Wrapped { ident, ty, .. } => quote! {
+                    #(#attrs)*
+                    #ident(#ty)
+                },
+                // Struct variants remain unchanged
+                ErrorVariant::Struct { ident, fields, .. } => {
+                    let field_defs: Vec<_> = fields.iter().map(|field| {
+                        let ErrorField { ident, ty } = field;
+                        quote! { #ident: #ty }
+                    }).collect();
+                    quote! {
+                        #(#attrs)*
+                        #ident { #(#field_defs),* }
+                    }
+                },
+            }
+        }).collect()
+    }
 
     pub fn find_variant_name_wrapping_type(&self, ty: &Type) -> Option<Ident> {
 
         self.variants.iter().find_map(|variant| {
             match variant {
-                ErrorVariant::Wrapped(ident, wrapped_ty) 
+                ErrorVariant::Wrapped { attrs: _, ident, ty: wrapped_ty, .. }
                     if **wrapped_ty == *ty => Some(ident.clone()),
                 _ => None,
             }
         })
     }
 
-    pub fn variant_defs(&self) -> Vec<TokenStream2> {
-        self.variants.iter().map(|variant| {
+    fn generate_display_impl(&self) -> TokenStream2 {
+        let ident = &self.ident;
+
+        let arms: Vec<TokenStream2> = self.variants.iter().map(|variant| {
+            let variant_ident = variant.ident();
+            let display_format = variant.display_format();
+
             match variant {
-                ErrorVariant::Basic(ident) => quote! { #ident },
-                ErrorVariant::Wrapped(ident, ty) => quote! { #ident(#ty) },
-                ErrorVariant::Struct(ident, fields) => {
-                    let field_defs: Vec<_> = fields.iter().map(|field| {
-                        let ErrorField { ident, ty } = field;
-                        quote! { #ident: #ty }
-                    }).collect();
-                    quote! { #ident { #(#field_defs),* } }
+                // Basic variants
+                ErrorVariant::Basic { .. } => {
+                    if let Some(format_str) = display_format {
+                        quote! {
+                            #ident::#variant_ident => write!(f, #format_str),
+                        }
+                    } else {
+                        quote! {
+                            #ident::#variant_ident => write!(f, stringify!(#variant_ident)),
+                        }
+                    }
+                },
+                // Wrapped variants now match tuple variants
+                ErrorVariant::Wrapped { .. } => {
+                    if let Some(format_str) = display_format {
+                        quote! {
+                            #ident::#variant_ident(inner) => write!(f, #format_str, inner = inner),
+                        }
+                    } else {
+                        quote! {
+                            #ident::#variant_ident(inner) => write!(f, "{}: {:?}", stringify!(#variant_ident), inner),
+                        }
+                    }
+                },
+                // Struct variants
+                ErrorVariant::Struct { fields, .. } => {
+                    let field_idents: Vec<_> = fields.iter().map(|field| &field.ident).collect();
+                    let pattern = quote! { #ident::#variant_ident { #(#field_idents),* } };
+
+                    if let Some(format_str) = display_format {
+                        let format_args = field_idents.iter().map(|ident| quote! { #ident = #ident });
+                        quote! {
+                            #pattern => write!(f, #format_str, #(#format_args),*),
+                        }
+                    } else {
+                        quote! {
+                            #pattern => write!(f, stringify!(#variant_ident)),
+                        }
+                    }
+                },
+            }
+        }).collect();
+
+        quote! {
+            impl std::fmt::Display for #ident {
+                fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                    match self {
+                        #(#arms)*
+                    }
                 }
             }
-        }).collect()
+        }
+    }
+
+    fn generate_partial_eq_impl(&self) -> Option<TokenStream2> {
+        let ident = &self.ident;
+
+        // Generate match arms for each variant
+        let arms: Vec<TokenStream2> = self.variants.iter().map(|variant| {
+            let variant_ident = variant.ident();
+            let cmp_neq = variant.cmp_neq();
+
+            match variant {
+                ErrorVariant::Basic { .. } => {
+                    if cmp_neq {
+                        quote! {
+                            (#ident::#variant_ident, #ident::#variant_ident) => false,
+                        }
+                    } else {
+                        quote! {
+                            (#ident::#variant_ident, #ident::#variant_ident) => true,
+                        }
+                    }
+                },
+                ErrorVariant::Wrapped { .. } => {
+                    if cmp_neq {
+                        quote! {
+                            (#ident::#variant_ident(_), #ident::#variant_ident(_)) => false,
+                        }
+                    } else {
+                        quote! {
+                            (#ident::#variant_ident(a), #ident::#variant_ident(b)) => a == b,
+                        }
+                    }
+                },
+                ErrorVariant::Struct { fields, .. } => {
+                    if cmp_neq {
+                        quote! {
+                            (#ident::#variant_ident { .. }, #ident::#variant_ident { .. }) => false,
+                        }
+                    } else {
+                        // Compare each field
+                        let field_idents: Vec<_> = fields.iter().map(|f| &f.ident).collect();
+                        let a_fields: Vec<_> = field_idents.iter()
+                            .map(|ident| format_ident!("a_{}", ident))
+                            .collect();
+                        let b_fields: Vec<_> = field_idents.iter()
+                            .map(|ident| format_ident!("b_{}", ident))
+                            .collect();
+
+                        let pattern_a = quote! { #ident::#variant_ident { #(#field_idents: #a_fields),* } };
+                        let pattern_b = quote! { #ident::#variant_ident { #(#field_idents: #b_fields),* } };
+
+                        let comparisons = a_fields.iter().zip(b_fields.iter())
+                            .map(|(a, b)| quote! { #a == #b });
+
+                        quote! {
+                            (#pattern_a, #pattern_b) => {
+                                #(#comparisons)&&*
+                            },
+                        }
+                    }
+                },
+            }
+        }).collect();
+
+        // Fallback arm for variants that don't match
+        let fallback_arm = quote! {
+            _ => false,
+        };
+
+        Some(quote! {
+            impl PartialEq for #ident {
+                fn eq(&self, other: &Self) -> bool {
+                    match (self, other) {
+                        #(#arms)*
+                        #fallback_arm
+                    }
+                }
+            }
+        })
     }
 }
 
@@ -96,26 +308,17 @@ impl Parse for ErrorEnum {
 }
 
 impl Validate for ErrorEnum {
-
     fn validate(&self) -> bool {
-
-        // Check variant validity
         for variant in &self.variants {
-
             match variant {
-
-                ErrorVariant::Basic(_) => {}, // Basic variants are usually always valid
-
-                ErrorVariant::Wrapped(_, ty) => {
+                ErrorVariant::Basic { .. } => {},
+                ErrorVariant::Wrapped { ty, .. } => {
                     if !ty.validate() {
                         return false;
                     }
                 },
-
-                ErrorVariant::Struct(_, fields) => {
-
+                ErrorVariant::Struct { fields, .. } => {
                     for field in fields {
-
                         if !field.ty.validate() {
                             return false;
                         }
@@ -123,10 +326,6 @@ impl Validate for ErrorEnum {
                 },
             }
         }
-
-        // Additional checks can be implemented here
-        // ...
-
         true
     }
 }
@@ -218,14 +417,31 @@ mod test_error_enum {
 
     fn common_variants() -> Vec<ErrorVariant> {
         vec![
-            ErrorVariant::Basic(Ident::new("FormatError", Span::call_site())),
-            ErrorVariant::Wrapped(Ident::new("IOError", Span::call_site()), Box::new(parse_quote!(std::io::Error))),
-            ErrorVariant::Struct(Ident::new("DeviceNotAvailable", Span::call_site()), vec![
-                ErrorField {
-                    ident: Ident::new("device_name", Span::call_site()),
-                    ty: parse_quote!(String)
-                }
-            ])
+            ErrorVariant::Basic{
+                attrs: vec![],
+                ident: Ident::new("FormatError", Span::call_site()),
+                cmp_neq: false,
+                display_format: None,
+            },
+            ErrorVariant::Wrapped{
+                attrs: vec![],
+                ident: Ident::new("IOError", Span::call_site()), 
+                ty:    Box::new(parse_quote!(std::io::Error)),
+                cmp_neq: false,
+                display_format: None,
+            },
+            ErrorVariant::Struct{
+                attrs:  vec![],
+                ident:  Ident::new("DeviceNotAvailable", Span::call_site()), 
+                fields: vec![
+                    ErrorField {
+                        ident: Ident::new("device_name", Span::call_site()),
+                        ty: parse_quote!(String)
+                    }
+                ],
+                cmp_neq: false,
+                display_format: None,
+            }
         ]
     }
 }

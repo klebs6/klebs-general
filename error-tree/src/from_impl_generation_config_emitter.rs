@@ -42,7 +42,7 @@ impl FromImplGenerationConfigEmitter {
     {
         match variant {
 
-            ErrorVariant::Wrapped(ident,ty) => {
+            ErrorVariant::Wrapped{ attrs: _, ident, ty, .. } => {
 
                 self.storage.push(
                     FromImplGenerationConfig::from(

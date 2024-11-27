@@ -12,4 +12,5 @@ x!{gpt_model_type}
 x!{gpt_request_body}
 x!{http_method}
 x!{errors}
-
+x!{batch_request_id}
+x!{custom_request_id}

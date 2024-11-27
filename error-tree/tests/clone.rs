@@ -29,4 +29,5 @@ fn test_enum_is_clone() {
 
     // If the code compiles and runs, then MyError implements Clone
     println!("Cloned errors successfully: {:?}, {:?}", cloned_error, cloned_io_error);
+    println!("Cloned errors successfully: {}, {}", cloned_error, cloned_io_error);
 }

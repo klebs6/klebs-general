@@ -21,7 +21,7 @@ crate::ix!();
 pub struct GptBatchAPIRequest {
 
     /// Identifier for the custom request.
-    custom_id: String,
+    custom_id: CustomRequestId,
 
     /// HTTP method used for the request.
     #[serde(with = "http_method")]
@@ -35,11 +35,17 @@ pub struct GptBatchAPIRequest {
     body: GptRequestBody,
 }
 
+impl GptBatchAPIRequest {
+    pub fn custom_id(&self) -> &CustomRequestId {
+        &self.custom_id
+    }
+}
+
 impl From<GptBatchAPIRequest> for BatchRequestInput {
 
     fn from(request: GptBatchAPIRequest) -> Self {
         BatchRequestInput {
-            custom_id: request.custom_id,
+            custom_id: request.custom_id.to_string(),
             method: BatchRequestInputMethod::POST,
             url: match request.url {
                 GptApiUrl::ChatCompletions => BatchEndpoint::V1ChatCompletions,
@@ -53,7 +59,7 @@ pub fn create_batch_input_file(
     requests:             &[GptBatchAPIRequest],
     batch_input_filename: impl AsRef<Path>,
 
-) -> Result<(), Box<dyn std::error::Error>> {
+) -> Result<(), BatchInputCreationError> {
 
     use std::io::{BufWriter,Write};
     use std::fs::File;
@@ -63,7 +69,7 @@ pub fn create_batch_input_file(
 
     for request in requests {
         let batch_input = BatchRequestInput {
-            custom_id: request.custom_id.clone(),
+            custom_id: request.custom_id.to_string(),
             method: match request.method {
                 HttpMethod::Post => BatchRequestInputMethod::POST,
                 _ => unimplemented!("Only POST method is supported"),
@@ -120,8 +126,8 @@ impl Display for GptBatchAPIRequest {
 
 impl GptBatchAPIRequest {
 
-    pub(crate) fn custom_id_for_idx(idx: usize) -> String {
-        format!("request-{}",idx)
+    pub(crate) fn custom_id_for_idx(idx: usize) -> CustomRequestId {
+        CustomRequestId::new(format!("request-{}",idx))
     }
 }
 
