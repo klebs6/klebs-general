@@ -9,7 +9,7 @@ fn main() -> Result<(), RckError> {
 
     let matches = Command::new("rck")
         .version("1.0")
-        .author("Author <email@example.com>")
+        .author("Author <tpk3.mx@gmail.com>")
         .about("Repo Check Tool")
         .arg(
             Arg::new("manifest")

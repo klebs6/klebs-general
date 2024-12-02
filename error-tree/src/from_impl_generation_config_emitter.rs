@@ -1,13 +1,10 @@
 crate::ix!();
 
 pub struct FromImplGenerationConfigEmitter {
-
-    /// Stack to track the path from the current node to the root
-    stack:   Vec<ErrorEnum>, 
-
-    /// Store generated FromImplGenerators
-    storage: Vec<FromImplGenerationConfig>, 
-    map:     HashMap<Ident,ErrorEnum>,
+    stack:             Vec<ErrorEnum>,                //< Stack to track the path from the current node to the root
+    storage:           Vec<FromImplGenerationConfig>, //< Store generated FromImplGenerators
+    map:               HashMap<Ident,ErrorEnum>,
+    conversion_chains: HashMap<(TypeKey, TypeKey), HashMap<ConversionChainKey, ConversionChain>>,
 }
 
 impl FromImplGenerationConfigEmitter {
@@ -28,10 +25,24 @@ impl FromImplGenerationConfigEmitter {
             stack:   Vec::new(),
             storage: Vec::new(),
             map,
+            conversion_chains: HashMap::new(),
         }
     }
 
-    pub fn emit(self) -> Vec<FromImplGenerationConfig> {
+    pub fn emit(mut self) -> Vec<FromImplGenerationConfig> {
+        for ((src_key, dst_key), chain_map) in self.conversion_chains.iter() {
+            if chain_map.len() == 1 {
+                // Get the single ConversionChain
+                let conversion_chain = chain_map.values().next().unwrap().clone();
+                self.storage.push(FromImplGenerationConfig::from(conversion_chain));
+            } else {
+                // Multiple unique paths detected, skip generating From impl
+                tracing::debug!(
+                    "Skipping From impl for {:?} -> {:?} due to multiple paths",
+                    src_key, dst_key
+                );
+            }
+        }
         self.storage
     }
 
@@ -44,19 +55,37 @@ impl FromImplGenerationConfigEmitter {
 
             ErrorVariant::Wrapped{ attrs: _, ident, ty, .. } => {
 
-                self.storage.push(
-                    FromImplGenerationConfig::from(
-                        ConversionChain::new_from_treewalker(&self.stack,ident,ty)?
-                    )
+                let conversion_chain = ConversionChain::new_from_treewalker(&self.stack, ident, ty)?;
+
+                let src_key = conversion_chain
+                    .source()
+                    .and_then(|ty| TypeKey::from_type(&ty))
+                    .expect("Expected source type to have a TypeKey");
+
+                let dst_key = TypeKey::Ident(
+                    conversion_chain
+                    .destination()
+                    .expect("Expected non-null destination Ident")
+                    .clone(),
                 );
 
-                let ty_ident = ty.as_ident().expect("expected type to be convertable to ident");
+                let key = (src_key.clone(), dst_key.clone());
+                let chain_key = ConversionChainKey::from_conversion_chain(&conversion_chain);
 
-                if let Some(ref error_enum) = self.map.get(&ty_ident).cloned() {
+                self.conversion_chains
+                    .entry(key)
+                    .or_insert_with(HashMap::new)
+                    .insert(chain_key, conversion_chain);
 
-                    // Check if the error_enum is already in the stack
-                    if !self.stack.iter().any(|e| e.ident == error_enum.ident) {
-                        self.visit_error_enum(error_enum);
+                // Continue traversal if necessary...
+                let ty_key = TypeKey::from_type(ty).expect("Expected type to be convertible to TypeKey");
+
+                if let TypeKey::Ident(ref ty_ident) = ty_key {
+                    if let Some(ref error_enum) = self.map.get(ty_ident).cloned() {
+                        // Check if the error_enum is already in the stack
+                        if !self.stack.iter().any(|e| e.ident == error_enum.ident) {
+                            self.visit_error_enum(error_enum);
+                        }
                     }
                 }
 

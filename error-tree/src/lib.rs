@@ -17,6 +17,7 @@ xp!{from_impl_generation_config}
 xp!{from_impl_generation_config_emitter}
 xp!{types}
 xp!{validate}
+xp!{type_key}
 
 #[proc_macro]
 pub fn error_tree(input: TokenStream) -> TokenStream {

@@ -1,3 +1,4 @@
+pub(crate) use std::hash::{Hash,Hasher};
 pub(crate) use export_magic::*;
 pub(crate) use derive_error::*;
 pub(crate) use std::collections::{VecDeque,HashMap,HashSet};

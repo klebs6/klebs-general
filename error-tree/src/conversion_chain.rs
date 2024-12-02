@@ -1,5 +1,38 @@
 crate::ix!();
 
+pub struct ConversionChainKey {
+    layers: Vec<Ident>,
+}
+
+impl ConversionChainKey {
+    pub fn from_conversion_chain(chain: &ConversionChain) -> Self {
+        let layers = chain
+            .layers
+            .iter()
+            .map(|layer| layer.outer_enum_name.clone())
+            .collect();
+        ConversionChainKey { layers }
+    }
+}
+
+impl Hash for ConversionChainKey {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        for ident in &self.layers {
+            ident.to_string().hash(state);
+        }
+    }
+}
+
+impl PartialEq for ConversionChainKey {
+    fn eq(&self, other: &Self) -> bool {
+        self.layers.len() == other.layers.len()
+            && self.layers.iter().zip(&other.layers).all(|(a, b)| a.to_string() == b.to_string())
+    }
+}
+
+impl Eq for ConversionChainKey {}
+
+//--------------------------------------------------------[chain-layer]
 #[derive(Hash, Debug, Clone, PartialEq, Eq)]
 pub struct ConversionChainLayer {
     outer_enum_name:   Ident,
@@ -61,8 +94,9 @@ pub struct ConversionChainLayer {
 /// 
 /// impl From<IOError> for PassiveAudioCaptureError {
 ///     fn from(x: IOError) -> Self {
-///         PassiveAudioCaptureError::IOError(x)
 ///     }
+///
+///         PassiveAudioCaptureError::IOError(x)
 /// }
 /// 
 /// impl From<DeviceError> for PassiveAudioCaptureError {
