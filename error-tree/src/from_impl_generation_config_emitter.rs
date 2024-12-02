@@ -36,15 +36,27 @@ impl FromImplGenerationConfigEmitter {
                 let conversion_chain = chain_map.values().next().unwrap().clone();
                 self.storage.push(FromImplGenerationConfig::from(conversion_chain));
             } else {
-                // Multiple unique paths detected, skip generating From impl
-                tracing::debug!(
-                    "Skipping From impl for {:?} -> {:?} due to multiple paths",
-                    src_key, dst_key
-                );
+                // Multiple unique paths detected, check for a unique direct path
+                let direct_chains: Vec<&ConversionChain> = chain_map.values()
+                    .filter(|chain| chain.n_layers() == 1)
+                    .collect();
+
+                if direct_chains.len() == 1 {
+                    // Exactly one direct path exists, generate From impl for it
+                    let conversion_chain = direct_chains[0].clone();
+                    self.storage.push(FromImplGenerationConfig::from(conversion_chain));
+                } else {
+                    // No unique direct path, skip generating From impl
+                    tracing::debug!(
+                        "Skipping From impl for {:?} -> {:?} due to multiple paths",
+                        src_key, dst_key
+                    );
+                }
             }
         }
         self.storage
     }
+
 
     // Method to generate FromImplGenerationConfig from a Wrapped variant
     //

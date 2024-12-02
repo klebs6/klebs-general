@@ -143,6 +143,10 @@ pub struct ConversionChain {
 
 impl ConversionChain {
 
+    pub fn n_layers(&self) -> usize {
+        self.layers.len()
+    }
+
     pub fn new_from_treewalker(
         tree_stack:    &Vec<ErrorEnum>,
         wrapped_ident: &Ident,
