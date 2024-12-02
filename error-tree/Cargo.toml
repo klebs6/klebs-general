@@ -20,8 +20,8 @@ tracing = "0.1.40"
 tracing-subscriber = { version = "0.3", default-features = false, features = ["fmt", "std", "env-filter"] }
 
 [dev-dependencies]
-serde_json = "*"
-uuid       = "*"
+serde_json = "1.0.133"
+uuid       = "1.11.0"
 
 [lib]
 proc-macro = true
