@@ -1,18 +1,25 @@
 crate::ix!();
 
-pub fn repair_json_accidental_single_quote_instead_of_double_quote(input: &str) -> String {
-    fix_mismatched_quotes(input)
+pub fn repair_json_accidental_single_quote_instead_of_double_quote(
+    input: &str,
+) -> Result<String, JsonRepairError> {
+    let (output, made_correction) = fix_mismatched_quotes(input);
+    if made_correction {
+        info!("Fixed accidental single quotes in JSON strings.");
+    }
+    Ok(output)
 }
 
-fn fix_mismatched_quotes(input: &str) -> String {
+fn fix_mismatched_quotes(input: &str) -> (String, bool) {
     use std::iter::Peekable;
     use std::str::Chars;
 
-    let mut output                 = String::new();
+    let mut output = String::new();
     let mut chars: Peekable<Chars> = input.chars().peekable();
-    let mut inside_string          = false;
-    let mut string_delimiter       = '\0';
-    let mut escape                 = false;
+    let mut inside_string = false;
+    let mut string_delimiter = '\0';
+    let mut escape = false;
+    let mut made_correction = false;
 
     while let Some(c) = chars.next() {
         output.push(c);
@@ -56,35 +63,34 @@ fn fix_mismatched_quotes(input: &str) -> String {
                         output.pop(); // Remove the mismatched quote.
                         output.push(string_delimiter); // Replace with correct delimiter.
                         inside_string = false;
+                        made_correction = true;
                     } else {
                         // It's a quote character inside the string value; escape it.
                         output.insert(output.len() - 1, '\\'); // Insert backslash before quote.
+                        made_correction = true;
                     }
                 } else {
                     // End of input; treat as closing quote.
                     output.pop(); // Remove the mismatched quote.
                     output.push(string_delimiter); // Replace with correct delimiter.
                     inside_string = false;
+                    made_correction = true;
                 }
             }
         }
     }
 
-    output
+    (output, made_correction)
 }
 
 #[cfg(test)]
 mod repair_accidental_single_quote_tests {
     use super::*;
     use serde_json::json;
-
-    fn assert_expected_matches_output_result(input: &str, output: &str, expected: &serde_json::Value) {
-        let parsed_output: serde_json::Value = serde_json::from_str(output).expect("Failed to parse output JSON");
-        assert_eq!(&parsed_output, expected, "Parsed output does not match expected value");
-    }
+    use serde_json::Value;
 
     #[test]
-    fn test_repair_single_quote_instead_of_double_quote() {
+    fn test_repair_single_quote_instead_of_double_quote() -> Result<(), JsonRepairError> {
         // value4 has a single quote instead of a double
         let input = r#"{
             "key": [
@@ -108,8 +114,14 @@ mod repair_accidental_single_quote_tests {
             ]
         });
 
-        let output = repair_json_accidental_single_quote_instead_of_double_quote(input);
+        let output = repair_json_accidental_single_quote_instead_of_double_quote(input)?;
 
-        assert_expected_matches_output_result(input, &output, &expected);
+        // Parse output as JSON
+        let output_json: Value = serde_json::from_str(&output)
+            .map_err(|inner| JsonRepairError::SerdeParseError { inner })?;
+
+        assert_eq!(output_json, expected);
+
+        Ok(())
     }
 }

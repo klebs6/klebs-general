@@ -1,9 +1,12 @@
 crate::ix!();
 
-pub fn repair_json_fix_mismatched_quotes(input: &str) -> String {
-    let mut repaired = String::new();
-    let mut in_string = false;
-    let mut escaped = false;
+pub fn repair_json_fix_mismatched_quotes(input: &str) -> Result<String,JsonRepairError> {
+
+    info!("fixing any mismatched quotation marks");
+
+    let mut repaired   = String::new();
+    let mut in_string  = false;
+    let mut escaped    = false;
     let mut quote_char = '\0';
 
     let mut chars = input.chars().peekable();
@@ -125,86 +128,103 @@ pub fn repair_json_fix_mismatched_quotes(input: &str) -> String {
         repaired.push(quote_char);
     }
 
-    repaired
+    Ok(repaired)
 }
 
 fn is_valid_json_value_start(c: char) -> bool {
-    c == '"' || c == '\'' || c == '{' || c == '[' || c.is_ascii_digit() || c == '-' || c == 't' || c == 'f' || c == 'n'
+           c == '"' 
+        || c == '\'' 
+        || c == '{' 
+        || c == '[' 
+        || c.is_ascii_digit() 
+        || c == '-' 
+        || c == 't' 
+        || c == 'f' 
+        || c == 'n'
 }
 
 #[cfg(test)]
 mod repair_json_fix_mismatched_quotes_tests {
     use super::*;
 
-    #[test]
-    fn test_missing_closing_quote_before_comma() {
+    #[traced_test]
+    fn test_missing_closing_quote_before_comma() -> Result<(),JsonRepairError> {
         let input = r#"{"key": "value, "another_key": "another_value"}"#;
         let expected = r#"{"key": "value", "another_key": "another_value"}"#;
-        let output = repair_json_fix_mismatched_quotes(input);
+        let output = repair_json_fix_mismatched_quotes(input)?;
         assert_eq!(output, expected);
+        Ok(())
     }
 
-    #[test]
-    fn test_missing_closing_quote_at_end() {
+    #[traced_test]
+    fn test_missing_closing_quote_at_end() -> Result<(),JsonRepairError> {
         let input = r#"{"key": "value}"#;
         let expected = r#"{"key": "value"}"#;
-        let output = repair_json_fix_mismatched_quotes(input);
+        let output = repair_json_fix_mismatched_quotes(input)?;
         assert_eq!(output, expected);
+        Ok(())
     }
 
-    #[test]
-    fn test_missing_opening_quote() {
+    #[traced_test]
+    fn test_missing_opening_quote() -> Result<(),JsonRepairError> {
         let input = r#"{"key": value"}"#;
         let expected = r#"{"key": "value"}"#;
-        let output = repair_json_fix_mismatched_quotes(input);
+        let output = repair_json_fix_mismatched_quotes(input)?;
         assert_eq!(output, expected);
+        Ok(())
     }
 
-    #[test]
-    fn test_nested_mismatched_quotes() {
+    #[traced_test]
+    fn test_nested_mismatched_quotes() -> Result<(),JsonRepairError> {
         let input = r#"{"key": "val"ue"}"#;
         let expected = r#"{"key": "val\"ue"}"#;
-        let output = repair_json_fix_mismatched_quotes(input);
+        let output = repair_json_fix_mismatched_quotes(input)?;
         assert_eq!(output, expected);
+        Ok(())
     }
 
-    #[test]
-    fn test_multiple_missing_quotes_in_array() {
+    #[traced_test]
+    fn test_multiple_missing_quotes_in_array() -> Result<(),JsonRepairError> {
         let input = r#"["item1", "item2, "item3", "item4, "item5"]"#;
         let expected = r#"["item1", "item2", "item3", "item4", "item5"]"#;
-        let output = repair_json_fix_mismatched_quotes(input);
+        let output = repair_json_fix_mismatched_quotes(input)?;
         assert_eq!(output, expected);
+        Ok(())
     }
 
-    #[test]
-    fn test_string_with_embedded_comma_without_closing_quote() {
+    #[traced_test]
+    fn test_string_with_embedded_comma_without_closing_quote() -> Result<(),JsonRepairError> {
         let input = r#"{"key": "value with comma, another part"}"#;
         let expected = r#"{"key": "value with comma, another part"}"#;
-        let output = repair_json_fix_mismatched_quotes(input);
+        let output = repair_json_fix_mismatched_quotes(input)?;
         assert_eq!(output, expected);
+        Ok(())
     }
 
-    #[test]
-    fn test_string_with_escaped_quote() {
+    #[traced_test]
+    fn test_string_with_escaped_quote() -> Result<(),JsonRepairError> {
         let input = r#"{"key": "value with an escaped quote \" still in string"}"#;
         let expected = r#"{"key": "value with an escaped quote \" still in string"}"#;
-        let output = repair_json_fix_mismatched_quotes(input);
+        let output = repair_json_fix_mismatched_quotes(input)?;
         assert_eq!(output, expected);
+        Ok(())
     }
 
-    #[test]
-    fn test_properly_quoted_string() {
+    #[traced_test]
+    fn test_properly_quoted_string() -> Result<(),JsonRepairError> {
         let input = r#"{"key": "value"}"#;
         let expected = r#"{"key": "value"}"#;
-        let output = repair_json_fix_mismatched_quotes(input);
+        let output = repair_json_fix_mismatched_quotes(input)?;
         assert_eq!(output, expected);
+        Ok(())
     }
 
-    #[test]
-    fn test_unclosed_string_in_nested_object() {
+    #[traced_test]
+    fn test_unclosed_string_in_nested_object() -> Result<(),JsonRepairError> {
         let input = r#"{"outer": {"inner": "value}}"#;
         let expected = r#"{"outer": {"inner": "value"}}"#;
-        let output = repair_json_fix_mismatched_quotes(input);
+        let output = repair_json_fix_mismatched_quotes(input)?;
         assert_eq!(output, expected);
+        Ok(())
     }
 }

@@ -1,6 +1,9 @@
 crate::ix!();
 
-pub fn repair_json_handle_eof_between_lists(input: &str) -> String {
+pub fn repair_json_handle_eof_between_lists(input: &str) -> Result<String,JsonRepairError> {
+
+    info!("handling EOF between lists");
+
     let mut repaired = input.to_owned();
 
     // Initialize variables
@@ -66,6 +69,6 @@ pub fn repair_json_handle_eof_between_lists(input: &str) -> String {
         repaired.push(']');
     }
 
-    repaired
+    Ok(repaired)
 }
 

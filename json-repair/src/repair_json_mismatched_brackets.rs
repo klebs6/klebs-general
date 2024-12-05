@@ -1,6 +1,8 @@
 crate::ix!();
 
-pub fn repair_json_mismatched_brackets(input: &str) -> String {
+pub fn repair_json_mismatched_brackets(input: &str) -> Result<String,JsonRepairError> {
+
+    info!("fixing any mismatched brackets");
 
     let mut repaired    = String::new();
     let mut stack       = Vec::new();
@@ -44,6 +46,6 @@ pub fn repair_json_mismatched_brackets(input: &str) -> String {
         repaired.push(if open == '{' { '}' } else { ']' });
     }
 
-    repaired
+    Ok(repaired)
 }
 

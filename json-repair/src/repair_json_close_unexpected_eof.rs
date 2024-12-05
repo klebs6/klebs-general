@@ -1,6 +1,8 @@
 crate::ix!();
 
-pub fn repair_json_close_unexpected_eof(input: &str) -> String {
+pub fn repair_json_close_unexpected_eof(input: &str) -> Result<String,JsonRepairError> {
+
+    info!("fixing any cases where we need to close an unexpected EOF");
 
     let mut repaired             = input.to_owned();
     let mut open_brackets: isize = 0;
@@ -50,5 +52,5 @@ pub fn repair_json_close_unexpected_eof(input: &str) -> String {
         repaired.push('}');
     }
 
-    repaired
+    Ok(repaired)
 }

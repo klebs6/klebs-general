@@ -1,7 +1,11 @@
 crate::ix!();
 
 #[allow(unused_assignments)]
-pub fn repair_json_close_unexpected_eof_in_array_tag(input: &str) -> String {
+pub fn repair_json_close_unexpected_eof_in_array_tag(input: &str) 
+    -> Result<String,JsonRepairError> 
+{
+    info!("closing an unexpected EOF in an array tag");
+
     use std::collections::VecDeque;
 
     #[derive(Clone, Copy)]
@@ -121,7 +125,7 @@ pub fn repair_json_close_unexpected_eof_in_array_tag(input: &str) -> String {
         repaired.push(c);
     }
 
-    repaired
+    Ok(repaired)
 }
 
 #[cfg(test)]
@@ -133,80 +137,88 @@ mod repair_json_close_unexpected_eof_in_array_tag_tests {
         serde_json::from_str(input).map_err(|inner| JsonRepairError::SerdeParseError { inner })
     }
 
-    #[test]
-    fn test_complete_json() {
+    #[traced_test]
+    fn test_complete_json() -> Result<(),JsonRepairError> {
         let input = r#"{"key": "value"}"#;
         let expected = json!({"key": "value"});
-        let repaired = repair_json_close_unexpected_eof_in_array_tag(input);
+        let repaired = repair_json_close_unexpected_eof_in_array_tag(input)?;
         let output = parse_json(&repaired);
         assert_expected_matches_output_result(input,&output,&expected);
+        Ok(())
     }
 
-    #[test]
-    fn test_unclosed_object() {
+    #[traced_test]
+    fn test_unclosed_object() -> Result<(),JsonRepairError> {
         let input = r#"{"key": "value""#;
         let expected = json!({"key": "value"});
-        let repaired = repair_json_close_unexpected_eof_in_array_tag(input);
+        let repaired = repair_json_close_unexpected_eof_in_array_tag(input)?;
         let output = parse_json(&repaired);
         assert_expected_matches_output_result(input,&output,&expected);
+        Ok(())
     }
 
-    #[test]
-    fn test_unclosed_array() {
+    #[traced_test]
+    fn test_unclosed_array() -> Result<(),JsonRepairError> {
         let input = r#"["item1", "item2""#;
         let expected = json!(["item1", "item2"]);
-        let repaired = repair_json_close_unexpected_eof_in_array_tag(input);
+        let repaired = repair_json_close_unexpected_eof_in_array_tag(input)?;
         let output = parse_json(&repaired);
         assert_expected_matches_output_result(input,&output,&expected);
+        Ok(())
     }
 
-    #[test]
-    fn test_unclosed_string() {
+    #[traced_test]
+    fn test_unclosed_string() -> Result<(),JsonRepairError> {
         let input = r#"{"key": "value"#;
         let expected = json!({"key": "value"});
-        let repaired = repair_json_close_unexpected_eof_in_array_tag(input);
+        let repaired = repair_json_close_unexpected_eof_in_array_tag(input)?;
         let output = parse_json(&repaired);
         assert_expected_matches_output_result(input,&output,&expected);
+        Ok(())
     }
 
-    #[test]
-    fn test_unclosed_nested_structures() {
+    #[traced_test]
+    fn test_unclosed_nested_structures() -> Result<(),JsonRepairError> {
         let input = r#"{"key1": {"key2": ["item1", "item2"]"#;
         let expected = json!({"key1": {"key2": ["item1", "item2"]}});
-        let repaired = repair_json_close_unexpected_eof_in_array_tag(input);
+        let repaired = repair_json_close_unexpected_eof_in_array_tag(input)?;
         let output = parse_json(&repaired);
         assert_expected_matches_output_result(input,&output,&expected);
+        Ok(())
     }
 
-    #[test]
-    fn test_incomplete_key() {
+    #[traced_test]
+    fn test_incomplete_key() -> Result<(),JsonRepairError> {
         let input = r#"{"key1": "value1", "key2"#;
         let expected = json!({"key1": "value1", "key2": null});
-        let repaired = repair_json_close_unexpected_eof_in_array_tag(input);
+        let repaired = repair_json_close_unexpected_eof_in_array_tag(input)?;
         let output = parse_json(&repaired);
         assert_expected_matches_output_result(input,&output,&expected);
+        Ok(())
     }
 
-    #[test]
-    fn test_incomplete_key_with_colon() {
+    #[traced_test]
+    fn test_incomplete_key_with_colon() -> Result<(),JsonRepairError> {
         let input = r#"{"key1": "value1", "key2":"#;
         let expected = json!({"key1": "value1", "key2": null});
-        let repaired = repair_json_close_unexpected_eof_in_array_tag(input);
+        let repaired = repair_json_close_unexpected_eof_in_array_tag(input)?;
         let output = parse_json(&repaired);
         assert_expected_matches_output_result(input,&output,&expected);
+        Ok(())
     }
 
-    #[test]
-    fn test_incomplete_value_in_array() {
+    #[traced_test]
+    fn test_incomplete_value_in_array() -> Result<(),JsonRepairError> {
         let input = r#"["item1", "item2"#;
         let expected = json!(["item1", "item2"]);
-        let repaired = repair_json_close_unexpected_eof_in_array_tag(input);
+        let repaired = repair_json_close_unexpected_eof_in_array_tag(input)?;
         let output = parse_json(&repaired);
         assert_expected_matches_output_result(input,&output,&expected);
+        Ok(())
     }
 
-    #[test]
-    fn test_unexpected_eof_midway_through_array() {
+    #[traced_test]
+    fn test_unexpected_eof_midway_through_array() -> Result<(),JsonRepairError> {
         let input = r#"{
   "tag1": [
     "item1",
@@ -217,13 +229,14 @@ mod repair_json_close_unexpected_eof_in_array_tag_tests {
             "tag1": ["item1", "item2"],
             "tag2": null
         });
-        let repaired = repair_json_close_unexpected_eof_in_array_tag(input);
+        let repaired = repair_json_close_unexpected_eof_in_array_tag(input)?;
         let output = parse_json(&repaired);
         assert_expected_matches_output_result(input,&output,&expected);
+        Ok(())
     }
 
-    #[test]
-    fn test_unexpected_eof_midway_through_object() {
+    #[traced_test]
+    fn test_unexpected_eof_midway_through_object() -> Result<(),JsonRepairError> {
         let input = r#"{
   "tag1": {
     "subtag1": "value1",
@@ -237,43 +250,48 @@ mod repair_json_close_unexpected_eof_in_array_tag_tests {
             },
             "tag2": null
         });
-        let repaired = repair_json_close_unexpected_eof_in_array_tag(input);
+        let repaired = repair_json_close_unexpected_eof_in_array_tag(input)?;
         let output = parse_json(&repaired);
         assert_expected_matches_output_result(input,&output,&expected);
+        Ok(())
     }
 
-    #[test]
-    fn test_unclosed_string_in_key() {
+    #[traced_test]
+    fn test_unclosed_string_in_key() -> Result<(),JsonRepairError> {
         let input = r#"{"key1": "value1", "key2"#;
         let expected = json!({"key1": "value1", "key2": null});
-        let repaired = repair_json_close_unexpected_eof_in_array_tag(input);
+        let repaired = repair_json_close_unexpected_eof_in_array_tag(input)?;
         let output = parse_json(&repaired);
         assert_expected_matches_output_result(input,&output,&expected);
+        Ok(())
     }
 
-    #[test]
-    fn test_unclosed_string_in_value() {
+    #[traced_test]
+    fn test_unclosed_string_in_value() -> Result<(),JsonRepairError> {
         let input = r#"{"key1": "value1", "key2": "value2"#;
         let expected = json!({"key1": "value1", "key2": "value2"});
-        let repaired = repair_json_close_unexpected_eof_in_array_tag(input);
+        let repaired = repair_json_close_unexpected_eof_in_array_tag(input)?;
         let output = parse_json(&repaired);
         assert_expected_matches_output_result(input,&output,&expected);
+        Ok(())
     }
 
-    #[test]
-    fn test_incomplete_key_without_quotes() {
+    #[traced_test]
+    fn test_incomplete_key_without_quotes() -> Result<(),JsonRepairError> {
         let input = r#"{"key1": "value1", key2"#; // Missing quotes around "key2"
         let expected = json!({"key1": "value1", "key2": null});
-        let repaired = repair_json_close_unexpected_eof_in_array_tag(input);
+        let repaired = repair_json_close_unexpected_eof_in_array_tag(input)?;
         // Note: The function may not handle keys without quotes, but JSON requires keys to be strings.
+        Ok(())
     }
 
-    #[test]
-    fn test_missing_value_after_colon() {
+    #[traced_test]
+    fn test_missing_value_after_colon() -> Result<(),JsonRepairError> {
         let input = r#"{"key1": "value1", "key2":"value2", "key3":"#;
         let expected = json!({"key1": "value1", "key2": "value2", "key3": null});
-        let repaired = repair_json_close_unexpected_eof_in_array_tag(input);
+        let repaired = repair_json_close_unexpected_eof_in_array_tag(input)?;
         let output = parse_json(&repaired);
         assert_expected_matches_output_result(input,&output,&expected);
+        Ok(())
     }
 }

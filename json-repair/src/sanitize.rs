@@ -9,14 +9,39 @@ pub fn sanitize_json_str(s: &str) -> String {
         .collect()
 }
 
-pub fn assert_expected_matches_output_result(input: &str, output: &Result<Value,JsonRepairError>, expected: &Value) {
-      if output != &Ok(expected.clone()) {
+pub fn assert_expected_matches_output_result<X: Clone + Debug + PartialEq>(
+    input:    &str, 
+    output:   &Result<X,JsonRepairError>, 
+    expected: &X
+
+) {
+    if output != &Ok(expected.clone()) {
         println!("input: {:#?}", input);
         println!("output: {:#?}", output);
         println!("expected: {:#?}", expected);
         assert_eq!(output,&Ok(expected.clone()));
     }
 }
+
+pub fn assert_expected_value_matches_output_result(
+    input:    &str, 
+    output:   &Result<String,JsonRepairError>, 
+    expected: &Value
+
+) {
+    assert!(output.is_ok());
+
+    let expected = expected.to_string();
+    let output   = output.as_ref().unwrap();
+
+    if output != &expected {
+        println!("input: {:#?}", input);
+        println!("output: {:#?}", output);
+        println!("expected: {:#?}", expected);
+        assert_eq!(output,&expected);
+    }
+}
+
 
 pub fn skip_whitespace(
     chars:    &mut Peekable<Chars>, 

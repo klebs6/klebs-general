@@ -1,6 +1,9 @@
 crate::ix!();
 
-pub fn repair_json_truncated_boolean_behavior(input: &str) -> String {
+pub fn repair_json_truncated_boolean_behavior(input: &str) -> Result<String,JsonRepairError> {
+
+    info!("repairing any truncated booleans");
+
     let mut output        = String::new();
     let mut chars         = input.chars().peekable();
     let mut inside_string = false;
@@ -13,13 +16,24 @@ pub fn repair_json_truncated_boolean_behavior(input: &str) -> String {
 
         if c == '"' {
             // Check if the quote is escaped
-            let escaped = false;
-            let mut idx = output.len().saturating_sub(2);
             let mut backslash_count = 0;
 
-            while idx > 0 && &output[idx..idx + 1] == "\\" {
-                backslash_count += 1;
-                idx = idx.saturating_sub(1);
+            // Start from the character before the quote, if any
+            if output.len() >= 2 {
+                let mut idx = output.len() - 2; // position before the quote
+
+                loop {
+                    if output.as_bytes()[idx] == b'\\' {
+                        backslash_count += 1;
+                        if idx == 0 {
+                            break;
+                        } else {
+                            idx -= 1;
+                        }
+                    } else {
+                        break;
+                    }
+                }
             }
 
             if backslash_count % 2 == 0 {
@@ -76,7 +90,7 @@ pub fn repair_json_truncated_boolean_behavior(input: &str) -> String {
         output.push('}');
     }
 
-    output
+    Ok(output)
 }
 
 #[cfg(test)]
@@ -89,20 +103,21 @@ mod tests {
         assert_eq!(&parsed_output, expected, "Parsed output does not match expected value");
     }
 
-    #[test]
-    fn test_truncated_boolean_true() {
+    #[traced_test]
+    fn test_truncated_boolean_true() -> Result<(),JsonRepairError> {
         let input = r#"{"bool": tr"#;
-        let output = repair_json_truncated_boolean_behavior(input);
+        let output = repair_json_truncated_boolean_behavior(input)?;
         let expected = json!({"bool": true});
         assert_expected_matches_output_result(input, &output, &expected);
+        Ok(())
     }
 
-    #[test]
-    fn test_truncated_boolean_false() {
+    #[traced_test]
+    fn test_truncated_boolean_false() -> Result<(),JsonRepairError> {
         let input = r#"{"bool": fal"#;
-        let output = repair_json_truncated_boolean_behavior(input);
+        let output = repair_json_truncated_boolean_behavior(input)?;
         let expected = json!({"bool": false});
         assert_expected_matches_output_result(input, &output, &expected);
+        Ok(())
     }
 }
-

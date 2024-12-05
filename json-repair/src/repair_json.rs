@@ -1,74 +1,13 @@
 crate::ix!();
 
 pub fn repair_json_string(input: &str) -> Result<Value, JsonRepairError> {
-
-    if input.is_empty() {
-        return Ok(serde_json::json!({}));
+    /*
+    match repair_json_string_parallel(input) {
+        Ok(repaired) => Ok(repaired),
+        Err(e)       => repair_json_string_series(input),
     }
-
-    if let Ok(mut value) = json5::from_str(&input) {
-        remove_control_characters_in_value(&mut value);
-        return Ok(value);
-    }
-
-    // First attempt to parse the input as-is.
-    if let Ok(repaired) = attempt_repair_json_string(input) {
-        return Ok(repaired);
-    }
-
-    macro_rules! repair_step {
-        ($step:ident) => {
-            {
-                // Apply repair for accidental single quotes first.
-                let input = $step(&input);
-                if let Ok(repaired) = attempt_repair_json_string(&input) {
-                    return Ok(repaired);
-                }
-            }
-        }
-    }
-
-    // Apply repair for accidental single quotes first.
-    repair_step!{repair_json_accidental_single_quote_instead_of_double_quote}; 
-
-    // Then attempt to repair comma issues.
-    repair_step!{repair_json_comma_behavior};                                  
-
-    // Then attempt to repair truncated booleans.
-    repair_step!{repair_json_truncated_boolean_behavior};                      
-
-    // Then attempt to repair mismatched brackets
-    repair_step!{repair_json_mismatched_brackets};                             
-
-    // Then attempt to remove control characters
-    repair_step!{repair_json_control_characters};                              
-
-    // Then attempt to repair missing commas inside list
-    repair_step!{repair_json_missing_commas_in_list};                          
-
-    // Then attempt to remove duplicate quotes
-    repair_step!{repair_json_remove_duplicate_quotes};                         
-
-    // Then attempt to close unexpected EOF
-    repair_step!{repair_json_close_unexpected_eof};                            
-
-    // Then attempt to add missing quotes
-    repair_step!{repair_json_add_missing_quotes};                              
-
-    // Then attempt to handle EOF between lists
-    repair_step!{repair_json_handle_eof_between_lists};                        
-
-    // Then attempt to fix mismatched quotes
-    repair_step!{repair_json_fix_mismatched_quotes};                           
-
-    // Then attempt to close unexpected EOF in array tag
-    repair_step!{repair_json_close_unexpected_eof_in_array_tag};               
-
-    // Then attempt to close unexpected EOF in array item
-    repair_step!{repair_json_close_unexpected_eof_in_array_item};              
-
-    // If all repairs fail, return an error.
-    Err(JsonRepairError::AllAttemptedRepairsFailed)
+    */
+    repair_json_string_series(input)
 }
 
 #[cfg(test)]
@@ -76,7 +15,7 @@ mod repair_json_tests {
     use super::*;
     use serde_json::json;
 
-    #[test]
+    #[traced_test]
     fn test_valid_json() {
         let input = r#"{"key": "value", "list": [1, 2, 3]}"#;
         let expected = serde_json::from_str(input).unwrap();
@@ -84,7 +23,7 @@ mod repair_json_tests {
         assert_expected_matches_output_result(input,&output,&expected);
     }
 
-    #[test]
+    #[traced_test]
     fn test_truncated_in_string() {
         let input = r#"{"key": "value"#;
         let expected = json!({"key": "value"});
@@ -92,7 +31,7 @@ mod repair_json_tests {
         assert_expected_matches_output_result(input,&output,&expected);
     }
 
-    #[test]
+    #[traced_test]
     fn test_unclosed_array() {
         let input = r#"{"list": [1, 2, 3"#;
         let expected = json!({"list": [1, 2, 3]});
@@ -100,7 +39,7 @@ mod repair_json_tests {
         assert_expected_matches_output_result(input,&output,&expected);
     }
 
-    #[test]
+    #[traced_test]
     fn test_unclosed_object() {
         let input = r#"{"object": {"nested": "value"#;
         let expected = json!({"object": {"nested": "value"}});
@@ -108,7 +47,7 @@ mod repair_json_tests {
         assert_expected_matches_output_result(input,&output,&expected);
     }
 
-    #[test]
+    #[traced_test]
     fn test_trailing_comma_in_object() {
         let input = r#"{"key": "value",}"#;
         let expected = json!({"key": "value"});
@@ -116,7 +55,7 @@ mod repair_json_tests {
         assert_expected_matches_output_result(input,&output,&expected);
     }
 
-    #[test]
+    #[traced_test]
     fn test_trailing_comma_in_array() {
         let input = r#"{"list": [1, 2, 3, ]}"#;
         let expected = json!({"list": [1, 2, 3]});
@@ -124,7 +63,7 @@ mod repair_json_tests {
         assert_expected_matches_output_result(input,&output,&expected);
     }
 
-    #[test]
+    #[traced_test]
     fn test_empty_input() {
         let input = "";
         let expected = json!({});
@@ -132,7 +71,7 @@ mod repair_json_tests {
         assert_expected_matches_output_result(input,&output,&expected);
     }
 
-    #[test]
+    #[traced_test]
     fn test_only_opening_brace() {
         let input = "{";
         let expected = json!({});
@@ -140,7 +79,7 @@ mod repair_json_tests {
         assert_expected_matches_output_result(input,&output,&expected);
     }
 
-    #[test]
+    #[traced_test]
     fn test_only_opening_bracket() {
         let input = "[";
         let expected = json!([]);
@@ -148,7 +87,7 @@ mod repair_json_tests {
         assert_expected_matches_output_result(input,&output,&expected);
     }
 
-    #[test]
+    #[traced_test]
     fn test_unclosed_string_in_array() {
         let input = r#"["value1", "value2"#;
         let expected = json!(["value1", "value2"]);
@@ -156,7 +95,7 @@ mod repair_json_tests {
         assert_expected_matches_output_result(input,&output,&expected);
     }
 
-    #[test]
+    #[traced_test]
     fn test_truncated_in_the_middle_of_array_element() {
         let input = r#"["value1", "value2", "value"#;
         let expected = json!(["value1", "value2", "value"]);
@@ -164,7 +103,7 @@ mod repair_json_tests {
         assert_expected_matches_output_result(input,&output,&expected);
     }
 
-    #[test]
+    #[traced_test]
     fn test_nested_structures_with_truncation() {
         let input = r#"{"a": {"b": {"c": [1, 2, {"d": "e"#;
         let expected = json!({"a": {"b": {"c": [1, 2, {"d": "e"}]}}});
@@ -172,7 +111,7 @@ mod repair_json_tests {
         assert_expected_matches_output_result(input,&output,&expected);
     }
 
-    #[test]
+    #[traced_test]
     fn test_truncated_number() {
         let input = r#"{"number": 1234"#;
         let expected = json!({"number": 1234});
@@ -180,7 +119,7 @@ mod repair_json_tests {
         assert_expected_matches_output_result(input,&output,&expected);
     }
 
-    #[test]
+    #[traced_test]
     fn test_truncated_boolean_true() {
         let input    = r#"{"bool": tr"#;
         let output   = repair_json_string(input);
@@ -188,7 +127,7 @@ mod repair_json_tests {
         assert_expected_matches_output_result(input,&output,&expected);
     }
 
-    #[test]
+    #[traced_test]
     fn test_truncated_boolean_false() {
         let input = r#"{"bool": fal"#;
         let output = repair_json_string(input);
@@ -196,7 +135,7 @@ mod repair_json_tests {
         assert_expected_matches_output_result(input,&output,&expected);
     }
 
-    #[test]
+    #[traced_test]
     fn test_extra_commas_and_unclosed_structures() {
         let input = r#"{"key1": "value1", "key2": "value2", "#;
         let expected = json!({"key1": "value1", "key2": "value2"});
@@ -204,7 +143,7 @@ mod repair_json_tests {
         assert_expected_matches_output_result(input,&output,&expected);
     }
 
-    #[test]
+    #[traced_test]
     fn test_complex_truncated_json() {
         let input = r#"{
   "aesthetic_details": [
@@ -254,7 +193,7 @@ mod repair_json_tests {
         assert_expected_matches_output_result(input,&output,&expected);
     }
 
-    #[test]
+    #[traced_test]
     fn test_repair_single_quote_instead_of_double_quote() {
         //value4 has a single quote instead of a double
         let input = r#"{
@@ -284,7 +223,7 @@ mod repair_json_tests {
         assert_expected_matches_output_result(input,&output,&expected);
     }
 
-    #[test]
+    #[traced_test]
     fn test_missing_comma() {
 
         //value5 has no comma after the quote
@@ -317,7 +256,7 @@ mod repair_json_tests {
         assert_expected_matches_output_result(input,&output,&expected);
     }
 
-    #[test]
+    #[traced_test]
     fn test_comma_and_quote_accidentally_swapped() {
         //value3 has the comma and the trailing quote swapped
         let input = r#"{
@@ -345,7 +284,7 @@ mod repair_json_tests {
         assert_expected_matches_output_result(input,&output,&expected);
     }
 
-    #[test]
+    #[traced_test]
     fn test_multiple_problems() {
         //value3 has the comma and the trailing quote swapped
         //value5 has no trailing comma
@@ -378,7 +317,7 @@ mod repair_json_tests {
         assert_expected_matches_output_result(input,&output,&expected);
     }
 
-    #[test]
+    #[traced_test]
     fn test_repair_single_quote_in_keys_and_values() {
         let input = r#"{
             'key1': 'value1',
@@ -407,7 +346,7 @@ mod repair_json_tests {
         assert_expected_matches_output_result(input, &output, &expected);
     }
 
-    #[test]
+    #[traced_test]
     fn test_repair_mixed_quotes_and_escaped_quotes() {
         let input = r#"{
             "message": 'He said, "It\'s a sunny day!"',
@@ -424,7 +363,7 @@ mod repair_json_tests {
         assert_expected_matches_output_result(input, &output, &expected);
     }
 
-    #[test]
+    #[traced_test]
     fn test_brace_instead_of_bracket() {
         let input = r#"{
           "tag1": [
@@ -460,7 +399,7 @@ mod repair_json_tests {
         assert_expected_matches_output_result(input, &output, &expected);
     }
 
-    #[test]
+    #[traced_test]
     fn test_control_character_error() {
         let input = "{ \"text\": \"This is a test\u{0001}string with control characters\" }";
 
@@ -472,7 +411,7 @@ mod repair_json_tests {
         assert_expected_matches_output_result(input, &output, &expected);
     }
 
-    #[test]
+    #[traced_test]
     fn test_missing_comma_inside_list() {
         let input = r#"{
           "tag": [
@@ -518,7 +457,7 @@ mod repair_json_tests {
         assert_expected_matches_output_result(input, &output, &expected);
     }
 
-    #[test]
+    #[traced_test]
     fn test_unexpected_eof_inside_list() {
         let input = r#"{
             "tag": [
@@ -559,7 +498,7 @@ mod repair_json_tests {
         assert_expected_matches_output_result(input, &output, &expected);
     }
 
-    #[test]
+    #[traced_test]
     fn test_duplicate_quote_to_close_list_item() {
         let input = r#"{
           "tag": [
@@ -596,7 +535,7 @@ mod repair_json_tests {
     }
 
     #[test]
-    fn test_missing_closing_double_quote_but_comma_present() {
+    fn test_missing_closing_double_quote_but_comma_present() -> Result<(), JsonRepairError> {
         let input = r#"{
           "tag": [
             "item1",
@@ -631,11 +570,17 @@ mod repair_json_tests {
             ]
         });
 
-        let output = repair_json_string(input);
-        assert_expected_matches_output_result(input, &output, &expected);
+        let output = repair_json_string_series(input)?;
+
+        // Parse output as JSON Value
+        let output_json: Value = output;
+
+        assert_eq!(output_json, expected);
+
+        Ok(())
     }
 
-    #[test]
+    #[traced_test]
     fn test_eof_in_between_lists() {
         let input = r#"{
           "tag": [
@@ -660,7 +605,7 @@ mod repair_json_tests {
         assert_expected_matches_output_result(input, &output, &expected);
     }
 
-    #[test]
+    #[traced_test]
     fn test_bad_quote_character() {
         let input = r#"{
             "tag": [
@@ -716,7 +661,7 @@ mod repair_json_tests {
         assert_expected_matches_output_result(input, &output, &expected);
     }
 
-    #[test]
+    #[traced_test]
     fn test_eof_found_midway_through_array_tag() {
         let input = r#"{
           "tag1": [
@@ -739,7 +684,7 @@ mod repair_json_tests {
         assert_expected_matches_output_result(input, &output, &expected);
     }
 
-    #[test]
+    #[traced_test]
     fn test_eof_found_midway_through_array_item() {
         let input = r#"{
           "tag": [

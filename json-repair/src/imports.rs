@@ -10,3 +10,4 @@ pub(crate) use tracing::{info,debug,error,warn};
 pub(crate) use std::collections::VecDeque;
 pub(crate) use std::iter::Peekable;
 pub(crate) use std::str::Chars;
+pub(crate) use std::fmt::Debug;

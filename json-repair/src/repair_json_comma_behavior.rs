@@ -1,6 +1,9 @@
 crate::ix!();
 
-pub fn repair_json_comma_behavior(input: &str) -> String {
+pub fn repair_json_comma_behavior(input: &str) -> Result<String,JsonRepairError> {
+
+    info!("fixing any errant comma behavior");
+
     let mut output = String::with_capacity(input.len());
     let mut chars = input.chars().peekable();
     let mut inside_string = false;
@@ -62,7 +65,7 @@ pub fn repair_json_comma_behavior(input: &str) -> String {
         prev_char = Some(c);
     }
 
-    output
+    Ok(output)
 }
 
 
@@ -71,8 +74,8 @@ mod attempt_repair_comma_and_quote_accidentally_swapped_tests {
     use super::*;
     use serde_json::json;
 
-    #[test]
-    fn test_comma_and_quote_accidentally_swapped() {
+    #[traced_test]
+    fn test_comma_and_quote_accidentally_swapped() -> Result<(),JsonRepairError> {
         // value3 has the comma and the trailing quote swapped
         let input = r#"{
             "key": [
@@ -94,15 +97,16 @@ mod attempt_repair_comma_and_quote_accidentally_swapped_tests {
             ]
         });
 
-        let output = repair_json_comma_behavior(input);
+        let output = repair_json_comma_behavior(input)?;
 
         let output_json = serde_json::from_str::<serde_json::Value>(&output).unwrap();
 
         assert_eq!(output_json, expected);
+        Ok(())
     }
 
-    #[test]
-    fn test_missing_comma() {
+    #[traced_test]
+    fn test_missing_comma() -> Result<(),JsonRepairError> {
         // value5 has no comma after the quote
         let input = r#"{
             "key": [
@@ -128,10 +132,14 @@ mod attempt_repair_comma_and_quote_accidentally_swapped_tests {
             ]
         });
 
-        let output = repair_json_comma_behavior(input);
+        let output = repair_json_comma_behavior(input)?;
 
-        let output_json = serde_json::from_str::<serde_json::Value>(&output).unwrap();
+        let output_json 
+            = serde_json::from_str::<serde_json::Value>(&output)
+            .map_err(|inner| JsonRepairError::SerdeParseError { inner })?;
 
         assert_eq!(output_json, expected);
+
+        Ok(())
     }
 }

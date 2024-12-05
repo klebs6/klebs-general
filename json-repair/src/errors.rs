@@ -4,6 +4,10 @@ error_tree!{
 
     #[derive(PartialEq)]
     pub enum JsonRepairError {
+        UnexpectedEOF,
+        UnexpectedToken,
+        InvalidToken(String),
+        InvalidNumber(String),
         FailedToParseRepairedJson {
             details: String,
         },

@@ -1,6 +1,7 @@
 crate::ix!();
 
 pub fn remove_control_characters_in_value(value: &mut Value) {
+
     match value {
         Value::String(s) => {
             let cleaned: String = s
@@ -28,21 +29,21 @@ mod remove_control_characters_in_value_tests {
     use super::*;
     use serde_json::json;
 
-    #[test]
+    #[traced_test]
     fn test_string_with_control_characters() {
         let mut value = json!("This is a test\u{0001}string with control characters");
         remove_control_characters_in_value(&mut value);
         assert_eq!(value, json!("This is a teststring with control characters"));
     }
 
-    #[test]
+    #[traced_test]
     fn test_string_without_control_characters() {
         let mut value = json!("This is a normal string");
         remove_control_characters_in_value(&mut value);
         assert_eq!(value, json!("This is a normal string"));
     }
 
-    #[test]
+    #[traced_test]
     fn test_nested_objects() {
         let mut value = json!({
             "text": "Some text\u{0002}",
@@ -66,7 +67,7 @@ mod remove_control_characters_in_value_tests {
         assert_eq!(value, expected);
     }
 
-    #[test]
+    #[traced_test]
     fn test_array_of_values() {
         let mut value = json!(["String\u{0005} with control char", 123, true, null, "\u{0006}Another string"]);
         remove_control_characters_in_value(&mut value);
@@ -74,14 +75,14 @@ mod remove_control_characters_in_value_tests {
         assert_eq!(value, expected);
     }
 
-    #[test]
+    #[traced_test]
     fn test_empty_string() {
         let mut value = json!("");
         remove_control_characters_in_value(&mut value);
         assert_eq!(value, json!(""));
     }
 
-    #[test]
+    #[traced_test]
     fn test_string_with_only_control_characters() {
         let mut value = json!("\u{0007}\u{0008}\u{0009}");
         println!("input: {:#?}", value);
@@ -92,7 +93,7 @@ mod remove_control_characters_in_value_tests {
         assert_eq!(value, expected);
     }
 
-    #[test]
+    #[traced_test]
     fn test_no_strings_in_json() {
         let mut value = json!({
             "number": 123,
@@ -105,7 +106,7 @@ mod remove_control_characters_in_value_tests {
         assert_eq!(value, expected);
     }
 
-    #[test]
+    #[traced_test]
     fn test_control_characters_in_keys() {
         let mut value = json!({
             "key\u{000A}1": "value1",
@@ -122,14 +123,14 @@ mod remove_control_characters_in_value_tests {
         assert_eq!(value, expected);
     }
 
-    #[test]
+    #[traced_test]
     fn test_unicode_characters() {
         let mut value = json!("Unicode test: \u{1F600}\u{000D}");
         remove_control_characters_in_value(&mut value);
         assert_eq!(value, json!("Unicode test: \u{1F600}"));
     }
 
-    #[test]
+    #[traced_test]
     fn test_nested_arrays() {
         let mut value = json!([
             "string\u{000E}",
