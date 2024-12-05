@@ -3,7 +3,7 @@ use rand_construct::*;
 use std::borrow::Cow;
 
 /// Enum representing different forms of structured language.
-#[derive(Default,RandConstruct,ItemFeature,PartialEq,Eq,Hash,Copy,Clone,Debug)]
+#[derive(Plural,Default,RandConstruct,ItemFeature,PartialEq,Eq,Hash,Copy,Clone,Debug)]
 pub enum StructuredLanguageForm {
     #[ai("4 lines, classical meter")]
     AlcaicStanza,            
@@ -169,8 +169,10 @@ pub enum StructuredLanguageForm {
     Villancico,             
 
     #[ai("19 lines, ABA ABA ABA ABA ABA ABAA")]
+    #[plural("vilanelles")]
     Villanelle,              
 
     #[ai("Medieval French form with multiple stanzas and refrains")]
+    #[plural("virelais")]
     Virelai,                
 }
