@@ -28,6 +28,7 @@ x!{repair_json_missing_commas_in_list}
 x!{repair_json_remove_control_characters_in_value}
 x!{repair_json_remove_duplicate_quotes}
 x!{repair_json_truncated_boolean_behavior}
+x!{repair_split_list_items}
 x!{sanitize}
 x!{strategy}
 //x!{tokenize}
