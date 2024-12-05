@@ -1,14 +1,13 @@
 crate::ix!();
 
-pub fn repair_json_close_unexpected_eof(input: &str) -> Result<String,JsonRepairError> {
-
-    info!("fixing any cases where we need to close an unexpected EOF");
-
+pub fn repair_json_close_unexpected_eof(input: &str) -> Result<String, JsonRepairError> {
     let mut repaired             = input.to_owned();
     let mut open_brackets: isize = 0;
     let mut open_braces: isize   = 0;
     let mut in_string            = false;
     let mut escape_next          = false;
+    let mut changed              = false;
+    let mut added_chars          = String::new();
 
     for c in input.chars() {
         if in_string {
@@ -42,15 +41,28 @@ pub fn repair_json_close_unexpected_eof(input: &str) -> Result<String,JsonRepair
     // Close any unclosed strings
     if in_string {
         repaired.push('"');
+        changed = true;
+        added_chars.push('"');
     }
 
-    // Close any unclosed structures
+    // Close any unclosed brackets
     for _ in 0..open_brackets {
         repaired.push(']');
+        changed = true;
+        added_chars.push(']');
     }
+
+    // Close any unclosed braces
     for _ in 0..open_braces {
         repaired.push('}');
+        changed = true;
+        added_chars.push('}');
+    }
+
+    if changed {
+        info!("Repaired JSON by adding the following characters at the end: {}", added_chars);
     }
 
     Ok(repaired)
 }
+

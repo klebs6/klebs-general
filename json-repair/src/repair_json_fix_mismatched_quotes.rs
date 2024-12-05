@@ -1,13 +1,11 @@
 crate::ix!();
 
-pub fn repair_json_fix_mismatched_quotes(input: &str) -> Result<String,JsonRepairError> {
-
-    info!("fixing any mismatched quotation marks");
-
-    let mut repaired   = String::new();
-    let mut in_string  = false;
-    let mut escaped    = false;
+pub fn repair_json_fix_mismatched_quotes(input: &str) -> Result<String, JsonRepairError> {
+    let mut repaired = String::new();
+    let mut in_string = false;
+    let mut escaped = false;
     let mut quote_char = '\0';
+    let mut changed = false;
 
     let mut chars = input.chars().peekable();
 
@@ -29,6 +27,7 @@ pub fn repair_json_fix_mismatched_quotes(input: &str) -> Result<String,JsonRepai
                             // Likely a quote inside the string, escape it
                             repaired.push('\\');
                             repaired.push(c);
+                            changed = true;
                         } else {
                             // End of string
                             repaired.push(c);
@@ -45,6 +44,7 @@ pub fn repair_json_fix_mismatched_quotes(input: &str) -> Result<String,JsonRepai
                     // Mismatched quote inside string, escape it
                     repaired.push('\\');
                     repaired.push(c);
+                    changed = true;
                 }
             } else {
                 // Not in a string
@@ -69,12 +69,14 @@ pub fn repair_json_fix_mismatched_quotes(input: &str) -> Result<String,JsonRepai
                         repaired.push(quote_char);
                         in_string = false;
                         quote_char = '\0';
+                        changed = true;
                     }
                 } else {
                     // End of input, insert closing quote
                     repaired.push(quote_char);
                     in_string = false;
                     quote_char = '\0';
+                    changed = true;
                 }
                 repaired.push(c);
             } else {
@@ -107,6 +109,7 @@ pub fn repair_json_fix_mismatched_quotes(input: &str) -> Result<String,JsonRepai
                         for _ in 0..whitespace.len() {
                             chars.next();
                         }
+                        changed = true;
                     }
                 } else {
                     // No more characters, insert collected whitespace and opening quote
@@ -118,6 +121,7 @@ pub fn repair_json_fix_mismatched_quotes(input: &str) -> Result<String,JsonRepai
                     for _ in 0..whitespace.len() {
                         chars.next();
                     }
+                    changed = true;
                 }
             }
         }
@@ -126,6 +130,11 @@ pub fn repair_json_fix_mismatched_quotes(input: &str) -> Result<String,JsonRepai
     if in_string {
         // Unclosed string at the end; add closing quote
         repaired.push(quote_char);
+        changed = true;
+    }
+
+    if changed {
+        info!("Repaired mismatched quotation marks.");
     }
 
     Ok(repaired)

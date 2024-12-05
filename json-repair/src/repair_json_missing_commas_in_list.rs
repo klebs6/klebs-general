@@ -2,8 +2,6 @@ crate::ix!();
 
 pub fn repair_json_missing_commas_in_list(input: &str) -> Result<String, JsonRepairError> {
 
-    info!("repairing json missing commas in list");
-
     let mut repaired = String::new();
     let mut chars = input.chars().peekable();
 
@@ -11,7 +9,7 @@ pub fn repair_json_missing_commas_in_list(input: &str) -> Result<String, JsonRep
     let mut in_string = false;
     let mut escape = false;
     let mut last_was_value = false;
-    let mut made_correction = false;
+    let mut corrections_made = 0;
 
     while let Some(c) = chars.next() {
         if in_string {
@@ -31,7 +29,7 @@ pub fn repair_json_missing_commas_in_list(input: &str) -> Result<String, JsonRep
                     // Start of a string
                     if last_was_value {
                         repaired.push(',');
-                        made_correction = true;
+                        corrections_made += 1;
                     }
                     in_string = true;
                     repaired.push(c);
@@ -41,7 +39,7 @@ pub fn repair_json_missing_commas_in_list(input: &str) -> Result<String, JsonRep
                     // Start of array or object
                     if last_was_value {
                         repaired.push(',');
-                        made_correction = true;
+                        corrections_made += 1;
                     }
                     repaired.push(c);
                     last_was_value = false;
@@ -74,7 +72,7 @@ pub fn repair_json_missing_commas_in_list(input: &str) -> Result<String, JsonRep
                     // Start of a number
                     if last_was_value {
                         repaired.push(',');
-                        made_correction = true;
+                        corrections_made += 1;
                     }
                     repaired.push(c);
                     // Consume the rest of the number
@@ -97,7 +95,7 @@ pub fn repair_json_missing_commas_in_list(input: &str) -> Result<String, JsonRep
                     // Start of a literal: true, false, null
                     if last_was_value {
                         repaired.push(',');
-                        made_correction = true;
+                        corrections_made += 1;
                     }
                     repaired.push(c);
                     // Consume the rest of the literal
@@ -119,8 +117,8 @@ pub fn repair_json_missing_commas_in_list(input: &str) -> Result<String, JsonRep
     }
 
     // Log only if a correction was made
-    if made_correction {
-        info!("repairing json missing commas in list");
+    if corrections_made > 0 {
+        info!("repaired {} missing comma(s) inside of a list", corrections_made)
     }
 
     Ok(repaired)

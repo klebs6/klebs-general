@@ -1,12 +1,5 @@
 crate::ix!();
 
-pub fn repair_json_add_missing_quotes(input: &str) -> Result<String, JsonRepairError> {
-    info!("adding missing quotations where necessary");
-    let mut tokens = tokenize(input)?;
-    let json_value = parse_value(&mut tokens)?;
-    serde_json::to_string(&json_value).map_err(|inner| JsonRepairError::SerdeParseError { inner })
-}
-
 #[derive(Debug)]
 pub enum Token {
     String(String),
@@ -16,7 +9,21 @@ pub enum Token {
     Comment,
 }
 
-pub fn tokenize(input: &str) -> Result<VecDeque<Token>, JsonRepairError> {
+pub fn repair_json_add_missing_quotes(input: &str) -> Result<String, JsonRepairError> {
+
+    let mut changed = false;
+    let mut tokens  = tokenize(input, &mut changed)?;
+    let json_value  = parse_value(&mut tokens)?;
+    let output      = serde_json::to_string(&json_value).map_err(|inner| JsonRepairError::SerdeParseError { inner })?;
+
+    if changed {
+        info!("added missing quotations where necessary");
+    }
+
+    Ok(output)
+}
+
+pub fn tokenize(input: &str, changed: &mut bool) -> Result<VecDeque<Token>, JsonRepairError> {
     let mut tokens = VecDeque::new();
     let mut chars = input.chars().peekable();
 
@@ -44,6 +51,10 @@ pub fn tokenize(input: &str) -> Result<VecDeque<Token>, JsonRepairError> {
             }
             _ => {
                 let string = parse_unquoted_string(&mut chars)?;
+                if !string.is_empty() {
+                    // We parsed an unquoted string, meaning we "added" quotes logically.
+                    *changed = true;
+                }
                 tokens.push_back(Token::String(string));
             }
         }
@@ -53,15 +64,15 @@ pub fn tokenize(input: &str) -> Result<VecDeque<Token>, JsonRepairError> {
 }
 
 fn parse_quoted_string(chars: &mut Peekable<Chars>) -> Result<String, JsonRepairError> {
-    let quote_char = chars.next().ok_or(JsonRepairError::UnexpectedEOF)?; // Consume the opening quote
+    let quote_char = chars.next().ok_or(JsonRepairError::UnexpectedEOF)?; // opening quote
     let mut s = String::new();
 
     while let Some(&c) = chars.peek() {
         if c == quote_char {
-            chars.next(); // Consume closing quote
+            chars.next(); // closing quote
             break;
         } else if c == '\\' {
-            chars.next(); // Consume '\'
+            chars.next(); // consume '\'
             if let Some(escaped_char) = chars.next() {
                 s.push(match escaped_char {
                     'n' => '\n',
@@ -79,7 +90,7 @@ fn parse_quoted_string(chars: &mut Peekable<Chars>) -> Result<String, JsonRepair
                 s.push('\\');
             }
         } else if ":,{}[]\"'".contains(c) {
-            // Assume the string ends if we encounter a structural character
+            // If we hit a structural character, end the string early
             break;
         } else {
             s.push(chars.next().unwrap());
@@ -104,9 +115,8 @@ fn parse_unquoted_string(chars: &mut Peekable<Chars>) -> Result<String, JsonRepa
 }
 
 fn consume_comment(chars: &mut Peekable<Chars>) {
-    chars.next(); // Consume '/'
-    chars.next(); // Consume second '/'
-
+    chars.next(); // '/'
+    chars.next(); // second '/'
     while let Some(c) = chars.next() {
         if c == '\n' {
             break;
@@ -179,18 +189,17 @@ pub fn parse_value(tokens: &mut VecDeque<Token>) -> Result<JsonValue, JsonRepair
                 let mut value_parts = vec![s];
 
                 loop {
-                    // Limit the scope of the immutable borrow
                     let continue_loop = {
                         let next_token = tokens.front();
                         if let Some(next_token) = next_token {
                             match next_token {
                                 Token::Whitespace | Token::Comment => {
-                                    tokens.pop_front(); // Consume and continue
+                                    tokens.pop_front(); // consume and continue
                                     true
                                 }
                                 Token::String(s) | Token::Number(s) => {
                                     let s = s.clone();
-                                    tokens.pop_front(); // Consume
+                                    tokens.pop_front(); // consume
                                     value_parts.push(s);
                                     true
                                 }
@@ -257,7 +266,7 @@ pub fn parse_object(tokens: &mut VecDeque<Token>) -> Result<JsonValue, JsonRepai
 
         match tokens.front() {
             Some(Token::Symbol('}')) => {
-                tokens.pop_front(); // Consume '}'
+                tokens.pop_front(); // consume '}'
                 break;
             }
             _ => {
@@ -275,7 +284,7 @@ pub fn parse_object(tokens: &mut VecDeque<Token>) -> Result<JsonValue, JsonRepai
                             }
                         }
                         Token::Whitespace | Token::Comment => {
-                            tokens.pop_front(); // Consume and continue
+                            tokens.pop_front(); // consume and continue
                         }
                         _ => break,
                     }
@@ -283,7 +292,6 @@ pub fn parse_object(tokens: &mut VecDeque<Token>) -> Result<JsonValue, JsonRepai
 
                 let key = key_parts.join(" ");
 
-                // Consume any extra whitespace, comments, or commas after the key
                 while matches!(
                     tokens.front(),
                     Some(Token::Whitespace) | Some(Token::Comment) | Some(Token::Symbol(','))
@@ -291,26 +299,21 @@ pub fn parse_object(tokens: &mut VecDeque<Token>) -> Result<JsonValue, JsonRepai
                     tokens.pop_front();
                 }
 
-                // Now, attempt to consume colon
                 let colon_found = if let Some(Token::Symbol(':')) = tokens.front() {
-                    tokens.pop_front(); // Consume ':'
+                    tokens.pop_front(); // consume ':'
                     true
                 } else {
                     false
                 };
 
-                // Consume any extra whitespace or comments after colon
                 while matches!(tokens.front(), Some(Token::Whitespace) | Some(Token::Comment)) {
                     tokens.pop_front();
                 }
 
                 if colon_found {
-                    // Parse value
                     let value = parse_value(tokens)?;
                     map.insert(key, value);
                 } else {
-                    // No colon found
-                    // If next token is a value, treat it as the value
                     match tokens.front() {
                         Some(Token::String(_))
                         | Some(Token::Number(_))
@@ -320,14 +323,13 @@ pub fn parse_object(tokens: &mut VecDeque<Token>) -> Result<JsonValue, JsonRepai
                             map.insert(key, value);
                         }
                         _ => {
-                            // Treat last key part as value if multiple key parts
+                            // No proper value found, treat last key part as value if multiple parts
                             if key_parts.len() > 1 {
                                 let value_str = key_parts.pop().unwrap();
                                 let key = key_parts.join(" ");
                                 let value = JsonValue::String(value_str);
                                 map.insert(key, value);
                             } else {
-                                // Single key part with no value
                                 map.insert(key, JsonValue::Null);
                             }
                         }
@@ -350,11 +352,11 @@ pub fn parse_array(tokens: &mut VecDeque<Token>) -> Result<JsonValue, JsonRepair
     while let Some(token) = tokens.front() {
         match token {
             Token::Symbol(']') => {
-                tokens.pop_front(); // Consume the closing ']'
+                tokens.pop_front(); // consume ']'
                 break;
             }
             Token::Whitespace | Token::Comment | Token::Symbol(',') => {
-                tokens.pop_front(); // Consume and continue
+                tokens.pop_front(); // consume and continue
                 continue;
             }
             _ => {

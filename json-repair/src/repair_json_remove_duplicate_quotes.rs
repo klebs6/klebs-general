@@ -1,13 +1,12 @@
 crate::ix!();
 
-pub fn repair_json_remove_duplicate_quotes(input: &str) -> Result<String,JsonRepairError> {
-
-    info!("removing any duplicate quotes");
-
+pub fn repair_json_remove_duplicate_quotes(input: &str) -> Result<String, JsonRepairError> {
     let mut repaired    = String::with_capacity(input.len());
     let mut chars       = input.chars().peekable();
     let mut in_string   = false;
     let mut escape_next = false;
+
+    let mut changed = false;
 
     while let Some(c) = chars.next() {
         if c == '\\' && !escape_next {
@@ -20,8 +19,14 @@ pub fn repair_json_remove_duplicate_quotes(input: &str) -> Result<String,JsonRep
         if c == '"' && !escape_next {
             if in_string {
                 // Skip any duplicate quotes
+                let mut skip_quotes = false;
                 while let Some(&'"') = chars.peek() {
                     chars.next();
+                    skip_quotes = true;
+                }
+
+                if skip_quotes {
+                    changed = true;
                 }
 
                 // Peek ahead to check the next non-space character
@@ -43,7 +48,7 @@ pub fn repair_json_remove_duplicate_quotes(input: &str) -> Result<String,JsonRep
                         repaired.push(c);
                     } else {
                         // Unescaped quote inside string, remove it
-                        // Do not push c
+                        changed = true;
                         continue;
                     }
                 } else {
@@ -58,12 +63,15 @@ pub fn repair_json_remove_duplicate_quotes(input: &str) -> Result<String,JsonRep
             }
             escape_next = false;
         } else {
-
             if escape_next {
                 escape_next = false;
             }
             repaired.push(c);
         }
+    }
+
+    if changed {
+        info!("Removed duplicate or invalid quotes in JSON.");
     }
 
     Ok(repaired)

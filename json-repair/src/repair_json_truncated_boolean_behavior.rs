@@ -1,15 +1,13 @@
 crate::ix!();
 
-pub fn repair_json_truncated_boolean_behavior(input: &str) -> Result<String,JsonRepairError> {
-
-    info!("repairing any truncated booleans");
-
+pub fn repair_json_truncated_boolean_behavior(input: &str) -> Result<String, JsonRepairError> {
     let mut output        = String::new();
     let mut chars         = input.chars().peekable();
     let mut inside_string = false;
     let mut last_token    = String::new();
     let mut open_braces   = 0;
     let mut open_brackets = 0;
+    let mut changed       = false;
 
     while let Some(c) = chars.next() {
         output.push(c);
@@ -18,10 +16,8 @@ pub fn repair_json_truncated_boolean_behavior(input: &str) -> Result<String,Json
             // Check if the quote is escaped
             let mut backslash_count = 0;
 
-            // Start from the character before the quote, if any
             if output.len() >= 2 {
-                let mut idx = output.len() - 2; // position before the quote
-
+                let mut idx = output.len() - 2; 
                 loop {
                     if output.as_bytes()[idx] == b'\\' {
                         backslash_count += 1;
@@ -37,7 +33,6 @@ pub fn repair_json_truncated_boolean_behavior(input: &str) -> Result<String,Json
             }
 
             if backslash_count % 2 == 0 {
-                // Even number of backslashes means the quote is not escaped
                 inside_string = !inside_string;
             }
             last_token.clear();
@@ -66,28 +61,41 @@ pub fn repair_json_truncated_boolean_behavior(input: &str) -> Result<String,Json
         }
     }
 
-    // At the end, check if last_token is an incomplete boolean and complete it
+    // If we ended with an incomplete boolean
     if !inside_string {
+        let mut appended = String::new();
         if last_token == "t" || last_token == "tr" || last_token == "tru" {
             let remaining = &"true"[last_token.len()..];
-            output.push_str(remaining);
+            appended.push_str(remaining);
         } else if last_token == "f" || last_token == "fa" || last_token == "fal" || last_token == "fals" {
             let remaining = &"false"[last_token.len()..];
-            output.push_str(remaining);
+            appended.push_str(remaining);
+        }
+
+        if !appended.is_empty() {
+            output.push_str(&appended);
+            changed = true;
         }
     }
 
     // Close any unclosed strings
     if inside_string {
         output.push('"');
+        changed = true;
     }
 
     // Close any unclosed brackets and braces
     for _ in 0..open_brackets {
         output.push(']');
+        changed = true;
     }
     for _ in 0..open_braces {
         output.push('}');
+        changed = true;
+    }
+
+    if changed {
+        info!("Repaired truncated booleans or unclosed delimiters in JSON.");
     }
 
     Ok(output)

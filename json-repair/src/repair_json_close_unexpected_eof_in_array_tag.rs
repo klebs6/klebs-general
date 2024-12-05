@@ -2,10 +2,8 @@ crate::ix!();
 
 #[allow(unused_assignments)]
 pub fn repair_json_close_unexpected_eof_in_array_tag(input: &str) 
-    -> Result<String,JsonRepairError> 
+    -> Result<String, JsonRepairError> 
 {
-    info!("closing an unexpected EOF in an array tag");
-
     use std::collections::VecDeque;
 
     #[derive(Clone, Copy)]
@@ -14,12 +12,14 @@ pub fn repair_json_close_unexpected_eof_in_array_tag(input: &str)
         Array,
     }
 
-    let mut repaired = String::new();
-    let mut chars = input.chars().peekable();
-    let mut stack = VecDeque::new();
+    let mut repaired      = String::new();
+    let mut chars         = input.chars().peekable();
+    let mut stack         = VecDeque::new();
     let mut context_stack = VecDeque::new();
-    let mut in_string = false;
-    let mut escaped = false;
+    let mut in_string     = false;
+    let mut escaped       = false;
+    let mut changed       = false;
+    let mut added_chars   = String::new();
 
     while let Some(c) = chars.next() {
         repaired.push(c);
@@ -54,6 +54,8 @@ pub fn repair_json_close_unexpected_eof_in_array_tag(input: &str)
     // If we are still inside a string, close it
     if in_string {
         repaired.push('"');
+        changed = true;
+        added_chars.push('"');
     }
 
     // Remove trailing whitespace
@@ -69,6 +71,8 @@ pub fn repair_json_close_unexpected_eof_in_array_tag(input: &str)
     if temp.ends_with(':') {
         // Missing value after colon
         repaired.push_str(" null");
+        changed = true;
+        added_chars.push_str(" null");
     } else if temp.ends_with('"') {
         // Possibly incomplete key or value
         let mut chars = temp.chars().rev().peekable();
@@ -109,8 +113,9 @@ pub fn repair_json_close_unexpected_eof_in_array_tag(input: &str)
                         if c == ',' || c == '{' {
                             // Missing colon and value after key
                             repaired.push_str(": null");
+                            changed = true;
+                            added_chars.push_str(": null");
                         }
-                        // Removed the else if c == ':' block
                     }
                 }
                 Context::Array => {
@@ -123,6 +128,12 @@ pub fn repair_json_close_unexpected_eof_in_array_tag(input: &str)
     // Close any open structures
     while let Some(c) = stack.pop_back() {
         repaired.push(c);
+        changed = true;
+        added_chars.push(c);
+    }
+
+    if changed {
+        info!("Repaired JSON by adding the following characters at the end: {}", added_chars);
     }
 
     Ok(repaired)

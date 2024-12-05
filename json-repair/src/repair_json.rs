@@ -1,13 +1,14 @@
 crate::ix!();
 
 pub fn repair_json_string(input: &str) -> Result<Value, JsonRepairError> {
-    /*
+    repair_json_string_series(input)
+}
+
+pub fn repair_json_string_heavy(input: &str) -> Result<Value, JsonRepairError> {
     match repair_json_string_parallel(input) {
         Ok(repaired) => Ok(repaired),
         Err(e)       => repair_json_string_series(input),
     }
-    */
-    repair_json_string_series(input)
 }
 
 #[cfg(test)]
