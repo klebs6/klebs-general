@@ -1,23 +1,33 @@
 crate::ix!();
 
-pub(crate) fn find_ai_attr(attrs: &[Attribute]) -> Option<String> {
+pub(crate) fn find_attr_with_tag(attrs: &[Attribute], tag: &str) -> Option<String> {
     for attr in attrs {
-        if attr.path.is_ident("ai") {
+        if attr.path.is_ident(tag) {
             if let Ok(Meta::List(meta_list)) = attr.parse_meta() {
-                // Handle #[ai("value")]
+                // Handle #[tag("value")]
                 for nested in meta_list.nested.iter() {
                     if let NestedMeta::Lit(Lit::Str(lit_str)) = nested {
                         return Some(lit_str.value());
                     }
                 }
             } else if let Ok(Meta::NameValue(MetaNameValue { lit: Lit::Str(lit_str), .. })) = attr.parse_meta() {
-                // Handle #[ai = "value"]
+                // Handle #[tag = "value"]
                 return Some(lit_str.value());
             }
         }
     }
     None
+
 }
+
+pub(crate) fn find_ai_attr(attrs: &[Attribute]) -> Option<String> {
+    find_attr_with_tag(attrs,"ai")
+}
+
+pub(crate) fn find_open_attr(attrs: &[Attribute]) -> Option<String> {
+    find_attr_with_tag(attrs,"open")
+}
+
 
 #[cfg(test)]
 mod tests {

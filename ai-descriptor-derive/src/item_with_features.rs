@@ -1,6 +1,5 @@
 crate::ix!();
 
-
 pub(crate) fn impl_item_with_features(input: &DeriveInput, data: &DataStruct) -> TokenStream2 {
     let struct_name = &input.ident;
 
