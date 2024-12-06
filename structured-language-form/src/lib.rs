@@ -174,3 +174,14 @@ pub enum StructuredLanguageForm {
     #[ai("Medieval French form with multiple stanzas and refrains")]
     Virelai,                
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_plural() {
+        let f = StructuredLanguageForm::random();
+        println!("{}", f.plural());
+    }
+}
