@@ -1,0 +1,22 @@
+[package]
+name = "variant-builder-macro"
+version = "0.1.0"
+edition = "2021"
+
+description = "This crate gives us the VariantBuider proc macro which can be used to streamline creting an enum from wrapping variants each using the builder pattern."
+authors = [ "klebs tpk3.mx@gmail.com" ]
+license = "MIT"
+keywords = ["macros", "builder", "shorthand", "enum", "reuse"]
+repository = "https://github.com/klebs6/klebs-general"
+categories = ["development-tools"]
+
+[lib]
+proc-macro = true
+
+[dependencies]
+quote = "1.0"
+syn = { version = "2.0", features = ["full"] }
+convert_case = "0.4"
+
+[dev-dependencies]
+derive_builder = "0.20.2"
