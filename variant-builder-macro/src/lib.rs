@@ -1,62 +1,87 @@
 use convert_case::{Case, Casing};
 use proc_macro::TokenStream;
-use quote::quote;
-use syn::{parse_macro_input, Data, DeriveInput, Fields, Ident};
+use quote::{format_ident, quote};
+use syn::{parse_macro_input, Data, DeriveInput, Fields};
 
-#[proc_macro_derive(VariantBuilder)]
+#[proc_macro_derive(VariantBuilder, attributes(default))]
 pub fn variant_builder_macro(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
+    let name = input.ident;
 
-    let enum_name = input.ident;
-
-    let variants = if let Data::Enum(data_enum) = input.data {
-        data_enum.variants
-    } else {
-        panic!("#[derive(VariantBuilder)] is only applicable to enums.");
+    // Ensure this is an enum
+    let data = match input.data {
+        Data::Enum(data) => data,
+        _ => panic!("#[derive(VariantBuilder)] is only supported on enums"),
     };
 
-    let methods = variants.iter().map(|variant| {
+    let mut default_variant = None;
+    let mut builder_methods = Vec::new();
+
+    // Iterate through the variants
+    for variant in &data.variants {
         let variant_name = &variant.ident;
 
+        // Check if the variant has the #[default] attribute
+        if variant
+            .attrs
+            .iter()
+            .any(|attr| attr.path().is_ident("default"))
+        {
+            if default_variant.is_some() {
+                panic!("Only one variant can be marked as #[default]");
+            }
+            default_variant = Some(variant_name.clone());
+        }
+
         // Convert the variant name to snake_case for the method name
-        let method_name = Ident::new(
-            &variant_name.to_string().to_case(Case::Snake),
-            variant_name.span(),
-        );
+        let builder_name = format_ident!("{}", variant_name.to_string().to_case(Case::Snake));
 
-        let builder_type = if let Fields::Unnamed(fields) = &variant.fields {
-            if fields.unnamed.len() != 1 {
-                panic!("Each variant must have exactly one unnamed field.");
+        // Generate the builder method for this variant
+        let builder_code = match &variant.fields {
+            Fields::Unnamed(fields) => {
+                let field_types: Vec<_> = fields.unnamed.iter().map(|f| &f.ty).collect();
+                if field_types.len() != 1 {
+                    panic!("Each variant must have exactly one unnamed field.");
+                }
+                let field_type = &field_types[0];
+                let builder_type = format_ident!("{}Builder", quote!(#field_type).to_string());
+                quote! {
+                    pub fn #builder_name<F>(build: F) -> Self
+                where
+                        F: FnOnce(&mut #builder_type),
+                    {
+                        let mut builder = #builder_type::default();
+                        build(&mut builder);
+                        Self::#variant_name(builder.build().expect("Builder failed to construct variant"))
+                    }
+                }
             }
-            &fields.unnamed.first().unwrap().ty
-        } else {
-            panic!("Each variant must have a single unnamed field.");
+            _ => panic!("Only unnamed fields are supported for variants."),
         };
 
-        let builder_type_name = if let syn::Type::Path(type_path) = builder_type {
-            let last_segment = &type_path.path.segments.last().unwrap();
-            let type_ident = &last_segment.ident;
-            Ident::new(&format!("{}Builder", type_ident), type_ident.span())
-        } else {
-            panic!("Variant must contain a named builder type.");
-        };
+        builder_methods.push(builder_code);
+    }
 
+    // Generate the Default impl if a default variant was found
+    let default_impl = if let Some(default_variant) = default_variant {
         quote! {
-            pub fn #method_name<F>(build: F) -> Self
-            where
-                F: FnOnce(&mut #builder_type_name),
-            {
-                let mut builder = #builder_type_name::default();
-                build(&mut builder);
-                Self::#variant_name(builder.build().unwrap())
+            impl Default for #name {
+                fn default() -> Self {
+                    Self::#default_variant(Default::default())
+                }
             }
         }
-    });
+    } else {
+        proc_macro2::TokenStream::new()
+    };
 
+    // Generate the final code
     let expanded = quote! {
-        impl #enum_name {
-            #(#methods)*
+        impl #name {
+            #(#builder_methods)*
         }
+
+        #default_impl
     };
 
     TokenStream::from(expanded)
