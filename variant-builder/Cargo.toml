@@ -1,0 +1,15 @@
+[package]
+name = "variant-builder"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+proc-macro = true
+
+[dependencies]
+quote = "1.0"
+syn = { version = "2.0", features = ["full"] }
+convert_case = "0.4"
+
+[dev-dependencies]
+derive_builder = "*"

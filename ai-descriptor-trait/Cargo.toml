@@ -14,3 +14,4 @@ keywords      = ["ai", "enums", "simulation", "ergonomics"]
 categories    = ["game-development", "simulation", "rust-patterns"]
 
 [dependencies]
+str-shorthand = {version = "*", path = "/Users/kleb/bethesda/work/repo/klebs-general/str-shorthand" }

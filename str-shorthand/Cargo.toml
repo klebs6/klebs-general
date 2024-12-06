@@ -11,3 +11,5 @@ repository = "https://github.com/klebs6/klebs-general"
 categories = ["development-tools"]
 
 [dependencies]
+export-magic = "0.3.6"
+unicode-segmentation = "1.10"

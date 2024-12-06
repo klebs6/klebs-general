@@ -28,7 +28,6 @@ pub(crate) fn find_open_attr(attrs: &[Attribute]) -> Option<String> {
     find_attr_with_tag(attrs,"open")
 }
 
-
 #[cfg(test)]
 mod tests {
     use super::*;

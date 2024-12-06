@@ -13,7 +13,10 @@ keywords      = ["ai", "enums", "simulation", "ergonomics"]
 categories    = ["game-development", "simulation", "rust-patterns"]
 
 [dependencies]
-ai-descriptor-derive = "0.5.0"
-ai-descriptor-trait  = "0.3.0"
+#ai-descriptor-derive = "0.5.0"
+#ai-descriptor-trait  = "0.3.0"
 plural-derive = "0.1.0"
 plural-trait  = "0.1.0"
+
+ai-descriptor-derive = { version = "*", path = "/Users/kleb/bethesda/work/repo/klebs-general/ai-descriptor-derive" }
+ai-descriptor-trait  = { version = "*", path = "/Users/kleb/bethesda/work/repo/klebs-general/ai-descriptor-trait" }
