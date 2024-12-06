@@ -169,10 +169,8 @@ pub enum StructuredLanguageForm {
     Villancico,             
 
     #[ai("19 lines, ABA ABA ABA ABA ABA ABAA")]
-    #[plural("vilanelles")]
     Villanelle,              
 
     #[ai("Medieval French form with multiple stanzas and refrains")]
-    #[plural("virelais")]
     Virelai,                
 }
