@@ -1,0 +1,22 @@
+[package]
+name        = "plural-derive"
+version     = "0.1.0"
+edition     = "2021"
+
+description = "This crate contains the derive macro `Plural` we use with the `PluralDisplay` trait"
+authors     = [ "klebs tpk3.mx@gmail.com" ]
+license     = "MIT"
+keywords    = ["macros", "shorthand", "plural" ]
+repository  = "https://github.com/klebs6/klebs-general"
+categories  = ["development-tools"]
+
+[dependencies]
+quote       = "1.0"
+syn         = "2.0"
+proc-macro2 = "1.0"
+
+[lib]
+proc-macro  = true
+
+[dev-dependencies]
+plural-trait = "0.1.0"
