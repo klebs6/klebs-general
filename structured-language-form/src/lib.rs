@@ -2,177 +2,176 @@ use ai_descriptor::*;
 use rand_construct::*;
 use std::borrow::Cow;
 
-/// Enum representing different forms of structured language.
 #[derive(Plural,Default,RandConstruct,ItemFeature,PartialEq,Eq,Hash,Copy,Clone,Debug)]
 pub enum StructuredLanguageForm {
-    #[ai("4 lines, classical meter")]
-    AlcaicStanza,            
+    #[ai("a poem structured in four lines with classical quantitative meter, typically dactylic or trochaic, evoking ancient Greek lyric tradition")]
+    AlcaicStanza,
 
-    #[ai("Quatrains, ABAB or ABCB")]
-    Ballad,                  
+    #[ai("a narrative poem composed of quatrains with alternating rhyme schemes (ABAB or ABCB), often recounting dramatic, folkloric, or romantic tales in a rhythmic and melodic style")]
+    Ballad,
 
-    #[ai("Unrhymed iambic pentameter")]
-    BlankVerse,              
+    #[ai("a poem written in unrhymed iambic pentameter, characterized by its regular rhythmic pattern and flexibility for elevated, dramatic, or reflective themes")]
+    BlankVerse,
 
-    #[ai("Six-line stanzas with aaabab rhyme scheme, also known as the Standard Habbie")]
-    BurnsStanza,            
+    #[ai("a poem with six-line stanzas, adhering to the traditional Scottish form known as the Standard Habbie, with a rhyme scheme of aaabab; often humorous or reflective in tone")]
+    BurnsStanza,
 
-    #[ai("Troubadour song form, often expressing courtly love")]
-    Canso,                  
+    #[ai("a lyrical composition in the troubadour tradition, frequently written in strophes and exploring themes of courtly love, idealized devotion, or chivalric ethos")]
+    Canso,
 
-    #[ai("Italian or Provençal song form")]
-    Canzone,                
+    #[ai("a sophisticated Italian or Provençal song form, characterized by intricate stanza structures, rich in musicality and often exploring themes of love or philosophy")]
+    Canzone,
 
-    #[ai("5 lines, varying syllable patterns")]
-    Cinquain,                
+    #[ai("a compact five-line poem with varied syllable patterns, emphasizing vivid imagery or focused emotional expression")]
+    Cinquain,
 
-    #[ai("Humorous, biographical, AABB rhyme")]
-    Clerihew,                
+    #[ai("a whimsical biographical poem of four lines with an AABB rhyme scheme, often humorous or satirical, focusing on an individual's peculiar traits or actions")]
+    Clerihew,
 
-    #[ai("Two lines of verse, usually in the same meter and joined by rhyme")]
-    Couplet,                
+    #[ai("a concise poetic form consisting of two rhyming lines, often used to distill meaning or emphasize contrast through parallelism or juxtaposition")]
+    Couplet,
 
-    #[ai("Diamond-shaped, 7 lines")]
-    Diamante,                
+    #[ai("a seven-line, diamond-shaped poem with a fixed structure that visually mirrors its central theme, often employing descriptive or contrasting imagery")]
+    Diamante,
 
-    #[ai("Inspired by visual art")]
-    Ekphrastic,              
+    #[ai("a vivid poetic form inspired by or describing a specific piece of visual art, aiming to translate its essence or emotional resonance into language")]
+    Ekphrastic,
 
-    #[ai("Reflective, often mourning")]
-    Elegy,                   
+    #[ai("a reflective and solemn poem typically mourning a loss or meditating on mortality, written in a somber yet elevated tone")]
+    Elegy,
 
     #[default]
-    #[ai("Long narrative, often heroic")]
-    Epic,                    
+    #[ai("an extended narrative poem of significant length, often heroic or mythological in subject, combining elevated diction and grand themes to celebrate cultural values or legendary figures")]
+    Epic,
 
-    #[ai("Short, witty, often satirical")]
-    Epigram,                 
+    #[ai("a succinct and witty poem, typically satirical or aphoristic, aimed at delivering a sharp or memorable observation in a few lines")]
+    Epigram,
 
-    #[ai("Poem for a wedding")]
-    Epithalamium,            
+    #[ai("a ceremonial poem written to celebrate and honor a wedding, blending lyrical beauty with themes of love, union, and festivity")]
+    Epithalamium,
 
-    #[ai("Based on Fibonacci sequence, syllables 1, 1, 2, 3, 5, 8...")]
-    Fib,                     
+    #[ai("a minimalist poetic form using syllabic progression based on the Fibonacci sequence (1, 1, 2, 3, 5, 8...), creating a spiraling structure of brevity and growth")]
+    Fib,
 
-    #[ai("No regular meter or rhyme scheme")]
-    FreeVerse,               
+    #[ai("a poem without a fixed rhyme scheme or meter, allowing unrestricted exploration of rhythm, imagery, and meaning")]
+    FreeVerse,
 
-    #[ai("Couplets, repeated rhyme, refrain")]
-    Ghazal,                  
+    #[ai("a poetic form of rhyming couplets with repeated phrases and refrains, traditionally emphasizing themes of love, loss, or spiritual longing")]
+    Ghazal,
 
-    #[ai("Iberian form elaborating on a quatrain by another poet")]
-    Glosa,                  
+    #[ai("a reflective Iberian verse form elaborating on a quatrain from another poet, blending commentary with creative extension in a uniquely interpretative structure")]
+    Glosa,
 
-    #[ai("3 lines, 5-7-5 syllables")]
-    Haiku,                   
+    #[ai("a concise three-line poem adhering to a syllabic structure of 5-7-5, traditionally focusing on nature or a moment of epiphany, rooted in Japanese aesthetics")]
+    Haiku,
 
-    #[ai("Regular stanzas, reflective")]
-    HoratianOde,             
+    #[ai("a contemplative ode written in regular, balanced stanzas, named for the Roman poet Horace and characterized by its reflective and restrained tone")]
+    HoratianOde,
 
-    #[ai("Quatrains with a refrain")]
-    Kyrielle,                
+    #[ai("a poetic form composed of quatrains, with a refrain repeated at the end of each stanza, often exploring spiritual or meditative themes")]
+    Kyrielle,
 
-    #[ai("Medieval French form with varying line lengths")]
-    Lai,                    
+    #[ai("a medieval French poetic form characterized by varying line lengths and intricate rhyme schemes, blending lyricism with narrative complexity")]
+    Lai,
 
-    #[ai("5 lines, AABBA")]
-    Limerick,                
+    #[ai("a humorous five-line poem with a distinct AABBA rhyme scheme, employing a sing-song rhythm to deliver witty or absurd narratives")]
+    Limerick,
 
-    #[ai("Haiku variant, 3-5-3 words")]
-    Lune,                    
+    #[ai("a haiku-like poetic form structured around three lines of 3-5-3 words rather than syllables, often exploring concise and evocative imagery")]
+    Lune,
 
-    #[ai("Short, lyrical poems of the Renaissance, often set to music")]
-    Madrigal,               
+    #[ai("a short, lyrical Renaissance poem often set to music, celebrated for its intricate wordplay and themes of love, beauty, and harmony")]
+    Madrigal,
 
-    #[ai("4 lines, 20-25 syllables")]
-    Naani,                   
+    #[ai("a compact four-line poetic form, typically ranging from 20-25 syllables, exploring themes of daily life or philosophical reflections in a straightforward style")]
+    Naani,
 
-    #[ai("9 lines, starting with 9 syllables, decreasing by one each line")]
-    Nonet,                   
+    #[ai("a nine-line poem beginning with nine syllables and decreasing by one syllable per line, creating a tapering effect that mirrors descent or resolution")]
+    Nonet,
 
-    #[ai("An eight-line stanza or the first eight lines of a sonnet")]
-    Octave,                 
+    #[ai("an eight-line stanza or the opening section of a sonnet, characterized by thematic setup or argument, often with an ABBAABBA rhyme scheme")]
+    Octave,
 
-    #[ai("Lyrical, often praising")]
-    Ode,                     
+    #[ai("a formal, lyrical poem that expresses deep admiration or reverence for its subject, blending emotional intensity with elevated diction")]
+    Ode,
 
-    #[ai("Quatrains, with repeated lines")]
-    Pantoum,                 
+    #[ai("a complex poetic form of quatrains with repeated lines, using a weave-like structure to emphasize cyclical or reflective themes")]
+    Pantoum,
 
-    #[ai("14 lines, ABBAABBACDECDE")]
-    PetrarchanSonnet,        
+    #[ai("a fourteen-line sonnet with an ABBAABBACDECDE rhyme scheme, traditionally associated with themes of unrequited love or idealized beauty")]
+    PetrarchanSonnet,
 
-    #[ai("Strophes, antistrophes, epodes")]
-    PindaricOde,             
+    #[ai("a classical ode structured in strophes, antistrophes, and epodes, imitating the choral odes of ancient Greek drama to celebrate triumphs or heroes")]
+    PindaricOde,
 
-    #[ai("A stanza of four lines, often with a specific rhyme scheme")]
-    Quatrain,               
+    #[ai("a stanza of four lines often adhering to a consistent rhyme scheme, serving as the foundational unit of many poetic traditions")]
+    Quatrain,
 
-    #[ai("A stanza of five lines with varied meter and rhyme")]
-    Quintain,               
+    #[ai("a stanza of five lines, typically employing a varied rhyme scheme and meter, blending structural freedom with lyrical expression")]
+    Quintain,
 
-    #[ai("15 lines, aabba aabR aabbaR")]
-    Rondeau,                 
+    #[ai("a fifteen-line poem with a refrain and intricate rhyme scheme (aabba aabR aabbaR), conveying layered themes or emotional echoes")]
+    Rondeau,
 
-    #[ai("A verse form originating in French lyrical poetry, with 13 or 14 lines and two rhymes")]
-    Rondel,                 
+    #[ai("a lyrical French poetic form of thirteen or fourteen lines with two rhymes, balancing musicality and formal precision to evoke timeless themes")]
+    Rondel,
 
-    #[ai("7 lines, A repeated refrain")]
-    Rondelet,                
+    #[ai("a seven-line poem with a refrain, blending lyrical brevity with a dance-like rhythm through its A repeated refrain structure")]
+    Rondelet,
 
-    #[ai("11 lines, ababB abaBab abB")]
-    Roundel,                 
+    #[ai("an eleven-line poetic form with a refrain and intricate rhyme scheme (ababB abaBab abB), interweaving repetition and variation")]
+    Roundel,
 
-    #[ai("Quatrains, aaba")]
-    Rubaiyat,                
+    #[ai("a quatrain-driven poetic form with a rhyme scheme of AABA, often used for meditative or mystical reflections, rooted in Persian tradition")]
+    Rubaiyat,
 
-    #[ai("Similar to haiku, but focuses on human nature")]
-    Senryu,                  
+    #[ai("a short three-line poem structurally similar to haiku, but focusing on human foibles, wit, or satire, with a syllabic pattern of 5-7-5")]
+    Senryu,
 
-    #[ai("A stanza of seven lines")]
-    Septet,                 
+    #[ai("a stanza of seven lines with varied rhyme and meter, serving as a versatile structure for narrative or descriptive poetry")]
+    Septet,
 
-    #[ai("The last six lines of a sonnet or a stanza of six lines")]
-    Sestet,                 
+    #[ai("a stanza or poem of six lines, often used as the concluding section of a sonnet to resolve or reflect upon its thematic arc")]
+    Sestet,
 
-    #[ai("39 lines, six sestets and a tercet")]
-    Sestina,                 
+    #[ai("a complex poetic form of thirty-nine lines, comprising six sestets and a tercet, with a fixed pattern of word repetition at the line endings")]
+    Sestina,
 
-    #[ai("14 lines, ABABCDCDEFEFGG")]
-    ShakespeareanSonnet,     
+    #[ai("a fourteen-line poem with the ABABCDCDEFEFGG rhyme scheme, often exploring themes of love, conflict, or introspection")]
+    ShakespeareanSonnet,
 
-    #[ai("14-line poems with a specific rhyme scheme, often about love")]
-    Sonnet,                 
+    #[ai("a highly formalized poetic form of fourteen lines with a wide variety of rhyme schemes, often centered on love or philosophical themes")]
+    Sonnet,
 
-    #[ai("Shortened sonnet, 10 or 12 lines")]
-    Sonnetina,               
+    #[ai("a truncated sonnet form with ten or twelve lines, offering a condensed exploration of the traditional sonnet’s thematic intensity")]
+    Sonnetina,
 
-    #[ai("14 lines, ABABBCBCCDCDEE")]
-    SpenserianSonnet,        
+    #[ai("a Spenserian sonnet composed of fourteen lines with a unique ABABBCBCCDCDEE rhyme scheme, blending lyricism with structural unity")]
+    SpenserianSonnet,
 
-    #[ai("5 lines, 5-7-5-7-7 syllables")]
-    Tanka,                   
+    #[ai("a traditional Japanese form of five lines with a syllabic pattern of 5-7-5-7-7, evoking deep emotion and natural imagery")]
+    Tanka,
 
-    #[ai("Tercets, aba bcb cdc...")]
-    TerzaRima,               
+    #[ai("a tercet-based poetic form with an interlocking rhyme scheme (aba bcb cdc...), allowing a flowing and interconnected progression of themes")]
+    TerzaRima,
 
-    #[ai("Burmese form, three lines, rhyming syllables")]
-    ThanBauk,                
+    #[ai("a Burmese poetic form of three lines with rhyming syllables and compressed themes, blending brevity with linguistic playfulness")]
+    ThanBauk,
 
-    #[ai("8 lines, ABaAabAB")]
-    Triolet,                 
+    #[ai("an eight-line poem with a refrain and a fixed ABaAabAB rhyme scheme, emphasizing lyrical repetition and melodic harmony")]
+    Triolet,
 
-    #[ai("6 lines, first four are two-syllable descriptive words")]
-    Tyburn,                  
+    #[ai("a six-line poem where the first four lines consist of two-syllable descriptive words, leading to a vivid central theme")]
+    Tyburn,
 
-    #[ai("Spanish and Portuguese form, with a refrain")]
-    Villancico,             
+    #[ai("a lyrical Spanish or Portuguese poetic form with a refrain, often celebrating cultural or religious themes with a song-like rhythm")]
+    Villancico,
 
-    #[ai("19 lines, ABA ABA ABA ABA ABA ABAA")]
-    Villanelle,              
+    #[ai("a nineteen-line poem with five tercets and a concluding quatrain, employing the refrain-based ABA ABA ABA ABA ABA ABAA rhyme scheme")]
+    Villanelle,
 
-    #[ai("Medieval French form with multiple stanzas and refrains")]
-    Virelai,                
+    #[ai("a medieval French poetic form with multiple stanzas and refrains, blending musicality with narrative intricacy")]
+    Virelai,
 }
 
 #[cfg(test)]
