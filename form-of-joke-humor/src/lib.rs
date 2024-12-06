@@ -39,7 +39,7 @@ pub enum FormOfJokeHumor {
     Zinger,                 // A striking or amusing remark
 }
 
-pub enum ExhaustiveFormOfJokeHumor {
+pub enum FormOfJokeHumor {
     Absurdism,              // Humor based on intentionally ridiculous or bizarre scenarios
     Anecdotal,              // Humor derived from personal stories or experiences
     Banter,                 // Playful and friendly exchange of teasing remarks

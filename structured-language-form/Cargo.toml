@@ -1,6 +1,6 @@
 [package]
 name = "structured-language-form"
-version       = "0.2.0"
+version       = "0.3.0"
 edition       = "2021"
 authors       = [ "klebs tpk3.mx@gmail.com" ]
 description   = "A Rust crate for representing and working with various poetic meters."
