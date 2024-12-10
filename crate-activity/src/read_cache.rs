@@ -1,7 +1,9 @@
 crate::ix!();
 
 // Cache the response to a file
-pub async fn cache_response(config_dir: &Path, crate_name: &str, date: NaiveDate, response: &CrateResponse) -> io::Result<()> {
+pub async fn cache_response(config_dir: &Path, crate_name: &str, date: NaiveDate, response: &CrateResponse) 
+    -> io::Result<()> 
+{
     let cache_dir = config_dir.join("cache");
     fs::create_dir_all(&cache_dir).await?;
 

@@ -1,0 +1,25 @@
+
+To disentangle correlated crates and better understand the relationships in your dataset, you can apply the following techniques to identify key drivers of correlation and uncover underlying patterns:
+
+### 5. **Outlier Detection**
+   Identify spikes in download activity that disproportionately drive correlations.
+
+   - **Steps**:
+     1. Analyze daily download trends for outliers using statistical methods (e.g., z-scores).
+     2. Recompute correlations after removing or down-weighting outliers.
+
+   - **Outcome**:
+     - Focus on underlying patterns rather than anomalies.
+
+---
+
+### 6. **Partial Correlation Analysis**
+   Evaluate correlations while controlling for the influence of a third variable.
+
+   - **Steps**:
+     1. Select potential confounding factors (e.g., overall platform activity or trends).
+     2. Compute partial correlations to isolate direct relationships between crates.
+
+   - **Outcome**:
+     - Distinguish direct relationships from those influenced by shared external factors.
+

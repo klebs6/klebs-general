@@ -1,7 +1,9 @@
 crate::ix!();
 
 // Fetch usage from the API or cache
-pub async fn fetch_usage(user_agent: &str, config_dir: &Path, crate_name: &str) -> Result<Option<CrateResponse>, reqwest::Error> {
+pub async fn fetch_usage(user_agent: &str, config_dir: &Path, crate_name: &str) 
+    -> Result<Option<CrateResponse>, reqwest::Error> 
+{
     let today = Utc::now().date_naive();
 
     if let Some(cached) = load_cached_response(config_dir,crate_name, today).await {

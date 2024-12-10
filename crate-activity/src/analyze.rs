@@ -1,14 +1,15 @@
 crate::ix!();
 
 pub fn analyze_usage(crate_name: &str, version_downloads: Vec<VersionDownload>) -> CrateUsageSummary {
+
     // Aggregate downloads by date
-    let mut daily_downloads: HashMap<NaiveDate, u64> = HashMap::new();
+    let mut daily_downloads: HashMap<NaiveDate, i64> = HashMap::new();
 
     for download in version_downloads.iter() {
         *daily_downloads.entry(*download.date()).or_insert(0) += download.downloads();
     }
 
-    let total_downloads: u64 = daily_downloads.values().sum();
+    let total_downloads: i64 = daily_downloads.values().sum();
     let average_daily_downloads = total_downloads as f64 / daily_downloads.len() as f64;
     let peak_daily_downloads = *daily_downloads.values().max().unwrap_or(&0);
 
@@ -46,4 +47,3 @@ pub fn analyze_usage(crate_name: &str, version_downloads: Vec<VersionDownload>) 
         .build()
         .expect("Failed to build CrateUsageSummary") // Handle errors from builder
 }
-

@@ -7,13 +7,13 @@ pub struct CrateActivitySummary {
     date_interval_3d:              NaiveDate,
     date_interval_full_start:      NaiveDate,
     date_interval_full_end:        NaiveDate,
-    total_downloads:               u64,
+    total_downloads:               i64,
     avg_daily_downloads:           f64,
     avg_daily_downloads_per_crate: f64,
-    median_daily_downloads:        u64,
+    median_daily_downloads:        i64,
     crates_analyzed:               usize,
-    top_crates_1d:                 Vec<(String, u64)>,
-    top_crates_3d:                 Vec<(String, u64)>,
+    top_crates_1d:                 Vec<(String, i64)>,
+    top_crates_3d:                 Vec<(String, i64)>,
 }
 
 impl fmt::Display for CrateActivitySummary {
@@ -49,8 +49,8 @@ impl CrateActivitySummary {
 
     pub fn new(
         summaries: &[CrateUsageSummary],
-        interval_downloads_1d: HashMap<String, u64>,
-        interval_downloads_3d: HashMap<String, u64>,
+        interval_downloads_1d: HashMap<String, i64>,
+        interval_downloads_3d: HashMap<String, i64>,
         one_day_ago: NaiveDate,
         three_days_ago: NaiveDate,
     ) -> Self {
@@ -65,12 +65,12 @@ impl CrateActivitySummary {
             .unwrap_or((&one_day_ago, &one_day_ago));
 
         // Overall stats
-        let total_downloads: u64 = summaries.iter().map(|s| s.total_downloads()).sum();
+        let total_downloads: i64 = summaries.iter().map(|s| s.total_downloads()).sum();
         let avg_daily_downloads: f64 = summaries.iter().map(|s| s.average_daily_downloads()).sum::<f64>();
         let avg_daily_downloads_per_crate = avg_daily_downloads / summaries.len() as f64;
 
         // Median daily downloads
-        let mut daily_downloads: Vec<u64> = summaries.iter().map(|s| *s.total_downloads()).collect();
+        let mut daily_downloads: Vec<i64> = summaries.iter().map(|s| *s.total_downloads()).collect();
         daily_downloads.sort();
         let median_daily_downloads = if daily_downloads.is_empty() {
             0
