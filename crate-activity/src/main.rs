@@ -1,10 +1,9 @@
 use crate_activity::*;
-use structopt::StructOpt;
 
 #[tokio::main]
 async fn main() -> Result<(),CrateActivityError> {
 
-    let cli = CrateActivityCli::from_args();
+    let cli = CrateActivityCli::read_command_line();
 
     crate_activity_main(&cli).await?;
 

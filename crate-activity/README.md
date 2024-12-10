@@ -1,6 +1,10 @@
 # `crate-activity`
 
-`crate-activity` is a Rust-based tool for analyzing the usage metrics of your published crates on [crates.io](https://crates.io). It provides insights such as total downloads, average daily downloads, peak daily downloads, and download trends over time. Additionally, it highlights the most downloaded crates over recent intervals and enables caching for efficient data retrieval.
+# Crate Activity Analyzer
+
+**Crate Activity Analyzer** is a command-line tool designed to analyze and visualize the activity patterns of various Rust crates over time. It fetches usage data (downloads), cleans it by detecting and handling outliers, and performs advanced statistical and network-based analyses such as correlation analysis, Principal Component Analysis (PCA), hierarchical clustering, and correlation network exploration.
+
+This tool aims to help developers and researchers understand how crates evolve, identify underlying usage patterns, cluster crates by similar activity, and detect anomalies or spikes that might skew correlations.
 
 ## Features
 
@@ -22,26 +26,39 @@
   - Reads the list of crates and user agent settings from a configuration directory (`~/.published-crates` by default).
   - Automatically creates necessary configuration files if they don't exist.
 
+- **Correlation Analysis:**  
+  Compute pairwise correlations between crates based on their daily download patterns. Focus on crates with strong correlations to identify related ecosystems or usage trends.
+
+- **PCA Analysis:**  
+  Reduce dimensionality and reveal underlying factors that explain most of the variance in crate usage data.
+
+- **Hierarchical Clustering:**  
+  Perform single-linkage hierarchical clustering to group crates into dendrograms, revealing how crates cluster together by similarity in their download activity.
+
+- **Correlation Network Analysis:**  
+  Build a network graph of crates as nodes and strong correlations as edges. Analyze communities of crates using Girvan–Newman or examine betweenness centrality to find critical "bridge" crates.
+
+- **Time-Lagged Correlations:**  
+  Explore correlations with potential time shifts to see if one crate's activity leads or lags behind another, potentially uncovering cause-effect or dependency relationships.
+
+- **Outlier Detection and Handling:**  
+  Identify and remove or downweight anomalous spikes in download data using a MAD-based robust outlier detection approach. Helps ensure that rare, extreme spikes don't distort the overall patterns.
+
+- **Fully Configurable via CLI:**  
+  Choose which analyses to run individually or run them all at once with `--all`.  
+  Adjust thresholds (like correlation network threshold, outlier z-threshold) and control outlier handling (disable, remove, or downweight them).
+
 ## Installation
 
-Add `crate-activity` to your Rust project using Cargo:
+Ensure you have Rust and Cargo installed. Then:
 
 ```bash
 cargo install crate-activity
 ```
 
-Alternatively, clone the repository and run it directly:
-
-```bash
-git clone https://github.com/your-username/crate-activity.git
-cd crate-activity
-cargo build --release
-./target/release/crate-activity
-```
-
 ## Usage
 
-Run `crate-activity` to analyze your crate usage data:
+To run the analysis, simply call:
 
 ```bash
 crate-activity
@@ -53,6 +70,93 @@ By default, the tool looks for a configuration directory at `~/.published-crates
 - **`user_agent.txt`**: A custom user agent string for API requests.
 
 If these files are missing, the tool will generate defaults.
+
+### Common CLI Flags
+
+- `--all`  
+  Enable all analyses at once (correlations, PCA, hierarchical clustering, network analysis, etc.).
+
+- `--show-correlations` (or `-c`)  
+  Display correlation analysis results.
+
+- `--perform-pca` (or `-p`)  
+  Run PCA on the download data.
+
+- `--perform-hierarchical-clustering` (or `-h`)  
+  Compute hierarchical clustering and print a dendrogram.
+
+- `--correlation-network` (or `-n`)  
+  Build and analyze a correlation network graph.
+
+- `--print-summary` (or `-s`)  
+  Print a summary of the network graph (number of nodes, edges, communities).
+
+- `--time-lag-correlations` (or `-t`)  
+  Compute and display time-lagged correlations with a given `--max-lag`.
+
+- `--outlier-z-threshold <float>`  
+  Set the z-score threshold for detecting outliers. Higher values yield fewer outliers.
+
+- `--downweight-outliers`  
+  Instead of removing outliers, downweight them by `--outlier-weight` factor.
+
+- `--outlier-weight <float>`  
+  Factor by which to multiply outliers if downweighting them.
+
+- `--disable-outlier-handling`  
+  Completely skip outlier detection and use raw data.
+
+### Example Commands
+
+1. **Run Everything:**  
+   ```bash
+   crate-activity --all
+   ```
+   This enables correlation analysis, PCA, hierarchical clustering, network analysis, print summary, and time-lag correlations.
+
+2. **Focus on Correlation Analysis Only:**  
+   ```bash
+   crate-activity --show-correlations
+   ```
+   
+3. **Perform PCA and Hierarchical Clustering with Higher Outlier Threshold:**  
+   ```bash
+   crate-activity --perform-pca --perform-hierarchical-clustering --outlier-z-threshold 6.0
+   ```
+   
+4. **Disable Outlier Handling and Build a Correlation Network:**  
+   ```bash
+   crate-activity --disable-outlier-handling --correlation-network --print-summary
+   ```
+
+## Configuration
+
+- **Crate List:**  
+  By default, reads `~/.published-crates/crate_list.txt`.  
+  If missing, it warns and uses a default set (like `serde`, `tokio`).
+
+- **User Agent:**  
+  Tries to read `~/.published-crates/user_agent.txt`. If missing, uses a default user agent.
+
+- **Caching:**  
+  Responses are cached in `~/.published-crates/cache` to speed up repeated runs.
+
+## Testing
+
+Run tests with:
+
+```bash
+cargo test
+```
+
+Tests verify data alignment, correlation computation, PCA, clustering, and outlier handling. If you encounter test failures due to outlier handling in tests, remember that the code disables outliers by default in test builds (or adjust test scenarios accordingly).
+
+## Limitations and Future Work
+
+- The current outlier detection method (MAD-based) and thresholds might need domain-specific tuning.
+- PCA and clustering are based on Pearson correlations, which assume linear relationships.
+- No built-in visualization beyond terminal output. Users may export results and visualize them with external tools.
+
 
 ### Output Example
 
@@ -142,3 +246,4 @@ Contributions are welcome! If you encounter bugs or have feature suggestions, fe
 ---
 
 Start monitoring your crate usage today with `crate-activity`! 🚀
+

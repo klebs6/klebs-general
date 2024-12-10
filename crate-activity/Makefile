@@ -1,5 +1,7 @@
 DEFAULT := run
-ARGS := -cphnbst -g3
+#ARGS := -cphnbst -g3
+#ARGS := 
+ARGS := --all
 
 default: $(DEFAULT)
 

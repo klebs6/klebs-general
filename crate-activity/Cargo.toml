@@ -1,6 +1,6 @@
 [package]
 name = "crate-activity"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 
 description = "This crate provides a way to monitor the usage for a set of crates.io crates"

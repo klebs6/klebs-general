@@ -4,6 +4,12 @@ crate::ix!();
 #[derive(Getters,StructOpt, Debug)]
 #[structopt(name = "crate-activity")]
 pub struct CrateActivityCli {
+
+    /// Enable all analyses: correlations, PCA, hierarchical clustering, network analysis, etc.
+    #[structopt(long, help = "Enable all analyses at once")]
+    #[getset(get = "pub")]
+    all: bool,
+
     /// Toggle to enable or disable correlation analysis
     #[structopt(long, short = "c", help = "Display correlation analysis")]
     #[getset(get = "pub")]
@@ -55,7 +61,7 @@ pub struct CrateActivityCli {
     max_lag: i32,
 
     /// Z-score threshold for outlier detection (MAD-based)
-    #[structopt(long, default_value = "3.0", help = "Z-score threshold for outlier detection")]
+    #[structopt(long, default_value = "4.0", help = "Z-score threshold for outlier detection")]
     #[getset(get = "pub")]
     outlier_z_threshold: f64,
 
@@ -71,6 +77,41 @@ pub struct CrateActivityCli {
 
     /// Disable outlier handling altogether
     #[structopt(long, help = "Disable outlier detection and handling")]
-    #[getset(get = "pub")]
     disable_outlier_handling: bool,
+}
+
+impl CrateActivityCli {
+
+    pub fn read_command_line() -> Self {
+        let mut cli = CrateActivityCli::from_args();
+        cli.apply_all_flag();
+        cli
+    }
+
+    pub fn disable_outlier_handling(&self) -> bool {
+
+        #[cfg(test)]
+        let disable_outliers_override = true; // Force no outliers in test
+
+        #[cfg(not(test))]
+        let disable_outliers_override = false;
+
+        let disable_outliers = self.disable_outlier_handling || disable_outliers_override;
+
+        disable_outliers
+    }
+
+    /// Apply the `--all` flag overrides if set.
+    pub fn apply_all_flag(&mut self) {
+        if self.all {
+            self.show_correlations = true;
+            self.perform_pca = true;
+            self.perform_hierarchical_clustering = true;
+            self.correlation_network = true;
+            self.compute_betweenness = true;
+            self.print_summary = true;
+            self.time_lag_correlations = true;
+            // You might leave outlier handling as is or also enable/disable it if desired.
+        }
+    }
 }

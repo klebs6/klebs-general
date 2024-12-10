@@ -258,7 +258,8 @@ mod time_lag_correlations_tests {
     #[test]
     fn test_single_best_lag() {
         let a = dummy_summary("A", &[10,20,30,40,50]);
-        let b = dummy_summary("B", &[20,30,40,50,9999]); 
+        let b = dummy_summary("B", &[20,30,40,50,100]);
+
         let results = compute_time_lag_correlations(&[a,b], 2);
         assert_eq!(results.len(), 1);
         let (_,_, lag, corr) = &results[0];

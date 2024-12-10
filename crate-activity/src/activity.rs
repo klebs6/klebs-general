@@ -31,7 +31,7 @@ pub async fn crate_activity_main(cli: &CrateActivityCli) -> Result<(), CrateActi
 
     tracing::info!("{}", activity_summary);
 
-    let cleaned_summaries = if *cli.disable_outlier_handling() {
+    let cleaned_summaries = if cli.disable_outlier_handling() {
         tracing::info!("Outlier detection disabled. Using raw data.");
         activity_data.summaries().to_vec()
     } else {
