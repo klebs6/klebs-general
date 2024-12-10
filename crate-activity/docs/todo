@@ -1,16 +1,6 @@
 
 To disentangle correlated crates and better understand the relationships in your dataset, you can apply the following techniques to identify key drivers of correlation and uncover underlying patterns:
 
-### 5. **Outlier Detection**
-   Identify spikes in download activity that disproportionately drive correlations.
-
-   - **Steps**:
-     1. Analyze daily download trends for outliers using statistical methods (e.g., z-scores).
-     2. Recompute correlations after removing or down-weighting outliers.
-
-   - **Outcome**:
-     - Focus on underlying patterns rather than anomalies.
-
 ---
 
 ### 6. **Partial Correlation Analysis**
@@ -23,3 +13,30 @@ To disentangle correlated crates and better understand the relationships in your
    - **Outcome**:
      - Distinguish direct relationships from those influenced by shared external factors.
 
+---
+
+If some crates have incomplete data (for example, they were just published and haven’t been around for the full date range), you have several strategies to consider:
+
+1. **Data Imputation (Filling Gaps):**  
+   Treat missing days as zero-download days or some other imputed value. This ensures all crates have data for the entire range. However, this might skew the analysis if the crate is new and its absence of data is interpreted as zero usage.
+
+2. **Adaptive Date Ranges:**  
+   Instead of enforcing a global full data range for every crate, consider only the intersection of dates where both crates have data when computing pairwise correlations. This already happens in many correlation computations by intersecting date ranges. Still, you can explicitly handle newer crates by:
+   - Only comparing overlapping periods between pairs of crates.
+   - Documenting that newer crates may have shorter analyzed periods, possibly affecting correlation strength.
+
+3. **Filtering Out Crates With Insufficient Data:**  
+   Before performing correlation, PCA, or clustering, define a minimum data coverage threshold. For example, only include crates that have at least X% of days covered within the analyzed range. Crates that don’t meet this criterion can be excluded from correlation and clustering analyses to avoid skewed results.
+
+4. **Weighted Correlations or Partial Periods:**  
+   If a crate appears late in the timeline, consider correlations only for the period after the crate’s first data point. For time-lag correlations or other analyses, focus on the overlapping timeframe where both crates have actual data. This ensures a fairer comparison and avoids penalizing newer crates or giving them undue influence.
+
+5. **Marking Incomplete Crates in the Output:**  
+   Add a note or a warning in the output indicating which crates had incomplete data. This transparency helps users interpret the results. For instance:
+   - Print a warning: "Crate 'xyz' has data for only the last 10 days, considered partial in analysis."
+   - Adjust summaries or correlation outputs to highlight crates that joined the ecosystem late.
+
+6. **Adjust the Analysis Window:**  
+   Restrict the global analysis period to a shorter, more recent time frame during which all crates have some presence. For example, if some crates are very new, consider only the last N days for the entire analysis. This ensures everyone is on a more even playing field, though it loses some historical perspective.
+
+**In summary**, the best approach depends on your goals. Often, simply acknowledging incomplete data and handling it gracefully—such as excluding crates with very short histories or performing correlations only over overlapping intervals—is enough. For a production tool, a combination of filtering out insufficient data and clearly documenting how incomplete data is treated will produce the most meaningful and interpretable results.

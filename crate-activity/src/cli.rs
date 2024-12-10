@@ -61,7 +61,7 @@ pub struct CrateActivityCli {
     max_lag: i32,
 
     /// Z-score threshold for outlier detection (MAD-based)
-    #[structopt(long, default_value = "4.0", help = "Z-score threshold for outlier detection")]
+    #[structopt(long, default_value = "24.0", help = "Z-score threshold for outlier detection")]
     #[getset(get = "pub")]
     outlier_z_threshold: f64,
 
