@@ -1,7 +1,9 @@
 crate::ix!();
 
 pub fn display_dendrogram(dendrogram: &Dendrogram) {
+
     println!("----------------[hierarchical-clustering-dendrogram]----------------");
+
     fn print_node(node: &Dendrogram, indent: usize) {
         let prefix = " ".repeat(indent);
         match node {
