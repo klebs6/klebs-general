@@ -1,0 +1,32 @@
+[package]
+name = "crate-activity"
+version = "0.1.0"
+edition = "2021"
+
+description = "This crate provides a way to monitor the usage for a set of crates.io crates"
+authors = [ "klebs tpk3.mx@gmail.com" ]
+license = "MIT"
+keywords = ["crates", "usage", "monitoring", "analysis", "stats"]
+repository = "https://github.com/klebs6/klebs-general"
+categories = ["development-tools"]
+
+[[bin]]
+name = "crate-activity"
+path = "src/main.rs"
+
+[dependencies]
+reqwest        = { version = "*", features = ["json"] }
+serde          = { version = "*", features = ["derive"] }
+tokio          = { version = "*", features = ["full"] }
+chrono         = { version = "*", features = ["serde"] }
+tracing-setup  = "1.0.2"
+traced-test    = "1.0.2"
+tracing        = "0.1.41"
+serde_json     = "1.0.133"
+error-tree     = "0.6.0"
+dirs           = "5.0.1"
+futures        = "0.3.31"
+export-magic   = "0.3.6"
+getset         = "0.1"
+derive_builder = "0.20.2"
+itertools      = "0.10.0"

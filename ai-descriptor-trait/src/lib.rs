@@ -1,4 +1,6 @@
 use std::borrow::Cow;
+
+#[allow(unused_imports)]
 use str_shorthand::lowercase_first_letter;
 
 pub trait ItemFeature {
@@ -13,8 +15,9 @@ pub trait ItemWithFeatures {
 impl<T> ItemFeature for T where T: ItemWithFeatures {
     fn text(&self) -> Cow<'_,str> {
         let mut lines: Vec<String> = vec![];
-        lines.push("It is".to_string());
-        lines.push(lowercase_first_letter(&self.header()));
+        //lines.push("It is".to_string());
+        //lines.push(lowercase_first_letter(&self.header()));
+        lines.push(self.header().to_string());
 
         for feature in self.features() {
             lines.push(feature.to_string());

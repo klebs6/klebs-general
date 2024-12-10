@@ -15,7 +15,7 @@ categories    = ["game-development", "simulation", "rust-patterns"]
 
 [dependencies]
 once_cell = "1.16"
-random-constructible        = "0.10.0"
-random-constructible-derive = "0.10.0"
-#random-constructible        = { version = "*", path = "../random-constructible" }
-#random-constructible-derive = { version = "*", path = "../random-constructible-derive" }
+#random-constructible        = "0.10.0"
+#random-constructible-derive = "0.10.0"
+random-constructible        = { version = "*", path = "../random-constructible" }
+random-constructible-derive = { version = "*", path = "../random-constructible-derive" }
