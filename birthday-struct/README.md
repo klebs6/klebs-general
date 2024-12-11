@@ -1,7 +1,7 @@
 
 # birthday-struct
 
-**birthday-struct** is a Rust library designed for working with birthdays in the context of an online bookstore or any e-commerce system. It supports:
+**birthday-struct** is a Rust library designed for working with birthdays. It supports:
 
 - Representing birthdays with an associated time zone.
 - Calculating age based on the current date.
@@ -34,7 +34,7 @@
 ## Example
 
 ```rust
-use storefront_birthday::{BirthdayBuilder, SerializableTimeZone, birthday_greeting};
+use birthday_struct::{BirthdayBuilder, Tz, birthday_greeting};
 use language_enum::Language;
 
 fn main() {
@@ -42,7 +42,7 @@ fn main() {
         .day(10)
         .month(8)
         .year(1990)
-        .time_zone(SerializableTimeZone::utc())
+        .time_zone(Tz::utc())
         .build()
         .unwrap();
 
