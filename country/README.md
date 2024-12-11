@@ -1,5 +1,6 @@
 Contains the following enum:
 
+```rust
 /// Represents a country
 ///
 #[derive(Debug, PartialEq, Eq, Clone,Serialize,Deserialize)]
@@ -203,5 +204,7 @@ pub enum Country {
     Zimbabwe,
     Other(String),
 }
+
+```
 
 If your country is not on this list and you would like to add it, please feel free to submit a pull request.
