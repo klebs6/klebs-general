@@ -1,0 +1,19 @@
+[package]
+name          = "zodiac-sign"
+version       = "0.1.0"
+edition       = "2024"
+authors       = [ "klebs tpk3.mx@gmail.com" ]
+license       = "MIT"
+repository    = "https://github.com/klebs6/klebs-general"
+description   = "A Rust library enumerating zodiac signs and providing date-based lookups and conversions."
+documentation = "https://docs.rs/zodiac-sign"
+readme        = "README.md"
+keywords      = ["zodiac", "astrology", "date"]
+categories    = ["internationalization"]
+include       = ["src/**/*", "Cargo.toml", "README.md", "LICENSE"]
+
+[dependencies]
+serde = { version = "1.0.216", features = ["derive"] }
+export-magic = "0.3.6"
+strum_macros = "0.26.4"
+strum = "0.26.3"
