@@ -31,15 +31,21 @@ impl fmt::Display for CrateActivitySummary {
         writeln!(f, "  Median Daily Downloads:            {}", self.median_daily_downloads)?;
         writeln!(f, "  Crates Analyzed:                   {}", self.crates_analyzed)?;
 
+        let mut total_1d_downloads = 0;
         writeln!(f, "\nTop Crates (Last 1 Day):")?;
         for (crate_name, downloads) in &self.top_crates_1d {
+            total_1d_downloads += downloads;
             writeln!(f, "  {:<30} {:>10} downloads", crate_name, downloads)?;
         }
+        writeln!(f, "  {:<30} total downloads (Last 1 Day)", total_1d_downloads)?;
 
+        let mut total_3d_downloads = 0;
         writeln!(f, "\nTop Crates (Last 3 Days):")?;
         for (crate_name, downloads) in &self.top_crates_3d {
+            total_3d_downloads += downloads;
             writeln!(f, "  {:<30} {:>10} downloads", crate_name, downloads)?;
         }
+        writeln!(f, "  {:<30} total downloads (Last 3 Days)", total_3d_downloads)?;
 
         Ok(())
     }
