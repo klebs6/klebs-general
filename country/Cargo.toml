@@ -1,0 +1,15 @@
+[package]
+name = "country"
+version = "0.1.0"
+edition = "2024"
+
+description = "Contains the `Country` enum representing the planet's countries as of 2024"
+authors = [ "klebs tpk3.mx@gmail.com" ]
+license = "MIT"
+keywords = ["geographic", "data-structures", "country", "geo", "enum"]
+repository = "https://github.com/klebs6/klebs-general"
+categories = ["development-tools", "data-structures"]
+
+
+[dependencies]
+serde = { version = "1.0.216", features = ["derive"] }
