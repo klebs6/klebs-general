@@ -2,7 +2,7 @@ use serde::{Serialize,Deserialize};
 
 /// Represents a country
 ///
-#[derive(Debug, PartialEq, Eq, Clone,Serialize,Deserialize)]
+#[derive(Debug,PartialEq,Eq,Hash,Copy,Clone,Serialize,Deserialize)]
 pub enum Country {
     Afghanistan,
     Albania,
@@ -201,5 +201,4 @@ pub enum Country {
     Yemen,
     Zambia,
     Zimbabwe,
-    Other(String),
 }
