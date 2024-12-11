@@ -1,0 +1,20 @@
+[package]
+name = "month-and-season"
+version = "0.1.0"
+edition = "2024"
+
+authors = [ "klebs tpk3.mx@gmail.com" ]
+license = "MIT"
+repository = "https://github.com/klebs6/klebs-general"
+description = "Typed enumerations and utilities for months and meteorological seasons."
+documentation = "https://docs.rs/month-and-season"
+readme = "README.md"
+keywords = ["month", "season", "time", "calendar"]
+categories = ["date-and-time"]
+include = ["src/**/*", "Cargo.toml", "README.md", "LICENSE"]
+
+[dependencies]
+serde = { version = "1.0.216", features = ["derive"] }
+export-magic = "0.3.6"
+strum_macros = "0.26.4"
+strum = "0.26.3"
