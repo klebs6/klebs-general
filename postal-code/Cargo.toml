@@ -10,7 +10,7 @@ repository = "https://github.com/klebs6/klebs-general"
 documentation = "https://docs.rs/postal-code"
 readme = "README.md"
 keywords = ["postage", "zipcode", "validation", "international", "country"]
-categories = ["data-validation", "internationalization"]
+categories = ["internationalization"]
 
 [dependencies]
 derive_builder = "0.11"
