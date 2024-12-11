@@ -3,13 +3,16 @@ name = "country"
 version = "0.3.0"
 edition = "2024"
 
-description = "Contains the `Country` enum representing the planet's countries as of 2024"
-authors = [ "klebs tpk3.mx@gmail.com" ]
-license = "MIT"
-keywords = ["geographic", "data-structures", "country", "geo", "enum"]
-repository = "https://github.com/klebs6/klebs-general"
-categories = ["development-tools", "data-structures"]
-
+description = "A Rust library providing a single source of truth for country enumeration and their associated ISO 3166-1 alpha-2 and alpha-3 codes"
+authors     = [ "klebs tpk3.mx@gmail.com" ]
+license     = "MIT"
+keywords    = ["geographic", "data-structures", "country", "geo", "enum"]
+repository  = "https://github.com/klebs6/klebs-general"
+categories  = ["development-tools", "data-structures"]
 
 [dependencies]
 serde = { version = "1.0.216", features = ["derive"] }
+export-magic = "0.3.6"
+
+[dev-dependencies]
+serde_json = "1.0.133"
