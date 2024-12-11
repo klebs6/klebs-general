@@ -1,6 +1,6 @@
 [package]
 authors       = [ "klebs <tpk3.mx@gmail.com>" ]
-categories    = ["text-processing", "data-formatting"]
+categories    = ["text-processing"]
 description   = "A Rust library for representing personal names with optional titles, middle names/initials, and convenience macros."
 documentation = "https://docs.rs/name-and-title"
 edition       = "2024"
