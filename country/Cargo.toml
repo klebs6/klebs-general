@@ -1,6 +1,6 @@
 [package]
 name = "country"
-version = "0.2.0"
+version = "0.3.0"
 edition = "2024"
 
 description = "Contains the `Country` enum representing the planet's countries as of 2024"
