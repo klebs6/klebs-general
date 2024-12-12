@@ -1,0 +1,23 @@
+[package]
+name = "twitter-twitter"
+version = "0.1.0"
+edition = "2024"
+
+[[bin]]
+path = "src/main.rs"
+name = "twitter-twitter"
+
+[dependencies]
+reqwest        = { version = "*", features = ["json", "rustls-tls"] }
+serde          = { version = "*", features  = ["derive"] }
+serde_json     = "*"
+oauth          = "*"
+tokio          = { version = "*", features    = ["full"] }
+dotenv         = "*"
+getset         = "*"
+derive_builder = "*"
+structopt      = "*"
+chrono         = { version = "*", features = ["serde"] }
+export-magic     = "*"
+error-tree       = "*"
+percent-encoding = "*"
