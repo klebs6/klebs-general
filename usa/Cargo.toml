@@ -1,0 +1,20 @@
+[package]
+name        = "usa"
+version     = "0.1.0"
+authors     = [ "klebs tpk3.mx@gmail.com" ]
+edition     = "2021"
+repository  = "https://github.com/klebs6/klebs-general"
+description = "A Rust library providing typed enums and utilities for working with United States regions, including states, territories, and the federal district."
+license     = "MIT"
+
+[dependencies]
+serde        = { version = "1.0", features = ["derive"] }
+export-magic = "0.3.6"
+strum        = { version = "0.24", features = ["derive"] }
+strum_macros = "0.24"
+serde_json   = { version = "1" }
+thiserror    = "2.0.6"
+once_cell    = "1.20.2"
+
+[features]
+serde_abbreviation = []
