@@ -32,8 +32,8 @@ generate_postal_code_validator!{
 
 generate_postal_code_validator!{
     UkValidator, 
-    Country::UK, 
-    REGEX_UK
+    Country::UnitedKingdom, 
+    REGEX_UnitedKingdom
 }
 
 generate_postal_code_validator!{
@@ -67,13 +67,13 @@ impl GetPostalCodeValidator for Country {
         -> Option<Box<dyn PostalCodeValidator + Send + Sync>> 
     {
         match self {
-            Country::USA     => Some(Box::new(UsaValidator)),
-            Country::Canada  => Some(Box::new(CanadaValidator)),
-            Country::UK      => Some(Box::new(UkValidator)),
-            Country::France  => Some(Box::new(FranceValidator)),
-            Country::Germany => Some(Box::new(GermanyValidator)),
-            Country::Italy   => Some(Box::new(ItalyValidator)),
-            _                => None, // Unsupported countries return None
+            Country::USA           => Some(Box::new(UsaValidator)),
+            Country::Canada        => Some(Box::new(CanadaValidator)),
+            Country::UnitedKingdom => Some(Box::new(UkValidator)),
+            Country::France        => Some(Box::new(FranceValidator)),
+            Country::Germany       => Some(Box::new(GermanyValidator)),
+            Country::Italy         => Some(Box::new(ItalyValidator)),
+            _                      => None, // Unsupported countries return None
         }
     }
 }

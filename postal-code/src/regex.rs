@@ -29,10 +29,10 @@ macro_rules! define_postal_code_regexes {
 
 define_postal_code_regexes!{
     Set1, {
-        USA    => r"^\d{5}(-\d{4})?$",
-        Canada => r"^[A-Za-z]\d[A-Za-z] ?\d[A-Za-z]\d$",
-        UK     => r"^(GIR 0AA)$|((([A-Z]{1,2}[0-9][A-Z0-9]?)|(([A-Z]{1,2}[0-9]{1,2})|(([A-Z]{1,2}[0-9][A-Z])|([A-Z]{1,2}[0-9]{2})))) [0-9][A-Z]{2})$",
-        France => r"^\d{5}$",
+        USA           => r"^\d{5}(-\d{4})?$",
+        Canada        => r"^[A-Za-z]\d[A-Za-z] ?\d[A-Za-z]\d$",
+        UnitedKingdom => r"^(GIR 0AA)$|((([A-Z]{1,2}[0-9][A-Z0-9]?)|(([A-Z]{1,2}[0-9]{1,2})|(([A-Z]{1,2}[0-9][A-Z])|([A-Z]{1,2}[0-9]{2})))) [0-9][A-Z]{2})$",
+        France        => r"^\d{5}$",
     }
 }
 

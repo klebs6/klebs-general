@@ -118,20 +118,20 @@ mod postal_code_tests {
     #[test]
     fn test_uk_valid() {
         // Buckingham Palace code: "SW1A 1AA"
-        let pc = PostalCode::new(Country::UK, "SW1A 1AA");
+        let pc = PostalCode::new(Country::UnitedKingdom, "SW1A 1AA");
         assert!(pc.is_ok());
     }
 
     #[test]
     fn test_uk_invalid_no_space() {
         // UK codes typically have a space; this might fail validation
-        let pc = PostalCode::new(Country::UK, "SW1A1AA");
+        let pc = PostalCode::new(Country::UnitedKingdom, "SW1A1AA");
         assert!(pc.is_err());
     }
 
     #[test]
     fn test_uk_invalid_too_long() {
-        let pc = PostalCode::new(Country::UK, "SW1A 1AAA");
+        let pc = PostalCode::new(Country::UnitedKingdom, "SW1A 1AAA");
         assert!(pc.is_err());
     }
 
@@ -242,7 +242,7 @@ mod postal_code_tests {
     #[test]
     fn test_uk_gir_special_case() {
         // G.IR 0AA is a special National Girobank code. Check that it is valid.
-        let pc = PostalCode::new(Country::UK, "GIR 0AA");
+        let pc = PostalCode::new(Country::UnitedKingdom, "GIR 0AA");
         assert!(pc.is_ok());
     }
 }
