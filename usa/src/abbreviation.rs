@@ -9,7 +9,7 @@ impl Abbreviation for USRegion {
 
     fn abbreviation(&self) -> &'static str {
         match self {
-            USRegion::UnitedState(s)           => s.abbreviation(),
+            USRegion::UnitedState(s)       => s.abbreviation(),
             USRegion::USTerritory(t)       => t.abbreviation(),
             USRegion::USFederalDistrict(d) => d.abbreviation(),
         }

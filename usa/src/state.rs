@@ -5,7 +5,7 @@ crate::ix!();
 /// We use strum attributes to handle various forms (full name, abbreviation, and spaceless name).
 /// `ascii_case_insensitive` ensures case-insensitive matching.
 /// `serialize_all = "title_case"` ensures variant names are considered in Title Case by default.
-#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy, StrumDisplay, StrumEnumString, StrumEnumIter, StrumEnumVariantNames)]
+#[derive(Debug,PartialOrd,Ord,PartialEq,Eq,Hash,Clone,Copy,StrumDisplay,StrumEnumString,StrumEnumIter,StrumEnumVariantNames)]
 #[strum(ascii_case_insensitive, serialize_all = "title_case")]
 pub enum UnitedState {
     #[strum(serialize = "Alabama",        serialize = "AL"                               )] Alabama,

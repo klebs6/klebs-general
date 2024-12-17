@@ -7,10 +7,6 @@ x!{region}
 x!{state}
 x!{territory}
 
-let country = Country::USA;
-let x       = UnitedState::California;
-let zip     = PostalCode::new(country, "20816");
-
 #[cfg(test)]
 mod tests {
     use super::*;

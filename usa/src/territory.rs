@@ -1,7 +1,7 @@
 crate::ix!();
 
 /// U.S. Territories.
-#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy, StrumDisplay, StrumEnumString, StrumEnumIter, StrumEnumVariantNames)]
+#[derive(Debug,PartialOrd,Ord,PartialEq,Eq,Hash,Clone,Copy,StrumDisplay,StrumEnumString,StrumEnumIter,StrumEnumVariantNames)]
 #[strum(ascii_case_insensitive, serialize_all = "title_case")]
 pub enum USTerritory {
     #[strum(serialize = "AmericanSamoa",          serialize = "American Samoa",           serialize = "AS" )] AmericanSamoa,
