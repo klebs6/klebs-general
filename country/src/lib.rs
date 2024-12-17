@@ -7,22 +7,22 @@ macro_rules! countries {
     (
         $( ($country:ident, $alpha2:ident, $alpha3:ident), )*
     ) => {
-        #[derive(Debug,PartialEq,Eq,Hash,Copy,Clone,Serialize,Deserialize)]
+        #[derive(Debug,PartialOrd,Ord,PartialEq,Eq,Hash,Copy,Clone,Serialize,Deserialize)]
         pub enum Country {
             $($country),*
         }
 
-        #[derive(Debug,PartialEq,Eq,Hash,Copy,Clone,Serialize,Deserialize)]
+        #[derive(Debug,PartialOrd,Ord,PartialEq,Eq,Hash,Copy,Clone,Serialize,Deserialize)]
         pub enum Iso3166Alpha2 {
             $($alpha2),*
         }
 
-        #[derive(Debug,PartialEq,Eq,Hash,Copy,Clone,Serialize,Deserialize)]
+        #[derive(Debug,PartialOrd,Ord,PartialEq,Eq,Hash,Copy,Clone,Serialize,Deserialize)]
         pub enum Iso3166Alpha3 {
             $($alpha3),*
         }
 
-        #[derive(Debug,PartialEq,Eq,Hash,Copy,Clone,Serialize,Deserialize)]
+        #[derive(Debug,PartialOrd,Ord,PartialEq,Eq,Hash,Copy,Clone,Serialize,Deserialize)]
         pub enum CountryCode {
             Alpha2(Iso3166Alpha2),
             Alpha3(Iso3166Alpha3),

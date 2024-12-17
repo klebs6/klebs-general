@@ -1,7 +1,7 @@
 crate::ix!();
 
 /// A validated postal code with country context.
-#[derive(Builder,Debug,Hash,Clone,PartialEq,Eq,Serialize,Deserialize,Getters)]
+#[derive(Builder,Debug,Hash,Clone,PartialEq,Eq,Serialize,Deserialize,Getters,Ord,PartialOrd)]
 #[builder(build_fn(error = "PostalCodeConstructionError",validate = "Self::validate"))]
 pub struct PostalCode {
 
