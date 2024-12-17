@@ -1,6 +1,6 @@
 [package]
 name = "country"
-version = "0.4.0"
+version = "0.5.0"
 edition = "2024"
 
 description = "A Rust library providing a single source of truth for country enumeration and their associated ISO 3166-1 alpha-2 and alpha-3 codes"
