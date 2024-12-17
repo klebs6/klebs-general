@@ -8,6 +8,24 @@ pub enum USRegion {
     USFederalDistrict(USFederalDistrict),
 }
 
+impl From<UnitedState> for USRegion {
+    fn from(x: UnitedState) -> Self {
+        USRegion::UnitedState(x)
+    }
+}
+
+impl From<USTerritory> for USRegion {
+    fn from(x: USTerritory) -> Self {
+        USRegion::USTerritory(x)
+    }
+}
+
+impl From<USFederalDistrict> for USRegion {
+    fn from(x: USFederalDistrict) -> Self {
+        USRegion::USFederalDistrict(x)
+    }
+}
+
 impl TryFrom<&str> for USRegion {
 
     type Error = BadInput;

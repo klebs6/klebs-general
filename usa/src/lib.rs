@@ -12,6 +12,16 @@ mod tests {
     use super::*;
 
     #[test]
+    fn test_from() {
+        let _ = USRegion::from(USFederalDistrict::DistrictOfColumbia);
+        let _ = USRegion::from(UnitedState::Maryland);
+        let _ = USRegion::from(USTerritory::VirginIslands);
+        let _: USRegion = USFederalDistrict::DistrictOfColumbia.into();
+        let _: USRegion = USTerritory::VirginIslands.into();
+        let _: USRegion = UnitedState::Maryland.into();
+    }
+
+    #[test]
     fn test_display() {
         assert_eq!(UnitedState::California.to_string(), "California");
         assert_eq!(UnitedState::NewYork.to_string(), "New York");
