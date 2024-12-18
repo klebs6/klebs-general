@@ -129,5 +129,3 @@ impl StreetExistsGlobally for DataAccess {
         self.get_city_set(&key_cities).is_some() || self.get_zip_set(&key_zips).is_some()
     }
 }
-
-

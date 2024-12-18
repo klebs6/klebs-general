@@ -49,7 +49,7 @@ impl Database {
         match serde_cbor::from_slice::<crate::CompressedList<T>>(val) {
             Ok(clist) => {
                 let items = clist.items();
-                println!("Decoded as {}: {:#?}", label, items);
+                println!("Decoded as {}: {:?}", label, items);
             }
             Err(e) => {
                 println!("Failed to decode as {}: {}", label, e);

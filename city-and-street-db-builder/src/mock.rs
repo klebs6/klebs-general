@@ -7,7 +7,7 @@ impl Mock for UsaAddress {
             .region(USRegion::UnitedState(UnitedState::Maryland))
             .zip(PostalCode::new(Country::USA, "21201").unwrap())
             .city(CityName::new("Baltimore").unwrap())
-            .street(StreetName::new("North Avenue").unwrap())
+            .street(StreetName::new("East North Avenue").unwrap())
             .build()
             .unwrap()
     }

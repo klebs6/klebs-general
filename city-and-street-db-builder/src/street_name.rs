@@ -96,4 +96,3 @@ mod postal_code_tests {
         }
     }
 }
-

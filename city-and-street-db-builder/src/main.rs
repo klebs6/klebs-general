@@ -11,10 +11,12 @@ async fn main() -> Result<(),UsaCityAndStreetDbBuilderError> {
     configure_tracing();
 
     let mock = false;
+    let dump = false;
+    let just_validate = true;
 
     match mock {
         true  => main_mock().await,
-        false => main_no_mock().await,
+        false => main_no_mock(dump,just_validate).await,
     }
 }
 
@@ -62,13 +64,21 @@ fn validate_mock_address(db: Arc<Mutex<Database>>) -> Result<(),UsaCityAndStreet
     Ok(())
 }
 
-async fn main_no_mock() -> Result<(),UsaCityAndStreetDbBuilderError> {
+async fn main_no_mock(dump: bool, just_validate: bool) -> Result<(),UsaCityAndStreetDbBuilderError> {
 
     let db  = Database::open(&PathBuf::from("rocksdb_us"))?;
 
-    match db.lock() {
-        Ok(mut db) => build_dmv_regions(&mut *db).await?,
-        Err(_) => panic!("could not get db lock!"),
+    if !just_validate {
+
+        match db.lock() {
+            Ok(mut db) => {
+                match dump {
+                    true  => db.dump_entire_database_contents(),
+                    false => build_dmv_regions(&mut *db).await?,
+                }
+            },
+            Err(_) => panic!("could not get db lock!"),
+        }
     }
 
     validate_mock_address(db.clone());
