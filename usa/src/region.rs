@@ -123,3 +123,9 @@ impl<'de> Deserialize<'de> for USRegion {
         })
     }
 }
+
+impl From<USRegion> for Country {
+    fn from(_value: USRegion) -> Self {
+        Country::USA
+    }
+}
