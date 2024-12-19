@@ -4,10 +4,10 @@ impl Mock for UsaAddress {
 
     fn mock() -> Self {
         UsaAddressBuilder::default()
-            .region(USRegion::UnitedState(UnitedState::Maryland))
-            .zip(PostalCode::new(Country::USA, "21201").unwrap())
-            .city(CityName::new("Baltimore").unwrap())
-            .street(StreetName::new("East North Avenue").unwrap())
+            .region(USRegion::UnitedState(UnitedState::Virginia))
+            .zip(PostalCode::new(Country::USA, "20124").unwrap())
+            .city(CityName::new("Clifton").unwrap())
+            .street(StreetName::new("Redbird Ridge").unwrap())
             .build()
             .unwrap()
     }

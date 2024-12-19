@@ -35,8 +35,8 @@ impl AddressRecord {
 }
 
 /// Collect tags into a HashMap for easier access
-fn collect_tags<'a>(tags: impl Iterator<Item=(&'a str, &'a str)>) -> HashMap<String,String> {
-    tags.map(|(k,v)| (k.to_string(), v.to_string())).collect()
+fn collect_tags<'a>(tags: impl Iterator<Item=(&'a str, &'a str)>) -> HashMap<&'a str, &'a str> {
+    tags.collect()
 }
 
 impl<'a> TryFrom<osmpbf::Element<'a>> for AddressRecord {
@@ -46,16 +46,22 @@ impl<'a> TryFrom<osmpbf::Element<'a>> for AddressRecord {
     fn try_from(element: osmpbf::Element<'a>) 
         -> Result<Self,Self::Error> 
     {
+        // dense nodes can be handled if needed
+        const PARSE_DENSE_NODES: bool = true;
+
+        // relations can be handled if needed
+        const PARSE_RELATIONS:   bool = true;
+
         match element {
-            Element::Node(node) => Ok(AddressRecord::try_from(&node)?),
-            Element::Way(way)   => Ok(AddressRecord::try_from(&way)?),
-            Element::Relation(_relation) => {
-                // In future, could parse relations similarly
-                Err(IncompatibleOsmPbfElement::MaybeTodoUnhandledOsmPbfRelationElement)
-            }
-            Element::DenseNode(_node) => {
-                // Dense nodes could be handled if needed
-                Err(IncompatibleOsmPbfElement::MaybeTodoUnhandledOsmPbfDenseNode)
+            Element::Node(node)         => Ok(AddressRecord::try_from(&node)?),
+            Element::Way(way)           => Ok(AddressRecord::try_from(&way)?),
+            Element::Relation(relation) => match PARSE_RELATIONS {
+                true  => Ok(AddressRecord::try_from(&relation)?),
+                false => Err(IncompatibleOsmPbfElement::MaybeTodoUnhandledOsmPbfRelationElement),
+            },
+            Element::DenseNode(node)    => match PARSE_DENSE_NODES {
+                true  => Ok(AddressRecord::try_from(&node)?),
+                false => Err(IncompatibleOsmPbfElement::MaybeTodoUnhandledOsmPbfDenseNode),
             }
         }
     }
@@ -72,9 +78,9 @@ macro_rules! impl_from_osmpbf_element {
                 -> Result<Self,Self::Error> 
             {
                 let tags     = collect_tags(x.tags());
-                let city     = tags.get("addr:city").cloned();
-                let street   = tags.get("addr:street").cloned();
-                let postcode = tags.get("addr:postcode").cloned();
+                let city     = tags.get("addr:city");
+                let street   = tags.get("addr:street");
+                let postcode = tags.get("addr:postcode");
 
                 if city.is_some() || street.is_some() || postcode.is_some() {
 
@@ -110,8 +116,10 @@ macro_rules! impl_from_osmpbf_element {
     }
 }
 
-impl_from_osmpbf_element!{osmpbf::Way<'a>,  IncompatibleOsmPbfWay}
-impl_from_osmpbf_element!{osmpbf::Node<'a>, IncompatibleOsmPbfNode}
+impl_from_osmpbf_element!{osmpbf::Way<'a>,       IncompatibleOsmPbfWay}
+impl_from_osmpbf_element!{osmpbf::Node<'a>,      IncompatibleOsmPbfNode}
+impl_from_osmpbf_element!{osmpbf::Relation<'a>,  IncompatibleOsmPbfRelation}
+impl_from_osmpbf_element!{osmpbf::DenseNode<'a>, IncompatibleOsmPbfDenseNode}
 
 /// Tests for AddressRecord conversions from OSM Elements
 #[cfg(test)]

@@ -8,6 +8,7 @@ pub struct DataAccess {
 impl DataAccess {
 
     pub fn with_db(db: Arc<Mutex<Database>>) -> Self {
+        info!("creating DataAccess object");
         DataAccess { db }
     }
 

@@ -22,3 +22,4 @@ pub(crate) use traced_test::*;
 pub(crate) use tracing_setup::*;
 pub(crate) use tempfile::TempDir;
 pub(crate) use std::io::ErrorKind;
+pub(crate) use structopt::*;

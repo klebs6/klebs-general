@@ -1,47 +1,49 @@
 crate::ix!();
 
 /// StreetName struct
-#[derive(Builder,Debug,Hash,Clone,Serialize,Deserialize,Getters,Ord,PartialOrd)]
+#[derive(Builder,Debug,Hash,Clone,Serialize,Deserialize,Getters,PartialEq,Eq,PartialOrd,Ord)]
 #[builder(build_fn(error = "StreetNameConstructionError",validate = "Self::validate"))]
 pub struct StreetName {
     #[getset(get = "pub")]
     name: String,
 }
 
-/// Implement PartialEq and Eq to ignore case and trim whitespace:
-/// This will allow "Baltimore", "  baltimore  ", and "BALTIMORE" to match.
-impl PartialEq for StreetName {
-    fn eq(&self, other: &Self) -> bool {
-        normalize(&self.name) == normalize(&other.name)
+impl StreetNameBuilder {
+    fn validate(&self) -> Result<(), StreetNameConstructionError> {
+        if let Some(n) = &self.name {
+            if normalize(n).is_empty() {
+                return Err(StreetNameConstructionError::InvalidName {
+                    attempted_name: n.clone(),
+                });
+            }
+            Ok(())
+        } else {
+            Err(StreetNameConstructionError::InvalidName {
+                attempted_name: "<unset>".to_string(),
+            })
+        }
+    }
+
+    fn finalize(&self) -> Result<StreetName, StreetNameConstructionError> {
+        let mut city = self.build()?;
+        city.name = normalize(&city.name);
+        Ok(city)
     }
 }
 
-impl Eq for StreetName {}
-
 impl fmt::Display for StreetName {
+
     fn fmt(&self, x: &mut std::fmt::Formatter<'_>) -> fmt::Result {
         write!(x,"{}",self.name)
     }
 }
 
 impl StreetName {
-    pub fn new(name: &str) -> Result<Self,StreetNameConstructionError> {
+
+    pub fn new(name: &str) -> Result<Self, StreetNameConstructionError> {
         StreetNameBuilder::default()
             .name(name.to_string())
-            .build()
-    }
-}
-
-impl StreetNameBuilder {
-    pub fn validate(&self) -> Result<(), StreetNameConstructionError> {
-        if let Some(n) = &self.name {
-            if n.trim().is_empty() {
-                return Err(StreetNameConstructionError::InvalidName { attempted_name: n.clone() });
-            }
-            Ok(())
-        } else {
-            Err(StreetNameConstructionError::InvalidName { attempted_name: "<unset>".to_string() })
-        }
+            .finalize()
     }
 }
 

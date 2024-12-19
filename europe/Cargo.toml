@@ -1,0 +1,24 @@
+[package]
+name          = "europe"
+version       = "0.1.0"
+edition       = "2024"
+authors       = [ "klebs tpk3.mx@gmail.com" ]
+repository    = "https://github.com/klebs6/klebs-general"
+description   = "A comprehensive Rust crate for enumerating and working with European countries and their subdivisions."
+homepage      = "https://github.com/yourusername/europe"
+documentation = "https://docs.rs/europe"
+readme        = "README.md"
+keywords      = ["europe", "countries", "regions", "serde"]
+categories    = ["localization", "internationalization"]
+
+[dependencies]
+serde        = { version = "1.0", features = ["derive"] }
+export-magic = "0.3.6"
+strum        = { version = "0.24", features = ["derive"] }
+strum_macros = "0.24"
+serde_json   = { version = "1" }
+thiserror    = "2.0.6"
+once_cell    = "1.20.2"
+
+[features]
+serde_abbreviation = []

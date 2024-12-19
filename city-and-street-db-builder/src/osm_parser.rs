@@ -18,7 +18,7 @@ pub fn parse_osm_pbf(path: impl AsRef<Path>)
         if let Ok(record) = AddressRecord::try_from(element) {
 
             if count % 1000 == 0 { 
-                tracing::info!("record for osm element, {:?}", record); 
+                info!("record for osm element, {:?}", record); 
             }
 
             records.push(record);

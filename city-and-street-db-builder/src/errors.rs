@@ -38,6 +38,8 @@ error_tree!{
     pub enum OsmPbfParseError {
         OsmPbf(osmpbf::Error),
         InvalidInputFile { reason: String },
+        UsaAddressBuilderError(UsaAddressBuilderError),
+        IoError(io::Error),
     }
 
     pub enum DatabaseConstructionError {
@@ -62,6 +64,8 @@ error_tree!{
     pub enum UsaCityAndStreetDbBuilderError {
         PbfDownloadError(PbfDownloadError),
         DatabaseConstructionError(DatabaseConstructionError),
+        DbLockError,
+        NotAllAddressesValidatedSuccessfully,
     }
 
     /// Error types for city and street name construction
@@ -80,6 +84,26 @@ error_tree!{
         MaybeTodoUnhandledOsmPbfDenseNode,
         IncompatibleOsmPbfNode(IncompatibleOsmPbfNode),
         IncompatibleOsmPbfWay(IncompatibleOsmPbfWay),
+        IncompatibleOsmPbfRelation(IncompatibleOsmPbfRelation),
+        IncompatibleOsmPbfDenseNode(IncompatibleOsmPbfDenseNode),
+    }
+
+    pub enum IncompatibleOsmPbfDenseNode {
+        Incompatible {
+            id: i64,
+        },
+        CityNameConstructionError(CityNameConstructionError),
+        StreetNameConstructionError(StreetNameConstructionError),
+        PostalCodeConstructionError(PostalCodeConstructionError),
+    }
+
+    pub enum IncompatibleOsmPbfRelation {
+        Incompatible {
+            id: i64,
+        },
+        CityNameConstructionError(CityNameConstructionError),
+        StreetNameConstructionError(StreetNameConstructionError),
+        PostalCodeConstructionError(PostalCodeConstructionError),
     }
 
     pub enum IncompatibleOsmPbfNode {

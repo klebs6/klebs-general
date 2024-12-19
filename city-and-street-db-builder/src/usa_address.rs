@@ -25,6 +25,7 @@ impl ValidateWith for UsaAddress {
         match city_set {
             Some(cities) => {
                 if !cities.contains(&self.city) {
+                    info!("cities: {:#?}", cities);
                     return Err(InvalidUsaAddress::CityNotFoundForZipCodeInRegion {
                         city:   self.city.clone(),
                         zip:    self.zip.clone(),
@@ -47,6 +48,7 @@ impl ValidateWith for UsaAddress {
         match street_set_for_zip {
             Some(streets) => {
                 if !streets.contains(&self.street) {
+                    info!("streets: {:#?}", streets);
                     return Err(InvalidUsaAddress::StreetNotFoundForZipCodeInRegion {
                         street: self.street.clone(),
                         zip:    self.zip.clone(),
@@ -69,6 +71,7 @@ impl ValidateWith for UsaAddress {
         match street_set_for_city {
             Some(streets) => {
                 if !streets.contains(&self.street) {
+                    info!("streets: {:#?}", streets);
                     return Err(
                         InvalidUsaAddress::StreetNotFoundForCityInRegion {
                             street: self.street.clone(),

@@ -1,22 +1,35 @@
 crate::ix!();
 
 /// CityName struct
-#[derive(Builder,Debug,Hash,Clone,Serialize,Deserialize,Getters,Ord,PartialOrd)]
+#[derive(Builder,Debug,Hash,Clone,Serialize,Deserialize,Getters,PartialEq,Eq,PartialOrd,Ord)]
 #[builder(build_fn(error = "CityNameConstructionError",validate = "Self::validate"))]
 pub struct CityName {
     #[getset(get = "pub")]
     name: String,
 }
 
-/// Implement PartialEq and Eq to ignore case and trim whitespace:
-/// This will allow "Baltimore", "  baltimore  ", and "BALTIMORE" to match.
-impl PartialEq for CityName {
-    fn eq(&self, other: &Self) -> bool {
-        normalize(&self.name) == normalize(&other.name)
+impl CityNameBuilder {
+    fn validate(&self) -> Result<(), CityNameConstructionError> {
+        if let Some(n) = &self.name {
+            if normalize(n).is_empty() {
+                return Err(CityNameConstructionError::InvalidName {
+                    attempted_name: n.clone(),
+                });
+            }
+            Ok(())
+        } else {
+            Err(CityNameConstructionError::InvalidName {
+                attempted_name: "<unset>".to_string(),
+            })
+        }
+    }
+
+    fn finalize(&self) -> Result<CityName, CityNameConstructionError> {
+        let mut city = self.build()?;
+        city.name = normalize(&city.name);
+        Ok(city)
     }
 }
-
-impl Eq for CityName {}
 
 impl fmt::Display for CityName {
 
@@ -26,25 +39,10 @@ impl fmt::Display for CityName {
 }
 
 impl CityName {
-
-    pub fn new(name: &str) -> Result<Self,CityNameConstructionError> {
+    pub fn new(name: &str) -> Result<Self, CityNameConstructionError> {
         CityNameBuilder::default()
             .name(name.to_string())
-            .build()
-    }
-}
-
-impl CityNameBuilder {
-
-    pub fn validate(&self) -> Result<(), CityNameConstructionError> {
-        if let Some(n) = &self.name {
-            if n.trim().is_empty() {
-                return Err(CityNameConstructionError::InvalidName { attempted_name: n.clone() });
-            }
-            Ok(())
-        } else {
-            Err(CityNameConstructionError::InvalidName { attempted_name: "<unset>".to_string() })
-        }
+            .finalize()
     }
 }
 

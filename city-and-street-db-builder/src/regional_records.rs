@@ -1,32 +1,5 @@
 crate::ix!();
 
-/// Build multiple regions from PBF files:
-pub async fn build_regions(
-    regions:    &[USRegion],
-    db:         &mut Database,
-    target_dir: &Path,
-) -> Result<(),UsaCityAndStreetDbBuilderError> {
-    for region in regions {
-
-        info!("building region: {:#?}", region);
-
-        let handle   = OpenStreetMapRegionalDataDownloadHandle::from(region.clone());
-
-        info!("download_handle: {:#?}", handle);
-
-        let pbf_file = handle.obtain_pbf(&target_dir).await?;
-
-        info!("pbf_file: {:#?}", pbf_file);
-
-        let regional_records = RegionalRecords::from_osm_pbf_file(*region,pbf_file)?;
-
-        info!("scanned {} regional_records", regional_records.len());
-
-        regional_records.write_to_storage(db)?;
-    }
-    Ok(())
-}
-
 #[derive(Builder,Debug,Getters)]
 #[getset(get="pub")]
 #[builder(setter(into))]
@@ -59,6 +32,8 @@ impl RegionalRecords {
     pub fn write_to_storage(&self, db: &mut Database) 
         -> Result<(),DatabaseConstructionError> 
     {
+        info!("writing regional records to storage for region: {:#?}", self.region);
+
         if db.region_done(&self.region)? {
             tracing::info!("Region {} already built, skipping", self.region);
             return Ok(());

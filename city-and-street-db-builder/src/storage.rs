@@ -55,6 +55,8 @@ impl Database {
 
     ) -> Result<(),DatabaseConstructionError> {
 
+        info!("writing InMemoryIndexes for region {:?}", region);
+
         // State->ZIP->Streets: S:{region}:{zip}
         if let Some(state_map) = indexes.zip_to_street_map_for_region(region) {
             for (zip, streets) in state_map {
@@ -150,15 +152,14 @@ mod database_tests {
 
         let temp_dir = TempDir::new().expect("Failed to create temp dir");
 
-        {
-            let db = Database::open(&temp_dir).unwrap();
-            let mut db_guard = db.lock().unwrap();
-            let region = USRegion::UnitedState(UnitedState::Maryland);
-            assert!(!db_guard.region_done(&region).unwrap());
+        let db           = Database::open(&temp_dir).unwrap();
+        let mut db_guard = db.lock().unwrap();
+        let region       = USRegion::UnitedState(UnitedState::Maryland);
 
-            db_guard.mark_region_done(&region).unwrap();
-            assert!(db_guard.region_done(&region).unwrap());
-        }
-        // Cleanup: in real tests you might remove db dir
+        assert!(!db_guard.region_done(&region).unwrap());
+
+        db_guard.mark_region_done(&region).unwrap();
+
+        assert!(db_guard.region_done(&region).unwrap());
     }
 }
