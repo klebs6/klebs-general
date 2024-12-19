@@ -1,7 +1,7 @@
 [package]
 edition = "2021"
 name = "language-enum"
-version = "0.2.0"
+version = "0.3.0"
 authors = [ "klebs tpk3.mx@gmail.com" ]
 description = "A robust enum representing languages for global and regional applications."
 license = "MIT OR Apache-2.0"

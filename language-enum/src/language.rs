@@ -695,7 +695,18 @@ pub enum Language {
     #[rand_construct(p=0.0005)]
     VariousSouthAfricanLocal,
 
+    #[ai("An official language used in South African government, education, and daily communication. Regularly part of local literacy campaigns and widely integrated into community schooling materials.")]
+    #[rand_construct(p=0.002)]
+    Xhosa,
+
     #[ai("A regional language used in unknown communities and local markets. Potentially employed in limited-language skill-building activities and informal learning contexts.")]
     #[rand_construct(p=0.0000001)]
     Other(OtherLanguage),
+}
+
+impl Language {
+
+    pub fn other(x: impl ToString) -> Self {
+        Self::Other(OtherLanguage::new(x))
+    }
 }
