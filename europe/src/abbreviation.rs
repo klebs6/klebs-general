@@ -1,9 +1,5 @@
 crate::ix!();
 
-pub trait Abbreviation {
-    fn abbreviation(&self) -> &'static str;
-}
-
 impl Abbreviation for EuropeRegion {
     fn abbreviation(&self) -> &'static str {
         match self {

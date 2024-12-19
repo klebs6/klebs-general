@@ -13,7 +13,7 @@ categories    = ["internationalization"]
 
 [dependencies]
 usa           = "0.5.0"
-europe        = "0.1.0"
+abbreviation  = "0.1.0"
 serde         = { version = "1.0", features = ["derive"] }
 export-magic  = "0.3.6"
 strum         = { version = "0.24", features = ["derive"] }
