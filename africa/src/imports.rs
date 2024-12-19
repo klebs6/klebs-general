@@ -16,3 +16,4 @@ pub(crate) use abbreviation_trait::*;
 
 #[cfg(test)]
 pub(crate) use std::str::FromStr;
+pub(crate) use error_tree::*;

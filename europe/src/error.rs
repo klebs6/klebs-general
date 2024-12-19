@@ -17,11 +17,13 @@ impl BadInput {
 
 error_tree!{
 
+    #[derive(PartialEq)]
     pub enum EuropeRegionConversionError {
         NotEuropean       { country: Country },
         UnsupportedRegion { region:  EuropeRegion },
     }
 
+    #[derive(PartialEq)]
     pub enum RegionParseError {
         StrumParseError(strum::ParseError),
         UnknownVariant(String),
