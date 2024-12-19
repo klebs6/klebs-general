@@ -12,7 +12,7 @@ pub(crate) use strum_macros::{
 };
 pub(crate) use country::{Country, Iso3166Alpha2, Iso3166Alpha3, CountryCode};
 pub(crate) use export_magic::*;
-pub(crate) use europe::*;
+pub(crate) use abbreviation_trait::*;
 
 #[cfg(test)]
 pub(crate) use std::str::FromStr;

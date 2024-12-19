@@ -8,3 +8,4 @@ pub(crate) use serde::de::{Deserializer,Error as DeError};
 pub(crate) use country::{Country, Iso3166Alpha2, Iso3166Alpha3, CountryCode};
 pub(crate) use std::convert::{TryFrom, TryInto};
 pub(crate) use error_tree::*;
+pub(crate) use abbreviation_trait::*;

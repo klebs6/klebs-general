@@ -1,0 +1,12 @@
+[package]
+edition = "2024"
+name = "abbreviation-trait"
+version = "0.1.0"
+description = "This crate provides the Abbreviation trait, common in the north-america, europe, south-america, etc crates"
+authors = [ "klebs tpk3.mx@gmail.com" ]
+license = "MIT"
+keywords = ["traitw", "shorthand", "reuse"]
+repository = "https://github.com/klebs6/klebs-general"
+categories = ["development-tools"]
+
+
