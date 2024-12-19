@@ -2,13 +2,13 @@ crate::ix!();
 
 #[derive(Clone,Debug,PartialEq,Eq)]
 pub struct OpenStreetMapRegionalDataDownloadHandle {
-    region:        USRegion,
+    region:        WorldRegion,
     download_link: &'static str,
 }
 
 impl OpenStreetMapRegionalDataDownloadHandle {
 
-    pub fn new(region: USRegion, download_link: &'static str) -> Self {
+    pub fn new(region: WorldRegion, download_link: &'static str) -> Self {
         Self { region, download_link }
     }
 
@@ -140,6 +140,7 @@ impl OpenStreetMapRegionalDataDownloadHandle {
     }
 
     pub fn filename(&self) -> PathBuf {
+        todo!();
         PathBuf::from(self.download_link.split("/us/").nth(1).unwrap())
     }
 

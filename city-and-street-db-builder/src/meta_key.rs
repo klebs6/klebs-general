@@ -3,7 +3,7 @@ crate::ix!();
 #[derive(Getters,Setters,Debug,Clone,PartialEq,Eq)]
 #[getset(get="pub",set="pub")]
 pub struct MetaKeyForRegion {
-    region: USRegion,
+    region: WorldRegion,
     key:    String,
 }
 
@@ -14,9 +14,9 @@ impl AsRef<[u8]> for MetaKeyForRegion {
     }
 }
 
-impl From<USRegion> for MetaKeyForRegion {
+impl From<WorldRegion> for MetaKeyForRegion {
 
-    fn from(region: USRegion) -> Self {
+    fn from(region: WorldRegion) -> Self {
         let region_name = region.abbreviation();
         Self {
             region,

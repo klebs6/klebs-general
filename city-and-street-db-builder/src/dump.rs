@@ -25,7 +25,7 @@ impl Database {
         if key.starts_with("Z2C:") {
             self.try_decode_as::<CityName>(val, "Cities");
         } else if key.starts_with("C2Z:") {
-            self.try_decode_as::<PostalCode>(val, "ZIP codes");
+            self.try_decode_as::<PostalCode>(val, "Postal codes");
         } else if key.starts_with("C2S:") {
             self.try_decode_as::<StreetName>(val, "Streets");
         } else if key.starts_with("S:") {
@@ -33,7 +33,7 @@ impl Database {
         } else if key.starts_with("S2C:") {
             self.try_decode_as::<CityName>(val, "Cities");
         } else if key.starts_with("S2Z:") {
-            self.try_decode_as::<PostalCode>(val, "ZIP codes");
+            self.try_decode_as::<PostalCode>(val, "Postal codes");
         } else if key.starts_with("META:REGION_DONE:") {
             println!("Value: REGION DONE MARKER");
         } else {
@@ -77,9 +77,8 @@ impl Database {
     }
 
     /// Dump all region-related keys by using its abbreviation as a prefix.
-    pub fn dump_region_data(&self, region: &USRegion) {
+    pub fn dump_region_data(&self, region: &WorldRegion) {
         let prefix = format!("{}:", region.abbreviation());
         self.dump_keys_with_prefix(&prefix);
     }
 }
-

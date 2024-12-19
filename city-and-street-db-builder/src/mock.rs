@@ -1,10 +1,10 @@
 crate::ix!();
 
-impl Mock for UsaAddress {
+impl Mock for WorldAddress {
 
     fn mock() -> Self {
-        UsaAddressBuilder::default()
-            .region(USRegion::UnitedState(UnitedState::Virginia))
+        WorldAddressBuilder::default()
+            .region(USRegion::UnitedState(UnitedState::Virginia).into())
             .zip(PostalCode::new(Country::USA, "20124").unwrap())
             .city(CityName::new("Clifton").unwrap())
             .street(StreetName::new("Redbird Ridge").unwrap())
@@ -14,11 +14,16 @@ impl Mock for UsaAddress {
 }
 
 impl MockForRegion for RegionalRecords {
-    fn mock_for_region(region: &USRegion) -> Self {
+    fn mock_for_region(region: &WorldRegion) -> Self {
+
+        let md: WorldRegion = USRegion::UnitedState(UnitedState::Maryland).into();
+        let va: WorldRegion = USRegion::UnitedState(UnitedState::Virginia).into();
+        let dc: WorldRegion = USRegion::USFederalDistrict(USFederalDistrict::DistrictOfColumbia).into();
+
         let mock_records = match region {
-            USRegion::UnitedState(UnitedState::Maryland) => maryland_mock_records(),
-            USRegion::UnitedState(UnitedState::Virginia) => virginia_mock_records(),
-            USRegion::USFederalDistrict(USFederalDistrict::DistrictOfColumbia) => dc_mock_records(),
+            md => maryland_mock_records(),
+            va => virginia_mock_records(),
+            dc => dc_mock_records(),
             _ => unimplemented!("need to add mock data for region: {:#?}", region),
         };
 

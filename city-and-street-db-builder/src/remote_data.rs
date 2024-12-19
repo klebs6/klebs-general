@@ -79,7 +79,7 @@ mod download_tests {
 
     #[test]
     fn verify_md5_checksum_mismatch() {
-        let region = USRegion::UnitedState(UnitedState::Maryland);
+        let region: WorldRegion = USRegion::UnitedState(UnitedState::Maryland).into();
         let handle = OpenStreetMapRegionalDataDownloadHandle::from(region);
 
         let rt = Runtime::new().unwrap();

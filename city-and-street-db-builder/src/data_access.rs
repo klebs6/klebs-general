@@ -49,7 +49,7 @@ impl DataAccess {
 impl ZipCodesForCityInRegion for DataAccess {
 
     // Example query: given city name, get associated ZIP codes
-    fn zip_codes_for_city_in_region(&self, region: &USRegion, city: &CityName) -> Option<BTreeSet<PostalCode>> {
+    fn zip_codes_for_city_in_region(&self, region: &WorldRegion, city: &CityName) -> Option<BTreeSet<PostalCode>> {
         let key = c2z_key(region,city);
         if let Some(zips) = self.get_zip_set(&key) {
             Some(zips)
@@ -62,7 +62,7 @@ impl ZipCodesForCityInRegion for DataAccess {
 impl StreetNamesForCityInRegion for DataAccess {
 
     // Similarly for other queries:
-    fn street_names_for_city_in_region(&self, region: &USRegion, city: &CityName) -> Option<BTreeSet<StreetName>> {
+    fn street_names_for_city_in_region(&self, region: &WorldRegion, city: &CityName) -> Option<BTreeSet<StreetName>> {
         let key = c2s_key(region,city);
         self.get_street_set(&key)
     }
@@ -70,7 +70,7 @@ impl StreetNamesForCityInRegion for DataAccess {
 
 impl CityNamesForZipCodeInRegion for DataAccess {
 
-    fn cities_for_zip(&self, region: &USRegion, zip: &PostalCode) -> Option<BTreeSet<CityName>> {
+    fn cities_for_zip(&self, region: &WorldRegion, zip: &PostalCode) -> Option<BTreeSet<CityName>> {
         let key = z2c_key(region,zip);
         self.get_city_set(&key)
     }
@@ -80,7 +80,7 @@ impl StreetNamesForZipCodeInRegion for DataAccess {
 
     fn street_names_for_zip_code_in_region(
         &self, 
-        region: &USRegion, 
+        region: &WorldRegion, 
         zip:    &PostalCode
 
     ) -> Option<BTreeSet<StreetName>> {
@@ -94,9 +94,9 @@ impl StreetExistsInCityInRegion for DataAccess {
 
     fn street_exists_in_city(
         &self, 
-        region: &USRegion, 
-        city:        &CityName, 
-        street:      &StreetName
+        region: &WorldRegion, 
+        city:   &CityName, 
+        street: &StreetName
 
     ) -> bool {
 
@@ -110,7 +110,7 @@ impl StreetExistsInCityInRegion for DataAccess {
 
 impl StreetExistsInZipCodeInRegion for DataAccess {
 
-    fn street_exists_in_zip(&self, region: &USRegion, zip: &PostalCode, street: &StreetName) -> bool {
+    fn street_exists_in_zip(&self, region: &WorldRegion, zip: &PostalCode, street: &StreetName) -> bool {
         if let Some(sts) = self.street_names_for_zip_code_in_region(region, zip) {
             sts.contains(street)
         } else {
@@ -122,7 +122,7 @@ impl StreetExistsInZipCodeInRegion for DataAccess {
 impl StreetExistsGlobally for DataAccess {
 
     // street_exists_globally in a region:
-    fn street_exists_globally(&self, region: &USRegion, street: &StreetName) -> bool {
+    fn street_exists_globally(&self, region: &WorldRegion, street: &StreetName) -> bool {
         // If S2C or S2Z keys exist for this street, it's known:
         let key_cities = s2c_key(region,street);
         let key_zips   = s2z_key(region,street);

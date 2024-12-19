@@ -2,35 +2,35 @@ crate::ix!();
 
 error_tree!{
 
-    pub enum InvalidUsaAddress {
-        CityNotFoundForZipCodeInRegion {
+    pub enum InvalidWorldAddress {
+        CityNotFoundForPostalCodeInRegion {
             city:   CityName,
-            region: USRegion,
+            region: WorldRegion,
             zip:    PostalCode,
         },
-        ZipToCityKeyNotFoundForRegion {
+        PostalCodeToCityKeyNotFoundForRegion {
             z2c_key: String,
-            region:  USRegion,
+            region:  WorldRegion,
             zip:     PostalCode,
         },
-        StreetNotFoundForZipCodeInRegion {
+        StreetNotFoundForPostalCodeInRegion {
             street: StreetName,
-            region: USRegion,
+            region: WorldRegion,
             zip:    PostalCode,
         },
-        ZipToStreetKeyNotFoundForRegion {
+        PostalCodeToStreetKeyNotFoundForRegion {
             s_key:  String,
-            region: USRegion,
+            region: WorldRegion,
             zip:    PostalCode,
         },
         StreetNotFoundForCityInRegion {
             street: StreetName,
             city:   CityName,
-            region: USRegion,
+            region: WorldRegion,
         },
         CityToStreetsKeyNotFoundForCityInRegion {
             c_key:  String,
-            region: USRegion,
+            region: WorldRegion,
             city:   CityName,
         }
     }
@@ -38,7 +38,7 @@ error_tree!{
     pub enum OsmPbfParseError {
         OsmPbf(osmpbf::Error),
         InvalidInputFile { reason: String },
-        UsaAddressBuilderError(UsaAddressBuilderError),
+        WorldAddressBuilderError(WorldAddressBuilderError),
         IoError(io::Error),
     }
 

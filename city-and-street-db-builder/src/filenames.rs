@@ -1,6 +1,6 @@
 crate::ix!();
 
-pub fn validate_pbf_filename(region: &USRegion, pbf_path: &Path) -> Result<(), OsmPbfParseError> {
+pub fn validate_pbf_filename(region: &WorldRegion, pbf_path: &Path) -> Result<(), OsmPbfParseError> {
     let actual_filename = pbf_path.file_name()
         .and_then(|f| f.to_str())
         .ok_or_else(|| OsmPbfParseError::InvalidInputFile {
@@ -58,7 +58,7 @@ pub fn filenames_match(expected: &str, actual: &str) -> bool {
 }
 
 /// Returns the expected filename for a given region based on the OSM download URL.
-pub fn expected_filename_for_region(region: &USRegion) -> PathBuf {
+pub fn expected_filename_for_region(region: &WorldRegion) -> PathBuf {
     let handle = OpenStreetMapRegionalDataDownloadHandle::from(region.clone());
     handle.filename()
 }
@@ -70,14 +70,14 @@ mod filenames_tests {
 
     #[test]
     fn test_expected_filename_for_region_maryland() {
-        let region = USRegion::UnitedState(UnitedState::Maryland);
+        let region: WorldRegion = USRegion::UnitedState(UnitedState::Maryland).into();
         let expected = expected_filename_for_region(&region);
         assert_eq!(expected.to_str().unwrap(), "maryland-latest.osm.pbf");
     }
 
     #[test]
     fn test_validate_pbf_filename_correct() {
-        let region = USRegion::UnitedState(UnitedState::Maryland);
+        let region: WorldRegion = USRegion::UnitedState(UnitedState::Maryland).into();
         let pbf_path = PathBuf::from("maryland-latest.osm.pbf");
         let res = validate_pbf_filename(&region, &pbf_path);
         assert!(res.is_ok());
@@ -85,7 +85,7 @@ mod filenames_tests {
 
     #[test]
     fn test_validate_pbf_filename_incorrect() {
-        let region = USRegion::UnitedState(UnitedState::Maryland);
+        let region: WorldRegion = USRegion::UnitedState(UnitedState::Maryland).into();
         let pbf_path = PathBuf::from("virginia-latest.osm.pbf");
         let res = validate_pbf_filename(&region, &pbf_path);
         assert!(res.is_err());
@@ -99,7 +99,7 @@ mod filenames_tests {
 
     #[test]
     fn test_validate_pbf_filename_case_insensitive() {
-        let region = USRegion::UnitedState(UnitedState::Maryland);
+        let region: WorldRegion = USRegion::UnitedState(UnitedState::Maryland).into();
         // different casing:
         let pbf_path = PathBuf::from("MaRyLaNd-LAtEsT.oSm.PbF");
         let res = validate_pbf_filename(&region, &pbf_path);
@@ -110,7 +110,7 @@ mod filenames_tests {
     fn test_from_osm_pbf_file_correct() {
         // Mock parse_osm_pbf to return empty records or a fixed set if needed.
         // Here we assume parse_osm_pbf works, or is tested separately.
-        let region = USRegion::UnitedState(UnitedState::Maryland);
+        let region: WorldRegion = USRegion::UnitedState(UnitedState::Maryland).into();
         let pbf_path = PathBuf::from("maryland-latest.osm.pbf");
         
         // We would need `parse_osm_pbf` to be mockable or the file actually exist.
@@ -124,7 +124,7 @@ mod filenames_tests {
 
     #[test]
     fn test_from_osm_pbf_file_incorrect_filename() {
-        let region = USRegion::UnitedState(UnitedState::Maryland);
+        let region: WorldRegion = USRegion::UnitedState(UnitedState::Maryland).into();
         let pbf_path = PathBuf::from("virginia-latest.osm.pbf");
 
         let records = RegionalRecords::from_osm_pbf_file(region, &pbf_path);
@@ -137,7 +137,7 @@ mod filenames_tests {
 
     #[test]
     fn test_from_osm_pbf_file_non_existent_file() {
-        let region = USRegion::UnitedState(UnitedState::Maryland);
+        let region: WorldRegion = USRegion::UnitedState(UnitedState::Maryland).into();
         let pbf_path = PathBuf::from("non_existent.osm.pbf");
 
         // Assuming parse_osm_pbf will return an error if file doesn't exist.
@@ -153,7 +153,7 @@ mod filenames_tests {
     #[test]
     #[should_panic(expected = "unimplemented")]
     fn test_from_osm_pbf_file_unsupported_region() {
-        let region = USRegion::USFederalDistrict(USFederalDistrict::Guam); // Assuming not implemented
+        let region: WorldRegion = USRegion::USFederalDistrict(USFederalDistrict::Guam).into(); // Assuming not implemented
         let pbf_path = PathBuf::from("guam-latest.osm.pbf");
         // This should panic or return an error due to unimplemented region support
         let _ = RegionalRecords::from_osm_pbf_file(region, &pbf_path);
@@ -161,7 +161,7 @@ mod filenames_tests {
 
     #[test]
     fn test_from_osm_pbf_file_empty_file() {
-        let region = USRegion::UnitedState(UnitedState::Maryland);
+        let region: WorldRegion = USRegion::UnitedState(UnitedState::Maryland).into();
         let temp_dir = tempfile::TempDir::new().unwrap();
         let pbf_path = temp_dir.path().join("maryland-latest.osm.pbf");
 
@@ -181,7 +181,7 @@ mod filenames_tests {
 
     #[test]
     fn test_validate_pbf_filename_extra_whitespace() {
-        let region = USRegion::UnitedState(UnitedState::Maryland);
+        let region: WorldRegion = USRegion::UnitedState(UnitedState::Maryland).into();
         let pbf_path = PathBuf::from("   maryland-latest.osm.pbf   ");
         // Normally, file paths won't have trailing spaces, but this test checks robustness.
         // If your code doesn't trim, this will fail. Consider trimming or documenting not supported.
@@ -191,7 +191,7 @@ mod filenames_tests {
 
     #[test]
     fn test_parse_osm_pbf_corrupted_file() {
-        let region = USRegion::UnitedState(UnitedState::Maryland);
+        let region: WorldRegion = USRegion::UnitedState(UnitedState::Maryland).into();
         let temp_dir = tempfile::TempDir::new().unwrap();
         let pbf_path = temp_dir.path().join("maryland-latest.osm.pbf");
 

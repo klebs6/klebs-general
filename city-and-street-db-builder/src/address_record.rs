@@ -39,13 +39,15 @@ fn collect_tags<'a>(tags: impl Iterator<Item=(&'a str, &'a str)>) -> HashMap<&'a
     tags.collect()
 }
 
-impl<'a> TryFrom<osmpbf::Element<'a>> for AddressRecord {
+impl<'a> TryFrom<(osmpbf::Element<'a>,&Country)> for AddressRecord {
 
     type Error = IncompatibleOsmPbfElement;
 
-    fn try_from(element: osmpbf::Element<'a>) 
+    fn try_from(x: (osmpbf::Element<'a>,&Country)) 
         -> Result<Self,Self::Error> 
     {
+        let (element,country) = x;
+
         // dense nodes can be handled if needed
         const PARSE_DENSE_NODES: bool = true;
 
@@ -53,14 +55,14 @@ impl<'a> TryFrom<osmpbf::Element<'a>> for AddressRecord {
         const PARSE_RELATIONS:   bool = true;
 
         match element {
-            Element::Node(node)         => Ok(AddressRecord::try_from(&node)?),
-            Element::Way(way)           => Ok(AddressRecord::try_from(&way)?),
+            Element::Node(node)         => Ok(AddressRecord::try_from((&node,country))?),
+            Element::Way(way)           => Ok(AddressRecord::try_from((&way,country))?),
             Element::Relation(relation) => match PARSE_RELATIONS {
-                true  => Ok(AddressRecord::try_from(&relation)?),
+                true  => Ok(AddressRecord::try_from((&relation,country))?),
                 false => Err(IncompatibleOsmPbfElement::MaybeTodoUnhandledOsmPbfRelationElement),
             },
             Element::DenseNode(node)    => match PARSE_DENSE_NODES {
-                true  => Ok(AddressRecord::try_from(&node)?),
+                true  => Ok(AddressRecord::try_from((&node,country))?),
                 false => Err(IncompatibleOsmPbfElement::MaybeTodoUnhandledOsmPbfDenseNode),
             }
         }
@@ -70,19 +72,24 @@ impl<'a> TryFrom<osmpbf::Element<'a>> for AddressRecord {
 macro_rules! impl_from_osmpbf_element {
     ($elem:ty,$err:ty) => {
 
-        impl<'a> TryFrom<&$elem> for AddressRecord {
+        impl<'a> TryFrom<(&$elem,&Country)> for AddressRecord {
 
             type Error = $err;
 
-            fn try_from(x: &$elem) 
-                -> Result<Self,Self::Error> 
+            fn try_from(x: (&$elem,&Country)) 
+                -> Result<Self,$err> 
             {
-                let tags     = collect_tags(x.tags());
+                let (elem,country) = x;
+
+                let tags     = collect_tags(elem.tags());
                 let city     = tags.get("addr:city");
                 let street   = tags.get("addr:street");
                 let postcode = tags.get("addr:postcode");
 
                 if city.is_some() || street.is_some() || postcode.is_some() {
+
+                    info!("tags: {:#?}", tags);
+                    todo!();
 
                     let city = match city {
                         Some(city) => Some(CityName::new(&city)?),
@@ -95,7 +102,7 @@ macro_rules! impl_from_osmpbf_element {
                     };
 
                     let postcode = match postcode {
-                        Some(postcode) => Some(PostalCode::new(Country::USA, &postcode)?),
+                        Some(postcode) => Some(PostalCode::new(*country, &postcode)?),
                         None       => None,
                     };
 
@@ -106,7 +113,7 @@ macro_rules! impl_from_osmpbf_element {
                     })
 
                 } else {
-                    let id = x.id();
+                    let id = elem.id();
                     Err(<$err>::Incompatible {
                         id
                     })

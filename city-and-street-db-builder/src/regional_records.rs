@@ -4,7 +4,7 @@ crate::ix!();
 #[getset(get="pub")]
 #[builder(setter(into))]
 pub struct RegionalRecords {
-    region:  USRegion,
+    region:  WorldRegion,
     records: Vec<AddressRecord>,
 }
 
@@ -14,7 +14,7 @@ impl RegionalRecords {
         self.records.len()
     }
 
-    pub fn from_osm_pbf_file(region: USRegion, pbf_file: impl AsRef<Path>) 
+    pub fn from_osm_pbf_file(region: WorldRegion, pbf_file: impl AsRef<Path>) 
         -> Result<Self,OsmPbfParseError> 
     {
         let pbf_path = pbf_file.as_ref();
