@@ -1,7 +1,7 @@
 [package]
 authors       = [ "klebs tpk3.mx@gmail.com" ]
 categories    = ["internationalization"]
-description = "A Rust crate providing enums and conversions for South American countries and their subregions, analogous to the asia and europe crates."
+description   = "A Rust crate providing enums and conversions for South American countries and their subregions, analogous to the asia and europe crates."
 documentation = "https://docs.rs/south-america"
 edition       = "2024"
 keywords      = ["south-america", "geography", "countries", "regions", "rust"]
@@ -9,7 +9,7 @@ license       = "MIT"
 name          = "south-america"
 readme        = "README.md"
 repository    = "https://github.com/klebs6/klebs-general"
-version       = "0.1.0"
+version       = "0.2.0"
 
 [dependencies]
 europe        = "0.1.0"
@@ -22,6 +22,7 @@ thiserror     = "2.0.6"
 once_cell     = "1.20.2"
 country       = "0.5.0"
 language-enum = "0.2.0"
+error-tree    = "0.6.0"
 
 [features]
 serde_abbreviation = []

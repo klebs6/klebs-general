@@ -46,7 +46,7 @@ impl TryFrom<Country> for SouthAmericaRegion {
             Country::Venezuela => Ok(SouthAmericaRegion::Venezuela),
 
             // Any country not in South America:
-            other => Err(SouthAmericaRegionConversionError::not_south_american(&other.to_string())),
+            other => Err(SouthAmericaRegionConversionError::NotSouthAmerican { country: other }),
         }
     }
 }

@@ -3,7 +3,7 @@ crate::ix!();
 //-------------------------------------------------------------
 // SouthAmericaRegion Enum
 //-------------------------------------------------------------
-#[derive(Debug,PartialOrd,Ord,PartialEq,Eq,Hash,Clone,Copy,StrumDisplay,StrumEnumIter,StrumEnumVariantNames,StrumEnumString)]
+#[derive(Debug,PartialOrd,Ord,PartialEq,Eq,Hash,Clone,Copy,StrumDisplay,StrumEnumIter,StrumEnumVariantNames)]
 #[strum(ascii_case_insensitive, serialize_all = "title_case")]
 pub enum SouthAmericaRegion {
     Argentina,
@@ -87,7 +87,7 @@ mod test_south_america_region {
     fn test_country_to_south_america_region_errors() {
         // A non-South American country
         match SouthAmericaRegion::try_from(Country::USA) {
-            Err(SouthAmericaRegionConversionError { .. }) => {}
+            Err(SouthAmericaRegionConversionError::NotSouthAmerican { .. }) => {}
             _ => panic!("Expected NotSouthAmerican for USA"),
         }
     }

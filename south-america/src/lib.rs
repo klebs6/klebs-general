@@ -1,4 +1,5 @@
 #![forbid(unsafe_code)]
+#![allow(unused_variables)]
 #![deny(clippy::all)]
 
 #[macro_use] mod imports; use imports::*;
