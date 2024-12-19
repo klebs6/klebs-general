@@ -3,7 +3,7 @@ crate::ix!();
 //-------------------------------------------------------------
 // AsiaRegion Enum
 //-------------------------------------------------------------
-#[derive(Debug,PartialOrd,Ord,PartialEq,Eq,Hash,Clone,Copy,StrumDisplay,StrumEnumIter,StrumEnumVariantNames,StrumEnumString)]
+#[derive(Debug,PartialOrd,Ord,PartialEq,Eq,Hash,Clone,Copy,StrumDisplay,StrumEnumIter,StrumEnumVariantNames)]
 #[strum(ascii_case_insensitive, serialize_all = "title_case")]
 pub enum AsiaRegion {
     Afghanistan,
@@ -14,19 +14,28 @@ pub enum AsiaRegion {
     Cambodia,
     China(ChinaRegion),
     EastTimor,
+
+    #[strum(serialize = "GCC States")]
     GccStates, // Bahrain, Kuwait, Oman, Qatar, Saudi Arabia, UAE combined
+
     India(IndiaRegion),
     Indonesia(IndonesiaRegion),
     Iran,
     Iraq,
+
+    #[strum(serialize = "Israel and Palestine")]
     IsraelAndPalestine,
+
     Japan(JapanRegion),
     Jordan,
     Kazakhstan,
     Kyrgyzstan,
     Laos,
     Lebanon,
+
+    #[strum(serialize = "Malaysia, Singapore, and Brunei")]
     MalaysiaSingaporeBrunei, // Malaysia, Singapore, Brunei combined
+
     Maldives,
     Mongolia,
     Myanmar,
@@ -34,7 +43,7 @@ pub enum AsiaRegion {
     NorthKorea,
     Pakistan,
     Philippines,
-    RussianFederation( /* possibly subdivided as in Europe, reuse same RussianFederationRegion */ RussianFederationRegion),
+    RussianFederation(RussianFederationRegion),
     SouthKorea,
     SriLanka,
     Syria,
@@ -125,7 +134,7 @@ mod test_asia_region {
     fn test_asia_region_to_country_errors() {
         // GCC States is a combined region not directly mapped to a single country
         match Country::try_from(AsiaRegion::GccStates) {
-            Err(AsiaRegionConversionError { .. }) => {}
+            Err( AsiaRegionConversionError::UnsupportedRegion { .. } ) => {}
             _ => panic!("Expected UnsupportedRegion for GCC States"),
         }
     }
@@ -152,12 +161,12 @@ mod test_asia_region {
     fn test_country_to_asia_region_errors() {
         // Test a non-Asian country:
         match AsiaRegion::try_from(Country::Brazil) {
-            Err(AsiaRegionConversionError { .. }) => {}
+            Err(AsiaRegionConversionError::NotAsian { .. }) => {}
             _ => panic!("Expected NotAsian for Brazil"),
         }
 
         match AsiaRegion::try_from(Country::USA) {
-            Err(AsiaRegionConversionError { .. }) => {}
+            Err(AsiaRegionConversionError::NotAsian { .. }) => {}
             _ => panic!("Expected NotAsian for USA"),
         }
     }
@@ -223,7 +232,7 @@ mod test_asia_region {
         // Test converting a non-mappable AsiaRegion to Country -> ISO codes:
         // GCC States
         match Iso3166Alpha2::try_from(AsiaRegion::GccStates) {
-            Err(AsiaRegionConversionError { .. }) => {}
+            Err(AsiaRegionConversionError::UnsupportedRegion { .. }) => {}
             _ => panic!("Expected error for GCC States -> ISO codes"),
         }
     }

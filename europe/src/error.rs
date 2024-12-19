@@ -15,13 +15,21 @@ impl BadInput {
     }
 }
 
-/// An error type for conversion failures between `EuropeRegion` and `Country` or ISO codes.
-#[derive(Error,Debug)]
-pub enum EuropeRegionConversionError {
+error_tree!{
 
-    #[error("The given `Country` {0} does not correspond to a European country handled by `EuropeRegion`.")]
-    NotEuropean(String),
+    pub enum EuropeRegionConversionError {
+        NotEuropean       { country: Country },
+        UnsupportedRegion { region:  EuropeRegion },
+    }
 
-    #[error("The given `EuropeRegion` {0} does not map to a known `Country` or is a special dependency that isn't represented in `Country`.")]
-    UnsupportedRegion(String),
+    pub enum RegionParseError {
+        StrumParseError(strum::ParseError),
+        UnknownVariant(String),
+        MissingParenthesis,
+        UnknownSubdividedCountry(String),
+        UnknownSubregion {
+            country:   Country,
+            subregion: String,
+        },
+    }
 }

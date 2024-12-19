@@ -6,3 +6,4 @@ pub(crate) use thiserror::Error;
 pub(crate) use serde::de::{Deserializer,Error as DeError};
 pub(crate) use country::{Country, Iso3166Alpha2, Iso3166Alpha3, CountryCode};
 pub(crate) use std::convert::{TryFrom, TryInto};
+pub(crate) use error_tree::*;

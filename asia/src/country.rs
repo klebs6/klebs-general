@@ -19,7 +19,7 @@ impl TryFrom<AsiaRegion> for Country {
             AsiaRegion::GccStates   => {
                 // This is a combined region (Bahrain, Kuwait, Oman, Qatar, Saudi Arabia, UAE).
                 // Not a single country. If we must pick one or fail:
-                Err(AsiaRegionConversionError::unsupported_region("GCC States"))
+                Err(AsiaRegionConversionError::UnsupportedRegion { region: AsiaRegion::GccStates })
             },
             AsiaRegion::India(_)           => Ok(Country::India),
             AsiaRegion::Indonesia(_)       => Ok(Country::Indonesia),
@@ -118,7 +118,7 @@ impl TryFrom<Country> for AsiaRegion {
             Country::Yemen        => Ok(AsiaRegion::Yemen),
 
             // Any country not in Asia:
-            other => Err(AsiaRegionConversionError::not_asian(&other.to_string())),
+            other => Err(AsiaRegionConversionError::NotAsian { country: other }),
         }
     }
 }

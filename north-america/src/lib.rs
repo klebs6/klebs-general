@@ -4,11 +4,13 @@
 #[macro_use] mod imports; use imports::*;
 
 x!{abbreviation}
+x!{from_str}
 x!{canada}
 x!{country}
 x!{error}
 x!{impl_serde}
 x!{north_america}
+x!{from_subregion}
 
 //-------------------------------------------------------------
 // Tests

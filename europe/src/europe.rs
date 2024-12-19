@@ -3,7 +3,7 @@ crate::ix!();
 //--------------------------------------
 // Top-level EuropeRegion enum (with all EuropeCountry variants directly under EuropeRegion)
 //--------------------------------------
-#[derive(Debug,PartialOrd,Ord,PartialEq,Eq,Hash,Clone,Copy,StrumDisplay,StrumEnumIter,StrumEnumVariantNames,StrumEnumString)]
+#[derive(Debug,PartialOrd,Ord,PartialEq,Eq,Hash,Clone,Copy,StrumDisplay,StrumEnumIter,StrumEnumVariantNames)]
 #[strum(ascii_case_insensitive, serialize_all = "title_case")]
 pub enum EuropeRegion {
 

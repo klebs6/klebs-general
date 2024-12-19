@@ -24,3 +24,35 @@ impl From<IndonesiaRegion> for Country {
         Country::Indonesia
     }
 }
+
+// For AsiaRegion
+impl From<ChinaRegion> for AsiaRegion {
+    fn from(value: ChinaRegion) -> Self {
+        AsiaRegion::China(value)
+    }
+}
+
+impl From<IndiaRegion> for AsiaRegion {
+    fn from(value: IndiaRegion) -> Self {
+        AsiaRegion::India(value)
+    }
+}
+
+impl From<JapanRegion> for AsiaRegion {
+    fn from(value: JapanRegion) -> Self {
+        AsiaRegion::Japan(value)
+    }
+}
+
+impl From<IndonesiaRegion> for AsiaRegion {
+    fn from(value: IndonesiaRegion) -> Self {
+        AsiaRegion::Indonesia(value)
+    }
+}
+
+impl From<RussianFederationRegion> for AsiaRegion {
+    fn from(value: RussianFederationRegion) -> Self {
+        AsiaRegion::RussianFederation(value)
+    }
+}
+

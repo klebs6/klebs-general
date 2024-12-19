@@ -4,6 +4,7 @@
 
 #![forbid(unsafe_code)]
 #![deny(clippy::all)]
+#![allow(unused_variables)]
 
 #[macro_use] mod imports; use imports::*;
 
@@ -17,3 +18,4 @@ x!{impl_serde}
 x!{india}
 x!{indonesia}
 x!{japan}
+x!{from_str}

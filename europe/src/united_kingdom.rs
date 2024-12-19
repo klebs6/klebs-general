@@ -14,7 +14,6 @@ crate::ix!();
     PartialOrd,
     StrumDisplay,
     StrumEnumIter,
-    StrumEnumString,
     StrumEnumVariantNames
 )]
 pub enum UnitedKingdomRegion {
