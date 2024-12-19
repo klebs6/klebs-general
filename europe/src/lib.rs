@@ -1,4 +1,5 @@
 #![forbid(unsafe_code)]
+#![allow(unused_variables)]
 #![deny(clippy::all)]
 
 #[macro_use] mod imports; use imports::*;
@@ -18,6 +19,6 @@ x!{united_kingdom}
 x!{impl_serde}
 x!{europe_serde}
 x!{country}
-x!{language}
-x!{from_str}
+x!{from_str_europe}
+x!{from_str_uk}
 x!{from_subregion}

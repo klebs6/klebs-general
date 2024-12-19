@@ -31,7 +31,7 @@ impl TryFrom<EuropeRegion> for Country {
                 // If you want to map them to Denmark:
                 // Ok(Country::Denmark)
                 // Otherwise:
-                Err(EuropeRegionConversionError::UnsupportedRegion("Faroe Islands".to_string()))
+                Err(EuropeRegionConversionError::UnsupportedRegion { region: EuropeRegion::FaroeIslands })
             },
             EuropeRegion::Finland           => Ok(Country::Finland),
             EuropeRegion::France(_)         => Ok(Country::France),
@@ -44,7 +44,7 @@ impl TryFrom<EuropeRegion> for Country {
                 // If you want to treat them as UK:
                 // Ok(Country::UnitedKingdom)
                 // Otherwise:
-                Err(EuropeRegionConversionError::UnsupportedRegion("Guernsey and Jersey".to_string()))
+                Err(EuropeRegionConversionError::UnsupportedRegion { region: EuropeRegion::GuernseyAndJersey })
             },
             EuropeRegion::Hungary                   => Ok(Country::Hungary),
             EuropeRegion::Iceland                   => Ok(Country::Iceland),
@@ -56,7 +56,7 @@ impl TryFrom<EuropeRegion> for Country {
                 // Another Crown dependency of the UK.
                 // If desired, map to UK:
                 // Ok(Country::UnitedKingdom)
-                Err(EuropeRegionConversionError::UnsupportedRegion("Isle of Man".to_string()))
+                Err(EuropeRegionConversionError::UnsupportedRegion { region: EuropeRegion::IsleOfMan })
             },
             EuropeRegion::Italy(_)      => Ok(Country::Italy),
             EuropeRegion::Kosovo        => Ok(Country::Kosovo),
@@ -154,7 +154,7 @@ impl TryFrom<Country> for EuropeRegion {
             Country::UnitedKingdom => Ok(EuropeRegion::UnitedKingdom(UnitedKingdomRegion::default())),
 
             // Any country not listed above is not in EuropeRegion:
-            other => Err(EuropeRegionConversionError::NotEuropean(other.to_string())),
+            other => Err(EuropeRegionConversionError::NotEuropean { country: other }),
         }
     }
 }
@@ -259,22 +259,22 @@ mod country_integration_tests {
     fn test_europe_region_to_country_errors() {
         // Test unsupported regions that return errors:
         match Country::try_from(EuropeRegion::FaroeIslands) {
-            Err(EuropeRegionConversionError::UnsupportedRegion(msg)) => {
-                assert_eq!(msg, "Faroe Islands");
+            Err(EuropeRegionConversionError::UnsupportedRegion { region }) => {
+                assert_eq!(region, EuropeRegion::FaroeIslands);
             },
             _ => panic!("Expected UnsupportedRegion for FaroeIslands"),
         }
 
         match Country::try_from(EuropeRegion::GuernseyAndJersey) {
-            Err(EuropeRegionConversionError::UnsupportedRegion(msg)) => {
-                assert_eq!(msg, "Guernsey and Jersey");
+            Err(EuropeRegionConversionError::UnsupportedRegion { region }) => {
+                assert_eq!(region, EuropeRegion::GuernseyAndJersey);
             },
             _ => panic!("Expected UnsupportedRegion for Guernsey and Jersey"),
         }
 
         match Country::try_from(EuropeRegion::IsleOfMan) {
-            Err(EuropeRegionConversionError::UnsupportedRegion(msg)) => {
-                assert_eq!(msg, "Isle of Man");
+            Err(EuropeRegionConversionError::UnsupportedRegion { region }) => {
+                assert_eq!(region, EuropeRegion::IsleOfMan);
             },
             _ => panic!("Expected UnsupportedRegion for Isle of Man"),
         }
@@ -303,15 +303,15 @@ mod country_integration_tests {
     fn test_country_to_europe_region_errors() {
         // Test a non-European country:
         match EuropeRegion::try_from(Country::Brazil) {
-            Err(EuropeRegionConversionError::NotEuropean(msg)) => {
-                assert_eq!(msg, "Brazil");
+            Err(EuropeRegionConversionError::NotEuropean { country }) => {
+                assert_eq!(country, Country::Brazil);
             },
             _ => panic!("Expected NotEuropean for Brazil"),
         }
 
         match EuropeRegion::try_from(Country::USA) {
-            Err(EuropeRegionConversionError::NotEuropean(msg)) => {
-                assert_eq!(msg, "USA");
+            Err(EuropeRegionConversionError::NotEuropean { country }) => {
+                assert_eq!(country, Country::USA);
             },
             _ => panic!("Expected NotEuropean for USA"),
         }
@@ -428,8 +428,8 @@ mod country_integration_tests {
         // Not directly possible since we start from EuropeRegion, which is always European.
         // Instead, test a region that fails conversion to Country:
         match Iso3166Alpha2::try_from(EuropeRegion::IsleOfMan) {
-            Err(EuropeRegionConversionError::UnsupportedRegion(msg)) => {
-                assert_eq!(msg, "Isle of Man");
+            Err(EuropeRegionConversionError::UnsupportedRegion { region }) => {
+                assert_eq!(region, EuropeRegion::IsleOfMan);
             },
             _ => panic!("Expected UnsupportedRegion for Isle of Man -> Country -> Iso3166Alpha2"),
         }

@@ -3,59 +3,99 @@ crate::ix!();
 //--------------------------------------
 // England Regions
 //--------------------------------------
-#[derive(Default,Debug,PartialOrd,Ord,PartialEq,Eq,Hash,Clone,Copy,StrumDisplay,StrumEnumIter,StrumEnumVariantNames,StrumEnumString)]
+#[derive(
+    Clone,
+    Copy,
+    Debug,
+    Default,
+    Eq,
+    Hash,
+    Ord,
+    PartialEq,
+    PartialOrd,
+    StrumDisplay,
+    StrumEnumIter,
+    StrumEnumString,
+    StrumEnumVariantNames
+)]
 #[strum(ascii_case_insensitive)]
 pub enum EnglandRegion {
-    #[strum(serialize = "Bedfordshire"                                           )] Bedfordshire,
-    #[strum(serialize = "Berkshire"                                              )] Berkshire,
-    #[strum(serialize = "Bristol"                                                )] Bristol,
-    #[strum(serialize = "Buckinghamshire"                                        )] Buckinghamshire,
-    #[strum(serialize = "Cambridgeshire"                                         )] Cambridgeshire,
-    #[strum(serialize = "Cheshire"                                               )] Cheshire,
-    #[strum(serialize = "Cornwall"                                               )] Cornwall,
-    #[strum(serialize = "Cumbria"                                                )] Cumbria,
-    #[strum(serialize = "Derbyshire"                                             )] Derbyshire,
-    #[strum(serialize = "Devon"                                                  )] Devon,
-    #[strum(serialize = "Dorset"                                                 )] Dorset,
-    #[strum(serialize = "Durham"                                                 )] Durham,
-    #[strum(serialize = "East Sussex"                                            )] EastSussex,
-    #[strum(serialize = "East Yorkshire with Hull", serialize = "East Yorkshire" )] EastYorkshireWithHull,
-    #[strum(serialize = "Essex"                                                  )] Essex,
-    #[strum(serialize = "Gloucestershire"                                        )] Gloucestershire,
+    Bedfordshire,
+    Berkshire,
+    Bristol,
+    Buckinghamshire,
+    Cambridgeshire,
+    Cheshire,
+    Cornwall,
+    Cumbria,
+    Derbyshire,
+    Devon,
+    Dorset,
+    Durham,
+
+    #[strum(serialize = "East Sussex" )]
+    EastSussex,
+
+    #[strum(serialize = "East Yorkshire with Hull", serialize = "East Yorkshire" )]
+    EastYorkshireWithHull,
+
+    Essex,
+    Gloucestershire,
 
     #[default]
-    #[strum(serialize = "Greater London"                                         )] GreaterLondon,
+    #[strum(
+        to_string = "GreaterLondon",   // This sets the canonical to_string() output
+        ascii_case_insensitive,
+        serialize = "Greater London",  // Allows parsing from "Greater London"
+    )]
+    GreaterLondon,
 
-    #[strum(serialize = "Greater Manchester"                                     )] GreaterManchester,
-    #[strum(serialize = "Hampshire"                                              )] Hampshire,
-    #[strum(serialize = "Herefordshire"                                          )] Herefordshire,
-    #[strum(serialize = "Hertfordshire"                                          )] Hertfordshire,
-    #[strum(serialize = "Isle of Wight"                                          )] IsleOfWight,
-    #[strum(serialize = "Kent"                                                   )] Kent,
-    #[strum(serialize = "Lancashire"                                             )] Lancashire,
-    #[strum(serialize = "Leicestershire"                                         )] Leicestershire,
-    #[strum(serialize = "Lincolnshire"                                           )] Lincolnshire,
-    #[strum(serialize = "Merseyside"                                             )] Merseyside,
-    #[strum(serialize = "Norfolk"                                                )] Norfolk,
-    #[strum(serialize = "North Yorkshire"                                        )] NorthYorkshire,
-    #[strum(serialize = "Northamptonshire"                                       )] Northamptonshire,
-    #[strum(serialize = "Northumberland"                                         )] Northumberland,
-    #[strum(serialize = "Nottinghamshire"                                        )] Nottinghamshire,
-    #[strum(serialize = "Oxfordshire"                                            )] Oxfordshire,
-    #[strum(serialize = "Rutland"                                                )] Rutland,
-    #[strum(serialize = "Shropshire"                                             )] Shropshire,
-    #[strum(serialize = "Somerset"                                               )] Somerset,
-    #[strum(serialize = "South Yorkshire"                                        )] SouthYorkshire,
-    #[strum(serialize = "Staffordshire"                                          )] Staffordshire,
-    #[strum(serialize = "Suffolk"                                                )] Suffolk,
-    #[strum(serialize = "Surrey"                                                 )] Surrey,
-    #[strum(serialize = "Tyne and Wear", serialize = "Tyne & Wear"               )] TyneAndWear,
-    #[strum(serialize = "Warwickshire"                                           )] Warwickshire,
-    #[strum(serialize = "West Midlands"                                          )] WestMidlands,
-    #[strum(serialize = "West Sussex"                                            )] WestSussex,
-    #[strum(serialize = "West Yorkshire"                                         )] WestYorkshire,
-    #[strum(serialize = "Wiltshire"                                              )] Wiltshire,
-    #[strum(serialize = "Worcestershire"                                         )] Worcestershire,
+    #[strum(serialize = "Greater Manchester" )]
+    GreaterManchester,
+
+    Hampshire,
+    Herefordshire,
+    Hertfordshire,
+
+    #[strum(serialize = "Isle of Wight"   )]
+    IsleOfWight,
+
+    Kent,
+    Lancashire,
+    Leicestershire,
+    Lincolnshire,
+    Merseyside,
+    Norfolk,
+
+    #[strum(serialize = "North Yorkshire" )]
+    NorthYorkshire,
+
+    Northamptonshire,
+    Northumberland,
+    Nottinghamshire,
+    Oxfordshire,
+    Rutland,
+    Shropshire,
+    Somerset,
+
+    #[strum(serialize = "South Yorkshire" )]
+    SouthYorkshire,
+
+    Staffordshire,
+    Suffolk,
+    Surrey,
+
+    #[strum(serialize = "Tyne and Wear", serialize = "Tyne & Wear" )]
+    TyneAndWear,
+
+    Warwickshire,
+
+    #[strum(serialize = "West Midlands"   )] WestMidlands,
+    #[strum(serialize = "West Sussex"     )] WestSussex,
+    #[strum(serialize = "West Yorkshire"  )] WestYorkshire,
+
+    Wiltshire,
+    Worcestershire,
 }
 
 #[cfg(test)]

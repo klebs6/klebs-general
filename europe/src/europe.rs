@@ -14,7 +14,11 @@ pub enum EuropeRegion {
     #[strum( serialize = "Azores"                                                                          )] Azores,
     #[strum( serialize = "Belarus"                                                                         )] Belarus,
     #[strum( serialize = "Belgium"                                                                         )] Belgium,
-    #[strum( serialize = "Bosnia-Herzegovina", serialize = "Bosnia Herzegovina"                            )] BosniaHerzegovina,
+    #[strum(
+        to_string = "Bosnia-Herzegovina",
+        serialize = "Bosnia Herzegovina"
+    )]
+    BosniaHerzegovina,
     #[strum( serialize = "Bulgaria"                                                                        )] Bulgaria,
     #[strum( serialize = "Croatia"                                                                         )] Croatia,
     #[strum( serialize = "Cyprus"                                                                          )] Cyprus,
