@@ -30,7 +30,7 @@ impl TryFrom<Country> for NorthAmericaRegion {
             Country::USA       => Ok(NorthAmericaRegion::UnitedStates(USRegion::default())),
 
             // Any country not in North America:
-            other => Err(NorthAmericaRegionConversionError::not_north_american(&other.to_string())),
+            other => Err(NorthAmericaRegionConversionError::NotNorthAmerican { country: other }),
         }
     }
 }

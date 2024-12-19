@@ -1,3 +1,5 @@
+pub(crate) use error_tree::*;
+pub(crate) use std::str::FromStr;
 pub(crate) use std::convert::{TryFrom, TryInto};
 pub(crate) use std::fmt;
 pub(crate) use serde::{Serializer,Deserialize,Serialize};

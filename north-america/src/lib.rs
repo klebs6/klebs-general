@@ -1,4 +1,5 @@
 #![forbid(unsafe_code)]
+#![allow(unused_variables)]
 #![deny(clippy::all)]
 
 #[macro_use] mod imports; use imports::*;
@@ -73,7 +74,7 @@ mod test_north_america_region {
     fn test_country_to_north_america_region_errors() {
         // A non-North American country:
         match NorthAmericaRegion::try_from(Country::France) {
-            Err(NorthAmericaRegionConversionError { .. }) => {}
+            Err(NorthAmericaRegionConversionError::NotNorthAmerican { .. }) => {}
             _ => panic!("Expected NotNorthAmerican for France"),
         }
     }
