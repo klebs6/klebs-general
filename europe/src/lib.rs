@@ -18,3 +18,4 @@ x!{united_kingdom}
 x!{impl_serde}
 x!{europe_serde}
 x!{country}
+x!{language}

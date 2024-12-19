@@ -16,7 +16,7 @@ Add `language-enum` to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-language-enum = "0.1"
+language-enum = "0.2"
 ```
 
 To enable serde support for serialization and deserialization:
@@ -38,6 +38,9 @@ fn main() {
     // Using the `Other` variant for an unsupported language
     let other_lang = Language::Other("Klingon".to_string());
     println!("Other language: {:?}", other_lang);
+
+    let random_lang         = Language::random(); // this is weighted by number of speakers on earth
+    let uniform_random_lang = Language::uniform();
 }
 
 ```

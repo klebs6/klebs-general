@@ -13,14 +13,15 @@ keywords      = ["europe", "countries", "regions", "serde"]
 categories    = ["localization", "internationalization"]
 
 [dependencies]
-serde        = { version = "1.0", features = ["derive"] }
-export-magic = "0.3.6"
-strum        = { version = "0.24", features = ["derive"] }
-strum_macros = "0.24"
-serde_json   = { version = "1" }
-thiserror    = "2.0.6"
-once_cell    = "1.20.2"
-country      = "0.5.0"
+serde         = { version = "1.0", features = ["derive"] }
+export-magic  = "0.3.6"
+strum         = { version = "0.24", features = ["derive"] }
+strum_macros  = "0.24"
+serde_json    = { version = "1" }
+thiserror     = "2.0.6"
+once_cell     = "1.20.2"
+country       = "0.5.0"
+langauge-enum = "0.1.0"
 
 [features]
 serde_abbreviation = []
