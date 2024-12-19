@@ -15,9 +15,9 @@ serde = { optional = true, version = "1.0", features = ["derive"] }
 serde_derive = { version = "1.0", optional = true }
 serde_json = "1.0"
 export-magic = "0.3.6"
-rand-construct = "*"
+rand-construct = "0.10.0"
 ai-descriptor = "*"
-rand = "*"
+rand = "0.8.5"
 
 [features]
 default = ["serde"] 
