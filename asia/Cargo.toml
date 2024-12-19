@@ -1,6 +1,6 @@
 [package]
 authors       = [ "klebs tpk3.mx@gmail.com" ]
-categories    = ["internationalization", "geography"]
+categories    = ["internationalization"]
 description   = "A Rust crate providing enums and conversions for Asian countries and their subregions, analogous to the Europe crate."
 documentation = "https://docs.rs/asia"
 edition       = "2024"
