@@ -2,6 +2,7 @@ crate::ix!();
 
 /// Federal District(s) like the District of Columbia.
 #[derive(
+    Default,
     Clone,
     Copy,
     Debug,
@@ -17,6 +18,7 @@ crate::ix!();
 )]
 #[strum(ascii_case_insensitive, serialize_all = "title_case")]
 pub enum USFederalDistrict {
+    #[default]
     #[strum(
         serialize = "District of Columbia", 
         serialize = "DC", 

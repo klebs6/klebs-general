@@ -8,6 +8,13 @@ pub enum USRegion {
     USFederalDistrict(USFederalDistrict),
 }
 
+impl Default for USRegion {
+
+    fn default() -> Self {
+        Self::USFederalDistrict(USFederalDistrict::default())
+    }
+}
+
 impl From<UnitedState> for USRegion {
     fn from(x: UnitedState) -> Self {
         USRegion::UnitedState(x)

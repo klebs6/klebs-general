@@ -1,9 +1,10 @@
 crate::ix!();
 
 /// U.S. Territories.
-#[derive(Debug,PartialOrd,Ord,PartialEq,Eq,Hash,Clone,Copy,StrumDisplay,StrumEnumString,StrumEnumIter,StrumEnumVariantNames)]
+#[derive(Default,Debug,PartialOrd,Ord,PartialEq,Eq,Hash,Clone,Copy,StrumDisplay,StrumEnumString,StrumEnumIter,StrumEnumVariantNames)]
 #[strum(ascii_case_insensitive, serialize_all = "title_case")]
 pub enum USTerritory {
+    #[default]
     #[strum(serialize = "AmericanSamoa",          serialize = "American Samoa",           serialize = "AS" )] AmericanSamoa,
     #[strum(serialize = "Guam",                   serialize = "GU"                                         )] Guam,
     #[strum(serialize = "NorthernMarianaIslands", serialize = "Northern Mariana Islands", serialize = "MP" )] NorthernMarianaIslands,
