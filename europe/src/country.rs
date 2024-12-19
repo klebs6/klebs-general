@@ -197,7 +197,7 @@ impl TryFrom<EuropeRegion> for CountryCode {
 // let c: Country = eu_region.try_into().expect("Should map to France");
 // let alpha2: Iso3166Alpha2 = eu_region.try_into().expect("Should map to FR");
 
-macro_rules! impl_into_country_for_subregions {
+#[macro_export] macro_rules! impl_into_country_for_subregions {
     ( $( ($subregion:ty, $country:ident) ),* ) => {
         $(
             impl From<$subregion> for Country {
