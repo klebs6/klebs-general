@@ -1,0 +1,18 @@
+[package]
+edition       = "2024"
+name          = "language-distribution"
+version       = "0.1.0"
+authors       = [ "klebs tpk3.mx@gmail.com" ]
+license       = "MIT"
+description   = "Provides language distribution mappings for countries, returning HashMaps of Language to relative prevalence and a method to pick a random language."
+repository    = "https://github.com/klebs6/klebs-general"
+documentation = "https://docs.rs/language-distribution"
+readme        = "README.md"
+keywords      = ["languages", "distribution", "country", "localization"]
+categories    = ["localization", "internationalization"]
+
+[dependencies]
+language-enum = "0.3.0"
+country       = "0.5.0"
+rand          = "0.8.5"
+export-magic  = "0.3.6"
