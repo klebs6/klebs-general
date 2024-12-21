@@ -9,7 +9,7 @@ readme        = "README.md"
 keywords      = ["file", "download", "checksum", "MD5"]
 license       = "MIT"
 repository    = "https://github.com/klebs6/klebs-general"
-categories    = ["geo", "network-programming", "data-processing"]
+categories    = ["network-programming"]
 
 [dependencies]
 async-trait   = "0.1.83"
