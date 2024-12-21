@@ -1,0 +1,11 @@
+error: Multiple fields in tuple variant not supported without a download_link
+ --> tests/ui/fail_multi_field_tuple_variant.rs:9:5
+  |
+9 |     TwoField(u32, u32),
+  |     ^^^^^^^^^^^^^^^^^^
+
+error: `match` arm with no body
+ --> tests/ui/fail_multi_field_tuple_variant.rs:9:5
+  |
+9 |     TwoField(u32, u32),
+  |     ^^^^^^^^^^^^^^^^^^- help: add a body after the pattern: `=> todo!(),`

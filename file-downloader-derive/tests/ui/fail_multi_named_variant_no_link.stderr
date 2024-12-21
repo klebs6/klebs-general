@@ -1,0 +1,19 @@
+error: Multiple named fields not supported without a download_link
+  --> tests/ui/fail_multi_named_variant_no_link.rs:8:5
+   |
+8  | /     MultiField {
+9  | |         a: u32,
+10 | |         b: u32,
+11 | |     },
+   | |_____^
+
+error: `match` arm with no body
+  --> tests/ui/fail_multi_named_variant_no_link.rs:8:5
+   |
+8  | /     MultiField {
+9  | |         a: u32,
+10 | |         b: u32,
+11 | |     },
+   | |     ^- help: add a body after the pattern: `=> todo!(),`
+   | |_____|
+   |

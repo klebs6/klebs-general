@@ -1,0 +1,11 @@
+error: Missing `#[download_link = "..."]` attribute on this unit variant
+ --> tests/ui/fail_unit_variant_no_link.rs:9:5
+  |
+9 |     VariantOne,
+  |     ^^^^^^^^^^
+
+error: `match` arm with no body
+ --> tests/ui/fail_unit_variant_no_link.rs:9:5
+  |
+9 |     VariantOne,
+  |     ^^^^^^^^^^- help: add a body after the pattern: `=> todo!(),`
