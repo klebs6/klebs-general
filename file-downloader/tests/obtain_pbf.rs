@@ -30,7 +30,7 @@ async fn test_obtain_pbf_success() {
     let md5_url = server.url("/planet.osm.pbf.md5");
 
     // Download & verify MD5
-    let path = find_file_locally_or_download(&pbf_url, Some(&md5_url), dir.path())
+    let path = find_file_locally_or_download_into(&pbf_url, Some(&md5_url), dir.path())
     .await
         .unwrap();
 
@@ -67,7 +67,7 @@ async fn test_obtain_pbf_md5_mismatch() {
     let md5_url = server.url("/planet.osm.pbf.md5");
 
     // We expect this call to fail
-    let result = find_file_locally_or_download(&pbf_url, Some(&md5_url), dir.path()).await;
+    let result = find_file_locally_or_download_into(&pbf_url, Some(&md5_url), dir.path()).await;
     assert!(result.is_err());
 
     // Verify it's specifically an Md5ChecksumVerificationError

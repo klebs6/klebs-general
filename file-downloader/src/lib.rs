@@ -25,8 +25,8 @@ pub trait FileDownloader {
 
     /// Obtain the associated PBF file locally, downloading if necessary.
     /// By default, this uses the `find_or_download` function provided by this crate.
-    async fn find_file_locally_or_download(&self, directory: impl AsRef<Path> + Send + Sync) -> Result<PathBuf, DownloadError> {
-        find_file_locally_or_download(
+    async fn find_file_locally_or_download_into(&self, directory: impl AsRef<Path> + Send + Sync) -> Result<PathBuf, DownloadError> {
+        find_file_locally_or_download_into(
             self.download_link(), 
             self.md5_download_link().as_deref(), 
             directory

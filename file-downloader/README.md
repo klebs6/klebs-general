@@ -32,7 +32,7 @@ impl FileDownloader for PlanetDownloader {
 #[tokio::main]
 async fn main() -> Result<(), PbfDownloadError> {
     let downloader = PlanetDownloader;
-    let local_path = downloader.find_file_locally_or_download("./pbf_cache").await?;
+    let local_path = downloader.find_file_locally_or_download_into("./pbf_cache").await?;
     println!("file available at: {:?}", local_path);
     Ok(())
 }

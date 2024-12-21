@@ -49,7 +49,7 @@ async fn test_obtain_pbf_no_md5() {
         link: pbf_url,
         ext: ".osm.pbf",
     }
-    .find_file_locally_or_download(&dir_path)
+    .find_file_locally_or_download_into(&dir_path)
     .await
     .expect("Download should succeed without MD5 checks");
 

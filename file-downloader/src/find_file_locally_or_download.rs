@@ -1,7 +1,7 @@
 crate::ix!();
 
 /// Attempt to obtain a file locally (with MD5 check) or download it otherwise.
-pub async fn find_file_locally_or_download(
+pub async fn find_file_locally_or_download_into(
     download_link:     &str,
     md5_download_link: Option<&str>,
     directory:         impl AsRef<Path>,
