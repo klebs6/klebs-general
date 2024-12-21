@@ -20,7 +20,6 @@ x!{find_region_for_file}
 x!{indexing}
 x!{keys}
 x!{list_all_addresses_in_pbf_dir}
-x!{md5}
 x!{meta_key}
 x!{mock}
 x!{normalize}

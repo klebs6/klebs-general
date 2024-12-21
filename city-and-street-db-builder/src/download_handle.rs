@@ -140,8 +140,7 @@ impl OpenStreetMapRegionalDataDownloadHandle {
     }
 
     pub fn filename(&self) -> PathBuf {
-        todo!();
-        PathBuf::from(self.download_link.split("/us/").nth(1).unwrap())
+        PathBuf::from(self.download_link.split("/").last().unwrap())
     }
 
     async fn download_file(&self, download_link: &str, target_file: &Path) 

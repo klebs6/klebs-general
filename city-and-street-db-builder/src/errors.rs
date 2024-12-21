@@ -47,20 +47,6 @@ error_tree!{
         RocksDB(rocksdb::Error),
     }
 
-    pub enum Md5ChecksumVerificationError {
-        ChecksumMismatch { 
-            expected: String, 
-            actual:   String 
-        },
-        IoError(io::Error),
-    }
-
-    pub enum PbfDownloadError {
-        IoError(io::Error),
-        HttpError(reqwest::Error),
-        Md5ChecksumVerificationError(Md5ChecksumVerificationError),
-    }
-
     pub enum UsaCityAndStreetDbBuilderError {
         PbfDownloadError(PbfDownloadError),
         DatabaseConstructionError(DatabaseConstructionError),

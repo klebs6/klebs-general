@@ -1,12 +1,12 @@
 crate::ix!();
 
-/// Fetch the MD5 checksum for the given OSM PBF download link.
+/// Fetch the MD5 checksum for the given download link.
 /// The `.md5` file contains just the MD5 sum and possibly a trailing newline.
-pub async fn fetch_md5_for_region(download_link: &str) -> Result<String, PbfDownloadError> {
-    let md5_url = format!("{}.md5", download_link);
-
+pub async fn fetch_md5_for_link(md5_url: &str) 
+    -> Result<String, DownloadError> 
+{
     let client = reqwest::Client::new();
-    let response = client.get(&md5_url)
+    let response = client.get(&*md5_url)
         .send()
         .await?
         .error_for_status()?;
@@ -14,7 +14,7 @@ pub async fn fetch_md5_for_region(download_link: &str) -> Result<String, PbfDown
     let text = response.text().await?;
     let trimmed = text.trim();
     if trimmed.is_empty() {
-        return Err(PbfDownloadError::IoError(
+        return Err(DownloadError::IoError(
             std::io::Error::new(std::io::ErrorKind::InvalidData, "Empty MD5 sum")
         ));
     }
@@ -23,11 +23,12 @@ pub async fn fetch_md5_for_region(download_link: &str) -> Result<String, PbfDown
     // We only want the hash, so split by whitespace and take the first part.
     let parts: Vec<&str> = trimmed.split_whitespace().collect();
     if parts.is_empty() {
-        return Err(PbfDownloadError::IoError(
+        return Err(DownloadError::IoError(
             std::io::Error::new(std::io::ErrorKind::InvalidData, "No hash found in MD5 file")
         ));
     }
 
     let md5_sum = parts[0];
+
     Ok(md5_sum.to_string())
 }
