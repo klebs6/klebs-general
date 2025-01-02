@@ -1,7 +1,7 @@
 crate::ix!();
 
 /// A region of the United States—this can be a UnitedState, a USTerritory, or a Federal District.
-#[derive(Debug,PartialOrd,Ord,PartialEq,Eq,Hash,Clone,Copy)]
+#[derive(FileDownloader,Debug,PartialOrd,Ord,PartialEq,Eq,Hash,Clone,Copy)]
 pub enum USRegion {
     UnitedState(UnitedState),
     USTerritory(USTerritory),

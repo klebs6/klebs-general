@@ -145,7 +145,7 @@ mod address_record_tests {
             ("addr:postcode", "21201"),
         ];
         let map = collect_tags(mock_tag_iter(tags));
-        assert_eq!(map.get("addr:city").unwrap(), "Baltimore");
+        assert_eq!(*map.get("addr:city").unwrap(), "Baltimore");
     }
 
     #[test]

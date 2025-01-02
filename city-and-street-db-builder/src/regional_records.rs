@@ -18,9 +18,10 @@ impl RegionalRecords {
         -> Result<Self,OsmPbfParseError> 
     {
         let pbf_path = pbf_file.as_ref();
+        let country  = region.country();
 
         validate_pbf_filename(&region, pbf_path)?;
-        let records = parse_osm_pbf(pbf_path)?;
+        let records = parse_osm_pbf(pbf_path,&country)?;
 
         Ok(Self {
             region,

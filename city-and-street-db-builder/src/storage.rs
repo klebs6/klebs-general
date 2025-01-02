@@ -26,12 +26,12 @@ impl Database {
     }
 
     /// Check if region already done
-    pub fn region_done(&self, region: &USRegion) -> Result<bool,rocksdb::Error> {
+    pub fn region_done(&self, region: &WorldRegion) -> Result<bool,rocksdb::Error> {
         Ok(self.db.get(MetaKeyForRegion::from(*region))?.is_some())
     }
 
     /// Mark region as done
-    pub fn mark_region_done(&mut self, region: &USRegion) 
+    pub fn mark_region_done(&mut self, region: &WorldRegion) 
         -> Result<(),DatabaseConstructionError> 
     {
         self.db.put(&MetaKeyForRegion::from(*region), b"done")?;
@@ -50,28 +50,28 @@ impl Database {
     /// Write a single region's indexes into DB
     pub fn write_indexes(
         &mut self,
-        region:  &USRegion,
+        region:  &WorldRegion,
         indexes: &InMemoryIndexes
 
     ) -> Result<(),DatabaseConstructionError> {
 
         info!("writing InMemoryIndexes for region {:?}", region);
 
-        // State->ZIP->Streets: S:{region}:{zip}
-        if let Some(state_map) = indexes.zip_to_street_map_for_region(region) {
-            for (zip, streets) in state_map {
-                self.write_streets_to_region_and_zip(region,zip,streets)?;
+        // State->PostalCode->Streets: S:{region}:{postal_code}
+        if let Some(state_map) = indexes.postal_code_to_street_map_for_region(region) {
+            for (postal_code, streets) in state_map {
+                self.write_streets_to_region_and_postal_code(region,postal_code,streets)?;
             }
         }
 
-        // ZIP->Cities: Z2C:{region_name}:{zip}
-        for (zip, cities) in indexes.zip_cities() {
-            self.write_cities_to_region_and_zip(region,zip,cities)?;
+        // PostalCode->Cities: Z2C:{region_name}:{postal_code}
+        for (postal_code, cities) in indexes.postal_code_cities() {
+            self.write_cities_to_region_and_postal_code(region,postal_code,cities)?;
         }
 
-        // City->ZIPs: C2Z:{region_name}:{city}
-        for (city, zips) in indexes.city_zips() {
-            self.write_zips_to_region_and_city(region,city,zips)?;
+        // City->PostalCodes: C2Z:{region_name}:{city}
+        for (city, postal_codes) in indexes.city_postal_codes() {
+            self.write_postal_codes_to_region_and_city(region,city,postal_codes)?;
         }
 
         // City->Streets: C2S:{region_name}:{city}
@@ -79,9 +79,9 @@ impl Database {
             self.write_streets_to_region_and_city(region,city,streets)?;
         }
 
-        // Street->ZIPs: S2Z:{region_name}:{street}
-        for (street, zips) in indexes.street_zips() {
-            self.write_zips_to_region_and_street(region,street,zips)?;
+        // Street->PostalCodes: S2Z:{region_name}:{street}
+        for (street, postal_codes) in indexes.street_postal_codes() {
+            self.write_postal_codes_to_region_and_street(region,street,postal_codes)?;
         }
 
         // Street->Cities: S2C:{region_name}:{street}
@@ -92,47 +92,47 @@ impl Database {
         Ok(())
     }
 
-    fn write_streets_to_region_and_zip(&mut self, region: &USRegion, zip: &PostalCode, streets: &BTreeSet<StreetName>) 
+    fn write_streets_to_region_and_postal_code(&mut self, region: &WorldRegion, postal_code: &PostalCode, streets: &BTreeSet<StreetName>) 
         -> Result<(),DatabaseConstructionError> 
     {
-        let key = s_key(region,zip);
+        let key = s_key(region,postal_code);
         let val = compress_set_to_cbor(streets);
         self.put(&key, val)?;
         Ok(())
     }
 
-    fn write_cities_to_region_and_zip(&mut self, region: &USRegion, zip: &PostalCode, cities: &BTreeSet<CityName>) 
+    fn write_cities_to_region_and_postal_code(&mut self, region: &WorldRegion, postal_code: &PostalCode, cities: &BTreeSet<CityName>) 
         -> Result<(),DatabaseConstructionError> 
     {
-        let key = z2c_key(region,zip);
+        let key = z2c_key(region,postal_code);
         let val = compress_set_to_cbor(cities);
         self.put(&key, val)?;
         Ok(())
     }
 
-    fn write_zips_to_region_and_city(&mut self, region: &USRegion, city: &CityName, zips: &BTreeSet<PostalCode>) 
+    fn write_postal_codes_to_region_and_city(&mut self, region: &WorldRegion, city: &CityName, postal_codes: &BTreeSet<PostalCode>) 
         -> Result<(),DatabaseConstructionError> 
     {
         let key = c2z_key(region,city);
-        self.put(&key, compress_set_to_cbor(zips))?;
+        self.put(&key, compress_set_to_cbor(postal_codes))?;
         Ok(())
     }
 
-    fn write_streets_to_region_and_city(&mut self, region: &USRegion, city: &CityName, streets: &BTreeSet<StreetName>) -> Result<(), DatabaseConstructionError> {
+    fn write_streets_to_region_and_city(&mut self, region: &WorldRegion, city: &CityName, streets: &BTreeSet<StreetName>) -> Result<(), DatabaseConstructionError> {
         let key = c2s_key(region,city);
         self.put(&key, compress_set_to_cbor(streets))?;
         Ok(())
     }
 
-    fn write_zips_to_region_and_street(&mut self, region: &USRegion, street: &StreetName, zips: &BTreeSet<PostalCode>) 
+    fn write_postal_codes_to_region_and_street(&mut self, region: &WorldRegion, street: &StreetName, postal_codes: &BTreeSet<PostalCode>) 
         -> Result<(),DatabaseConstructionError> 
     {
         let key = s2z_key(region,street);
-        self.put(&key, compress_set_to_cbor(zips))?;
+        self.put(&key, compress_set_to_cbor(postal_codes))?;
         Ok(())
     }
 
-    fn write_cities_to_region_and_street(&mut self, region: &USRegion, street: &StreetName, cities: &BTreeSet<CityName>) 
+    fn write_cities_to_region_and_street(&mut self, region: &WorldRegion, street: &StreetName, cities: &BTreeSet<CityName>) 
         -> Result<(),DatabaseConstructionError> 
     {
         let key = s2c_key(region,street);
@@ -154,7 +154,7 @@ mod database_tests {
 
         let db           = Database::open(&temp_dir).unwrap();
         let mut db_guard = db.lock().unwrap();
-        let region       = USRegion::UnitedState(UnitedState::Maryland);
+        let region: WorldRegion = USRegion::UnitedState(UnitedState::Maryland).into();
 
         assert!(!db_guard.region_done(&region).unwrap());
 

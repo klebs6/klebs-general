@@ -5,208 +5,208 @@ crate::ix!();
 /// We use strum attributes to handle various forms (full name, abbreviation, and spaceless name).
 /// `ascii_case_insensitive` ensures case-insensitive matching.
 /// `serialize_all = "title_case"` ensures variant names are considered in Title Case by default.
-#[derive(OsmPbfDownloader,Debug, PartialEq, Eq, Hash, Clone, Copy, StrumDisplay, StrumEnumString, StrumEnumIter, StrumEnumVariantNames)]
+#[derive(OsmPbfDownloader,Debug,PartialOrd,Ord,PartialEq,Eq,Hash,Clone,Copy,StrumDisplay,StrumEnumString,StrumEnumIter,StrumEnumVariantNames)]
 #[strum(ascii_case_insensitive, serialize_all = "title_case")]
 pub enum UnitedState {
 
-    #[geofabrik(link="north-america/us/alabama-latest.osm.pbf")]
-    #[strum(serialize = "Alabama",        serialize = "AL"    )] 
+    #[geofabrik(us="alabama-latest.osm.pbf"                )] 
+    #[strum(serialize = "Alabama", serialize = "AL"        )] 
     Alabama,
 
-    #[geofabrik(link=""                                       )]
-    #[strum(serialize = "Alaska",         serialize = "AK"    )] 
+    #[geofabrik(us="alaska-latest.osm.pbf"                 )] 
+    #[strum(serialize = "Alaska",         serialize = "AK" )] 
     Alaska,
 
-    #[geofabrik(link=""                                       )]
-    #[strum(serialize = "Arizona",        serialize = "AZ"    )] 
+    #[geofabrik(us="arizona-latest.osm.pbf"                )] 
+    #[strum(serialize = "Arizona",        serialize = "AZ" )] 
     Arizona,
 
-    #[geofabrik(link=""                                       )]
-    #[strum(serialize = "Arkansas",       serialize = "AR"    )] 
+    #[geofabrik(us="arkansas-latest.osm.pbf"               )] 
+    #[strum(serialize = "Arkansas",       serialize = "AR" )] 
     Arkansas,
 
-    #[geofabrik(link=""                                       )]
-    #[strum(serialize = "California",     serialize = "CA"    )] 
+    #[geofabrik(us="california-latest.osm.pbf"             )] 
+    #[strum(serialize = "California",     serialize = "CA" )] 
     California,
 
-    #[geofabrik(link=""                                       )]
-    #[strum(serialize = "Colorado",       serialize = "CO"    )] 
+    #[geofabrik(us="colorado-latest.osm.pbf"               )] 
+    #[strum(serialize = "Colorado",       serialize = "CO" )] 
     Colorado,
 
-    #[geofabrik(link=""                                       )]
-    #[strum(serialize = "Connecticut",    serialize = "CT"    )] 
+    #[geofabrik(us="connecticut-latest.osm.pbf"            )] 
+    #[strum(serialize = "Connecticut",    serialize = "CT" )] 
     Connecticut,
 
-    #[geofabrik(link=""                                       )]
-    #[strum(serialize = "Delaware",       serialize = "DE"    )] 
+    #[geofabrik(us="delaware-latest.osm.pbf"               )] 
+    #[strum(serialize = "Delaware",       serialize = "DE" )] 
     Delaware,
 
-    #[geofabrik(link=""                                       )]
-    #[strum(serialize = "Florida",        serialize = "FL"    )] 
+    #[geofabrik(us="florida-latest.osm.pbf"                )] 
+    #[strum(serialize = "Florida",        serialize = "FL" )] 
     Florida,
 
-    #[geofabrik(link=""                                       )]
-    #[strum(serialize = "Georgia",        serialize = "GA"    )] 
+    #[geofabrik(us="georgia-latest.osm.pbf"                )] 
+    #[strum(serialize = "Georgia",        serialize = "GA" )] 
     Georgia,
 
-    #[geofabrik(link=""                                       )]
-    #[strum(serialize = "Hawaii",         serialize = "HI"    )] 
+    #[geofabrik(us="hawaii-latest.osm.pbf"                 )] 
+    #[strum(serialize = "Hawaii",         serialize = "HI" )] 
     Hawaii,
 
-    #[geofabrik(link=""                                       )]
-    #[strum(serialize = "Idaho",          serialize = "ID"    )] 
+    #[geofabrik(us="idaho-latest.osm.pbf"                  )] 
+    #[strum(serialize = "Idaho",          serialize = "ID" )] 
     Idaho,
 
-    #[geofabrik(link=""                                       )]
-    #[strum(serialize = "Illinois",       serialize = "IL"    )] 
+    #[geofabrik(us="illinois-latest.osm.pbf"               )] 
+    #[strum(serialize = "Illinois",       serialize = "IL" )] 
     Illinois,
 
-    #[geofabrik(link=""                                       )]
-    #[strum(serialize = "Indiana",        serialize = "IN"    )] 
+    #[geofabrik(us="indiana-latest.osm.pbf"                )] 
+    #[strum(serialize = "Indiana",        serialize = "IN" )] 
     Indiana,
 
-    #[geofabrik(link=""                                       )]
-    #[strum(serialize = "Iowa",           serialize = "IA"    )] 
+    #[geofabrik(us="iowa-latest.osm.pbf"                   )] 
+    #[strum(serialize = "Iowa",           serialize = "IA" )] 
     Iowa,
 
-    #[geofabrik(link=""                                       )]
-    #[strum(serialize = "Kansas",         serialize = "KS"    )] 
+    #[geofabrik(us="kansas-latest.osm.pbf"                 )] 
+    #[strum(serialize = "Kansas",         serialize = "KS" )] 
     Kansas,
 
-    #[geofabrik(link=""                                       )]
-    #[strum(serialize = "Kentucky",       serialize = "KY"    )] 
+    #[geofabrik(us="kentucky-latest.osm.pbf"               )] 
+    #[strum(serialize = "Kentucky",       serialize = "KY" )] 
     Kentucky,
 
-    #[geofabrik(link=""                                       )]
-    #[strum(serialize = "Louisiana",      serialize = "LA"    )] 
+    #[geofabrik(us="louisiana-latest.osm.pbf"              )] 
+    #[strum(serialize = "Louisiana",      serialize = "LA" )] 
     Louisiana,
 
-    #[geofabrik(link=""                                       )]
-    #[strum(serialize = "Maine",          serialize = "ME"    )] 
+    #[geofabrik(us="maine-latest.osm.pbf"                  )] 
+    #[strum(serialize = "Maine",          serialize = "ME" )] 
     Maine,
 
-    #[geofabrik(link=""                                       )]
-    #[strum(serialize = "Maryland",       serialize = "MD"    )] 
+    #[geofabrik(us="maryland-latest.osm.pbf"               )] 
+    #[strum(serialize = "Maryland",       serialize = "MD" )] 
     Maryland,
 
-    #[geofabrik(link=""                                       )]
-    #[strum(serialize = "Massachusetts",  serialize = "MA"    )] 
+    #[geofabrik(us="massachusetts-latest.osm.pbf"          )] 
+    #[strum(serialize = "Massachusetts",  serialize = "MA" )] 
     Massachusetts,
 
-    #[geofabrik(link=""                                       )]
-    #[strum(serialize = "Michigan",       serialize = "MI"    )] 
+    #[geofabrik(us="michigan-latest.osm.pbf"               )] 
+    #[strum(serialize = "Michigan",       serialize = "MI" )] 
     Michigan,
 
-    #[geofabrik(link=""                                       )]
-    #[strum(serialize = "Minnesota",      serialize = "MN"    )] 
+    #[geofabrik(us="minnesota-latest.osm.pbf"              )] 
+    #[strum(serialize = "Minnesota",      serialize = "MN" )] 
     Minnesota,
 
-    #[geofabrik(link=""                                       )]
-    #[strum(serialize = "Mississippi",    serialize = "MS"    )] 
+    #[geofabrik(us="mississippi-latest.osm.pbf"            )] 
+    #[strum(serialize = "Mississippi",    serialize = "MS" )] 
     Mississippi,
 
-    #[geofabrik(link=""                                       )]
-    #[strum(serialize = "Missouri",       serialize = "MO"    )] 
+    #[geofabrik(us="missouri-latest.osm.pbf"               )] 
+    #[strum(serialize = "Missouri",       serialize = "MO" )] 
     Missouri,
 
-    #[geofabrik(link=""                                       )]
-    #[strum(serialize = "Montana",        serialize = "MT"    )] 
+    #[geofabrik(us="montana-latest.osm.pbf"                )] 
+    #[strum(serialize = "Montana",        serialize = "MT" )] 
     Montana,
 
-    #[geofabrik(link=""                                       )]
-    #[strum(serialize = "Nebraska",       serialize = "NE"    )] 
+    #[geofabrik(us="nebraska-latest.osm.pbf"               )] 
+    #[strum(serialize = "Nebraska",       serialize = "NE" )] 
     Nebraska,
 
-    #[geofabrik(link=""                                       )]
-    #[strum(serialize = "Nevada",         serialize = "NV"    )] 
+    #[geofabrik(us="nevada-latest.osm.pbf"                 )] 
+    #[strum(serialize = "Nevada",         serialize = "NV" )] 
     Nevada,
 
-    #[geofabrik(link="")]
+    #[geofabrik(us="new-hampshire-latest.osm.pbf"                                        )] 
     #[strum(serialize = "NewHampshire",   serialize = "New Hampshire",  serialize = "NH" )] 
     NewHampshire,
 
-    #[geofabrik(link="")]
+    #[geofabrik(us="new-jersey-latest.osm.pbf"                                           )] 
     #[strum(serialize = "NewJersey",      serialize = "New Jersey",     serialize = "NJ" )] 
     NewJersey,
 
-    #[geofabrik(link="")]
+    #[geofabrik(us="new-mexico-latest.osm.pbf"                                           )] 
     #[strum(serialize = "NewMexico",      serialize = "New Mexico",     serialize = "NM" )] 
     NewMexico,
 
-    #[geofabrik(link="")]
+    #[geofabrik(us="new-york-latest.osm.pbf"                                             )] 
     #[strum(serialize = "NewYork",        serialize = "New York",       serialize = "NY" )] 
     NewYork,
 
-    #[geofabrik(link="")]
+    #[geofabrik(us="north-carolina-latest.osm.pbf"                                       )] 
     #[strum(serialize = "NorthCarolina",  serialize = "North Carolina", serialize = "NC" )] 
     NorthCarolina,
 
-    #[geofabrik(link="")]
+    #[geofabrik(us="north-dakota-latest.osm.pbf"                                         )] 
     #[strum(serialize = "NorthDakota",    serialize = "North Dakota",   serialize = "ND" )] 
     NorthDakota,
 
-    #[geofabrik(link=""                                       )]
-    #[strum(serialize = "Ohio",           serialize = "OH"    )] 
+    #[geofabrik(us="ohio-latest.osm.pbf"                   )] 
+    #[strum(serialize = "Ohio",           serialize = "OH" )] 
     Ohio,
 
-    #[geofabrik(link=""                                       )]
-    #[strum(serialize = "Oklahoma",       serialize = "OK"    )] 
+    #[geofabrik(us="oklahoma-latest.osm.pbf"               )] 
+    #[strum(serialize = "Oklahoma",       serialize = "OK" )] 
     Oklahoma,
 
-    #[geofabrik(link=""                                       )]
-    #[strum(serialize = "Oregon",         serialize = "OR"    )] 
+    #[geofabrik(us="oregon-latest.osm.pbf"                 )] 
+    #[strum(serialize = "Oregon",         serialize = "OR" )] 
     Oregon,
 
-    #[geofabrik(link=""                                       )]
-    #[strum(serialize = "Pennsylvania",   serialize = "PA"    )] 
+    #[geofabrik(us="pennsylvania-latest.osm.pbf"           )] 
+    #[strum(serialize = "Pennsylvania",   serialize = "PA" )] 
     Pennsylvania,
 
-    #[geofabrik(link="")]
+    #[geofabrik(us="rhode-island-latest.osm.pbf"                                         )] 
     #[strum(serialize = "RhodeIsland",    serialize = "Rhode Island",   serialize = "RI" )] 
     RhodeIsland,
 
-    #[geofabrik(link="")]
+    #[geofabrik(us="south-carolina-latest.osm.pbf"                                       )] 
     #[strum(serialize = "SouthCarolina",  serialize = "South Carolina", serialize = "SC" )] 
     SouthCarolina,
 
-    #[geofabrik(link="")]
+    #[geofabrik(us="south-dakota-latest.osm.pbf"                                         )] 
     #[strum(serialize = "SouthDakota",    serialize = "South Dakota",   serialize = "SD" )] 
     SouthDakota,
 
-    #[geofabrik(link=""                                       )]
-    #[strum(serialize = "Tennessee",      serialize = "TN"    )] 
+    #[geofabrik(us="tennessee-latest.osm.pbf"              )] 
+    #[strum(serialize = "Tennessee",      serialize = "TN" )] 
     Tennessee,
 
-    #[geofabrik(link=""                                       )]
-    #[strum(serialize = "Texas",          serialize = "TX"    )] 
+    #[geofabrik(us="texas-latest.osm.pbf"                  )] 
+    #[strum(serialize = "Texas",          serialize = "TX" )] 
     Texas,
 
-    #[geofabrik(link=""                                       )]
-    #[strum(serialize = "Utah",           serialize = "UT"    )] 
+    #[geofabrik(us="utah-latest.osm.pbf"                   )] 
+    #[strum(serialize = "Utah",           serialize = "UT" )] 
     Utah,
 
-    #[geofabrik(link=""                                       )]
-    #[strum(serialize = "Vermont",        serialize = "VT"    )] 
+    #[geofabrik(us="vermont-latest.osm.pbf"                )] 
+    #[strum(serialize = "Vermont",        serialize = "VT" )] 
     Vermont,
 
-    #[geofabrik(link=""                                       )]
-    #[strum(serialize = "Virginia",       serialize = "VA"    )] 
+    #[geofabrik(us="virginia-latest.osm.pbf"               )] 
+    #[strum(serialize = "Virginia",       serialize = "VA" )] 
     Virginia,
 
-    #[geofabrik(link=""                                       )]
-    #[strum(serialize = "Washington",     serialize = "WA"    )] 
+    #[geofabrik(us="washington-latest.osm.pbf"             )] 
+    #[strum(serialize = "Washington",     serialize = "WA" )] 
     Washington,
 
-    #[geofabrik(link="")]
+    #[geofabrik(us="west-virginia-latest.osm.pbf"                                        )] 
     #[strum(serialize = "WestVirginia",   serialize = "West Virginia",  serialize = "WV" )] 
     WestVirginia,
 
-    #[geofabrik(link=""                                       )]
-    #[strum(serialize = "Wisconsin",      serialize = "WI"    )] 
+    #[geofabrik(us="wisconsin-latest.osm.pbf"              )] 
+    #[strum(serialize = "Wisconsin",      serialize = "WI" )] 
     Wisconsin,
 
-    #[geofabrik(link=""                                       )]
-    #[strum(serialize = "Wyoming",        serialize = "WY"    )] 
+    #[geofabrik(us="wyoming-latest.osm.pbf"                )] 
+    #[strum(serialize = "Wyoming",        serialize = "WY" )] 
     Wyoming,
 }
 

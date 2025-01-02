@@ -4,38 +4,39 @@ error_tree!{
 
     pub enum InvalidWorldAddress {
         CityNotFoundForPostalCodeInRegion {
-            city:   CityName,
-            region: WorldRegion,
-            zip:    PostalCode,
+            city:        CityName,
+            region:      WorldRegion,
+            postal_code: PostalCode,
         },
         PostalCodeToCityKeyNotFoundForRegion {
-            z2c_key: String,
-            region:  WorldRegion,
-            zip:     PostalCode,
+            z2c_key:     String,
+            region:      WorldRegion,
+            postal_code: PostalCode,
         },
         StreetNotFoundForPostalCodeInRegion {
-            street: StreetName,
-            region: WorldRegion,
-            zip:    PostalCode,
+            street:      StreetName,
+            region:      WorldRegion,
+            postal_code: PostalCode,
         },
         PostalCodeToStreetKeyNotFoundForRegion {
-            s_key:  String,
-            region: WorldRegion,
-            zip:    PostalCode,
+            s_key:       String,
+            region:      WorldRegion,
+            postal_code: PostalCode,
         },
         StreetNotFoundForCityInRegion {
-            street: StreetName,
-            city:   CityName,
-            region: WorldRegion,
+            street:      StreetName,
+            city:        CityName,
+            region:      WorldRegion,
         },
         CityToStreetsKeyNotFoundForCityInRegion {
-            c_key:  String,
-            region: WorldRegion,
-            city:   CityName,
+            c_key:       String,
+            region:      WorldRegion,
+            city:        CityName,
         }
     }
 
     pub enum OsmPbfParseError {
+        WorldRegionConversionError(WorldRegionConversionError),
         OsmPbf(osmpbf::Error),
         InvalidInputFile { reason: String },
         WorldAddressBuilderError(WorldAddressBuilderError),
@@ -47,8 +48,8 @@ error_tree!{
         RocksDB(rocksdb::Error),
     }
 
-    pub enum UsaCityAndStreetDbBuilderError {
-        PbfDownloadError(PbfDownloadError),
+    pub enum WorldCityAndStreetDbBuilderError {
+        DownloadError(DownloadError),
         DatabaseConstructionError(DatabaseConstructionError),
         DbLockError,
         NotAllAddressesValidatedSuccessfully,

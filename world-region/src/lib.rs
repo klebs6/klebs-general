@@ -9,6 +9,7 @@ x!{from_str}
 x!{country}
 x!{error}
 x!{impl_serde}
+x!{impl_from}
 x!{world_region}
 
 #[cfg(test)]

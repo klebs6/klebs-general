@@ -7,4 +7,7 @@ pub trait NamedAlias {
 
     /// Returns the list of aliases.
     fn aliases(&self) -> Vec<Cow<'_, str>>;
+
+    /// Clears all aliases from the item
+    fn clear_aliases(&mut self);
 }

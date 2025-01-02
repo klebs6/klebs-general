@@ -12,7 +12,6 @@ x!{compressed_list}
 x!{data_access_traits}
 x!{data_access}
 x!{download_and_parse_all_regions}
-x!{download_handle}
 x!{dump}
 x!{errors}
 x!{filenames}
@@ -30,5 +29,5 @@ x!{remote_data}
 x!{storage}
 x!{street_name}
 x!{traits}
-x!{usa_address}
+x!{world_address}
 x!{validate_all_addresses}

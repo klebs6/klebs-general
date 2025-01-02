@@ -153,7 +153,7 @@ mod filenames_tests {
     #[test]
     #[should_panic(expected = "unimplemented")]
     fn test_from_osm_pbf_file_unsupported_region() {
-        let region: WorldRegion = USRegion::USFederalDistrict(USFederalDistrict::Guam).into(); // Assuming not implemented
+        let region: WorldRegion = USRegion::USTerritory(USTerritory::Guam).into(); // Assuming not implemented
         let pbf_path = PathBuf::from("guam-latest.osm.pbf");
         // This should panic or return an error due to unimplemented region support
         let _ = RegionalRecords::from_osm_pbf_file(region, &pbf_path);

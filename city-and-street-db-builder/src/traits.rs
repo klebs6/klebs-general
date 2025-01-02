@@ -23,5 +23,5 @@ pub trait MockI {
 
 pub trait MockForRegion {
 
-    fn mock_for_region(region: &USRegion) -> Self;
+    fn mock_for_region(region: &WorldRegion) -> Self;
 }

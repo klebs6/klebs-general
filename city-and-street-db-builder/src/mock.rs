@@ -3,9 +3,12 @@ crate::ix!();
 impl Mock for WorldAddress {
 
     fn mock() -> Self {
+
+        let region: WorldRegion = USRegion::UnitedState(UnitedState::Virginia).into();
+
         WorldAddressBuilder::default()
-            .region(USRegion::UnitedState(UnitedState::Virginia).into())
-            .zip(PostalCode::new(Country::USA, "20124").unwrap())
+            .region(region)
+            .postal_code(PostalCode::new(Country::USA, "20124").unwrap())
             .city(CityName::new("Clifton").unwrap())
             .street(StreetName::new("Redbird Ridge").unwrap())
             .build()
@@ -57,20 +60,20 @@ fn maryland_mock_records() -> Vec<AddressRecord> {
     let rockville_pike   = StreetName::new("Rockville Pike").unwrap();
     let veirs_mill_road  = StreetName::new("Veirs Mill Road").unwrap();
 
-    let zip21201         = PostalCode::new(Country::USA,"21201").unwrap();
-    let zip20814         = PostalCode::new(Country::USA,"20814").unwrap();
-    let zip20850         = PostalCode::new(Country::USA,"20850").unwrap();
+    let postalcode21201         = PostalCode::new(Country::USA,"21201").unwrap();
+    let postalcode20814         = PostalCode::new(Country::USA,"20814").unwrap();
+    let postalcode20850         = PostalCode::new(Country::USA,"20850").unwrap();
 
     vec![
-        address_record!(baltimore, north_avenue     , zip21201), 
-        address_record!(baltimore, greenmount_avenue, zip21201), 
-        address_record!(baltimore, howard_street    , zip21201), 
+        address_record!(baltimore, north_avenue     , postalcode21201), 
+        address_record!(baltimore, greenmount_avenue, postalcode21201), 
+        address_record!(baltimore, howard_street    , postalcode21201), 
 
-        address_record!(bethesda , wisconsin_avenue , zip20814), 
-        address_record!(bethesda , old_georgetown   , zip20814), 
+        address_record!(bethesda , wisconsin_avenue , postalcode20814), 
+        address_record!(bethesda , old_georgetown   , postalcode20814), 
 
-        address_record!(rockville, rockville_pike   , zip20850), 
-        address_record!(rockville, veirs_mill_road  , zip20850), 
+        address_record!(rockville, rockville_pike   , postalcode20850), 
+        address_record!(rockville, veirs_mill_road  , postalcode20850), 
     ]
 }
 
@@ -91,19 +94,19 @@ fn virginia_mock_records() -> Vec<AddressRecord> {
     let reston_pkwy       = StreetName::new("Reston Pkwy").unwrap();
     let sunrise_valley    = StreetName::new("Sunrise Valley Dr").unwrap();
 
-    let zip22201          = PostalCode::new(Country::USA,"22201").unwrap();
-    let zip22301          = PostalCode::new(Country::USA,"22301").unwrap();
-    let zip20190          = PostalCode::new(Country::USA,"20190").unwrap();
+    let postalcode22201          = PostalCode::new(Country::USA,"22201").unwrap();
+    let postalcode22301          = PostalCode::new(Country::USA,"22301").unwrap();
+    let postalcode20190          = PostalCode::new(Country::USA,"20190").unwrap();
 
     vec![
-        address_record!(arlington , wilson_blvd     , zip22201), 
-        address_record!(arlington , clarendon_blvd  , zip22201), 
+        address_record!(arlington , wilson_blvd     , postalcode22201), 
+        address_record!(arlington , clarendon_blvd  , postalcode22201), 
 
-        address_record!(alexandria, king_st         , zip22301), 
-        address_record!(alexandria, mount_vernon_ave, zip22301), 
+        address_record!(alexandria, king_st         , postalcode22301), 
+        address_record!(alexandria, mount_vernon_ave, postalcode22301), 
 
-        address_record!(reston    , reston_pkwy     , zip20190), 
-        address_record!(reston    , sunrise_valley  , zip20190), 
+        address_record!(reston    , reston_pkwy     , postalcode20190), 
+        address_record!(reston    , sunrise_valley  , postalcode20190), 
     ]
 }
 
@@ -119,14 +122,14 @@ fn dc_mock_records() -> Vec<AddressRecord> {
     let wisconsin_avenue = StreetName::new("Wisconsin Avenue").unwrap();
     let m_st_nw          = StreetName::new("M St NW").unwrap();
 
-    let zip20001         = PostalCode::new(Country::USA,"20001").unwrap();
-    let zip20007         = PostalCode::new(Country::USA,"20007").unwrap();
+    let postalcode20001         = PostalCode::new(Country::USA,"20001").unwrap();
+    let postalcode20007         = PostalCode::new(Country::USA,"20007").unwrap();
 
     vec![
-        address_record!(washington_dc, maryland_ave    , zip20001),
-        address_record!(washington_dc, pennsylvania_ave, zip20001),
+        address_record!(washington_dc, maryland_ave    , postalcode20001),
+        address_record!(washington_dc, pennsylvania_ave, postalcode20001),
 
-        address_record!(washington_dc, wisconsin_avenue, zip20007),
-        address_record!(washington_dc, m_st_nw         , zip20007),
+        address_record!(washington_dc, wisconsin_avenue, postalcode20007),
+        address_record!(washington_dc, m_st_nw         , postalcode20007),
     ]
 }

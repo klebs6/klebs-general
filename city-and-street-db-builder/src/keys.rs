@@ -1,11 +1,11 @@
 crate::ix!();
 
-pub fn z2c_key(region: &WorldRegion, zip: &PostalCode) -> String {
-    format!("Z2C:{}:{}", region.abbreviation(), zip.code())
+pub fn z2c_key(region: &WorldRegion, postal_code: &PostalCode) -> String {
+    format!("Z2C:{}:{}", region.abbreviation(), postal_code.code())
 }
 
-pub fn s_key(region: &WorldRegion, zip: &PostalCode) -> String {
-    format!("S:{}:{}", region.abbreviation(), zip.code())
+pub fn s_key(region: &WorldRegion, postal_code: &PostalCode) -> String {
+    format!("S:{}:{}", region.abbreviation(), postal_code.code())
 }
 
 pub fn c_key(region: &WorldRegion, city: &CityName) -> String {

@@ -23,3 +23,7 @@ pub(crate) use tracing_setup::*;
 pub(crate) use tempfile::TempDir;
 pub(crate) use std::io::ErrorKind;
 pub(crate) use structopt::*;
+pub(crate) use file_downloader::*;
+pub(crate) use file_downloader_derive::*;
+pub(crate) use world_region::*;
+pub(crate) use abbreviation_trait::Abbreviation;

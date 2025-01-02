@@ -5,15 +5,15 @@ pub trait ValidateAddress {
     fn validate_address(
         &self, 
         region_name: &WorldRegion, 
-        zip:         &PostalCode, 
+        postal_code: &PostalCode, 
         city:        &CityName, 
         street:      &StreetName
     ) -> bool;
 }
 
-pub trait ZipCodesForCityInRegion {
+pub trait PostalCodesForCityInRegion {
 
-    fn zip_codes_for_city_in_region(
+    fn postal_codes_for_city_in_region(
         &self, 
         region: &WorldRegion, 
         city:   &CityName
@@ -30,21 +30,21 @@ pub trait StreetNamesForCityInRegion {
     ) -> Option<BTreeSet<StreetName>>;
 }
 
-pub trait CityNamesForZipCodeInRegion {
+pub trait CityNamesForPostalCodeInRegion {
 
-    fn cities_for_zip(
+    fn cities_for_postal_code(
         &self, 
         region_name: &WorldRegion, 
-        zip:         &PostalCode
+        postal_code: &PostalCode
     ) -> Option<BTreeSet<CityName>>;
 }
 
-pub trait StreetNamesForZipCodeInRegion {
+pub trait StreetNamesForPostalCodeInRegion {
 
-    fn street_names_for_zip_code_in_region(
+    fn street_names_for_postal_code_in_region(
         &self, 
         region_name: &WorldRegion, 
-        zip:         &PostalCode
+        postal_code: &PostalCode
     ) -> Option<BTreeSet<StreetName>>;
 }
 
@@ -58,12 +58,12 @@ pub trait StreetExistsInCityInRegion {
     ) -> bool;
 }
 
-pub trait StreetExistsInZipCodeInRegion {
+pub trait StreetExistsInPostalCodeInRegion {
 
-    fn street_exists_in_zip(
+    fn street_exists_in_postal_code(
         &self, 
         region_name: &WorldRegion, 
-        zip:         &PostalCode, 
+        postal_code: &PostalCode, 
         street:      &StreetName
     ) -> bool;
 }
