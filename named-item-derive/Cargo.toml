@@ -1,7 +1,13 @@
 [package]
-name = "named-item-derive"
-version = "0.1.0"
-edition = "2024"
+name          = "named-item-derive"
+version       = "0.1.0"
+edition       = "2024"
+description   = "A single procedural macro that implements NamedItem and optionally enables name history or aliases based on struct fields."
+license       = "MIT"
+repository    = "https://github.com/klebs6/klebs-general"
+homepage      = "https://github.com/klebs6/klebs-general"
+documentation = "https://docs.rs/named-item-derive"
+readme        = "README.md"
 
 [lib]
 proc-macro = true
@@ -10,6 +16,7 @@ proc-macro = true
 syn         = "2"
 quote       = "1"
 proc-macro2 = "1"
-named-item  = { version = "*", path = "../named-item" }
+#named-item  = { version = "*", path = "../named-item" }
+named-item  = "*"
 [dev-dependencies]
-trybuild = "*"
+trybuild = "1.0.101"

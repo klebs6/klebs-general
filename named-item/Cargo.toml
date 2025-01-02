@@ -1,14 +1,15 @@
+[package]
+description = "A crate providing traits for managing named items, including support for aliases, name history, validation, and more."
+edition     = "2021"
+authors     = ["klebs tpk3.mx@gmail.com"]
+license     = "MIT OR Apache-2.0"
+repository  = "https://github.com/klebs6/klebs-general"
+name        = "named-item"
+version     = "0.6.0"
+keywords    = ["names", "utilities", "traits", "history", "validation"]
+categories  = ["data-structures"]
+
 [dependencies]
 export-magic = "0.3.6"
 regex = "1.10.6"
 language-enum = "0.1.0"
-[package]
-description = "A crate providing traits for managing named items, including support for aliases, name history, validation, and more."
-edition = "2021"
-authors = ["klebs tpk3.mx@gmail.com"]
-license = "MIT OR Apache-2.0"
-repository = "https://github.com/klebs6/klebs-general"
-name = "named-item"
-version = "0.5.0"
-keywords = ["names", "utilities", "traits", "history", "validation"]
-categories = ["data-structures"]
