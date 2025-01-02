@@ -41,4 +41,3 @@ fn main() -> Result<(), NameError> {
 
     Ok(())
 }
-

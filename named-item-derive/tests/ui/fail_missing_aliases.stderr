@@ -1,0 +1,5 @@
+error: aliases=true but no `aliases: Vec<String>` field found.
+ --> tests/ui/fail_missing_aliases.rs:8:8
+  |
+8 | struct MissingAliasesField {
+  |        ^^^^^^^^^^^^^^^^^^^

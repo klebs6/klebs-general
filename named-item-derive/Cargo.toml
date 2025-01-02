@@ -17,6 +17,6 @@ syn         = "2"
 quote       = "1"
 proc-macro2 = "1"
 #named-item  = { version = "*", path = "../named-item" }
-named-item  = "*"
+named-item  = "0.6.0"
 [dev-dependencies]
 trybuild = "1.0.101"

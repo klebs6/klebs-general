@@ -1,0 +1,13 @@
+error: Struct must have `name: String`.
+ --> tests/ui/fail_missing_name.rs:9:8
+  |
+9 | struct MissingNameField {
+  |        ^^^^^^^^^^^^^^^^
+
+warning: unused import: `Named`
+ --> tests/ui/fail_missing_name.rs:6:18
+  |
+6 | use named_item::{Named};
+  |                  ^^^^^
+  |
+  = note: `#[warn(unused_imports)]` on by default

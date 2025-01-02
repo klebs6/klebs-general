@@ -1,0 +1,5 @@
+error: history=true but no `name_history: Vec<String>` field found.
+ --> tests/ui/fail_missing_history.rs:8:8
+  |
+8 | struct MissingHistoryField {
+  |        ^^^^^^^^^^^^^^^^^^^
