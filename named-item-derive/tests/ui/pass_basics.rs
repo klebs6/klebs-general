@@ -1,6 +1,6 @@
 use named_item_derive::NamedItem;
 use named_item::{
-    Named, SetName, ResetName, NameHistory, NamedAlias, NameError, DefaultName
+    Named, SetName, ResetName, NameHistory, NamedAlias, NameError
 };
 
 #[derive(NamedItem)]

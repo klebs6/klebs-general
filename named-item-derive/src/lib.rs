@@ -64,7 +64,6 @@ struct NamedItemConfig {
 ///     assert_eq!(x.name(), "updated");
 /// }
 /// ```
-
 fn parse_named_item_attrs(ast: &DeriveInput) -> syn::Result<NamedItemConfig> {
     let mut default_name = None;
     let mut aliases = false;
@@ -74,26 +73,23 @@ fn parse_named_item_attrs(ast: &DeriveInput) -> syn::Result<NamedItemConfig> {
     for attr in &ast.attrs {
         if attr.path().is_ident("named_item") {
             attr.parse_nested_meta(|meta| {
-                let p = &meta.path; // `path` is a field in syn 2.0
-
+                let p = &meta.path;
                 if p.is_ident("default_name") {
-                    // e.g. default_name="Foo"
                     let lit: LitStr = meta.value()?.parse()?;
                     default_name = Some(lit.value());
                 } else if p.is_ident("aliases") {
-                    // e.g. aliases="true"
                     let lit: LitStr = meta.value()?.parse()?;
                     aliases = lit.value().to_lowercase() == "true";
                 } else if p.is_ident("default_aliases") {
-                    // e.g. default_aliases="alpha,beta"
                     let lit: LitStr = meta.value()?.parse()?;
+                    // FILTER OUT empty tokens:
                     default_aliases = lit
                         .value()
                         .split(',')
+                        .filter(|tok| !tok.trim().is_empty())   // <-- NEW
                         .map(|s| s.trim().to_string())
                         .collect();
                 } else if p.is_ident("history") {
-                    // e.g. history="true"
                     let lit: LitStr = meta.value()?.parse()?;
                     history = lit.value().to_lowercase() == "true";
                 }
@@ -110,11 +106,9 @@ fn parse_named_item_attrs(ast: &DeriveInput) -> syn::Result<NamedItemConfig> {
     })
 }
 
-/// Implements the NamedItem logic (and optionally history + aliases).
 fn impl_named_item(ast: &DeriveInput, cfg: &NamedItemConfig) -> syn::Result<TokenStream> {
     let struct_name = &ast.ident;
 
-    // 1) Ensure we have a named struct with `name: String`.
     let fields = match &ast.data {
         Data::Struct(ds) => &ds.fields,
         _ => {
@@ -125,7 +119,7 @@ fn impl_named_item(ast: &DeriveInput, cfg: &NamedItemConfig) -> syn::Result<Toke
         }
     };
     let named_fields = match fields {
-        Fields::Named(fields_named) => &fields_named.named,
+        Fields::Named(f) => &f.named,
         _ => {
             return Err(SynError::new_spanned(
                 &ast.ident,
@@ -134,14 +128,14 @@ fn impl_named_item(ast: &DeriveInput, cfg: &NamedItemConfig) -> syn::Result<Toke
         }
     };
 
-    // Must have `name: String`.
+    // must have name: String
     let name_field = named_fields.iter().find(|field| {
         field.ident.as_ref().map(|id| id == "name").unwrap_or(false)
     });
     if name_field.is_none() {
         return Err(SynError::new_spanned(
             &ast.ident,
-            "Struct must have a `name: String` field for NamedItem.",
+            "Struct must have `name: String`.",
         ));
     }
     let name_ty = &name_field.unwrap().ty;
@@ -158,7 +152,7 @@ fn impl_named_item(ast: &DeriveInput, cfg: &NamedItemConfig) -> syn::Result<Toke
         ));
     }
 
-    // 2) If history=true => require `name_history: Vec<String>`.
+    // require name_history if history=true
     if cfg.history {
         let hist_field = named_fields.iter().find(|field| {
             field.ident.as_ref().map(|id| id == "name_history").unwrap_or(false)
@@ -166,13 +160,12 @@ fn impl_named_item(ast: &DeriveInput, cfg: &NamedItemConfig) -> syn::Result<Toke
         if hist_field.is_none() {
             return Err(SynError::new_spanned(
                 &ast.ident,
-                "history=true but `name_history: Vec<String>` not found.",
+                "history=true but no `name_history: Vec<String>` field found.",
             ));
         }
-        // Optionally check the type is Vec<String>, etc.
     }
 
-    // 3) If aliases=true => require `aliases: Vec<String>`.
+    // require aliases if aliases=true
     if cfg.aliases {
         let alias_field = named_fields.iter().find(|field| {
             field.ident.as_ref().map(|id| id == "aliases").unwrap_or(false)
@@ -180,42 +173,41 @@ fn impl_named_item(ast: &DeriveInput, cfg: &NamedItemConfig) -> syn::Result<Toke
         if alias_field.is_none() {
             return Err(SynError::new_spanned(
                 &ast.ident,
-                "aliases=true but `aliases: Vec<String>` not found.",
+                "aliases=true but no `aliases: Vec<String>` field found.",
             ));
         }
-        // Optionally check the type is Vec<String>, etc.
     }
 
-    // 4) Baseline trait impls: Named, DefaultName, ResetName
     let fallback_name = cfg.default_name.clone().unwrap_or_else(|| struct_name.to_string());
 
+    // Named, DefaultName, ResetName
     let baseline_impl = quote! {
-        // Named
         impl named_item::Named for #struct_name {
             fn name(&self) -> std::borrow::Cow<'_, str> {
                 std::borrow::Cow::from(&self.name)
             }
         }
 
-        // DefaultName
         impl named_item::DefaultName for #struct_name {
             fn default_name() -> std::borrow::Cow<'static, str> {
                 std::borrow::Cow::from(#fallback_name)
             }
         }
 
-        // ResetName
         impl named_item::ResetName for #struct_name {}
     };
 
-    // 5) set_name logic
+    // SetName:
+    // If we want to allow empty name if it equals the default, do so:
     let setname_impl = if cfg.history {
-        // Overwrite set_name to track changes
         quote! {
             impl named_item::SetName for #struct_name {
                 fn set_name(&mut self, name: &str) -> Result<(), named_item::NameError> {
+                    // push history first
                     self.name_history.push(name.to_string());
-                    if name.is_empty() {
+
+                    // only error if empty and not the default
+                    if name.is_empty() && name != &*Self::default_name() {
                         return Err(named_item::NameError::EmptyName);
                     }
                     self.name = name.to_owned();
@@ -227,6 +219,7 @@ fn impl_named_item(ast: &DeriveInput, cfg: &NamedItemConfig) -> syn::Result<Toke
                 fn add_name_to_history(&mut self, name: &str) {
                     self.name_history.push(name.to_string());
                 }
+
                 fn name_history(&self) -> Vec<std::borrow::Cow<'_, str>> {
                     self.name_history
                         .iter()
@@ -236,11 +229,12 @@ fn impl_named_item(ast: &DeriveInput, cfg: &NamedItemConfig) -> syn::Result<Toke
             }
         }
     } else {
-        // Normal (no history)
+        // no history
         quote! {
             impl named_item::SetName for #struct_name {
                 fn set_name(&mut self, name: &str) -> Result<(), named_item::NameError> {
-                    if name.is_empty() {
+                    // only error if empty and not the default
+                    if name.is_empty() && name != &*Self::default_name() {
                         return Err(named_item::NameError::EmptyName);
                     }
                     self.name = name.to_owned();
@@ -250,11 +244,9 @@ fn impl_named_item(ast: &DeriveInput, cfg: &NamedItemConfig) -> syn::Result<Toke
         }
     };
 
-    // 6) NamedAlias impl if aliases=true
+    // NamedAlias if aliases=true
     let alias_impl = if cfg.aliases {
-        let default_aliases_vec = &cfg.default_aliases;
-        let arr_tokens = default_aliases_vec.iter().map(|s| quote! { #s.to_owned() });
-
+        let arr_tokens = cfg.default_aliases.iter().map(|s| quote! { #s.to_owned() });
         quote! {
             impl named_item::NamedAlias for #struct_name {
                 fn add_alias(&mut self, alias: &str) {
@@ -271,7 +263,6 @@ fn impl_named_item(ast: &DeriveInput, cfg: &NamedItemConfig) -> syn::Result<Toke
                 }
             }
 
-            // Provide a helper to retrieve default aliases as a Vec<Cow<'static, str>>.
             impl #struct_name {
                 pub fn default_aliases() -> Vec<std::borrow::Cow<'static, str>> {
                     vec![

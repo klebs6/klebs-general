@@ -2,7 +2,7 @@
 
 use named_item_derive::NamedItem;
 use named_item::{
-    Named, SetName, ResetName, NamedAlias, NameHistory, NameError,
+    Named, SetName, ResetName, NamedAlias, NameHistory, NameError, DefaultName
 };
 
 //---------------------------------------------------------------
