@@ -38,7 +38,7 @@ struct NamedItemConfig {
 ///
 /// ```rust
 /// use named_item_derive::NamedItem;
-/// use named_item::{Named, SetName};
+/// use named_item::{Named, SetName,DefaultName};
 ///
 /// #[derive(NamedItem)]
 /// #[named_item(
