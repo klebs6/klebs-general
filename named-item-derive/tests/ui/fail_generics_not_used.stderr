@@ -1,0 +1,8 @@
+error[E0392]: type parameter `T` is never used
+  --> tests/ui/fail_generics_not_used.rs:10:26
+   |
+10 | pub struct UnusedGeneric<T> {
+   |                          ^ unused type parameter
+   |
+   = help: consider removing `T`, referring to it in a field, or using a marker such as `PhantomData`
+   = help: if you intended `T` to be a const parameter, use `const T: /* Type */` instead

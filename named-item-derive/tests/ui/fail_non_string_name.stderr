@@ -1,0 +1,5 @@
+error: `name` field must be `String`
+ --> tests/ui/fail_non_string_name.rs:9:11
+  |
+9 |     name: i32,  // not `String`
+  |           ^^^

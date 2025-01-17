@@ -1,0 +1,5 @@
+error: Struct must have `name: String`.
+ --> tests/ui/fail_missing_name_field.rs:8:12
+  |
+8 | pub struct BadStruct {
+  |            ^^^^^^^^^
