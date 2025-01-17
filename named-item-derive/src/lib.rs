@@ -1,3 +1,5 @@
+//! named-item-derive — a derive macro for implementing `Named`, `SetName`, etc.
+
 use proc_macro::TokenStream;
 use quote::quote;
 use syn::{
@@ -5,12 +7,10 @@ use syn::{
     LitStr,
 };
 
-//=======================================================
-// NamedItem Derive Macro
-//=======================================================
-
+/// The attribute macro to derive Named, DefaultName, SetName, etc. behaviors.
 #[proc_macro_derive(NamedItem, attributes(named_item))]
 pub fn derive_named_item(input: TokenStream) -> TokenStream {
+
     let ast = parse_macro_input!(input as DeriveInput);
 
     // Parse the user-provided #[named_item(...)] attributes
@@ -26,44 +26,18 @@ pub fn derive_named_item(input: TokenStream) -> TokenStream {
     }
 }
 
-/// Holds configuration extracted from `#[named_item(...)]`.
+/// Configuration extracted from `#[named_item(...)]`.
 struct NamedItemConfig {
+    /// Optional default name if `default_name="foo"`.
     default_name: Option<String>,
+    /// If `aliases="true"`, the struct must have `aliases: Vec<String>`.
     aliases: bool,
+    /// If `default_aliases="foo,bar"`, we store them here.
     default_aliases: Vec<String>,
+    /// If `history="true"`, the struct must have `name_history: Vec<String>`.
     history: bool,
 }
 
-/// Parses attribute usage like:
-///
-/// ```rust
-/// use named_item_derive::NamedItem;
-/// use named_item::{Named, SetName,DefaultName};
-///
-/// #[derive(NamedItem)]
-/// #[named_item(
-///     default_name="...",
-///     aliases="true",
-///     default_aliases="foo,bar",
-///     history="true"
-/// )]
-/// struct Demo {
-///     name: String,
-///     name_history: Vec<String>,
-///     aliases: Vec<String>,
-/// }
-///
-/// fn main() {
-///     let mut x = Demo {
-///         name: "initial".into(),
-///         name_history: vec![],
-///         aliases: vec![],
-///     };
-///     // Now we can call set_name, name_history, etc.
-///     x.set_name("updated").unwrap();
-///     assert_eq!(x.name(), "updated");
-/// }
-/// ```
 fn parse_named_item_attrs(ast: &DeriveInput) -> syn::Result<NamedItemConfig> {
     let mut default_name = None;
     let mut aliases = false;
@@ -72,6 +46,7 @@ fn parse_named_item_attrs(ast: &DeriveInput) -> syn::Result<NamedItemConfig> {
 
     for attr in &ast.attrs {
         if attr.path().is_ident("named_item") {
+            // parse_nested_meta helps parse name="value" pairs
             attr.parse_nested_meta(|meta| {
                 let p = &meta.path;
                 if p.is_ident("default_name") {
@@ -82,11 +57,10 @@ fn parse_named_item_attrs(ast: &DeriveInput) -> syn::Result<NamedItemConfig> {
                     aliases = lit.value().to_lowercase() == "true";
                 } else if p.is_ident("default_aliases") {
                     let lit: LitStr = meta.value()?.parse()?;
-                    // FILTER OUT empty tokens:
                     default_aliases = lit
                         .value()
                         .split(',')
-                        .filter(|tok| !tok.trim().is_empty())   // <-- NEW
+                        .filter(|tok| !tok.trim().is_empty())
                         .map(|s| s.trim().to_string())
                         .collect();
                 } else if p.is_ident("history") {
@@ -106,18 +80,30 @@ fn parse_named_item_attrs(ast: &DeriveInput) -> syn::Result<NamedItemConfig> {
     })
 }
 
+/// Generate the trait implementations for the given struct:
+/// - Named
+/// - DefaultName
+/// - ResetName
+/// - SetName
+/// - NameHistory (optionally)
+/// - NamedAlias (optionally)
 fn impl_named_item(ast: &DeriveInput, cfg: &NamedItemConfig) -> syn::Result<TokenStream> {
     let struct_name = &ast.ident;
 
+    // ### 1) Capture generics
+    let (impl_generics, ty_generics, where_clause) = ast.generics.split_for_impl();
+
+    // ### 2) We only support normal "struct { name: String, ... }"
     let fields = match &ast.data {
         Data::Struct(ds) => &ds.fields,
         _ => {
             return Err(SynError::new_spanned(
                 &ast.ident,
-                "NamedItem can only be derived for a struct.",
+                "NamedItem can only be derived on a struct.",
             ));
         }
     };
+
     let named_fields = match fields {
         Fields::Named(f) => &f.named,
         _ => {
@@ -128,7 +114,7 @@ fn impl_named_item(ast: &DeriveInput, cfg: &NamedItemConfig) -> syn::Result<Toke
         }
     };
 
-    // must have name: String
+    // Must have `name: String`
     let name_field = named_fields.iter().find(|field| {
         field.ident.as_ref().map(|id| id == "name").unwrap_or(false)
     });
@@ -178,44 +164,44 @@ fn impl_named_item(ast: &DeriveInput, cfg: &NamedItemConfig) -> syn::Result<Toke
         }
     }
 
+    // Fallback name if none is provided
     let fallback_name = cfg.default_name.clone().unwrap_or_else(|| struct_name.to_string());
 
-    // Named, DefaultName, ResetName
+    // ### 3) Generate the "baseline" Named, DefaultName, ResetName
     let baseline_impl = quote! {
-        impl named_item::Named for #struct_name {
+        impl #impl_generics Named for #struct_name #ty_generics #where_clause {
             fn name(&self) -> std::borrow::Cow<'_, str> {
                 std::borrow::Cow::from(&self.name)
             }
         }
 
-        impl named_item::DefaultName for #struct_name {
+        impl #impl_generics DefaultName for #struct_name #ty_generics #where_clause {
             fn default_name() -> std::borrow::Cow<'static, str> {
                 std::borrow::Cow::from(#fallback_name)
             }
         }
 
-        impl named_item::ResetName for #struct_name {}
+        impl #impl_generics ResetName for #struct_name #ty_generics #where_clause {}
     };
 
-    // SetName:
-    // If we want to allow empty name if it equals the default, do so:
+    // ### 4) If we have history=true, we push to `name_history` each time we rename
     let setname_impl = if cfg.history {
         quote! {
-            impl named_item::SetName for #struct_name {
-                fn set_name(&mut self, name: &str) -> Result<(), named_item::NameError> {
+            impl #impl_generics SetName for #struct_name #ty_generics #where_clause {
+                fn set_name(&mut self, name: &str) -> Result<(), NameError> {
                     // push history first
                     self.name_history.push(name.to_string());
 
-                    // only error if empty and not the default
+                    // forbid empty if not default
                     if name.is_empty() && name != &*Self::default_name() {
-                        return Err(named_item::NameError::EmptyName);
+                        return Err(NameError::EmptyName);
                     }
                     self.name = name.to_owned();
                     Ok(())
                 }
             }
 
-            impl named_item::NameHistory for #struct_name {
+            impl #impl_generics NameHistory for #struct_name #ty_generics #where_clause {
                 fn add_name_to_history(&mut self, name: &str) {
                     self.name_history.push(name.to_string());
                 }
@@ -229,13 +215,12 @@ fn impl_named_item(ast: &DeriveInput, cfg: &NamedItemConfig) -> syn::Result<Toke
             }
         }
     } else {
-        // no history
         quote! {
-            impl named_item::SetName for #struct_name {
-                fn set_name(&mut self, name: &str) -> Result<(), named_item::NameError> {
-                    // only error if empty and not the default
+            impl #impl_generics SetName for #struct_name #ty_generics #where_clause {
+                fn set_name(&mut self, name: &str) -> Result<(), NameError> {
+                    // forbid empty if not default
                     if name.is_empty() && name != &*Self::default_name() {
-                        return Err(named_item::NameError::EmptyName);
+                        return Err(NameError::EmptyName);
                     }
                     self.name = name.to_owned();
                     Ok(())
@@ -244,11 +229,11 @@ fn impl_named_item(ast: &DeriveInput, cfg: &NamedItemConfig) -> syn::Result<Toke
         }
     };
 
-    // NamedAlias if aliases=true
+    // ### 5) If aliases=true, implement NamedAlias
     let alias_impl = if cfg.aliases {
         let arr_tokens = cfg.default_aliases.iter().map(|s| quote! { #s.to_owned() });
         quote! {
-            impl named_item::NamedAlias for #struct_name {
+            impl #impl_generics NamedAlias for #struct_name #ty_generics #where_clause {
                 fn add_alias(&mut self, alias: &str) {
                     self.aliases.push(alias.to_string());
                 }
@@ -263,7 +248,7 @@ fn impl_named_item(ast: &DeriveInput, cfg: &NamedItemConfig) -> syn::Result<Toke
                 }
             }
 
-            impl #struct_name {
+            impl #impl_generics #struct_name #ty_generics #where_clause {
                 pub fn default_aliases() -> Vec<std::borrow::Cow<'static, str>> {
                     vec![
                         #(std::borrow::Cow::from(#arr_tokens)),*
@@ -275,6 +260,7 @@ fn impl_named_item(ast: &DeriveInput, cfg: &NamedItemConfig) -> syn::Result<Toke
         quote!()
     };
 
+    // ### 6) Combine expansions
     let expanded = quote! {
         #baseline_impl
         #setname_impl
