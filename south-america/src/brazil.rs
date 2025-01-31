@@ -3,16 +3,29 @@ crate::ix!();
 //-------------------------------------------------------------
 // Brazil Regions
 //-------------------------------------------------------------
-#[derive(Serialize,Deserialize,Default,Debug,PartialOrd,Ord,PartialEq,Eq,Hash,Clone,Copy,StrumDisplay,StrumEnumIter,StrumEnumVariantNames,StrumEnumString)]
+#[derive(FileDownloader,Serialize,Deserialize,Default,Debug,PartialOrd,Ord,PartialEq,Eq,Hash,Clone,Copy,StrumDisplay,StrumEnumIter,StrumEnumVariantNames,StrumEnumString)]
 #[strum(ascii_case_insensitive)]
 pub enum BrazilRegion {
-    #[strum(serialize = "Centro-Oeste", serialize = "Centro Oeste" )] CentroOeste,
-    #[strum(serialize = "Nordeste"                                 )] Nordeste,
-    #[strum(serialize = "Norte"                                    )] Norte,
-    #[strum(serialize = "Sudeste"                                  )] Sudeste,
+    #[download_link("https://download.geofabrik.de/south-america/brazil/centro-oeste-latest.osm.pbf")]
+    #[strum(serialize = "Centro-Oeste", serialize = "Centro Oeste")] 
+    CentroOeste,
+
+    #[download_link("https://download.geofabrik.de/south-america/brazil/nordeste-latest.osm.pbf")]
+    #[strum(serialize = "Nordeste")] 
+    Nordeste,
+
+    #[download_link("https://download.geofabrik.de/south-america/brazil/norte-latest.osm.pbf")]
+    #[strum(serialize = "Norte")] 
+    Norte,
+
+    #[download_link("https://download.geofabrik.de/south-america/brazil/sudeste-latest.osm.pbf")]
+    #[strum(serialize = "Sudeste")] 
+    Sudeste,
 
     #[default]
-    #[strum(serialize = "Sul"                                      )] Sul,
+    #[download_link("https://download.geofabrik.de/south-america/brazil/sul-latest.osm.pbf")]
+    #[strum(serialize = "Sul")] 
+    Sul,
 }
 
 #[cfg(test)]
