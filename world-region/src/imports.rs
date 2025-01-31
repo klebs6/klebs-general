@@ -18,3 +18,5 @@ pub(crate) use strum_macros::{
     EnumVariantNames as StrumEnumVariantNames
 };
 pub(crate) use std::str::FromStr;
+pub(crate) use file_downloader_derive::*;
+pub(crate) use file_downloader::*;

@@ -1,7 +1,7 @@
 crate::ix!();
 
 // WorldRegion Enum
-#[derive(Debug,PartialOrd,Ord,PartialEq,Eq,Hash,Clone,Copy,StrumDisplay,StrumEnumIter,StrumEnumVariantNames)]
+#[derive(FileDownloader,Debug,PartialOrd,Ord,PartialEq,Eq,Hash,Clone,Copy,StrumDisplay,StrumEnumIter,StrumEnumVariantNames)]
 #[strum(ascii_case_insensitive)]
 pub enum WorldRegion {
     Africa(AfricaRegion),
