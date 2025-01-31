@@ -10,6 +10,10 @@ pub struct RegionalRecords {
 
 impl RegionalRecords {
 
+    pub fn country(&self) -> Country {
+        Country::try_from(self.region).unwrap()
+    }
+
     pub fn len(&self) -> usize {
         self.records.len()
     }
@@ -18,7 +22,7 @@ impl RegionalRecords {
         -> Result<Self,OsmPbfParseError> 
     {
         let pbf_path = pbf_file.as_ref();
-        let country  = region.country();
+        let country  = Country::try_from(region).expect("expected a region which could convert to a country");
 
         validate_pbf_filename(&region, pbf_path)?;
         let records = parse_osm_pbf(pbf_path,&country)?;

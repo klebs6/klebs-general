@@ -1,6 +1,6 @@
 crate::ix!();
 
-#[derive(Error,Debug, Clone)]
+#[derive(PartialEq,Eq,Error,Debug, Clone)]
 #[error("Bad input! {input}")]
 pub struct BadInput {
     input: String,

@@ -10,6 +10,7 @@ error_tree!{
 
     #[derive(PartialEq)]
     pub enum RegionParseError {
+        #[cmp_neq]
         BadInput(usa::BadInput),
         StrumParseError(strum::ParseError),
         UnknownVariant(String),

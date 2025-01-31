@@ -17,6 +17,7 @@ impl Mock for WorldAddress {
 }
 
 impl MockForRegion for RegionalRecords {
+
     fn mock_for_region(region: &WorldRegion) -> Self {
 
         let md: WorldRegion = USRegion::UnitedState(UnitedState::Maryland).into();
@@ -24,9 +25,9 @@ impl MockForRegion for RegionalRecords {
         let dc: WorldRegion = USRegion::USFederalDistrict(USFederalDistrict::DistrictOfColumbia).into();
 
         let mock_records = match region {
-            md => maryland_mock_records(),
-            va => virginia_mock_records(),
-            dc => dc_mock_records(),
+            _ if *region == md => maryland_mock_records(),
+            _ if *region == va => virginia_mock_records(),
+            _ if *region == dc => dc_mock_records(),
             _ => unimplemented!("need to add mock data for region: {:#?}", region),
         };
 
