@@ -56,7 +56,7 @@ mod africa_tests {
         let variants = AfricaRegion::VARIANTS;
         assert!(variants.contains(&"Nigeria"));
         assert!(variants.contains(&"Algeria"));
-        assert!(variants.contains(&"SenegalAndGambia"));
+        assert!(variants.contains(&"Senegal and Gambia"));
     }
 
     #[test]
@@ -75,13 +75,13 @@ mod africa_tests {
     fn test_africa_region_to_country_errors() {
         // Canary Islands is not a standalone country in our mapping
         match Country::try_from(AfricaRegion::CanaryIslands) {
-            Err(AfricaRegionConversionError { .. }) => {}
+            Err(_) => {}
             _ => panic!("Expected error for Canary Islands"),
         }
 
         // Saint Helena, Ascension, and Tristan da Cunha combined region not mapped cleanly
         match Country::try_from(AfricaRegion::SaintHelenaAscensionTristanDaCunha) {
-            Err(AfricaRegionConversionError { .. }) => {}
+            Err(AfricaRegionConversionError::UnsupportedRegion { .. }) => {}
             _ => panic!("Expected UnsupportedRegion for Saint Helena, Ascension, and Tristan da Cunha"),
         }
     }
@@ -103,13 +103,13 @@ mod africa_tests {
     fn test_country_to_africa_region_errors() {
         // Brazil is not in Africa
         match AfricaRegion::try_from(Country::Brazil) {
-            Err(AfricaRegionConversionError { .. }) => {}
+            Err(AfricaRegionConversionError::NotAfrican { .. }) => {}
             _ => panic!("Expected NotAfrican for Brazil"),
         }
 
         // USA is not in Africa
         match AfricaRegion::try_from(Country::USA) {
-            Err(AfricaRegionConversionError { .. }) => {}
+            Err(AfricaRegionConversionError::NotAfrican { .. }) => {}
             _ => panic!("Expected NotAfrican for USA"),
         }
     }
@@ -165,13 +165,13 @@ mod africa_tests {
     fn test_error_conditions_iso_codes() {
         // Canary Islands -> no single country code
         match Iso3166Alpha2::try_from(AfricaRegion::CanaryIslands) {
-            Err(AfricaRegionConversionError { .. }) => {}
+            Err(_) => {}
             _ => panic!("Expected error for Canary Islands -> ISO codes"),
         }
 
         // SaintHelenaAscensionTristanDaCunha -> no single code
         match Iso3166Alpha2::try_from(AfricaRegion::SaintHelenaAscensionTristanDaCunha) {
-            Err(AfricaRegionConversionError { .. }) => {}
+            Err(_) => {}
             _ => panic!("Expected error for Saint Helena, Ascension, and Tristan da Cunha -> ISO codes"),
         }
     }

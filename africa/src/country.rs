@@ -12,7 +12,7 @@ impl TryFrom<AfricaRegion> for Country {
             AfricaRegion::BurkinaFaso                           => Ok(Country::BurkinaFaso),
             AfricaRegion::Burundi                               => Ok(Country::Burundi),
             AfricaRegion::Cameroon                              => Ok(Country::Cameroon),
-            AfricaRegion::CanaryIslands                         => Err(AfricaRegionConversionError::unsupported_region("Canary Islands")),
+            AfricaRegion::CanaryIslands                         => Err(AfricaRegionConversionError::UnsupportedRegion { region: AfricaRegion::CanaryIslands }),
             AfricaRegion::CapeVerde                             => Ok(Country::CapeVerde),
             AfricaRegion::CentralAfricanRepublic                => Ok(Country::CentralAfricanRepublic),
             AfricaRegion::Chad                                  => Ok(Country::Chad),
@@ -44,7 +44,7 @@ impl TryFrom<AfricaRegion> for Country {
             AfricaRegion::Niger                                 => Ok(Country::Niger),
             AfricaRegion::Nigeria                               => Ok(Country::Nigeria),
             AfricaRegion::Rwanda                                => Ok(Country::Rwanda),
-            AfricaRegion::SaintHelenaAscensionTristanDaCunha    => Err(AfricaRegionConversionError::unsupported_region("Saint Helena, Ascension, and Tristan da Cunha")),
+            AfricaRegion::SaintHelenaAscensionTristanDaCunha    => Err(AfricaRegionConversionError::UnsupportedRegion { region: AfricaRegion::SaintHelenaAscensionTristanDaCunha }),
             AfricaRegion::SaoTomeAndPrincipe                    => Ok(Country::SaoTomeAndPrincipe),
             AfricaRegion::SenegalAndGambia                      => {
                 // Combined region. Choose Senegal by convention
@@ -128,7 +128,7 @@ impl TryFrom<Country> for AfricaRegion {
             Country::Zimbabwe               => Ok(AfricaRegion::Zimbabwe),
 
             // Countries not in Africa or not represented:
-            other => Err(AfricaRegionConversionError::not_african(&other.to_string())),
+            other => Err(AfricaRegionConversionError::NotAfrican { country: other }),
         }
     }
 }
