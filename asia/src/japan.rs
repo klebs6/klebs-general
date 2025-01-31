@@ -1,19 +1,42 @@
 crate::ix!();
 
 // Japan Regions
-#[derive(Serialize,Deserialize,Default,Debug,PartialOrd,Ord,PartialEq,Eq,Hash,Clone,Copy,StrumDisplay,StrumEnumIter,StrumEnumVariantNames,StrumEnumString)]
+#[derive(FileDownloader,Serialize,Deserialize,Default,Debug,PartialOrd,Ord,PartialEq,Eq,Hash,Clone,Copy,StrumDisplay,StrumEnumIter,StrumEnumVariantNames,StrumEnumString)]
 #[strum(ascii_case_insensitive)]
 pub enum JapanRegion {
-    #[strum(serialize = "Chūbu region",    serialize = "Chubu"        )] Chubu,
-    #[strum(serialize = "Chūgoku region",  serialize = "Chugoku"      )] Chugoku,
-    #[strum(serialize = "Hokkaidō",        serialize = "Hokkaido"     )] Hokkaido,
-    #[strum(serialize = "Kansai region",   serialize = "Kinki region" )] Kansai,
-    #[strum(serialize = "Kantō region",    serialize = "Kanto"        )] Kanto,
-    #[strum(serialize = "Kyūshū",          serialize = "Kyushu"       )] Kyushu,
+
+    #[strum(serialize = "Chūbu region",    serialize = "Chubu")] 
+    #[download_link("https://download.geofabrik.de/asia/japan/chubu-latest.osm.pbf")]
+    Chubu,
+
+    #[strum(serialize = "Chūgoku region",  serialize = "Chugoku")] 
+    #[download_link("https://download.geofabrik.de/asia/japan/chugoku-latest.osm.pbf")]
+    Chugoku,
+
+    #[strum(serialize = "Hokkaidō",        serialize = "Hokkaido")] 
+    #[download_link("https://download.geofabrik.de/asia/japan/hokkaido-latest.osm.pbf")]
+    Hokkaido,
+
+    #[strum(serialize = "Kansai region",   serialize = "Kinki region")] 
+    #[download_link("https://download.geofabrik.de/asia/japan/kansai-latest.osm.pbf")]
+    Kansai,
+
+    #[strum(serialize = "Kantō region",    serialize = "Kanto")] 
+    #[download_link("https://download.geofabrik.de/asia/japan/kanto-latest.osm.pbf")]
+    Kanto,
+
+    #[strum(serialize = "Kyūshū",          serialize = "Kyushu")] 
+    #[download_link("https://download.geofabrik.de/asia/japan/kyushu-latest.osm.pbf")]
+    Kyushu,
 
     #[default]
-    #[strum(serialize = "Shikoku"                                     )] Shikoku,
-    #[strum(serialize = "Tōhoku region",   serialize = "Tohoku"       )] Tohoku,
+    #[strum(serialize = "Shikoku")] 
+    #[download_link("https://download.geofabrik.de/asia/japan/shikoku-latest.osm.pbf")]
+    Shikoku,
+
+    #[strum(serialize = "Tōhoku region",   serialize = "Tohoku")] 
+    #[download_link("https://download.geofabrik.de/asia/japan/tohoku-latest.osm.pbf")]
+    Tohoku,
 }
 
 #[cfg(test)]

@@ -15,3 +15,5 @@ pub(crate) use export_magic::*;
 pub(crate) use abbreviation_trait::*;
 pub(crate) use error_tree::*;
 pub(crate) use europe::*;
+pub(crate) use file_downloader::*;
+pub(crate) use file_downloader_derive::*;

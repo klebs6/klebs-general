@@ -1,16 +1,34 @@
 crate::ix!();
 
 // India Regions
-#[derive(Serialize,Deserialize,Default,Debug,PartialOrd,Ord,PartialEq,Eq,Hash,Clone,Copy,StrumDisplay,StrumEnumIter,StrumEnumVariantNames,StrumEnumString)]
+#[derive(FileDownloader,Serialize,Deserialize,Default,Debug,PartialOrd,Ord,PartialEq,Eq,Hash,Clone,Copy,StrumDisplay,StrumEnumIter,StrumEnumVariantNames,StrumEnumString)]
 #[strum(ascii_case_insensitive)]
 pub enum IndiaRegion {
-    #[strum(serialize = "Central Zone"       )] CentralZone,
-    #[strum(serialize = "Eastern Zone"       )] EasternZone,
-    #[strum(serialize = "North-Eastern Zone" )] NorthEasternZone,
-    #[strum(serialize = "Northern Zone"      )] NorthernZone,
+
+    #[strum(serialize = "Central Zone")] 
+    #[download_link("https://download.geofabrik.de/asia/india/central-zone-latest.osm.pbf")]
+    CentralZone,
+
+    #[strum(serialize = "Eastern Zone")] 
+    #[download_link("https://download.geofabrik.de/asia/india/eastern-zone-latest.osm.pbf")]
+    EasternZone,
+
+    #[strum(serialize = "North-Eastern Zone")] 
+    #[download_link("https://download.geofabrik.de/asia/india/north-eastern-zone-latest.osm.pbf")]
+    NorthEasternZone,
+
+    #[strum(serialize = "Northern Zone")] 
+    #[download_link("https://download.geofabrik.de/asia/india/northern-zone-latest.osm.pbf")]
+    NorthernZone,
+
     #[default]
-    #[strum(serialize = "Southern Zone"      )] SouthernZone,
-    #[strum(serialize = "Western Zone"       )] WesternZone,
+    #[strum(serialize = "Southern Zone")] 
+    #[download_link("https://download.geofabrik.de/asia/india/southern-zone-latest.osm.pbf")]
+    SouthernZone,
+
+    #[strum(serialize = "Western Zone")] 
+    #[download_link("https://download.geofabrik.de/asia/india/western-zone-latest.osm.pbf")]
+    WesternZone,
 }
 
 #[cfg(test)]

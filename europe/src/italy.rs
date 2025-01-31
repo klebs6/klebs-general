@@ -3,16 +3,30 @@ crate::ix!();
 //--------------------------------------
 // Italy Regions
 //--------------------------------------
-#[derive(Default,Debug,PartialOrd,Ord,PartialEq,Eq,Hash,Clone,Copy,StrumDisplay,StrumEnumIter,StrumEnumVariantNames,StrumEnumString)]
+#[derive(FileDownloader,Default,Debug,PartialOrd,Ord,PartialEq,Eq,Hash,Clone,Copy,StrumDisplay,StrumEnumIter,StrumEnumVariantNames,StrumEnumString)]
 #[strum(ascii_case_insensitive)]
 pub enum ItalyRegion {
-    #[default]
-    #[strum(serialize = "Centro"                                    )] Centro,
 
-    #[strum(serialize = "Isole"                                     )] Isole,
-    #[strum(serialize = "Nord-Est",        serialize = "Nord Est"   )] NordEst,
-    #[strum(serialize = "Nord-Ovest",      serialize = "Nord Ovest" )] NordOvest,
-    #[strum(serialize = "Sud"                                       )] Sud,
+    #[default]
+    #[strum(serialize = "Centro")] 
+    #[download_link("https://download.geofabrik.de/europe/italy/centro-latest.osm.pbf")] 
+    Centro,
+
+    #[strum(serialize = "Isole")] 
+    #[download_link("https://download.geofabrik.de/europe/italy/isole-latest.osm.pbf")] 
+    Isole,
+
+    #[strum(serialize = "Nord-Est", serialize = "Nord Est")] 
+    #[download_link("https://download.geofabrik.de/europe/italy/nord-est-latest.osm.pbf")] 
+    NordEst,
+
+    #[strum(serialize = "Nord-Ovest", serialize = "Nord Ovest")] 
+    #[download_link("https://download.geofabrik.de/europe/italy/nord-ovest-latest.osm.pbf")] 
+    NordOvest,
+
+    #[strum(serialize = "Sud")] 
+    #[download_link("https://download.geofabrik.de/europe/italy/sud-latest.osm.pbf")] 
+    Sud,
 }
 
 #[cfg(test)]

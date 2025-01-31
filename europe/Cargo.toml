@@ -1,6 +1,6 @@
 [package]
 name          = "europe"
-version       = "0.3.0"
+version       = "0.4.0"
 edition       = "2024"
 authors       = [ "klebs tpk3.mx@gmail.com" ]
 repository    = "https://github.com/klebs6/klebs-general"
@@ -23,6 +23,8 @@ once_cell     = "1.20.2"
 country       = "0.5.0"
 error-tree    = "0.6.0"
 abbreviation-trait = "0.1.0"
+file-downloader        = "0.1.0"
+file-downloader-derive = "0.1.0"
 
 [features]
 serde_abbreviation = []

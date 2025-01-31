@@ -3,29 +3,82 @@ crate::ix!();
 //--------------------------------------
 // Spain Regions
 //--------------------------------------
-#[derive(Default,Debug,PartialOrd,Ord,PartialEq,Eq,Hash,Clone,Copy,StrumDisplay,StrumEnumIter,StrumEnumVariantNames,StrumEnumString)]
+#[derive(FileDownloader,Default,Debug,PartialOrd,Ord,PartialEq,Eq,Hash,Clone,Copy,StrumDisplay,StrumEnumIter,StrumEnumVariantNames,StrumEnumString)]
 #[strum(ascii_case_insensitive)]
 pub enum SpainRegion {
-    #[strum(serialize = "Andalucía",           serialize = "Andalucia"                                                               )] Andalucia,
-    #[strum(serialize = "Aragón",              serialize = "Aragon"                                                                  )] Aragon,
-    #[strum(serialize = "Asturias"                                                                                                   )] Asturias,
-    #[strum(serialize = "Cantabria"                                                                                                  )] Cantabria,
-    #[strum(serialize = "Castilla-La Mancha",  serialize = "Castilla La Mancha"                                                      )] CastillaLaMancha,
-    #[strum(serialize = "Castilla y León",     serialize = "Castilla y Leon",   serialize = "Castilla Leon"                          )] CastillaYLeon,
-    #[strum(serialize = "Cataluña",            serialize = "Cataluna",          serialize = "Catalonia",     serialize = "Catalunya" )] Cataluna,
-    #[strum(serialize = "Ceuta"                                                                                                      )] Ceuta,
-    #[strum(serialize = "Extremadura"                                                                                                )] Extremadura,
-    #[strum(serialize = "Galicia"                                                                                                    )] Galicia,
-    #[strum(serialize = "Islas Baleares",      serialize = "Islas Baleares (Balearic Islands)"                                       )] IslasBaleares,
-    #[strum(serialize = "La Rioja"                                                                                                   )] LaRioja,
+
+    #[strum(serialize = "Andalucía", serialize = "Andalucia" )] 
+    #[download_link("https://download.geofabrik.de/europe/spain/andalucia-latest.osm.pbf")]
+    Andalucia,
+
+    #[strum(serialize = "Aragón", serialize = "Aragon" )] 
+    #[download_link("https://download.geofabrik.de/europe/spain/aragon-latest.osm.pbf")]
+    Aragon,
+
+    #[strum(serialize = "Asturias" )] 
+    #[download_link("https://download.geofabrik.de/europe/spain/asturias-latest.osm.pbf")]
+    Asturias,
+
+    #[strum(serialize = "Cantabria" )] 
+    #[download_link("https://download.geofabrik.de/europe/spain/cantabria-latest.osm.pbf")]
+    Cantabria,
+
+    #[strum(serialize = "Castilla-La Mancha", serialize = "Castilla La Mancha" )] 
+    #[download_link("https://download.geofabrik.de/europe/spain/castilla-la-mancha-latest.osm.pbf")]
+    CastillaLaMancha,
+
+    #[strum(serialize = "Castilla y León", serialize = "Castilla y Leon", serialize = "Castilla Leon" )] 
+    #[download_link("https://download.geofabrik.de/europe/spain/castilla-y-leon-latest.osm.pbf")]
+    CastillaYLeon,
+
+    #[strum(serialize = "Cataluña", serialize = "Cataluna", serialize = "Catalonia", serialize = "Catalunya" )] 
+    #[download_link("https://download.geofabrik.de/europe/spain/cataluna-latest.osm.pbf")]
+    Cataluna,
+
+    #[strum(serialize = "Ceuta" )] 
+    #[download_link("https://download.geofabrik.de/europe/spain/ceuta-latest.osm.pbf")]
+    Ceuta,
+
+    #[strum(serialize = "Extremadura" )] 
+    #[download_link("https://download.geofabrik.de/europe/spain/extremadura-latest.osm.pbf")]
+    Extremadura,
+
+    #[strum(serialize = "Galicia" )] 
+    #[download_link("https://download.geofabrik.de/europe/spain/galicia-latest.osm.pbf")]
+    Galicia,
+
+    #[strum(serialize = "Islas Baleares", serialize = "Islas Baleares (Balearic Islands)" )] 
+    #[download_link("https://download.geofabrik.de/europe/spain/islas-baleares-latest.osm.pbf")]
+    IslasBaleares,
+
+    #[strum(serialize = "La Rioja" )] 
+    #[download_link("https://download.geofabrik.de/europe/spain/la-rioja-latest.osm.pbf")]
+    LaRioja,
 
     #[default]
-    #[strum(serialize = "Madrid"                                                                                                     )] Madrid,
-    #[strum(serialize = "Melilla"                                                                                                    )] Melilla,
-    #[strum(serialize = "Murcia"                                                                                                     )] Murcia,
-    #[strum(serialize = "Navarra"                                                                                                    )] Navarra,
-    #[strum(serialize = "País Vasco",          serialize = "Pais Vasco",        serialize = "Basque Country"                         )] PaisVasco,
-    #[strum(serialize = "Valencia"                                                                                                   )] Valencia,
+    #[strum(serialize = "Madrid" )] 
+    #[download_link("https://download.geofabrik.de/europe/spain/madrid-latest.osm.pbf")]
+    Madrid,
+
+    #[strum(serialize = "Melilla" )] 
+    #[download_link("https://download.geofabrik.de/europe/spain/melilla-latest.osm.pbf")]
+    Melilla,
+
+    #[strum(serialize = "Murcia" )] 
+    #[download_link("https://download.geofabrik.de/europe/spain/murcia-latest.osm.pbf")]
+    Murcia,
+
+    #[strum(serialize = "Navarra" )] 
+    #[download_link("https://download.geofabrik.de/europe/spain/navarra-latest.osm.pbf")]
+    Navarra,
+
+    #[strum(serialize = "País Vasco", serialize = "Pais Vasco", serialize = "Basque Country" )] 
+    #[download_link("https://download.geofabrik.de/europe/spain/pais-vasco-latest.osm.pbf")]
+    PaisVasco,
+
+    #[strum(serialize = "Valencia" )] 
+    #[download_link("https://download.geofabrik.de/europe/spain/valencia-latest.osm.pbf")]
+    Valencia,
 }
 
 #[cfg(test)]
