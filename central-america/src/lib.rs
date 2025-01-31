@@ -65,7 +65,7 @@ mod test_central_america_region {
     fn test_country_to_central_america_region_errors() {
         // A non-Central American country
         match CentralAmericaRegion::try_from(Country::Brazil) {
-            Err(CentralAmericaRegionConversionError { .. }) => {}
+            Err(CentralAmericaRegionConversionError::NotCentralAmerican { .. }) => {}
             _ => panic!("Expected NotCentralAmerican for Brazil"),
         }
     }

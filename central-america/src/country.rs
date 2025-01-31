@@ -48,7 +48,7 @@ impl TryFrom<Country> for CentralAmericaRegion {
             Country::Panama            => Ok(CentralAmericaRegion::Panama),
 
             // Any country not in this Central America region listing:
-            other => Err(CentralAmericaRegionConversionError::not_central_american(&other.to_string())),
+            other => Err(CentralAmericaRegionConversionError::NotCentralAmerican { country: other } ),
         }
     }
 }
