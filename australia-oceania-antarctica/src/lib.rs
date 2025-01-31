@@ -66,7 +66,7 @@ mod aoa_tests {
     #[test]
     fn test_to_country_failure() {
         match Country::try_from(AustraliaOceaniaAntarcticaRegion::CookIslands) {
-            Err(AoaRegionConversionError { .. }) => {}
+            Err(_) => {}
             _ => panic!("Expected error for Cook Islands"),
         }
     }
@@ -81,8 +81,8 @@ mod aoa_tests {
     fn test_from_country_failure() {
         // Assume Brazil is not in this region
         match AustraliaOceaniaAntarcticaRegion::try_from(Country::Brazil) {
-            Err(AoaRegionConversionError { .. }) => {}
-            _ => panic!("Expected NotInAoa for Brazil"),
+            Err(AoaRegionConversionError::NotAoan { .. }) => {}
+            _ => panic!("Expected NotAoan for Brazil"),
         }
     }
 

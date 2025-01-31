@@ -25,23 +25,23 @@ impl TryFrom<AustraliaOceaniaAntarcticaRegion> for Country {
             AustraliaOceaniaAntarcticaRegion::Vanuatu         => Ok(Country::Vanuatu),
 
             // Unsupported or multiple dependencies:
-            AustraliaOceaniaAntarcticaRegion::Antarctica      => Err(AoaRegionConversionError::unsupported_region("Antarctica")),
-            AustraliaOceaniaAntarcticaRegion::AmericanOceania => Err(AoaRegionConversionError::unsupported_region("American Oceania")),
-            AustraliaOceaniaAntarcticaRegion::CookIslands     => Err(AoaRegionConversionError::unsupported_region("Cook Islands")),
-            AustraliaOceaniaAntarcticaRegion::IleDeClipperton => Err(AoaRegionConversionError::unsupported_region("Île de Clipperton")),
-            AustraliaOceaniaAntarcticaRegion::NewCaledonia    => Err(AoaRegionConversionError::unsupported_region("New Caledonia")),
-            AustraliaOceaniaAntarcticaRegion::Niue            => Err(AoaRegionConversionError::unsupported_region("Niue")),
-            AustraliaOceaniaAntarcticaRegion::PitcairnIslands => Err(AoaRegionConversionError::unsupported_region("Pitcairn Islands")),
-            AustraliaOceaniaAntarcticaRegion::FrenchPolynesia => Err(AoaRegionConversionError::unsupported_region("French Polynesia")),
-            AustraliaOceaniaAntarcticaRegion::Tokelau         => Err(AoaRegionConversionError::unsupported_region("Tokelau")),
-            AustraliaOceaniaAntarcticaRegion::WallisEtFutuna  => Err(AoaRegionConversionError::unsupported_region("Wallis et Futuna")),
+            AustraliaOceaniaAntarcticaRegion::Antarctica      => Err(AoaRegionConversionError::UnsupportedRegion { region: AustraliaOceaniaAntarcticaRegion::Antarctica }),
+            AustraliaOceaniaAntarcticaRegion::AmericanOceania => Err(AoaRegionConversionError::UnsupportedRegion { region: AustraliaOceaniaAntarcticaRegion::AmericanOceania }),
+            AustraliaOceaniaAntarcticaRegion::CookIslands     => Err(AoaRegionConversionError::UnsupportedRegion { region: AustraliaOceaniaAntarcticaRegion::CookIslands }),
+            AustraliaOceaniaAntarcticaRegion::IleDeClipperton => Err(AoaRegionConversionError::UnsupportedRegion { region: AustraliaOceaniaAntarcticaRegion::IleDeClipperton }),
+            AustraliaOceaniaAntarcticaRegion::NewCaledonia    => Err(AoaRegionConversionError::UnsupportedRegion { region: AustraliaOceaniaAntarcticaRegion::NewCaledonia }),
+            AustraliaOceaniaAntarcticaRegion::Niue            => Err(AoaRegionConversionError::UnsupportedRegion { region: AustraliaOceaniaAntarcticaRegion::Niue }),
+            AustraliaOceaniaAntarcticaRegion::PitcairnIslands => Err(AoaRegionConversionError::UnsupportedRegion { region: AustraliaOceaniaAntarcticaRegion::PitcairnIslands }),
+            AustraliaOceaniaAntarcticaRegion::FrenchPolynesia => Err(AoaRegionConversionError::UnsupportedRegion { region: AustraliaOceaniaAntarcticaRegion::FrenchPolynesia }),
+            AustraliaOceaniaAntarcticaRegion::Tokelau         => Err(AoaRegionConversionError::UnsupportedRegion { region: AustraliaOceaniaAntarcticaRegion::Tokelau }),
+            AustraliaOceaniaAntarcticaRegion::WallisEtFutuna  => Err(AoaRegionConversionError::UnsupportedRegion { region: AustraliaOceaniaAntarcticaRegion::WallisEtFutuna }),
         }
     }
 }
 
 //-------------------------------------------------------------
 // Conversions from Country to Region
-// If a Country doesn't fit here, return NotInAoa
+// If a Country doesn't fit here, return NotAoan
 //-------------------------------------------------------------
 impl TryFrom<Country> for AustraliaOceaniaAntarcticaRegion {
     type Error = AoaRegionConversionError;
@@ -64,7 +64,7 @@ impl TryFrom<Country> for AustraliaOceaniaAntarcticaRegion {
             Country::Vanuatu          => Ok(AustraliaOceaniaAntarcticaRegion::Vanuatu),
 
             // Not in this region:
-            other => Err(AoaRegionConversionError::not_in_aoa(&other.to_string())),
+            other => Err(AoaRegionConversionError::NotAoan { country: other }),
         }
     }
 }
