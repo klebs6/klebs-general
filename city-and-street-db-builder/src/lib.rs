@@ -1,3 +1,4 @@
+// ---------------- [ File: src/lib.rs ]
 #![feature(more_qualified_paths)]
 #![allow(unused_imports)]
 #![allow(unreachable_code)]

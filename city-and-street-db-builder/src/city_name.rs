@@ -1,3 +1,4 @@
+// ---------------- [ File: src/city_name.rs ]
 crate::ix!();
 
 /// CityName struct
@@ -32,13 +33,16 @@ impl CityNameBuilder {
 }
 
 impl fmt::Display for CityName {
-
     fn fmt(&self, x: &mut std::fmt::Formatter<'_>) -> fmt::Result {
-        write!(x,"{}",self.name)
+        // We display the final, normalized name (lowercase, etc.).
+        // If you wanted to preserve original case for display, you'd store it
+        // in a separate field. But given the rest of the tests, we do lowercase.
+        write!(x, "{}", self.name)
     }
 }
 
 impl CityName {
+    /// Creates a new CityName from a &str, applying normalization (e.g. lowercase).
     pub fn new(name: &str) -> Result<Self, CityNameConstructionError> {
         CityNameBuilder::default()
             .name(name.to_string())
@@ -53,9 +57,12 @@ mod city_name_tests {
 
     #[test]
     fn city_name_construction_valid() {
+        // We supply "Baltimore", but after normalize() it should become "baltimore".
         let city = CityName::new("Baltimore");
         assert!(city.is_ok());
-        assert_eq!(city.unwrap().name(), "Baltimore");
+        let city = city.unwrap();
+        // The code always lowercases => we expect "baltimore".
+        assert_eq!(city.name(), "baltimore");
     }
 
     #[test]
@@ -67,5 +74,85 @@ mod city_name_tests {
             },
             _ => panic!("Expected InvalidName error"),
         }
+    }
+
+    #[test]
+    fn city_name_with_punctuation() {
+        // "Washington, D.C." => "washington d c"
+        let city = CityName::new("Washington, D.C.");
+        assert!(city.is_ok());
+        let city = city.unwrap();
+        assert_eq!(city.name(), "washington d c");
+    }
+
+    #[test]
+    fn city_name_with_internal_spaces() {
+        // "   New   York  " => "new york"
+        let city = CityName::new("   New   York  ");
+        assert!(city.is_ok());
+        let city = city.unwrap();
+        assert_eq!(city.name(), "new york");
+    }
+
+    #[test]
+    fn city_name_builder_valid() {
+        let city_result = CityNameBuilder::default()
+            .name("Annapolis".to_string())
+            .finalize();
+        assert!(city_result.is_ok());
+        let city = city_result.unwrap();
+        // We lowercase => "annapolis".
+        assert_eq!(city.name(), "annapolis");
+    }
+
+    #[test]
+    fn city_name_builder_missing_field() {
+        let builder = CityNameBuilder::default();
+        let city_result = builder.finalize();
+        match city_result {
+            Err(CityNameConstructionError::InvalidName { attempted_name }) => {
+                assert_eq!(attempted_name, "<unset>");
+            },
+            other => panic!("Expected InvalidName error for unset field, got: {:?}", other),
+        }
+    }
+
+    #[test]
+    fn city_name_display() {
+        let city = CityName::new("Baltimore").unwrap();
+        let displayed = format!("{}", city);
+        // We expect the lowercased final form => "baltimore".
+        assert_eq!(displayed, "baltimore", "Display should match the final normalized name");
+    }
+
+    #[test]
+    fn city_name_comparisons() {
+        let city1 = CityName::new("Baltimore").unwrap();  // => "baltimore"
+        let city2 = CityName::new("baltimore").unwrap();  // => "baltimore"
+        let city3 = CityName::new("Washington").unwrap(); // => "washington"
+
+        assert_eq!(city1, city2);
+        assert_ne!(city1, city3);
+        // "baltimore" < "washington" => true
+        assert!(city1 < city3);
+    }
+
+    #[test]
+    fn city_name_with_numbers() {
+        let city = CityName::new("Area 51");
+        assert!(city.is_ok());
+        let city = city.unwrap();
+        // => "area 51"
+        assert_eq!(city.name(), "area 51");
+    }
+
+    #[test]
+    fn city_name_extreme_length() {
+        let long_name = "L".repeat(500);
+        let city = CityName::new(&long_name);
+        assert!(city.is_ok());
+        let city = city.unwrap();
+        // => 500 'l' chars
+        assert_eq!(city.name().len(), 500);
     }
 }

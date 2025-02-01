@@ -1,6 +1,25 @@
+// ---------------- [ File: src/errors.rs ]
 crate::ix!();
 
 error_tree!{
+
+    pub enum DataAccessError {
+        Io(io::Error),
+        LockPoisoned,
+        DatabaseConstructionError(DatabaseConstructionError),
+        PostalCodeError(PostalCodeConstructionError),
+    }
+
+    pub enum AddressValidationError {
+        IoError(io::Error),
+        DatabaseConstructionError(DatabaseConstructionError),
+        LockPoisoned,
+    }
+
+    pub enum ListAllAddressesError {
+        IoError(io::Error),
+        OsmPbfParseError(OsmPbfParseError),
+    }
 
     pub enum InvalidWorldAddress {
         CityNotFoundForPostalCodeInRegion {

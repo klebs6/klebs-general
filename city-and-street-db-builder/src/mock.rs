@@ -1,3 +1,4 @@
+// ---------------- [ File: src/mock.rs ]
 crate::ix!();
 
 impl Mock for WorldAddress {
@@ -99,7 +100,13 @@ fn virginia_mock_records() -> Vec<AddressRecord> {
     let postalcode22301          = PostalCode::new(Country::USA,"22301").unwrap();
     let postalcode20190          = PostalCode::new(Country::USA,"20190").unwrap();
 
+    let clifton       = CityName::new("Clifton").unwrap();
+    let redbird_ridge = StreetName::new("Redbird Ridge").unwrap();
+    let pc20124       = PostalCode::new(Country::USA, "20124").unwrap();
+
     vec![
+        address_record!(clifton, redbird_ridge, pc20124),
+
         address_record!(arlington , wilson_blvd     , postalcode22201), 
         address_record!(arlington , clarendon_blvd  , postalcode22201), 
 
@@ -133,4 +140,222 @@ fn dc_mock_records() -> Vec<AddressRecord> {
         address_record!(washington_dc, wisconsin_avenue, postalcode20007),
         address_record!(washington_dc, m_st_nw         , postalcode20007),
     ]
+}
+
+#[cfg(test)]
+mod test_mock {
+    use super::*;
+
+    /// Verifies the `WorldAddress::mock()` function creates a valid address:
+    /// checks that the fields match the expected default mock data (Virginia/Clifton/20124/Redbird Ridge).
+    #[traced_test]
+    #[serial]
+    fn test_world_address_mock() {
+        let mocked_addr = WorldAddress::mock();
+
+        // Region => VA
+        let region = mocked_addr.region();
+        // We avoid `.unwrap()`, so we do a direct comparison:
+        let expected_region: WorldRegion = USRegion::UnitedState(UnitedState::Virginia).into();
+        assert_eq!(
+            *region, 
+            expected_region, 
+            "{}", 
+            format!("Expected region = Virginia, got region = {:?}", region)
+        );
+
+        // Postal code => "20124"
+        let postal = mocked_addr.postal_code().code();
+        assert_eq!(postal, "20124", "Expected postal code to be \"20124\"");
+
+        // City => "clifton"
+        let city_str = mocked_addr.city().name();
+        assert_eq!(city_str, "clifton", "Expected city name to be \"clifton\"");
+
+        // Street => "redbird ridge"
+        let street_str = mocked_addr.street().name();
+        assert_eq!(street_str, "redbird ridge", "Expected street name to be \"redbird ridge\"");
+    }
+
+    /// Ensures that `RegionalRecords::mock_for_region()` produces valid mock data for Maryland.
+    /// We confirm the region is Maryland, and the number of returned addresses and their fields.
+    #[traced_test]
+    #[serial]
+    fn test_mock_for_region_md() {
+        let md_region: WorldRegion = USRegion::UnitedState(UnitedState::Maryland).into();
+        let records_struct = RegionalRecords::mock_for_region(&md_region);
+
+        // Check that the region is indeed Maryland
+        assert_eq!(
+            *records_struct.region(), 
+            md_region, 
+            "Expected region = Maryland"
+        );
+
+        let records = records_struct.records();
+        // For reference, `maryland_mock_records()` returns 7 addresses
+        assert_eq!(records.len(), 7, "Maryland mock should have 7 addresses");
+
+        // Confirm we have no empty AddressRecord
+        for (i, addr) in records.iter().enumerate() {
+            let msg = format!("Maryland AddressRecord #{} must not be empty", i);
+            assert!(!addr.is_empty(), "{}", msg);
+
+            // City/street/postcode must be Some(...)
+            // We'll check them all to ensure correct data
+            let city_opt = addr.city();
+            assert!(city_opt.is_some(), "Mocked city is None?");
+            let street_opt = addr.street();
+            assert!(street_opt.is_some(), "Mocked street is None?");
+            let pc_opt = addr.postcode();
+            assert!(pc_opt.is_some(), "Mocked postal code is None?");
+        }
+    }
+
+    /// Ensures that `RegionalRecords::mock_for_region()` produces valid mock data for Virginia.
+    #[traced_test]
+    #[serial]
+    fn test_mock_for_region_va() {
+        let va_region: WorldRegion = USRegion::UnitedState(UnitedState::Virginia).into();
+        let records_struct = RegionalRecords::mock_for_region(&va_region);
+
+        assert_eq!(
+            *records_struct.region(), 
+            va_region, 
+            "Expected region = Virginia"
+        );
+
+        let records = records_struct.records();
+        // `virginia_mock_records()` returns 7 addresses total
+        assert_eq!(records.len(), 7, "Virginia mock should have 7 addresses");
+        for (i, addr) in records.iter().enumerate() {
+            assert!(!addr.is_empty(), "AddressRecord #{} is unexpectedly empty", i);
+            let city_opt = addr.city();
+            assert!(city_opt.is_some(), "City is None for VA record #{}", i);
+            let street_opt = addr.street();
+            assert!(street_opt.is_some(), "Street is None for VA record #{}", i);
+            let pc_opt = addr.postcode();
+            assert!(pc_opt.is_some(), "Postal code is None for VA record #{}", i);
+        }
+    }
+
+    /// Ensures that `RegionalRecords::mock_for_region()` produces valid mock data for Washington, DC.
+    #[traced_test]
+    #[serial]
+    fn test_mock_for_region_dc() {
+        let dc_region: WorldRegion = USRegion::USFederalDistrict(USFederalDistrict::DistrictOfColumbia).into();
+        let records_struct = RegionalRecords::mock_for_region(&dc_region);
+
+        assert_eq!(
+            *records_struct.region(), 
+            dc_region, 
+            "Expected region = District of Columbia"
+        );
+
+        let records = records_struct.records();
+        // `dc_mock_records()` returns 4 addresses
+        assert_eq!(records.len(), 4, "DC mock should have 4 addresses");
+        for (i, addr) in records.iter().enumerate() {
+            assert!(!addr.is_empty(), "AddressRecord #{} is unexpectedly empty", i);
+        }
+    }
+
+    /// Thorough test of the standalone `maryland_mock_records()` helper: 
+    /// checks total count, checks for duplicates, verifies no empty addresses, etc.
+    #[traced_test]
+    #[serial]
+    fn test_maryland_mock_records() {
+        let recs = maryland_mock_records();
+        assert_eq!(
+            recs.len(), 
+            7, 
+            "Maryland mock records should produce exactly 7 addresses"
+        );
+
+        // Ensure no duplicates by constructing a set of (city,street,postal)
+        let mut triple_set = HashSet::new();
+        for (i, ar) in recs.iter().enumerate() {
+            assert!(!ar.is_empty(), "Maryland record #{} is empty, unexpected", i);
+
+            // city, street, postcode must be Some:
+            let (city_ok, street_ok, pc_ok) = (ar.city(), ar.street(), ar.postcode());
+            assert!(city_ok.is_some(), "No city in record #{}", i);
+            assert!(street_ok.is_some(), "No street in record #{}", i);
+            assert!(pc_ok.is_some(), "No postal code in record #{}", i);
+
+            // For duplicates check, we treat them as a triple of strings
+            let city_str  = city_ok.clone().map(|c| c.name().to_owned()).unwrap_or_default();
+            let street_str= street_ok.clone().map(|s| s.name().to_owned()).unwrap_or_default();
+            let pc_str    = pc_ok.clone().map(|p| p.code().to_owned()).unwrap_or_default();
+
+            let inserted = triple_set.insert((city_str, street_str, pc_str));
+            assert!(inserted, "Found a duplicate record at index {}", i);
+        }
+    }
+
+    /// Thorough test of `virginia_mock_records()`.
+    #[traced_test]
+    #[serial]
+    fn test_virginia_mock_records() {
+        let recs = virginia_mock_records();
+        // Should have 7 addresses (Clifton, Arlington x2, Alexandria x2, Reston x2)
+        assert_eq!(
+            recs.len(), 
+            7, 
+            "Virginia mock records should produce exactly 7 addresses"
+        );
+
+        let mut triple_set = HashSet::new();
+        for (i, ar) in recs.iter().enumerate() {
+            assert!(!ar.is_empty(), "Virginia record #{} is empty", i);
+
+            let city_opt    = ar.city();
+            let street_opt  = ar.street();
+            let postal_opt  = ar.postcode();
+            assert!(city_opt.is_some(), "Missing city in VA record #{}", i);
+            assert!(street_opt.is_some(), "Missing street in VA record #{}", i);
+            assert!(postal_opt.is_some(), "Missing postal code in VA record #{}", i);
+
+            let triple = (
+                city_opt.clone().map(|c| c.name().to_owned()).unwrap_or_default(),
+                street_opt.clone().map(|c| c.name().to_owned()).unwrap_or_default(),
+                postal_opt.clone().map(|c| c.code().to_owned()).unwrap_or_default()
+            );
+            let inserted = triple_set.insert(triple);
+            assert!(inserted, "Duplicated VA address record at index {}", i);
+        }
+    }
+
+    /// Thorough test of `dc_mock_records()`.
+    #[traced_test]
+    #[serial]
+    fn test_dc_mock_records() {
+        let recs = dc_mock_records();
+        // Should have 4 addresses
+        assert_eq!(
+            recs.len(), 
+            4, 
+            "DC mock records should produce exactly 4 addresses"
+        );
+
+        let mut triple_set = HashSet::new();
+        for (i, ar) in recs.iter().enumerate() {
+            assert!(!ar.is_empty(), "DC record #{} is empty", i);
+
+            let city_opt   = ar.city();
+            let street_opt = ar.street();
+            let postal_opt = ar.postcode();
+            assert!(city_opt.is_some(),   "Missing city in DC record #{}", i);
+            assert!(street_opt.is_some(), "Missing street in DC record #{}", i);
+            assert!(postal_opt.is_some(), "Missing postal code in DC record #{}", i);
+
+            let triple = (
+                city_opt.clone().map(|c| c.name().to_owned()).unwrap_or_default(),
+                street_opt.clone().map(|s| s.name().to_owned()).unwrap_or_default(),
+                postal_opt.clone().map(|p| p.code().to_owned()).unwrap_or_default()
+            );
+            let inserted = triple_set.insert(triple);
+            assert!(inserted, "Duplicated DC address record at index {}", i);
+        }
+    }
 }
