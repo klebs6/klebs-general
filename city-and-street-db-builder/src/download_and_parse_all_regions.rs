@@ -47,6 +47,7 @@ pub async fn download_and_parse_regions(
 ) -> Result<(), WorldCityAndStreetDbBuilderError> {
 
     for region in regions {
+
         download_and_parse_region(region,&target_dir,db,write_to_storage).await?;
     }
 
@@ -133,9 +134,7 @@ mod download_and_parse_all_regions_tests {
                 calls.inc_download();
                 if download_should_fail {
                     // Return error
-                    return Err(WorldCityAndStreetDbBuilderError::DownloadError(
-                        crate::DownloadError::NetworkError("Simulated download failure".to_string())
-                    ));
+                    return Err(WorldCityAndStreetDbBuilderError::SimulatedDownloadFailure);
                 }
                 // Otherwise, produce a "downloaded" path
                 let dl_path = target_dir.join("downloaded_file.osm.pbf");
@@ -288,14 +287,7 @@ mod download_and_parse_all_regions_tests {
         let result = mock_obtain_pbf_file_for_region(&region, temp_dir.path(), &calls).await;
         assert!(result.is_err());
         match result.err().unwrap() {
-            WorldCityAndStreetDbBuilderError::DownloadError(e) => {
-                match e {
-                    crate::DownloadError::NetworkError(msg) => {
-                        assert!(msg.contains("Simulated download failure"));
-                    },
-                    _ => panic!("Expected NetworkError(...)"),
-                }
-            }
+            WorldCityAndStreetDbBuilderError::SimulatedDownloadFailure => { }
             other => panic!("Expected DownloadError, got: {:?}", other),
         }
         assert_eq!(calls.finds.load(std::sync::atomic::Ordering::SeqCst), 1);

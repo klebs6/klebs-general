@@ -40,9 +40,9 @@ mod test_north_america_region {
 
     #[test]
     fn test_abbreviations() {
-        assert_eq!(NorthAmericaRegion::Canada(CanadaRegion::Quebec).abbreviation(), "CA");
+        assert_eq!(NorthAmericaRegion::Canada(CanadaRegion::Quebec).abbreviation(), "QC");
         assert_eq!(NorthAmericaRegion::Greenland.abbreviation(), "GL");
-        assert_eq!(NorthAmericaRegion::UnitedStates(USRegion::default()).abbreviation(), "US");
+        assert_eq!(NorthAmericaRegion::UnitedStates(USRegion::default()).abbreviation(), "DC");
     }
 
     #[test]

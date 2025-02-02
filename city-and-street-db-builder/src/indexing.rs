@@ -9,8 +9,9 @@ pub type CityToStreetMap                = BTreeMap<CityName, BTreeSet<StreetName
 pub type StreetToPostalCodeMap          = BTreeMap<StreetName, BTreeSet<PostalCode>>;
 pub type StreetToCitiesMap              = BTreeMap<StreetName, BTreeSet<CityName>>;
 
-#[derive(MutGetters,Getters,Setters)]
+#[derive(MutGetters,Getters,Builder,Setters)]
 #[getset(get="pub",set="pub",get_mut="pub")]
+#[builder(setter(into))]
 pub struct InMemoryIndexes {
     region_postal_code_streets: RegionToPostalCodeToStreetsMap, // State -> PostalCode -> Streets
     postal_code_cities:         PostalCodeToCityMap,            // PostalCode -> Cities
@@ -170,11 +171,12 @@ mod in_memory_indexes_tests {
         postal_code: Option<&str>
     ) -> AddressRecord 
     {
-        AddressRecord {
-            city:     city.map(|c| make_city(c)),
-            street:   street.map(|s| make_street(s)),
-            postcode: postal_code.map(|p| make_postal_code(p)),
-        }
+        AddressRecordBuilder::default()
+            .city(city.map(|c| make_city(c)))
+            .street(street.map(|s| make_street(s)))
+            .postcode(postal_code.map(|p| make_postal_code(p)))
+            .build()
+            .unwrap()
     }
 
     #[test]

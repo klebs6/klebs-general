@@ -32,3 +32,4 @@ x!{street_name}
 x!{traits}
 x!{world_address}
 x!{validate_all_addresses}
+x!{prefix_transform}

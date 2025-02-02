@@ -68,6 +68,7 @@ error_tree!{
     }
 
     pub enum WorldCityAndStreetDbBuilderError {
+        SimulatedDownloadFailure,
         DownloadError(DownloadError),
         DatabaseConstructionError(DatabaseConstructionError),
         DbLockError,

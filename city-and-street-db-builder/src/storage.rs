@@ -1,6 +1,7 @@
 // ---------------- [ File: src/storage.rs ]
 crate::ix!();
 
+/// A simple "Database" wrapper that sets up the dynamic prefix transform.
 #[derive(Getters)]
 #[getset(get="pub")]
 pub struct Database {
@@ -10,20 +11,23 @@ pub struct Database {
 impl Database {
 
     /// Initialize DB in its own function
-    pub fn open(path: impl AsRef<Path> + Debug) 
-        -> Result<Arc<Mutex<Self>>,DatabaseConstructionError> 
+    pub fn open(path: impl AsRef<std::path::Path>) 
+        -> Result<Arc<Mutex<Self>>, DatabaseConstructionError> 
     {
-        info!("opening rocksdb at path: {:?}", path);
-
-        let mut opts = rocksdb::Options::default();
+        let mut opts = Options::default();
         opts.create_if_missing(true);
-        opts.set_compression_type(rocksdb::DBCompressionType::Zstd);
+        opts.set_compression_type(DBCompressionType::Zstd);
+
+        // Use the dynamic slice transform
+        let st = create_colon_prefix_transform();
+        opts.set_prefix_extractor(st);
+
+        // Optionally enable prefix bloom filters
+        opts.set_memtable_prefix_bloom_ratio(0.1);
 
         let db = DB::open(&opts, path)?;
 
-        Ok(Arc::new(Mutex::new(Self {
-            db
-        })))
+        Ok(Arc::new(Mutex::new(Self { db })))
     }
 
     /// Check if region already done
@@ -240,14 +244,15 @@ mod database_tests {
 
         // We'll build a small InMemoryIndexes:
         // city -> postal, postal -> city, etc.
-        let mut indexes = InMemoryIndexes {
-            region_postal_code_streets: BTreeMap::new(),
-            postal_code_cities: BTreeMap::new(),
-            city_postal_codes: BTreeMap::new(),
-            city_streets: BTreeMap::new(),
-            street_postal_codes: BTreeMap::new(),
-            street_cities: BTreeMap::new(),
-        };
+        let mut indexes = InMemoryIndexesBuilder::default()
+            .region_postal_code_streets(BTreeMap::new())
+            .postal_code_cities(BTreeMap::new())
+            .city_postal_codes(BTreeMap::new())
+            .city_streets(BTreeMap::new())
+            .street_postal_codes(BTreeMap::new())
+            .street_cities(BTreeMap::new())
+            .build()
+            .unwrap();
 
         // Insert a small record: postal=21201 => city="baltimore" => street="north avenue"
         // We'll do a minimal approach: city->postal, postal->city, etc.

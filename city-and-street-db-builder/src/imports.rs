@@ -8,7 +8,7 @@ pub(crate) use std::path::{Path,PathBuf};
 pub(crate) use std::fmt::{self,Debug,Display};
 pub(crate) use tokio::{io::{self,AsyncWriteExt,AsyncReadExt},fs::File};
 pub(crate) use std::collections::{HashSet,HashMap,BTreeSet,BTreeMap};
-pub(crate) use rocksdb::{DB, Options};
+pub(crate) use rocksdb::{DBCompressionType,DB,Options,SliceTransform};
 pub(crate) use serde::{Serialize,Deserialize};
 pub(crate) use getset::{MutGetters,Getters,Setters};
 pub(crate) use futures_util::TryStreamExt; // for try_next()

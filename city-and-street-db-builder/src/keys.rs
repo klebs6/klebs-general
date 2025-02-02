@@ -48,7 +48,7 @@ mod keys_tests {
     /// We'll define a small helper function that normalizes or returns the abbreviation,
     /// just so we can see what the actual code is. (In your real code, region.abbreviation() may be "US".)
     fn region_abbrev(r: &WorldRegion) -> String {
-        r.abbreviation()
+        r.abbreviation().to_string()
     }
 
     #[test]

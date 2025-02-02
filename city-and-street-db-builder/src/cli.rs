@@ -23,6 +23,7 @@ impl Cli {
     /// The “production” entry point: calls `run_with_injection` using actual (non-capturing) 
     /// top-level functions for the real logic.
     pub async fn run(&self) -> Result<(), WorldCityAndStreetDbBuilderError> {
+
         // Shims that do not capture anything:
         fn real_world_regions() -> Vec<WorldRegion> {
             world_regions()
