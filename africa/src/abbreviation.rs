@@ -66,11 +66,11 @@ impl Abbreviation for AfricaRegion {
 }
 
 impl TryFromAbbreviation for AfricaRegion {
-    type Error = AfricaTryFromAbbreviationError;
+    type Error = TryFromAbbreviationError;
 
     /// Attempts to parse a short code like `"EG"` (Egypt) into an `AfricaRegion`.
     /// If the abbreviation is unrecognized, returns
-    /// `Err(AfricaTryFromAbbreviationError::InvalidAbbreviation)`.
+    /// `Err(TryFromAbbreviationError::InvalidAbbreviation)`.
     fn try_from_abbreviation(abbr: &str) -> Result<Self, Self::Error> {
         match abbr {
             "DZ" => Ok(AfricaRegion::Algeria),
@@ -128,7 +128,7 @@ impl TryFromAbbreviation for AfricaRegion {
             "UG" => Ok(AfricaRegion::Uganda),
             "ZM" => Ok(AfricaRegion::Zambia),
             "ZW" => Ok(AfricaRegion::Zimbabwe),
-            _ => Err(AfricaTryFromAbbreviationError::InvalidAbbreviation),
+            _ => Err(TryFromAbbreviationError::InvalidAbbreviation),
         }
     }
 }
