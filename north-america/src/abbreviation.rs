@@ -10,7 +10,6 @@ impl Abbreviation for NorthAmericaRegion {
             NorthAmericaRegion::Greenland       => "GL",
             NorthAmericaRegion::Mexico          => "MX",
             NorthAmericaRegion::UnitedStates(x) => {
-                use usa::Abbreviation;
                 x.abbreviation()
             },
         }
