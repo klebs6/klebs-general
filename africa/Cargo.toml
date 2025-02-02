@@ -1,6 +1,6 @@
 [package]
 name          = "africa"
-version       = "0.3.0"
+version       = "0.4.0"
 authors       = [ "klebs tpk3.mx@gmail.com" ]
 categories    = ["internationalization"]
 description   = "A Rust crate providing enums and conversions for African countries and their subregions, analogous to the Europe crate."

@@ -20,3 +20,25 @@ impl Abbreviation for CentralAmericaRegion {
         }
     }
 }
+
+impl TryFromAbbreviation for CentralAmericaRegion {
+    type Error = TryFromAbbreviationError;
+
+    fn try_from_abbreviation(abbr: &str) -> Result<Self, Self::Error> {
+        let region = match abbr {
+            "BS" => CentralAmericaRegion::Bahamas,
+            "BZ" => CentralAmericaRegion::Belize,
+            "CR" => CentralAmericaRegion::CostaRica,
+            "CU" => CentralAmericaRegion::Cuba,
+            "SV" => CentralAmericaRegion::ElSalvador,
+            "GT" => CentralAmericaRegion::Guatemala,
+            "HT-DO" => CentralAmericaRegion::HaitiAndDominicanRepublic,
+            "HN" => CentralAmericaRegion::Honduras,
+            "JM" => CentralAmericaRegion::Jamaica,
+            "NI" => CentralAmericaRegion::Nicaragua,
+            "PA" => CentralAmericaRegion::Panama,
+            _ => return Err(TryFromAbbreviationError::InvalidAbbreviation),
+        };
+        Ok(region)
+    }
+}

@@ -1,10 +1,5 @@
 crate::ix!();
 
-pub trait Abbreviation {
-
-    fn abbreviation(&self) -> &'static str;
-}
-
 impl Abbreviation for USRegion {
 
     fn abbreviation(&self) -> &'static str {
@@ -91,6 +86,111 @@ impl Abbreviation for USFederalDistrict {
     fn abbreviation(&self) -> &'static str {
         match self {
             USFederalDistrict::DistrictOfColumbia => "DC",
+        }
+    }
+}
+
+impl TryFromAbbreviation for USRegion {
+    type Error = TryFromAbbreviationError;
+
+    fn try_from_abbreviation(abbr: &str) -> Result<Self, Self::Error> {
+        if let Ok(s) = UnitedState::try_from_abbreviation(abbr) {
+            return Ok(USRegion::UnitedState(s));
+        }
+        if let Ok(t) = USTerritory::try_from_abbreviation(abbr) {
+            return Ok(USRegion::USTerritory(t));
+        }
+        if let Ok(d) = USFederalDistrict::try_from_abbreviation(abbr) {
+            return Ok(USRegion::USFederalDistrict(d));
+        }
+        Err(TryFromAbbreviationError::InvalidAbbreviation)
+    }
+}
+
+impl TryFromAbbreviation for UnitedState {
+    type Error = TryFromAbbreviationError;
+
+    fn try_from_abbreviation(abbr: &str) -> Result<Self, Self::Error> {
+        let s = match abbr {
+            "AL" => UnitedState::Alabama,
+            "AK" => UnitedState::Alaska,
+            "AZ" => UnitedState::Arizona,
+            "AR" => UnitedState::Arkansas,
+            "CA" => UnitedState::California,
+            "CO" => UnitedState::Colorado,
+            "CT" => UnitedState::Connecticut,
+            "DE" => UnitedState::Delaware,
+            "FL" => UnitedState::Florida,
+            "GA" => UnitedState::Georgia,
+            "HI" => UnitedState::Hawaii,
+            "ID" => UnitedState::Idaho,
+            "IL" => UnitedState::Illinois,
+            "IN" => UnitedState::Indiana,
+            "IA" => UnitedState::Iowa,
+            "KS" => UnitedState::Kansas,
+            "KY" => UnitedState::Kentucky,
+            "LA" => UnitedState::Louisiana,
+            "ME" => UnitedState::Maine,
+            "MD" => UnitedState::Maryland,
+            "MA" => UnitedState::Massachusetts,
+            "MI" => UnitedState::Michigan,
+            "MN" => UnitedState::Minnesota,
+            "MS" => UnitedState::Mississippi,
+            "MO" => UnitedState::Missouri,
+            "MT" => UnitedState::Montana,
+            "NE" => UnitedState::Nebraska,
+            "NV" => UnitedState::Nevada,
+            "NH" => UnitedState::NewHampshire,
+            "NJ" => UnitedState::NewJersey,
+            "NM" => UnitedState::NewMexico,
+            "NY" => UnitedState::NewYork,
+            "NC" => UnitedState::NorthCarolina,
+            "ND" => UnitedState::NorthDakota,
+            "OH" => UnitedState::Ohio,
+            "OK" => UnitedState::Oklahoma,
+            "OR" => UnitedState::Oregon,
+            "PA" => UnitedState::Pennsylvania,
+            "RI" => UnitedState::RhodeIsland,
+            "SC" => UnitedState::SouthCarolina,
+            "SD" => UnitedState::SouthDakota,
+            "TN" => UnitedState::Tennessee,
+            "TX" => UnitedState::Texas,
+            "UT" => UnitedState::Utah,
+            "VT" => UnitedState::Vermont,
+            "VA" => UnitedState::Virginia,
+            "WA" => UnitedState::Washington,
+            "WV" => UnitedState::WestVirginia,
+            "WI" => UnitedState::Wisconsin,
+            "WY" => UnitedState::Wyoming,
+            _ => return Err(TryFromAbbreviationError::InvalidAbbreviation),
+        };
+        Ok(s)
+    }
+}
+
+impl TryFromAbbreviation for USTerritory {
+    type Error = TryFromAbbreviationError;
+
+    fn try_from_abbreviation(abbr: &str) -> Result<Self, Self::Error> {
+        let t = match abbr {
+            "AS" => USTerritory::AmericanSamoa,
+            "GU" => USTerritory::Guam,
+            "MP" => USTerritory::NorthernMarianaIslands,
+            "PR" => USTerritory::PuertoRico,
+            "VI" => USTerritory::VirginIslands,
+            _ => return Err(TryFromAbbreviationError::InvalidAbbreviation),
+        };
+        Ok(t)
+    }
+}
+
+impl TryFromAbbreviation for USFederalDistrict {
+    type Error = TryFromAbbreviationError;
+
+    fn try_from_abbreviation(abbr: &str) -> Result<Self, Self::Error> {
+        match abbr {
+            "DC" => Ok(USFederalDistrict::DistrictOfColumbia),
+            _ => Err(TryFromAbbreviationError::InvalidAbbreviation),
         }
     }
 }
