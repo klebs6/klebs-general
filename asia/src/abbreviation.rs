@@ -108,7 +108,7 @@ impl TryFromAbbreviation for AsiaRegion {
             return Ok(AsiaRegion::Japan(jp));
         }
         // Russian Federation (same struct as in Europe):
-        if let Ok(ru) = RussiaRegion::try_from_abbreviation(abbr) {
+        if let Ok(ru) = RussianFederationRegion::try_from_abbreviation(abbr) {
             return Ok(AsiaRegion::RussianFederation(ru));
         }
 

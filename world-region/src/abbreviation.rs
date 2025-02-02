@@ -15,3 +15,18 @@ impl Abbreviation for WorldRegion {
         }
     }
 }
+
+impl TryFromAbbreviation for WorldRegion {
+    type Error = TryFromAbbreviationError;
+    fn try_from_abbreviation(abbr: &str) -> Result<Self, Self::Error> {
+        match self {
+            WorldRegion::Africa(r)                     => r.try_from_abbreviation(),
+            WorldRegion::Asia(r)                       => r.try_from_abbreviation(),
+            WorldRegion::Europe(r)                     => r.try_from_abbreviation(),
+            WorldRegion::NorthAmerica(r)               => r.try_from_abbreviation(),
+            WorldRegion::SouthAmerica(r)               => r.try_from_abbreviation(),
+            WorldRegion::CentralAmerica(r)             => r.try_from_abbreviation(),
+            WorldRegion::AustraliaOceaniaAntarctica(r) => r.try_from_abbreviation(),
+        }
+    }
+}

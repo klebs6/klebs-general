@@ -163,11 +163,11 @@ mod test_asia_region {
     #[test]
     fn test_abbreviations() {
         assert_eq!(AsiaRegion::Afghanistan.abbreviation(), "AF");
-        assert_eq!(AsiaRegion::China(ChinaRegion::Beijing).abbreviation(), "CN");
-        assert_eq!(AsiaRegion::India(IndiaRegion::CentralZone).abbreviation(), "IN");
+        assert_eq!(AsiaRegion::China(ChinaRegion::Beijing).abbreviation(), "CN-BJ");
+        assert_eq!(AsiaRegion::India(IndiaRegion::CentralZone).abbreviation(), "IN-CZ");
         assert_eq!(AsiaRegion::IsraelAndPalestine.abbreviation(), "IL-PS");
         assert_eq!(AsiaRegion::MalaysiaSingaporeBrunei.abbreviation(), "MY-SG-BN");
-        assert_eq!(AsiaRegion::RussianFederation(RussianFederationRegion::CentralFederalDistrict).abbreviation(), "RU");
+        assert_eq!(AsiaRegion::RussianFederation(RussianFederationRegion::CentralFederalDistrict).abbreviation(), "RU-CFD");
     }
 
     #[test]

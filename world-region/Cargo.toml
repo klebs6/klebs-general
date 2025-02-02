@@ -13,26 +13,26 @@ repository    = "https://github.com/klebs6/klebs-general"
 
 [dependencies]
 abbreviation-trait           = "0.3.0"
-africa                       = "0.3.0"
-asia                         = "0.4.0"
-australia-oceania-antarctica = "0.3.0"
-central-america              = "0.3.0"
+africa                       = "0.4.0"
+asia                         = "0.5.0"
+australia-oceania-antarctica = "0.4.0"
+central-america              = "0.4.0"
 country                      = "0.5.0"
 error-tree                   = "0.6.0"
-europe                       = "0.4.0"
+europe                       = "0.5.0"
 export-magic                 = "0.3.6"
 file-downloader              = "0.1.0"
 file-downloader-derive       = "0.1.0"
 language-enum                = "0.2.0"
-north-america                = "0.5.0"
+north-america                = "0.6.0"
 once_cell                    = "1.20.2"
 serde                        = { version = "1.0", features  = ["derive"] }
 serde_json                   = { version = "1" }
-south-america                = "0.4.0"
+south-america                = "0.5.0"
 strum                        = { version = "0.24", features = ["derive"] }
 strum_macros                 = "0.24"
 thiserror                    = "2.0.6"
-usa                          = "0.6.0"
+usa                          = "0.7.0"
 
 [features]
 serde_abbreviation = []
