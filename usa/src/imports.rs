@@ -10,3 +10,4 @@ pub(crate) use once_cell::sync::Lazy;
 pub(crate) use country::Country;
 pub(crate) use file_downloader::*;
 pub(crate) use file_downloader_derive::*;
+pub(crate) use abbreviation_trait::*;

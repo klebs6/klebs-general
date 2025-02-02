@@ -8,7 +8,7 @@ name = "usa-city-and-street-db-builder"
 path = "src/main.rs"
 
 [dependencies]
-abbreviation-trait     = "*"
+abbreviation-trait     = "0.3.0"
 async-trait            = "*"
 byteorder              = "*"
 bytes                  = "*"

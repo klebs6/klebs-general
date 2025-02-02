@@ -528,3 +528,119 @@ impl TryFromAbbreviation for UnitedKingdomRegion {
         }
     }
 }
+
+/// Returns a short ISO-like code (unofficial in some cases) for each county in England.
+impl Abbreviation for EnglandRegion {
+    fn abbreviation(&self) -> &'static str {
+        match self {
+            EnglandRegion::Bedfordshire      => "GB-BDF",
+            EnglandRegion::Berkshire         => "GB-BRK",
+            EnglandRegion::Bristol           => "GB-BST",
+            EnglandRegion::Buckinghamshire   => "GB-BKM",
+            EnglandRegion::Cambridgeshire    => "GB-CAM",
+            EnglandRegion::Cheshire          => "GB-CHS",
+            EnglandRegion::Cornwall          => "GB-CON",
+            EnglandRegion::Cumbria           => "GB-CMA",
+            EnglandRegion::Derbyshire        => "GB-DBY",
+            EnglandRegion::Devon             => "GB-DEV",
+            EnglandRegion::Dorset            => "GB-DOR",
+            EnglandRegion::Durham            => "GB-DUR",
+            EnglandRegion::EastSussex        => "GB-ESX",
+            EnglandRegion::EastYorkshireWithHull => "GB-ERY", // East Riding of Yorkshire
+            EnglandRegion::Essex             => "GB-ESS",
+            EnglandRegion::Gloucestershire   => "GB-GLS",
+            EnglandRegion::GreaterLondon     => "GB-LND",
+            EnglandRegion::GreaterManchester => "GB-GTM",
+            EnglandRegion::Hampshire         => "GB-HAM",
+            EnglandRegion::Herefordshire     => "GB-HEF",
+            EnglandRegion::Hertfordshire     => "GB-HRT",
+            EnglandRegion::IsleOfWight       => "GB-IOW",
+            EnglandRegion::Kent              => "GB-KEN",
+            EnglandRegion::Lancashire        => "GB-LAN",
+            EnglandRegion::Leicestershire    => "GB-LEC",
+            EnglandRegion::Lincolnshire      => "GB-LIN",
+            EnglandRegion::Merseyside        => "GB-MSY",
+            EnglandRegion::Norfolk           => "GB-NFK",
+            EnglandRegion::NorthYorkshire    => "GB-NYK",
+            EnglandRegion::Northamptonshire  => "GB-NTH",
+            EnglandRegion::Northumberland    => "GB-NBL",
+            EnglandRegion::Nottinghamshire   => "GB-NTT",
+            EnglandRegion::Oxfordshire       => "GB-OXF",
+            EnglandRegion::Rutland           => "GB-RUT",
+            EnglandRegion::Shropshire        => "GB-SHR",
+            EnglandRegion::Somerset          => "GB-SOM",
+            EnglandRegion::SouthYorkshire    => "GB-SYK",
+            EnglandRegion::Staffordshire     => "GB-STS",
+            EnglandRegion::Suffolk           => "GB-SFK",
+            EnglandRegion::Surrey            => "GB-SRY",
+            EnglandRegion::TyneAndWear       => "GB-TWR",
+            EnglandRegion::Warwickshire      => "GB-WAR",
+            EnglandRegion::WestMidlands      => "GB-WMD",
+            EnglandRegion::WestSussex        => "GB-WSX",
+            EnglandRegion::WestYorkshire     => "GB-WYK",
+            EnglandRegion::Wiltshire         => "GB-WIL",
+            EnglandRegion::Worcestershire    => "GB-WOR",
+        }
+    }
+}
+
+impl TryFromAbbreviation for EnglandRegion {
+    type Error = TryFromAbbreviationError;
+
+    /// Parses a short code (e.g. "GB-BDF") into an `EnglandRegion`.
+    ///
+    /// Returns `Err(TryFromAbbreviationError::InvalidAbbreviation)`
+    /// if `abbr` is not recognized.
+    fn try_from_abbreviation(abbr: &str) -> Result<Self, Self::Error> {
+        match abbr {
+            "GB-BDF" => Ok(EnglandRegion::Bedfordshire),
+            "GB-BRK" => Ok(EnglandRegion::Berkshire),
+            "GB-BST" => Ok(EnglandRegion::Bristol),
+            "GB-BKM" => Ok(EnglandRegion::Buckinghamshire),
+            "GB-CAM" => Ok(EnglandRegion::Cambridgeshire),
+            "GB-CHS" => Ok(EnglandRegion::Cheshire),
+            "GB-CON" => Ok(EnglandRegion::Cornwall),
+            "GB-CMA" => Ok(EnglandRegion::Cumbria),
+            "GB-DBY" => Ok(EnglandRegion::Derbyshire),
+            "GB-DEV" => Ok(EnglandRegion::Devon),
+            "GB-DOR" => Ok(EnglandRegion::Dorset),
+            "GB-DUR" => Ok(EnglandRegion::Durham),
+            "GB-ESX" => Ok(EnglandRegion::EastSussex),
+            "GB-ERY" => Ok(EnglandRegion::EastYorkshireWithHull),
+            "GB-ESS" => Ok(EnglandRegion::Essex),
+            "GB-GLS" => Ok(EnglandRegion::Gloucestershire),
+            "GB-LND" => Ok(EnglandRegion::GreaterLondon),
+            "GB-GTM" => Ok(EnglandRegion::GreaterManchester),
+            "GB-HAM" => Ok(EnglandRegion::Hampshire),
+            "GB-HEF" => Ok(EnglandRegion::Herefordshire),
+            "GB-HRT" => Ok(EnglandRegion::Hertfordshire),
+            "GB-IOW" => Ok(EnglandRegion::IsleOfWight),
+            "GB-KEN" => Ok(EnglandRegion::Kent),
+            "GB-LAN" => Ok(EnglandRegion::Lancashire),
+            "GB-LEC" => Ok(EnglandRegion::Leicestershire),
+            "GB-LIN" => Ok(EnglandRegion::Lincolnshire),
+            "GB-MSY" => Ok(EnglandRegion::Merseyside),
+            "GB-NFK" => Ok(EnglandRegion::Norfolk),
+            "GB-NYK" => Ok(EnglandRegion::NorthYorkshire),
+            "GB-NTH" => Ok(EnglandRegion::Northamptonshire),
+            "GB-NBL" => Ok(EnglandRegion::Northumberland),
+            "GB-NTT" => Ok(EnglandRegion::Nottinghamshire),
+            "GB-OXF" => Ok(EnglandRegion::Oxfordshire),
+            "GB-RUT" => Ok(EnglandRegion::Rutland),
+            "GB-SHR" => Ok(EnglandRegion::Shropshire),
+            "GB-SOM" => Ok(EnglandRegion::Somerset),
+            "GB-SYK" => Ok(EnglandRegion::SouthYorkshire),
+            "GB-STS" => Ok(EnglandRegion::Staffordshire),
+            "GB-SFK" => Ok(EnglandRegion::Suffolk),
+            "GB-SRY" => Ok(EnglandRegion::Surrey),
+            "GB-TWR" => Ok(EnglandRegion::TyneAndWear),
+            "GB-WAR" => Ok(EnglandRegion::Warwickshire),
+            "GB-WMD" => Ok(EnglandRegion::WestMidlands),
+            "GB-WSX" => Ok(EnglandRegion::WestSussex),
+            "GB-WYK" => Ok(EnglandRegion::WestYorkshire),
+            "GB-WIL" => Ok(EnglandRegion::Wiltshire),
+            "GB-WOR" => Ok(EnglandRegion::Worcestershire),
+            _ => Err(TryFromAbbreviationError::InvalidAbbreviation),
+        }
+    }
+}
