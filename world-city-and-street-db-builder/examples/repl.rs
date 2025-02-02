@@ -23,9 +23,33 @@ use world_city_and_street_db_builder::*;
 use tracing_setup::*;
 use structopt::*;
 
+/*
 fn main() -> Result<(),WorldCityAndStreetDbBuilderError> {
     configure_tracing();
     tracing::info!("starting WorldCityAndStreetDbBuilder REPL");
     repl_main()?;
+    Ok(())
+}
+*/
+use std::path::PathBuf;
+
+/// The main entry: build or open DB, gather data, run REPL with fuzzy autocomplete and region toggling.
+#[tokio::main]
+async fn main() -> Result<(),WorldCityAndStreetDbBuilderError> {
+
+    configure_tracing();
+    tracing::info!("starting WorldCityAndStreetDbBuilder REPL");
+
+    let db_path  = PathBuf::from("./dmv_db");
+    let pbf_path = PathBuf::from("./pbf");
+
+    // 1) Build/Load DB (async):
+    let db_arc = build_dmv_database(db_path, pbf_path).await?;
+
+    // 2) Run interactive REPL (sync):
+    if let Err(e) = run_interactive_repl(db_arc) {
+        eprintln!("REPL error: {}", e);
+    }
+
     Ok(())
 }

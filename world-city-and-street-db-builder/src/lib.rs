@@ -39,6 +39,7 @@ x!{run_repl}
 x!{load_all_cities_for_region}
 x!{load_all_streets_for_region}
 x!{dmv}
+x!{interactive_repl}
 
 pub mod proto {
     include!(concat!(env!("OUT_DIR"), "/mod.rs"));
