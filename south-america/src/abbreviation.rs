@@ -26,27 +26,29 @@ impl TryFromAbbreviation for SouthAmericaRegion {
     type Error = TryFromAbbreviationError;
 
     fn try_from_abbreviation(abbr: &str) -> Result<Self, Self::Error> {
-        let region = match abbr {
-            "AR" => SouthAmericaRegion::Argentina,
-            "BO" => SouthAmericaRegion::Bolivia,
-            "CL" => SouthAmericaRegion::Chile,
-            "CO" => SouthAmericaRegion::Colombia,
-            "EC" => SouthAmericaRegion::Ecuador,
-            "GY" => SouthAmericaRegion::Guyana,
-            "PY" => SouthAmericaRegion::Paraguay,
-            "PE" => SouthAmericaRegion::Peru,
-            "SR" => SouthAmericaRegion::Suriname,
-            "UY" => SouthAmericaRegion::Uruguay,
-            "VE" => SouthAmericaRegion::Venezuela,
-            _    => { /* fall through to Brazil sub-enum or fail */ }
-        };
 
         // If we found a direct match in `match`, just return it:
         if !matches!(abbr, "BR") {
+
+            let region = match abbr {
+                "AR" => SouthAmericaRegion::Argentina,
+                "BO" => SouthAmericaRegion::Bolivia,
+                "CL" => SouthAmericaRegion::Chile,
+                "CO" => SouthAmericaRegion::Colombia,
+                "EC" => SouthAmericaRegion::Ecuador,
+                "GY" => SouthAmericaRegion::Guyana,
+                "PY" => SouthAmericaRegion::Paraguay,
+                "PE" => SouthAmericaRegion::Peru,
+                "SR" => SouthAmericaRegion::Suriname,
+                "UY" => SouthAmericaRegion::Uruguay,
+                "VE" => SouthAmericaRegion::Venezuela,
+                _    => unreachable!(),
+            };
+
             // If region got set, return it:
             if let SouthAmericaRegion::Argentina
-               | SouthAmericaRegion::Bolivia
-               | SouthAmericaRegion::Chile
+            | SouthAmericaRegion::Bolivia
+            | SouthAmericaRegion::Chile
                | SouthAmericaRegion::Colombia
                | SouthAmericaRegion::Ecuador
                | SouthAmericaRegion::Guyana
@@ -91,7 +93,7 @@ impl TryFromAbbreviation for BrazilRegion {
             "BR-N"  => Ok(BrazilRegion::Norte),
             "BR-SE" => Ok(BrazilRegion::Sudeste),
             "BR-S"  => Ok(BrazilRegion::Sul),
-            _       => Err(BrazilTryFromAbbreviationError::InvalidAbbreviation),
+            _       => Err(TryFromAbbreviationError::InvalidAbbreviation),
         }
     }
 }

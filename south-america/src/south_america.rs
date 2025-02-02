@@ -80,7 +80,7 @@ mod test_south_america_region {
     #[test]
     fn test_abbreviations() {
         assert_eq!(SouthAmericaRegion::Argentina.abbreviation(), "AR");
-        assert_eq!(SouthAmericaRegion::Brazil(BrazilRegion::Norte).abbreviation(), "BR");
+        assert_eq!(SouthAmericaRegion::Brazil(BrazilRegion::Norte).abbreviation(), "BR-N");
         assert_eq!(SouthAmericaRegion::Venezuela.abbreviation(), "VE");
     }
 
