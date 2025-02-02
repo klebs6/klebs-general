@@ -34,3 +34,7 @@ pub(crate) use serial_test::serial;
 pub(crate) use std::error::Error;
 pub(crate) use std::io::{Write,Read};
 pub(crate) use std::os::fd::AsRawFd;
+pub(crate) use tokio::runtime::Runtime;
+pub(crate) use std::thread;
+pub(crate) use std::sync::mpsc;
+pub(crate) use std::iter;

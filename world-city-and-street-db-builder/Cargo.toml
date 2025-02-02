@@ -1,0 +1,55 @@
+[package]
+name = "world-city-and-street-db-builder"
+version = "0.1.0"
+edition = "2024"
+
+[[bin]]
+name = "usa-city-and-street-db-builder"
+path = "src/main.rs"
+
+[dependencies]
+abbreviation-trait     = "*"
+async-trait            = "*"
+byteorder              = "*"
+bytes                  = "*"
+country                = "*"
+derive_builder         = "*"
+error-tree             = "*"
+export-magic           = "*"
+file-downloader        = "*"
+file-downloader-derive = "*"
+futures-util           = "0.3"
+getset                 = "*"
+libc                   = "*"
+md5                    = "*"
+once_cell              = "*"
+os_pipe                = "*"
+osmpbf                 = "*"
+postal-code            = "*"
+reqwest                = { version = "0.11", features = ["blocking", "json", "stream"] }
+rocksdb                = "0.20"
+serde                  = { version = "1", features    = ["derive"] }
+serde_cbor             = "0.11"
+serial_test            = "*"
+structopt              = "0.3"
+tempfile               = "3"
+tokio                  = { version = "1", features    = ["full"] }
+traced-test            = "*"
+tracing                = "*"
+tracing-setup          = "*"
+tracing-subscriber     = "0.3"
+usa                    = "0.6.0"
+world-region           = "0.3.0"
+prost                  = "0.11"
+
+[dev-dependencies]
+osm-pbf = "*"
+
+[build-dependencies]
+prost-build = "0.11"
+
+[dependencies.protobuf]
+version = "3.1"
+
+[build-dependencies.protobuf-codegen]
+version = "3.1"

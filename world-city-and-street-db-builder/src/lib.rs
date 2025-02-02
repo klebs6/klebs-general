@@ -33,3 +33,13 @@ x!{traits}
 x!{world_address}
 x!{validate_all_addresses}
 x!{prefix_transform}
+x!{create_tiny_osm_pbf}
+x!{repl_main}
+x!{run_repl}
+x!{load_all_cities_for_region}
+x!{load_all_streets_for_region}
+x!{dmv}
+
+pub mod proto {
+    include!(concat!(env!("OUT_DIR"), "/mod.rs"));
+}
