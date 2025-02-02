@@ -1,7 +1,7 @@
 [package]
 edition = "2024"
 name = "abbreviation-trait"
-version = "0.2.0"
+version = "0.3.0"
 description = "This crate provides the Abbreviation and TryFromAbbreviation traits, common in the north-america, europe, south-america, etc crates"
 authors = [ "klebs tpk3.mx@gmail.com" ]
 license = "MIT"
