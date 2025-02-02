@@ -2,6 +2,7 @@
 crate::ix!();
 
 /// DataAccess struct for queries
+#[derive(Clone)]
 pub struct DataAccess {
     db: Arc<Mutex<Database>>,
 }

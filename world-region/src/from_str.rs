@@ -1,3 +1,4 @@
+// ---------------- [ File: src/from_str.rs ]
 crate::ix!();
 
 impl FromStr for WorldRegion {

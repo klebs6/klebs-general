@@ -1,3 +1,4 @@
+// ---------------- [ File: tests/mini_pbf_integration_test.rs ]
 /// This file demonstrates an **integration test** that uses a small `.osm.pbf` fixture
 /// to test the full pipeline:
 ///   1. Loading the file with `osmpbf::ElementReader`

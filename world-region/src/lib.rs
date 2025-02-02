@@ -1,3 +1,4 @@
+// ---------------- [ File: src/lib.rs ]
 #![forbid(unsafe_code)]
 #![allow(unused_variables)]
 #![deny(clippy::all)]
