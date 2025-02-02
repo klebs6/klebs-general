@@ -36,7 +36,7 @@ mod world_region_tests {
     #[test]
     fn test_abbreviation() {
         let wr = WorldRegion::Asia(AsiaRegion::China(asia::ChinaRegion::Beijing));
-        assert_eq!(wr.abbreviation(), "CN");
+        assert_eq!(wr.abbreviation(), "CN-BJ");
     }
 
     #[test]
@@ -46,16 +46,16 @@ mod world_region_tests {
         assert_eq!(wr_africa.abbreviation(), "NG");
 
         let wr_asia = WorldRegion::Asia(AsiaRegion::Japan(asia::JapanRegion::Hokkaido));
-        assert_eq!(wr_asia.abbreviation(), "JP");
+        assert_eq!(wr_asia.abbreviation(), "JP-HKD");
 
         let wr_europe = WorldRegion::Europe(EuropeRegion::France(europe::FranceRegion::IleDeFrance));
-        assert_eq!(wr_europe.abbreviation(), "FR");
+        assert_eq!(wr_europe.abbreviation(), "FR-J");
 
         let wr_naa = WorldRegion::NorthAmerica(NorthAmericaRegion::Canada(north_america::CanadaRegion::Ontario));
-        assert_eq!(wr_naa.abbreviation(), "CA");
+        assert_eq!(wr_naa.abbreviation(), "ON");
 
         let wr_saa = WorldRegion::SouthAmerica(SouthAmericaRegion::Brazil(south_america::BrazilRegion::Sudeste));
-        assert_eq!(wr_saa.abbreviation(), "BR");
+        assert_eq!(wr_saa.abbreviation(), "BR-SE");
 
         let wr_caa = WorldRegion::CentralAmerica(CentralAmericaRegion::CostaRica);
         assert_eq!(wr_caa.abbreviation(), "CR");
@@ -328,10 +328,10 @@ mod exhaustive_world_region_tests {
     fn test_abbreviation_across_continents() {
         let pairs = vec![
             (WorldRegion::Africa(AfricaRegion::Nigeria), "NG"),
-            (WorldRegion::Asia(AsiaRegion::Japan(asia::JapanRegion::Hokkaido)), "JP"),
-            (WorldRegion::Europe(EuropeRegion::Germany(GermanyRegion::Berlin)), "DE"),
-            (WorldRegion::NorthAmerica(NorthAmericaRegion::UnitedStates(usa::USRegion::UnitedState(usa::UnitedState::California))), "US"),
-            (WorldRegion::SouthAmerica(SouthAmericaRegion::Brazil(south_america::BrazilRegion::Sudeste)), "BR"),
+            (WorldRegion::Asia(AsiaRegion::Japan(asia::JapanRegion::Hokkaido)), "JP-HKD"),
+            (WorldRegion::Europe(EuropeRegion::Germany(GermanyRegion::Berlin)), "DE-BE"),
+            (WorldRegion::NorthAmerica(NorthAmericaRegion::UnitedStates(usa::USRegion::UnitedState(usa::UnitedState::California))), "CA"),
+            (WorldRegion::SouthAmerica(SouthAmericaRegion::Brazil(south_america::BrazilRegion::Sudeste)), "BR-SE"),
             (WorldRegion::CentralAmerica(CentralAmericaRegion::Panama), "PA"),
             (WorldRegion::AustraliaOceaniaAntarctica(australia_oceania_antarctica::AustraliaOceaniaAntarcticaRegion::Fiji), "FJ"),
         ];

@@ -21,7 +21,6 @@ x!{errors}
 x!{filenames}
 x!{find_region_for_file}
 x!{indexing}
-x!{interactive_repl}
 x!{keys}
 x!{list_all_addresses_in_pbf_dir}
 x!{load_all_cities_for_region}
@@ -38,11 +37,6 @@ x!{region_data}
 x!{regional_records}
 x!{regions}
 x!{remote_data}
-x!{repl_autocomplete_mode}
-x!{repl_completer}
-x!{repl_main}
-x!{repl_state}
-x!{run_repl}
 x!{storage}
 x!{street_name}
 x!{traits}
