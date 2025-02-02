@@ -126,7 +126,7 @@ impl TryFromAbbreviation for EuropeRegion {
         if let Ok(pl) = PolandRegion::try_from_abbreviation(abbr) {
             return Ok(EuropeRegion::Poland(pl));
         }
-        if let Ok(ru) = RussiaRegion::try_from_abbreviation(abbr) {
+        if let Ok(ru) = RussianFederationRegion::try_from_abbreviation(abbr) {
             return Ok(EuropeRegion::RussianFederation(ru));
         }
         if let Ok(es) = SpainRegion::try_from_abbreviation(abbr) {

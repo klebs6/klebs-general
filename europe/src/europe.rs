@@ -349,8 +349,8 @@ mod test_europe_region {
     #[test]
     fn test_abbreviations() {
         assert_eq!(EuropeRegion::Albania.abbreviation(), "AL");
-        assert_eq!(EuropeRegion::UnitedKingdom(UnitedKingdomRegion::England(EnglandRegion::GreaterLondon)).abbreviation(), "GB");
-        assert_eq!(EuropeRegion::France(FranceRegion::Bretagne).abbreviation(), "FR");
+        assert_eq!(EuropeRegion::UnitedKingdom(UnitedKingdomRegion::England(EnglandRegion::GreaterLondon)).abbreviation(), "GB-LND");
+        assert_eq!(EuropeRegion::France(FranceRegion::Bretagne).abbreviation(), "FR-E");
     }
 
     #[test]

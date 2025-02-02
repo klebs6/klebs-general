@@ -64,3 +64,71 @@ impl Abbreviation for AfricaRegion {
         }
     }
 }
+
+impl TryFromAbbreviation for AfricaRegion {
+    type Error = AfricaTryFromAbbreviationError;
+
+    /// Attempts to parse a short code like `"EG"` (Egypt) into an `AfricaRegion`.
+    /// If the abbreviation is unrecognized, returns
+    /// `Err(AfricaTryFromAbbreviationError::InvalidAbbreviation)`.
+    fn try_from_abbreviation(abbr: &str) -> Result<Self, Self::Error> {
+        match abbr {
+            "DZ" => Ok(AfricaRegion::Algeria),
+            "AO" => Ok(AfricaRegion::Angola),
+            "BJ" => Ok(AfricaRegion::Benin),
+            "BW" => Ok(AfricaRegion::Botswana),
+            "BF" => Ok(AfricaRegion::BurkinaFaso),
+            "BI" => Ok(AfricaRegion::Burundi),
+            "CM" => Ok(AfricaRegion::Cameroon),
+            "IC" => Ok(AfricaRegion::CanaryIslands),
+            "CV" => Ok(AfricaRegion::CapeVerde),
+            "CF" => Ok(AfricaRegion::CentralAfricanRepublic),
+            "TD" => Ok(AfricaRegion::Chad),
+            "KM" => Ok(AfricaRegion::Comores),
+            "CG" => Ok(AfricaRegion::CongoRepublicBrazzaville),
+            "CD" => Ok(AfricaRegion::CongoDemocraticRepublicKinshasa),
+            "DJ" => Ok(AfricaRegion::Djibouti),
+            "EG" => Ok(AfricaRegion::Egypt),
+            "GQ" => Ok(AfricaRegion::EquatorialGuinea),
+            "ER" => Ok(AfricaRegion::Eritrea),
+            "ET" => Ok(AfricaRegion::Ethiopia),
+            "GA" => Ok(AfricaRegion::Gabon),
+            "GH" => Ok(AfricaRegion::Ghana),
+            "GN" => Ok(AfricaRegion::Guinea),
+            "GW" => Ok(AfricaRegion::GuineaBissau),
+            "CI" => Ok(AfricaRegion::IvoryCoast),
+            "KE" => Ok(AfricaRegion::Kenya),
+            "LS" => Ok(AfricaRegion::Lesotho),
+            "LR" => Ok(AfricaRegion::Liberia),
+            "LY" => Ok(AfricaRegion::Libya),
+            "MG" => Ok(AfricaRegion::Madagascar),
+            "MW" => Ok(AfricaRegion::Malawi),
+            "ML" => Ok(AfricaRegion::Mali),
+            "MR" => Ok(AfricaRegion::Mauritania),
+            "MU" => Ok(AfricaRegion::Mauritius),
+            "MA" => Ok(AfricaRegion::Morocco),
+            "MZ" => Ok(AfricaRegion::Mozambique),
+            "NA" => Ok(AfricaRegion::Namibia),
+            "NE" => Ok(AfricaRegion::Niger),
+            "NG" => Ok(AfricaRegion::Nigeria),
+            "RW" => Ok(AfricaRegion::Rwanda),
+            "SH-AC-TA" => Ok(AfricaRegion::SaintHelenaAscensionTristanDaCunha),
+            "ST" => Ok(AfricaRegion::SaoTomeAndPrincipe),
+            "SN-GM" => Ok(AfricaRegion::SenegalAndGambia),
+            "SC" => Ok(AfricaRegion::Seychelles),
+            "SL" => Ok(AfricaRegion::SierraLeone),
+            "SO" => Ok(AfricaRegion::Somalia),
+            "ZA" => Ok(AfricaRegion::SouthAfrica),
+            "SS" => Ok(AfricaRegion::SouthSudan),
+            "SD" => Ok(AfricaRegion::Sudan),
+            "SZ" => Ok(AfricaRegion::Swaziland),
+            "TZ" => Ok(AfricaRegion::Tanzania),
+            "TG" => Ok(AfricaRegion::Togo),
+            "TN" => Ok(AfricaRegion::Tunisia),
+            "UG" => Ok(AfricaRegion::Uganda),
+            "ZM" => Ok(AfricaRegion::Zambia),
+            "ZW" => Ok(AfricaRegion::Zimbabwe),
+            _ => Err(AfricaTryFromAbbreviationError::InvalidAbbreviation),
+        }
+    }
+}
