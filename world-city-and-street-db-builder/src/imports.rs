@@ -26,7 +26,7 @@ pub(crate) use structopt::*;
 pub(crate) use file_downloader::*;
 pub(crate) use file_downloader_derive::*;
 pub(crate) use world_region::*;
-pub(crate) use abbreviation_trait::Abbreviation;
+pub(crate) use abbreviation_trait::{Abbreviation,TryFromAbbreviation};
 pub(crate) use std::sync::atomic::AtomicBool;
 pub(crate) use std::sync::atomic::Ordering;
 pub(crate) use serial_test::serial;
@@ -49,3 +49,4 @@ pub(crate) use rustyline::{
     Helper,
     history::DefaultHistory,
 };
+pub(crate) use strum::IntoEnumIterator;

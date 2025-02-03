@@ -171,22 +171,22 @@ mod data_access_tests {
     fn city_baltimore() -> CityName {
         CityName::new("Baltimore").unwrap()
     }
-    fn city_clifton() -> CityName {
-        CityName::new("Clifton").unwrap()
+    fn city_calverton() -> CityName {
+        CityName::new("Calverton").unwrap()
     }
 
     fn street_north_avenue() -> StreetName {
         StreetName::new("North Avenue").unwrap()
     }
-    fn street_redbird_ridge() -> StreetName {
-        StreetName::new("Redbird Ridge").unwrap()
+    fn street_catlett_road() -> StreetName {
+        StreetName::new("Catlett Road").unwrap()
     }
 
     fn postal_21201() -> PostalCode {
         PostalCode::new(Country::USA, "21201").unwrap()
     }
-    fn postal_20124() -> PostalCode {
-        PostalCode::new(Country::USA, "20124").unwrap()
+    fn postal_20138_9997() -> PostalCode {
+        PostalCode::new(Country::USA, "20138-9997").unwrap()
     }
 
     // --------------------------------------------
@@ -393,20 +393,20 @@ mod data_access_tests {
         {
             let mut guard = db.lock().map_err(|_| DataAccessError::LockPoisoned)?;
             let region = region_va();
-            let street = street_redbird_ridge();
+            let street = street_catlett_road();
 
             let s2c_k = s2c_key(&region, &street);
             let mut cities = BTreeSet::new();
-            cities.insert(city_clifton());
+            cities.insert(city_calverton());
             put_set_into_db(&mut guard, &s2c_k, &cities)?;
 
             let s2z_k = s2z_key(&region, &street);
             let mut zips = BTreeSet::new();
-            zips.insert(postal_20124());
+            zips.insert(postal_20138_9997());
             put_set_into_db(&mut guard, &s2z_k, &zips)?;
         }
         let region = region_va();
-        let street = street_redbird_ridge();
+        let street = street_catlett_road();
         let exists = da.street_exists_globally(&region, &street);
         assert!(exists);
         Ok(())
@@ -416,7 +416,7 @@ mod data_access_tests {
     fn test_street_exists_globally_false() -> Result<(), DataAccessError> {
         let (_db, da) = create_db_and_da()?;
         let region = region_va();
-        let street = street_redbird_ridge();
+        let street = street_catlett_road();
         let exists = da.street_exists_globally(&region, &street);
         assert!(!exists);
         Ok(())

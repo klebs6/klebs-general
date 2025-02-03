@@ -9,9 +9,9 @@ impl Mock for WorldAddress {
 
         WorldAddressBuilder::default()
             .region(region)
-            .postal_code(PostalCode::new(Country::USA, "20124").unwrap())
-            .city(CityName::new("Clifton").unwrap())
-            .street(StreetName::new("Redbird Ridge").unwrap())
+            .postal_code(PostalCode::new(Country::USA, "20138-9997").unwrap())
+            .city(CityName::new("Calverton").unwrap())
+            .street(StreetName::new("Catlett Road").unwrap())
             .build()
             .unwrap()
     }
@@ -100,12 +100,12 @@ fn virginia_mock_records() -> Vec<AddressRecord> {
     let postalcode22301          = PostalCode::new(Country::USA,"22301").unwrap();
     let postalcode20190          = PostalCode::new(Country::USA,"20190").unwrap();
 
-    let clifton       = CityName::new("Clifton").unwrap();
-    let redbird_ridge = StreetName::new("Redbird Ridge").unwrap();
-    let pc20124       = PostalCode::new(Country::USA, "20124").unwrap();
+    let calverton       = CityName::new("Calverton").unwrap();
+    let catlett_road = StreetName::new("Catlett Road").unwrap();
+    let pc20138_9997       = PostalCode::new(Country::USA, "20138-9997").unwrap();
 
     vec![
-        address_record!(clifton, redbird_ridge, pc20124),
+        address_record!(calverton, catlett_road, pc20138_9997),
 
         address_record!(arlington , wilson_blvd     , postalcode22201), 
         address_record!(arlington , clarendon_blvd  , postalcode22201), 
@@ -147,7 +147,7 @@ mod test_mock {
     use super::*;
 
     /// Verifies the `WorldAddress::mock()` function creates a valid address:
-    /// checks that the fields match the expected default mock data (Virginia/Clifton/20124/Redbird Ridge).
+    /// checks that the fields match the expected default mock data (Virginia/Calverton/20138-9997/Catlett Road).
     #[traced_test]
     #[serial]
     fn test_world_address_mock() {
@@ -164,17 +164,17 @@ mod test_mock {
             format!("Expected region = Virginia, got region = {:?}", region)
         );
 
-        // Postal code => "20124"
+        // Postal code => "20138-9997"
         let postal = mocked_addr.postal_code().code();
-        assert_eq!(postal, "20124", "Expected postal code to be \"20124\"");
+        assert_eq!(postal, "20138-9997", "Expected postal code to be \"20138-9997\"");
 
-        // City => "clifton"
+        // City => "calverton"
         let city_str = mocked_addr.city().name();
-        assert_eq!(city_str, "clifton", "Expected city name to be \"clifton\"");
+        assert_eq!(city_str, "calverton", "Expected city name to be \"calverton\"");
 
-        // Street => "redbird ridge"
+        // Street => "catlett road"
         let street_str = mocked_addr.street().name();
-        assert_eq!(street_str, "redbird ridge", "Expected street name to be \"redbird ridge\"");
+        assert_eq!(street_str, "catlett road", "Expected street name to be \"catlett road\"");
     }
 
     /// Ensures that `RegionalRecords::mock_for_region()` produces valid mock data for Maryland.
@@ -298,7 +298,7 @@ mod test_mock {
     #[serial]
     fn test_virginia_mock_records() {
         let recs = virginia_mock_records();
-        // Should have 7 addresses (Clifton, Arlington x2, Alexandria x2, Reston x2)
+        // Should have 7 addresses (Calverton, Arlington x2, Alexandria x2, Reston x2)
         assert_eq!(
             recs.len(), 
             7, 

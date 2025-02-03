@@ -29,7 +29,6 @@ INDIVIDUAL_TEST := world_address
 
 #-----------------------------------------------------[this section lets us choose how we want to test]
 DEFAULT := test
-DEFAULT := repl
 #DEFAULT := test_file
 #DEFAULT := test_one
 #CEFAULT := test_file_one
@@ -43,9 +42,6 @@ default: $(DEFAULT)
 #NOCAPTURE := 
 
 #----------------------------------------------[here are our rules]
-repl:
-	RUSTFLAGS=$(RUSTFLAGS) $(CARGO) $(RUN) --example repl -p $(ACTIVE_PACKAGE) $(FEATURES)
-
 run:
 	RUSTFLAGS=$(RUSTFLAGS) $(CARGO) $(RUN) -p $(ACTIVE_PACKAGE) $(FEATURES)
 

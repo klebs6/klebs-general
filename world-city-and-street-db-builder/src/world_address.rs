@@ -95,8 +95,8 @@ mod world_address_validation_tests {
     // -----------------------------
     #[traced_test]
     fn validate_address_happy_path() {
-        // 1) We use the default WorldAddress::mock() => region=VA, city=clifton, street=redbird ridge, postal=20124.
-        //    Ensure your virginia_mock_records() includes (clifton, redbird ridge, 20124).
+        // 1) We use the default WorldAddress::mock() => region=VA, city=calverton, street=catlett road, postal=20138-9997.
+        //    Ensure your virginia_mock_records() includes (calverton, catlett road, 20138-9997).
         let region_va: WorldRegion = USRegion::UnitedState(UnitedState::Virginia).into();
 
         // 2) Create DB, store the VA mock data.
@@ -111,7 +111,7 @@ mod world_address_validation_tests {
 
         // 3) Validate the default mock address, which should now exist
         let da = DataAccess::with_db(db);
-        let address = WorldAddress::mock(); // => region=VA, city=clifton, etc.
+        let address = WorldAddress::mock(); // => region=VA, city=calverton, etc.
 
         debug!("Testing address: {:#?}", address);
         let result = address.validate_with(&da);
@@ -289,13 +289,13 @@ mod world_address_validation_tests {
 
         let da = DataAccess::with_db(db.clone());
 
-        // region=VA => "clifton," "redbird ridge," "20124" not in DB
+        // region=VA => "calverton," "catlett road," "20138-9997" not in DB
         let addr = WorldAddress::mock();
         let res = addr.validate_with(&da);
         assert!(res.is_err());
         match res.unwrap_err() {
             InvalidWorldAddress::PostalCodeToCityKeyNotFoundForRegion { postal_code, .. } => {
-                assert_eq!(postal_code.code(), "20124");
+                assert_eq!(postal_code.code(), "20138-9997");
             }
             other => panic!("Expected PostalCodeToCityKeyNotFoundForRegion, got: {:?}", other),
         }

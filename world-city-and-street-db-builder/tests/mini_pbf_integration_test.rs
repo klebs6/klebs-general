@@ -32,7 +32,7 @@ fn test_parse_tiny_osm_pbf_fixture() {
     let mut addresses = Vec::new();
     // For each element in the PBF, we try converting it to an AddressRecord:
     let parse_result = reader.for_each(|element| {
-        match AddressRecord::try_from((element, &Country::USA)) {
+        match AddressRecord::try_from((&element, &Country::USA)) {
             Ok(addr) => {
                 addresses.push(addr);
             }

@@ -6,6 +6,10 @@
 
 #[macro_use] mod imports; use imports::*;
 
+pub mod proto {
+    include!(concat!(env!("OUT_DIR"), "/mod.rs"));
+}
+
 x!{address_record}
 x!{build_all_region_data}
 x!{city_name}
@@ -20,6 +24,8 @@ x!{dump}
 x!{errors}
 x!{filenames}
 x!{find_region_for_file}
+x!{house_number_in_any_range}
+x!{house_number_ranges}
 x!{indexing}
 x!{keys}
 x!{list_all_addresses_in_pbf_dir}
@@ -27,7 +33,12 @@ x!{load_all_cities_for_region}
 x!{load_all_streets_for_region}
 x!{load_done_regions}
 x!{load_house_number_ranges}
-x!{main}
+x!{house_number_parsing_and_storage}
+x!{extract_house_number_range_from_tags}
+x!{extract_house_number_range_from_element}
+x!{merge_house_number_range}
+x!{addresses_from_pbf_file_with_house_numbers}
+x!{parse_osm_pbf_and_build_house_number_ranges}
 x!{meta_key}
 x!{mock}
 x!{normalize}
@@ -38,11 +49,8 @@ x!{regional_records}
 x!{regions}
 x!{remote_data}
 x!{storage}
+x!{store_house_number_ranges}
 x!{street_name}
 x!{traits}
 x!{validate_all_addresses}
 x!{world_address}
-
-pub mod proto {
-    include!(concat!(env!("OUT_DIR"), "/mod.rs"));
-}

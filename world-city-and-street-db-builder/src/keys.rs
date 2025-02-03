@@ -29,6 +29,16 @@ pub fn s2z_key(region: &WorldRegion, street: &StreetName) -> String {
     format!("S2Z:{}:{}", region.abbreviation(), street.name())
 }
 
+/// Builds the RocksDB key for house-number ranges on a particular street in a region.
+///
+/// For example: 
+///    `HNR:{region_abbr}:{street_name}`
+/// where `street_name` has already been normalized to lowercase, 
+/// but we rely on `StreetName::name()` for that.
+pub fn house_number_ranges_key(region: &WorldRegion, street: &StreetName) -> String {
+    format!("HNR:{}:{}", region.abbreviation(), street.name())
+}
+
 #[cfg(test)]
 mod keys_tests {
     use super::*;
@@ -90,31 +100,31 @@ mod keys_tests {
     fn test_keys_virginia() {
         let region = make_virginia_region();
 
-        // e.g. "Clifton", "20124", "Redbird Ridge"
-        let postal_code = PostalCode::new(Country::USA, "20124").unwrap();
-        let city_name   = CityName::new("Clifton").unwrap();
-        let street_name = StreetName::new("Redbird Ridge").unwrap();
+        // e.g. "Calverton", "20138-9997", "Redbird Ridge"
+        let postal_code = PostalCode::new(Country::USA, "20138-9997").unwrap();
+        let city_name   = CityName::new("Calverton").unwrap();
+        let street_name = StreetName::new("Catlett Road").unwrap();
 
         let z2c = z2c_key(&region, &postal_code);
-        assert_eq!(z2c, format!("Z2C:{}:{}", region_abbrev(&region), "20124"));
+        assert_eq!(z2c, format!("Z2C:{}:{}", region_abbrev(&region), "20138-9997"));
 
         let s_k = s_key(&region, &postal_code);
-        assert_eq!(s_k, format!("S:{}:{}", region_abbrev(&region), "20124"));
+        assert_eq!(s_k, format!("S:{}:{}", region_abbrev(&region), "20138-9997"));
 
         let c_k = c_key(&region, &city_name);
-        assert_eq!(c_k, format!("C2S:{}:{}", region_abbrev(&region), "clifton"));
+        assert_eq!(c_k, format!("C2S:{}:{}", region_abbrev(&region), "calverton"));
 
         let c2z = c2z_key(&region, &city_name);
-        assert_eq!(c2z, format!("C2Z:{}:{}", region_abbrev(&region), "clifton"));
+        assert_eq!(c2z, format!("C2Z:{}:{}", region_abbrev(&region), "calverton"));
 
         let c2s = c2s_key(&region, &city_name);
-        assert_eq!(c2s, format!("C2S:{}:{}", region_abbrev(&region), "clifton"));
+        assert_eq!(c2s, format!("C2S:{}:{}", region_abbrev(&region), "calverton"));
 
         let s2c = s2c_key(&region, &street_name);
-        assert_eq!(s2c, format!("S2C:{}:{}", region_abbrev(&region), "redbird ridge"));
+        assert_eq!(s2c, format!("S2C:{}:{}", region_abbrev(&region), "catlett road"));
 
         let s2z = s2z_key(&region, &street_name);
-        assert_eq!(s2z, format!("S2Z:{}:{}", region_abbrev(&region), "redbird ridge"));
+        assert_eq!(s2z, format!("S2Z:{}:{}", region_abbrev(&region), "catlett road"));
     }
 
     #[test]

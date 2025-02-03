@@ -385,7 +385,7 @@ mod in_memory_indexes_tests {
         let idx_md = InMemoryIndexes::from(&rr_md);
 
         // Build indexes for region2
-        let rec_va = build_address_record(Some("Clifton"), Some("Redbird Ridge"), Some("20124"));
+        let rec_va = build_address_record(Some("Calverton"), Some("Redbird Ridge"), Some("20138-9997"));
         let rr_va = RegionalRecordsBuilder::default()
             .region(region2)
             .records(vec![rec_va])

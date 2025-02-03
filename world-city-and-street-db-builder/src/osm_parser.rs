@@ -26,7 +26,7 @@ pub fn parse_osm_pbf(path: impl AsRef<Path>, country: &Country)
     // For each element, we try to parse an `AddressRecord`.
     // If it succeeds, we push it onto our `records` vec.
     reader.for_each(|element| {
-        if let Ok(record) = AddressRecord::try_from((element, country)) {
+        if let Ok(record) = AddressRecord::try_from((&element, country)) {
             if count % 1000 == 0 {
                 info!("record for osm element, {:?}", record);
             }

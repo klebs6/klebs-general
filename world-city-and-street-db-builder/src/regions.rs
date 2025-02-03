@@ -11,6 +11,5 @@ pub fn dmv_regions() -> Vec<WorldRegion> {
 }
 
 pub fn world_regions() -> Vec<WorldRegion> {
-    warn!("in the future, we will want to expand our set of world regions to include places outside dmv");
-    dmv_regions()
+    WorldRegion::iter().collect()
 }

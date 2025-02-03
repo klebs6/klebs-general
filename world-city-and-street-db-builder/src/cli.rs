@@ -26,7 +26,7 @@ impl Cli {
 
         // Shims that do not capture anything:
         fn real_world_regions() -> Vec<WorldRegion> {
-            world_regions()
+            dmv_regions()
         }
 
         fn real_db_open(
@@ -336,7 +336,7 @@ mod cli_tests {
     #[test]
     #[serial] 
     fn test_mock_scenario() {
-        // The default “mock” address is region=VA => city=clifton => postal=20124 => street=redbird ridge
+        // The default “mock” address is region=VA => city=calverton => postal=20138-9997 => street=catlett road
         // So we store VA data so it’s valid:
         let va_region = USRegion::UnitedState(UnitedState::Virginia).into();
 
@@ -350,7 +350,7 @@ mod cli_tests {
             rr.write_to_storage(&mut db_guard).unwrap();
         }
 
-        let mock_addr = WorldAddress::mock(); // => region=VA, city=clifton, ...
+        let mock_addr = WorldAddress::mock(); // => region=VA, city=calverton, ...
         let da = DataAccess::with_db(db.clone());
         // Now it is valid because we have VA data in a fresh DB 
         assert!(

@@ -116,10 +116,10 @@ pub fn address_record_from_tags<'a>(
 /// Now the TryFrom implementation can simply call the factored-out function.
 /// If you also want to parse ways/relations, do the same pattern by calling
 /// `elem.tags()` and `address_record_from_tags(..., elem.id())`.
-impl<'a> TryFrom<(osmpbf::Element<'a>, &Country)> for AddressRecord {
+impl<'a> TryFrom<(&osmpbf::Element<'a>, &Country)> for AddressRecord {
     type Error = IncompatibleOsmPbfElement;
 
-    fn try_from(x: (osmpbf::Element<'a>, &Country)) -> Result<Self, Self::Error> {
+    fn try_from(x: (&osmpbf::Element<'a>, &Country)) -> Result<Self, Self::Error> {
         let (element, country) = x;
 
         match element {

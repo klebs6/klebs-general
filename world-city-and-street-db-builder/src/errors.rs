@@ -60,6 +60,9 @@ error_tree!{
         InvalidInputFile { reason: String },
         WorldAddressBuilderError(WorldAddressBuilderError),
         IoError(io::Error),
+        HouseNumberRangeSerdeError {
+            msg: String,
+        },
     }
 
     pub enum DatabaseConstructionError {

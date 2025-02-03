@@ -17,7 +17,7 @@ pub fn list_all_addresses_in_pbf_dir(
     }
 
     // Known regions (DMV or more).
-    let known_regions = world_regions();
+    let known_regions = dmv_regions();
     info!(
         "listing all addresses in the PBF dir for all known regions: {:#?}",
         known_regions
@@ -66,7 +66,7 @@ fn addresses_from_pbf_file(
 
         let result = reader.for_each(|element| {
             // The closure returns (), not Result.
-            match AddressRecord::try_from((element, &country)) {
+            match AddressRecord::try_from((&element, &country)) {
                 Ok(rec) => {
                     if let (Some(city), Some(street), Some(postcode)) =
                         (rec.city(), rec.street(), rec.postcode())
