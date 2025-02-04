@@ -6,10 +6,8 @@ crate::ix!();
 mod download_tests {
     use super::*;
     use tokio::runtime::Runtime;
-    use std::fs::File as StdFile;
     use std::io::Write;
 
-    #[test]
     fn verify_md5_checksum_mismatch() {
         // Create a tokio runtime without using `unwrap()`.
         let rt = match Runtime::new() {
@@ -22,13 +20,11 @@ mod download_tests {
 
         // Write some random data to the temporary file.
         {
-            let mut f = match StdFile::create(&tmp_path) {
+            let mut f = match std::fs::File::create(&tmp_path) {
                 Ok(created) => created,
                 Err(e) => panic!("Failed to create temp file: {:?}", e),
             };
-            if let Err(e) = f.write_all(b"some random data") {
-                panic!("Failed to write data to file: {:?}", e);
-            }
+            f.write_all(b"some random data").unwrap();
         }
 
         // Pass both arguments to the `verify_md5_checksum` function,

@@ -77,3 +77,17 @@ pub trait StreetExistsGlobally {
         street:      &StreetName
     ) -> bool;
 }
+
+pub trait GatherAllZipsInRegion {
+
+    fn gather_all_zips_in_region(&self, region: &WorldRegion) -> Vec<PostalCode>;
+}
+
+pub trait LoadHouseNumberRanges {
+
+    fn load_house_number_ranges(
+        &self, 
+        region: &WorldRegion, 
+        street_obj: &StreetName
+    ) -> Result<Option<Vec<HouseNumberRange>>, DataAccessError>;
+}

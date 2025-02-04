@@ -20,6 +20,11 @@ INDIVIDUAL_TEST := filenames_tests
 INDIVIDUAL_TEST := address_record_tests
 INDIVIDUAL_TEST := city_name
 INDIVIDUAL_TEST := world_address
+INDIVIDUAL_TEST := test_build_world_address_fail
+INDIVIDUAL_TEST := test_parse_and_aggregate_osm_empty
+INDIVIDUAL_TEST := osm_parser_tests::test_parse_osm_pbf_corrupted_file
+#INDIVIDUAL_TEST := verify_md5_checksum_mismatch
+
 #INDIVIDUAL_TEST := cli
 #INDIVIDUAL_TEST := street_name_test
 #INDIVIDUAL_TEST := list_all_addresses

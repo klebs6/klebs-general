@@ -1,13 +1,6 @@
 // ---------------- [ File: src/download_and_parse_all_regions.rs ]
 crate::ix!();
 
-pub async fn obtain_pbf_file_for_region(
-    region:           &WorldRegion,
-    target_dir:       impl AsRef<Path> + Send + Sync,
-) -> Result<PathBuf, WorldCityAndStreetDbBuilderError> {
-    Ok(region.find_file_locally_or_download_into(&target_dir).await?)
-}
-
 pub async fn download_and_parse_region(
     region:           &WorldRegion,
     target_dir:       impl AsRef<Path> + Send + Sync,
@@ -33,22 +26,6 @@ pub async fn download_and_parse_region(
 
     if write_to_storage {
         regional_records.write_to_storage(db)?;
-    }
-
-    Ok(())
-}
-
-/// Download and parse all specified regions, skipping those already built.
-pub async fn download_and_parse_regions(
-    regions:          &[WorldRegion],
-    target_dir:       impl AsRef<Path> + Send + Sync,
-    db:               &mut Database,
-    write_to_storage: bool,
-) -> Result<(), WorldCityAndStreetDbBuilderError> {
-
-    for region in regions {
-
-        download_and_parse_region(region,&target_dir,db,write_to_storage).await?;
     }
 
     Ok(())

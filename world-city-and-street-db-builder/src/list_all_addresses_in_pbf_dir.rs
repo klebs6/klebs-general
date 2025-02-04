@@ -1,109 +1,124 @@
 // ---------------- [ File: src/list_all_addresses_in_pbf_dir.rs ]
 crate::ix!();
 
+/// Produces an iterator of [`WorldAddress`] items by scanning a directory for
+/// `.pbf` files and attempting to parse each one. Files are associated with
+/// known regions and then processed in sequence.
+///
+/// # Arguments
+///
+/// * `pbf_dir` - A filesystem path to a directory containing `.pbf` files.
+/// * `db`      - Shared database reference for storing or retrieving house number data.
+///
+/// # Returns
+///
+/// * `Ok(impl Iterator<Item = Result<WorldAddress, OsmPbfParseError>>)` on success.
+/// * `Err(OsmPbfParseError)` if reading the directory or chaining file iterators fails.
 pub fn list_all_addresses_in_pbf_dir(
-    pbf_dir: impl AsRef<Path>
+    pbf_dir: impl AsRef<Path>,
+    db: Arc<Mutex<Database>>,
 ) -> Result<impl Iterator<Item = Result<WorldAddress, OsmPbfParseError>>, OsmPbfParseError> {
-    let entries = std::fs::read_dir(&pbf_dir)?;
+    trace!("list_all_addresses_in_pbf_dir: start for pbf_dir={:?}", pbf_dir.as_ref());
 
-    // Gather PBF files.
+    // 1) Collect all `.pbf` files from the directory.
+    let pbf_files = gather_pbf_files(pbf_dir.as_ref())?;
+    debug!("list_all_addresses_in_pbf_dir: found {} PBF files", pbf_files.len());
+
+    // 2) Identify known regions.
+    let known_regions = dmv_regions();
+    info!("list_all_addresses_in_pbf_dir: known regions: {:#?}", known_regions);
+
+    // 3) Build a chained iterator of addresses from all recognized PBF files.
+    let chained = chain_addresses_across_files(pbf_files, &known_regions, db, pbf_dir.as_ref())?;
+    Ok(chained)
+}
+
+/// Reads the specified directory, returning a `Vec<PathBuf>` of all `.pbf` files found.
+///
+/// # Returns
+///
+/// * `Ok(Vec<PathBuf>)` if the directory is accessible.
+/// * `Err(OsmPbfParseError)` if reading the directory fails.
+fn gather_pbf_files(pbf_dir: &Path) -> Result<Vec<PathBuf>, OsmPbfParseError> {
+    trace!("gather_pbf_files: scanning directory {:?}", pbf_dir);
+    let entries = fs::read_dir(pbf_dir)
+        .map_err(|io_err| OsmPbfParseError::IoError(io_err))?;
+
     let mut pbf_files = Vec::new();
-    for entry in entries {
-        let entry = entry?;
+    for entry_result in entries {
+        let entry = match entry_result {
+            Ok(e) => e,
+            Err(e) => {
+                error!("gather_pbf_files: error reading entry in {:?}: {}", pbf_dir, e);
+                return Err(OsmPbfParseError::IoError(e));
+            }
+        };
         let path = entry.path();
         if path.extension().and_then(|ext| ext.to_str()) == Some("pbf") {
+            debug!("gather_pbf_files: found PBF file {:?}", path);
             pbf_files.push(path);
         }
     }
 
-    // Known regions (DMV or more).
-    let known_regions = dmv_regions();
-    info!(
-        "listing all addresses in the PBF dir for all known regions: {:#?}",
-        known_regions
-    );
-
-    // Create a chained iterator of addresses from all files.
-    let mut chained = Box::new(iter::empty()) as Box<dyn Iterator<Item = Result<WorldAddress, OsmPbfParseError>>>;
-    for file_path in pbf_files {
-        // pbf_dir is your base directory of PBF files.
-        let region = match find_region_for_file(&file_path, &known_regions, &pbf_dir) {
-            Some(r) => r,
-            None => {
-                warn!("Could not determine region for file {:?}, skipping", file_path);
-                continue;
-            }
-        };
-
-        // Create an iterator for this file's addresses.
-        let file_iter = addresses_from_pbf_file(file_path, region)?;
-        // Chain it to the existing iterator.
-        chained = Box::new(chained.chain(file_iter));
-    }
-
-    Ok(chained)
+    Ok(pbf_files)
 }
 
-/// Returns an iterator over addresses from a single PBF file.
-fn addresses_from_pbf_file(
-    path: PathBuf,
-    world_region: impl Into<crate::WorldRegion>,
-) -> Result<impl Iterator<Item = Result<WorldAddress, OsmPbfParseError>>, OsmPbfParseError> {
-    let world_region = world_region.into();
-    info!("parsing addresses for pbf_file {:?} for region {}", path, world_region);
+/// Builds a single chained iterator of [`WorldAddress`] across all `.pbf` files.
+/// For each file, we attempt to determine the region and parse the file, skipping
+/// those with unknown regions.
+///
+/// # Returns
+///
+/// * `Ok(Box<dyn Iterator<Item = Result<WorldAddress, OsmPbfParseError>>>)` on success.
+/// * `Err(OsmPbfParseError)` if an error arises parsing a given file.
+fn chain_addresses_across_files(
+    pbf_files: Vec<PathBuf>,
+    known_regions: &[WorldRegion],
+    db: Arc<Mutex<Database>>,
+    pbf_dir: &Path,
+) -> Result<Box<dyn Iterator<Item = Result<WorldAddress, OsmPbfParseError>>>, OsmPbfParseError> {
+    trace!("chain_addresses_across_files: building iterator for {} files", pbf_files.len());
 
-    let country = Country::try_from(world_region)?;
-    let (tx, rx) = mpsc::sync_channel(1000);
+    // Start with an empty iterator
+    let mut chained_iter = Box::new(iter::empty()) as Box<dyn Iterator<Item = _>>;
 
-    thread::spawn(move || {
-        let reader = match osmpbf::ElementReader::from_path(&path) {
-            Ok(r) => r,
-            Err(e) => {
-                let _ = tx.send(Err(OsmPbfParseError::OsmPbf(e)));
-                return;
+    for file_path in pbf_files {
+        match select_region_for_file(&file_path, known_regions, pbf_dir) {
+            Some(region) => {
+                debug!(
+                    "chain_addresses_across_files: associating file {:?} with region={:?}",
+                    file_path, region
+                );
+                let file_iter = addresses_from_pbf_file_with_house_numbers(
+                    file_path,
+                    region,
+                    db.clone()
+                )?;
+                // Chain it to the existing iterator
+                chained_iter = Box::new(chained_iter.chain(file_iter));
             }
-        };
-
-        let result = reader.for_each(|element| {
-            // The closure returns (), not Result.
-            match AddressRecord::try_from((&element, &country)) {
-                Ok(rec) => {
-                    if let (Some(city), Some(street), Some(postcode)) =
-                        (rec.city(), rec.street(), rec.postcode())
-                    {
-                        let addr = match WorldAddressBuilder::default()
-                            .region(world_region)
-                            .city(city.clone())
-                            .street(street.clone())
-                            .postal_code(postcode.clone())
-                            .build()
-                        {
-                            Ok(a) => a,
-                            Err(_) => {
-                                warn!("Failed to build WorldAddress from record");
-                                // Just skip this record.
-                                return;
-                            }
-                        };
-
-                        if tx.send(Ok(addr)).is_err() {
-                            warn!("Receiver dropped. Stopping processing.");
-                            return;
-                        }
-                    }
-                }
-                Err(_) => {
-                    // If parsing of the element fails, we simply skip it.
-                }
+            None => {
+                warn!("chain_addresses_across_files: could not determine region for file {:?}; skipping", file_path);
             }
-        });
-
-        if let Err(osmpbf_err) = result {
-            let _ = tx.send(Err(OsmPbfParseError::OsmPbf(osmpbf_err)));
         }
-    });
+    }
 
-    Ok(rx.into_iter())
+    Ok(chained_iter)
+}
+
+/// Attempts to determine which region a given file belongs to. Returns `Some` if found,
+/// or `None` if the file does not match any known region heuristics.
+fn select_region_for_file(
+    file_path: &Path,
+    known_regions: &[WorldRegion],
+    base_dir: &Path,
+) -> Option<WorldRegion> {
+    trace!(
+        "select_region_for_file: file_path={:?}, base_dir={:?}",
+        file_path,
+        base_dir
+    );
+    find_region_for_file(file_path, known_regions, base_dir)
 }
 
 #[cfg(test)]
@@ -124,8 +139,9 @@ mod list_all_addresses_tests {
     #[traced_test]
     async fn test_list_all_addresses_empty_dir() {
         let temp_dir = TempDir::new().unwrap();
+        let db = Database::open(&temp_dir).expect("DB should open");
         // No .pbf files => the returned iterator is empty.
-        let result = list_all_addresses_in_pbf_dir(temp_dir.path());
+        let result = list_all_addresses_in_pbf_dir(temp_dir.path(),db);
         assert!(result.is_ok(), "Should not fail scanning an empty dir");
         let iter = result.unwrap();
         assert_eq!(iter.count(), 0, "No pbf => no addresses");
@@ -134,6 +150,7 @@ mod list_all_addresses_tests {
     #[traced_test]
     async fn test_list_all_addresses_no_matching_filenames() {
         let temp_dir = TempDir::new().unwrap();
+        let db = Database::open(&temp_dir).expect("DB should open");
 
         // Create a file not recognized by find_region_for_file, e.g. "unknown-latest.osm.pbf".
         let unknown_path = temp_dir.path().join("unknown-latest.osm.pbf");
@@ -143,7 +160,7 @@ mod list_all_addresses_tests {
         }
 
         // The file is recognized as .pbf, but region determination fails => skip.
-        let result = list_all_addresses_in_pbf_dir(temp_dir.path()).unwrap();
+        let result = list_all_addresses_in_pbf_dir(temp_dir.path(),db).unwrap();
         let items: Vec<_> = result.collect();
         assert_eq!(items.len(), 0, "No recognized region => skip => zero addresses");
     }
@@ -151,13 +168,14 @@ mod list_all_addresses_tests {
     #[test]
     fn test_list_all_addresses_corrupted_pbf() {
         let temp_dir = TempDir::new().unwrap();
+        let db = Database::open(&temp_dir).expect("DB should open");
         let pbf_path = temp_dir.path().join("maryland-latest.osm.pbf");
         {
             let rt = Runtime::new().unwrap();
             rt.block_on(create_corrupt_pbf(&pbf_path));
         }
 
-        let result_iter = list_all_addresses_in_pbf_dir(temp_dir.path()).unwrap();
+        let result_iter = list_all_addresses_in_pbf_dir(temp_dir.path(),db).unwrap();
 
         // We expect the iterator to yield at least one error.
         let mut iter = result_iter;
@@ -178,12 +196,13 @@ mod list_all_addresses_tests {
     #[test]
     fn test_list_all_addresses_zero_length_pbf() {
         let temp_dir = TempDir::new().unwrap();
+        let db = Database::open(&temp_dir).expect("DB should open");
         let pbf_path = temp_dir.path().join("virginia-latest.osm.pbf");
         {
             let rt = Runtime::new().unwrap();
             rt.block_on(create_empty_pbf(&pbf_path));
         }
-        let result_iter = list_all_addresses_in_pbf_dir(temp_dir.path()).unwrap();
+        let result_iter = list_all_addresses_in_pbf_dir(temp_dir.path(),db).unwrap();
         let collected: Vec<_> = result_iter.collect();
         if collected.is_empty() {
             debug!("Zero-length file => no addresses, acceptable");
@@ -197,6 +216,7 @@ mod list_all_addresses_tests {
     #[test]
     fn test_list_all_addresses_multiple_files_mixture() {
         let temp_dir = TempDir::new().unwrap();
+        let db = Database::open(&temp_dir).expect("DB should open");
         let md_path = temp_dir.path().join("maryland-latest.osm.pbf");
         let va_path = temp_dir.path().join("virginia-latest.osm.pbf");
         {
@@ -204,7 +224,7 @@ mod list_all_addresses_tests {
             rt.block_on(create_corrupt_pbf(&md_path));
             rt.block_on(create_corrupt_pbf(&va_path));
         }
-        let iter = list_all_addresses_in_pbf_dir(temp_dir.path()).unwrap();
+        let iter = list_all_addresses_in_pbf_dir(temp_dir.path(),db).unwrap();
         let results: Vec<_> = iter.collect();
         assert_eq!(results.len(), 2, "two .pbf files should yield two parse errors");
         for res in results {

@@ -13,14 +13,14 @@ use country::*;
 use osmpbf::ElementReader;
 use std::path::Path;
 
-#[test]
-fn test_parse_tiny_osm_pbf_fixture() {
+#[tokio::test]
+async fn test_parse_tiny_osm_pbf_fixture() {
 
     // 1) create ephemeral .osm.pbf in a temp dir
     let tmp          = tempfile::TempDir::new().unwrap();
     let fixture_path = tmp.path().join("tiny.osm.pbf");
 
-    create_tiny_osm_pbf(&fixture_path).expect("create pbf");
+    create_tiny_osm_pbf(&fixture_path).await.expect("create pbf");
 
     let reader = match ElementReader::from_path(&fixture_path) {
         Ok(r) => r,

@@ -15,7 +15,7 @@ pub(crate) use futures_util::TryStreamExt; // for try_next()
 pub(crate) use bytes::Bytes;
 pub(crate) use postal_code::*;
 pub(crate) use country::*;
-pub(crate) use tracing::{info,warn,debug};
+pub(crate) use tracing::{error,trace,info,warn,debug};
 pub(crate) use derive_builder::Builder;
 pub(crate) use serde::de::DeserializeOwned;
 pub(crate) use std::sync::{Mutex,Arc};
@@ -35,7 +35,7 @@ pub(crate) use std::io::{ErrorKind,Write,Read};
 pub(crate) use std::os::fd::AsRawFd;
 pub(crate) use tokio::runtime::Runtime;
 pub(crate) use std::thread;
-pub(crate) use std::sync::mpsc;
+pub(crate) use std::sync::mpsc::{self,SyncSender};
 pub(crate) use std::iter;
 pub(crate) use fuzzy_matcher::skim::SkimMatcherV2;
 pub(crate) use fuzzy_matcher::FuzzyMatcher;
@@ -50,3 +50,6 @@ pub(crate) use rustyline::{
     history::DefaultHistory,
 };
 pub(crate) use strum::IntoEnumIterator;
+pub(crate) use disable_macro::disable;
+pub(crate) use byteorder::{ByteOrder,BigEndian, WriteBytesExt}; // for writing the 4-byte length prefix
+pub(crate) use protobuf::{Message,MessageField};

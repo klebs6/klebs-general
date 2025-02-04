@@ -10,6 +10,7 @@ path = "src/main.rs"
 [dependencies]
 abbreviation-trait     = "0.3.0"
 async-trait            = "*"
+disable_macro            = "*"
 byteorder              = "*"
 strum                  = "*"
 bytes                  = "*"

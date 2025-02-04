@@ -1,126 +1,6 @@
 // ---------------- [ File: src/filenames.rs ]
 crate::ix!();
 
-/// Validates that `pbf_path` has a filename matching what we'd expect for `region`.
-/// It also checks for optional MD5 insertion in the filename.
-/// Returns an error if mismatched or if filename is invalid/unreadable.
-pub fn validate_pbf_filename(
-    region:   &WorldRegion,
-    pbf_path: &Path,
-) -> Result<(), OsmPbfParseError> {
-    // Attempt to extract the actual filename
-    let actual_filename = pbf_path
-        .file_name()
-        .and_then(|f| f.to_str())
-        .ok_or_else(|| OsmPbfParseError::InvalidInputFile {
-            reason: format!("Invalid filename: {:?}", pbf_path),
-        })?;
-
-    // Generate the “expected” filename. We pass `dir="."` to indicate “no path prefix,”
-    // then remove that prefix from the result.
-    let expected_path = expected_filename_for_region(Path::new("."), region);
-    let expected_filename_str = expected_path.to_str().unwrap_or_default();
-
-    // If these do not match (case-insensitive, optional MD5 block), return error
-    if filenames_match(expected_filename_str, actual_filename) {
-        Ok(())
-    } else {
-        Err(OsmPbfParseError::InvalidInputFile {
-            reason: format!(
-                "Provided PBF file '{:?}' does not match expected filename '{:?}' for region {:?}",
-                actual_filename, 
-                expected_filename_str, 
-                region
-            ),
-        })
-    }
-}
-
-/// Returns `true` if `actual` matches the `expected` ignoring ASCII case,
-/// and possibly including an optional “.<md5>” insertion before `.osm.pbf`.
-/// 
-/// Example:
-/// - expected = "maryland-latest.osm.pbf"
-/// - actual   = "MaRyLaNd-LaTeSt.1c2d3f4g.oSm.PbF"
-/// => returns true
-pub fn filenames_match(expected: &str, actual: &str) -> bool {
-    // Because of the possibility that `expected` is "./maryland-latest.osm.pbf"
-    // if someone tried something else, do a quick strip leading "./" from both.
-    let expected = strip_leading_dot_slash(expected);
-    let actual   = strip_leading_dot_slash(actual);
-
-    // Quick check: if ignoring ASCII case they match exactly, done.
-    if actual.eq_ignore_ascii_case(&expected) {
-        return true;
-    }
-
-    // Both must end with ".osm.pbf" ignoring case
-    const SUFFIX: &str = ".osm.pbf";
-    // For easy checks ignoring ASCII case, let's do a lowercase version
-    let expected_lc = expected.to_ascii_lowercase();
-    let actual_lc   = actual.to_ascii_lowercase();
-    if !expected_lc.ends_with(SUFFIX) || !actual_lc.ends_with(SUFFIX) {
-        return false;
-    }
-
-    // Trim off ".osm.pbf"
-    let expected_base = &expected_lc[..expected_lc.len() - SUFFIX.len()];
-    let actual_base   = &actual_lc[..actual_lc.len() - SUFFIX.len()];
-
-    // actual might be something like "maryland-latest.<md5>"
-    // expected might be "maryland-latest"
-    if !actual_base.starts_with(expected_base) {
-        return false;
-    }
-
-    // The remainder after "maryland-latest"
-    let remainder = &actual_base[expected_base.len()..];
-    // If remainder is empty, we already did the eq_ignore_ascii_case() check above,
-    // so presumably that would have matched. If remainder starts with '.' and more stuff,
-    // that's presumably the MD5. So let's check that:
-    if remainder.starts_with('.') && remainder.len() > 1 {
-        // e.g. ".abc1234"
-        true
-    } else {
-        false
-    }
-}
-
-/// Helper to remove leading "./" from a &str
-fn strip_leading_dot_slash(s: &str) -> &str {
-    if let Some(stripped) = s.strip_prefix("./") {
-        stripped
-    } else {
-        s
-    }
-}
-
-/// Returns the expected filename for a given region based on the OSM
-/// download URL. If `dir` is `"."`, we omit the dot path prefix
-/// and return just the file’s name (e.g. "maryland-latest.osm.pbf").
-pub fn expected_filename_for_region(
-    dir:    impl AsRef<Path>,
-    region: &WorldRegion,
-) -> PathBuf {
-    // e.g. for Maryland, download_link() -> "http://download.geofabrik.de/north-america/us/maryland-latest.osm.pbf"
-    // So the final part is "maryland-latest.osm.pbf"
-    let download_link = region.download_link();
-    let filename = download_link
-        .split('/')
-        .last()
-        .unwrap_or("region-latest.osm.pbf");
-
-    // If the user passes `dir="."`, just return the bare filename
-    if dir.as_ref() == Path::new(".") {
-        return PathBuf::from(filename);
-    }
-
-    // Otherwise, return a path prefixed by the directory
-    let mut out = dir.as_ref().to_path_buf();
-    out.push(filename);
-    out
-}
-
 #[cfg(test)]
 mod filenames_tests {
     use super::*;
@@ -195,8 +75,8 @@ mod filenames_tests {
     // In real usage, that function also tries to parse the file. If the file doesn't exist,
     // is corrupt, or region is “unimplemented”, we expect specific error behaviors.
 
-    #[test]
-    fn test_from_osm_pbf_file_correct() {
+    #[tokio::test]
+    async fn test_from_osm_pbf_file_correct() {
         // We assume parse_osm_pbf is already tested, or can be a no-op in unit tests.
         // For demonstration, we’ll forcibly short-circuit parse_osm_pbf to return empty Vec.
         // That is typically done by mocking or by controlling the parse logic in your code.
@@ -206,7 +86,7 @@ mod filenames_tests {
         let temp_dir = tempfile::TempDir::new().unwrap();
         let pbf_path = temp_dir.path().join("maryland-latest.osm.pbf");
         // Create an actual zero-length file
-        std::fs::File::create(&pbf_path).unwrap();
+        File::create(&pbf_path).await.unwrap();
 
         // Now call from_osm_pbf_file, which calls validate_pbf_filename + parse_osm_pbf
         // If your parse code returns an error on an empty file, then we must adjust the test expectation accordingly.
@@ -267,14 +147,14 @@ mod filenames_tests {
         }
     }
 
-    #[test]
-    fn test_from_osm_pbf_file_empty_file() {
+    #[tokio::test]
+    async fn test_from_osm_pbf_file_empty_file() {
         let region = make_maryland_world_region();
         let temp_dir = tempfile::TempDir::new().unwrap();
         let pbf_path = temp_dir.path().join("maryland-latest.osm.pbf");
 
         // Create an empty file
-        std::fs::File::create(&pbf_path).unwrap();
+        File::create(&pbf_path).await.unwrap();
 
         let records = RegionalRecords::from_osm_pbf_file(region, &pbf_path);
         // If your parse_osm_pbf logic returns Ok for empty, check that:

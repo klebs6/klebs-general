@@ -1,89 +1,57 @@
 // ---------------- [ File: src/dump.rs ]
 crate::ix!();
 
-impl Database {
-    /// Dump all keys and values in the database to stdout.
-    pub fn dump_entire_database_contents(&self) {
+/// A unified implementation of both `DatabaseDump` and `DatabaseValueDecoder`
+/// for the `Database` type. Methods have robust tracing for observability.
+impl DatabaseDump for Database {
+    /// Dump all key-value pairs in the database to stdout.
+    fn dump_entire_database_contents(&self) {
+        trace!("dump_entire_database_contents: starting full DB iteration");
         let iter = self.db().iterator(rocksdb::IteratorMode::Start);
         println!("---- DUMPING ENTIRE DATABASE CONTENTS ----");
         for item in iter {
             match item {
-                Ok((key, val)) => {
-                    let key_str = String::from_utf8_lossy(&key);
-                    println!("Key: {}", key_str);
-                    self.dump_value_for_key(&key_str, &val);
+                Ok((key_bytes, val_bytes)) => {
+                    let key_str = String::from_utf8_lossy(&key_bytes);
+                    debug!("dump_entire_database_contents: found key={}", key_str);
+                    self.decode_value_for_key(&key_str, &val_bytes);
                     println!();
                 }
                 Err(e) => {
-                    eprintln!("Error reading from DB: {}", e);
+                    error!("dump_entire_database_contents: Error reading from DB: {}", e);
                 }
             }
         }
     }
 
-    /// Attempt to decode the value based on the key prefix.
-    fn dump_value_for_key(&self, key: &str, val: &[u8]) {
-        if key.starts_with("Z2C:") {
-            self.try_decode_as::<CityName>(val, "Cities");
-        } else if key.starts_with("C2Z:") {
-            self.try_decode_as::<PostalCode>(val, "Postal codes");
-        } else if key.starts_with("C2S:") {
-            self.try_decode_as::<StreetName>(val, "Streets");
-        } else if key.starts_with("S:") {
-            self.try_decode_as::<StreetName>(val, "Streets");
-        } else if key.starts_with("S2C:") {
-            self.try_decode_as::<CityName>(val, "Cities");
-        } else if key.starts_with("S2Z:") {
-            self.try_decode_as::<PostalCode>(val, "Postal codes");
-        } else if key.starts_with("META:REGION_DONE:") {
-            println!("Value: REGION DONE MARKER");
-        } else {
-            println!("Value: [Unknown key pattern]");
-        }
-    }
-
-    /// Attempt to decode CBOR-encoded sets into a known type and print results.
-    fn try_decode_as<T>(&self, val: &[u8], label: &str)
-    where
-        T: Serialize + serde::de::DeserializeOwned + std::fmt::Debug,
-    {
-        match serde_cbor::from_slice::<crate::CompressedList<T>>(val) {
-            Ok(clist) => {
-                let items = clist.items();
-                println!("Decoded as {}: {:?}", label, items);
-            }
-            Err(e) => {
-                println!("Failed to decode as {}: {}", label, e);
-            }
-        }
-    }
-
-    /// Dump all keys that match a given prefix.
-    pub fn dump_keys_with_prefix(&self, prefix: &str) {
+    /// Dump all keys that match a given prefix, attempting to decode
+    /// each value.
+    fn dump_keys_with_prefix(&self, prefix: &str) {
+        trace!("dump_keys_with_prefix: prefix={}", prefix);
         let iter = self.db().prefix_iterator(prefix.as_bytes());
         println!("---- DUMPING KEYS WITH PREFIX: {} ----", prefix);
         for item in iter {
             match item {
-                Ok((key, val)) => {
-                    let key_str = String::from_utf8_lossy(&key);
-                    println!("Key: {}", key_str);
-                    self.dump_value_for_key(&key_str, &val);
+                Ok((key_bytes, val_bytes)) => {
+                    let key_str = String::from_utf8_lossy(&key_bytes);
+                    debug!("dump_keys_with_prefix: matched key={}", key_str);
+                    self.decode_value_for_key(&key_str, &val_bytes);
                     println!();
                 }
                 Err(e) => {
-                    eprintln!("Error reading from DB: {}", e);
+                    error!("dump_keys_with_prefix: Error reading from DB: {}", e);
                 }
             }
         }
     }
 
     /// Dump all region-related keys by using its abbreviation as a prefix.
-    pub fn dump_region_data(&self, region: &WorldRegion) {
+    fn dump_region_data(&self, region: &WorldRegion) {
         let prefix = format!("{}:", region.abbreviation());
+        trace!("dump_region_data: region={:?}, prefix={}", region, prefix);
         self.dump_keys_with_prefix(&prefix);
     }
 }
-
 
 #[cfg(test)]
 mod dump_tests {

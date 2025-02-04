@@ -7,6 +7,8 @@ crate::ix!();
 pub struct RegionalRecords {
     region:  WorldRegion,
     records: Vec<AddressRecord>,
+    #[builder(default)]
+    house_number_ranges: HashMap<StreetName,Vec<HouseNumberRange>>,
 }
 
 impl RegionalRecords {
@@ -23,14 +25,15 @@ impl RegionalRecords {
         -> Result<Self,OsmPbfParseError> 
     {
         let pbf_path = pbf_file.as_ref();
-        let country  = Country::try_from(region).expect("expected a region which could convert to a country");
 
         validate_pbf_filename(&region, pbf_path)?;
-        let records = parse_osm_pbf(pbf_path,&country)?;
+        let (records, house_number_ranges) 
+            = load_osm_data_with_housenumbers(pbf_path,&region)?;
 
         Ok(Self {
             region,
             records,
+            house_number_ranges,
         })
     }
 
@@ -46,6 +49,8 @@ impl RegionalRecords {
         }
 
         db.write_indexes(&self.region, &InMemoryIndexes::from(self))?;
+
+        write_house_number_ranges_into_storage(&self.house_number_ranges,&self.region,db)?;
 
         db.mark_region_done(&self.region)?;
 
@@ -109,6 +114,7 @@ mod test_regional_records {
         let rr = RegionalRecords {
             region,
             records: recs,
+            house_number_ranges: Default::default()
         };
         let c = rr.country();
         assert_eq!(c, Country::USA, "Expected region=MD => country=USA");
@@ -135,6 +141,7 @@ mod test_regional_records {
         let rr = RegionalRecords {
             region,
             records,
+            house_number_ranges: Default::default()
         };
 
         assert_eq!(rr.len(), 2, "Expected exactly 2 records.");
@@ -281,6 +288,7 @@ mod test_regional_records {
         let rr = RegionalRecords {
             region,
             records: recs,
+            house_number_ranges: Default::default()
         };
 
         // Now attempt to store
@@ -314,6 +322,7 @@ mod test_regional_records {
         let rr = RegionalRecords {
             region,
             records: recs,
+            house_number_ranges: Default::default()
         };
 
         let result = rr.write_to_storage(&mut db_guard);

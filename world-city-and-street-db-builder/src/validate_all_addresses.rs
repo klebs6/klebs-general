@@ -1,47 +1,99 @@
 // ---------------- [ File: src/validate_all_addresses.rs ]
 crate::ix!();
 
+/// Validates all addresses from `.pbf` files in a directory against the database.
+/// Iterates through each [`WorldAddress`] discovered by `list_all_addresses_in_pbf_dir`,
+/// checks validity via `DataAccess::validate_with(...)`, and logs any failures.
+///
+/// # Arguments
+///
+/// * `db`      - A shared `Database` reference wrapped in a `Mutex`.
+/// * `pbf_dir` - Path to a directory containing `.pbf` files to parse.
+///
+/// # Returns
+///
+/// * `Ok(())` if all addresses are valid.
+/// * `Err(WorldCityAndStreetDbBuilderError::NotAllAddressesValidatedSuccessfully)` if any address fails.
 pub fn validate_all_addresses(
     db: Arc<Mutex<Database>>,
     pbf_dir: impl AsRef<Path> + Debug,
 ) -> Result<(), WorldCityAndStreetDbBuilderError> {
-    info!("validating all addresses in database!");
+    trace!("validate_all_addresses: start for pbf_dir={:?}", pbf_dir.as_ref());
 
-    let address_iter = list_all_addresses_in_pbf_dir(pbf_dir)?;
-    let da = DataAccess::with_db(db.clone());
+    info!("validate_all_addresses: validating all addresses in database");
+    let address_iter = build_address_iterator(db.clone(), pbf_dir.as_ref())?;
+    let data_access = create_data_access(db.clone());
+
+    let all_valid = process_and_validate_addresses(address_iter, &data_access)?;
+    finalize_address_validation(all_valid)
+}
+
+/// Builds an iterator of addresses from the specified `.pbf` directory.
+fn build_address_iterator(
+    db: Arc<Mutex<Database>>,
+    pbf_dir: &Path
+) -> Result<impl Iterator<Item = Result<WorldAddress, OsmPbfParseError>>, WorldCityAndStreetDbBuilderError> {
+    trace!("build_address_iterator: listing addresses in dir={:?}", pbf_dir);
+    list_all_addresses_in_pbf_dir(pbf_dir, db)
+        .map_err(|e| {
+            error!("build_address_iterator: error listing addresses => {:?}", e);
+            WorldCityAndStreetDbBuilderError::OsmPbfParseFailure(e)
+        })
+}
+
+/// Creates a [`DataAccess`] instance tied to the same database.
+fn create_data_access(db: Arc<Mutex<Database>>) -> DataAccess {
+    trace!("create_data_access: building DataAccess from shared Database");
+    DataAccess::with_db(db)
+}
+
+/// Consumes the address iterator, validating each [`WorldAddress`].
+/// Returns `Ok(true)` if all addresses are valid, `Ok(false)` otherwise.
+fn process_and_validate_addresses<I>(
+    address_iter: I,
+    data_access: &DataAccess
+) -> Result<bool, WorldCityAndStreetDbBuilderError>
+where
+    I: Iterator<Item = Result<WorldAddress, OsmPbfParseError>>,
+{
+    trace!("process_and_validate_addresses: starting validation loop");
 
     let mut all_valid = true;
-    let mut count = 0;
+    let mut count = 0usize;
 
     for addr_res in address_iter {
-        let addr = match addr_res {
-            Ok(a) => a,
-            Err(e) => {
-                warn!("Could not parse an address: err={:?}", e);
-                all_valid = false;
-                continue;
-            }
-        };
-
-        match addr.validate_with(&da) {
-            Ok(_) => {
-                if count % 100 == 0 {
-                    info!("{}th Address is valid {:#?} -> true", count, addr);
+        match addr_res {
+            Ok(addr) => {
+                if let Err(e) = addr.validate_with(data_access) {
+                    warn!("process_and_validate_addresses: Address invalid => {:#?}\nerr={:#?}", addr, e);
+                    all_valid = false;
+                } else if count % 100 == 0 {
+                    info!("process_and_validate_addresses: {}th address validated => {:#?} is valid", count, addr);
                 }
             }
             Err(e) => {
-                warn!("Address is invalid {:#?} -> false\nerr={:#?}", addr, e);
+                warn!("process_and_validate_addresses: could not parse address => {:?}", e);
                 all_valid = false;
             }
         }
         count += 1;
     }
 
-    if !all_valid {
-        return Err(WorldCityAndStreetDbBuilderError::NotAllAddressesValidatedSuccessfully);
-    }
+    debug!("process_and_validate_addresses: total addresses checked={}", count);
+    Ok(all_valid)
+}
 
-    Ok(())
+/// Inspects whether all addresses were valid, returning a success or a
+/// `NotAllAddressesValidatedSuccessfully` error.
+fn finalize_address_validation(all_valid: bool) -> Result<(), WorldCityAndStreetDbBuilderError> {
+    trace!("finalize_address_validation: all_valid={}", all_valid);
+    if !all_valid {
+        warn!("finalize_address_validation: Not all addresses validated successfully");
+        Err(WorldCityAndStreetDbBuilderError::NotAllAddressesValidatedSuccessfully)
+    } else {
+        info!("finalize_address_validation: all addresses validated successfully");
+        Ok(())
+    }
 }
 
 #[cfg(test)]

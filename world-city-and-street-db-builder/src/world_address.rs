@@ -11,76 +11,143 @@ pub struct WorldAddress {
     street:      StreetName,
 }
 
+/// Implements a validation process that checks whether the
+/// `[WorldAddress]` is consistent with the underlying data structures
+/// in the provided `[DataAccess]`.
 impl ValidateWith for WorldAddress {
     type Validator = DataAccess;
-    type Error     = InvalidWorldAddress;
+    type Error = InvalidWorldAddress;
 
     fn validate_with(&self, validator: &Self::Validator) -> Result<(), Self::Error> {
-        // 1) Check city <-> postal code
-        let z2c_k = z2c_key(&self.region, &self.postal_code);
-        match validator.get_city_set(&z2c_k) {
-            Some(city_set) => {
-                if !city_set.contains(&self.city) {
-                    return Err(InvalidWorldAddress::CityNotFoundForPostalCodeInRegion {
-                        city: self.city.clone(),
-                        postal_code: self.postal_code.clone(),
-                        region: self.region,
-                    });
-                }
-            }
-            None => {
-                return Err(InvalidWorldAddress::PostalCodeToCityKeyNotFoundForRegion {
-                    z2c_key: z2c_k,
-                    region: self.region,
-                    postal_code: self.postal_code.clone(),
-                });
-            }
-        }
+        trace!("WorldAddress::validate_with: begin validation for {:?}", self);
 
-        // 2) Check street <-> postal code
-        let s_k = s_key(&self.region, &self.postal_code);
-        match validator.get_street_set(&s_k) {
-            Some(streets) => {
-                if !streets.contains(&self.street) {
-                    return Err(InvalidWorldAddress::StreetNotFoundForPostalCodeInRegion {
-                        street: self.street.clone(),
-                        postal_code: self.postal_code.clone(),
-                        region: self.region,
-                    });
-                }
-            }
-            None => {
-                return Err(InvalidWorldAddress::PostalCodeToStreetKeyNotFoundForRegion {
-                    s_key: s_k,
-                    region: self.region,
-                    postal_code: self.postal_code.clone(),
-                });
-            }
-        }
+        validate_city_for_postal_code(self, validator)?;
+        validate_street_for_postal_code(self, validator)?;
+        validate_street_for_city(self, validator)?;
 
-        // 3) Check street <-> city
-        let c_k = c_key(&self.region, &self.city);
-        match validator.get_street_set(&c_k) {
-            Some(streets) => {
-                if !streets.contains(&self.street) {
-                    return Err(InvalidWorldAddress::StreetNotFoundForCityInRegion {
-                        street: self.street.clone(),
-                        city:   self.city.clone(),
-                        region: self.region,
-                    });
-                }
-            }
-            None => {
-                return Err(InvalidWorldAddress::CityToStreetsKeyNotFoundForCityInRegion {
-                    c_key: c_k,
-                    region: self.region,
-                    city: self.city.clone(),
-                });
-            }
-        }
-
+        debug!("WorldAddress::validate_with: validation succeeded for {:?}", self);
         Ok(())
     }
+}
+
+/// Validates that the `[CityName]` is present in the set of cities associated
+/// with the `[PostalCode]` (i.e., `z2c_key(region, postal_code)`).
+fn validate_city_for_postal_code(
+    addr: &WorldAddress,
+    validator: &DataAccess,
+) -> Result<(), InvalidWorldAddress> {
+    let z2c_k = z2c_key(&addr.region, &addr.postal_code);
+    trace!("validate_city_for_postal_code: using key='{}'", z2c_k);
+
+    match validator.get_city_set(&z2c_k) {
+        Some(city_set) => {
+            if !city_set.contains(addr.city()) {
+                warn!(
+                    "validate_city_for_postal_code: city='{:?}' not found for postal_code='{}' in region={:?}",
+                    addr.city(),
+                    addr.postal_code(),
+                    addr.region()
+                );
+                return Err(InvalidWorldAddress::CityNotFoundForPostalCodeInRegion {
+                    city: addr.city().clone(),
+                    postal_code: addr.postal_code().clone(),
+                    region: *addr.region(),
+                });
+            }
+        }
+        None => {
+            warn!(
+                "validate_city_for_postal_code: no city set found for key='{}'",
+                z2c_k
+            );
+            return Err(InvalidWorldAddress::PostalCodeToCityKeyNotFoundForRegion {
+                z2c_key: z2c_k,
+                region: *addr.region(),
+                postal_code: addr.postal_code().clone(),
+            });
+        }
+    }
+    Ok(())
+}
+
+/// Validates that the `[StreetName]` is present in the set of streets
+/// associated with the `[PostalCode]` (i.e., `s_key(region, postal_code)`).
+fn validate_street_for_postal_code(
+    addr: &WorldAddress,
+    validator: &DataAccess,
+) -> Result<(), InvalidWorldAddress> {
+    let s_k = s_key(&addr.region, &addr.postal_code);
+    trace!("validate_street_for_postal_code: using key='{}'", s_k);
+
+    match validator.get_street_set(&s_k) {
+        Some(streets) => {
+            if !streets.contains(addr.street()) {
+                warn!(
+                    "validate_street_for_postal_code: street='{:?}' not found for postal_code='{}' in region={:?}",
+                    addr.street(),
+                    addr.postal_code(),
+                    addr.region()
+                );
+                return Err(InvalidWorldAddress::StreetNotFoundForPostalCodeInRegion {
+                    street: addr.street().clone(),
+                    postal_code: addr.postal_code().clone(),
+                    region: *addr.region(),
+                });
+            }
+        }
+        None => {
+            warn!(
+                "validate_street_for_postal_code: no street set found for key='{}'",
+                s_k
+            );
+            return Err(InvalidWorldAddress::PostalCodeToStreetKeyNotFoundForRegion {
+                s_key: s_k,
+                region: *addr.region(),
+                postal_code: addr.postal_code().clone(),
+            });
+        }
+    }
+    Ok(())
+}
+
+/// Validates that the `[StreetName]` is present in the set of streets
+/// associated with the `[CityName]` (i.e., `c_key(region, city)`).
+fn validate_street_for_city(
+    addr: &WorldAddress,
+    validator: &DataAccess,
+) -> Result<(), InvalidWorldAddress> {
+    let c_k = c_key(&addr.region, &addr.city);
+    trace!("validate_street_for_city: using key='{}'", c_k);
+
+    match validator.get_street_set(&c_k) {
+        Some(streets) => {
+            if !streets.contains(addr.street()) {
+                warn!(
+                    "validate_street_for_city: street='{:?}' not found for city='{}' in region={:?}",
+                    addr.street(),
+                    addr.city(),
+                    addr.region()
+                );
+                return Err(InvalidWorldAddress::StreetNotFoundForCityInRegion {
+                    street: addr.street().clone(),
+                    city:   addr.city().clone(),
+                    region: *addr.region(),
+                });
+            }
+        }
+        None => {
+            warn!(
+                "validate_street_for_city: no street set found for key='{}'",
+                c_k
+            );
+            return Err(InvalidWorldAddress::CityToStreetsKeyNotFoundForCityInRegion {
+                c_key: c_k,
+                region: *addr.region(),
+                city: addr.city().clone(),
+            });
+        }
+    }
+    Ok(())
 }
 
 // ---------------- [ File: tests/world_address_tests.rs ]
