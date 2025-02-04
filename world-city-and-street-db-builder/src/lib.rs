@@ -1,5 +1,6 @@
 // ---------------- [ File: src/lib.rs ]
 #![feature(more_qualified_paths)]
+#![feature(type_alias_impl_trait)]
 #![allow(unused_imports)]
 #![allow(unreachable_code)]
 #![allow(unused_variables)]
@@ -14,7 +15,6 @@ x!{address_record_from_element_and_country}
 x!{address_record}
 x!{addresses_from_pbf_file_with_house_numbers}
 x!{attempt_storing_house_number_aggregator_in_db}
-x!{build_address_iterator}
 x!{build_all_region_data}
 x!{build_city_search_prefix}
 x!{build_world_address_if_possible}

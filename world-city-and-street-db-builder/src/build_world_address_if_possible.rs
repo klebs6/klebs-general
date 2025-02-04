@@ -1,3 +1,4 @@
+// ---------------- [ File: src/build_world_address_if_possible.rs ]
 crate::ix!();
 
 /// If the [`AddressRecord`] has non-empty (city, street, postcode), build a [`WorldAddress`].

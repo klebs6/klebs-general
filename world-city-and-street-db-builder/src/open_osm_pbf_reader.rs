@@ -1,10 +1,10 @@
 // ---------------- [ File: src/open_osm_pbf_reader.rs ]
 crate::ix!();
 
-pub fn open_osm_pbf_reader(path: &std::path::PathBuf)
+pub fn open_osm_pbf_reader(path: impl AsRef<Path>)
     -> Result<ElementReader<std::io::BufReader<std::fs::File>>, OsmPbfParseError>
 {
-    trace!("open_osm_pbf_reader: Attempting to open {:?}", path);
+    trace!("open_osm_pbf_reader: Attempting to open {:?}", path.as_ref());
     match osmpbf::ElementReader::from_path(path) {
         Ok(r) => Ok(r),
         Err(e) => Err(OsmPbfParseError::OsmPbf(e)),

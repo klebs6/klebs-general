@@ -1,3 +1,4 @@
+// ---------------- [ File: src/try_assemble_address_record.rs ]
 crate::ix!();
 
 /// Assembles the final `AddressRecord` using the provided city, street, and postcode objects.

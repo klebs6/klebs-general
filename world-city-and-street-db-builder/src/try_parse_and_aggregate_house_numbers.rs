@@ -1,3 +1,4 @@
+// ---------------- [ File: src/try_parse_and_aggregate_house_numbers.rs ]
 crate::ix!();
 
 /// Attempts to parse the OSM PBF data, populate `aggregator`, and stream out addresses.

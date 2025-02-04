@@ -1,4 +1,7 @@
+// ---------------- [ File: src/seriallize_osm_header_block.rs ]
 crate::ix!();
+
+use crate::proto::{fileformat,osmformat};
 
 /// Serializes the given `HeaderBlock` into a `Blob` and `BlobHeader`.
 pub fn serialize_osm_header_block(

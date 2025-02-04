@@ -31,15 +31,16 @@ pub fn load_osm_data_with_housenumbers(
 
     // Step 1: Infer the Country from the given region.
     let country = infer_country_from_region(region)?;
+
     // Step 2: Open the OSM PBF file for reading.
-    let reader = open_osm_pbf_reader(path.as_ref())?;
+    let reader = open_osm_pbf_reader(&path)?;
 
     // Step 3: We’ll accumulate addresses and house‐number ranges in memory.
     let mut street_hnr_map: HashMap<StreetName, Vec<HouseNumberRange>> = HashMap::new();
     let mut addresses = Vec::new();
 
     // Step 4: Process the PBF file’s elements in a single pass.
-    collect_address_and_housenumber_data(&reader, &country, &mut addresses, &mut street_hnr_map)?;
+    collect_address_and_housenumber_data(reader, &country, &mut addresses, &mut street_hnr_map)?;
 
     info!(
         "load_osm_data_with_housenumbers: completed. Found {} addresses; {} streets with house‐number data",

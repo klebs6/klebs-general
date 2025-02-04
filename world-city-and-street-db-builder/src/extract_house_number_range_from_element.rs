@@ -13,7 +13,7 @@ crate::ix!();
 ///
 /// Usage example:
 /// ```rust
-/// generate_house_number_extractors!(
+/// world_city_and_street_db_builder::generate_house_number_extractors!(
 ///     extract_house_number_range_from_node,
 ///     osmpbf::Node,
 ///     Node,

@@ -1,3 +1,4 @@
+// ---------------- [ File: src/build_city_search_prefix.rs ]
 crate::ix!();
 
 /// Constructs the RocksDB key prefix for city => postal code data.

@@ -1,3 +1,4 @@
+// ---------------- [ File: src/create_small_osm_pbf_file.rs ]
 crate::ix!();
 
 /// Creates a minimal `.osm.pbf` file with a single Node.

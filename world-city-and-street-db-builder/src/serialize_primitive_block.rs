@@ -1,4 +1,7 @@
+// ---------------- [ File: src/serialize_primitive_block.rs ]
 crate::ix!();
+
+use crate::proto::{fileformat,osmformat};
 
 /// Serializes a [`PrimitiveBlock`] into a `Blob` and `BlobHeader`.
 pub fn serialize_primitive_block(

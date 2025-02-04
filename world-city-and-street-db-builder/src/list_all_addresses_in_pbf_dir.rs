@@ -1,6 +1,8 @@
 // ---------------- [ File: src/list_all_addresses_in_pbf_dir.rs ]
 crate::ix!();
 
+pub type WorldAddressIterator = impl Iterator<Item=Result<WorldAddress,OsmPbfParseError>>;
+
 /// Produces an iterator of [`WorldAddress`] items by scanning a directory for
 /// `.pbf` files and attempting to parse each one. Files are associated with
 /// known regions and then processed in sequence.
@@ -17,7 +19,7 @@ crate::ix!();
 pub fn list_all_addresses_in_pbf_dir(
     pbf_dir: impl AsRef<Path>,
     db: Arc<Mutex<Database>>,
-) -> Result<impl Iterator<Item = Result<WorldAddress, OsmPbfParseError>>, OsmPbfParseError> {
+) -> Result<WorldAddressIterator, OsmPbfParseError> {
     trace!("list_all_addresses_in_pbf_dir: start for pbf_dir={:?}", pbf_dir.as_ref());
 
     // 1) Collect all `.pbf` files from the directory.

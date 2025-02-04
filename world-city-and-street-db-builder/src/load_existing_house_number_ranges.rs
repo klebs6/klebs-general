@@ -1,3 +1,4 @@
+// ---------------- [ File: src/load_existing_house_number_ranges.rs ]
 crate::ix!();
 
 /// Loads existing house‐number ranges from the database for the specified street in the given region.

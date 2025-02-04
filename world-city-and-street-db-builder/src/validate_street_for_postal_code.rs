@@ -1,3 +1,4 @@
+// ---------------- [ File: src/validate_street_for_postal_code.rs ]
 crate::ix!();
 
 /// Validates that the `[StreetName]` is present in the set of streets
@@ -6,7 +7,7 @@ pub fn validate_street_for_postal_code(
     addr: &WorldAddress,
     validator: &DataAccess,
 ) -> Result<(), InvalidWorldAddress> {
-    let s_k = s_key(&addr.region, &addr.postal_code);
+    let s_k = s_key(addr.region(), addr.postal_code());
     trace!("validate_street_for_postal_code: using key='{}'", s_k);
 
     match validator.get_street_set(&s_k) {

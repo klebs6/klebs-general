@@ -1,3 +1,4 @@
+// ---------------- [ File: src/handle_pbf_house_number_extractor_in_thread.rs ]
 crate::ix!();
 
 /// Handles the actual I/O, parsing, aggregation, and DB storage in a worker thread.

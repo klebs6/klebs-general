@@ -1,3 +1,4 @@
+// ---------------- [ File: src/process_and_validate_addresses.rs ]
 crate::ix!();
 
 /// Consumes the address iterator, validating each [`WorldAddress`].

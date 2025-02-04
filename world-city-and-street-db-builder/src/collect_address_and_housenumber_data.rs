@@ -1,10 +1,11 @@
+// ---------------- [ File: src/collect_address_and_housenumber_data.rs ]
 crate::ix!();
 
 /// Iterates through all OSM elements in the file, extracting both addresses
 /// and house‐number ranges. The results are appended to `addresses` and
 /// `street_hnr_map`.
 pub fn collect_address_and_housenumber_data(
-    reader: &osmpbf::ElementReader<std::io::BufReader<std::fs::File>>,
+    reader: osmpbf::ElementReader<std::io::BufReader<std::fs::File>>,
     country: &Country,
     addresses: &mut Vec<AddressRecord>,
     street_hnr_map: &mut HashMap<StreetName, Vec<HouseNumberRange>>,
@@ -24,7 +25,6 @@ pub fn collect_address_and_housenumber_data(
                 count
             );
         }
-        Ok(())
     })?;
 
     debug!("collect_address_and_housenumber_data: complete. total elements={}", count);

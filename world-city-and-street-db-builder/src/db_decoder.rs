@@ -1,3 +1,4 @@
+// ---------------- [ File: src/db_decoder.rs ]
 crate::ix!();
 
 impl DatabaseValueDecoder for Database {

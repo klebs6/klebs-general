@@ -1,3 +1,4 @@
+// ---------------- [ File: src/store_merged_house_number_ranges.rs ]
 crate::ix!();
 
 /// Stores the merged list of house‐number ranges back into the database.

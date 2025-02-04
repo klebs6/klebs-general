@@ -1,3 +1,4 @@
+// ---------------- [ File: src/validate_not_dir.rs ]
 crate::ix!();
 
 /// Ensures the path does not point to an existing directory.

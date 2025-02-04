@@ -1,3 +1,4 @@
+// ---------------- [ File: src/merge_new_subranges.rs ]
 crate::ix!();
 
 /// Merges newly extracted subranges into the existing list, returning a consolidated list.

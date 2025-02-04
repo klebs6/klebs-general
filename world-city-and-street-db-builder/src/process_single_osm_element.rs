@@ -1,3 +1,4 @@
+// ---------------- [ File: src/process_single_osm_element.rs ]
 crate::ix!();
 
 /// For one OSM element, we:
@@ -5,11 +6,13 @@ crate::ix!();
 ///   2. Extract a [`HouseNumberRange`] if present.
 ///   3. If both a street name and house‐number range exist, store them in `street_hnr_map`.
 pub fn process_single_osm_element(
-    element: &osmpbf::Element,
-    country: &Country,
-    addresses: &mut Vec<AddressRecord>,
+    element:        &osmpbf::Element,
+    country:        &Country,
+    addresses:      &mut Vec<AddressRecord>,
     street_hnr_map: &mut HashMap<StreetName, Vec<HouseNumberRange>>,
+
 ) -> Result<(), OsmPbfParseError> {
+
     trace!("process_single_osm_element: analyzing an OSM element");
 
     // Attempt an AddressRecord
@@ -25,12 +28,12 @@ pub fn process_single_osm_element(
     // If we found a HNR and we have a valid street, record it
     if let Ok(Some(hnr)) = hnr_result {
         let maybe_street = match &record_result {
-            Ok(addr) => addr.street(),  // If we already have an AddressRecord
+            Ok(addr) => addr.street().clone(),  // If we already have an AddressRecord
             Err(_) => {
                 // If the AddressRecord parse failed, we can try again or skip
                 // Try again just to see if there's a street
                 if let Ok(addr2) = AddressRecord::try_from((element, country)) {
-                    addr2.street()
+                    addr2.street().clone()
                 } else {
                     None
                 }

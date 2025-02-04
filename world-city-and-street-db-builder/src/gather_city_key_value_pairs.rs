@@ -1,3 +1,4 @@
+// ---------------- [ File: src/gather_city_key_value_pairs.rs ]
 crate::ix!();
 
 /// Performs a prefix-based iteration in RocksDB to find all city keys matching the prefix.

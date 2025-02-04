@@ -1,3 +1,4 @@
+// ---------------- [ File: src/open_pbf_reader_or_report_error.rs ]
 crate::ix!();
 
 /// Helper that attempts to open the OSM PBF file. If successful, returns the reader.

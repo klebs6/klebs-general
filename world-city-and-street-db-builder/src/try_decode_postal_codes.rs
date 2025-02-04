@@ -1,3 +1,4 @@
+// ---------------- [ File: src/try_decode_postal_codes.rs ]
 crate::ix!();
 
 /// Illustrates a hypothetical decode of postal codes from the RocksDB value bytes.

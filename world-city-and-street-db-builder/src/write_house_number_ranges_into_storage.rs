@@ -1,3 +1,4 @@
+// ---------------- [ File: src/write_house_number_ranges_into_storage.rs ]
 crate::ix!();
 
 /// Merges and writes all provided house‐number ranges into storage for the given region.

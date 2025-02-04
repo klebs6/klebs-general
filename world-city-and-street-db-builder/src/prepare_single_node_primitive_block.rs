@@ -1,3 +1,4 @@
+// ---------------- [ File: src/prepare_single_node_primitive_block.rs ]
 crate::ix!();
 
 use crate::proto::{fileformat,osmformat};

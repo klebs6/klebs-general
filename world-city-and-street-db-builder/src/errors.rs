@@ -3,7 +3,9 @@ crate::ix!();
 
 error_tree!{
 
+    #[derive(PartialEq)]
     pub enum DataAccessError {
+        #[cmp_neq]
         Io(io::Error),
         LockPoisoned,
         DatabaseConstructionError(DatabaseConstructionError),
@@ -11,16 +13,20 @@ error_tree!{
     }
 
     pub enum AddressValidationError {
+        #[cmp_neq]
         IoError(io::Error),
         DatabaseConstructionError(DatabaseConstructionError),
         LockPoisoned,
     }
 
+    #[derive(PartialEq)]
     pub enum ListAllAddressesError {
+        #[cmp_neq]
         IoError(io::Error),
         OsmPbfParseError(OsmPbfParseError),
     }
 
+    #[derive(PartialEq)]
     pub enum InvalidWorldAddress {
         CityNotFoundForPostalCodeInRegion {
             city:        CityName,
@@ -54,41 +60,65 @@ error_tree!{
         }
     }
 
+    #[derive(PartialEq)]
     pub enum OsmPbfParseError {
+
+        #[cmp_neq]
         WorldRegionConversionError(WorldRegionConversionError),
+
+        #[cmp_neq]
         OsmPbf(osmpbf::Error),
+
         InvalidInputFile { reason: String },
+
+        #[cmp_neq]
         WorldAddressBuilderError(WorldAddressBuilderError),
+
+        #[cmp_neq]
         IoError(io::Error),
+
         HouseNumberRangeSerdeError {
             msg: String,
         },
     }
 
+    #[derive(PartialEq)]
     pub enum DatabaseConstructionError {
         OsmPbfParseError(OsmPbfParseError),
         RocksDB(rocksdb::Error),
     }
 
+    #[derive(PartialEq)]
     pub enum WorldCityAndStreetDbBuilderError {
+
         SimulatedDownloadFailure,
+
+        #[cmp_neq]
         DownloadError(DownloadError),
+
         DatabaseConstructionError(DatabaseConstructionError),
         DbLockError,
         NotAllAddressesValidatedSuccessfully,
     }
 
     /// Error types for city and street name construction
+    #[derive(PartialEq)]
     pub enum CityNameConstructionError {
         InvalidName { attempted_name: String }
+
+        #[cmp_neq]
         UninitializedField(derive_builder::UninitializedFieldError),
     }
 
+    #[derive(PartialEq)]
     pub enum StreetNameConstructionError {
         InvalidName { attempted_name: String }
+
+        #[cmp_neq]
         UninitializedField(derive_builder::UninitializedFieldError),
     }
 
+    #[derive(PartialEq)]
     pub enum IncompatibleOsmPbfElement {
         MaybeTodoUnhandledOsmPbfRelationElement,
         MaybeTodoUnhandledOsmPbfDenseNode,
@@ -98,6 +128,7 @@ error_tree!{
         IncompatibleOsmPbfDenseNode(IncompatibleOsmPbfDenseNode),
     }
 
+    #[derive(PartialEq)]
     pub enum IncompatibleOsmPbfDenseNode {
         Incompatible {
             id: i64,
@@ -107,6 +138,7 @@ error_tree!{
         PostalCodeConstructionError(PostalCodeConstructionError),
     }
 
+    #[derive(PartialEq)]
     pub enum IncompatibleOsmPbfRelation {
         Incompatible {
             id: i64,
@@ -116,6 +148,7 @@ error_tree!{
         PostalCodeConstructionError(PostalCodeConstructionError),
     }
 
+    #[derive(PartialEq)]
     pub enum IncompatibleOsmPbfNode {
         Incompatible {
             id: i64,
@@ -123,8 +156,15 @@ error_tree!{
         CityNameConstructionError(CityNameConstructionError),
         StreetNameConstructionError(StreetNameConstructionError),
         PostalCodeConstructionError(PostalCodeConstructionError),
+
+        #[cmp_neq]
+        AddressRecordBuilderError {
+            id: i64,
+            source: AddressRecordBuilderError,
+        }
     }
 
+    #[derive(PartialEq)]
     pub enum IncompatibleOsmPbfWay {
         Incompatible {
             id: i64,

@@ -6,22 +6,35 @@ impl TryFrom<Country> for WorldRegion {
 
     type Error = WorldRegionConversionError;
 
+    // Try each region set in turn
+    // If africa::AfricaRegion::try_from(c) works, we have an Africa variant, etc.
     fn try_from(c: Country) -> Result<Self, Self::Error> {
-        // Try each region set in turn
-        // If africa::AfricaRegion::try_from(c) works, we have an Africa variant, etc.
+
+        if let Ok(a) = NorthAmericaRegion::try_from(c.clone()) {
+            return Ok(WorldRegion::NorthAmerica(a));
+        } 
+
+        if let Ok(a) = CentralAmericaRegion::try_from(c.clone()) {
+            return Ok(WorldRegion::CentralAmerica(a));
+        } 
+
+        if let Ok(a) = SouthAmericaRegion::try_from(c.clone()) {
+            return Ok(WorldRegion::SouthAmerica(a));
+        } 
+
+        if let Ok(a) = EuropeRegion::try_from(c.clone()) {
+            return Ok(WorldRegion::Europe(a));
+        } 
+
         if let Ok(a) = AfricaRegion::try_from(c.clone()) {
             return Ok(WorldRegion::Africa(a));
-        } else if let Ok(a) = AsiaRegion::try_from(c.clone()) {
+        }
+
+        if let Ok(a) = AsiaRegion::try_from(c.clone()) {
             return Ok(WorldRegion::Asia(a));
-        } else if let Ok(a) = EuropeRegion::try_from(c.clone()) {
-            return Ok(WorldRegion::Europe(a));
-        } else if let Ok(a) = NorthAmericaRegion::try_from(c.clone()) {
-            return Ok(WorldRegion::NorthAmerica(a));
-        } else if let Ok(a) = SouthAmericaRegion::try_from(c.clone()) {
-            return Ok(WorldRegion::SouthAmerica(a));
-        } else if let Ok(a) = CentralAmericaRegion::try_from(c.clone()) {
-            return Ok(WorldRegion::CentralAmerica(a));
-        } else if let Ok(a) = AustraliaOceaniaAntarcticaRegion::try_from(c.clone()) {
+        } 
+
+        if let Ok(a) = AustraliaOceaniaAntarcticaRegion::try_from(c.clone()) {
             return Ok(WorldRegion::AustraliaOceaniaAntarctica(a));
         }
 

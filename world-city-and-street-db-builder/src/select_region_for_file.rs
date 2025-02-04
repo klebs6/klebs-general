@@ -1,3 +1,4 @@
+// ---------------- [ File: src/select_region_for_file.rs ]
 crate::ix!();
 
 /// Attempts to determine which region a given file belongs to. Returns `Some` if found,

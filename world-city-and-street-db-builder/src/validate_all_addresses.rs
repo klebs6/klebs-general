@@ -18,13 +18,20 @@ pub fn validate_all_addresses(
     db: Arc<Mutex<Database>>,
     pbf_dir: impl AsRef<Path> + Debug,
 ) -> Result<(), WorldCityAndStreetDbBuilderError> {
+
     trace!("validate_all_addresses: start for pbf_dir={:?}", pbf_dir.as_ref());
 
     info!("validate_all_addresses: validating all addresses in database");
-    let address_iter = build_address_iterator(db.clone(), pbf_dir.as_ref())?;
+
+    let address_iter = list_all_addresses_in_pbf_dir(
+        pbf_dir.as_ref(),
+        db.clone()
+    )?;
+
     let data_access = create_data_access(db.clone());
 
     let all_valid = process_and_validate_addresses(address_iter, &data_access)?;
+
     finalize_address_validation(all_valid)
 }
 

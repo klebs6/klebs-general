@@ -1,3 +1,4 @@
+// ---------------- [ File: src/create_address_stream_channel.rs ]
 crate::ix!();
 
 /// Creates a bounded sync channel for streaming address results.

@@ -1,3 +1,4 @@
+// ---------------- [ File: src/write_osm_pbf_file.rs ]
 crate::ix!();
 
 /// Asynchronously writes two sets of BlobHeader/Blob pairs

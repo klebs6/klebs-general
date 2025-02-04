@@ -1,3 +1,4 @@
+// ---------------- [ File: src/db_decoder_trait.rs ]
 crate::ix!();
 
 /// A trait that encapsulates value-decoding logic based on key prefixes.

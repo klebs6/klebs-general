@@ -1,3 +1,4 @@
+// ---------------- [ File: src/parse_integer.rs ]
 crate::ix!();
 
 /// Parses a string as an unsigned integer (`u32`). Returns a domain error if invalid.

@@ -1,3 +1,4 @@
+// ---------------- [ File: src/validate_city_for_postal_code.rs ]
 crate::ix!();
 
 /// Validates that the `[CityName]` is present in the set of cities associated
@@ -6,7 +7,7 @@ pub fn validate_city_for_postal_code(
     addr: &WorldAddress,
     validator: &DataAccess,
 ) -> Result<(), InvalidWorldAddress> {
-    let z2c_k = z2c_key(&addr.region, &addr.postal_code);
+    let z2c_k = z2c_key(addr.region(), addr.postal_code());
     trace!("validate_city_for_postal_code: using key='{}'", z2c_k);
 
     match validator.get_city_set(&z2c_k) {

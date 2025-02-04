@@ -1,3 +1,4 @@
+// ---------------- [ File: src/chain_addresses_across_files.rs ]
 crate::ix!();
 
 /// Builds a single chained iterator of [`WorldAddress`] across all `.pbf` files.
