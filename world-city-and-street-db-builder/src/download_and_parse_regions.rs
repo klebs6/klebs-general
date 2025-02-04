@@ -8,11 +8,8 @@ pub async fn download_and_parse_regions(
     db:               &mut Database,
     write_to_storage: bool,
 ) -> Result<(), WorldCityAndStreetDbBuilderError> {
-
     for region in regions {
-
         download_and_parse_region(region,&target_dir,db,write_to_storage).await?;
     }
-
     Ok(())
 }
