@@ -8,112 +8,112 @@ crate::ix!();
 pub enum FranceRegion {
 
     #[strum(serialize = "Alsace")] 
-    #[download_link("https://download.geofabrik.de/europe/france/alsace-latest.osm.pbf")]
+    #[geofabrik(france="alsace-latest.osm.pbf")]
     Alsace,
 
     #[strum(serialize = "Aquitaine")] 
-    #[download_link("https://download.geofabrik.de/europe/france/aquitaine-latest.osm.pbf")]
+    #[geofabrik(france="aquitaine-latest.osm.pbf")]
     Aquitaine,
 
     #[strum(serialize = "Auvergne")] 
-    #[download_link("https://download.geofabrik.de/europe/france/auvergne-latest.osm.pbf")]
+    #[geofabrik(france="auvergne-latest.osm.pbf")]
     Auvergne,
 
     #[strum(serialize = "Basse-Normandie",            serialize = "Basse Normandie")] 
-    #[download_link("https://download.geofabrik.de/europe/france/basse-normandie-latest.osm.pbf")]
+    #[geofabrik(france="basse-normandie-latest.osm.pbf")]
     BasseNormandie,
 
     #[strum(serialize = "Bourgogne")] 
-    #[download_link("https://download.geofabrik.de/europe/france/bourgogne-latest.osm.pbf")]
+    #[geofabrik(france="bourgogne-latest.osm.pbf")]
     Bourgogne,
 
     #[strum(serialize = "Bretagne")] 
-    #[download_link("https://download.geofabrik.de/europe/france/bretagne-latest.osm.pbf")]
+    #[geofabrik(france="bretagne-latest.osm.pbf")]
     Bretagne,
 
     #[strum(serialize = "Centre")] 
-    #[download_link("https://download.geofabrik.de/europe/france/centre-latest.osm.pbf")]
+    #[geofabrik(france="centre-latest.osm.pbf")]
     Centre,
 
     #[strum(serialize = "Champagne Ardenne",          serialize = "Champagne-Ardenne")] 
-    #[download_link("https://download.geofabrik.de/europe/france/champagne-ardenne-latest.osm.pbf")]
+    #[geofabrik(france="champagne-ardenne-latest.osm.pbf")]
     ChampagneArdenne,
 
     #[strum(serialize = "Corse")] 
-    #[download_link("https://download.geofabrik.de/europe/france/corse-latest.osm.pbf")]
+    #[geofabrik(france="corse-latest.osm.pbf")]
     Corse,
 
     #[strum(serialize = "Franche Comte",              serialize = "Franche-Comte")] 
-    #[download_link("https://download.geofabrik.de/europe/france/franche-comte-latest.osm.pbf")]
+    #[geofabrik(france="franche-comte-latest.osm.pbf")]
     FrancheComte,
 
     #[strum(serialize = "Guadeloupe")] 
-    #[download_link("https://download.geofabrik.de/europe/france/guadeloupe-latest.osm.pbf")]
+    #[geofabrik(france="guadeloupe-latest.osm.pbf")]
     Guadeloupe,
 
     #[strum(serialize = "Guyane")] 
-    #[download_link("https://download.geofabrik.de/europe/france/guyane-latest.osm.pbf")]
+    #[geofabrik(france="guyane-latest.osm.pbf")]
     Guyane,
 
     #[strum(serialize = "Haute-Normandie",            serialize = "Haute Normandie")] 
-    #[download_link("https://download.geofabrik.de/europe/france/haute-normandie-latest.osm.pbf")]
+    #[geofabrik(france="haute-normandie-latest.osm.pbf")]
     HauteNormandie,
 
     #[default]
     #[strum(serialize = "Ile-de-France",              serialize = "Ile de France")] 
-    #[download_link("https://download.geofabrik.de/europe/france/ile-de-france-latest.osm.pbf")]
+    #[geofabrik(france="ile-de-france-latest.osm.pbf")]
     IleDeFrance,
 
     #[strum(serialize = "Languedoc-Roussillon",       serialize = "Languedoc Roussillon")] 
-    #[download_link("https://download.geofabrik.de/europe/france/languedoc-roussillon-latest.osm.pbf")]
+    #[geofabrik(france="languedoc-roussillon-latest.osm.pbf")]
     LanguedocRoussillon,
 
     #[strum(serialize = "Limousin")] 
-    #[download_link("https://download.geofabrik.de/europe/france/limousin-latest.osm.pbf")]
+    #[geofabrik(france="limousin-latest.osm.pbf")]
     Limousin,
 
     #[strum(serialize = "Lorraine")] 
-    #[download_link("https://download.geofabrik.de/europe/france/lorraine-latest.osm.pbf")]
+    #[geofabrik(france="lorraine-latest.osm.pbf")]
     Lorraine,
 
     #[strum(serialize = "Martinique")] 
-    #[download_link("https://download.geofabrik.de/europe/france/martinique-latest.osm.pbf")]
+    #[geofabrik(france="martinique-latest.osm.pbf")]
     Martinique,
 
     #[strum(serialize = "Mayotte")] 
-    #[download_link("https://download.geofabrik.de/europe/france/mayotte-latest.osm.pbf")]
+    #[geofabrik(france="mayotte-latest.osm.pbf")]
     Mayotte,
 
     #[strum(serialize = "Midi-Pyrenees",              serialize = "Midi Pyrenees")] 
-    #[download_link("https://download.geofabrik.de/europe/france/midi-pyrenees-latest.osm.pbf")]
+    #[geofabrik(france="midi-pyrenees-latest.osm.pbf")]
     MidiPyrenees,
 
     #[strum(serialize = "Nord-Pas-de-Calais",         serialize = "Nord Pas de Calais")] 
-    #[download_link("https://download.geofabrik.de/europe/france/nord-pas-de-calais-latest.osm.pbf")]
+    #[geofabrik(france="nord-pas-de-calais-latest.osm.pbf")]
     NordPasDeCalais,
 
     #[strum(serialize = "Pays de la Loire")] 
-    #[download_link("https://download.geofabrik.de/europe/france/pays-de-la-loire-latest.osm.pbf")]
+    #[geofabrik(france="pays-de-la-loire-latest.osm.pbf")]
     PaysDeLaLoire,
 
     #[strum(serialize = "Picardie")] 
-    #[download_link("https://download.geofabrik.de/europe/france/picardie-latest.osm.pbf")]
+    #[geofabrik(france="picardie-latest.osm.pbf")]
     Picardie,
 
     #[strum(serialize = "Poitou-Charentes",           serialize = "Poitou Charentes")] 
-    #[download_link("https://download.geofabrik.de/europe/france/poitou-charentes-latest.osm.pbf")]
+    #[geofabrik(france="poitou-charentes-latest.osm.pbf")]
     PoitouCharentes,
 
     #[strum(serialize = "Provence Alpes-Cote-d'Azur", serialize = "Provence Alpes Cote d'Azur")] 
-    #[download_link("https://download.geofabrik.de/europe/france/provence-alpes-cote-d-azur-latest.osm.pbf")]
+    #[geofabrik(france="provence-alpes-cote-d-azur-latest.osm.pbf")]
     ProvenceAlpesCoteDAzur,
 
     #[strum(serialize = "Reunion")] 
-    #[download_link("https://download.geofabrik.de/europe/france/reunion-latest.osm.pbf")]
+    #[geofabrik(france="reunion-latest.osm.pbf")]
     Reunion,
 
     #[strum(serialize = "Rhone-Alpes",                serialize = "Rhone Alpes")] 
-    #[download_link("https://download.geofabrik.de/europe/france/rhone-alpes-latest.osm.pbf")]
+    #[geofabrik(france="rhone-alpes-latest.osm.pbf")]
     RhoneAlpes,
 }
 

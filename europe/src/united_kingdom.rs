@@ -4,7 +4,7 @@ crate::ix!();
 // United Kingdom Regions
 //--------------------------------------
 #[derive(
-    FileDownloader,
+    OsmPbfFileDownloader,
     Clone,
     Copy,
     Debug,
@@ -21,10 +21,10 @@ pub enum UnitedKingdomRegion {
 
     England(EnglandRegion),
 
-    #[download_link("https://download.geofabrik.de/europe/united-kingdom/scotland-latest.osm.pbf")]
+    #[geofabrik(uk="scotland-latest.osm.pbf")]
     Scotland,
 
-    #[download_link("https://download.geofabrik.de/europe/united-kingdom/wales-latest.osm.pbf")]
+    #[geofabrik(uk="wales-latest.osm.pbf")]
     Wales,
 }
 

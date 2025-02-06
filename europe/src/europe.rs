@@ -9,171 +9,171 @@ pub enum EuropeRegion {
 
     // Directly included former EuropeCountry variants:
     #[strum(serialize = "Albania")] 
-    #[download_link("https://download.geofabrik.de/europe/albania-latest.osm.pbf")]
+    #[geofabrik(europe="albania-latest.osm.pbf")]
     Albania,
 
     #[strum(serialize = "Andorra")] 
-    #[download_link("https://download.geofabrik.de/europe/andorra-latest.osm.pbf")]
+    #[geofabrik(europe="andorra-latest.osm.pbf")]
     Andorra,
 
     #[strum(serialize = "Austria")] 
-    #[download_link("https://download.geofabrik.de/europe/austria-latest.osm.pbf")]
+    #[geofabrik(europe="austria-latest.osm.pbf")]
     Austria,
 
     #[strum(serialize = "Azores")] 
-    #[download_link("https://download.geofabrik.de/europe/azores-latest.osm.pbf")]
+    #[geofabrik(europe="azores-latest.osm.pbf")]
     Azores,
 
     #[strum(serialize = "Belarus")] 
-    #[download_link("https://download.geofabrik.de/europe/belarus-latest.osm.pbf")]
+    #[geofabrik(europe="belarus-latest.osm.pbf")]
     Belarus,
 
     #[strum(serialize = "Belgium")] 
-    #[download_link("https://download.geofabrik.de/europe/belgium-latest.osm.pbf")]
+    #[geofabrik(europe="belgium-latest.osm.pbf")]
     Belgium,
 
     #[strum(to_string = "Bosnia-Herzegovina", serialize = "Bosnia Herzegovina")] 
-    #[download_link("https://download.geofabrik.de/europe/bosnia-herzegovina-latest.osm.pbf")]
+    #[geofabrik(europe="bosnia-herzegovina-latest.osm.pbf")]
     BosniaHerzegovina,
 
     #[strum(serialize = "Bulgaria")] 
-    #[download_link("https://download.geofabrik.de/europe/bulgaria-latest.osm.pbf")]
+    #[geofabrik(europe="bulgaria-latest.osm.pbf")]
     Bulgaria,
 
     #[strum(serialize = "Croatia")] 
-    #[download_link("https://download.geofabrik.de/europe/croatia-latest.osm.pbf")]
+    #[geofabrik(europe="croatia-latest.osm.pbf")]
     Croatia,
 
     #[strum(serialize = "Cyprus")] 
-    #[download_link("https://download.geofabrik.de/europe/cyprus-latest.osm.pbf")]
+    #[geofabrik(europe="cyprus-latest.osm.pbf")]
     Cyprus,
 
     #[strum(serialize = "Czech Republic")] 
-    #[download_link("https://download.geofabrik.de/europe/czech-republic-latest.osm.pbf")]
+    #[geofabrik(europe="czech-republic-latest.osm.pbf")]
     CzechRepublic,
 
     #[strum(serialize = "Denmark")] 
-    #[download_link("https://download.geofabrik.de/europe/denmark-latest.osm.pbf")]
+    #[geofabrik(europe="denmark-latest.osm.pbf")]
     Denmark,
 
     #[strum(serialize = "Estonia")] 
-    #[download_link("https://download.geofabrik.de/europe/estonia-latest.osm.pbf")]
+    #[geofabrik(europe="estonia-latest.osm.pbf")]
     Estonia,
 
     #[strum(serialize = "Faroe Islands")] 
-    #[download_link("https://download.geofabrik.de/europe/faroe-islands-latest.osm.pbf")]
+    #[geofabrik(europe="faroe-islands-latest.osm.pbf")]
     FaroeIslands,
 
     #[strum(serialize = "Finland")] 
-    #[download_link("https://download.geofabrik.de/europe/finland-latest.osm.pbf")]
+    #[geofabrik(europe="finland-latest.osm.pbf")]
     Finland,
 
     #[strum(serialize = "Georgia")] 
-    #[download_link("https://download.geofabrik.de/europe/georgia-latest.osm.pbf")]
+    #[geofabrik(europe="georgia-latest.osm.pbf")]
     Georgia,
 
     #[strum(serialize = "Greece")] 
-    #[download_link("https://download.geofabrik.de/europe/greece-latest.osm.pbf")]
+    #[geofabrik(europe="greece-latest.osm.pbf")]
     Greece,
 
     #[strum(serialize = "Guernsey and Jersey")] 
-    #[download_link("https://download.geofabrik.de/europe/guernsey-jersey-latest.osm.pbf")]
+    #[geofabrik(europe="guernsey-jersey-latest.osm.pbf")]
     GuernseyAndJersey,
 
     #[strum(serialize = "Hungary")] 
-    #[download_link("https://download.geofabrik.de/europe/hungary-latest.osm.pbf")]
+    #[geofabrik(europe="hungary-latest.osm.pbf")]
     Hungary,
 
     #[strum(serialize = "Iceland")] 
-    #[download_link("https://download.geofabrik.de/europe/iceland-latest.osm.pbf")]
+    #[geofabrik(europe="iceland-latest.osm.pbf")]
     Iceland,
 
     #[strum(serialize = "Ireland and Northern Ireland")] 
-    #[download_link("https://download.geofabrik.de/europe/ireland-and-northern-ireland-latest.osm.pbf")]
+    #[geofabrik(europe="ireland-and-northern-ireland-latest.osm.pbf")]
     IrelandAndNorthernIreland,
 
     #[strum(serialize = "Isle of Man")] 
-    #[download_link("https://download.geofabrik.de/europe/isle-of-man-latest.osm.pbf")]
+    #[geofabrik(europe="isle-of-man-latest.osm.pbf")]
     IsleOfMan,
 
     #[strum(serialize = "Kosovo")] 
-    #[download_link("https://download.geofabrik.de/europe/kosovo-latest.osm.pbf")]
+    #[geofabrik(europe="kosovo-latest.osm.pbf")]
     Kosovo,
 
     #[strum(serialize = "Latvia")] 
-    #[download_link("https://download.geofabrik.de/europe/latvia-latest.osm.pbf")]
+    #[geofabrik(europe="latvia-latest.osm.pbf")]
     Latvia,
 
     #[strum(serialize = "Liechtenstein")] 
-    #[download_link("https://download.geofabrik.de/europe/liechtenstein-latest.osm.pbf")]
+    #[geofabrik(europe="liechtenstein-latest.osm.pbf")]
     Liechtenstein,
 
     #[strum(serialize = "Lithuania")] 
-    #[download_link("https://download.geofabrik.de/europe/lithuania-latest.osm.pbf")]
+    #[geofabrik(europe="lithuania-latest.osm.pbf")]
     Lithuania,
 
     #[strum(serialize = "Luxembourg")] 
-    #[download_link("https://download.geofabrik.de/europe/luxembourg-latest.osm.pbf")]
+    #[geofabrik(europe="luxembourg-latest.osm.pbf")]
     Luxembourg,
 
     #[strum(serialize = "Macedonia")] 
-    #[download_link("https://download.geofabrik.de/europe/macedonia-latest.osm.pbf")]
+    #[geofabrik(europe="macedonia-latest.osm.pbf")]
     Macedonia,
 
     #[strum(serialize = "Malta")] 
-    #[download_link("https://download.geofabrik.de/europe/malta-latest.osm.pbf")]
+    #[geofabrik(europe="malta-latest.osm.pbf")]
     Malta,
 
     #[strum(serialize = "Moldova")] 
-    #[download_link("https://download.geofabrik.de/europe/moldova-latest.osm.pbf")]
+    #[geofabrik(europe="moldova-latest.osm.pbf")]
     Moldova,
 
     #[strum(serialize = "Monaco")] 
-    #[download_link("https://download.geofabrik.de/europe/monaco-latest.osm.pbf")]
+    #[geofabrik(europe="monaco-latest.osm.pbf")]
     Monaco,
 
     #[strum(serialize = "Montenegro")] 
-    #[download_link("https://download.geofabrik.de/europe/montenegro-latest.osm.pbf")]
+    #[geofabrik(europe="montenegro-latest.osm.pbf")]
     Montenegro,
 
     #[strum(serialize = "Norway")] 
-    #[download_link("https://download.geofabrik.de/europe/norway-latest.osm.pbf")]
+    #[geofabrik(europe="norway-latest.osm.pbf")]
     Norway,
 
     #[strum(serialize = "Portugal")] 
-    #[download_link("https://download.geofabrik.de/europe/portugal-latest.osm.pbf")]
+    #[geofabrik(europe="portugal-latest.osm.pbf")]
     Portugal,
 
     #[strum(serialize = "Romania")] 
-    #[download_link("https://download.geofabrik.de/europe/romania-latest.osm.pbf")]
+    #[geofabrik(europe="romania-latest.osm.pbf")]
     Romania,
 
     #[strum(serialize = "Serbia")] 
-    #[download_link("https://download.geofabrik.de/europe/serbia-latest.osm.pbf")]
+    #[geofabrik(europe="serbia-latest.osm.pbf")]
     Serbia,
 
     #[strum(serialize = "Slovakia")] 
-    #[download_link("https://download.geofabrik.de/europe/slovakia-latest.osm.pbf")]
+    #[geofabrik(europe="slovakia-latest.osm.pbf")]
     Slovakia,
 
     #[strum(serialize = "Slovenia")] 
-    #[download_link("https://download.geofabrik.de/europe/slovenia-latest.osm.pbf")]
+    #[geofabrik(europe="slovenia-latest.osm.pbf")]
     Slovenia,
 
     #[strum(serialize = "Sweden")] 
-    #[download_link("https://download.geofabrik.de/europe/sweden-latest.osm.pbf")]
+    #[geofabrik(europe="sweden-latest.osm.pbf")]
     Sweden,
 
     #[strum(serialize = "Switzerland")] 
-    #[download_link("https://download.geofabrik.de/europe/switzerland-latest.osm.pbf")]
+    #[geofabrik(europe="switzerland-latest.osm.pbf")]
     Switzerland,
 
     #[strum(serialize = "Turkey")] 
-    #[download_link("https://download.geofabrik.de/europe/turkey-latest.osm.pbf")]
+    #[geofabrik(europe="turkey-latest.osm.pbf")]
     Turkey,
 
     #[strum(serialize = "Ukraine (with Crimea)", serialize = "Ukraine", serialize = "Ukraine with Crimea")] 
-    #[download_link("https://download.geofabrik.de/europe/ukraine-latest.osm.pbf")]
+    #[geofabrik(europe="ukraine-latest.osm.pbf")]
     UkraineWithCrimea,
 
     // Subdivided countries:

@@ -3,43 +3,43 @@ crate::ix!();
 //-------------------------------------------------------------
 // SouthAmericaRegion Enum
 //-------------------------------------------------------------
-#[derive(FileDownloader,Debug,PartialOrd,Ord,PartialEq,Eq,Hash,Clone,Copy,StrumDisplay,StrumEnumIter,StrumEnumVariantNames)]
+#[derive(OsmPbfFileDownloader,Debug,PartialOrd,Ord,PartialEq,Eq,Hash,Clone,Copy,StrumDisplay,StrumEnumIter,StrumEnumVariantNames)]
 #[strum(ascii_case_insensitive, serialize_all = "title_case")]
 pub enum SouthAmericaRegion {
 
-    #[download_link("https://download.geofabrik.de/south-america/argentina-latest.osm.pbf")]
+    #[geofabrik(south_america="argentina-latest.osm.pbf")]
     Argentina,
 
-    #[download_link("https://download.geofabrik.de/south-america/bolivia-latest.osm.pbf")]
+    #[geofabrik(south_america="bolivia-latest.osm.pbf")]
     Bolivia,
 
     Brazil(BrazilRegion),
 
-    #[download_link("https://download.geofabrik.de/south-america/chile-latest.osm.pbf")]
+    #[geofabrik(south_america="chile-latest.osm.pbf")]
     Chile,
 
-    #[download_link("https://download.geofabrik.de/south-america/colombia-latest.osm.pbf")]
+    #[geofabrik(south_america="colombia-latest.osm.pbf")]
     Colombia,
 
-    #[download_link("https://download.geofabrik.de/south-america/ecuador-latest.osm.pbf")]
+    #[geofabrik(south_america="ecuador-latest.osm.pbf")]
     Ecuador,
 
-    #[download_link("https://download.geofabrik.de/south-america/guyana-latest.osm.pbf")]
+    #[geofabrik(south_america="guyana-latest.osm.pbf")]
     Guyana,
 
-    #[download_link("https://download.geofabrik.de/south-america/paraguay-latest.osm.pbf")]
+    #[geofabrik(south_america="paraguay-latest.osm.pbf")]
     Paraguay,
 
-    #[download_link("https://download.geofabrik.de/south-america/peru-latest.osm.pbf")]
+    #[geofabrik(south_america="peru-latest.osm.pbf")]
     Peru,
 
-    #[download_link("https://download.geofabrik.de/south-america/suriname-latest.osm.pbf")]
+    #[geofabrik(south_america="suriname-latest.osm.pbf")]
     Suriname,
 
-    #[download_link("https://download.geofabrik.de/south-america/uruguay-latest.osm.pbf")]
+    #[geofabrik(south_america="uruguay-latest.osm.pbf")]
     Uruguay,
 
-    #[download_link("https://download.geofabrik.de/south-america/venezuela-latest.osm.pbf")]
+    #[geofabrik(south_america="venezuela-latest.osm.pbf")]
     Venezuela,
 }
 

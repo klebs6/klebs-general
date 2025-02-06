@@ -1,28 +1,28 @@
 crate::ix!();
 
 /// U.S. Territories.
-#[derive(FileDownloader,Default,Debug,PartialOrd,Ord,PartialEq,Eq,Hash,Clone,Copy,StrumDisplay,StrumEnumString,StrumEnumIter,StrumEnumVariantNames)]
+#[derive(OsmPBfFileDownloader,Default,Debug,PartialOrd,Ord,PartialEq,Eq,Hash,Clone,Copy,StrumDisplay,StrumEnumString,StrumEnumIter,StrumEnumVariantNames)]
 #[strum(ascii_case_insensitive, serialize_all = "title_case")]
 pub enum USTerritory {
 
     #[default]
-    #[download_link("none")]
+    #[geofabrik(usa="no_file")]
     #[strum(serialize = "AmericanSamoa", serialize = "American Samoa",serialize = "AS")]
     AmericanSamoa,
 
-    #[download_link("none")]
+    #[geofabrik(usa="no_file")]
     #[strum(serialize = "Guam", serialize = "GU" )] 
     Guam,
 
-    #[download_link("none")]
+    #[geofabrik(usa="no_file")]
     #[strum(serialize = "NorthernMarianaIslands", serialize = "Northern Mariana Islands", serialize = "MP" )] 
     NorthernMarianaIslands,
 
-    #[download_link("https://download.geofabrik.de/north-america/us/puerto-rico-latest.osm.pbf")]
+    #[geofabrik(usa="puerto-rico-latest.osm.pbf")]
     #[strum(serialize = "PuertoRico", serialize = "Puerto Rico", serialize = "PR" )] 
     PuertoRico,
 
-    #[download_link("https://download.geofabrik.de/north-america/us/us-virgin-islands-latest.osm.pbf")]
+    #[geofabrik(usa="us-virgin-islands-latest.osm.pbf")]
     #[strum(serialize = "USVirginIslands", serialize = "U.S. Virgin Islands", serialize = "VI" )] 
     VirginIslands,
 }

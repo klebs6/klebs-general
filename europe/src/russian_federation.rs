@@ -3,45 +3,45 @@ crate::ix!();
 //--------------------------------------
 // Russian Federation Regions
 //--------------------------------------
-#[derive(FileDownloader,Default,Debug,PartialOrd,Ord,PartialEq,Eq,Hash,Clone,Copy,StrumDisplay,StrumEnumIter,StrumEnumVariantNames,StrumEnumString)]
+#[derive(OsmPbfFileDownloader,Default,Debug,PartialOrd,Ord,PartialEq,Eq,Hash,Clone,Copy,StrumDisplay,StrumEnumIter,StrumEnumVariantNames,StrumEnumString)]
 #[strum(ascii_case_insensitive)]
 pub enum RussianFederationRegion {
 
     #[default]
     #[strum(serialize = "Central Federal District")] 
-    #[download_link("https://download.geofabrik.de/russia/central-fed-district-latest.osm.pbf")]
+    #[geofabrik(russia="central-fed-district-latest.osm.pbf")]
     CentralFederalDistrict,
 
     #[strum(serialize = "Crimean Federal District")] 
-    #[download_link("https://download.geofabrik.de/russia/crimean-fed-district-latest.osm.pbf")]
+    #[geofabrik(russia="crimean-fed-district-latest.osm.pbf")]
     CrimeanFederalDistrict,
 
     #[strum(serialize = "Far Eastern Federal District")] 
-    #[download_link("https://download.geofabrik.de/russia/far-eastern-fed-district-latest.osm.pbf")]
+    #[geofabrik(russia="far-eastern-fed-district-latest.osm.pbf")]
     FarEasternFederalDistrict,
 
     #[strum(serialize = "North Caucasus Federal District")] 
-    #[download_link("https://download.geofabrik.de/russia/north-caucasus-fed-district-latest.osm.pbf")]
+    #[geofabrik(russia="north-caucasus-fed-district-latest.osm.pbf")]
     NorthCaucasusFederalDistrict,
 
     #[strum(serialize = "Northwestern Federal District")] 
-    #[download_link("https://download.geofabrik.de/russia/northwestern-fed-district-latest.osm.pbf")]
+    #[geofabrik(russia="northwestern-fed-district-latest.osm.pbf")]
     NorthwesternFederalDistrict,
 
     #[strum(serialize = "Siberian Federal District")] 
-    #[download_link("https://download.geofabrik.de/russia/siberian-fed-district-latest.osm.pbf")]
+    #[geofabrik(russia="siberian-fed-district-latest.osm.pbf")]
     SiberianFederalDistrict,
 
     #[strum(serialize = "South Federal District")] 
-    #[download_link("https://download.geofabrik.de/russia/south-fed-district-latest.osm.pbf")]
+    #[geofabrik(russia="south-fed-district-latest.osm.pbf")]
     SouthFederalDistrict,
 
     #[strum(serialize = "Ural Federal District")] 
-    #[download_link("https://download.geofabrik.de/russia/ural-fed-district-latest.osm.pbf")]
+    #[geofabrik(russia="ural-fed-district-latest.osm.pbf")]
     UralFederalDistrict,
 
     #[strum(serialize = "Volga Federal District")] 
-    #[download_link("https://download.geofabrik.de/russia/volga-fed-district-latest.osm.pbf")]
+    #[geofabrik(russia="volga-fed-district-latest.osm.pbf")]
     VolgaFederalDistrict,
 }
 

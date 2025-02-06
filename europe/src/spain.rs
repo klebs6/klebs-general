@@ -3,81 +3,81 @@ crate::ix!();
 //--------------------------------------
 // Spain Regions
 //--------------------------------------
-#[derive(FileDownloader,Default,Debug,PartialOrd,Ord,PartialEq,Eq,Hash,Clone,Copy,StrumDisplay,StrumEnumIter,StrumEnumVariantNames,StrumEnumString)]
+#[derive(OsmPbfFileDownloader,Default,Debug,PartialOrd,Ord,PartialEq,Eq,Hash,Clone,Copy,StrumDisplay,StrumEnumIter,StrumEnumVariantNames,StrumEnumString)]
 #[strum(ascii_case_insensitive)]
 pub enum SpainRegion {
 
     #[strum(serialize = "Andalucía", serialize = "Andalucia" )] 
-    #[download_link("https://download.geofabrik.de/europe/spain/andalucia-latest.osm.pbf")]
+    #[geofabrik(spain="andalucia-latest.osm.pbf")]
     Andalucia,
 
     #[strum(serialize = "Aragón", serialize = "Aragon" )] 
-    #[download_link("https://download.geofabrik.de/europe/spain/aragon-latest.osm.pbf")]
+    #[geofabrik(spain="aragon-latest.osm.pbf")]
     Aragon,
 
     #[strum(serialize = "Asturias" )] 
-    #[download_link("https://download.geofabrik.de/europe/spain/asturias-latest.osm.pbf")]
+    #[geofabrik(spain="asturias-latest.osm.pbf")]
     Asturias,
 
     #[strum(serialize = "Cantabria" )] 
-    #[download_link("https://download.geofabrik.de/europe/spain/cantabria-latest.osm.pbf")]
+    #[geofabrik(spain="cantabria-latest.osm.pbf")]
     Cantabria,
 
     #[strum(serialize = "Castilla-La Mancha", serialize = "Castilla La Mancha" )] 
-    #[download_link("https://download.geofabrik.de/europe/spain/castilla-la-mancha-latest.osm.pbf")]
+    #[geofabrik(spain="castilla-la-mancha-latest.osm.pbf")]
     CastillaLaMancha,
 
     #[strum(serialize = "Castilla y León", serialize = "Castilla y Leon", serialize = "Castilla Leon" )] 
-    #[download_link("https://download.geofabrik.de/europe/spain/castilla-y-leon-latest.osm.pbf")]
+    #[geofabrik(spain="castilla-y-leon-latest.osm.pbf")]
     CastillaYLeon,
 
     #[strum(serialize = "Cataluña", serialize = "Cataluna", serialize = "Catalonia", serialize = "Catalunya" )] 
-    #[download_link("https://download.geofabrik.de/europe/spain/cataluna-latest.osm.pbf")]
+    #[geofabrik(spain="cataluna-latest.osm.pbf")]
     Cataluna,
 
     #[strum(serialize = "Ceuta" )] 
-    #[download_link("https://download.geofabrik.de/europe/spain/ceuta-latest.osm.pbf")]
+    #[geofabrik(spain="ceuta-latest.osm.pbf")]
     Ceuta,
 
     #[strum(serialize = "Extremadura" )] 
-    #[download_link("https://download.geofabrik.de/europe/spain/extremadura-latest.osm.pbf")]
+    #[geofabrik(spain="extremadura-latest.osm.pbf")]
     Extremadura,
 
     #[strum(serialize = "Galicia" )] 
-    #[download_link("https://download.geofabrik.de/europe/spain/galicia-latest.osm.pbf")]
+    #[geofabrik(spain="galicia-latest.osm.pbf")]
     Galicia,
 
     #[strum(serialize = "Islas Baleares", serialize = "Islas Baleares (Balearic Islands)" )] 
-    #[download_link("https://download.geofabrik.de/europe/spain/islas-baleares-latest.osm.pbf")]
+    #[geofabrik(spain="islas-baleares-latest.osm.pbf")]
     IslasBaleares,
 
     #[strum(serialize = "La Rioja" )] 
-    #[download_link("https://download.geofabrik.de/europe/spain/la-rioja-latest.osm.pbf")]
+    #[geofabrik(spain="la-rioja-latest.osm.pbf")]
     LaRioja,
 
     #[default]
     #[strum(serialize = "Madrid" )] 
-    #[download_link("https://download.geofabrik.de/europe/spain/madrid-latest.osm.pbf")]
+    #[geofabrik(spain="madrid-latest.osm.pbf")]
     Madrid,
 
     #[strum(serialize = "Melilla" )] 
-    #[download_link("https://download.geofabrik.de/europe/spain/melilla-latest.osm.pbf")]
+    #[geofabrik(spain="melilla-latest.osm.pbf")]
     Melilla,
 
     #[strum(serialize = "Murcia" )] 
-    #[download_link("https://download.geofabrik.de/europe/spain/murcia-latest.osm.pbf")]
+    #[geofabrik(spain="murcia-latest.osm.pbf")]
     Murcia,
 
     #[strum(serialize = "Navarra" )] 
-    #[download_link("https://download.geofabrik.de/europe/spain/navarra-latest.osm.pbf")]
+    #[geofabrik(spain="navarra-latest.osm.pbf")]
     Navarra,
 
     #[strum(serialize = "País Vasco", serialize = "Pais Vasco", serialize = "Basque Country" )] 
-    #[download_link("https://download.geofabrik.de/europe/spain/pais-vasco-latest.osm.pbf")]
+    #[geofabrik(spain="pais-vasco-latest.osm.pbf")]
     PaisVasco,
 
     #[strum(serialize = "Valencia" )] 
-    #[download_link("https://download.geofabrik.de/europe/spain/valencia-latest.osm.pbf")]
+    #[geofabrik(spain="valencia-latest.osm.pbf")]
     Valencia,
 }
 

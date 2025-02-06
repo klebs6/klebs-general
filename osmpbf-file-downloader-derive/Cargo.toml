@@ -1,0 +1,29 @@
+[package]
+name = "osmpbf-file-downloader-derive"
+version = "0.2.0"
+edition = "2024"
+
+description = "This crate lets us use OsmPbfFileDownloader derive macro to automatically derive FileDownloader with cleaner syntax for geofabrik osmpbf files. Please see the file-downloader and file-downloader-derive crates for more details."
+authors = [ "klebs tpk3.mx@gmail.com" ]
+license = "MIT"
+keywords = ["download", "checksum", "MD5"]
+repository = "https://github.com/klebs6/klebs-general"
+categories = ["network-programming"]
+
+[dependencies]
+syn = { version = "2.0.52", features = ["full", "parsing"] }
+derive-error = "0.0.5"
+export-magic = "0.3.1"
+quote = "1.0"
+proc-macro2 = "1.0"
+tracing = "0.1.40"
+tracing-subscriber = { version = "0.3", default-features = false, features = ["fmt", "std", "env-filter"] }
+
+[dev-dependencies]
+serde_json      = "1.0.133"
+uuid            = "1.11.0"
+trybuild        = "1"
+file-downloader = "0.2.0"
+
+[lib]
+proc-macro = true

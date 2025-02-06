@@ -1,41 +1,41 @@
 crate::ix!();
 
 // Japan Regions
-#[derive(FileDownloader,Serialize,Deserialize,Default,Debug,PartialOrd,Ord,PartialEq,Eq,Hash,Clone,Copy,StrumDisplay,StrumEnumIter,StrumEnumVariantNames,StrumEnumString)]
+#[derive(OsmPbfFileDownloader,Serialize,Deserialize,Default,Debug,PartialOrd,Ord,PartialEq,Eq,Hash,Clone,Copy,StrumDisplay,StrumEnumIter,StrumEnumVariantNames,StrumEnumString)]
 #[strum(ascii_case_insensitive)]
 pub enum JapanRegion {
 
     #[strum(serialize = "Chūbu region",    serialize = "Chubu")] 
-    #[download_link("https://download.geofabrik.de/asia/japan/chubu-latest.osm.pbf")]
+    #[geofabrik(japan="chubu-latest.osm.pbf")]
     Chubu,
 
     #[strum(serialize = "Chūgoku region",  serialize = "Chugoku")] 
-    #[download_link("https://download.geofabrik.de/asia/japan/chugoku-latest.osm.pbf")]
+    #[geofabrik(japan="chugoku-latest.osm.pbf")]
     Chugoku,
 
     #[strum(serialize = "Hokkaidō",        serialize = "Hokkaido")] 
-    #[download_link("https://download.geofabrik.de/asia/japan/hokkaido-latest.osm.pbf")]
+    #[geofabrik(japan="hokkaido-latest.osm.pbf")]
     Hokkaido,
 
     #[strum(serialize = "Kansai region",   serialize = "Kinki region")] 
-    #[download_link("https://download.geofabrik.de/asia/japan/kansai-latest.osm.pbf")]
+    #[geofabrik(japan="kansai-latest.osm.pbf")]
     Kansai,
 
     #[strum(serialize = "Kantō region",    serialize = "Kanto")] 
-    #[download_link("https://download.geofabrik.de/asia/japan/kanto-latest.osm.pbf")]
+    #[geofabrik(japan="kanto-latest.osm.pbf")]
     Kanto,
 
     #[strum(serialize = "Kyūshū",          serialize = "Kyushu")] 
-    #[download_link("https://download.geofabrik.de/asia/japan/kyushu-latest.osm.pbf")]
+    #[geofabrik(japan="kyushu-latest.osm.pbf")]
     Kyushu,
 
     #[default]
     #[strum(serialize = "Shikoku")] 
-    #[download_link("https://download.geofabrik.de/asia/japan/shikoku-latest.osm.pbf")]
+    #[geofabrik(japan="shikoku-latest.osm.pbf")]
     Shikoku,
 
     #[strum(serialize = "Tōhoku region",   serialize = "Tohoku")] 
-    #[download_link("https://download.geofabrik.de/asia/japan/tohoku-latest.osm.pbf")]
+    #[geofabrik(japan="tohoku-latest.osm.pbf")]
     Tohoku,
 }
 

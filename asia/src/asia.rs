@@ -3,123 +3,123 @@ crate::ix!();
 //-------------------------------------------------------------
 // AsiaRegion Enum
 //-------------------------------------------------------------
-#[derive(FileDownloader,Debug,PartialOrd,Ord,PartialEq,Eq,Hash,Clone,Copy,StrumDisplay,StrumEnumIter,StrumEnumVariantNames)]
+#[derive(OsmPbfFileDownloader,Debug,PartialOrd,Ord,PartialEq,Eq,Hash,Clone,Copy,StrumDisplay,StrumEnumIter,StrumEnumVariantNames)]
 #[strum(ascii_case_insensitive, serialize_all = "title_case")]
 pub enum AsiaRegion {
 
-    #[download_link("https://download.geofabrik.de/asia/afghanistan-latest.osm.pbf")]
+    #[geofabrik(asia="afghanistan-latest.osm.pbf")]
     Afghanistan,
 
-    #[download_link("https://download.geofabrik.de/asia/armenia-latest.osm.pbf")]
+    #[geofabrik(asia="armenia-latest.osm.pbf")]
     Armenia,
 
-    #[download_link("https://download.geofabrik.de/asia/azerbaijan-latest.osm.pbf")]
+    #[geofabrik(asia="azerbaijan-latest.osm.pbf")]
     Azerbaijan,
 
-    #[download_link("https://download.geofabrik.de/asia/bangladesh-latest.osm.pbf")]
+    #[geofabrik(asia="bangladesh-latest.osm.pbf")]
     Bangladesh,
 
-    #[download_link("https://download.geofabrik.de/asia/bhutan-latest.osm.pbf")]
+    #[geofabrik(asia="bhutan-latest.osm.pbf")]
     Bhutan,
 
-    #[download_link("https://download.geofabrik.de/asia/cambodia-latest.osm.pbf")]
+    #[geofabrik(asia="cambodia-latest.osm.pbf")]
     Cambodia,
 
     China(ChinaRegion),
 
-    #[download_link("https://download.geofabrik.de/asia/east-timor-latest.osm.pbf")]
+    #[geofabrik(asia="east-timor-latest.osm.pbf")]
     EastTimor,
 
     #[strum(serialize = "GCC States")]
-    #[download_link("https://download.geofabrik.de/asia/gcc-states-latest.osm.pbf")]
+    #[geofabrik(asia="gcc-states-latest.osm.pbf")]
     GccStates, // Bahrain, Kuwait, Oman, Qatar, Saudi Arabia, UAE combined
 
     India(IndiaRegion),
 
     Indonesia(IndonesiaRegion),
 
-    #[download_link("https://download.geofabrik.de/asia/iran-latest.osm.pbf")]
+    #[geofabrik(asia="iran-latest.osm.pbf")]
     Iran,
 
-    #[download_link("https://download.geofabrik.de/asia/iraq-latest.osm.pbf")]
+    #[geofabrik(asia="iraq-latest.osm.pbf")]
     Iraq,
 
     #[strum(serialize = "Israel and Palestine")]
-    #[download_link("https://download.geofabrik.de/asia/israel-and-palestine-latest.osm.pbf")]
+    #[geofabrik(asia="israel-and-palestine-latest.osm.pbf")]
     IsraelAndPalestine,
 
     Japan(JapanRegion),
 
-    #[download_link("https://download.geofabrik.de/asia/jordan-latest.osm.pbf")]
+    #[geofabrik(asia="jordan-latest.osm.pbf")]
     Jordan,
 
-    #[download_link("https://download.geofabrik.de/asia/kazakhstan-latest.osm.pbf")]
+    #[geofabrik(asia="kazakhstan-latest.osm.pbf")]
     Kazakhstan,
 
-    #[download_link("https://download.geofabrik.de/asia/kyrgyzstan-latest.osm.pbf")]
+    #[geofabrik(asia="kyrgyzstan-latest.osm.pbf")]
     Kyrgyzstan,
 
-    #[download_link("https://download.geofabrik.de/asia/laos-latest.osm.pbf")]
+    #[geofabrik(asia="laos-latest.osm.pbf")]
     Laos,
 
-    #[download_link("https://download.geofabrik.de/asia/lebanon-latest.osm.pbf")]
+    #[geofabrik(asia="lebanon-latest.osm.pbf")]
     Lebanon,
 
     #[strum(serialize = "Malaysia, Singapore, and Brunei")]
-    #[download_link("https://download.geofabrik.de/asia/malaysia-singapore-brunei-latest.osm.pbf")]
+    #[geofabrik(asia="malaysia-singapore-brunei-latest.osm.pbf")]
     MalaysiaSingaporeBrunei, // Malaysia, Singapore, Brunei combined
 
-    #[download_link("https://download.geofabrik.de/asia/maldives-latest.osm.pbf")]
+    #[geofabrik(asia="maldives-latest.osm.pbf")]
     Maldives,
 
-    #[download_link("https://download.geofabrik.de/asia/mongolia-latest.osm.pbf")]
+    #[geofabrik(asia="mongolia-latest.osm.pbf")]
     Mongolia,
 
-    #[download_link("https://download.geofabrik.de/asia/myanmar-latest.osm.pbf")]
+    #[geofabrik(asia="myanmar-latest.osm.pbf")]
     Myanmar,
 
-    #[download_link("https://download.geofabrik.de/asia/nepal-latest.osm.pbf")]
+    #[geofabrik(asia="nepal-latest.osm.pbf")]
     Nepal,
 
-    #[download_link("https://download.geofabrik.de/asia/north-korea-latest.osm.pbf")]
+    #[geofabrik(asia="north-korea-latest.osm.pbf")]
     NorthKorea,
 
-    #[download_link("https://download.geofabrik.de/asia/pakistan-latest.osm.pbf")]
+    #[geofabrik(asia="pakistan-latest.osm.pbf")]
     Pakistan,
 
-    #[download_link("https://download.geofabrik.de/asia/philippines-latest.osm.pbf")]
+    #[geofabrik(asia="philippines-latest.osm.pbf")]
     Philippines,
 
     RussianFederation(RussianFederationRegion),
 
-    #[download_link("https://download.geofabrik.de/asia/south-korea-latest.osm.pbf")]
+    #[geofabrik(asia="south-korea-latest.osm.pbf")]
     SouthKorea,
 
-    #[download_link("https://download.geofabrik.de/asia/sri-lanka-latest.osm.pbf")]
+    #[geofabrik(asia="sri-lanka-latest.osm.pbf")]
     SriLanka,
 
-    #[download_link("https://download.geofabrik.de/asia/syria-latest.osm.pbf")]
+    #[geofabrik(asia="syria-latest.osm.pbf")]
     Syria,
 
-    #[download_link("https://download.geofabrik.de/asia/taiwan-latest.osm.pbf")]
+    #[geofabrik(asia="taiwan-latest.osm.pbf")]
     Taiwan,
 
-    #[download_link("https://download.geofabrik.de/asia/tajikistan-latest.osm.pbf")]
+    #[geofabrik(asia="tajikistan-latest.osm.pbf")]
     Tajikistan,
 
-    #[download_link("https://download.geofabrik.de/asia/thailand-latest.osm.pbf")]
+    #[geofabrik(asia="thailand-latest.osm.pbf")]
     Thailand,
 
-    #[download_link("https://download.geofabrik.de/asia/turkmenistan-latest.osm.pbf")]
+    #[geofabrik(asia="turkmenistan-latest.osm.pbf")]
     Turkmenistan,
 
-    #[download_link("https://download.geofabrik.de/asia/uzbekistan-latest.osm.pbf")]
+    #[geofabrik(asia="uzbekistan-latest.osm.pbf")]
     Uzbekistan,
 
-    #[download_link("https://download.geofabrik.de/asia/vietnam-latest.osm.pbf")]
+    #[geofabrik(asia="vietnam-latest.osm.pbf")]
     Vietnam,
 
-    #[download_link("https://download.geofabrik.de/asia/yemen-latest.osm.pbf")]
+    #[geofabrik(asia="yemen-latest.osm.pbf")]
     Yemen,
 }
 

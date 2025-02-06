@@ -3,57 +3,57 @@ crate::ix!();
 //--------------------------------------
 // Netherlands Regions
 //--------------------------------------
-#[derive(FileDownloader,Default,Debug,PartialOrd,Ord,PartialEq,Eq,Hash,Clone,Copy,StrumDisplay,StrumEnumIter,StrumEnumVariantNames,StrumEnumString)]
+#[derive(OsmPbfFileDownloader,Default,Debug,PartialOrd,Ord,PartialEq,Eq,Hash,Clone,Copy,StrumDisplay,StrumEnumIter,StrumEnumVariantNames,StrumEnumString)]
 #[strum(ascii_case_insensitive)]
 pub enum NetherlandsRegion {
 
     #[strum(serialize = "Drenthe")] 
-    #[download_link("https://download.geofabrik.de/europe/netherlands/drenthe-latest.osm.pbf")] 
+    #[geofabrik(netherlands="drenthe-latest.osm.pbf")] 
     Drenthe,
 
     #[strum(serialize = "Flevoland")] 
-    #[download_link("https://download.geofabrik.de/europe/netherlands/flevoland-latest.osm.pbf")] 
+    #[geofabrik(netherlands="flevoland-latest.osm.pbf")] 
     Flevoland,
 
     #[strum(serialize = "Friesland")] 
-    #[download_link("https://download.geofabrik.de/europe/netherlands/friesland-latest.osm.pbf")] 
+    #[geofabrik(netherlands="friesland-latest.osm.pbf")] 
     Friesland,
 
     #[strum(serialize = "Gelderland")] 
-    #[download_link("https://download.geofabrik.de/europe/netherlands/gelderland-latest.osm.pbf")] 
+    #[geofabrik(netherlands="gelderland-latest.osm.pbf")] 
     Gelderland,
 
     #[strum(serialize = "Groningen")] 
-    #[download_link("https://download.geofabrik.de/europe/netherlands/groningen-latest.osm.pbf")] 
+    #[geofabrik(netherlands="groningen-latest.osm.pbf")] 
     Groningen,
 
     #[strum(serialize = "Limburg")] 
-    #[download_link("https://download.geofabrik.de/europe/netherlands/limburg-latest.osm.pbf")] 
+    #[geofabrik(netherlands="limburg-latest.osm.pbf")] 
     Limburg,
 
     #[strum(serialize = "Noord-Brabant", serialize = "Noord Brabant")] 
-    #[download_link("https://download.geofabrik.de/europe/netherlands/noord-brabant-latest.osm.pbf")] 
+    #[geofabrik(netherlands="noord-brabant-latest.osm.pbf")] 
     NoordBrabant,
 
     #[default]
     #[strum(serialize = "Noord-Holland", serialize = "Noord Holland")] 
-    #[download_link("https://download.geofabrik.de/europe/netherlands/noord-holland-latest.osm.pbf")] 
+    #[geofabrik(netherlands="noord-holland-latest.osm.pbf")] 
     NoordHolland,
 
     #[strum(serialize = "Overijssel")] 
-    #[download_link("https://download.geofabrik.de/europe/netherlands/overijssel-latest.osm.pbf")] 
+    #[geofabrik(netherlands="overijssel-latest.osm.pbf")] 
     Overijssel,
 
     #[strum(serialize = "Utrecht")] 
-    #[download_link("https://download.geofabrik.de/europe/netherlands/utrecht-latest.osm.pbf")] 
+    #[geofabrik(netherlands="utrecht-latest.osm.pbf")] 
     Utrecht,
 
     #[strum(serialize = "Zeeland")] 
-    #[download_link("https://download.geofabrik.de/europe/netherlands/zeeland-latest.osm.pbf")] 
+    #[geofabrik(netherlands="zeeland-latest.osm.pbf")] 
     Zeeland,
 
     #[strum(serialize = "Zuid-Holland",  serialize = "Zuid Holland")] 
-    #[download_link("https://download.geofabrik.de/europe/netherlands/zuid-holland-latest.osm.pbf")] 
+    #[geofabrik(netherlands="zuid-holland-latest.osm.pbf")] 
     ZuidHolland,
 }
 

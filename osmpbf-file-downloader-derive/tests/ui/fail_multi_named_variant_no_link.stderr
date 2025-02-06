@@ -1,0 +1,19 @@
+error: OsmPbfFileDownloader only supports unit variants or single-field variants.
+ --> tests/ui/fail_multi_named_variant_no_link.rs:6:5
+  |
+6 | /     MultiField {
+7 | |         a: u32,
+8 | |         b: u32,
+9 | |     },
+  | |_____^
+
+error: `match` arm with no body
+ --> tests/ui/fail_multi_named_variant_no_link.rs:6:5
+  |
+6 | /     MultiField {
+7 | |         a: u32,
+8 | |         b: u32,
+9 | |     },
+  | |     ^- help: add a body after the pattern: `=> todo!(),`
+  | |_____|
+  |

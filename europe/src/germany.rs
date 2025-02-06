@@ -3,73 +3,73 @@ crate::ix!();
 //--------------------------------------
 // Germany Regions
 //--------------------------------------
-#[derive(FileDownloader,Default,Debug,PartialOrd,Ord,PartialEq,Eq,Hash,Clone,Copy,StrumDisplay,StrumEnumIter,StrumEnumVariantNames,StrumEnumString)]
+#[derive(OsmPbfFileDownloader,Default,Debug,PartialOrd,Ord,PartialEq,Eq,Hash,Clone,Copy,StrumDisplay,StrumEnumIter,StrumEnumVariantNames,StrumEnumString)]
 #[strum(ascii_case_insensitive)]
 pub enum GermanyRegion {
 
     #[strum(serialize = "Baden-Württemberg",           serialize = "Baden Wurttemberg")] 
-    #[download_link("https://download.geofabrik.de/europe/germany/baden-wuerttemberg-latest.osm.pbf")]
+    #[geofabrik(germany="baden-wuerttemberg-latest.osm.pbf")]
     BadenWurttemberg,
 
     #[strum(serialize = "Bayern")] 
-    #[download_link("https://download.geofabrik.de/europe/germany/bayern-latest.osm.pbf")]
+    #[geofabrik(germany="bayern-latest.osm.pbf")]
     Bayern,
 
     #[default]
     #[strum(serialize = "Berlin")] 
-    #[download_link("https://download.geofabrik.de/europe/germany/berlin-latest.osm.pbf")]
+    #[geofabrik(germany="berlin-latest.osm.pbf")]
     Berlin,
 
     #[strum(serialize = "Brandenburg (mit Berlin)",    serialize = "Brandenburg")] 
-    #[download_link("https://download.geofabrik.de/europe/germany/brandenburg-latest.osm.pbf")]
+    #[geofabrik(germany="brandenburg-latest.osm.pbf")]
     BrandenburgMitBerlin,
 
     #[strum(serialize = "Bremen")] 
-    #[download_link("https://download.geofabrik.de/europe/germany/bremen-latest.osm.pbf")]
+    #[geofabrik(germany="bremen-latest.osm.pbf")]
     Bremen,
 
     #[strum(serialize = "Hamburg")] 
-    #[download_link("https://download.geofabrik.de/europe/germany/hamburg-latest.osm.pbf")]
+    #[geofabrik(germany="hamburg-latest.osm.pbf")]
     Hamburg,
 
     #[strum(serialize = "Hessen")] 
-    #[download_link("https://download.geofabrik.de/europe/germany/hessen-latest.osm.pbf")]
+    #[geofabrik(germany="hessen-latest.osm.pbf")]
     Hessen,
 
     #[strum(serialize = "Mecklenburg-Vorpommern",      serialize = "Mecklenburg Vorpommern")] 
-    #[download_link("https://download.geofabrik.de/europe/germany/mecklenburg-vorpommern-latest.osm.pbf")]
+    #[geofabrik(germany="mecklenburg-vorpommern-latest.osm.pbf")]
     MecklenburgVorpommern,
 
     #[strum(serialize = "Niedersachsen (mit Bremen)",  serialize = "Niedersachsen")] 
-    #[download_link("https://download.geofabrik.de/europe/germany/niedersachsen-latest.osm.pbf")]
+    #[geofabrik(germany="niedersachsen-latest.osm.pbf")]
     NiedersachsenMitBremen,
 
     #[strum(serialize = "Nordrhein-Westfalen",         serialize = "Nordrhein Westfalen")] 
-    #[download_link("https://download.geofabrik.de/europe/germany/nordrhein-westfalen-latest.osm.pbf")]
+    #[geofabrik(germany="nordrhein-westfalen-latest.osm.pbf")]
     NordrheinWestfalen,
 
     #[strum(serialize = "Rheinland-Pfalz",             serialize = "Rheinland Pfalz")] 
-    #[download_link("https://download.geofabrik.de/europe/germany/rheinland-pfalz-latest.osm.pbf")]
+    #[geofabrik(germany="rheinland-pfalz-latest.osm.pbf")]
     RheinlandPfalz,
 
     #[strum(serialize = "Saarland")] 
-    #[download_link("https://download.geofabrik.de/europe/germany/saarland-latest.osm.pbf")]
+    #[geofabrik(germany="saarland-latest.osm.pbf")]
     Saarland,
 
     #[strum(serialize = "Sachsen")] 
-    #[download_link("https://download.geofabrik.de/europe/germany/sachsen-latest.osm.pbf")]
+    #[geofabrik(germany="sachsen-latest.osm.pbf")]
     Sachsen,
 
     #[strum(serialize = "Sachsen-Anhalt",              serialize = "Sachsen Anhalt")] 
-    #[download_link("https://download.geofabrik.de/europe/germany/sachsen-anhalt-latest.osm.pbf")]
+    #[geofabrik(germany="sachsen-anhalt-latest.osm.pbf")]
     SachsenAnhalt,
 
     #[strum(serialize = "Schleswig-Holstein",          serialize = "Schleswig Holstein")] 
-    #[download_link("https://download.geofabrik.de/europe/germany/schleswig-holstein-latest.osm.pbf")]
+    #[geofabrik(germany="schleswig-holstein-latest.osm.pbf")]
     SchleswigHolstein,
 
     #[strum(serialize = "Thüringen",                   serialize = "Thuringen")] 
-    #[download_link("https://download.geofabrik.de/europe/germany/thueringen-latest.osm.pbf")]
+    #[geofabrik(germany="thueringen-latest.osm.pbf")]
     Thueringen,
 }
 

@@ -1,0 +1,11 @@
+error: OsmPbfFileDownloader only supports unit variants or single-field variants.
+ --> tests/ui/fail_multi_field_tuple_variant.rs:7:5
+  |
+7 |     TwoField(u32, u32),
+  |     ^^^^^^^^^^^^^^^^^^
+
+error: `match` arm with no body
+ --> tests/ui/fail_multi_field_tuple_variant.rs:7:5
+  |
+7 |     TwoField(u32, u32),
+  |     ^^^^^^^^^^^^^^^^^^- help: add a body after the pattern: `=> todo!(),`
