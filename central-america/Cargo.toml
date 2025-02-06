@@ -9,7 +9,7 @@ license       = "MIT"
 name          = "central-america"
 readme        = "README.md"
 repository    = "https://github.com/klebs6/klebs-general"
-version       = "0.4.0"
+version       = "0.5.0"
 
 [dependencies]
 abbreviation-trait     = "0.3.0"

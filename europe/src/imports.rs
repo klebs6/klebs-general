@@ -9,5 +9,4 @@ pub(crate) use country::{Country, Iso3166Alpha2, Iso3166Alpha3, CountryCode};
 pub(crate) use std::convert::{TryFrom, TryInto};
 pub(crate) use error_tree::*;
 pub(crate) use abbreviation_trait::*;
-pub(crate) use file_downloader::*;
-pub(crate) use file_downloader_derive::*;
+pub(crate) use osmpbf_file_downloader_derive::*;

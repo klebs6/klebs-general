@@ -14,6 +14,5 @@ pub(crate) use strum_macros::{
 pub(crate) use country::{Country, Iso3166Alpha2, Iso3166Alpha3, CountryCode};
 pub(crate) use export_magic::*;
 pub(crate) use abbreviation_trait::*;
-pub(crate) use file_downloader_derive::*;
-pub(crate) use file_downloader::*;
+pub(crate) use osmpbf_file_downloader_derive::*;
 pub(crate) use usa::USRegion; // Assuming a `usa` crate with USRegion definition is available.
