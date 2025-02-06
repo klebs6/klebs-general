@@ -17,5 +17,4 @@ pub(crate) use abbreviation_trait::*;
 #[cfg(test)]
 pub(crate) use std::str::FromStr;
 pub(crate) use error_tree::*;
-pub(crate) use file_downloader::*;
-pub(crate) use file_downloader_derive::*;
+pub(crate) use osmpbf_file_downloader_derive::*;
