@@ -80,7 +80,7 @@ mod attempt_storing_house_number_aggregator_in_db_tests {
         // verify nothing was written => no "HNR" keys
         let db_guard = db_arc.lock().unwrap();
         // We can do a quick iteration:
-        let iter = db_guard.db().iterator(rocksdb::IteratorMode::Start);
+        let iter = db_guard.iterator(rocksdb::IteratorMode::Start);
         for item in iter {
             let (key, _val) = item.expect("iterator error").clone();
             let key_str = String::from_utf8_lossy(&key);

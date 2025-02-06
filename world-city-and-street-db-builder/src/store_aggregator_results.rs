@@ -17,10 +17,11 @@ crate::ix!();
 /// * `Ok(())` if all aggregator data is processed successfully (warnings may still occur).
 /// * `Err(OsmPbfParseError)` if a critical error arises (e.g., DB I/O error).
 pub fn store_house_number_aggregator_results(
-    db: &mut Database,
+    db:           &mut Database,
     world_region: &WorldRegion,
-    aggregator: HashMap<StreetName, Vec<HouseNumberRange>>,
+    aggregator:   HashMap<StreetName, Vec<HouseNumberRange>>,
 ) -> Result<(), OsmPbfParseError> {
+
     trace!(
         "store_house_number_aggregator_results: storing data for {} streets in region={:?}",
         aggregator.len(),
@@ -63,20 +64,23 @@ mod store_aggregator_results_tests {
         let tmp_dir = TempDir::new().unwrap();
         let db = Database::open(tmp_dir.path()).unwrap();
         {
-            let mut db_guard = db.lock().unwrap();
             let region = WorldRegion::default();
 
-            let res = store_house_number_aggregator_results(&mut db_guard, &region, aggregator);
-            assert!(res.is_ok());
+            {
+                let mut db_guard = db.lock().unwrap();
 
-            // Optionally load them back with load_house_number_ranges
-            let loaded_opt = load_house_number_ranges(&db_guard, &region, &street).unwrap();
-            assert!(loaded_opt.is_some());
-            let loaded = loaded_opt.unwrap();
-            assert_eq!(loaded.len(), 1);
-            let rng = &loaded[0];
-            assert_eq!(rng.start(), &100);
-            assert_eq!(rng.end(), &110);
+                let res = store_house_number_aggregator_results(&mut db_guard, &region, aggregator);
+                assert!(res.is_ok());
+
+                // Optionally load them back with load_house_number_ranges
+                let loaded_opt = db_guard.load_house_number_ranges(&region, &street).unwrap();
+                assert!(loaded_opt.is_some());
+                let loaded = loaded_opt.unwrap();
+                assert_eq!(loaded.len(), 1);
+                let rng = &loaded[0];
+                assert_eq!(rng.start(), &100);
+                assert_eq!(rng.end(), &110);
+            }
         }
     }
 }

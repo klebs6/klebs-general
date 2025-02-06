@@ -73,13 +73,11 @@ mod house_number_range_storage_tests {
         ];
 
         // 4) store them
-        let store_res = store_house_number_ranges(&mut db, &region, &street, &ranges);
+        let store_res = db.store_house_number_ranges(&region, &street, &ranges);
         assert!(store_res.is_ok());
 
         // 5) load them
-        drop(db); // release the guard so we can do read
-        let db2 = db_arc.lock().unwrap();
-        let loaded_opt = load_house_number_ranges(&db2, &region, &street).unwrap();
+        let loaded_opt = db.load_house_number_ranges(&region, &street).unwrap();
         assert!(loaded_opt.is_some());
         let loaded = loaded_opt.unwrap();
         assert_eq!(loaded.len(), 3);
@@ -99,28 +97,25 @@ mod house_number_range_storage_tests {
             HouseNumberRange { start: 140, end: 260 },
             HouseNumberRange { start: 300, end: 400 },
         ];
-        let _ = store_house_number_ranges(&mut db, &region, &street, &ranges).unwrap();
 
-        drop(db);
-        let db2 = db_arc.lock().unwrap();
+        let _ = db.store_house_number_ranges(&region, &street, &ranges).unwrap();
 
         // check some values
-        assert!(house_number_in_any_range(&db2, &region, &street, 1).unwrap());    // in [1..100]
-        assert!(!house_number_in_any_range(&db2, &region, &street, 120).unwrap()); // missing 101..139
-        assert!(house_number_in_any_range(&db2, &region, &street, 200).unwrap());  // in [140..260]
-        assert!(house_number_in_any_range(&db2, &region, &street, 399).unwrap());  // in [300..400]
-        assert!(!house_number_in_any_range(&db2, &region, &street, 999).unwrap());
+        assert!(db.house_number_in_any_range(&region, &street, 1).unwrap());    // in [1..100]
+        assert!(!db.house_number_in_any_range(&region, &street, 120).unwrap()); // missing 101..139
+        assert!(db.house_number_in_any_range(&region, &street, 200).unwrap());  // in [140..260]
+        assert!(db.house_number_in_any_range(&region, &street, 399).unwrap());  // in [300..400]
+        assert!(!db.house_number_in_any_range(&region, &street, 999).unwrap());
     }
 
     #[test]
     fn test_load_house_number_ranges_no_key() {
         let tmp_dir = TempDir::new().unwrap();
-        let db_arc = Database::open(tmp_dir.path()).unwrap();
-        let db = db_arc.lock().unwrap();
+        let db_arc  = Database::open(tmp_dir.path()).unwrap();
+        let region  = region_maryland();
+        let street  = make_street("Imaginary Road");
+        let result  = db_arc.lock().unwrap().load_house_number_ranges(&region, &street).unwrap();
 
-        let region = region_maryland();
-        let street = make_street("Imaginary Road");
-        let result = load_house_number_ranges(&db, &region, &street).unwrap();
         assert!(result.is_none(), "No data => None");
     }
 

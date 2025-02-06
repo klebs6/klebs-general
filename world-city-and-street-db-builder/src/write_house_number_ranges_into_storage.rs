@@ -28,7 +28,7 @@ pub fn write_house_number_ranges_into_storage(
     );
 
     for (street, new_ranges) in house_number_ranges {
-        process_street_house_numbers(db, region, street, new_ranges)?;
+        update_street_house_numbers(db, region, street, new_ranges)?;
     }
 
     info!("write_house_number_ranges_into_storage: done processing all streets for region={:?}", region);

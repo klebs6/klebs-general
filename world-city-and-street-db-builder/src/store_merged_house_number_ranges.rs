@@ -15,7 +15,7 @@ pub fn store_merged_house_number_ranges(
         region
     );
 
-    store_house_number_ranges(db, region, street, merged)?;
+    db.store_house_number_ranges(region, street, merged)?;
     debug!(
         "store_merged_house_number_ranges: successfully stored ranges for street='{}'",
         street

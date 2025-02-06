@@ -12,17 +12,22 @@ struct NoMd5Downloader {
     ext:  &'static str,
 }
 
-impl FileDownloader for NoMd5Downloader {
+impl DownloadLink for NoMd5Downloader {
 
     fn download_link(&self) -> &str {
         &self.link
     }
+}
+
+impl Md5DownloadLink for NoMd5Downloader {
 
     // Return None so we skip MD5 checks
     fn md5_download_link(&self) -> Option<Cow<'_, str>> {
         None
     }
 }
+
+impl FileDownloader for NoMd5Downloader {}
 
 #[tokio::test]
 async fn test_obtain_pbf_no_md5() {

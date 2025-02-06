@@ -84,6 +84,7 @@ error_tree!{
 
     #[derive(PartialEq)]
     pub enum DatabaseConstructionError {
+        DataAccessError,
         OsmPbfParseError(OsmPbfParseError),
         RocksDB(rocksdb::Error),
     }

@@ -1,3 +1,4 @@
+// ---------------- [ File: src/lib.rs ]
 use std::fmt;
 use std::str::FromStr;
 use serde::{Serialize,Deserialize};

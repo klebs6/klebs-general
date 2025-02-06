@@ -67,3 +67,265 @@ pub async fn create_small_osm_pbf_file(
     info!("create_small_osm_pbf_file: successfully wrote OSM PBF to {:?}", path);
     Ok(())
 }
+
+#[cfg(test)]
+mod create_small_osm_pbf_file_tests {
+    use super::*;
+    use std::fs::File;
+    use std::io::{Write, ErrorKind};
+    use std::path::PathBuf;
+    use tempfile::TempDir;
+    use osmpbf::{Element, ElementReader};
+
+    /// A helper to parse the resulting `.pbf` and confirm there's exactly one node
+    /// with the expected city/street/housenumber. If `expected_hn` is `None`, we ensure
+    /// there's no `addr:housenumber`. We also check lat/lon if desired.
+    fn parse_and_verify_pbf(
+        path: &std::path::Path,
+        expected_lat: f64,
+        expected_lon: f64,
+        expected_city: &str,
+        expected_street: &str,
+        expected_hn: Option<&str>,
+    ) {
+        let reader = ElementReader::from_path(path).expect("Should open pbf for read");
+        let mut node_count = 0;
+
+        // We'll track what we found
+        let mut found_city = None;
+        let mut found_street = None;
+        let mut found_hn = None;
+        let (mut lat_found, mut lon_found) = (None, None);
+
+        reader
+            .for_each(|element| {
+                if let Element::Node(node) = element {
+                    node_count += 1;
+
+                    // lat/lon checks
+                    // raw lat/lon from osmpbf is typically in 1e-7 or 1e-9 scaling,
+                    // but let's do `node.lat()` if available:
+                    lat_found = Some(node.lat());
+                    lon_found = Some(node.lon());
+
+                    // gather tags
+                    for (k, v) in node.tags() {
+                        match k {
+                            "addr:city" => found_city = Some(v.to_string()),
+                            "addr:street" => found_street = Some(v.to_string()),
+                            "addr:housenumber" => found_hn = Some(v.to_string()),
+                            _ => {}
+                        }
+                    }
+                }
+            })
+            .expect("Should parse each element");
+
+        assert_eq!(node_count, 1, "We expect exactly 1 node in the .pbf");
+
+        // lat/lon close to expected? We only do a rough check if desired, because the final
+        // pbf lat/lon might reflect internal offset/granularity. But let's do approximate check:
+        let lat_ok = (lat_found.unwrap_or_default() - expected_lat).abs() < 0.0001;
+        let lon_ok = (lon_found.unwrap_or_default() - expected_lon).abs() < 0.0001;
+        assert!(
+            lat_ok && lon_ok,
+            "Lat/lon do not match expected. Found=({:?},{:?}), want=({},{})",
+            lat_found, lon_found, expected_lat, expected_lon
+        );
+
+        // city/street
+        assert_eq!(
+            found_city.as_deref(),
+            Some(expected_city),
+            "addr:city mismatch"
+        );
+        assert_eq!(
+            found_street.as_deref(),
+            Some(expected_street),
+            "addr:street mismatch"
+        );
+
+        // optional housenumber
+        match (expected_hn, found_hn) {
+            (Some(want), Some(got)) => {
+                assert_eq!(want, got, "addr:housenumber mismatch");
+            }
+            (Some(want), None) => {
+                panic!("Expected housenumber='{}', but found none", want);
+            }
+            (None, Some(got)) => {
+                panic!("Expected no housenumber, found='{}'", got);
+            }
+            (None, None) => {
+                // ok => no housenumber expected or found
+            }
+        }
+    }
+
+    #[tokio::test]
+    async fn test_create_small_osm_pbf_file_success_no_housenumber() {
+        let tmp = TempDir::new().unwrap();
+        let path = tmp.path().join("single_node.osm.pbf");
+
+        // bounding box => near -77..-76..39..38 for example
+        let bbox = (-77_000_000_000, -76_000_000_000, 39_000_000_000, 38_000_000_000);
+        let lat = 39.283_f64;
+        let lon = -76.616_f64;
+        let city = "Baltimore";
+        let street = "North Avenue";
+
+        let res = create_small_osm_pbf_file(
+            &path,
+            bbox,
+            city,
+            street,
+            None, // no housenumber
+            lat,
+            lon,
+            1001,
+        )
+        .await;
+
+        assert!(res.is_ok(), "Should succeed creating .pbf file");
+
+        // parse => confirm 1 node with city/street, no housenumber
+        parse_and_verify_pbf(&path, lat, lon, "Baltimore", "North Avenue", None);
+    }
+
+    #[tokio::test]
+    async fn test_create_small_osm_pbf_file_success_with_housenumber() {
+        let tmp = TempDir::new().unwrap();
+        let path = tmp.path().join("with_hn.osm.pbf");
+
+        let bbox = (-77_000_000_000, -76_000_000_000, 39_000_000_000, 38_000_000_000);
+        let lat = 40.0;
+        let lon = -75.5;
+        let city = "TestCity";
+        let street = "TestStreet";
+        let housenumber = Some("100-110");
+
+        let res = create_small_osm_pbf_file(
+            &path,
+            bbox,
+            city,
+            street,
+            housenumber,
+            lat,
+            lon,
+            2002,
+        )
+        .await;
+
+        assert!(res.is_ok());
+        parse_and_verify_pbf(&path, lat, lon, "TestCity", "TestStreet", housenumber);
+    }
+
+    #[tokio::test]
+    async fn test_create_small_osm_pbf_file_path_is_dir() {
+        let tmp = TempDir::new().unwrap();
+        // We'll pass the directory path instead of a file => `validate_not_dir(...)` => error
+        let dir_path = tmp.path();
+
+        let bbox = (-70_000_000_000, -69_000_000_000, 35_000_000_000, 34_000_000_000);
+        let lat = 35.0;
+        let lon = -69.5;
+
+        let res = create_small_osm_pbf_file(
+            dir_path,
+            bbox,
+            "City",
+            "Street",
+            None,
+            lat,
+            lon,
+            9999,
+        )
+        .await;
+
+        assert!(res.is_err(), "Passing a directory => std::io::Error");
+        let err = res.err().unwrap();
+        assert_eq!(err.kind(), ErrorKind::Other, "We produce an Other or relevant error kind");
+    }
+
+    #[tokio::test]
+    async fn test_create_small_osm_pbf_file_unwritable_path() {
+        // We'll try to pass something like '/root/some_unwritable_file.osm.pbf' on Unix,
+        // or a bogus path on Windows. This is OS-specific. If we can't reliably 
+        // test unwritable, we can at least do a partial approach: pass a path 
+        // containing invalid characters on Windows, or something.
+
+        #[cfg(unix)]
+        {
+            let path = PathBuf::from("/this/path/is/not/writable.osm.pbf");
+            let bbox = (-77_000_000_000, -76_000_000_000, 39_000_000_000, 38_000_000_000);
+            let res = create_small_osm_pbf_file(&path, bbox, "City", "Street", None, 39.0, -76.0, 123).await;
+            assert!(res.is_err(), "Unwritable path => error");
+        }
+    }
+
+    #[tokio::test]
+    async fn test_create_small_osm_pbf_file_various_bbox() {
+        let tmp = TempDir::new().unwrap();
+        let path = tmp.path().join("varied_bbox.osm.pbf");
+
+        // Suppose we do a bounding box for e.g. from lat=45 => 46, so:
+        // left= -120.0 => -120_000_000_000, right=-119.0 => -119_000_000_000, top=46.0 => 46_000_000_000, bottom=45 => 45_000_000_000
+        let bbox = (-120_000_000_000, -119_000_000_000, 46_000_000_000, 45_000_000_000);
+
+        let city = "AnywhereVille";
+        let street = "Main St";
+        let lat = 45.5;
+        let lon = -119.5;
+
+        let res = create_small_osm_pbf_file(
+            &path,
+            bbox,
+            city,
+            street,
+            None,
+            lat,
+            lon,
+            3003,
+        )
+        .await;
+        assert!(res.is_ok());
+
+        // parse => confirm lat/lon, city/street
+        parse_and_verify_pbf(&path, lat, lon, "AnywhereVille", "Main St", None);
+    }
+
+    #[tokio::test]
+    async fn test_create_small_osm_pbf_file_lat_lon_out_of_range() {
+        // The function doesn't necessarily enforce lat/lon within -90..90 or -180..180.
+        // It logs a warning. We'll see if it just proceeds. 
+        // We'll just confirm it doesn't fail.
+        let tmp = TempDir::new().unwrap();
+        let path = tmp.path().join("extreme_latlon.osm.pbf");
+
+        let bbox = (-180_000_000_000, 180_000_000_000, 90_000_000_000, -90_000_000_000);
+        // lat= 95.0 => out of normal range, lon=200 => out
+        let lat = 95.0;
+        let lon = 200.0;
+        let city = "OutOfRangeCity";
+        let street = "SomeRoad";
+
+        let res = create_small_osm_pbf_file(
+            &path,
+            bbox,
+            city,
+            street,
+            Some("42"),
+            lat,
+            lon,
+            4004,
+        )
+        .await;
+
+        // The code might only log a warning about lat/lon range. We assume it doesn't fail.
+        // If your code specifically forbids lat>90 => error, adapt the test.
+        assert!(res.is_ok(), "We do not forcibly fail if lat/lon out-of-range, just logs a warning");
+
+        // parse => confirm it *did* produce a node. We'll see lat/lon might be truncated by granularity.
+        parse_and_verify_pbf(&path, lat, lon, "OutOfRangeCity", "SomeRoad", Some("42"));
+    }
+}

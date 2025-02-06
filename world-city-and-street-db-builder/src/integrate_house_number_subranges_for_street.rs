@@ -16,11 +16,12 @@ crate::ix!();
 /// * `Ok(())` on success, or if partial failures occurred but we can continue.
 /// * `Err(OsmPbfParseError)` if a critical error prevents further processing.
 pub fn integrate_house_number_subranges_for_street(
-    db: &mut Database,
+    db:           &mut Database,
     world_region: &WorldRegion,
-    street: &StreetName,
-    new_ranges: Vec<HouseNumberRange>,
+    street:       &StreetName,
+    new_ranges:   Vec<HouseNumberRange>,
 ) -> Result<(), OsmPbfParseError> {
+
     trace!(
         "integrate_house_number_subranges_for_street: street='{}', merging {} new ranges",
         street,
@@ -28,7 +29,7 @@ pub fn integrate_house_number_subranges_for_street(
     );
 
     // Step 1) Load existing ranges (if any)
-    let existing_opt = match load_existing_street_ranges(db, world_region, street) {
+    let existing_opt = match db.load_existing_street_ranges(world_region, street) {
         Ok(v) => v,
         Err(e) => {
             warn!(
@@ -44,7 +45,7 @@ pub fn integrate_house_number_subranges_for_street(
     let merged = merge_new_subranges(existing_opt.unwrap_or_default(), new_ranges);
 
     // Step 3) Store
-    match store_merged_street_ranges(db, world_region, street, &merged) {
+    match db.store_house_number_ranges(world_region, street, &merged) {
         Ok(_) => {
             debug!(
                 "integrate_house_number_subranges_for_street: successfully stored merged ranges for street='{}'",

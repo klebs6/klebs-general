@@ -49,12 +49,12 @@ impl TryFrom<WorldRegion> for Country {
 
     fn try_from(value: WorldRegion) -> Result<Self, Self::Error> {
         match value {
+            WorldRegion::NorthAmerica(r)               => Ok(Country::try_from(r)?),
+            WorldRegion::CentralAmerica(r)             => Ok(Country::try_from(r)?),
+            WorldRegion::SouthAmerica(r)               => Ok(Country::try_from(r)?),
+            WorldRegion::Europe(r)                     => Ok(Country::try_from(r)?),
             WorldRegion::Africa(r)                     => Ok(Country::try_from(r)?),
             WorldRegion::Asia(r)                       => Ok(Country::try_from(r)?),
-            WorldRegion::Europe(r)                     => Ok(Country::try_from(r)?),
-            WorldRegion::NorthAmerica(r)               => Ok(Country::try_from(r)?),
-            WorldRegion::SouthAmerica(r)               => Ok(Country::try_from(r)?),
-            WorldRegion::CentralAmerica(r)             => Ok(Country::try_from(r)?),
             WorldRegion::AustraliaOceaniaAntarctica(r) => Ok(Country::try_from(r)?),
         }
     }

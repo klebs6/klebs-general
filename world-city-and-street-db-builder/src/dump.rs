@@ -1,13 +1,30 @@
 // ---------------- [ File: src/dump.rs ]
 crate::ix!();
 
+/// A trait defining methods for dumping and inspecting the contents
+/// of a RocksDB‐backed `Database`. This includes the ability to dump
+/// all contents, filter by prefix, and dump region data.
+pub trait DatabaseDump {
+    /// Dump all key-value pairs in the database to stdout.
+    /// Attempts to decode each value according to known key prefixes.
+    fn dump_entire_database_contents(&self);
+
+    /// Dump all keys that match a given prefix, attempting to decode
+    /// each value.
+    fn dump_keys_with_prefix(&self, prefix: &str);
+
+    /// Dump all region-related keys by using the region's abbreviation
+    /// as a prefix.
+    fn dump_region_data(&self, region: &WorldRegion);
+}
+
 /// A unified implementation of both `DatabaseDump` and `DatabaseValueDecoder`
 /// for the `Database` type. Methods have robust tracing for observability.
 impl DatabaseDump for Database {
     /// Dump all key-value pairs in the database to stdout.
     fn dump_entire_database_contents(&self) {
         trace!("dump_entire_database_contents: starting full DB iteration");
-        let iter = self.db().iterator(rocksdb::IteratorMode::Start);
+        let iter = self.iterator(rocksdb::IteratorMode::Start);
         println!("---- DUMPING ENTIRE DATABASE CONTENTS ----");
         for item in iter {
             match item {
@@ -28,7 +45,7 @@ impl DatabaseDump for Database {
     /// each value.
     fn dump_keys_with_prefix(&self, prefix: &str) {
         trace!("dump_keys_with_prefix: prefix={}", prefix);
-        let iter = self.db().prefix_iterator(prefix.as_bytes());
+        let iter = self.prefix_iterator(prefix.as_bytes());
         println!("---- DUMPING KEYS WITH PREFIX: {} ----", prefix);
         for item in iter {
             match item {
@@ -94,7 +111,7 @@ mod dump_tests {
     impl Database {
         pub fn dump_entire_database_contents_to<W: Write>(&self, mut out: W) {
             writeln!(out, "---- DUMPING ENTIRE DATABASE CONTENTS ----").ok();
-            let iter = self.db().iterator(rocksdb::IteratorMode::Start);
+            let iter = self.iterator(rocksdb::IteratorMode::Start);
             for item in iter {
                 match item {
                     Ok((key, val)) => {
@@ -273,7 +290,7 @@ mod dump_tests {
 
         // We'll do a minimal re-implementation:
         writeln!(buffer, "---- DUMPING KEYS WITH PREFIX: C2Z:US: ----").ok();
-        let iter = db_guard.db().prefix_iterator("C2Z:US:".as_bytes());
+        let iter = db_guard.prefix_iterator("C2Z:US:".as_bytes());
         for item in iter {
             match item {
                 Ok((key, val)) => {

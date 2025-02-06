@@ -115,32 +115,34 @@ mod house_number_parsing_and_storage_tests {
     fn test_store_and_merge_house_number_range_in_db() {
         let tmp = TempDir::new().unwrap();
         let db_arc = Database::open(tmp.path()).unwrap();
-        let mut db = db_arc.lock().unwrap();
 
         let region = USRegion::UnitedState(crate::UnitedState::Maryland).into();
         let street = StreetName::new("North Avenue").unwrap();
+
+        let mut db = db_arc.lock().unwrap();
 
         // Initially store [1..=10]
         let initial = vec![
             HouseNumberRange::new(1, 10),
         ];
-        store_house_number_ranges(&mut db, &region, &street, &initial).unwrap();
+
+        db.store_house_number_ranges(&region, &street, &initial).unwrap();
 
         // Now parse a new range = [8..=12]
         let new_range = HouseNumberRange::new(8, 12);
 
         // 1) Load existing
-        let existing_opt = load_house_number_ranges(&db, &region, &street).unwrap();
+        let existing_opt = db.load_house_number_ranges(&region, &street).unwrap();
         let existing = existing_opt.unwrap_or_default(); // => [1..=10]
 
         // 2) merge
         let merged = merge_house_number_range(existing, new_range); // => [1..=12]
 
         // 3) store
-        store_house_number_ranges(&mut db, &region, &street, &merged).unwrap();
+        db.store_house_number_ranges(&region, &street, &merged).unwrap();
 
         // Check final
-        let final_opt = load_house_number_ranges(&db, &region, &street).unwrap();
+        let final_opt = db.load_house_number_ranges(&region, &street).unwrap();
         let final_ranges = final_opt.unwrap();
         assert_eq!(final_ranges.len(), 1);
         assert_eq!(*final_ranges[0].start(), 1);
@@ -157,32 +159,35 @@ mod house_number_parsing_and_storage_tests {
 
         let tmp = TempDir::new().unwrap();
         let db_arc = Database::open(tmp.path()).unwrap();
-        let mut db = db_arc.lock().unwrap();
 
         let region = USRegion::UnitedState(crate::UnitedState::Maryland).into();
         let street = StreetName::new("North Avenue").unwrap();
 
-        let mut accumulated = Vec::new();
+        {
+            let mut db = db_arc.lock().unwrap();
 
-        // Suppose we found these 3 in separate OSM elements:
-        let parsed = vec![
-            HouseNumberRange::new(100, 100), // single
-            HouseNumberRange::new(101, 105), // small range
-            HouseNumberRange::new(106, 108), // adjacent => unify
-        ];
-        for r in parsed {
-            accumulated = merge_house_number_range(accumulated, r);
+
+            let mut accumulated = Vec::new();
+
+            // Suppose we found these 3 in separate OSM elements:
+            let parsed = vec![
+                HouseNumberRange::new(100, 100), // single
+                HouseNumberRange::new(101, 105), // small range
+                HouseNumberRange::new(106, 108), // adjacent => unify
+            ];
+            for r in parsed {
+                accumulated = merge_house_number_range(accumulated, r);
+            }
+            // now accumulated => [100..=108] in a single range
+
+            // store once
+            db.store_house_number_ranges(&region, &street, &accumulated).unwrap();
+
+            // check
+            let final_opt = db.load_house_number_ranges(&region, &street).unwrap();
+            let final_ranges = final_opt.unwrap();
+            assert_eq!(final_ranges.len(), 1);
+            assert_eq!(final_ranges[0], HouseNumberRange::new(100, 108));
         }
-        // now accumulated => [100..=108] in a single range
-
-        // store once
-        store_house_number_ranges(&mut db, &region, &street, &accumulated).unwrap();
-
-        // check
-        let final_opt = load_house_number_ranges(&db, &region, &street).unwrap();
-        let final_ranges = final_opt.unwrap();
-        assert_eq!(final_ranges.len(), 1);
-        assert_eq!(final_ranges[0], HouseNumberRange::new(100, 108));
     }
 }
-

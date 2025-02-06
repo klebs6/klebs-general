@@ -1,6 +1,6 @@
 [package]
 name          = "file-downloader"
-version       = "0.1.0"
+version       = "0.2.0"
 edition       = "2024"
 authors       = [ "klebs tpk3.mx@gmail.com" ]
 description   = "A Rust library to download and verify files, including MD5 checksum verification."

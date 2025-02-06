@@ -48,7 +48,7 @@ impl RegionalRecords {
             return Ok(());
         }
 
-        db.write_indexes(&self.region, &InMemoryIndexes::from(self))?;
+        db.write_indices_for_region(&self.region, &InMemoryIndexes::from(self))?;
 
         write_house_number_ranges_into_storage(&self.house_number_ranges,&self.region,db)?;
 

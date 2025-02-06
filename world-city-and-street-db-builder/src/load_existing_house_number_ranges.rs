@@ -1,25 +1,37 @@
 // ---------------- [ File: src/load_existing_house_number_ranges.rs ]
 crate::ix!();
 
-/// Loads existing house‐number ranges from the database for the specified street in the given region.
-pub fn load_existing_house_number_ranges(
-    db: &mut Database,
-    region: &WorldRegion,
-    street: &StreetName,
-) -> Result<Vec<HouseNumberRange>, DatabaseConstructionError> {
-    trace!(
-        "load_existing_house_number_ranges: street='{}' in region={:?}",
-        street,
-        region
-    );
+pub trait LoadExistingHouseNumberRanges {
 
-    let existing_opt = load_house_number_ranges(db, region, street)?;
-    let existing = existing_opt.unwrap_or_default();
+    fn load_existing_house_number_ranges(
+        &self,
+        region: &WorldRegion,
+        street: &StreetName,
+    ) -> Result<Vec<HouseNumberRange>, DataAccessError>;
+}
 
-    debug!(
-        "load_existing_house_number_ranges: found {} existing ranges for street='{}'",
-        existing.len(),
-        street
-    );
-    Ok(existing)
+impl LoadExistingHouseNumberRanges for Database {
+
+    /// Loads existing house‐number ranges from the database for the specified street in the given region.
+    fn load_existing_house_number_ranges(
+        &self,
+        region: &WorldRegion,
+        street: &StreetName,
+    ) -> Result<Vec<HouseNumberRange>, DataAccessError> {
+        trace!(
+            "load_existing_house_number_ranges: street='{}' in region={:?}",
+            street,
+            region
+        );
+
+        let existing_opt = self.load_house_number_ranges(region, street)?;
+        let existing = existing_opt.unwrap_or_default();
+
+        debug!(
+            "load_existing_house_number_ranges: found {} existing ranges for street='{}'",
+            existing.len(),
+            street
+        );
+        Ok(existing)
+    }
 }

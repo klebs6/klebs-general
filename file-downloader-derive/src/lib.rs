@@ -30,11 +30,17 @@ pub fn derive_file_downloader(input: TokenStream) -> TokenStream {
     };
 
     let expanded = quote! {
-        impl #impl_generics FileDownloader for #ident #ty_generics #where_clause {
+
+        impl #impl_generics DownloadLink for #ident #ty_generics #where_clause {
             fn download_link(&self) -> &str {
                 #download_link_body
             }
         }
+
+        impl #impl_generics Md5DownloadLink for #ident #ty_generics #where_clause {}
+
+        impl #impl_generics FileDownloader for #ident #ty_generics #where_clause {}
+
     };
 
     expanded.into()

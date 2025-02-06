@@ -13,15 +13,21 @@ x!{find_local_file}
 x!{find_file_locally_or_download}
 x!{get_extension_intelligent}
 
-#[async_trait]
-pub trait FileDownloader {
+pub trait DownloadLink {
 
     /// Return the associated OSM PBF download link
     fn download_link(&self) -> &str;
+}
+
+pub trait Md5DownloadLink: DownloadLink {
 
     fn md5_download_link(&self) -> Option<Cow<'_,str>> {
         Some(Cow::Owned(format!("{}.md5", self.download_link())))
     }
+}
+
+#[async_trait]
+pub trait FileDownloader: Md5DownloadLink {
 
     /// Obtain the associated PBF file locally, downloading if necessary.
     /// By default, this uses the `find_or_download` function provided by this crate.
