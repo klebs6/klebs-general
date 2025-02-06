@@ -1,6 +1,6 @@
 [package]
 name = "file-downloader-derive"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2024"
 
 description = "This crate lets us use FileDownloader derive macro. We can use it to facilitate flexible downloading of files."
@@ -23,7 +23,7 @@ tracing-subscriber = { version = "0.3", default-features = false, features = ["f
 serde_json = "1.0.133"
 uuid       = "1.11.0"
 trybuild = "1"
-file-downloader = "0.1.0"
+file-downloader = "0.2.0"
 
 [lib]
 proc-macro = true
