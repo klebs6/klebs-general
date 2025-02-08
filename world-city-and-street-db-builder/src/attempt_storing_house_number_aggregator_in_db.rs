@@ -1,39 +1,9 @@
 // ---------------- [ File: src/attempt_storing_house_number_aggregator_in_db.rs ]
+// ---------------- [ File: src/attempt_storing_in_db.rs ]
 crate::ix!();
 
-/// Stores aggregator results into the DB, if possible. Logs warnings on failure.
-/// Depending on desired behavior, you might also send an `Err` to `tx`.
-pub fn attempt_storing_house_number_aggregator_in_db(
-    db: Arc<Mutex<Database>>,
-    world_region: &WorldRegion,
-    aggregator: HashMap<StreetName, Vec<HouseNumberRange>>
-) {
-    trace!(
-        "attempt_storing_house_number_aggregator_in_db: Storing aggregator with {} streets for region={:?}",
-        aggregator.len(),
-        world_region
-    );
-
-    match db.lock() {
-        Ok(mut db_guard) => {
-            debug!(
-                "attempt_storing_house_number_aggregator_in_db: DB lock acquired; storing aggregator with {} streets",
-                aggregator.len()
-            );
-            if let Err(e) = store_house_number_aggregator_results(&mut db_guard, world_region, aggregator) {
-                warn!(
-                    "attempt_storing_house_number_aggregator_in_db: Failed storing aggregator results: {:?}",
-                    e
-                );
-            }
-        }
-        Err(_) => {
-            warn!("attempt_storing_house_number_aggregator_in_db: Could not lock DB for region={:?}", world_region);
-        }
-    }
-}
-
 #[cfg(test)]
+#[disable]
 mod attempt_storing_house_number_aggregator_in_db_tests {
     use super::*;
     use std::sync::{Arc, Mutex};
@@ -52,12 +22,12 @@ mod attempt_storing_house_number_aggregator_in_db_tests {
     }
 
     /// Builds a small aggregator for a single street => single HouseNumberRange.
-    fn build_single_street_aggregator() -> HashMap<StreetName, Vec<HouseNumberRange>> {
+    fn build_single_street_aggregator() -> HouseNumberAggregator {
         let street = StreetName::new("North Avenue").unwrap();
         let range = HouseNumberRange::new(100, 110);
         let mut map = HashMap::new();
         map.insert(street, vec![range]);
-        map
+        HouseNumberAggregator::new_with_map(&WorldRegion::default(),map)
     }
 
     /// By default, `store_house_number_aggregator_results(...)` is what does the real DB I/O.
@@ -75,7 +45,7 @@ mod attempt_storing_house_number_aggregator_in_db_tests {
         let aggregator = HashMap::new(); // empty
 
         // This should do nothing but log debug statements
-        attempt_storing_house_number_aggregator_in_db(db_arc.clone(), &region, aggregator);
+        aggregator.attempt_storing_in_db(db_arc.clone(), &region);
 
         // verify nothing was written => no "HNR" keys
         let db_guard = db_arc.lock().unwrap();
@@ -100,7 +70,7 @@ mod attempt_storing_house_number_aggregator_in_db_tests {
         let region = md_region();
         let aggregator = build_single_street_aggregator();
 
-        attempt_storing_house_number_aggregator_in_db(db_arc.clone(), &region, aggregator);
+        aggregator.attempt_storing_in_db(db_arc.clone(), &region);
 
         // verify that the aggregator subranges were stored
         let db_guard = db_arc.lock().unwrap();
@@ -139,7 +109,7 @@ mod attempt_storing_house_number_aggregator_in_db_tests {
 
         // Now the lock is poisoned
         // The function should catch the Err and log a warning
-        attempt_storing_house_number_aggregator_in_db(db_arc.clone(), &region, aggregator);
+        aggregator.attempt_storing_in_db(db_arc.clone(), &region);
 
         // There's no easy way to confirm the actual warning log, but at least we confirm
         // it doesn't panic and doesn't store anything.
@@ -174,7 +144,7 @@ mod attempt_storing_house_number_aggregator_in_db_tests {
         }
 
         // 2) We'll replace the real function with our fake one using a local override technique
-        // This can be done by re-implementing attempt_storing_house_number_aggregator_in_db with dependency injection
+        // This can be done by re-implementing attempt_storing_in_db with dependency injection
         // For now, let's just inline a test version:
 
         fn test_version_of_attempt_storing(

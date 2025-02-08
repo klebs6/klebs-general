@@ -14,7 +14,7 @@ pub fn unify_new_and_existing_ranges(
     );
 
     for rng in new_ranges {
-        current = merge_house_number_range(current, rng.clone());
+        current = merge_house_number_range(current, rng);
     }
     current
 }

@@ -62,7 +62,7 @@ mod house_number_parsing_and_storage_tests {
             HouseNumberRange::new(1,10),
         ];
         let new = HouseNumberRange::new(20,20);
-        let merged = merge_house_number_range(existing, new);
+        let merged = merge_house_number_range(existing, &new);
         assert_eq!(merged.len(), 2);
         assert_eq!(merged[0], HouseNumberRange::new(1, 10));
         assert_eq!(merged[1], HouseNumberRange::new(20, 20));
@@ -75,7 +75,7 @@ mod house_number_parsing_and_storage_tests {
             HouseNumberRange::new(1, 10),
         ];
         let new = HouseNumberRange::new(8, 12);
-        let merged = merge_house_number_range(existing, new);
+        let merged = merge_house_number_range(existing, &new);
         assert_eq!(merged.len(), 1);
         assert_eq!(merged[0], HouseNumberRange::new(1, 12));
     }
@@ -87,7 +87,7 @@ mod house_number_parsing_and_storage_tests {
             HouseNumberRange::new(1, 10)
         ];
         let new = HouseNumberRange::new(11, 15);
-        let merged = merge_house_number_range(existing, new);
+        let merged = merge_house_number_range(existing, &new);
         assert_eq!(merged.len(), 1);
         assert_eq!(merged[0], HouseNumberRange::new(1, 15));
     }
@@ -102,7 +102,7 @@ mod house_number_parsing_and_storage_tests {
             HouseNumberRange::new(10, 15),
         ];
         let new = HouseNumberRange::new(7, 12);
-        let merged = merge_house_number_range(existing, new);
+        let merged = merge_house_number_range(existing, &new);
         assert_eq!(merged.len(), 2);
         assert_eq!(merged[0], HouseNumberRange::new(1, 5));
         assert_eq!(merged[1], HouseNumberRange::new(7, 15));
@@ -136,7 +136,7 @@ mod house_number_parsing_and_storage_tests {
         let existing = existing_opt.unwrap_or_default(); // => [1..=10]
 
         // 2) merge
-        let merged = merge_house_number_range(existing, new_range); // => [1..=12]
+        let merged = merge_house_number_range(existing, &new_range); // => [1..=12]
 
         // 3) store
         db.store_house_number_ranges(&region, &street, &merged).unwrap();
@@ -176,7 +176,7 @@ mod house_number_parsing_and_storage_tests {
                 HouseNumberRange::new(106, 108), // adjacent => unify
             ];
             for r in parsed {
-                accumulated = merge_house_number_range(accumulated, r);
+                accumulated = merge_house_number_range(accumulated, &r);
             }
             // now accumulated => [100..=108] in a single range
 

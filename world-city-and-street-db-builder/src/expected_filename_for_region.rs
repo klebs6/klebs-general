@@ -49,14 +49,14 @@ mod expected_filename_for_region_tests {
     impl Abbreviation for MockRegion {
         // We only need abbreviation if your code calls region.abbreviation(), 
         // but in this function we don't. We'll just provide some default.
-        fn abbreviation(&self) -> &str {
+        fn abbreviation(&self) -> &'static str {
             "MOCK"
         }
     }
 
-    impl FileDownloader for MockRegion {
-        fn download_link(&self) -> String {
-            self.link.to_string()
+    impl DownloadLink for MockRegion {
+        fn download_link(&self) -> &str {
+            &self.link
         }
     }
 
@@ -67,7 +67,7 @@ mod expected_filename_for_region_tests {
             // If your code must store in a real variant, do so. 
             // Or if the function is generic, skip. 
             // We'll do a minimal approach:
-            WorldRegion::Custom("mockregion".to_string(), m.link.to_string())
+            WorldRegion::default()
         }
     }
 

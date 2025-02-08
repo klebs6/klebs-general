@@ -9,7 +9,7 @@ crate::ix!();
 /// * A new `Vec<HouseNumberRange>` containing the merged results.
 pub fn merge_new_subranges(
     mut current: Vec<HouseNumberRange>,
-    new_ranges: Vec<HouseNumberRange>,
+    new_ranges: &Vec<HouseNumberRange>,
 ) -> Vec<HouseNumberRange> {
     trace!(
         "merge_new_subranges: current={} existing ranges, new={} ranges",

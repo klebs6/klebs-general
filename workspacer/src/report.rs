@@ -1,3 +1,4 @@
+// ---------------- [ File: src/report.rs ]
 crate::ix!();
 
 pub trait GenerateReport {

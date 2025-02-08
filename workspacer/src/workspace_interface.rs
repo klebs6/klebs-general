@@ -1,3 +1,4 @@
+// ---------------- [ File: src/workspace_interface.rs ]
 crate::ix!();
 
 pub trait WorkspaceInterface<P>

@@ -1,3 +1,4 @@
+// ---------------- [ File: src/crate_interface_item.rs ]
 crate::ix!();
 
 pub struct CrateInterfaceItem<T: GenerateSignature> {

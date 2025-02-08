@@ -1,3 +1,4 @@
+// ---------------- [ File: src/test_coverage.rs ]
 crate::ix!();
 
 #[async_trait]

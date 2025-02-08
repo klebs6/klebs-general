@@ -25,5 +25,5 @@ test_one:
 test:
 	cargo test
 
-coverage:
-	cargo tarpaulin --all-features --workspace
+example:
+	cargo run --example basic_usage

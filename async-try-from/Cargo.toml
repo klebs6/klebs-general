@@ -1,0 +1,16 @@
+[package]
+name = "async-try-from"
+version = "0.1.0"
+edition = "2024"
+authors = ["klebs tpk3.mx@gmail.com"]
+description = "A crate that provides asynchronous trait-based creation and validation patterns."
+license = "MIT"
+repository = "https://github.com/klebs6/klebs-general"
+readme = "README.md"
+keywords = ["async", "trait", "rust", "validation"]
+categories = ["asynchronous", "development-tools"]
+
+[dependencies]
+async-trait = "0.1.86"
+tokio = { version = "1", features = ["rt-multi-thread", "macros"] }
+

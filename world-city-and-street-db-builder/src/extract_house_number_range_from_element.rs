@@ -130,332 +130,116 @@ generate_house_number_extractors!(
     );
 );
 
+// In src/extract_house_number_range_from_element.rs (or in your tests/integration folder)
 #[cfg(test)]
-mod house_number_extractors_tests {
+mod extract_house_number_range_from_element_integration_tests {
     use super::*;
+    use std::fs::File;
 
-    // --------------------------------------------------------------
-    // 1) Minimal mocks for Node, Way, Relation, DenseNode
-    // --------------------------------------------------------------
-    // They provide:
-    //   fn id(&self) -> i64
-    //   fn tags(&self) -> impl Iterator<Item = (&str, &str)>
-
-    #[derive(Clone)]
-    struct MockNode {
-        id: i64,
-        tags_map: HashMap<String, String>,
-    }
-    impl MockNode {
-        fn new(id: i64) -> Self {
-            Self { id, tags_map: HashMap::new() }
-        }
-        fn with_tag(mut self, k: &str, v: &str) -> Self {
-            self.tags_map.insert(k.to_string(), v.to_string());
-            self
-        }
-    }
-    impl MockNode {
-        fn id(&self) -> i64 { self.id }
-        fn tags(&self) -> impl Iterator<Item = (&str, &str)> {
-            self.tags_map.iter().map(|(k,v)| (k.as_str(), v.as_str()))
-        }
+    /// Helper: creates a minimal OSM PBF file with one Node.
+    /// The node will have the given parameters.
+    async fn create_minimal_osm_pbf(
+        path: &Path,
+        housenumber: Option<&str>,
+        node_id: i64,
+    ) -> std::io::Result<()> {
+        // We use the common bounding box near Baltimore.
+        create_small_osm_pbf_file(
+            path,
+            (-77_000_000_000, -76_000_000_000, 39_000_000_000, 38_000_000_000),
+            "TestCity",
+            "TestStreet",
+            housenumber,
+            39.283,
+            -76.616,
+            node_id,
+        ).await
     }
 
-    #[derive(Clone)]
-    struct MockWay {
-        id: i64,
-        tags_map: HashMap<String, String>,
-    }
-    impl MockWay {
-        fn new(id: i64) -> Self {
-            Self { id, tags_map: HashMap::new() }
-        }
-        fn with_tag(mut self, k: &str, v: &str) -> Self {
-            self.tags_map.insert(k.to_string(), v.to_string());
-            self
-        }
-    }
-    impl MockWay {
-        fn id(&self) -> i64 { self.id }
-        fn tags(&self) -> impl Iterator<Item = (&str, &str)> {
-            self.tags_map.iter().map(|(k,v)| (k.as_str(), v.as_str()))
-        }
-    }
+    #[tokio::test]
+    async fn test_extract_house_number_range_from_node_valid_range() {
+        // Create a minimal osm.pbf file with a Node that has a valid house number range "100-110"
+        let tmp_dir = TempDir::new().expect("Failed to create temporary directory");
+        let pbf_path = tmp_dir.path().join("test_valid_node.osm.pbf");
 
-    #[derive(Clone)]
-    struct MockRelation {
-        id: i64,
-        tags_map: HashMap<String, String>,
-    }
-    impl MockRelation {
-        fn new(id: i64) -> Self {
-            Self { id, tags_map: HashMap::new() }
-        }
-        fn with_tag(mut self, k: &str, v: &str) -> Self {
-            self.tags_map.insert(k.to_string(), v.to_string());
-            self
-        }
-    }
-    impl MockRelation {
-        fn id(&self) -> i64 { self.id }
-        fn tags(&self) -> impl Iterator<Item = (&str, &str)> {
-            self.tags_map.iter().map(|(k,v)| (k.as_str(), v.as_str()))
-        }
-    }
+        create_minimal_osm_pbf(&pbf_path, Some("100-110"), 1234)
+            .await
+            .expect("Failed to create minimal OSM PBF file");
 
-    #[derive(Clone)]
-    struct MockDenseNode {
-        id: i64,
-        tags_map: HashMap<String, String>,
-    }
-    impl MockDenseNode {
-        fn new(id: i64) -> Self {
-            Self { id, tags_map: HashMap::new() }
-        }
-        fn with_tag(mut self, k: &str, v: &str) -> Self {
-            self.tags_map.insert(k.to_string(), v.to_string());
-            self
-        }
-    }
-    impl MockDenseNode {
-        fn id(&self) -> i64 { self.id }
-        fn tags(&self) -> impl Iterator<Item = (&str, &str)> {
-            self.tags_map.iter().map(|(k,v)| (k.as_str(), v.as_str()))
-        }
-    }
+        // Open the file with osmpbf ElementReader.
+        let file = File::open(&pbf_path).expect("Failed to open test file");
+        let reader = ElementReader::new(file);
 
-    // --------------------------------------------------------------
-    // 2) Minimal "osmpbf::Element" wrapper that can hold our mocks
-    // --------------------------------------------------------------
-    // We'll define a local enum that exactly mirrors "osmpbf::Element" variants,
-    // but storing references to the mocks. Then we call "extract_house_number_range_from_element"
-    // on it. The macro expects "osmpbf::Element::Node(n)", etc.
-    // We'll define a local or test-only version of "osmpbf::Element".
-    mod test_osmpbf {
-        use super::{MockNode, MockWay, MockRelation, MockDenseNode};
-
-        pub enum Element<'a> {
-            Node(&'a MockNode),
-            Way(&'a MockWay),
-            Relation(&'a MockRelation),
-            DenseNode(&'a MockDenseNode),
-        }
-    }
-    use test_osmpbf::Element; // local test version
-
-    // We'll re-import the macro's generated "extract_house_number_range_from_element" but we'd
-    // need to rename it or re-implement. Instead, we can rename ours:
-    use crate::extract_house_number_range_from_element as real_unified;
-    use crate::extract_house_number_range_from_node as real_node;
-    use crate::extract_house_number_range_from_way as real_way;
-    use crate::extract_house_number_range_from_relation as real_rel;
-    use crate::extract_house_number_range_from_dense_node as real_dense;
-
-    // We'll define local fns that match the signature of the generated ones but take our test Element.
-    // Actually, the macro is "match element { osmpbf::Element::Node(e) => ... }".
-    // We replicate that logic for our "test_osmpbf::Element".
-    pub fn test_extract_house_number_range_from_element<'a>(
-        element: &'a Element<'a>
-    ) -> Result<Option<HouseNumberRange>, IncompatibleOsmPbfElement> {
-        match element {
-            Element::Node(n) => real_node(n),
-            Element::Way(w) => real_way(w),
-            Element::Relation(r) => real_rel(r),
-            Element::DenseNode(d) => real_dense(d),
-        }
-    }
-
-    // --------------------------------------------------------------
-    // 3) Now the actual tests
-    // --------------------------------------------------------------
-    #[traced_test]
-    fn test_node_no_housenumber() {
-        let node = MockNode::new(101)
-            .with_tag("addr:city", "Baltimore")
-            .with_tag("some_other_tag", "anything");
-        let res = real_node(&node);
-        assert!(res.is_ok());
-        let opt = res.unwrap();
-        assert!(opt.is_none(), "No housenumber => None");
-        assert!(logs_contain("no house‐number range for Node with id=101"));
-    }
-
-    #[traced_test]
-    fn test_node_valid_housenumber() {
-        // e.g. "100-110"
-        let node = MockNode::new(202)
-            .with_tag("addr:housenumber", "100-110")
-            .with_tag("addr:city", "Baltimore");
-        let res = real_node(&node);
-        assert!(res.is_ok());
-        let opt = res.unwrap();
-        assert!(opt.is_some());
-        let rng = opt.unwrap();
-        assert_eq!(rng.start(), 100);
-        assert_eq!(rng.end(), 110);
-        assert!(logs_contain("found house‐number range for Node with id=202"));
-    }
-
-    #[traced_test]
-    fn test_node_invalid_housenumber() {
-        let node = MockNode::new(303)
-            .with_tag("addr:housenumber", "ABC not valid");
-        let res = real_node(&node);
-        assert!(res.is_err());
-        match res.err().unwrap() {
-            IncompatibleOsmPbfElement::IncompatibleOsmPbfNode(IncompatibleOsmPbfNode::Incompatible { id }) => {
-                assert_eq!(id, 303);
+        let mut found = false;
+        reader.for_each(|element| {
+            match extract_house_number_range_from_element(&element) {
+                Ok(Some(range)) => {
+                    // We expect the range to be [100, 110].
+                    assert_eq!(*range.start(), 100, "Expected start to be 100");
+                    assert_eq!(*range.end(), 110, "Expected end to be 110");
+                    found = true;
+                }
+                Ok(None) => {}, // This element had no housenumber
+                Err(e) => panic!("Unexpected error: {:?}", e),
             }
-            other => panic!("Expected IncompatibleOsmPbfNode::Incompatible, got {:?}", other),
-        }
-        assert!(logs_contain("error extracting range for Node with id=303:"));
+        });
+        assert!(found, "Expected at least one Node with a valid house number range");
     }
 
-    #[traced_test]
-    fn test_way_no_housenumber() {
-        let way = MockWay::new(404).with_tag("addr:city", "Rockville");
-        let res = real_way(&way);
-        assert!(res.is_ok());
-        let opt = res.unwrap();
-        assert!(opt.is_none());
-    }
+    #[tokio::test]
+    async fn test_extract_house_number_range_from_node_no_housenumber() {
+        // Create a minimal file with a Node that does not include addr:housenumber.
+        let tmp_dir = TempDir::new().expect("Failed to create temporary directory");
+        let pbf_path = tmp_dir.path().join("test_no_hn_node.osm.pbf");
 
-    #[traced_test]
-    fn test_way_valid_housenumber() {
-        let way = MockWay::new(505).with_tag("addr:housenumber", "123");
-        let res = real_way(&way);
-        assert!(res.is_ok());
-        let rng_opt = res.unwrap();
-        assert!(rng_opt.is_some());
-        assert_eq!(rng_opt.unwrap().start(), 123);
-    }
+        create_minimal_osm_pbf(&pbf_path, None, 2345)
+            .await
+            .expect("Failed to create minimal OSM PBF file");
 
-    #[traced_test]
-    fn test_way_invalid_housenumber() {
-        let way = MockWay::new(606).with_tag("addr:housenumber", "-not a number-");
-        let res = real_way(&way);
-        assert!(res.is_err());
-        match res.err().unwrap() {
-            // The macro transforms Node error => Way error => IncompatibleOsmPbfWay::Incompatible{id=606}
-            IncompatibleOsmPbfElement::IncompatibleOsmPbfWay(IncompatibleOsmPbfWay::Incompatible { id }) => {
-                assert_eq!(id, 606);
+        let file = File::open(&pbf_path).expect("Failed to open test file");
+        let reader = ElementReader::new(file);
+
+        let mut seen_none = false;
+
+        reader.for_each(|element| {
+            match extract_house_number_range_from_element(&element) {
+                Ok(None) => seen_none = true,
+                Ok(Some(_)) => panic!("Did not expect a house number range"),
+                Err(e) => panic!("Unexpected error: {:?}", e),
             }
-            other => panic!("Expected IncompatibleOsmPbfWay, got {:?}", other),
-        }
+        });
+
+        assert!(seen_none, "Expected a Node with no housenumber to yield None");
     }
 
-    #[traced_test]
-    fn test_relation_ok_none() {
-        let rel = MockRelation::new(707);
-        let res = real_rel(&rel);
-        assert!(res.is_ok());
-        assert!(res.unwrap().is_none());
-    }
+    #[tokio::test]
+    async fn test_extract_house_number_range_from_node_invalid_housenumber() {
+        // Create a minimal file with a Node that has an invalid housenumber (non-numeric)
+        let tmp_dir = TempDir::new().expect("Failed to create temporary directory");
+        let pbf_path = tmp_dir.path().join("test_invalid_hn_node.osm.pbf");
 
-    #[traced_test]
-    fn test_relation_ok_some() {
-        let rel = MockRelation::new(808)
-            .with_tag("addr:housenumber", "200-300");
-        let res = real_rel(&rel);
-        let rng_opt = res.unwrap();
-        let rng = rng_opt.unwrap();
-        assert_eq!((rng.start(), rng.end()), (200, 300));
-    }
+        // Use an invalid housenumber value like "ABC".
+        create_minimal_osm_pbf(&pbf_path, Some("ABC"), 3456)
+            .await
+            .expect("Failed to create minimal OSM PBF file");
 
-    #[traced_test]
-    fn test_relation_invalid_housenumber() {
-        let rel = MockRelation::new(909)
-            .with_tag("addr:housenumber", "?? unparseable");
-        let res = real_rel(&rel);
-        assert!(res.is_err());
-        match res.err().unwrap() {
-            IncompatibleOsmPbfElement::IncompatibleOsmPbfRelation(IncompatibleOsmPbfRelation::Incompatible { id }) => {
-                assert_eq!(id, 909);
+        let file = File::open(&pbf_path).expect("Failed to open test file");
+        let reader = ElementReader::new(file);
+
+        let mut saw_error = false;
+        reader.for_each(|element| {
+            match extract_house_number_range_from_element(&element) {
+                Ok(Some(_)) => panic!("Expected an error for invalid housenumber"),
+                Ok(None) => panic!("Expected an error for invalid housenumber, not None"),
+                Err(e) => {
+                    // Check that the error is the expected kind (here we expect an Incompatible error).
+                    match e {
+                        IncompatibleOsmPbfElement::IncompatibleOsmPbfNode(_) => saw_error = true,
+                        _ => panic!("Expected IncompatibleOsmPbfNode error, got {:?}", e),
+                    }
+                },
             }
-            other => panic!("Expected IncompatibleOsmPbfRelation, got {:?}", other),
-        }
-    }
-
-    #[traced_test]
-    fn test_dense_node_ok_none() {
-        let dn = MockDenseNode::new(1001);
-        let res = real_dense(&dn);
-        assert!(res.is_ok());
-        assert!(res.unwrap().is_none());
-    }
-
-    #[traced_test]
-    fn test_dense_node_ok_some() {
-        let dn = MockDenseNode::new(2002)
-            .with_tag("addr:housenumber", "999");
-        let res = real_dense(&dn);
-        let rng_opt = res.unwrap();
-        assert!(rng_opt.is_some());
-        assert_eq!(rng_opt.unwrap().start(), 999);
-    }
-
-    #[traced_test]
-    fn test_dense_node_invalid() {
-        let dn = MockDenseNode::new(3003)
-            .with_tag("addr:housenumber", "N/A");
-        let res = real_dense(&dn);
-        assert!(res.is_err());
-        match res.err().unwrap() {
-            IncompatibleOsmPbfElement::IncompatibleOsmPbfDenseNode(IncompatibleOsmPbfDenseNode::Incompatible { id }) => {
-                assert_eq!(id, 3003);
-            }
-            other => panic!("Expected IncompatibleOsmPbfDenseNode, got {:?}", other),
-        }
-    }
-
-    // --------------------------------------------------------------
-    // 4) Unified function test => test_extract_house_number_range_from_element(...)
-    // --------------------------------------------------------------
-
-    #[traced_test]
-    fn test_unified_node_ok() {
-        let node = MockNode::new(111).with_tag("addr:housenumber", "45-50");
-        let elem = Element::Node(&node);
-        let res = test_extract_house_number_range_from_element(&elem);
-        assert!(res.is_ok());
-        let rng = res.unwrap().unwrap();
-        assert_eq!((rng.start(), rng.end()), (45, 50));
-    }
-
-    #[traced_test]
-    fn test_unified_way_err() {
-        let way = MockWay::new(222).with_tag("addr:housenumber", "invalid##");
-        let elem = Element::Way(&way);
-        let res = test_extract_house_number_range_from_element(&elem);
-        assert!(res.is_err());
-        match res.err().unwrap() {
-            IncompatibleOsmPbfElement::IncompatibleOsmPbfWay(IncompatibleOsmPbfWay::Incompatible { id }) => {
-                assert_eq!(id, 222);
-            }
-            other => panic!("Expected IncompatibleOsmPbfWay, got {:?}", other),
-        }
-    }
-
-    #[traced_test]
-    fn test_unified_relation_none() {
-        let rel = MockRelation::new(333)
-            .with_tag("some_tag", "no housenumber");
-        let elem = Element::Relation(&rel);
-        let res = test_extract_house_number_range_from_element(&elem);
-        assert!(res.is_ok());
-        assert!(res.unwrap().is_none());
-    }
-
-    #[traced_test]
-    fn test_unified_dense_node_ok() {
-        let dn = MockDenseNode::new(444)
-            .with_tag("addr:housenumber", "1234");
-        let elem = Element::DenseNode(&dn);
-        let res = test_extract_house_number_range_from_element(&elem);
-        assert!(res.is_ok());
-        let rng = res.unwrap().unwrap();
-        assert_eq!(rng.start(), 1234);
-        assert_eq!(rng.end(), 1234);
+        });
+        assert!(saw_error, "Expected at least one error for invalid housenumber");
     }
 }

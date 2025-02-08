@@ -61,7 +61,6 @@ x!{house_number_parsing_and_storage}
 x!{house_number_ranges}
 x!{indexing}
 x!{infer_country_from_region}
-x!{init_house_number_aggregator}
 x!{integrate_house_number_subranges_for_street}
 x!{keys}
 x!{list_all_addresses_in_pbf_dir}
@@ -81,7 +80,6 @@ x!{open_database_at_path}
 x!{open_osm_pbf_reader}
 x!{open_pbf_reader_or_report_error}
 x!{parse_address_record_if_any}
-x!{parse_and_aggregate_osm}
 x!{parse_city_names}
 x!{parse_housenumber_value}
 x!{parse_integer}
@@ -91,7 +89,6 @@ x!{prefix_transform}
 x!{prepare_osm_header_block}
 x!{prepare_single_node_primitive_block}
 x!{process_and_validate_addresses}
-x!{process_osm_element}
 x!{process_single_osm_element}
 x!{putget}
 x!{region_data}
@@ -123,8 +120,6 @@ x!{try_construct_postal_code}
 x!{try_construct_street_name}
 x!{try_decode_postal_codes}
 x!{try_extract_address_tags}
-x!{try_infer_street_and_update_housenumber}
-x!{try_parse_and_aggregate_house_numbers}
 x!{try_resolve_country}
 x!{unify_new_and_existing_ranges}
 x!{update_aggregator_with_housenumber}
@@ -147,3 +142,4 @@ x!{write_postal_codes_to_region_and_city}
 x!{write_postal_codes_to_region_and_street}
 x!{write_streets_to_region_and_city}
 x!{write_streets_to_region_and_postal_code}
+x!{house_number_aggregator}

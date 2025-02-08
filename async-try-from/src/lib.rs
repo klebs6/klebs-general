@@ -1,4 +1,7 @@
-crate::ix!();
+use std::path::Path;
+use async_trait::async_trait;
+
+// ---------------- [ File: src/async_traits.rs ]
 
 pub trait MaybeThrow {
 
@@ -44,7 +47,7 @@ where
 }
 
 #[async_trait]
-pub trait AsyncIsValid {
+pub trait AsyncPathValidator {
 
     async fn is_valid(path: &Path) -> bool;
 }
@@ -57,4 +60,12 @@ pub trait AsyncFindItems {
 
     /// Asynchronously finds all the crates in the workspace
     async fn find_items(path: &Path) -> Result<Vec<Self::Item>, Self::Error>;
+}
+
+/// Trait for validating integrity of a component (e.g., Workspace or Crate)
+pub trait ValidateIntegrity {
+
+    type Error;
+
+    fn validate_integrity(&self) -> Result<(), Self::Error>;
 }

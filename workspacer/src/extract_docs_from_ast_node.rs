@@ -1,3 +1,4 @@
+// ---------------- [ File: src/extract_docs_from_ast_node.rs ]
 crate::ix!();
 
 pub fn extract_docs(node: &SyntaxNode) -> Option<String> {

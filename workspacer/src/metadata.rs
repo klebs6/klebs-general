@@ -1,3 +1,4 @@
+// ---------------- [ File: src/metadata.rs ]
 crate::ix!();
 
 #[async_trait]

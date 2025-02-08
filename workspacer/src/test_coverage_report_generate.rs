@@ -1,3 +1,4 @@
+// ---------------- [ File: src/test_coverage_report_generate.rs ]
 crate::ix!();
 
 impl GenerateReport for TestCoverageCommand {

@@ -19,7 +19,7 @@ pub fn integrate_house_number_subranges_for_street(
     db:           &mut Database,
     world_region: &WorldRegion,
     street:       &StreetName,
-    new_ranges:   Vec<HouseNumberRange>,
+    new_ranges:   &Vec<HouseNumberRange>,
 ) -> Result<(), OsmPbfParseError> {
 
     trace!(

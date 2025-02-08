@@ -1,3 +1,4 @@
+// ---------------- [ File: src/crate_handle_interface.rs ]
 crate::ix!();
 
 pub trait CrateHandleInterface<P>
@@ -53,14 +54,6 @@ pub trait CheckIfReadmeExists {
 pub trait GetReadmePath {
 
     async fn readme_path(&self) -> Result<Option<PathBuf>, WorkspaceError>;
-}
-
-/// Trait for validating integrity of a component (e.g., Workspace or Crate)
-pub trait ValidateIntegrity {
-
-    type Error;
-
-    fn validate_integrity(&self) -> Result<(), Self::Error>;
 }
 
 pub trait HasCargoToml {

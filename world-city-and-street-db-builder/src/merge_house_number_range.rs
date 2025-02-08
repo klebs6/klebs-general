@@ -8,10 +8,10 @@ crate::ix!();
 /// Adjust if adjacency shouldn't unify.
 pub fn merge_house_number_range(
     mut existing: Vec<HouseNumberRange>,
-    new_range: HouseNumberRange
+    new_range: &HouseNumberRange
 ) -> Vec<HouseNumberRange> 
 {
-    existing.push(new_range);
+    existing.push(new_range.clone());
     existing.sort_by_key(|r| *r.start());
 
     let mut merged = Vec::new();
@@ -44,7 +44,7 @@ mod merge_range_tests {
             HouseNumberRange::new(1, 10),
         ];
         let new = HouseNumberRange::new(20, 20);
-        let merged = merge_house_number_range(existing, new);
+        let merged = merge_house_number_range(existing, &new);
         assert_eq!(merged.len(), 2);
         assert_eq!(merged[0], HouseNumberRange::new(1, 10));
         assert_eq!(merged[1], HouseNumberRange::new(20, 20));
@@ -57,7 +57,7 @@ mod merge_range_tests {
             HouseNumberRange::new(1, 10),
         ];
         let new = HouseNumberRange::new(8, 12);
-        let merged = merge_house_number_range(existing, new);
+        let merged = merge_house_number_range(existing, &new);
         assert_eq!(merged.len(), 1);
         assert_eq!(merged[0], HouseNumberRange::new(1, 12));
     }
@@ -69,7 +69,7 @@ mod merge_range_tests {
             HouseNumberRange::new(1, 10),
         ];
         let new = HouseNumberRange::new(11, 15);
-        let merged = merge_house_number_range(existing, new);
+        let merged = merge_house_number_range(existing, &new);
         assert_eq!(merged.len(), 1);
         assert_eq!(merged[0], HouseNumberRange::new(1, 15));
     }
@@ -82,7 +82,7 @@ mod merge_range_tests {
         ];
         let new = HouseNumberRange::new(7, 12);
         // Sort => [1..=5, 7..=12, 10..=15], unify => [1..=5, 7..=15]
-        let merged = merge_house_number_range(existing, new);
+        let merged = merge_house_number_range(existing, &new);
         assert_eq!(merged.len(), 2);
         assert_eq!(merged[0], HouseNumberRange::new(1, 5));
         assert_eq!(merged[1], HouseNumberRange::new(7, 15));

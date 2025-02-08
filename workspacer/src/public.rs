@@ -1,3 +1,4 @@
+// ---------------- [ File: src/public.rs ]
 crate::ix!();
 
 pub fn is_node_public(node: &SyntaxNode) -> bool {

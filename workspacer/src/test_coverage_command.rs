@@ -1,3 +1,4 @@
+// ---------------- [ File: src/test_coverage_command.rs ]
 crate::ix!();
 
 pub struct TestCoverageCommand {

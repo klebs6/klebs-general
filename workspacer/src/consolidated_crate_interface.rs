@@ -1,3 +1,4 @@
+// ---------------- [ File: src/consolidated_crate_interface.rs ]
 crate::ix!();
 
 pub struct ConsolidatedCrateInterface {
@@ -8,6 +9,8 @@ pub struct ConsolidatedCrateInterface {
     types:   Vec<CrateInterfaceItem<ast::TypeAlias>>,
     macros:  Vec<CrateInterfaceItem<ast::MacroRules>>,
 }
+
+unsafe impl Send for ConsolidatedCrateInterface {}
 
 impl fmt::Display for ConsolidatedCrateInterface {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
