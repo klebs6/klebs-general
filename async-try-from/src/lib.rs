@@ -69,3 +69,65 @@ pub trait ValidateIntegrity {
 
     fn validate_integrity(&self) -> Result<(), Self::Error>;
 }
+
+/// Trait for asynchronously creating `Self` specifically from an environment variable name.
+#[async_trait]
+pub trait AsyncTryFromEnv {
+    type Error;
+
+    /// Creates an instance of `Self` by reading an environment variable asynchronously (if needed).
+    async fn new_from_env(var_name: &str) -> Result<Self, Self::Error>
+    where
+        Self: Sized;
+}
+
+/// Trait for asynchronously creating `Self` from a filesystem path.
+#[async_trait]
+pub trait AsyncTryFromFile {
+    type Error;
+
+    /// Asynchronously create `Self` by reading the file at `path`.
+    async fn new_from_file(path: &Path) -> Result<Self, Self::Error>
+    where
+        Self: Sized;
+}
+
+/// Trait that combines the environment creation with `ValidateIntegrity`.
+#[async_trait]
+pub trait AsyncCreateWithAndValidateEnv:
+    Sized
+    + AsyncTryFromEnv
+    + ValidateIntegrity<Error = <Self as AsyncTryFromEnv>::Error>
+{
+    async fn new_from_env_and_validate(var_name: &str) -> Result<Self, <Self as AsyncTryFromEnv>::Error> {
+        let instance = Self::new_from_env(var_name).await?;
+        instance.validate_integrity()?;
+        Ok(instance)
+    }
+}
+
+// Blanket implementation if a type implements both `AsyncTryFromEnv` and `ValidateIntegrity`
+impl<T> AsyncCreateWithAndValidateEnv for T
+where
+    T: AsyncTryFromEnv + ValidateIntegrity<Error = <T as AsyncTryFromEnv>::Error>,
+{}
+
+/// Trait that combines file-based creation with `ValidateIntegrity`.
+#[async_trait]
+pub trait AsyncCreateWithAndValidateFile:
+    Sized
+    + AsyncTryFromFile
+    + ValidateIntegrity<Error = <Self as AsyncTryFromFile>::Error>
+{
+    async fn new_from_file_and_validate(path: &Path) -> Result<Self, <Self as AsyncTryFromFile>::Error> {
+        let instance = Self::new_from_file(path).await?;
+        instance.validate_integrity()?;
+        Ok(instance)
+    }
+}
+
+// Blanket implementation if a type implements both `AsyncTryFromFile` and `ValidateIntegrity`
+impl<T> AsyncCreateWithAndValidateFile for T
+where
+    T: AsyncTryFromFile + ValidateIntegrity<Error = <T as AsyncTryFromFile>::Error>,
+{}

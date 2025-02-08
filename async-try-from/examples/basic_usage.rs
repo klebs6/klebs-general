@@ -2,7 +2,6 @@ mod basic_usage_example {
     use async_trait::async_trait;
     use async_try_from::{AsyncTryFrom, ValidateIntegrity, AsyncCreateWithAndValidate};
     use std::io;
-    use tokio;
 
     // A simple struct that we will create asynchronously
     pub struct MyType;
@@ -32,7 +31,6 @@ mod basic_usage_example {
     }
 
     // Demonstrate creating and validating our type in one step
-    #[tokio::main]
     pub async fn run_example() -> Result<(), Box<dyn std::error::Error>> {
         let input = "Some input".to_string();
         let _instance = MyType::new_and_validate(&input).await?;
@@ -46,5 +44,5 @@ pub async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // In a real project, you could call:
     // This example keeps main synchronous for demonstration.
     println!("Run 'cargo run --example basic_usage' to see the async creation and validation in action.");
-    basic_usage_example::run_example()
+    Ok(basic_usage_example::run_example().await?)
 }
