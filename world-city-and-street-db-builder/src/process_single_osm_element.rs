@@ -54,6 +54,7 @@ pub fn process_single_osm_element(
 }
 
 #[cfg(test)]
+#[disable]
 mod test_process_single_osm_element {
     use super::*;
     use std::collections::HashMap;

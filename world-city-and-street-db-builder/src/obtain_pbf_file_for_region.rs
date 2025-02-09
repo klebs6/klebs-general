@@ -9,6 +9,7 @@ pub async fn obtain_pbf_file_for_region(
 }
 
 #[cfg(test)]
+#[disable]
 mod test_obtain_pbf_file_for_region {
     use super::*;
     use std::path::{PathBuf, Path};

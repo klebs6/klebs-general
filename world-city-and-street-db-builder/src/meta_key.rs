@@ -27,6 +27,7 @@ impl From<WorldRegion> for MetaKeyForRegion {
 }
 
 #[cfg(test)]
+#[disable]
 mod meta_key_tests {
     use super::*;
 

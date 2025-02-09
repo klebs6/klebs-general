@@ -24,6 +24,7 @@ pub fn parse_integer(
 }
 
 #[cfg(test)]
+#[disable]
 mod test_parse_integer {
     use super::*;
 

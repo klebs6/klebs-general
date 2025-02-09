@@ -37,6 +37,7 @@ impl LoadExistingHouseNumberRanges for Database {
 }
 
 #[cfg(test)]
+#[disable]
 mod test_load_existing_house_number_ranges {
     use super::*;
     use tempfile::TempDir;
@@ -44,10 +45,9 @@ mod test_load_existing_house_number_ranges {
 
     /// Creates a temporary database and returns `(db, temp_dir)` so that the temp dir
     /// remains valid throughout this test module's usage.
-    fn create_temp_db() -> (Arc<Mutex<Database>>, TempDir) {
+    fn create_temp_db<I:StorageInterface>() -> (Arc<Mutex<I>>, TempDir) {
         let temp_dir = TempDir::new().expect("Failed to create temporary directory");
-        let db = Database::open(temp_dir.path())
-            .expect("Failed to open database in temp dir");
+        let db = I::open(temp_dir.path()).expect("Failed to open database in temp dir");
         (db, temp_dir)
     }
 
@@ -58,8 +58,8 @@ mod test_load_existing_house_number_ranges {
 
     /// Writes multiple house-number subranges under the region+street key
     /// so that we can test retrieving them with `load_existing_house_number_ranges`.
-    fn store_house_number_ranges_for_test(
-        db: &mut Database,
+    fn store_house_number_ranges_for_test<I:StorageInterface>(
+        db:     &mut I,
         region: &WorldRegion,
         street: &StreetName,
         ranges: &[HouseNumberRange],

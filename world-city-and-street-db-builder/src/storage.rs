@@ -13,9 +13,11 @@ impl StorageInterface for Database {}
 
 pub trait StorageInterface
 : CheckIfRegionDone
++ Send
++ Sync
++ GetIterator
 + DatabaseGet
 + DatabasePut
-+ GetIterator
 + GetPrefixIterator
 + HouseNumberInAnyRange
 + LoadExistingHouseNumberRanges

@@ -1,14 +1,13 @@
 // ---------------- [ File: src/traits.rs ]
 crate::ix!();
 
-pub trait ValidateWith {
+pub trait ValidateWith<V> {
 
-    type Validator;
     type Error;
 
     fn validate_with(
         &self, 
-        validator: &Self::Validator,
+        validator: &V,
     ) -> Result<(),Self::Error>;
 }
 

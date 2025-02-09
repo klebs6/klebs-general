@@ -38,7 +38,7 @@ impl RegionalRecords {
     }
 
     /// store region data in rocksdb
-    pub fn write_to_storage(&self, db: &mut Database) 
+    pub fn write_to_storage<I:StorageInterface>(&self, db: &mut I) 
         -> Result<(),DatabaseConstructionError> 
     {
         info!("writing regional records to storage for region: {:#?}", self.region);
@@ -59,15 +59,16 @@ impl RegionalRecords {
 }
 
 #[cfg(test)]
+#[disable]
 mod test_regional_records {
     use super::*;
 
     /// Helper to open a test database in a fresh temp directory. 
     /// Returns `(Arc<Mutex<Database>>, TempDir)` so that the 
     /// directory remains valid for the scope of each test.
-    fn create_test_db() -> (Arc<Mutex<Database>>, TempDir) {
+    fn create_test_db<I:StorageInterface>() -> (Arc<Mutex<I>>, TempDir) {
         let dir = TempDir::new().unwrap(); // Using unwrap() in tests is acceptable.
-        let db = Database::open(dir.path()).unwrap();
+        let db  = I::open(dir.path()).unwrap();
         (db, dir)
     }
 

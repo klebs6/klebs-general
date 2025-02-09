@@ -2,10 +2,10 @@
 crate::ix!();
 
 /// Download and parse all specified regions, skipping those already built.
-pub async fn download_and_parse_regions(
+pub async fn download_and_parse_regions<I:StorageInterface>(
     regions:          &[WorldRegion],
     target_dir:       impl AsRef<Path> + Send + Sync,
-    db:               &mut Database,
+    db:               &mut I,
     write_to_storage: bool,
 ) -> Result<(), WorldCityAndStreetDbBuilderError> {
     for region in regions {
@@ -14,10 +14,10 @@ pub async fn download_and_parse_regions(
     Ok(())
 }
 
-pub async fn download_and_parse_region(
+pub async fn download_and_parse_region<I:StorageInterface>(
     region:           &WorldRegion,
     target_dir:       impl AsRef<Path> + Send + Sync,
-    db:               &mut Database,
+    db:               &mut I,
     write_to_storage: bool,
 ) -> Result<(), WorldCityAndStreetDbBuilderError> {
 
@@ -168,12 +168,12 @@ mod download_and_parse_all_regions_tests {
     }
 
     // We'll define an injected version of "download_and_parse_region" that uses our mocks
-    async fn mock_download_and_parse_region(
-        region: &WorldRegion,
-        target_dir: &std::path::Path,
-        db: &mut Database,
-        write_to_storage: bool,
-        calls: &MockCalls,
+    async fn mock_download_and_parse_region<I:StorageInterface>(
+        region:            &WorldRegion,
+        target_dir:        &std::path::Path,
+        db:                &mut I,
+        write_to_storage:  bool,
+        calls:             &MockCalls,
         parse_should_fail: bool,
     ) -> Result<(), WorldCityAndStreetDbBuilderError> {
         info!("(mock) Processing region: {:?}", region);
@@ -206,12 +206,12 @@ mod download_and_parse_all_regions_tests {
 
     // We do similarly for "download_and_parse_regions" but we can call the above in a loop.
 
-    async fn mock_download_and_parse_regions(
-        regions: &[WorldRegion],
-        target_dir: &std::path::Path,
-        db: &mut Database,
-        write_to_storage: bool,
-        calls: &MockCalls,
+    async fn mock_download_and_parse_regions<I:StorageInterface>(
+        regions:           &[WorldRegion],
+        target_dir:        &std::path::Path,
+        db:                &mut I,
+        write_to_storage:  bool,
+        calls:             &MockCalls,
         parse_should_fail: bool,
     ) -> Result<(), WorldCityAndStreetDbBuilderError> {
         for region in regions {
@@ -304,7 +304,7 @@ mod download_and_parse_all_regions_tests {
             let res = mock_download_and_parse_region(
                 &region, 
                 temp_dir.path(), 
-                &mut db_guard, 
+                &mut *db_guard, 
                 true, 
                 &calls, 
                 false
@@ -337,7 +337,7 @@ mod download_and_parse_all_regions_tests {
             let res = mock_download_and_parse_region(
                 &region,
                 temp_dir.path(),
-                &mut db_guard,
+                &mut *db_guard,
                 true,
                 &calls,
                 false, // parse_should_fail = false
@@ -356,7 +356,7 @@ mod download_and_parse_all_regions_tests {
             let res = mock_download_and_parse_region(
                 &region,
                 temp_dir.path(),
-                &mut db_guard,
+                &mut *db_guard,
                 true,
                 &calls,
                 false
@@ -389,7 +389,7 @@ mod download_and_parse_all_regions_tests {
             let res = mock_download_and_parse_region(
                 &region,
                 temp_dir.path(),
-                &mut db_guard,
+                &mut *db_guard,
                 true,
                 &calls,
                 true, // parse fails
@@ -438,7 +438,7 @@ mod download_and_parse_all_regions_tests {
             let res = mock_download_and_parse_regions(
                 &[region_md, region_va],
                 temp_dir.path(),
-                &mut db_guard,
+                &mut *db_guard,
                 true,
                 &calls,
                 false

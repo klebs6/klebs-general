@@ -5,13 +5,13 @@ crate::ix!();
 /// each region’s OSM PBF into `pbf_dir` if necessary.
 ///
 /// Returns the opened database handle upon success.
-pub async fn build_dmv_database(
+pub async fn build_dmv_database<I:StorageInterface>(
     db_path: impl AsRef<Path> + Send + Sync,
     pbf_dir: impl AsRef<Path> + Send + Sync,
-) -> Result<Arc<Mutex<Database>>, WorldCityAndStreetDbBuilderError> 
+) -> Result<Arc<Mutex<I>>, WorldCityAndStreetDbBuilderError> 
 {
     // 1) Open (or create) the DB
-    let db = match Database::open(db_path) {
+    let db = match I::open(db_path) {
         Ok(db_arc) => db_arc,
         Err(e) => {
             return Err(WorldCityAndStreetDbBuilderError::DatabaseConstructionError(e));
@@ -32,7 +32,7 @@ pub async fn build_dmv_database(
         let regions = dmv_regions();
         for region in regions {
             // This checks if region_done(...) first, so we can just always call it:
-            download_and_parse_region(&region, &pbf_dir, &mut db_guard, true).await?;
+            download_and_parse_region(&region, &pbf_dir, &mut *db_guard, true).await?;
         }
     }
 
@@ -63,7 +63,9 @@ mod dmv_database_tests {
 
     /// Checks if a region is marked as "done" in the database.
     /// In our implementation, this means that the DB contains a key like "META:REGION_DONE:<abbr>"
-    fn region_is_done(db: &Database, region: &WorldRegion) -> bool {
+    fn region_is_done<I:StorageInterface>(db: &I, region: &WorldRegion) 
+        -> bool 
+    {
         let meta_key = crate::meta_key::MetaKeyForRegion::from(*region);
         db.get(meta_key.key().as_bytes()).unwrap().is_some()
     }
@@ -121,7 +123,7 @@ mod dmv_database_tests {
         std::fs::write(&invalid_db_file, b"this is a file, not a directory").expect("Failed to write to file");
 
         // Call build_dmv_database. It should fail with a DatabaseConstructionError.
-        let db_result = build_dmv_database(invalid_db_file, pbf_dir).await;
+        let db_result = build_dmv_database::<Database>(invalid_db_file, pbf_dir).await;
         assert!(db_result.is_err(), "build_dmv_database should fail on an invalid DB path");
     }
 

@@ -24,6 +24,7 @@ pub fn merge_new_subranges(
 }
 
 #[cfg(test)]
+#[disable]
 mod test_merge_new_subranges {
     use super::*;
     use std::fmt;

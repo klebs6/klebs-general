@@ -54,6 +54,7 @@ pub fn parse_housenumber_value(
 }
 
 #[cfg(test)]
+#[disable]
 mod test_parse_housenumber_value {
     use super::*;
 

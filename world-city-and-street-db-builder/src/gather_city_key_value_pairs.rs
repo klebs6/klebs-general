@@ -3,13 +3,15 @@ crate::ix!();
 
 /// Performs a prefix-based iteration in RocksDB to find all city keys matching the prefix.
 /// Returns a vector of `(key_string, value_bytes)` tuples for further processing.
-pub fn gather_city_key_value_pairs(db: &Database, prefix: &str) -> Vec<(String, Vec<u8>)> {
+pub fn gather_city_key_value_pairs<I:StorageInterface>(db: &I, prefix: &str) 
+-> Vec<(String, Vec<u8>)> 
+{
     trace!(
         "gather_city_key_value_pairs: prefix='{}' => running prefix_iterator",
         prefix
     );
 
-    let iter = db.db().prefix_iterator(prefix.as_bytes());
+    let iter = db.prefix_iterator(prefix.as_bytes());
     let mut results = Vec::new();
 
     for item_result in iter {
@@ -41,15 +43,15 @@ mod gather_city_key_value_pairs_tests {
 
     /// Creates a DB instance for testing.
     /// Returns `(db_arc, temp_dir)`.
-    fn create_test_db() -> (Arc<Mutex<Database>>, TempDir) {
+    fn create_test_db<I:StorageInterface>() -> (Arc<Mutex<I>>, TempDir) {
         let tmp_dir = TempDir::new().expect("failed to create temp dir");
-        let db = Database::open(tmp_dir.path()).expect("db to open");
+        let db = I::open(tmp_dir.path()).expect("db to open");
         (db, tmp_dir)
     }
 
     #[test]
     fn test_gather_city_key_value_pairs_no_matches() {
-        let (db_arc, _tmp) = create_test_db();
+        let (db_arc, _tmp) = create_test_db::<Database>();
         {
             // Insert some data that won't match our prefix
             let mut db_guard = db_arc.lock().unwrap();
@@ -57,14 +59,14 @@ mod gather_city_key_value_pairs_tests {
         }
 
         let db_guard = db_arc.lock().unwrap();
-        let results = gather_city_key_value_pairs(&db_guard, "C2Z:EU:");
+        let results = gather_city_key_value_pairs(&*db_guard, "C2Z:EU:");
         // "C2Z:EU:" doesn't match "C2Z:US:...", so we get an empty vector
         assert!(results.is_empty());
     }
 
     #[test]
     fn test_gather_city_key_value_pairs_single_match() {
-        let (db_arc, _tmp) = create_test_db();
+        let (db_arc, _tmp) = create_test_db::<Database>();
         {
             let mut db_guard = db_arc.lock().unwrap();
             db_guard.put(b"C2Z:US:baltimore", b"baltimore_data").unwrap();
@@ -74,7 +76,7 @@ mod gather_city_key_value_pairs_tests {
         let db_guard = db_arc.lock().unwrap();
         // prefix "C2Z:US:baltimore"
         let prefix = "C2Z:US:baltimore";
-        let results = gather_city_key_value_pairs(&db_guard, prefix);
+        let results = gather_city_key_value_pairs(&*db_guard, prefix);
         // Expect exactly 1 matching key => "C2Z:US:baltimore"
         assert_eq!(results.len(), 1);
         let (key_str, val_bytes) = &results[0];
@@ -84,7 +86,7 @@ mod gather_city_key_value_pairs_tests {
 
     #[test]
     fn test_gather_city_key_value_pairs_multiple_matches() {
-        let (db_arc, _tmp) = create_test_db();
+        let (db_arc, _tmp) = create_test_db::<Database>();
         {
             let mut db_guard = db_arc.lock().unwrap();
             db_guard.put(b"C2Z:US:baltimore", b"baltimore_data").unwrap();
@@ -94,7 +96,7 @@ mod gather_city_key_value_pairs_tests {
 
         let db_guard = db_arc.lock().unwrap();
         // prefix => "C2Z:US:"
-        let results = gather_city_key_value_pairs(&db_guard, "C2Z:US:");
+        let results = gather_city_key_value_pairs(&*db_guard, "C2Z:US:");
         // We should get 2 results => "baltimore" & "annapolis"
         // The iteration order might be sorted by RocksDB's internal ordering (often lexicographic).
         assert_eq!(results.len(), 2, "Should match 'baltimore' and 'annapolis' keys");
@@ -109,7 +111,7 @@ mod gather_city_key_value_pairs_tests {
         {
             use std::os::unix::ffi::OsStrExt;
 
-            let (db_arc, _tmp) = create_test_db();
+            let (db_arc, _tmp) = create_test_db::<Database>();
             {
                 let mut db_guard = db_arc.lock().unwrap();
                 let bad_bytes = b"C2Z:\xF0\x9F\x92\xA9"; // "C2Z:" plus invalid/unusual bytes
@@ -117,7 +119,7 @@ mod gather_city_key_value_pairs_tests {
             }
 
             let db_guard = db_arc.lock().unwrap();
-            let results = gather_city_key_value_pairs(&db_guard, "C2Z:");
+            let results = gather_city_key_value_pairs(&*db_guard, "C2Z:");
             // We'll get at most 1 item. The key might appear as a lossy UTF-8 conversion => "C2Z:\u{fffd}\u{fffd}\u{fffd}\u{fffd}"
             // Check we didn't crash:
             assert_eq!(results.len(), 1);
@@ -135,7 +137,7 @@ mod gather_city_key_value_pairs_tests {
         // but let's do a forced lock poisoning scenario: 
         // we forcibly poison the DB lock, so the function logs an error and presumably yields no items for that iteration result.
 
-        let (db_arc, _tmp) = create_test_db();
+        let (db_arc, _tmp) = create_test_db::<Database>();
         {
             let mut db_guard = db_arc.lock().unwrap();
             db_guard.put(b"C2Z:US:test", b"test_data").unwrap();
@@ -159,7 +161,7 @@ mod gather_city_key_value_pairs_tests {
         
         // We'll do a normal call => we might see 1 item or 0 items. 
         let db_guard = db_arc.lock().unwrap(); // ironically, we can still lock it
-        let results = gather_city_key_value_pairs(&db_guard, "C2Z:US:");
+        let results = gather_city_key_value_pairs(&*db_guard, "C2Z:US:");
         // The function won't produce an error. Possibly we see the item. 
         assert_eq!(results.len(), 1, "Should see the single test_data item");
     }

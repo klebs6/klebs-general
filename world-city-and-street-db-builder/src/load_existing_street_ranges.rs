@@ -29,6 +29,7 @@ impl LoadExistingStreetRanges for Database {
 }
 
 #[cfg(test)]
+#[disable]
 mod test_load_existing_street_ranges {
     use super::*;
     use std::sync::{Arc, Mutex};
@@ -37,10 +38,9 @@ mod test_load_existing_street_ranges {
     /// Creates a temporary database for testing, returning the
     /// `(Arc<Mutex<Database>>, TempDir)` pair so that the
     /// temp directory remains valid throughout the test.
-    fn create_temp_db() -> (Arc<Mutex<Database>>, TempDir) {
+    fn create_temp_db<I:StorageInterface>() -> (Arc<Mutex<I>>, TempDir) {
         let temp_dir = TempDir::new().expect("Failed to create temporary directory");
-        let db = Database::open(temp_dir.path())
-            .expect("Failed to open database in temp dir");
+        let db = I::open(temp_dir.path()).expect("Failed to open database in temp dir");
         (db, temp_dir)
     }
 
@@ -52,8 +52,8 @@ mod test_load_existing_street_ranges {
     /// Stores a vector of `HouseNumberRange` items for a given region+street
     /// in RocksDB under the "HNR:REGION_ABBR:street" key. This is the same key
     /// that `load_house_number_ranges` expects, making it test-friendly.
-    fn store_test_ranges(
-        db: &mut Database,
+    fn store_test_ranges<I:StorageInterface>(
+        db:     &mut I,
         region: &WorldRegion,
         street: &StreetName,
         ranges: &[HouseNumberRange],

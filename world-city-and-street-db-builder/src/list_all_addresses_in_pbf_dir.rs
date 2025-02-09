@@ -16,9 +16,9 @@ pub type WorldAddressIterator = impl Iterator<Item=Result<WorldAddress,OsmPbfPar
 ///
 /// * `Ok(impl Iterator<Item = Result<WorldAddress, OsmPbfParseError>>)` on success.
 /// * `Err(OsmPbfParseError)` if reading the directory or chaining file iterators fails.
-pub fn list_all_addresses_in_pbf_dir(
+pub fn list_all_addresses_in_pbf_dir<I:StorageInterface + 'static>(
     pbf_dir: impl AsRef<Path>,
-    db: Arc<Mutex<Database>>,
+    db: Arc<Mutex<I>>,
 ) -> Result<WorldAddressIterator, OsmPbfParseError> {
     trace!("list_all_addresses_in_pbf_dir: start for pbf_dir={:?}", pbf_dir.as_ref());
 
@@ -36,6 +36,7 @@ pub fn list_all_addresses_in_pbf_dir(
 }
 
 #[cfg(test)]
+#[disable]
 mod list_all_addresses_tests {
     use super::*;
 

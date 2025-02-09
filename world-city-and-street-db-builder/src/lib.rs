@@ -97,12 +97,10 @@ x!{regional_records}
 x!{regions}
 x!{remote_data}
 x!{retrieve_housenumber_value}
-x!{select_region_for_file}
 x!{serialize_primitive_block}
 x!{seriallize_osm_header_block}
 x!{stdout_backup}
 x!{storage}
-x!{store_aggregator_results}
 x!{store_house_number_ranges}
 x!{store_merged_house_number_ranges}
 x!{street_exists_globally}

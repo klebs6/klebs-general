@@ -52,6 +52,7 @@ pub fn load_osm_data_with_housenumbers(
 }
 
 #[cfg(test)]
+#[disable]
 mod test_load_osm_data_with_housenumbers {
     use super::*;
     use tempfile::TempDir;

@@ -12,11 +12,11 @@ crate::ix!();
 /// * `world_region` - The original region indicator.
 /// * `db`           - Database reference, protected by a mutex.
 /// * `tx`           - A `SyncSender` for streaming [`WorldAddress`] results or errors.
-pub fn handle_pbf_house_number_extractor_in_thread(
+pub fn handle_pbf_house_number_extractor_in_thread<I:StorageInterface>(
     path:         PathBuf,
     country:      Country,
     world_region: WorldRegion,
-    db:           Arc<Mutex<Database>>,
+    db:           Arc<Mutex<I>>,
     tx:           std::sync::mpsc::SyncSender<Result<WorldAddress, OsmPbfParseError>>,
 ) {
     trace!("handle_pbf_house_number_extractor_in_thread: Spawned for path={:?}", path);
@@ -51,14 +51,14 @@ mod handle_pbf_house_number_extractor_in_thread_tests {
     use super::*;
 
     /// Helper: set up a fresh DB in a temp dir, plus a sync_channel for the results.
-    fn setup_db_and_channel()
-        -> (Arc<Mutex<Database>>,
+    fn setup_db_and_channel<I:StorageInterface>()
+        -> (Arc<Mutex<I>>,
             SyncSender<Result<WorldAddress, OsmPbfParseError>>,
             std::sync::mpsc::Receiver<Result<WorldAddress, OsmPbfParseError>>,
             TempDir)
     {
         let tmp_dir = TempDir::new().expect("tempdir creation");
-        let db = Database::open(tmp_dir.path()).expect("Database::open");
+        let db = I::open(tmp_dir.path()).expect("Database::open");
         let (tx, rx) = std::sync::mpsc::sync_channel::<Result<WorldAddress,OsmPbfParseError>>(1000);
         (db, tx, rx, tmp_dir)
     }
@@ -73,7 +73,7 @@ mod handle_pbf_house_number_extractor_in_thread_tests {
         let region: WorldRegion = USRegion::UnitedState(UnitedState::Maryland).into();
         let country = Country::USA;
 
-        let (db_arc, tx, rx, _tmp) = setup_db_and_channel();
+        let (db_arc, tx, rx, _tmp) = setup_db_and_channel::<Database>();
 
         // call the function
         handle_pbf_house_number_extractor_in_thread(path.clone(), country, region, db_arc, tx);
@@ -108,7 +108,7 @@ mod handle_pbf_house_number_extractor_in_thread_tests {
 
         let region: WorldRegion = USRegion::UnitedState(UnitedState::Maryland).into();
         let country = Country::USA;
-        let (db_arc, tx, rx, _td) = setup_db_and_channel();
+        let (db_arc, tx, rx, _td) = setup_db_and_channel::<Database>();
 
         // call
         handle_pbf_house_number_extractor_in_thread(pbf_path.clone(), country, region, db_arc.clone(), tx);
@@ -152,7 +152,7 @@ mod handle_pbf_house_number_extractor_in_thread_tests {
             1001
         ).await.expect("write minimal pbf");
 
-        let (db_arc, tx, rx, _td) = setup_db_and_channel();
+        let (db_arc, tx, rx, _td) = setup_db_and_channel::<Database>();
 
         // call
         handle_pbf_house_number_extractor_in_thread(pbf_path.clone(), country, region, db_arc.clone(), tx);
@@ -196,7 +196,7 @@ mod handle_pbf_house_number_extractor_in_thread_tests {
             2002
         ).await.expect("write pbf with housenumber");
 
-        let (db_arc, tx, rx, _td) = setup_db_and_channel();
+        let (db_arc, tx, rx, _td) = setup_db_and_channel::<Database>();
 
         handle_pbf_house_number_extractor_in_thread(pbf_path.clone(), country, region, db_arc.clone(), tx);
 
@@ -237,7 +237,7 @@ mod handle_pbf_house_number_extractor_in_thread_tests {
         let region: WorldRegion = USRegion::UnitedState(UnitedState::Maryland).into();
         let country = Country::USA;
 
-        let (db_arc, tx, rx, _td) = setup_db_and_channel();
+        let (db_arc, tx, rx, _td) = setup_db_and_channel::<Database>();
         
         // We'll define a custom minimal approach: "open" must succeed => aggregator => parse => aggregator => success => aggregator tries store => store fails b/c we poison the lock
         // We'll do that by hooking "attempt_storing_house_number_aggregator_in_db" or forcibly poisoning the DB lock after parse but before aggregator store. 

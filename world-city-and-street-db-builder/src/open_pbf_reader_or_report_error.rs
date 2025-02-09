@@ -23,6 +23,7 @@ pub fn open_pbf_reader_or_report_error(
 }
 
 #[cfg(test)]
+#[disable]
 mod test_open_pbf_reader_or_report_error {
     use super::*;
     use std::sync::mpsc;

@@ -69,9 +69,9 @@ mod database_value_decoder_tests {
     /// A small helper to create an in‐memory or temp-dir DB, so we can store test data
     /// and then call `decode_value_for_key(...)` on the DB.  
     /// We won't rely on prefix iteration here, just the decode logic.
-    fn create_test_db() -> Arc<Mutex<Database>> {
+    fn create_test_db<I:StorageInterface>() -> Arc<Mutex<I>> {
         let tmp = TempDir::new().unwrap();
-        Database::open(tmp.path()).expect("DB open").clone()
+        I::open(tmp.path()).expect("DB open").clone()
     }
 
     /// Utility to produce CBOR data for a set of items, stored in a CompressedList.
@@ -89,7 +89,7 @@ mod database_value_decoder_tests {
     fn test_decode_value_for_key_all_scenarios() 
         -> Result<(),io::Error> 
     {
-        let db_arc = create_test_db();
+        let db_arc = create_test_db::<Database>();
         let db_guard = db_arc.lock().unwrap();
 
         // We'll call decode_value_for_key directly, passing (key, val).

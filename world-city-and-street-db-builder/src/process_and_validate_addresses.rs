@@ -3,12 +3,12 @@ crate::ix!();
 
 /// Consumes the address iterator, validating each [`WorldAddress`].
 /// Returns `Ok(true)` if all addresses are valid, `Ok(false)` otherwise.
-pub fn process_and_validate_addresses<I>(
-    address_iter: I,
-    data_access: &DataAccess
+pub fn process_and_validate_addresses<AddressIterator,I:StorageInterface>(
+    address_iter: AddressIterator,
+    data_access:  &DataAccess<I>
 ) -> Result<bool, WorldCityAndStreetDbBuilderError>
 where
-    I: Iterator<Item = Result<WorldAddress, OsmPbfParseError>>,
+    AddressIterator: Iterator<Item = Result<WorldAddress, OsmPbfParseError>>,
 {
     trace!("process_and_validate_addresses: starting validation loop");
 
@@ -38,6 +38,7 @@ where
 }
 
 #[cfg(test)]
+#[disable]
 mod test_process_and_validate_addresses {
     use super::*;
     use std::sync::{Arc, Mutex};

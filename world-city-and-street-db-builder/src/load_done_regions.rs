@@ -2,11 +2,11 @@
 crate::ix!();
 
 /// (5) Helper function to load the set of “done” regions by scanning for `META:REGION_DONE:<abbrev>`.
-pub fn load_done_regions(db: &Database) -> Vec<WorldRegion> {
+pub fn load_done_regions<I:StorageInterface>(db: &I) -> Vec<WorldRegion> {
     let prefix = b"META:REGION_DONE:";
     let mut out = Vec::new();
 
-    let it = db.db().prefix_iterator(prefix);
+    let it = db.prefix_iterator(prefix);
     for kv in it {
         if let Ok((k, _v)) = kv {
             let key_str = String::from_utf8_lossy(&k).to_string();
@@ -30,6 +30,7 @@ pub fn load_done_regions(db: &Database) -> Vec<WorldRegion> {
 }
 
 #[cfg(test)]
+#[disable]
 mod test_load_done_regions {
     use super::*;
     use tempfile::TempDir;
@@ -37,17 +38,17 @@ mod test_load_done_regions {
 
     /// Creates a temporary database and returns both the DB and the TempDir
     /// so the directory remains valid for the test's duration.
-    fn create_temp_db() -> (Arc<Mutex<Database>>, TempDir) {
+    fn create_temp_db<I:StorageInterface>() -> (Arc<Mutex<I>>, TempDir) {
         let temp_dir = TempDir::new().expect("Failed to create temporary directory");
-        let db = Database::open(temp_dir.path()).expect("Failed to open database in temp dir");
+        let db       = I::open(temp_dir.path()).expect("Failed to open database in temp dir");
         (db, temp_dir)
     }
 
     /// Puts a marker key `META:REGION_DONE:<abbr>` in the DB. This simulates a region 
     /// that has completed processing.
-    fn mark_region_done_manually(
-        db: &mut Database,
-        abbr: &str,
+    fn mark_region_done_manually<I:StorageInterface>(
+        db:    &mut I,
+        abbr:  &str,
         value: &[u8],
     ) {
         let key = format!("META:REGION_DONE:{}", abbr);

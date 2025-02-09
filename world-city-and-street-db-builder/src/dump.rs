@@ -75,17 +75,17 @@ mod dump_tests {
     use super::*;
 
     /// A small helper that opens a new, empty DB in a temp directory.
-    fn create_db() -> (Arc<Mutex<Database>>, TempDir) {
+    fn create_db<I:StorageInterface>() -> (Arc<Mutex<I>>, TempDir) {
         let tmp = TempDir::new().expect("Failed to create temp dir");
-        let db = Database::open(tmp.path()).expect("Failed to open Database in temp dir");
+        let db  = I::open(tmp.path()).expect("Failed to open Database in temp dir");
         (db, tmp)
     }
 
     /// Helper to insert a BTreeSet of items under some key, provided items implement
     /// Serialize + DeserializeOwned + Clone.
-    fn put_set_into_db<T>(
-        db: &mut Database,
-        key: &str,
+    fn put_set_into_db<T,I:StorageInterface>(
+        db:    &mut I,
+        key:   &str,
         items: &BTreeSet<T>
     )
     where
@@ -166,7 +166,7 @@ mod dump_tests {
 
     #[test]
     fn test_dump_entire_database_contents_empty() {
-        let (db, _td) = create_db();
+        let (db, _td) = create_db::<Database>();
         let db_guard = db.lock().unwrap();
 
         // We'll capture output in a buffer
@@ -181,7 +181,7 @@ mod dump_tests {
 
     #[test]
     fn test_dump_unknown_key_pattern() {
-        let (db, _td) = create_db();
+        let (db, _td) = create_db::<Database>();
         {
             let mut db_guard = db.lock().unwrap();
             db_guard.put("XYZ:randomstuff", b"some bytes").unwrap();
@@ -199,7 +199,7 @@ mod dump_tests {
 
     #[test]
     fn test_dump_region_done_marker() {
-        let (db, _td) = create_db();
+        let (db, _td) = create_db::<Database>();
         {
             let mut db_guard = db.lock().unwrap();
             db_guard.put("META:REGION_DONE:US", b"done").unwrap();
@@ -216,25 +216,25 @@ mod dump_tests {
 
     #[test]
     fn test_dump_recognized_prefixes() {
-        let (db, _td) = create_db();
+        let (db, _td) = create_db::<Database>();
         {
             let mut db_guard = db.lock().unwrap();
             // Z2C => CityName
             let mut city_set = BTreeSet::new();
             city_set.insert(CityName::new("Baltimore").unwrap());
             city_set.insert(CityName::new("Annapolis").unwrap());
-            put_set_into_db(&mut db_guard, "Z2C:US:21201", &city_set);
+            put_set_into_db(&mut *db_guard, "Z2C:US:21201", &city_set);
 
             // C2Z => PostalCode
             let mut postal_set = BTreeSet::new();
             postal_set.insert(PostalCode::new(Country::USA, "21201").unwrap());
             postal_set.insert(PostalCode::new(Country::USA, "21401").unwrap());
-            put_set_into_db(&mut db_guard, "C2Z:US:baltimore", &postal_set);
+            put_set_into_db(&mut *db_guard, "C2Z:US:baltimore", &postal_set);
 
             // S => StreetName
             let mut street_set = BTreeSet::new();
             street_set.insert(StreetName::new("Main St").unwrap());
-            put_set_into_db(&mut db_guard, "S:US:21201", &street_set);
+            put_set_into_db(&mut *db_guard, "S:US:21201", &street_set);
         }
 
         let db_guard = db.lock().unwrap();
@@ -255,7 +255,7 @@ mod dump_tests {
 
     #[test]
     fn test_dump_corrupted_cbor_for_recognized_prefix() {
-        let (db, _td) = create_db();
+        let (db, _td) = create_db::<Database>();
         {
             let mut db_guard = db.lock().unwrap();
             // "Z2C:..." => tries to decode as CityName
@@ -273,7 +273,7 @@ mod dump_tests {
 
     #[test]
     fn test_dump_keys_with_prefix() {
-        let (db, _td) = create_db();
+        let (db, _td) = create_db::<Database>();
         {
             let mut db_guard = db.lock().unwrap();
             db_guard.put("C2Z:US:baltimore", b"some city->postal data").unwrap();

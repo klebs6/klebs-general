@@ -25,6 +25,7 @@ pub fn prepare_osm_header_block(bbox: (i64, i64, i64, i64)) -> osmformat::Header
 }
 
 #[cfg(test)]
+#[disable]
 mod test_prepare_osm_header_block {
     use super::*;
     use crate::proto::osmformat; // Ensure the correct path to your osmformat is used

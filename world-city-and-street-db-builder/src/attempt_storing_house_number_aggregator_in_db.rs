@@ -16,9 +16,9 @@ mod attempt_storing_house_number_aggregator_in_db_tests {
     }
 
     /// Creates a minimal DB in a temporary directory (for short‐lived tests).
-    fn create_test_db() -> Arc<Mutex<Database>> {
+    fn create_test_db<I:StorageInterface>() -> Arc<Mutex<I>> {
         let tmp = TempDir::new().expect("failed to create temp dir");
-        Database::open(tmp.path()).expect("failed to open DB")
+        I::open(tmp.path()).expect("failed to open DB")
     }
 
     /// Builds a small aggregator for a single street => single HouseNumberRange.
@@ -132,10 +132,10 @@ mod attempt_storing_house_number_aggregator_in_db_tests {
         // you can skip or adapt. For demonstration, let's define a "FakeDB" or a boolean error injection.
 
         // 1) We'll define a minor closure that simulates store => always returns an error
-        fn fake_store_house_number_aggregator_results(
-            _db: &mut Database,
+        fn fake_store_house_number_aggregator_results<I:StorageInterface>(
+            _db:           &mut I,
             _world_region: &WorldRegion,
-            _aggregator: HashMap<StreetName, Vec<HouseNumberRange>>,
+            _aggregator:   HashMap<StreetName, Vec<HouseNumberRange>>,
         ) -> Result<(), OsmPbfParseError> {
             Err(OsmPbfParseError::IoError(std::io::Error::new(
                 std::io::ErrorKind::Other,
@@ -147,9 +147,9 @@ mod attempt_storing_house_number_aggregator_in_db_tests {
         // This can be done by re-implementing attempt_storing_in_db with dependency injection
         // For now, let's just inline a test version:
 
-        fn test_version_of_attempt_storing(
-            db: Arc<Mutex<Database>>,
-            region: &WorldRegion,
+        fn test_version_of_attempt_storing<I:StorageInterface>(
+            db:         Arc<Mutex<I>>,
+            region:     &WorldRegion,
             aggregator: HashMap<StreetName, Vec<HouseNumberRange>>,
         ) {
             match db.lock() {

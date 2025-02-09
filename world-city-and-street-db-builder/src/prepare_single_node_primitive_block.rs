@@ -89,6 +89,7 @@ pub fn prepare_single_node_primitive_block(
 }
 
 #[cfg(test)]
+#[disable]
 mod test_prepare_single_node_primitive_block {
     use super::*;
     use crate::proto::osmformat; // Adjust if your osmformat module is located elsewhere

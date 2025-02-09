@@ -29,14 +29,14 @@ impl Cli {
             dmv_regions()
         }
 
-        fn real_db_open(
+        fn real_db_open<I:StorageInterface>(
             path: &std::path::Path
-        ) -> Result<std::sync::Arc<std::sync::Mutex<Database>>, DatabaseConstructionError> {
-            Database::open(path)
+        ) -> Result<std::sync::Arc<std::sync::Mutex<I>>, DatabaseConstructionError> {
+            I::open(path)
         }
 
-        fn real_validate_all(
-            db: std::sync::Arc<std::sync::Mutex<Database>>,
+        fn real_validate_all<I:StorageInterface + 'static>(
+            db: std::sync::Arc<std::sync::Mutex<I>>,
             pbf_path: &std::path::Path
         ) -> Result<(), WorldCityAndStreetDbBuilderError> {
             validate_all_addresses(db, pbf_path)
@@ -44,13 +44,14 @@ impl Cli {
 
         // Notice this is an `async` fn capturing references:
         // We'll just define a small wrapper so it matches the signature for `run_with_injection`.
-        fn real_download_and_parse<'r>(
-            region: &'r WorldRegion,
+        fn real_download_and_parse<'r,I:StorageInterface>(
+            region:   &'r WorldRegion,
             pbf_path: &'r std::path::Path,
-            db: &'r mut Database,
-            write: bool
-        ) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<(), WorldCityAndStreetDbBuilderError>> + Send + 'r>>
-        {
+            db:       &'r mut I,
+            write:    bool
+
+        ) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<(), WorldCityAndStreetDbBuilderError>> + Send + 'r>> {
+
             Box::pin(async move {
                 download_and_parse_region(region, pbf_path, db, write).await
             })
@@ -160,13 +161,13 @@ mod cli_tests {
     }
 
     /// This returns a capturing closure that increments `db_opened`.
-    fn make_db_opener(flags: Arc<TestFlags>) 
-        -> impl Fn(&std::path::Path) -> Result<Arc<Mutex<Database>>, DatabaseConstructionError>
+    fn make_db_opener<I:StorageInterface>(flags: Arc<TestFlags>) 
+        -> impl Fn(&std::path::Path) -> Result<Arc<Mutex<I>>, DatabaseConstructionError>
     {
         move |_| {
             flags.db_opened.store(true, Ordering::SeqCst);
             let temp_dir = TempDir::new().unwrap();
-            Database::open(temp_dir.path())
+            I::open(temp_dir.path())
         }
     }
 
@@ -347,7 +348,7 @@ mod cli_tests {
         {
             let mut db_guard = db.lock().unwrap();
             let rr = RegionalRecords::mock_for_region(&va_region);
-            rr.write_to_storage(&mut db_guard).unwrap();
+            rr.write_to_storage(&mut *db_guard).unwrap();
         }
 
         let mock_addr = WorldAddress::mock(); // => region=VA, city=calverton, ...

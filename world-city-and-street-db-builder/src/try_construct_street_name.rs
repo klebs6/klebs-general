@@ -23,3 +23,75 @@ pub fn try_construct_street_name(
         Ok(None)
     }
 }
+
+#[cfg(test)]
+#[disable]
+mod test_try_construct_street_name {
+    use super::*;
+    use crate::errors::*;
+    use tracing::{trace, debug, error};
+
+    #[test]
+    fn test_none_input_returns_ok_none() {
+        let element_id = 10;
+        let result = try_construct_street_name(None, element_id);
+        assert!(result.is_ok(), "No street => Ok(None)");
+        assert!(result.unwrap().is_none());
+    }
+
+    #[test]
+    fn test_valid_street_returns_some() {
+        let element_id = 11;
+        let result = try_construct_street_name(Some("Main Street"), element_id);
+        assert!(result.is_ok(), "A valid street name should succeed");
+        let street = result.unwrap().expect("Expected Some(StreetName)");
+        // StreetName::new("Main Street") typically normalizes to "main street"
+        assert_eq!(street.name(), "main street",
+            "Normalization should have occurred if your StreetName does so"
+        );
+    }
+
+    #[test]
+    fn test_empty_street_fails() {
+        let element_id = 12;
+        let result = try_construct_street_name(Some(""), element_id);
+        match result {
+            Err(IncompatibleOsmPbfElement::IncompatibleOsmPbfNode(
+                IncompatibleOsmPbfNode::StreetNameConstructionError(e)
+            )) => {
+                // The error might be StreetNameConstructionError::InvalidName { attempted_name } 
+                // or something similar, depending on your definition.
+                match e {
+                    StreetNameConstructionError::InvalidName { attempted_name } => {
+                        assert!(attempted_name.is_empty());
+                    }
+                    _ => panic!("Expected InvalidName variant, got {:?}", e),
+                }
+            }
+            other => panic!("Expected StreetNameConstructionError, got {:?}", other),
+        }
+    }
+
+    #[test]
+    fn test_whitespace_street_fails() {
+        let element_id = 13;
+        let result = try_construct_street_name(Some("   "), element_id);
+        match result {
+            Err(IncompatibleOsmPbfElement::IncompatibleOsmPbfNode(
+                IncompatibleOsmPbfNode::StreetNameConstructionError(_)
+            )) => {
+                // Good; likely StreetNameConstructionError::InvalidName
+            }
+            other => panic!("Expected a StreetNameConstructionError, got {:?}", other),
+        }
+    }
+
+    #[test]
+    fn test_debug_logging_when_streetname_fails() {
+        // The function logs an error with the `error!` macro if street construction fails.
+        // We can't directly verify logs in a standard test, but we confirm the error is returned.
+        let element_id = 14;
+        let result = try_construct_street_name(Some("***InvalidStreet***"), element_id);
+        assert!(result.is_err(), "Expecting an error if your StreetName logic disallows such strings");
+    }
+}

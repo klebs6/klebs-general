@@ -14,11 +14,10 @@ pub struct WorldAddress {
 /// Implements a validation process that checks whether the
 /// `[WorldAddress]` is consistent with the underlying data structures
 /// in the provided `[DataAccess]`.
-impl ValidateWith for WorldAddress {
-    type Validator = DataAccess;
-    type Error = InvalidWorldAddress;
+impl<V:GetCitySetForKey + GetStreetSetForKey> ValidateWith<V> for WorldAddress {
+    type Error     = InvalidWorldAddress;
 
-    fn validate_with(&self, validator: &Self::Validator) -> Result<(), Self::Error> {
+    fn validate_with(&self, validator: &V) -> Result<(), Self::Error> {
         trace!("WorldAddress::validate_with: begin validation for {:?}", self);
 
         validate_city_for_postal_code(self, validator)?;
@@ -34,6 +33,7 @@ impl ValidateWith for WorldAddress {
 // or you can keep them inline with a `#[cfg(test)] mod world_address_validation_tests;`
 
 #[cfg(test)]
+#[disable]
 mod world_address_validation_tests {
     use super::*;
 

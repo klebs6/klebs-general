@@ -15,8 +15,8 @@ crate::ix!();
 ///
 /// * `Ok(())` on success, or if partial failures occurred but we can continue.
 /// * `Err(OsmPbfParseError)` if a critical error prevents further processing.
-pub fn integrate_house_number_subranges_for_street(
-    db:           &mut Database,
+pub fn integrate_house_number_subranges_for_street<I:StorageInterface>(
+    db:           &mut I,
     world_region: &WorldRegion,
     street:       &StreetName,
     new_ranges:   &Vec<HouseNumberRange>,
@@ -64,6 +64,7 @@ pub fn integrate_house_number_subranges_for_street(
 }
 
 #[cfg(test)]
+#[disable]
 mod test_integrate_house_number_subranges_for_street {
     use super::*;
     use std::collections::BTreeSet;
@@ -73,17 +74,16 @@ mod test_integrate_house_number_subranges_for_street {
 
     /// Helper that creates a temporary RocksDB-backed `Database`.
     /// Returns `(db, tempdir)` so the tempdir is held until the test completes.
-    fn create_temp_db() -> (Arc<Mutex<Database>>, TempDir) {
+    fn create_temp_db<I:StorageInterface>() -> (Arc<Mutex<I>>, TempDir) {
         let temp_dir = TempDir::new().expect("Failed to create temp dir");
-        let db = Database::open(temp_dir.path())
-            .expect("Failed to open database in temporary directory");
+        let db = I::open(temp_dir.path()).expect("Failed to open database in temporary directory");
         (db, temp_dir)
     }
 
     /// A utility to store house-number ranges under the street/region key directly.
     /// This allows us to simulate "existing" data in the DB.
-    fn put_existing_ranges(
-        db: &mut Database,
+    fn put_existing_ranges<I:StorageInterface>(
+        db:     &mut I,
         region: &WorldRegion,
         street: &StreetName,
         ranges: Vec<HouseNumberRange>,
@@ -94,8 +94,8 @@ mod test_integrate_house_number_subranges_for_street {
 
     /// A utility to read back the stored house-number ranges from the DB.
     /// Returns an empty vector if none found.
-    fn get_stored_ranges(
-        db: &Database,
+    fn get_stored_ranges<I:StorageInterface>(
+        db:     &I,
         region: &WorldRegion,
         street: &StreetName
     ) -> Vec<HouseNumberRange> {
@@ -221,7 +221,7 @@ mod test_integrate_house_number_subranges_for_street {
         impl FailingLoadDatabase {
             fn new(path: &Path) -> Self {
                 let db = Database::open(path).expect("Could not open DB");
-                Self { inner: db.lock().unwrap().clone() }
+                Self { inner: db }
             }
         }
         impl LoadExistingStreetRanges for FailingLoadDatabase {

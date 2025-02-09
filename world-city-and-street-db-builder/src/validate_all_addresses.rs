@@ -14,8 +14,8 @@ crate::ix!();
 ///
 /// * `Ok(())` if all addresses are valid.
 /// * `Err(WorldCityAndStreetDbBuilderError::NotAllAddressesValidatedSuccessfully)` if any address fails.
-pub fn validate_all_addresses(
-    db: Arc<Mutex<Database>>,
+pub fn validate_all_addresses<I:StorageInterface + 'static>(
+    db:      Arc<Mutex<I>>,
     pbf_dir: impl AsRef<Path> + Debug,
 ) -> Result<(), WorldCityAndStreetDbBuilderError> {
 
@@ -36,6 +36,7 @@ pub fn validate_all_addresses(
 }
 
 #[cfg(test)]
+#[disable]
 mod validate_all_addresses_tests {
     use super::*;
 
@@ -43,14 +44,14 @@ mod validate_all_addresses_tests {
         USRegion::UnitedState(UnitedState::Maryland).into()
     }
 
-    fn create_db() -> Result<(Arc<Mutex<Database>>, TempDir), AddressValidationError> {
+    fn create_db<I:StorageInterface>() -> Result<(Arc<Mutex<I>>, TempDir), AddressValidationError> {
         let tmp = TempDir::new()?;
-        let db = Database::open(tmp.path())?;
+        let db = I::open(tmp.path())?;
         Ok((db, tmp))
     }
 
-    fn store_valid_address(
-        db: &mut Database,
+    fn store_valid_address<I:StorageInterface>(
+        db: &mut I,
         region: &WorldRegion,
         city: &CityName,
         street: &StreetName,

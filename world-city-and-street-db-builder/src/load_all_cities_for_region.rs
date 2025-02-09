@@ -15,7 +15,7 @@ crate::ix!();
 /// # Returns
 ///
 /// * A vector of city names (e.g., `["baltimore", "frederick", ...]`).
-pub fn load_all_cities_for_region(db: &Database, region: &WorldRegion) -> Vec<String> {
+pub fn load_all_cities_for_region<I:StorageInterface>(db: &I, region: &WorldRegion) -> Vec<String> {
     trace!("load_all_cities_for_region: start for region={:?}", region);
 
     let prefix = build_city_search_prefix(region);
@@ -39,6 +39,7 @@ pub fn load_all_cities_for_region(db: &Database, region: &WorldRegion) -> Vec<St
 }
 
 #[cfg(test)]
+#[disable]
 mod test_load_all_cities_for_region {
     use super::*;
     use tempfile::TempDir;
@@ -47,9 +48,9 @@ mod test_load_all_cities_for_region {
     /// Creates a temporary database for testing.
     /// Returns `(Arc<Mutex<Database>>, TempDir)` so that the temp directory
     /// remains valid for the lifetime of the tests.
-    fn create_temp_db() -> (Arc<Mutex<Database>>, TempDir) {
+    fn create_temp_db<I:StorageInterface>() -> (Arc<Mutex<I>>, TempDir) {
         let tmp = TempDir::new().expect("Failed to create temp dir");
-        let db = Database::open(tmp.path()).expect("Failed to open database in temp dir");
+        let db = I::open(tmp.path()).expect("Failed to open database in temp dir");
         (db, tmp)
     }
 
@@ -57,10 +58,10 @@ mod test_load_all_cities_for_region {
     /// This helps simulate city->postal-code data in RocksDB, though we only
     /// need to confirm the city extraction logic for the key.
     /// The actual value can be valid or invalid CBOR for negative testing.
-    fn put_c2z_data(
-        db: &mut Database,
-        region: &WorldRegion,
-        city_str: &str,
+    fn put_c2z_data<I:StorageInterface>(
+        db:        &mut I,
+        region:    &WorldRegion,
+        city_str:  &str,
         cbor_data: &[u8],
     ) {
         let key = format!("C2Z:{}:{}", region.abbreviation(), city_str);

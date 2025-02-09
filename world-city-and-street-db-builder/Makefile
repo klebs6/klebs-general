@@ -24,6 +24,17 @@ INDIVIDUAL_TEST := test_build_world_address_fail
 INDIVIDUAL_TEST := test_parse_and_aggregate_osm_empty
 INDIVIDUAL_TEST := osm_parser_tests::test_parse_osm_pbf_corrupted_file
 #INDIVIDUAL_TEST := verify_md5_checksum_mismatch
+INDIVIDUAL_TEST := build_city_search_prefix
+INDIVIDUAL_TEST := build_world_address
+INDIVIDUAL_TEST := build_world_address_if_possible
+INDIVIDUAL_TEST := capture_stdout
+INDIVIDUAL_TEST := chain_addresses_across_files
+INDIVIDUAL_TEST := collect_address_and_housenumber_data
+INDIVIDUAL_TEST := db_decoder
+INDIVIDUAL_TEST := expected_filename_for_region
+INDIVIDUAL_TEST := gather_city_key_value_pairs
+INDIVIDUAL_TEST := get_prefix_iterator
+INDIVIDUAL_TEST := handle_pbf_house_number_extractor_in_thread
 
 #INDIVIDUAL_TEST := cli
 #INDIVIDUAL_TEST := street_name_test

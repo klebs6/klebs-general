@@ -1,3 +1,15 @@
 [workspace]
 resolver = "3"
-members = [ "lightweight-command-runner", "generate-report-trait", "get-file-size", "workspacer", "workspacer-3p", "workspacer-consolidate", "workspacer-crate", "workspacer-interface", "workspacer-mock", "workspacer-syntax", "workspacer-toml" ]
+members = [ 
+    "lightweight-command-runner", 
+    "generate-report-trait", 
+    "get-file-size", 
+    "workspacer", 
+    "workspacer-3p", 
+    "workspacer-consolidate", 
+    "workspacer-crate", 
+    "workspacer-interface", 
+    "workspacer-mock", 
+    "workspacer-syntax", 
+    "workspacer-toml" 
+]

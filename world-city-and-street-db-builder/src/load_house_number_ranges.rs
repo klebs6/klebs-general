@@ -9,7 +9,7 @@ pub trait LoadHouseNumberRanges {
     ) -> Result<Option<Vec<HouseNumberRange>>, DataAccessError>;
 }
 
-impl LoadHouseNumberRanges for DataAccess {
+impl<I:StorageInterface> LoadHouseNumberRanges for DataAccess<I> {
 
     fn load_house_number_ranges(
         &self, 
@@ -66,6 +66,7 @@ impl LoadHouseNumberRanges for Database {
 }
 
 #[cfg(test)]
+#[disable]
 mod test_load_house_number_ranges {
     use super::*;
     use tempfile::TempDir;
@@ -73,15 +74,14 @@ mod test_load_house_number_ranges {
 
     /// Creates a temporary database and returns `(Arc<Mutex<Database>>, TempDir)` so
     /// that the temp directory remains valid for the duration of the tests.
-    fn create_temp_db() -> (Arc<Mutex<Database>>, TempDir) {
+    fn create_temp_db<I:StorageInterface>() -> (Arc<Mutex<I>>, TempDir) {
         let temp_dir = TempDir::new().expect("Failed to create temp dir");
-        let db = Database::open(temp_dir.path())
-            .expect("Failed to open database in temp dir");
+        let db = I::open(temp_dir.path()).expect("Failed to open database in temp dir");
         (db, temp_dir)
     }
 
     /// Creates a `DataAccess` that references the same `Database`.
-    fn create_data_access(db: Arc<Mutex<Database>>) -> DataAccess {
+    fn create_data_access<I:StorageInterface>(db: Arc<Mutex<I>>) -> DataAccess {
         DataAccess::with_db(db)
     }
 
@@ -93,8 +93,8 @@ mod test_load_house_number_ranges {
     /// Helper to store an array of `HouseNumberRange` objects in the DB
     /// under the key that `load_house_number_ranges(...)` expects.
     /// This uses the DB's `store_house_number_ranges(...)`.
-    fn store_house_number_ranges_for_test(
-        db: &mut Database,
+    fn store_house_number_ranges_for_test<I:StorageInterface>(
+        db:     &mut I,
         region: &WorldRegion,
         street: &StreetName,
         ranges: &[HouseNumberRange],

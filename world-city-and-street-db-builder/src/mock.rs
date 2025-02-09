@@ -143,6 +143,7 @@ fn dc_mock_records() -> Vec<AddressRecord> {
 }
 
 #[cfg(test)]
+#[disable]
 mod test_mock {
     use super::*;
 

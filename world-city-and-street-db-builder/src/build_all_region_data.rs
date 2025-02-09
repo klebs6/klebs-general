@@ -2,7 +2,7 @@
 crate::ix!();
 
 /// (6) Build a map of (region => RegionData), by scanning city+street from the DB for each done region.
-pub fn build_all_region_data(db: &Database, done_regions: &[WorldRegion]) -> HashMap<WorldRegion, RegionData> {
+pub fn build_all_region_data<I:StorageInterface>(db: &I, done_regions: &[WorldRegion]) -> HashMap<WorldRegion, RegionData> {
     let mut map = HashMap::new();
     for r in done_regions {
         let mut city_vec = load_all_cities_for_region(db, r);
@@ -30,17 +30,17 @@ mod build_all_region_data_tests {
     use tempfile::TempDir;
 
     /// Utility to create a fresh `Database` in a temporary directory.
-    fn create_test_db() -> (Arc<Mutex<Database>>, TempDir) {
+    fn create_test_db<I:StorageInterface>() -> (Arc<Mutex<I>>, TempDir) {
         let tmp = TempDir::new().expect("tempdir creation failed");
-        let db = Database::open(tmp.path()).expect("Failed to open DB");
+        let db = I::open(tmp.path()).expect("Failed to open DB");
         (db, tmp)
     }
 
     /// Helper that inserts a set of city names for a given region into DB
     /// under the `C2Z:` prefix, simulating how `load_all_cities_for_region(...)` fetches them.
-    fn insert_cities_for_region(
-        db: &mut Database,
-        region: &WorldRegion,
+    fn insert_cities_for_region<I:StorageInterface>(
+        db:         &mut I,
+        region:     &WorldRegion,
         city_names: &[&str],
     ) {
         for &c in city_names {
@@ -56,9 +56,9 @@ mod build_all_region_data_tests {
 
     /// Helper that inserts a set of streets for a given region into DB
     /// under the `S2C:` prefix, simulating how `load_all_streets_for_region(...)` fetches them.
-    fn insert_streets_for_region(
-        db: &mut Database,
-        region: &WorldRegion,
+    fn insert_streets_for_region<I:StorageInterface>(
+        db:           &mut I,
+        region:       &WorldRegion,
         street_names: &[&str],
     ) {
         for &s in street_names {
@@ -76,25 +76,25 @@ mod build_all_region_data_tests {
     // => the returned map should be empty
     #[test]
     fn test_build_all_region_data_empty_done_regions() {
-        let (db_arc, _tmp) = create_test_db();
+        let (db_arc, _tmp) = create_test_db::<Database>();
         let db_guard = db_arc.lock().unwrap();
 
         let done_regions: Vec<WorldRegion> = Vec::new();
-        let result_map = build_all_region_data(&db_guard, &done_regions);
+        let result_map = build_all_region_data(&*db_guard, &done_regions);
         assert!(result_map.is_empty(), "No done regions => empty map");
     }
 
     // 2) Single region with no city/street => yields empty city_vec & street_vec
     #[test]
     fn test_build_all_region_data_single_region_no_data() {
-        let (db_arc, _tmp) = create_test_db();
+        let (db_arc, _tmp) = create_test_db::<Database>();
         let db_guard = db_arc.lock().unwrap();
 
         let region = WorldRegion::default(); // e.g. USRegion::UnitedState(UnitedState::Maryland)
         let done_regions = vec![region];
 
         // No city or street data inserted.
-        let result_map = build_all_region_data(&db_guard, &done_regions);
+        let result_map = build_all_region_data(&*db_guard, &done_regions);
 
         assert_eq!(result_map.len(), 1, "One region => one entry");
         let region_data = result_map.get(&region).expect("entry for region");
@@ -111,19 +111,19 @@ mod build_all_region_data_tests {
     // 3) Single region with known city/street => they appear in the RegionData
     #[test]
     fn test_build_all_region_data_single_region_some_data() {
-        let (db_arc, _tmp) = create_test_db();
+        let (db_arc, _tmp) = create_test_db::<Database>();
         let mut db_guard = db_arc.lock().unwrap();
 
         let region = USRegion::UnitedState(UnitedState::Maryland).into();
         let done_regions = vec![region];
 
         // Insert city data => "Baltimore", "Rockville", "Bethesda"
-        insert_cities_for_region(&mut db_guard, &region, &["Baltimore", "Rockville", "Bethesda"]);
+        insert_cities_for_region(&mut *db_guard, &region, &["Baltimore", "Rockville", "Bethesda"]);
         // Insert street data => "Main Street", "Highway 1"
-        insert_streets_for_region(&mut db_guard, &region, &["Main Street", "Highway 1"]);
+        insert_streets_for_region(&mut *db_guard, &region, &["Main Street", "Highway 1"]);
 
         // Now build
-        let result_map = build_all_region_data(&db_guard, &done_regions);
+        let result_map = build_all_region_data(&*db_guard, &done_regions);
         assert_eq!(result_map.len(), 1);
         let region_data = result_map
             .get(&region)
@@ -140,7 +140,7 @@ mod build_all_region_data_tests {
     // 4) Two done regions => confirm both appear
     #[test]
     fn test_build_all_region_data_multiple_regions() {
-        let (db_arc, _tmp) = create_test_db();
+        let (db_arc, _tmp) = create_test_db::<Database>();
         let mut db_guard = db_arc.lock().unwrap();
 
         let region_md = USRegion::UnitedState(UnitedState::Maryland).into();
@@ -148,14 +148,14 @@ mod build_all_region_data_tests {
         let done_regions = vec![region_md, region_va];
 
         // Insert data for MD
-        insert_cities_for_region(&mut db_guard, &region_md, &["Annapolis"]);
-        insert_streets_for_region(&mut db_guard, &region_md, &["North Avenue"]);
+        insert_cities_for_region(&mut *db_guard, &region_md, &["Annapolis"]);
+        insert_streets_for_region(&mut *db_guard, &region_md, &["North Avenue"]);
 
         // Insert data for VA
-        insert_cities_for_region(&mut db_guard, &region_va, &["Arlington", "Reston"]);
-        insert_streets_for_region(&mut db_guard, &region_va, &["Wilson Blvd", "Sunrise Valley Dr"]);
+        insert_cities_for_region(&mut *db_guard, &region_va, &["Arlington", "Reston"]);
+        insert_streets_for_region(&mut *db_guard, &region_va, &["Wilson Blvd", "Sunrise Valley Dr"]);
 
-        let result_map = build_all_region_data(&db_guard, &done_regions);
+        let result_map = build_all_region_data(&*db_guard, &done_regions);
         assert_eq!(result_map.len(), 2, "Two distinct regions => 2 entries");
 
         // MD => 1 city, 1 street
@@ -175,17 +175,17 @@ mod build_all_region_data_tests {
     // 5) Partial data for a region => e.g. some city keys exist but no street keys
     #[test]
     fn test_build_all_region_data_partial_region_data() {
-        let (db_arc, _tmp) = create_test_db();
+        let (db_arc, _tmp) = create_test_db::<Database>();
         let mut db_guard = db_arc.lock().unwrap();
 
         let region = USRegion::UnitedState(UnitedState::Maryland).into();
         let done_regions = vec![region];
 
         // Insert city data => "Greenbelt", "Wheaton" but no street data
-        insert_cities_for_region(&mut db_guard, &region, &["Greenbelt", "Wheaton"]);
+        insert_cities_for_region(&mut *db_guard, &region, &["Greenbelt", "Wheaton"]);
 
         // Now build
-        let result_map = build_all_region_data(&db_guard, &done_regions);
+        let result_map = build_all_region_data(&*db_guard, &done_regions);
         assert_eq!(result_map.len(), 1);
 
         let region_data = result_map.get(&region).unwrap();
@@ -197,18 +197,18 @@ mod build_all_region_data_tests {
     // 6) Confirm sorting & dedup logic (some city repeated in DB)
     #[test]
     fn test_build_all_region_data_sorting_and_dedup() {
-        let (db_arc, _tmp) = create_test_db();
+        let (db_arc, _tmp) = create_test_db::<Database>();
         let mut db_guard = db_arc.lock().unwrap();
 
         let region = USRegion::UnitedState(UnitedState::Maryland).into();
         let done_regions = vec![region];
 
         // Suppose we insert the same city multiple times with different c2z keys
-        insert_cities_for_region(&mut db_guard, &region, &["Baltimore", "baltimore", "BALTIMORE"]);
+        insert_cities_for_region(&mut *db_guard, &region, &["Baltimore", "baltimore", "BALTIMORE"]);
         // Similarly for streets
-        insert_streets_for_region(&mut db_guard, &region, &["MAIN street", "Main Street"]);
+        insert_streets_for_region(&mut *db_guard, &region, &["MAIN street", "Main Street"]);
 
-        let result_map = build_all_region_data(&db_guard, &done_regions);
+        let result_map = build_all_region_data(&*db_guard, &done_regions);
         let rd = result_map.get(&region).expect("region data must exist");
 
         let cities = rd.cities();

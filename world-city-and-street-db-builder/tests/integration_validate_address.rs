@@ -15,14 +15,14 @@ async fn integration_test_validate_address() {
         let md_rr = RegionalRecords::mock_for_region(&WorldRegion::from(
             USRegion::UnitedState(UnitedState::Maryland),
         ));
-        md_rr.write_to_storage(&mut db_guard)
+        md_rr.write_to_storage(&mut *db_guard)
             .expect("Failed to store MD data");
 
         // store Virginia
         let va_rr = RegionalRecords::mock_for_region(&WorldRegion::from(
             USRegion::UnitedState(UnitedState::Virginia),
         ));
-        va_rr.write_to_storage(&mut db_guard)
+        va_rr.write_to_storage(&mut *db_guard)
             .expect("Failed to store VA data");
     }
 

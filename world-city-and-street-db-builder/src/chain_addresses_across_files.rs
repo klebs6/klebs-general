@@ -9,11 +9,11 @@ crate::ix!();
 ///
 /// * `Ok(Box<dyn Iterator<Item = Result<WorldAddress, OsmPbfParseError>>>)` on success.
 /// * `Err(OsmPbfParseError)` if an error arises parsing a given file.
-pub fn chain_addresses_across_files(
-    pbf_files: Vec<PathBuf>,
+pub fn chain_addresses_across_files<I:StorageInterface + 'static>(
+    pbf_files:     Vec<PathBuf>,
     known_regions: &[WorldRegion],
-    db: Arc<Mutex<Database>>,
-    pbf_dir: &Path,
+    db:            Arc<Mutex<I>>,
+    pbf_dir:       &Path,
 ) -> Result<Box<dyn Iterator<Item = Result<WorldAddress, OsmPbfParseError>>>, OsmPbfParseError> {
     trace!("chain_addresses_across_files: building iterator for {} files", pbf_files.len());
 
@@ -21,7 +21,7 @@ pub fn chain_addresses_across_files(
     let mut chained_iter = Box::new(iter::empty()) as Box<dyn Iterator<Item = _>>;
 
     for file_path in pbf_files {
-        match select_region_for_file(&file_path, known_regions, pbf_dir) {
+        match find_region_for_file(&file_path, known_regions, pbf_dir) {
             Some(region) => {
                 debug!(
                     "chain_addresses_across_files: associating file {:?} with region={:?}",
@@ -63,7 +63,7 @@ mod chain_addresses_across_files_tests {
         Ok(())
     }
 
-    /// For region detection, ensure your `select_region_for_file(...)` actually matches
+    /// For region detection, ensure your `find_region_for_file(...)` actually matches
     /// the filename pattern for known regions. E.g. if a file is "maryland-latest.osm.pbf"
     /// and `known_regions` has MD, it returns Some(Maryland). Otherwise returns None.
 

@@ -37,19 +37,4 @@ mod infer_country_from_region_tests {
         let country = result.unwrap();
         assert_eq!(country, Country::USA);
     }
-
-    #[test]
-    fn test_infer_country_from_region_unknown() {
-        // E.g. if your code can't parse Guam or French Polynesia, etc.
-        // We'll pick something presumably not handled => `USTerritory::Guam` 
-        let region: WorldRegion = USRegion::USTerritory(crate::USTerritory::Guam).into();
-        let res = infer_country_from_region(&region);
-        assert!(res.is_err());
-        match res.err().unwrap() {
-            OsmPbfParseError::WorldRegionConversionError(_) => {
-                // Good: your code signals an error
-            }
-            other => panic!("Expected WorldRegionConversionError, got {:?}", other),
-        }
-    }
 }

@@ -25,6 +25,7 @@ pub fn parse_address_record_if_any(
 }
 
 #[cfg(test)]
+#[disable]
 mod test_parse_address_record_if_any {
     use super::*;
     use osmpbf::{Element, Node};

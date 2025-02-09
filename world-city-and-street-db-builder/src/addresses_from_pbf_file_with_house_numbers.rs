@@ -21,10 +21,10 @@ crate::ix!();
 ///
 /// * `Ok(impl Iterator<Item = Result<WorldAddress, OsmPbfParseError>>)` on success.
 /// * `Err(OsmPbfParseError)` if the country conversion fails immediately.
-pub fn addresses_from_pbf_file_with_house_numbers(
-    path: PathBuf,
+pub fn addresses_from_pbf_file_with_house_numbers<I:StorageInterface + 'static>(
+    path:         PathBuf,
     world_region: WorldRegion,
-    db: Arc<Mutex<Database>>,
+    db:           Arc<Mutex<I>>,
 ) -> Result<impl Iterator<Item = Result<WorldAddress, OsmPbfParseError>>, OsmPbfParseError> {
     trace!("addresses_from_pbf_file_with_house_numbers: Invoked with path={:?}, region={:?}", path, world_region);
 
@@ -34,9 +34,17 @@ pub fn addresses_from_pbf_file_with_house_numbers(
     let (tx, rx) = create_address_stream_channel();
     trace!("addresses_from_pbf_file_with_house_numbers: Created sync_channel for address streaming");
 
+    let dbc = db.clone();
+
     // Move ownership into background thread
     thread::spawn(move || {
-        handle_pbf_house_number_extractor_in_thread(path, country, world_region, db, tx);
+        handle_pbf_house_number_extractor_in_thread(
+            path, 
+            country, 
+            world_region, 
+            dbc, 
+            tx
+        );
     });
 
     // Provide the consumer an iterator of results

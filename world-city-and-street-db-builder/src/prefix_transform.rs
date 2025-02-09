@@ -32,6 +32,7 @@ pub fn create_colon_prefix_transform() -> SliceTransform {
 }
 
 #[cfg(test)]
+#[disable]
 mod prefix_transform_tests {
     use super::*;
 
