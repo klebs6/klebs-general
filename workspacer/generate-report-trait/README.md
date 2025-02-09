@@ -1,6 +1,6 @@
-# Generate Report
+# Generate Report Trait
 
-`generate-report` is a minimal crate that defines a trait for generating reports. The trait, `GenerateReport`, allows you to standardize report creation by specifying associated types for the report output and any errors that might occur during report generation.
+`generate-report-trait` is a minimal crate that defines a trait for generating reports. The trait, `GenerateReport`, allows you to standardize report creation by specifying associated types for the report output and any errors that might occur during report generation.
 
 ## Features
 
@@ -20,7 +20,7 @@ generate-report = "0.1.0"
 Implement the trait for your custom type:
 
 ```rust
-use generate_report::GenerateReport;
+use generate_report_trait::GenerateReport;
 
 struct MyReporter;
 

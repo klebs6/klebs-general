@@ -14,7 +14,7 @@ use std::process::Output;
 use crate::workspace::{Workspace, WatchAndReload};
 use crate::errors::WorkspaceError;
 use crate::mock::{create_mock_workspace, CrateConfig};
-use crate::command_runner::CommandRunner;
+use crate::lightweight_command_runner::CommandRunner;
 
 #[cfg(test)]
 mod concurrency_cancel_tests {

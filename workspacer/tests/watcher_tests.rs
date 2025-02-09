@@ -11,7 +11,7 @@ use tokio_util::sync::CancellationToken;
 use std::process::Output;
 use std::io;
 use mockall::{mock, Sequence, predicate::*};
-use crate::command_runner::CommandRunner;
+use crate::lightweight_command_runner::CommandRunner;
 use crate::workspace::{Workspace, WatchAndReload};
 use crate::errors::WorkspaceError;
 use crate::mock::{create_mock_workspace, CrateConfig};
