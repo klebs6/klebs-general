@@ -2,8 +2,8 @@
 workspacer-interface = "0.1.0"
 workspacer-3p        = "0.1.0"
 workspacer-crate     = "0.1.0"
-generate-report      = "0.1.0"
-command-runner       = "0.1.0"
+generate-report-trait      = "0.1.0"
+lightweight-command-runner = "0.1.0"
 
 [package]
 name        = "workspacer"

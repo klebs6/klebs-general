@@ -1,6 +1,3 @@
-[dependencies.workspacer-3p]
-path = "../workspacer-3p"
-
 [dependencies]
 workspacer-interface = "0.1.0"
 workspacer-3p        = "0.1.0"

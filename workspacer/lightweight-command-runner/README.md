@@ -1,6 +1,6 @@
-# Command Runner
+# Lightweight Command Runner
 
-Command Runner is a lightweight asynchronous command execution library that provides a simple trait-based interface for running system commands using [Tokio](https://tokio.rs). With a default implementation and the ability to customize, it lets you integrate command execution easily into your asynchronous Rust applications.
+Lightweight Command Runner is a lightweight asynchronous command execution library that provides a simple trait-based interface for running system commands using [Tokio](https://tokio.rs). With a default implementation and the ability to customize, it lets you integrate command execution easily into your asynchronous Rust applications.
 
 ## Features
 
@@ -15,7 +15,7 @@ Add the following to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-command-runner = "0.1.0"
+lightweight-command-runner = "0.1.0"
 ```
 
 ## Usage
@@ -23,7 +23,7 @@ command-runner = "0.1.0"
 Here's a basic example using the default implementation:
 
 ```rust
-use command_runner::{CommandRunner, DefaultCommandRunner};
+use lightweight_command_runner::{CommandRunner, DefaultCommandRunner};
 use tokio::process::Command;
 
 #[tokio::main]

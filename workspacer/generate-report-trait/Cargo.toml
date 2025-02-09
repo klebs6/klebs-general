@@ -1,5 +1,5 @@
 [package]
-name        = "generate-report"
+name        = "generate-report-trait"
 version     = "0.1.0"
 edition     = "2024"
 authors     = ["klebs tpk3.mx@gmail.com"]
