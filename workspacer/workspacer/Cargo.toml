@@ -1,0 +1,15 @@
+[dependencies]
+workspacer-interface = "0.1.0"
+workspacer-3p        = "0.1.0"
+workspacer-crate     = "0.1.0"
+generate-report      = "0.1.0"
+command-runner       = "0.1.0"
+
+[package]
+name        = "workspacer"
+version     = "0.1.0"
+edition     = "2024"
+authors     = ["klebs tpk3.mx@gmail.com"]
+repository  = "https://github.com/klebs6/klebs-general"
+description = "An asynchronous workspace management library for Rust projects, providing utilities for automation, analysis, and maintenance of multi-crate workspaces."
+license     = "MIT OR Apache-2.0"

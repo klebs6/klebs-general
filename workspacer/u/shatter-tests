@@ -1,0 +1,122 @@
+#!/usr/bin/env raku
+
+my %data = %(
+    "transformer-cpu-multihead-attention-network" => [
+        "multihead_attention_network.rs",
+    ],
+    "transformer-cpu-weighted-sum-layer" => [
+        "compute_grad_weighted_sum.rs",
+        "compute_weighted_sum.rs",
+    ],
+    "perturb" => [
+        "componentwise_perturb.rs",
+    ],
+    "transformer-cpu-deployment" => [
+        "deployment.rs",
+    ],
+    "transformer-cpu-dot-product-layer" => [
+        "mac.rs",
+        "dot_product.rs",
+        "dot_product_stress.rs",
+    ],
+    "transformer-cpu-fine-tuning" => [
+        "fine_tuning.rs",
+    ],
+    "transformer-cpu-masking" => [
+        "masking.rs",
+    ],
+    "transformer-cpu-compute-gradient" => [
+        "epsilon.rs",
+    ],
+    "transformer-cpu-matrix-product" => [
+        "compute_matrix_product.rs",
+    ],
+    "transformer-cpu-concatenation-layer" => [
+        "concatenation_layer.rs",
+    ],
+    "transformer-cpu-attention-layer" => [
+        "keys.rs",
+        "queries.rs",
+        "values.rs",
+        "attention_backward.rs",
+    ],
+    "transformer-cpu-optimization" => [
+        "optimization.rs",
+    ],
+    "transformer-cpu-positional-embeddings" => [
+        "positional_embeddings.rs",
+    ],
+    "transformer-cpu-positional-encoding" => [
+        "positional_encoding.rs",
+    ],
+    "transformer-cpu-positionwise-feedforward-network" => [
+        "positionwise_feedforward_network.rs",
+        "positionwise_feedforward_network_with_normalization.rs",
+    ],
+    "transformer-cpu-projection-layer" => [
+        "projection_layer.rs",
+    ],
+    "transformer-cpu-projection-space" => [
+        "projection_space.rs",
+    ],
+    "transformer-cpu-encoder-decoder" => [
+        "encoder_decoder_attention.rs",
+    ],
+    "transformer-cpu-relu-activation-layer" => [
+        "relu_activation_layer.rs",
+    ],
+    "transformer-cpu-scale-layer" => [
+        "gradient_check_scale_layer.rs",
+        "test_scale_layer.rs",
+    ],
+    "transformer-cpu-softmax-layer" => [
+        "grad_softmax.rs",
+        "grad_softmax_slice.rs",
+        "gradient_check_softmax_layer.rs",
+        "softmax.rs",
+        "softmax_jacobian.rs",
+    ],
+    "transformer-cpu-test-hooks" => [
+        "symmetry.rs",
+    ],
+    "transformer-cpu-token-embeddings" => [
+        "tokenizer.rs",
+    ],
+    "transformer-cpu-training-loop" => [
+        "training_loop.rs",
+    ],
+    "transformer-cpu-add-and-normalize-layer" => [
+        "add_and_normalize.rs",
+    ],
+    "transformer-cpu-final-linear-layer" => [
+        "final_linear_layer.rs",
+    ],
+    "transformer-cpu-linear-layer" => [
+        "linear_layer.rs",
+    ],
+    "transformer-cpu-loss-function" => [
+        "loss_function.rs",
+    ],
+    "transformer-cpu-evaluation" => [
+        "evaluation.rs",
+    ],
+    "transformer-cpu-input" => [
+        "input.rs",
+    ],
+    "transformer-cpu-output-layer" => [
+        "output_layer.rs",
+    ],
+    "transformer-cpu-learned-positional-encoding" => [
+        "learned_positional_encoding.rs",
+    ],
+);
+
+for %data.keys -> $crate {
+    my @files = %data{$crate}.List;
+    for @files -> $file {
+        qqx/mkdir $crate\/tests/;
+        my $cmd = "mv tests/$file $crate/tests";
+        say $cmd;
+        qqx/$cmd/;
+    }
+}

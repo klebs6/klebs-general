@@ -1,0 +1,21 @@
+#!/usr/bin/env raku
+use Chomper::CargoWorkspace;
+
+sub MAIN(Str $name, Bool :$write) {
+
+    batch-add-dependencies-to-cargo-toml(
+        [$name], 
+        deps  => ["serde_derive", "serde_json"],
+        ver   => "*",
+        write => True,
+    );
+
+    batch-add-dependencies-with-features-to-cargo-toml(
+        [$name], 
+        deps     => [ "serde" ],
+        ver      => "*",
+        features => [ "derive" ],
+        write    => True,
+    );
+}
+

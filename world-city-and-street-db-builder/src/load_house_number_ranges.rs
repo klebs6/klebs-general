@@ -9,6 +9,18 @@ pub trait LoadHouseNumberRanges {
     ) -> Result<Option<Vec<HouseNumberRange>>, DataAccessError>;
 }
 
+impl LoadHouseNumberRanges for DataAccess {
+
+    fn load_house_number_ranges(
+        &self, 
+        region: &WorldRegion, 
+        street_obj: &StreetName
+    ) -> Result<Option<Vec<HouseNumberRange>>, DataAccessError> 
+    {
+        self.db().lock().expect("expected to be able to get the db").load_house_number_ranges(region,street_obj)
+    }
+}
+
 impl LoadHouseNumberRanges for Database {
 
     // ----------------------------------------------------------------------
@@ -48,6 +60,197 @@ impl LoadHouseNumberRanges for Database {
                         Err(OsmPbfParseError::HouseNumberRangeSerdeError { msg }.into())
                     }
                 }
+            }
+        }
+    }
+}
+
+#[cfg(test)]
+mod test_load_house_number_ranges {
+    use super::*;
+    use tempfile::TempDir;
+    use std::sync::{Arc, Mutex};
+
+    /// Creates a temporary database and returns `(Arc<Mutex<Database>>, TempDir)` so
+    /// that the temp directory remains valid for the duration of the tests.
+    fn create_temp_db() -> (Arc<Mutex<Database>>, TempDir) {
+        let temp_dir = TempDir::new().expect("Failed to create temp dir");
+        let db = Database::open(temp_dir.path())
+            .expect("Failed to open database in temp dir");
+        (db, temp_dir)
+    }
+
+    /// Creates a `DataAccess` that references the same `Database`.
+    fn create_data_access(db: Arc<Mutex<Database>>) -> DataAccess {
+        DataAccess::with_db(db)
+    }
+
+    /// Convenience for building a `HouseNumberRange`.
+    fn hnr(start: u32, end: u32) -> HouseNumberRange {
+        HouseNumberRange::new(start, end)
+    }
+
+    /// Helper to store an array of `HouseNumberRange` objects in the DB
+    /// under the key that `load_house_number_ranges(...)` expects.
+    /// This uses the DB's `store_house_number_ranges(...)`.
+    fn store_house_number_ranges_for_test(
+        db: &mut Database,
+        region: &WorldRegion,
+        street: &StreetName,
+        ranges: &[HouseNumberRange],
+    ) {
+        db.store_house_number_ranges(region, street, ranges)
+          .expect("Storing house-number ranges should succeed in test setup");
+    }
+
+    #[test]
+    fn test_no_key_returns_none() {
+        // If there's no key in the DB, we expect None as the result.
+        let (db_arc, _tmp) = create_temp_db();
+        let data_access = create_data_access(db_arc.clone());
+
+        let region = WorldRegion::try_from_abbreviation("MD").unwrap();
+        let street = StreetName::new("NoData Street").unwrap();
+
+        let result = data_access
+            .load_house_number_ranges(&region, &street)
+            .expect("Should return Ok(None) if no data is stored");
+        assert_eq!(result, None, "Expected None when no key is in DB");
+    }
+
+    #[test]
+    fn test_valid_data_returns_some_ranges() {
+        // We'll store valid CBOR data (two house number ranges) and confirm we can load them.
+        let (db_arc, _tmp) = create_temp_db();
+        let mut db_guard = db_arc.lock().unwrap();
+        let data_access = create_data_access(db_arc.clone());
+
+        let region = WorldRegion::try_from_abbreviation("MD").unwrap();
+        let street = StreetName::new("ValidData St").unwrap();
+
+        let ranges_in = vec![hnr(1, 10), hnr(20, 30)];
+        store_house_number_ranges_for_test(&mut db_guard, &region, &street, &ranges_in);
+
+        // Release lock before reading to mimic real usage
+        drop(db_guard);
+
+        let loaded = data_access
+            .load_house_number_ranges(&region, &street)
+            .expect("Loading should succeed with valid data")
+            .expect("We expect Some(...) with valid data stored");
+        assert_eq!(loaded, ranges_in, "Loaded ranges should match stored data");
+    }
+
+    #[test]
+    fn test_corrupted_cbor_data_causes_error() {
+        // We'll write invalid CBOR bytes, ensuring that an error is returned.
+        let (db_arc, _tmp) = create_temp_db();
+        let mut db_guard = db_arc.lock().unwrap();
+        let data_access = create_data_access(db_arc.clone());
+
+        let region = WorldRegion::try_from_abbreviation("MD").unwrap();
+        let street = StreetName::new("Corrupted Street").unwrap();
+
+        // Manually compute the key
+        let key = house_number_ranges_key(&region, &street);
+        db_guard.put(&key, b"not-valid-cbor").unwrap();
+
+        // Release the lock to simulate normal read usage
+        drop(db_guard);
+
+        let result = data_access.load_house_number_ranges(&region, &street);
+
+        match result {
+            Err(DataAccessError::Io(io_err)) => {
+                assert!(
+                    io_err.to_string().contains("Failed to deserialize"),
+                    "The error message should indicate a deserialization failure"
+                );
+            }
+            Err(e) => {
+                panic!("Expected DataAccessError::Io or decode-based error, but got: {:?}", e);
+            }
+            Ok(_) => panic!("Should not succeed with corrupted CBOR data"),
+        }
+    }
+
+    #[test]
+    fn test_rocksdb_read_error_propagates() {
+        // If a RocksDB read fails, that is typically converted to `DataAccessError::Io`.
+        // We'll create a minimal stub that fails on `get(...)` to test the propagation.
+
+        struct FailingDbStub;
+        impl DatabaseGet for FailingDbStub {
+            fn get(&self, _key: impl AsRef<[u8]>) -> Result<Option<Vec<u8>>, DatabaseConstructionError> {
+                Err(DatabaseConstructionError::RocksDB(
+                    rocksdb::Error::new("Simulated read error")
+                ))
+            }
+        }
+
+        // We only need `Database` for the trait, so let's do a partial structure:
+        // We'll define enough to compile. The rest won't be called in this test.
+        impl OpenDatabaseAtPath for FailingDbStub {
+            fn open(_p: impl AsRef<std::path::Path>) -> Result<Arc<Mutex<Self>>, DatabaseConstructionError> {
+                unimplemented!()
+            }
+        }
+        impl StorageInterface for FailingDbStub {}
+        impl FailingDbStub {
+            fn new() -> Self { Self }
+        }
+
+        // Provide the `load_house_number_ranges` for the stub
+        impl LoadHouseNumberRanges for FailingDbStub {
+            fn load_house_number_ranges(
+                &self,
+                _region: &WorldRegion,
+                _street_obj: &StreetName
+            ) -> Result<Option<Vec<HouseNumberRange>>, DataAccessError> {
+                let key = "HNR:fake";
+                // We'll call get(...) => forced error
+                match self.get(key) {
+                    Ok(_) => Ok(None),
+                    Err(e) => Err(DataAccessError::DatabaseConstructionError(e)),
+                }
+            }
+        }
+
+        // Now let's create a test data access that uses this stub in place of a real DB
+        #[derive(Clone)]
+        struct FailingDataAccess {
+            db: Arc<Mutex<FailingDbStub>>
+        }
+        impl FailingDataAccess {
+            fn new(stub: FailingDbStub) -> Self {
+                Self { db: Arc::new(Mutex::new(stub)) }
+            }
+        }
+        impl LoadHouseNumberRanges for FailingDataAccess {
+            fn load_house_number_ranges(
+                &self,
+                region: &WorldRegion,
+                street_obj: &StreetName
+            ) -> Result<Option<Vec<HouseNumberRange>>, DataAccessError> {
+                self.db.lock().unwrap().load_house_number_ranges(region, street_obj)
+            }
+        }
+
+        // Build the failing data access
+        let failing_access = FailingDataAccess::new(FailingDbStub::new());
+
+        let region = WorldRegion::try_from_abbreviation("MD").unwrap();
+        let street = StreetName::new("Error Ave").unwrap();
+
+        let result = failing_access.load_house_number_ranges(&region, &street);
+        match result {
+            Err(DataAccessError::DatabaseConstructionError(
+                DatabaseConstructionError::RocksDB(e)
+            )) => {
+                assert_eq!(e.to_string(), "Simulated read error");
+            }
+            other => {
+                panic!("Expected RocksDB error, got {:?}", other);
             }
         }
     }

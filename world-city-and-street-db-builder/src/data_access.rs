@@ -32,6 +32,7 @@ pub trait DataAccessInterface
 + StreetExistsInPostalCodeInRegion
 + StreetNamesForCityInRegion
 + StreetNamesForPostalCodeInRegion
++ LoadHouseNumberRanges
 {}
 
 #[cfg(test)]

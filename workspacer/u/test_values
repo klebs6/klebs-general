@@ -1,0 +1,27 @@
+#!/usr/bin/env python
+import numpy as np
+
+# Define input data
+grad_weighted_sum = np.array([
+    [[[0.1, 0.2, 0.3, 0.4],
+      [0.5, 0.6, 0.7, 0.8],
+      [0.9, 1.0, 1.1, 1.2]]]])
+
+weights = np.array([
+    [[[0.1, 0.2, 0.3],
+      [0.4, 0.5, 0.6],
+      [0.7, 0.8, 0.9]]]])
+
+# Calculate expected gradients
+expected_grad_values = np.zeros_like(grad_weighted_sum)
+for batch in range(weights.shape[0]):
+    for head in range(weights.shape[1]):
+        for query_seq in range(weights.shape[2]):  # Changed to query_seq
+            for feature in range(grad_weighted_sum.shape[3]):
+                sum = 0
+                for key_seq in range(weights.shape[2]):  # Changed to key_seq
+                    sum += weights[batch, head, key_seq, query_seq] * grad_weighted_sum[batch, head, query_seq, feature]
+                expected_grad_values[batch, head, query_seq, feature] = sum
+
+print("Expected Gradient Values:\n", expected_grad_values)
+

@@ -1,0 +1,12 @@
+#!/usr/bin/env raku
+use Chomper::CargoWorkspace;
+
+sub MAIN(Str $name, Bool :$write) {
+
+    batch-add-dependencies-to-cargo-toml(
+        [$name], 
+        deps  => ["named-item", "named-item-derive"],
+        ver   => "*",
+        write => True,
+    );
+}

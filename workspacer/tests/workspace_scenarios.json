@@ -1,0 +1,17 @@
+[
+  {
+    "name": "valid_workspace",
+    "crate_configs": [
+      { "name": "crate_a", "add_readme": true, "add_src": true },
+      { "name": "crate_b", "add_readme": true, "add_src": true }
+    ],
+    "expect_error": false
+  },
+  {
+    "name": "missing_readme",
+    "crate_configs": [
+      { "name": "crate_without_readme", "add_readme": false, "add_src": true }
+    ],
+    "expect_error": true
+  }
+]
