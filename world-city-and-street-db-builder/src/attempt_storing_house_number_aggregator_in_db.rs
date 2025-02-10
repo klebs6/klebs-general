@@ -1,6 +1,4 @@
 // ---------------- [ File: src/attempt_storing_house_number_aggregator_in_db.rs ]
-// ---------------- [ File: src/attempt_storing_house_number_aggregator_in_db.rs ]
-// ---------------- [ File: src/attempt_storing_in_db.rs ]
 crate::ix!();
 
 #[cfg(test)]

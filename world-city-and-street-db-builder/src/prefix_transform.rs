@@ -2,38 +2,31 @@
 // ---------------- [ File: src/prefix_transform.rs ]
 crate::ix!();
 
-/// Create a SliceTransform that extracts everything up to 
-/// (and including) the second colon (`':'`) in each key.
+/// Create a `SliceTransform` that extracts everything **up to and including** the second `':'`
+/// in each key. If the key has fewer than two colons, we return the entire key.
 pub fn create_colon_prefix_transform() -> SliceTransform {
-    // "create(name, transform_fn, in_domain_and_range)"
-    // The third param is an Option<fn(&[u8]) -> bool>
     SliceTransform::create(
         "my_colon_prefix_transform",
-        // transform_fn: fn(&[u8]) -> &[u8]
         |key: &[u8]| {
             let mut colon_count = 0;
             for (i, &byte) in key.iter().enumerate() {
                 if byte == b':' {
                     colon_count += 1;
                     if colon_count == 2 {
-                        // return slice up to and including i
+                        // return slice up to and including that second colon
                         return &key[..=i];
                     }
                 }
             }
-            // If fewer than 2 colons => entire key
+            // If fewer than 2 colons => the entire key is the “prefix”
             key
         },
-        // in_domain_and_range => Some(...) if you want a domain check, or None
-        Some(|k: &[u8]| {
-            // We'll just say a valid key must not be empty
-            !k.is_empty()
-        }),
+        // The domain check is optional; at minimum we confirm it’s non-empty.
+        Some(|k: &[u8]| !k.is_empty()),
     )
 }
 
 #[cfg(test)]
-#[disable]
 mod prefix_transform_tests {
     use super::*;
 

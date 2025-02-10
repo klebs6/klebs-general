@@ -14,7 +14,7 @@ mod filenames_tests {
     #[traced_test]
     fn test_expected_filename_for_region_maryland() {
         let region = make_maryland_world_region();
-        let actual_path = expected_filename_for_region(PathBuf::from("."), &region);
+        let actual_path = expected_filename_for_region(PathBuf::from("."), region.download_link()).expect("expected maryland to have a pbf path");
         let actual_str  = actual_path.to_str().unwrap();
         assert_eq!(
             actual_str, 

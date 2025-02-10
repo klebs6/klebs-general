@@ -31,11 +31,6 @@ INDIVIDUAL_TEST := capture_stdout
 INDIVIDUAL_TEST := chain_addresses_across_files
 INDIVIDUAL_TEST := collect_address_and_housenumber_data
 INDIVIDUAL_TEST := db_decoder
-INDIVIDUAL_TEST := expected_filename_for_region
-INDIVIDUAL_TEST := gather_city_key_value_pairs
-INDIVIDUAL_TEST := get_prefix_iterator
-INDIVIDUAL_TEST := handle_pbf_house_number_extractor_in_thread
-INDIVIDUAL_TEST := test_handle_extractor_aggregator_store_fails
 
 #INDIVIDUAL_TEST := cli
 #INDIVIDUAL_TEST := street_name_test
@@ -47,7 +42,7 @@ INDIVIDUAL_TEST := test_handle_extractor_aggregator_store_fails
 #-----------------------------------------------------[this section lets us choose how we want to test]
 DEFAULT := test
 #DEFAULT := test_file
-DEFAULT := test_one
+#DEFAULT := test_one
 #DEFAULT := test_file_one
 #DEFAULT := test_all
 #DEFAULT := run

@@ -1,5 +1,4 @@
 // ---------------- [ File: src/handle_pbf_house_number_extractor_in_thread.rs ]
-// ---------------- [ File: src/handle_pbf_house_number_extractor_in_thread.rs ]
 crate::ix!();
 
 /// Handles the actual I/O, parsing, aggregation, and DB storage in a worker thread.
@@ -54,12 +53,13 @@ mod handle_pbf_house_number_extractor_in_thread_tests {
     use std::fs::File;
     use std::io::Write;
     use tempfile::TempDir;
-    use tokio; // for #[traced_test], if needed
+    use tokio; // for #[traced_test], if you're actually using it in async tests
 
     //-----------------------------------------------------------------
     // A small "mock DB" that fails on store:
     //-----------------------------------------------------------------
     struct FailingDb;
+
     impl StoreHouseNumberRanges for FailingDb {
         fn store_house_number_ranges(
             &mut self,
@@ -72,12 +72,10 @@ mod handle_pbf_house_number_extractor_in_thread_tests {
     }
 
     impl LoadExistingStreetRanges for FailingDb {
-
-        /// Loads existing house‐number ranges for the specified street from the DB.
         fn load_existing_street_ranges(
             &self,
-            world_region: &WorldRegion,
-            street:       &StreetName,
+            _world_region: &WorldRegion,
+            _street: &StreetName,
         ) -> Result<Option<Vec<HouseNumberRange>>, DataAccessError> {
             Err(DataAccessError::MockDbAlwaysFailsOnLoad)
         }
@@ -86,6 +84,7 @@ mod handle_pbf_house_number_extractor_in_thread_tests {
     //-----------------------------------------------------------------
     // Setup helpers
     //-----------------------------------------------------------------
+
     /// Helper: set up a fresh real DB in a temp dir + sync_channel.
     fn setup_db_and_channel()
         -> (Arc<Mutex<Database>>,
@@ -99,7 +98,7 @@ mod handle_pbf_house_number_extractor_in_thread_tests {
         (db, tx, rx, tmp_dir)
     }
 
-    /// Same, but returning a DB trait object that fails on store.
+    /// Same, but returning a DB that fails on store.
     fn setup_failing_db_and_channel()
         -> (Arc<Mutex<FailingDb>>,
             SyncSender<Result<WorldAddress, OsmPbfParseError>>,
@@ -110,63 +109,6 @@ mod handle_pbf_house_number_extractor_in_thread_tests {
         let failing_db = FailingDb;
         let (tx, rx) = std::sync::mpsc::sync_channel::<Result<WorldAddress,OsmPbfParseError>>(1000);
         (Arc::new(Mutex::new(failing_db)), tx, rx, tmp_dir)
-    }
-
-    /// Creates a minimal `.osm.pbf` file whose bounding box definitely includes the specified
-    /// `lat`/`lon` (around Baltimore). This fixes the scale so that `osmpbf` can parse it.
-    ///
-    /// # Arguments
-    ///
-    /// * `pbf_path`   - Path to the output `.osm.pbf` file.
-    /// * `city`       - The `addr:city` to embed in the Node.
-    /// * `street`     - The `addr:street` to embed in the Node.
-    /// * `housenumber`- Optional `addr:housenumber`.
-    /// * `lat`/`lon`  - The Node’s latitude/longitude in floating degrees (e.g. 39.283 / -76.616).
-    /// * `node_id`    - The Node’s OSM ID.
-    ///
-    /// # Example
-    ///
-    /// ```no_run
-    /// # use std::path::Path;
-    /// # #[tokio::main]
-    /// # async fn main() {
-    /// #   let pbf_path = Path::new("test.osm.pbf");
-    /// #   create_small_osm_pbf_file_in_bbox(
-    /// #       pbf_path, "Baltimore", "North Avenue", Some("100-110"), 39.283, -76.616, 123
-    /// #   ).await.unwrap();
-    /// # }
-    /// ```
-    pub async fn create_small_osm_pbf_file_in_bbox(
-        pbf_path: &std::path::Path,
-        city: &str,
-        street: &str,
-        housenumber: Option<&str>,
-        lat: f64,
-        lon: f64,
-        node_id: i64
-    ) -> std::io::Result<()> {
-        // Bounding box in 1e7 "nano-degrees", spanning roughly 38°..40° N, 77°..76° W.
-        // This ensures lat=39.283, lon=-76.616 is inside the box.
-        let bounding_box = (
-            -770_000_000, // left  (≈ -77.0)
-            -760_000_000, // right (≈ -76.0)
-            400_000_000, // top   (≈  40.0)
-            380_000_000, // bottom(≈  38.0)
-        );
-
-        // Delegate to the core PBF creation function.
-        // Adjust lat/lon in floating degrees as needed; the called function
-        // will handle scaling and writing a single Node with these tags.
-        create_small_osm_pbf_file(
-            pbf_path,
-            bounding_box,
-            city,
-            street,
-            housenumber,
-            lat,
-            lon,
-            node_id,
-        ).await
     }
 
     //-----------------------------------------------------------------
@@ -181,7 +123,7 @@ mod handle_pbf_house_number_extractor_in_thread_tests {
 
         let (db_arc, tx, rx, _tmp) = setup_db_and_channel();
 
-        handle_pbf_house_number_extractor_in_thread(db_arc,path.clone(), country, region, tx);
+        handle_pbf_house_number_extractor_in_thread(db_arc, path.clone(), country, region, tx);
 
         // Because open fails, the function sends an Err to the channel:
         let first = rx.recv().expect("channel must have one message");
@@ -216,7 +158,7 @@ mod handle_pbf_house_number_extractor_in_thread_tests {
         let (db_arc, tx, rx, _td) = setup_db_and_channel();
 
         // call
-        handle_pbf_house_number_extractor_in_thread(db_arc,pbf_path.clone(), country, region, tx);
+        handle_pbf_house_number_extractor_in_thread(db_arc, pbf_path.clone(), country, region, tx);
 
         // Expect an error message
         let first = rx.recv().expect("one item from parse failure");
@@ -237,7 +179,8 @@ mod handle_pbf_house_number_extractor_in_thread_tests {
     //-----------------------------------------------------------------
     #[traced_test]
     async fn test_handle_extractor_success_no_housenumbers() {
-        // Create a minimal valid .pbf => node with city/street but no housenumber => aggregator is empty
+        // Create a minimal valid .pbf => node with city/street but no housenumber => aggregator is empty,
+        // but we'll pass a postal_code so aggregator builds a WorldAddress (city+street+postcode).
         let region: WorldRegion = USRegion::UnitedState(UnitedState::Maryland).into();
         let country = Country::USA;
 
@@ -249,7 +192,8 @@ mod handle_pbf_house_number_extractor_in_thread_tests {
             &pbf_path,
             "Baltimore",
             "North Ave",
-            None,
+            None,          // no housenumber
+            Some("21201"), // do provide a postal code => aggregator can produce an address
             39.283,
             -76.616,
             1001
@@ -258,25 +202,22 @@ mod handle_pbf_house_number_extractor_in_thread_tests {
         let (db_arc, tx, rx, _td) = setup_db_and_channel();
 
         // call
-        handle_pbf_house_number_extractor_in_thread(db_arc.clone(),pbf_path.clone(), country, region, tx);
+        handle_pbf_house_number_extractor_in_thread(db_arc.clone(), pbf_path.clone(), country, region, tx);
 
         // We expect exactly one Ok(WorldAddress) from aggregator’s parse
-        // (assuming your aggregator sends an Ok even if housenumber is missing).
-        // If your aggregator doesn't send any address when there's no housenumber,
-        // then you might expect zero messages. Adjust accordingly.
-        let first = rx.recv().expect("should be one item or possibly zero if aggregator discards completely");
-        assert!(first.is_ok(), "Expected an Ok(...) address if aggregator sends city/street w/o housenumber");
+        // because we gave city+street+postal_code but no housenumber => aggregator has no subrange.
+        let first = rx.recv().expect("should be 1 address message");
+        assert!(first.is_ok(), "Expected an Ok(...) address with city/street/postcode");
         let addr = first.unwrap();
         assert_eq!(addr.city().name(), "baltimore");
         assert_eq!(addr.street().name(), "north ave");
-        //assert!(addr.house_number().is_none(), "No housenumber assigned => aggregator is empty?");
-
-        // aggregator has no actual house-number ranges => nothing stored in DB
+        // aggregator won't store any house-number ranges => no more messages
         assert!(rx.try_recv().is_err(), "no more messages => aggregator done");
-        
+
+        // confirm aggregator wrote no subranges => "HNR:MD:north ave" not present
         let db_guard = db_arc.lock().unwrap();
-        let hnr_key = format!("HNR:MD:north ave");
-        let existing = db_guard.get(hnr_key.as_bytes()).unwrap();
+        let hnr_key = b"HNR:MD:north ave";
+        let existing = db_guard.get(hnr_key).unwrap();
         assert!(existing.is_none(), "No aggregator data => no DB entry for housenumbers");
     }
 
@@ -291,12 +232,13 @@ mod handle_pbf_house_number_extractor_in_thread_tests {
         let tmp_dir = TempDir::new().unwrap();
         let pbf_path = tmp_dir.path().join("with_hn.osm.pbf");
 
-        // bounding box includes lat=39.283, lon=-76.616 => aggregator should keep it
+        // bounding box includes lat=39.283, lon=-76.616 => aggregator uses city+street+postcode+housenumber
         create_small_osm_pbf_file_in_bbox(
             &pbf_path,
             "Calverton",
             "Catlett Road",
             Some("100-110"),
+            Some("20190"),
             39.283,
             -76.616,
             2002
@@ -306,9 +248,9 @@ mod handle_pbf_house_number_extractor_in_thread_tests {
 
         handle_pbf_house_number_extractor_in_thread(
             db_arc.clone(),
-            pbf_path.clone(), 
-            country, 
-            region, 
+            pbf_path.clone(),
+            country,
+            region,
             tx
         );
 
@@ -316,19 +258,20 @@ mod handle_pbf_house_number_extractor_in_thread_tests {
         let first = rx.recv().expect("one item from channel");
         assert!(first.is_ok());
         let addr = first.unwrap();
+        // aggregator normalizes city/street => "calverton", "catlett road"
         assert_eq!(addr.city().name(), "calverton");
         assert_eq!(addr.street().name(), "catlett road");
-        assert_eq!(addr.postal_code().code(), "20138-9997"); // if your code sets that
+        assert_eq!(addr.postal_code().code(), "20190");
         // aggregator => [100..110] stored => no more items
         assert!(rx.try_recv().is_err(), "no more messages => aggregator done storing");
 
         // confirm aggregator data in DB => "HNR:VA:catlett road"
         let db_guard = db_arc.lock().unwrap();
-        let key = "HNR:VA:catlett road";
-        let hnr_val_opt = db_guard.get(key.as_bytes()).unwrap();
+        let key = b"HNR:VA:catlett road";
+        let hnr_val_opt = db_guard.get(key).unwrap();
         assert!(hnr_val_opt.is_some(), "Should have aggregator data");
         
-        // decode your cbor
+        // decode CBOR
         let cbor_bytes = hnr_val_opt.unwrap();
         let clist: crate::CompressedList<HouseNumberRange> = serde_cbor::from_slice(&cbor_bytes).unwrap();
         let items = clist.items();
@@ -340,12 +283,6 @@ mod handle_pbf_house_number_extractor_in_thread_tests {
     //-----------------------------------------------------------------
     // 5) Test scenario: aggregator store fails => we confirm it logs an error
     //-----------------------------------------------------------------
-    //
-    // Instead of concurrency or lock poisoning, we pass a "FailingDb"
-    // so that aggregator attempts to store => always gets an error => logs a warning.
-    // We verify the aggregator still sends the parse results to the channel, so our test 
-    // gets at least one Ok(WorldAddress), then sees a store failure in logs (and no panic).
-    //
     #[traced_test]
     async fn test_handle_extractor_aggregator_store_fails() {
         let region: WorldRegion = USRegion::UnitedState(UnitedState::Maryland).into();
@@ -355,11 +292,13 @@ mod handle_pbf_house_number_extractor_in_thread_tests {
         let pbf_path = tmp_dir.path().join("test_aggregator_fail.osm.pbf");
 
         // bounding box definitely includes lat=39.0, lon=-76.0
+        // we also pass a postal code so aggregator does produce a WorldAddress
         create_small_osm_pbf_file_in_bbox(
             &pbf_path,
             "Baltimore",
             "North Avenue",
             Some("5-10"),
+            Some("21201"),
             39.0,
             -76.0,
             123
@@ -384,8 +323,5 @@ mod handle_pbf_house_number_extractor_in_thread_tests {
 
         // The aggregator then tries to store => fails => logs error => does not panic => no further messages
         assert!(rx.try_recv().is_err(), "no more messages => aggregator store failed quietly");
-
-        // Obviously we won't see anything stored in the failing DB. If your aggregator code
-        // logs or tries partial store, that’s up to you. The key is that it does not panic.
     }
 }

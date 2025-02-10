@@ -1,8 +1,13 @@
 // ---------------- [ File: src/errors.rs ]
-// ---------------- [ File: src/errors.rs ]
 crate::ix!();
 
 error_tree!{
+
+    #[derive(PartialEq)]
+    pub enum ExpectedFilenameError {
+        #[display("Download link was empty or ends with slash, no valid filename found")]
+        NoValidFilename,
+    }
 
     #[derive(PartialEq)]
     pub enum DataAccessError {
@@ -64,6 +69,7 @@ error_tree!{
 
     #[derive(PartialEq)]
     pub enum OsmPbfParseError {
+        ExpectedFilenameError(ExpectedFilenameError),
 
         #[cmp_neq]
         WorldRegionConversionError(WorldRegionConversionError),

@@ -22,7 +22,7 @@ pub fn chain_addresses_across_files<I:StorageInterface + 'static>(
     let mut chained_iter = Box::new(iter::empty()) as Box<dyn Iterator<Item = _>>;
 
     for file_path in pbf_files {
-        match find_region_for_file(&file_path, known_regions, pbf_dir) {
+        match find_region_for_file(&file_path, known_regions, pbf_dir)? {
             Some(region) => {
                 debug!(
                     "chain_addresses_across_files: associating file {:?} with region={:?}",

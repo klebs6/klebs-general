@@ -1,146 +1,131 @@
 // ---------------- [ File: src/get_prefix_iterator.rs ]
-// ---------------- [ File: src/get_prefix_iterator.rs ]
 crate::ix!();
 
 pub trait GetPrefixIterator {
-
-    fn prefix_iterator<'a: 'b, 'b, P: AsRef<[u8]>>(&'a self, prefix: P) 
-        -> rocksdb::DBIteratorWithThreadMode<'b,rocksdb::DB>;
+    fn prefix_iterator<'a: 'b, 'b, P: AsRef<[u8]>>(
+        &'a self,
+        prefix: P
+    ) -> DBIteratorWithThreadMode<'b, DB>;
 }
 
+/// Because older versions of `rust-rocksdb` do not have `prefix_iterator_opt`,
+/// we do `iterator_opt(From(...), ...)` with a custom `ReadOptions` that sets
+/// `prefix_same_as_start(true)`.
+///
+/// This positions the iterator at `>= prefix` and, with the prefix extractor,
+/// it should terminate once the prefix diverges.
 impl GetPrefixIterator for Database {
-
-    fn prefix_iterator<'a: 'b, 'b, P: AsRef<[u8]>>(&'a self, prefix: P) 
-        -> rocksdb::DBIteratorWithThreadMode<'b,rocksdb::DB> {
-            self.db().prefix_iterator(prefix)
-    }
-}
-
-pub trait GetIterator {
-
-    fn iterator<'a: 'b, 'b>(
+    fn prefix_iterator<'a: 'b, 'b, P: AsRef<[u8]>>(
         &'a self,
-        mode: rocksdb::IteratorMode,
-    ) -> rocksdb::DBIteratorWithThreadMode<'b, rocksdb::DB>;
-}
+        prefix: P
+    ) -> DBIteratorWithThreadMode<'b, DB> {
+        let prefix_bytes = prefix.as_ref();
 
-impl GetIterator for Database {
+        // We'll set up read options in total‐order, plus prefix-same-as-start.
+        let mut read_opts = rocksdb::ReadOptions::default();
+        // This is the crucial setting:
+        read_opts.set_prefix_same_as_start(true);
 
-    fn iterator<'a: 'b, 'b>(
-        &'a self,
-        mode: rocksdb::IteratorMode,
-    ) -> rocksdb::DBIteratorWithThreadMode<'b, rocksdb::DB> {
-        self.db().iterator(mode)
+        // We start at the first key >= `prefix_bytes`, going forward.
+        let mode = rocksdb::IteratorMode::From(prefix_bytes, rocksdb::Direction::Forward);
+        self.db().iterator_opt(mode, read_opts)
     }
 }
 
 #[cfg(test)]
-mod get_iterator_traits_tests {
+mod prefix_transform_tests {
     use super::*;
+    use tempfile::TempDir;
+    use std::sync::{Arc, Mutex};
 
-    fn create_db<I:StorageInterface>() -> (Arc<Mutex<I>>, TempDir) {
-        let temp = TempDir::new().expect("tempdir");
-        let db   = I::open(temp.path()).expect("db open");
-        (db, temp)
-    }
+    #[test]
+    fn test_dynamic_colon_prefix_extractor() {
+        let tmp = TempDir::new().unwrap();
+        let db = Database::open(tmp.path()).expect("open DB");
+        let mut db_guard = db.lock().unwrap();
 
-    /// Helper to write a few key-value pairs into the DB
-    fn insert_test_data(db_arc: &Arc<Mutex<Database>>) {
-        let mut db_guard = db_arc.lock().expect("lock DB");
-        db_guard.put("alpha", b"value_alpha").unwrap();
-        db_guard.put("beta", b"value_beta").unwrap();
-        db_guard.put("prefix:one", b"prefix_one").unwrap();
-        db_guard.put("prefix:two", b"prefix_two").unwrap();
-        db_guard.put("prefix:zzz", b"prefix_zzz").unwrap();
-        // We can also test numeric sorting, etc. if desired
-    }
+        // Insert sample keys
+        db_guard.put(b"C2Z:US:baltimore", b"data").unwrap();
+        db_guard.put(b"C2Z:US:some:extra", b"data").unwrap();
+        db_guard.put(b"C2Z:EU:london", b"data").unwrap();
+        db_guard.put(b"C2Z:US", b"partial").unwrap();
+        db_guard.put(b"Z2C:US:21201", b"data").unwrap();
 
-    #[traced_test]
-    fn test_prefix_iterator_basic() {
-        let (db_arc, _tempdir) = create_db();
-        insert_test_data(&db_arc);
-
-        let db_guard = db_arc.lock().expect("lock DB");
-        // We'll retrieve all keys that start with "prefix:" 
-        let mut iter = db_guard.prefix_iterator("prefix:");
-        let mut keys_collected = vec![];
-        while let Some(Ok((k, _v))) = iter.next() {
-            keys_collected.push(String::from_utf8_lossy(&k).to_string());
+        // 1) prefix="C2Z:US:"
+        {
+            let mut iter = db_guard.prefix_iterator("C2Z:US:");
+            let mut found = Vec::new();
+            while let Some(Ok((k, _v))) = iter.next() {
+                found.push(String::from_utf8_lossy(&k).to_string());
+            }
+            // Expect "C2Z:US:baltimore" and "C2Z:US:some:extra"
+            assert_eq!(found.len(), 2);
+            assert!(found.contains(&"C2Z:US:baltimore".to_string()));
+            assert!(found.contains(&"C2Z:US:some:extra".to_string()));
         }
-        // We expect "prefix:one", "prefix:two", "prefix:zzz" 
-        keys_collected.sort();
-        assert_eq!(keys_collected, vec!["prefix:one", "prefix:two", "prefix:zzz"]);
-    }
 
-    #[traced_test]
-    fn test_iterator_start() {
-        let (db_arc, _tempdir) = create_db();
-        insert_test_data(&db_arc);
-
-        let db_guard = db_arc.lock().expect("lock DB");
-        // We'll do a forward iteration from the start
-        let mut iter = db_guard.iterator(rocksdb::IteratorMode::Start);
-        let mut found = vec![];
-        while let Some(Ok((k, v))) = iter.next() {
-            found.push((
-                String::from_utf8_lossy(&k).to_string(),
-                String::from_utf8_lossy(&v).to_string(),
-            ));
+        // 2) prefix="Z2C:US:"
+        {
+            let mut iter2 = db_guard.prefix_iterator("Z2C:US:");
+            let mut found2 = Vec::new();
+            while let Some(Ok((k, _v))) = iter2.next() {
+                found2.push(String::from_utf8_lossy(&k).to_string());
+            }
+            // Should see only "Z2C:US:21201"
+            assert_eq!(found2, vec!["Z2C:US:21201"]);
         }
-        // Sort them by key or just observe the insertion order. 
-        // RocksDB might not store in insertion order if not using an OrderedColumnFamily, but typically
-        // we see ascending lexicographical if default comparator is used.
-        // We'll just check that we got them all:
-        assert_eq!(found.len(), 5, "we inserted 5 key-value pairs");
-        // (We won't enforce the order strictly unless we rely on known key ordering.)
-        let mut keys: Vec<_> = found.iter().map(|(k, _)| k.clone()).collect();
-        keys.sort();
-        assert_eq!(
-            keys,
-            vec!["alpha", "beta", "prefix:one", "prefix:two", "prefix:zzz"]
-        );
     }
 
-    #[traced_test]
-    fn test_prefix_iterator_empty_db() {
-        let (db_arc, _tempdir) = create_db::<Database>();
-        let db_guard = db_arc.lock().unwrap();
-        let mut iter = db_guard.prefix_iterator("prefix:");
-        assert!(iter.next().is_none(), "No data => no items");
-    }
+    #[test]
+    fn test_my_colon_prefix_transform() {
+        let tmp = TempDir::new().unwrap();
+        let db = Database::open(tmp.path()).expect("open DB with prefix transform");
+        let mut db_guard = db.lock().unwrap();
 
-    #[traced_test]
-    fn test_iterator_end_mode() {
-        let (db_arc, _tempdir) = create_db();
-        insert_test_data(&db_arc);
+        // Insert keys
+        db_guard.put(b"C2Z:US:baltimore", b"baltimore_data").unwrap();
+        db_guard.put(b"C2Z:US:annapolis", b"annapolis_data").unwrap();
+        db_guard.put(b"Z2C:US:21201",     b"zip_data").unwrap();
+        db_guard.put(b"C2Z:EU:london",   b"london_data").unwrap();
+        db_guard.put(b"C2Z:US",          b"partial_data").unwrap();
+        db_guard.put(b"C2Z:US:some:extra:stuff", b"extra_data").unwrap();
 
-        let db_guard = db_arc.lock().unwrap();
-        // If we do `IteratorMode::End`, it starts at the last key and goes backwards. 
-        // We'll check if we can handle that logic.
-        let mut iter = db_guard.iterator(rocksdb::IteratorMode::End);
-        // Typically the first `next()` from an end-iterator yields None if we haven't done .prev(). 
-        // But let's see how your code sets up RocksDB. 
-        // We'll do a partial approach: we expect an empty iteration if we only do `next()` calls.
-        let first = iter.next();
-        assert!(first.is_none());
-        // If we wanted a reverse iteration, we'd do .prev() calls. But the trait doesn't show that usage here.
-    }
+        // prefix="C2Z:US:"
+        {
+            let mut iter = db_guard.prefix_iterator("C2Z:US:");
+            let mut found = Vec::new();
+            while let Some(Ok((k, _v))) = iter.next() {
+                found.push(String::from_utf8_lossy(&k).to_string());
+            }
 
-    #[traced_test]
-    fn test_iterator_lock_poisoned() {
-        let (db_arc, _tempdir) = create_db::<Database>();
-        // Poison the lock
-        let _ = std::panic::catch_unwind(|| {
-            let _guard = db_arc.lock().unwrap();
-            panic!("poisoning");
-        });
-        // Next time we do .lock() => error. We'll see how we handle it in production code. 
-        // Possibly it panics or returns an error. Usually in Rust, a lock poison triggers a panic 
-        // unless we do a special approach. We'll just demonstrate:
-        let result = std::panic::catch_unwind(|| {
-            let db_guard = db_arc.lock().unwrap();
-            db_guard.prefix_iterator("prefix:");
-        });
-        assert!(result.is_err(), "Should panic due to lock poisoning by default");
+            // Should match anything whose slice transform is "C2Z:US:"
+            // i.e. keys that contain *at least* 2 colons, and the second colon is at the same position
+            // as "C2Z:US:". We expect:
+            //   * "C2Z:US:baltimore" => transform is "C2Z:US:"
+            //   * "C2Z:US:annapolis" => transform is "C2Z:US:"
+            //   * "C2Z:US:some:extra:stuff" => transform is "C2Z:US:"
+            // => total 3 results
+            assert_eq!(found.len(), 3);
+            assert!(found.contains(&"C2Z:US:baltimore".to_string()));
+            assert!(found.contains(&"C2Z:US:annapolis".to_string()));
+            assert!(found.contains(&"C2Z:US:some:extra:stuff".to_string()));
+        }
+
+        // prefix="C2Z:US"
+        {
+            let mut iter2 = db_guard.prefix_iterator("C2Z:US");
+            let mut found = Vec::new();
+            while let Some(Ok((k, _v))) = iter2.next() {
+                found.push(String::from_utf8_lossy(&k).to_string());
+            }
+
+            // Because there's exactly 1 colon, the transform returns the entire key 
+            // if it has <2 colons. The key "C2Z:US" has exactly 1 colon => transform is "C2Z:US".
+            // We only want the key "C2Z:US" itself. 
+            // Meanwhile, "C2Z:US:baltimore" transforms to "C2Z:US:", which doesn't match "C2Z:US".
+            // So we expect exactly 1 match: "C2Z:US"
+            assert_eq!(found.len(), 1);
+            assert_eq!(found[0], "C2Z:US");
+        }
     }
 }

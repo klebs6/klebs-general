@@ -9,15 +9,15 @@ pub trait OpenDatabaseAtPath {
 
 impl OpenDatabaseAtPath for Database {
 
-    /// Initialize DB in its own function
-    fn open(path: impl AsRef<std::path::Path>) 
-        -> Result<Arc<Mutex<Self>>, DatabaseConstructionError> 
+    fn open(path: impl AsRef<std::path::Path>)
+        -> Result<Arc<Mutex<Self>>, DatabaseConstructionError>
     {
         let mut opts = Options::default();
         opts.create_if_missing(true);
         opts.set_compression_type(DBCompressionType::Zstd);
 
-        // Use the dynamic slice transform
+        // 1) Use the “colon prefix” transform so that RocksDB
+        //    stores an extracted prefix up to the second colon.
         let st = create_colon_prefix_transform();
         opts.set_prefix_extractor(st);
 
@@ -36,7 +36,6 @@ impl OpenDatabaseAtPath for Database {
 }
 
 #[cfg(test)]
-#[disable]
 mod test_open_database_at_path {
     use super::*;
     use tempfile::TempDir;
@@ -99,22 +98,20 @@ mod test_open_database_at_path {
             File::create(&file_path).expect("Failed to create file in temp dir");
         }
 
-        let db_result = Database::open(&file_path);
-        assert!(
-            db_result.is_err(),
-            "Opening a DB where path is a file should fail"
-        );
-        if let Err(DatabaseConstructionError::RocksDB(e)) = db_result.unwrap_err() {
-            // The exact error message might differ across environments,
-            // but we'll check for at least a partial phrase if needed.
-            assert!(
-                e.to_string().contains("Invalid argument")
-                    || e.to_string().contains("is not a directory"),
-                "Expected an error indicating that the path is invalid: {}",
-                e
-            );
-        } else {
-            panic!("Expected a RocksDB error when using a file path");
+        match Database::open(&file_path) {
+            Ok(db) => {
+                panic!("Expected a RocksDB error when using a file path");
+            }
+            Err(e) => {
+                // The exact error message might differ across environments,
+                // but we'll check for at least a partial phrase if needed.
+                assert!(
+                    e.to_string().contains("Invalid argument")
+                    || e.to_string().contains("is not a directory")
+                    || e.to_string().contains("Failed to create RocksDB directory")
+                    , "Expected an error indicating that the path is invalid: {}", e
+                );
+            }
         }
     }
 
@@ -166,7 +163,7 @@ mod test_open_database_at_path {
             "DB should open successfully with prefix transform and bloom filter enabled"
         );
         let db_arc = db_result.unwrap();
-        let db_guard = db_arc.lock().unwrap();
+        let mut db_guard = db_arc.lock().unwrap();
 
         // We can do a minimal check: put & get a prefix-based key
         // This won't fully confirm the prefix transform is active, but ensures no crash

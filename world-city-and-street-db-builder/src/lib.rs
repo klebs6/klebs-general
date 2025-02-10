@@ -143,3 +143,5 @@ x!{write_postal_codes_to_region_and_street}
 x!{write_streets_to_region_and_city}
 x!{write_streets_to_region_and_postal_code}
 x!{house_number_aggregator}
+x!{pbf_creation}
+x!{get_iterator}

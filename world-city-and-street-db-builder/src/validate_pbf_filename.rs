@@ -19,7 +19,7 @@ pub fn validate_pbf_filename(
 
     // Generate the “expected” filename. We pass `dir="."` to indicate “no path prefix,”
     // then remove that prefix from the result.
-    let expected_path = expected_filename_for_region(Path::new("."), region);
+    let expected_path = expected_filename_for_region(Path::new("."), region.download_link())?;
     let expected_filename_str = expected_path.to_str().unwrap_or_default();
 
     // If these do not match (case-insensitive, optional MD5 block), return error

@@ -19,15 +19,15 @@ pub fn find_region_for_file(
     file_path:     &Path,
     known_regions: &[WorldRegion],
     base_dir:      impl AsRef<Path>,
-) -> Option<WorldRegion> {
+) -> Result<Option<WorldRegion>,ExpectedFilenameError> {
     let filename = match file_path.file_name().and_then(|f| f.to_str()) {
         Some(s) => s,
-        None => return None,
+        None => return Ok(None),
     };
 
     for candidate_region in known_regions {
         // Build the expected full path in the provided base directory.
-        let expected_path = expected_filename_for_region(&base_dir, candidate_region);
+        let expected_path = expected_filename_for_region(&base_dir, candidate_region.download_link())?;
         // Extract just the final filename component of that path (e.g. "maryland-latest.osm.pbf").
         let expected_filename = match expected_path.file_name().and_then(|f| f.to_str()) {
             Some(s) => s,
@@ -36,11 +36,11 @@ pub fn find_region_for_file(
 
         // Compare them (case-insensitive and allowing optional MD5 in the actual filename).
         if filenames_match(expected_filename, filename) {
-            return Some(*candidate_region);
+            return Ok(Some(*candidate_region));
         }
     }
 
-    None
+    Ok(None)
 }
 
 #[cfg(test)]
@@ -63,7 +63,7 @@ mod find_region_for_file_tests {
         // we should return None
         let path = PathBuf::from("/some/directory/"); // no file component
         let regions = known_test_regions();
-        let result = find_region_for_file(&path, &regions, ".");
+        let result = find_region_for_file(&path, &regions, ".").expect("expected a region for the file");
         assert!(result.is_none(), "No file name => None");
     }
 
@@ -91,7 +91,7 @@ mod find_region_for_file_tests {
         let path = PathBuf::from("maryland-latest.osm.pbf");
         let regions = known_test_regions();
         let base_dir = "."; // used in expected_filename_for_region
-        let result = find_region_for_file(&path, &regions, base_dir);
+        let result = find_region_for_file(&path, &regions, base_dir).expect("expected a region for the file");
         assert_eq!(result, Some(md), "Exact match => Some(MD)");
     }
 
@@ -101,7 +101,7 @@ mod find_region_for_file_tests {
         let path = PathBuf::from("ViRgInIa-LaTesT.OsM.PbF");
         let regions = known_test_regions();
         let base_dir = ".";
-        let result = find_region_for_file(&path, &regions, base_dir);
+        let result = find_region_for_file(&path, &regions, base_dir).expect("expected a region for the file");
         assert_eq!(result, Some(va), "Case-insensitive match => Some(VA)");
     }
 
@@ -112,7 +112,7 @@ mod find_region_for_file_tests {
         let path = PathBuf::from("maryland-latest.abc123.osm.pbf");
         let regions = known_test_regions();
         let base_dir = ".";
-        let result = find_region_for_file(&path, &regions, base_dir);
+        let result = find_region_for_file(&path, &regions, base_dir).expect("expected a region for the file");
         assert_eq!(result, Some(md), "MD5 insertion => Some(MD)");
     }
 
@@ -121,7 +121,7 @@ mod find_region_for_file_tests {
         let path = PathBuf::from("unknown-latest.osm.pbf");
         let regions = known_test_regions();
         let base_dir = ".";
-        let result = find_region_for_file(&path, &regions, base_dir);
+        let result = find_region_for_file(&path, &regions, base_dir).expect("expected a region for the file");
         assert!(result.is_none(), "Unknown => None");
     }
 
@@ -131,7 +131,7 @@ mod find_region_for_file_tests {
         let path = PathBuf::from("maryland-latest.osm");
         let regions = known_test_regions();
         let base_dir = ".";
-        let result = find_region_for_file(&path, &regions, base_dir);
+        let result = find_region_for_file(&path, &regions, base_dir).expect("expected a region for the file");
         assert!(result.is_none(), "Not .osm.pbf => None");
     }
 
@@ -145,7 +145,7 @@ mod find_region_for_file_tests {
         let regions = known_test_regions();
         let base_dir = "/tmp/custom/base_dir";
         // We'll still expect it to match MD, because the final file name is "maryland-latest.osm.pbf"
-        let result = find_region_for_file(&path, &regions, base_dir);
+        let result = find_region_for_file(&path, &regions, base_dir).expect("expected a region for the file");
         assert_eq!(result, Some(md));
     }
 
@@ -168,7 +168,7 @@ mod find_region_for_file_tests {
         // unless there's truly a conflict. We'll just illustrate the "first match" concept:
         
         let path = PathBuf::from("virginia-latest.osm.pbf");
-        let result = find_region_for_file(&path, &reversed_regions, ".");
+        let result = find_region_for_file(&path, &reversed_regions, ".").expect("expected a region for the file");
         // It's going to find VA presumably, or if DC doesn't match, no big deal. 
         // We'll confirm that it indeed found VA, even though DC is first in the slice.
         let va: WorldRegion = USRegion::UnitedState(UnitedState::Virginia).into();

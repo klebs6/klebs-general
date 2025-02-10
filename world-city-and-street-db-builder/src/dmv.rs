@@ -51,10 +51,10 @@ mod dmv_database_tests {
 
     /// Helper function that, for each region in the given slice, creates an empty tiny OSM PBF file in `pbf_dir`
     /// with the expected filename. Here we use `create_tiny_osm_pbf` (which produces a file without housenumber).
-    async fn create_dummy_pbf_files_for_regions(pbf_dir: &PathBuf, regions: &[WorldRegion]) -> std::io::Result<()> {
+    async fn create_dummy_pbf_files_for_regions(pbf_dir: &PathBuf, regions: &[WorldRegion]) -> Result<(),OsmPbfParseError> {
         for region in regions {
             // The expected filename is built using our helper.
-            let file_path = expected_filename_for_region(pbf_dir, region);
+            let file_path = expected_filename_for_region(pbf_dir, region.download_link())?;
             // Call the tiny pbf file creator.
             // (You might choose the variant with or without housenumber.)
             create_tiny_osm_pbf(&file_path).await?;
