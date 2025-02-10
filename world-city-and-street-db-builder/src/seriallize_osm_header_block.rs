@@ -1,4 +1,5 @@
 // ---------------- [ File: src/seriallize_osm_header_block.rs ]
+// ---------------- [ File: src/seriallize_osm_header_block.rs ]
 crate::ix!();
 
 use crate::proto::{fileformat,osmformat};
@@ -44,7 +45,7 @@ mod test_serialize_osm_header_block {
     use protobuf::Message; // For (de)serialization checks
     use std::io;
 
-    #[test]
+    #[traced_test]
     fn test_minimal_header_block_success() {
         // Create a minimal HeaderBlock (no bbox, no replication info, etc.)
         let header_block = osmformat::HeaderBlock::new();
@@ -64,7 +65,7 @@ mod test_serialize_osm_header_block {
         );
     }
 
-    #[test]
+    #[traced_test]
     fn test_basic_header_block_with_bbox() {
         // Provide a bounding box, required features, etc.
         let mut header_block = osmformat::HeaderBlock::new();
@@ -126,7 +127,7 @@ mod test_serialize_osm_header_block {
         );
     }
 
-    #[test]
+    #[traced_test]
     fn test_round_trip_serialization() {
         // We'll fill in a few more fields, then parse them back out of the blob.
         let mut header_block = osmformat::HeaderBlock::new();
@@ -175,7 +176,7 @@ mod test_serialize_osm_header_block {
         );
     }
 
-    #[test]
+    #[traced_test]
     fn test_error_in_header_block_serialization() {
         // We'll do a minimal approach to force an error in `header_block.write_to_bytes()`.
         // The real `protobuf::Message` generally won't fail easily on normal data, so we mock it.
@@ -240,7 +241,7 @@ mod test_serialize_osm_header_block {
         );
     }
 
-    #[test]
+    #[traced_test]
     fn test_error_in_blob_serialization() {
         // Similarly, we can force an error in writing the Blob. We'll define a local function
         // that calls `blob.write_to_bytes()` but uses a mock. The real code is identical in approach.
@@ -291,7 +292,7 @@ mod test_serialize_osm_header_block {
         );
     }
 
-    #[test]
+    #[traced_test]
     fn test_error_in_blob_header_serialization() {
         // We'll force an error in writing the BlobHeader. This is contrived, but consistent with the pattern.
         struct MockBlobHeader;

@@ -1,4 +1,5 @@
 // ---------------- [ File: src/retrieve_housenumber_value.rs ]
+// ---------------- [ File: src/retrieve_housenumber_value.rs ]
 crate::ix!();
 
 /// Retrieves the `addr:housenumber` value from the collected tags, if present and non-empty.
@@ -79,7 +80,7 @@ mod test_retrieve_housenumber_value {
         }
     }
 
-    #[test]
+    #[traced_test]
     fn test_no_housenumber_key_returns_ok_none() {
         // If "addr:housenumber" is not present, we get Ok(None).
         let tags = build_tags(&[("some_key", "some_val")]);
@@ -88,7 +89,7 @@ mod test_retrieve_housenumber_value {
         assert_ok_none(result);
     }
 
-    #[test]
+    #[traced_test]
     fn test_empty_housenumber_value_returns_ok_none() {
         // "addr:housenumber" => "" => trimmed is empty => Ok(None)
         let tags = build_tags(&[("addr:housenumber", "")]);
@@ -97,7 +98,7 @@ mod test_retrieve_housenumber_value {
         assert_ok_none(result);
     }
 
-    #[test]
+    #[traced_test]
     fn test_whitespace_housenumber_value_returns_ok_none() {
         // "addr:housenumber" => "   " => still empty after trim => Ok(None)
         let tags = build_tags(&[("addr:housenumber", "   ")]);
@@ -106,7 +107,7 @@ mod test_retrieve_housenumber_value {
         assert_ok_none(result);
     }
 
-    #[test]
+    #[traced_test]
     fn test_valid_housenumber_returns_ok_some_trimmed() {
         // "addr:housenumber" => "  123 " => trimmed => "123"
         let tags = build_tags(&[("addr:housenumber", "  123 ")]);
@@ -115,7 +116,7 @@ mod test_retrieve_housenumber_value {
         assert_ok_some(result, "123");
     }
 
-    #[test]
+    #[traced_test]
     fn test_another_valid_housenumber_with_dashes() {
         // This function doesn't parse the number, just retrieves it. 
         // "addr:housenumber" => "10-20"
@@ -132,7 +133,7 @@ mod test_retrieve_housenumber_value {
     // For demonstration, let's simulate an extension: if the function decided 
     // to handle some special invalid case. We'll just show how we'd test it:
 
-    #[test]
+    #[traced_test]
     #[ignore = "Currently retrieve_housenumber_value never returns Err(...) for invalid data. 
                 Un-ignore if you add that feature in the future."]
     fn test_special_invalid_case_returns_err() {

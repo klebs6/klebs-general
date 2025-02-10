@@ -1,4 +1,5 @@
 // ---------------- [ File: src/putget.rs ]
+// ---------------- [ File: src/putget.rs ]
 crate::ix!();
 
 pub trait DatabasePut {
@@ -44,7 +45,7 @@ mod test_database_put_get {
         (db, tmp)
     }
 
-    #[test]
+    #[traced_test]
     fn test_put_and_get_round_trip() {
         let (db_arc, _tmp_dir) = create_temp_db();
         let mut db_guard = db_arc.lock().unwrap();
@@ -64,7 +65,7 @@ mod test_database_put_get {
         );
     }
 
-    #[test]
+    #[traced_test]
     fn test_get_non_existent_key_returns_none() {
         let (db_arc, _tmp_dir) = create_temp_db();
         let db_guard = db_arc.lock().unwrap();
@@ -75,7 +76,7 @@ mod test_database_put_get {
         assert!(result.is_none(), "Non-existent key => None");
     }
 
-    #[test]
+    #[traced_test]
     fn test_overwrite_existing_key() {
         let (db_arc, _tmp_dir) = create_temp_db();
         let mut db_guard = db_arc.lock().unwrap();
@@ -95,7 +96,7 @@ mod test_database_put_get {
         assert_eq!(val2, updated_val, "Value should be overwritten");
     }
 
-    #[test]
+    #[traced_test]
     fn test_empty_value() {
         // Confirm that storing an empty value is valid.
         let (db_arc, _tmp_dir) = create_temp_db();
@@ -109,7 +110,7 @@ mod test_database_put_get {
         assert!(retrieved.is_empty(), "Stored empty value should load as empty");
     }
 
-    #[test]
+    #[traced_test]
     fn test_large_value() {
         // We'll attempt storing a larger value (like ~1MB). Some configurations might have limitations.
         let (db_arc, _tmp_dir) = create_temp_db();
@@ -124,7 +125,7 @@ mod test_database_put_get {
         assert_eq!(&retrieved[..], &large_data[..], "Data should match exactly");
     }
 
-    #[test]
+    #[traced_test]
     fn test_unicode_in_key_and_value() {
         // We'll try non-ASCII keys and values to ensure everything is handled as raw bytes.
         let (db_arc, _tmp_dir) = create_temp_db();
@@ -141,7 +142,7 @@ mod test_database_put_get {
         assert_eq!(retrieved_str, "значение", "Should match the original Unicode");
     }
 
-    #[test]
+    #[traced_test]
     fn test_rocksdb_error_propagation_on_put() {
         // If an error occurs during `put`, it should return DatabaseConstructionError::RocksDB(_).
         // We'll define a minimal approach: a stub that always fails on `put`.
@@ -166,7 +167,7 @@ mod test_database_put_get {
         }
     }
 
-    #[test]
+    #[traced_test]
     fn test_rocksdb_error_propagation_on_get() {
         // If an error occurs during `get`, it should return DatabaseConstructionError::RocksDB(_).
         struct FailingDbStub;

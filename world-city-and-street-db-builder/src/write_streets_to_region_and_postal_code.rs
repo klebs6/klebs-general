@@ -1,4 +1,5 @@
 // ---------------- [ File: src/write_streets_to_region_and_postal_code.rs ]
+// ---------------- [ File: src/write_streets_to_region_and_postal_code.rs ]
 crate::ix!();
 
 pub trait WriteStreetsToRegionAndPostalCode {
@@ -56,7 +57,7 @@ mod test_write_streets_to_region_and_postal_code {
         clist_result.ok().map(|cl| cl.items().iter().cloned().collect())
     }
 
-    #[test]
+    #[traced_test]
     fn test_write_nonempty_streets_success() {
         let (db_arc, _temp_dir) = create_temp_db();
         let mut db_guard = db_arc.lock().unwrap();
@@ -80,7 +81,7 @@ mod test_write_streets_to_region_and_postal_code {
         assert_eq!(loaded, street_set, "The stored data should match our input set");
     }
 
-    #[test]
+    #[traced_test]
     fn test_overwrite_existing_streets() {
         let (db_arc, _temp_dir) = create_temp_db();
         let mut db_guard = db_arc.lock().unwrap();
@@ -109,7 +110,7 @@ mod test_write_streets_to_region_and_postal_code {
         assert_eq!(stored, new_streets, "The new data should have overwritten the old data");
     }
 
-    #[test]
+    #[traced_test]
     fn test_write_empty_set() {
         let (db_arc, _temp_dir) = create_temp_db();
         let mut db_guard = db_arc.lock().unwrap();
@@ -129,7 +130,7 @@ mod test_write_streets_to_region_and_postal_code {
         assert!(loaded.is_empty(), "Decoded set is empty");
     }
 
-    #[test]
+    #[traced_test]
     fn test_rocksdb_put_error() {
         // If put fails => returns DatabaseConstructionError::RocksDB
         struct FailingDbStub;

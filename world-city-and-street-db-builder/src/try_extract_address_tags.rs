@@ -1,4 +1,5 @@
 // ---------------- [ File: src/try_extract_address_tags.rs ]
+// ---------------- [ File: src/try_extract_address_tags.rs ]
 crate::ix!();
 
 /// Searches a tag map for `addr:city`, `addr:street`, and `addr:postcode`.
@@ -44,7 +45,7 @@ mod test_try_extract_address_tags {
         map
     }
 
-    #[test]
+    #[traced_test]
     fn test_no_address_tags_returns_error() {
         // If city, street, and postcode are all missing => IncompatibleOsmPbfElement::IncompatibleOsmPbfNode => ...
         let tags = build_tags(&[("name", "JustAFeature"), ("highway", "residential")]);
@@ -61,7 +62,7 @@ mod test_try_extract_address_tags {
         }
     }
 
-    #[test]
+    #[traced_test]
     fn test_only_city_tag_returns_ok() {
         // The doc says returns an error if *none* are present; 
         // if city is present, that is "at least one," so it should be Ok((Some(...), None, None)).
@@ -76,7 +77,7 @@ mod test_try_extract_address_tags {
         assert!(postcode_opt.is_none());
     }
 
-    #[test]
+    #[traced_test]
     fn test_only_street_tag_returns_ok() {
         let tags = build_tags(&[("addr:street", "TestStreet")]);
         let element_id = 1003;
@@ -89,7 +90,7 @@ mod test_try_extract_address_tags {
         assert!(postcode_opt.is_none());
     }
 
-    #[test]
+    #[traced_test]
     fn test_only_postcode_tag_returns_ok() {
         let tags = build_tags(&[("addr:postcode", "12345")]);
         let element_id = 1004;
@@ -102,7 +103,7 @@ mod test_try_extract_address_tags {
         assert_eq!(postcode_opt, Some("12345"));
     }
 
-    #[test]
+    #[traced_test]
     fn test_all_three_tags_returns_ok() {
         let tags = build_tags(&[
             ("addr:city", "CityVal"),
@@ -120,7 +121,7 @@ mod test_try_extract_address_tags {
         assert_eq!(postcode_opt, Some("99999"));
     }
 
-    #[test]
+    #[traced_test]
     fn test_partial_tags_city_and_postcode_returns_ok() {
         let tags = build_tags(&[
             ("addr:city", "PartialCity"),

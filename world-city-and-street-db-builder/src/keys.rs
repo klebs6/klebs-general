@@ -1,4 +1,5 @@
 // ---------------- [ File: src/keys.rs ]
+// ---------------- [ File: src/keys.rs ]
 crate::ix!();
 
 pub fn z2c_key(region: &WorldRegion, postal_code: &PostalCode) -> String {
@@ -61,7 +62,7 @@ mod keys_tests {
         r.abbreviation().to_string()
     }
 
-    #[test]
+    #[traced_test]
     fn test_keys_maryland() {
         let region = make_maryland_region();
         // If region.abbreviation() is "US", then we expect "Z2C:US:21201", etc.
@@ -96,7 +97,7 @@ mod keys_tests {
         assert_eq!(s2z, format!("S2Z:{}:{}", region_abbrev(&region), "north avenue"));
     }
 
-    #[test]
+    #[traced_test]
     fn test_keys_virginia() {
         let region = make_virginia_region();
 
@@ -127,7 +128,7 @@ mod keys_tests {
         assert_eq!(s2z, format!("S2Z:{}:{}", region_abbrev(&region), "catlett road"));
     }
 
-    #[test]
+    #[traced_test]
     fn test_keys_with_punctuation_or_spaces() {
         // Suppose we do a city name with punctuation or a street with weird characters 
         // to confirm they appear literally in the key. 
@@ -154,7 +155,7 @@ mod keys_tests {
         assert_eq!(s2z, format!("S2Z:{}:{}", region_abbrev(&region), expected_street));
     }
 
-    #[test]
+    #[traced_test]
     fn test_keys_with_different_abbreviation() {
         // If your code for region.abbreviation() differs for certain states/districts, 
         // you can confirm the prefix. For instance, if DC => "DC", or something else.

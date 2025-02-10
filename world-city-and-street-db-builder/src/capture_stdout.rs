@@ -1,4 +1,5 @@
 // ---------------- [ File: src/capture_stdout.rs ]
+// ---------------- [ File: src/capture_stdout.rs ]
 crate::ix!();
 
 use std::io::{self, Read, Write};
@@ -62,7 +63,7 @@ pub mod capture_stdout_tests {
     use super::*;
 
     /// Ensures that capturing stdout from an empty closure yields an empty string.
-    #[test]
+    #[traced_test]
     fn test_capture_stdout_empty_closure() -> Result<(), Box<dyn Error>> {
         let captured = capture_stdout(|| {})?;
         assert_eq!(captured, "");
@@ -70,7 +71,7 @@ pub mod capture_stdout_tests {
     }
 
     /// Verifies that a single-line print statement is captured correctly.
-    #[test]
+    #[traced_test]
     fn test_capture_stdout_single_line() -> Result<(), Box<dyn Error>> {
         let captured = capture_stdout(|| {
             println!("Hello, test!");
@@ -81,7 +82,7 @@ pub mod capture_stdout_tests {
     }
 
     /// Confirms that multiple lines of output are captured in their original form.
-    #[test]
+    #[traced_test]
     fn test_capture_stdout_multiple_lines() -> Result<(), Box<dyn Error>> {
         let captured = capture_stdout(|| {
             println!("Line one");
@@ -94,7 +95,7 @@ pub mod capture_stdout_tests {
     }
 
     /// Checks that very large output is captured fully without truncation.
-    #[test]
+    #[traced_test]
     fn test_capture_stdout_large_output() -> Result<(), Box<dyn Error>> {
         // Generate a large string of repeated characters.
         let large_data = "a".repeat(8192);
@@ -107,7 +108,7 @@ pub mod capture_stdout_tests {
     }
 
     /// Ensures that non-UTF8 byte sequences are captured and converted via `from_utf8_lossy`.
-    #[test]
+    #[traced_test]
     fn test_capture_stdout_non_utf8() -> Result<(), Box<dyn Error>> {
         // Some arbitrary bytes that are not valid UTF-8 for certain code points.
         let bad_bytes = [0x66, 0x6F, 0x80, 0xFE, 0xFF];
@@ -133,7 +134,7 @@ pub mod capture_stdout_tests {
     /// We cannot validate partial output in a normal test because the panic
     /// interrupts printing, but at minimum we ensure that the function
     /// does not leave stdout unusable after returning.
-    #[test]
+    #[traced_test]
     fn test_capture_stdout_closure_panics() {
         use std::panic;
 

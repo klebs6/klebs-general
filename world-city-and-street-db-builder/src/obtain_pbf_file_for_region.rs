@@ -1,4 +1,5 @@
 // ---------------- [ File: src/obtain_pbf_file_for_region.rs ]
+// ---------------- [ File: src/obtain_pbf_file_for_region.rs ]
 crate::ix!();
 
 pub async fn obtain_pbf_file_for_region(
@@ -87,7 +88,7 @@ mod test_obtain_pbf_file_for_region {
         Ok(mock_region.find_file_locally_or_download_into(target_dir).await?)
     }
 
-    #[tokio::test]
+    #[traced_test]
     async fn test_already_exists_locally() {
         // Setup: the region claims it already has the file locally
         let region_mock = MockRegion {
@@ -106,7 +107,7 @@ mod test_obtain_pbf_file_for_region {
             "Should return the local file path");
     }
 
-    #[tokio::test]
+    #[traced_test]
     async fn test_successful_download() {
         // Setup: simulate that we must download the file, and it succeeds
         let region_mock = MockRegion {
@@ -124,7 +125,7 @@ mod test_obtain_pbf_file_for_region {
         assert_eq!(path, PathBuf::from("/tmp/fake_downloaded_file.osm.pbf"));
     }
 
-    #[tokio::test]
+    #[traced_test]
     async fn test_download_failure() {
         // Setup: the mock region fails to download
         let region_mock = MockRegion {
@@ -147,7 +148,7 @@ mod test_obtain_pbf_file_for_region {
         }
     }
 
-    #[tokio::test]
+    #[traced_test]
     async fn test_unknown_region_error() {
         // Setup: simulate an unrecognized region
         let region_mock = MockRegion {

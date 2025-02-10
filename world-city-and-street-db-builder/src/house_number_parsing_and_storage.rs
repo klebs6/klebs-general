@@ -1,11 +1,12 @@
 // ---------------- [ File: src/house_number_parsing_and_storage.rs ]
+// ---------------- [ File: src/house_number_parsing_and_storage.rs ]
 crate::ix!();
 
 #[cfg(test)]
 mod house_number_parsing_and_storage_tests {
     use super::*;
 
-    #[test]
+    #[traced_test]
     fn test_extract_house_number_range_from_tags_single() {
         let tags = vec![
             ("addr:city", "Calverton"),
@@ -20,7 +21,7 @@ mod house_number_parsing_and_storage_tests {
         assert_eq!(*rng.end(), 35);
     }
 
-    #[test]
+    #[traced_test]
     fn test_extract_house_number_range_from_tags_range() {
         let tags = vec![
             ("addr:housenumber", "100-110"),
@@ -33,7 +34,7 @@ mod house_number_parsing_and_storage_tests {
         assert_eq!(*rng.end(), 110);
     }
 
-    #[test]
+    #[traced_test]
     fn test_extract_house_number_range_from_tags_no_hn() {
         let tags = vec![
             ("addr:street", "North Avenue"),
@@ -44,7 +45,7 @@ mod house_number_parsing_and_storage_tests {
         assert!(res.unwrap().is_none());
     }
 
-    #[test]
+    #[traced_test]
     fn test_extract_house_number_range_from_tags_invalid_format() {
         // e.g. "abc-xyz" => parse error
         let tags = vec![("addr:housenumber", "abc-xyz")];
@@ -55,7 +56,7 @@ mod house_number_parsing_and_storage_tests {
     // ---------------------
     // Test `merge_house_number_range`
     // ---------------------
-    #[test]
+    #[traced_test]
     fn test_merge_range_disjoint() {
         // existing = [1..=10], new= [20..=20] => result = [1..=10, 20..=20]
         let existing = vec![
@@ -68,7 +69,7 @@ mod house_number_parsing_and_storage_tests {
         assert_eq!(merged[1], HouseNumberRange::new(20, 20));
     }
 
-    #[test]
+    #[traced_test]
     fn test_merge_range_overlapping() {
         // existing = [1..=10], new= [8..=12] => unify => [1..=12]
         let existing = vec![
@@ -80,7 +81,7 @@ mod house_number_parsing_and_storage_tests {
         assert_eq!(merged[0], HouseNumberRange::new(1, 12));
     }
 
-    #[test]
+    #[traced_test]
     fn test_merge_range_adjacent() {
         // existing=[1..=10], new=[11..=15], if we treat adjacency as unify => [1..=15]
         let existing = vec![
@@ -92,7 +93,7 @@ mod house_number_parsing_and_storage_tests {
         assert_eq!(merged[0], HouseNumberRange::new(1, 15));
     }
 
-    #[test]
+    #[traced_test]
     fn test_merge_range_multiple() {
         // existing=[1..=5, 10..=15], new=[7..=12].
         // Sort => [1..=5, 7..=12, 10..=15]
@@ -111,7 +112,7 @@ mod house_number_parsing_and_storage_tests {
     // ---------------------
     // Integration-like: store + merge in a DB
     // ---------------------
-    #[test]
+    #[traced_test]
     fn test_store_and_merge_house_number_range_in_db() {
         let tmp = TempDir::new().unwrap();
         let db_arc = Database::open(tmp.path()).unwrap();
@@ -149,7 +150,7 @@ mod house_number_parsing_and_storage_tests {
         assert_eq!(*final_ranges[0].end(), 12);
     }
 
-    #[test]
+    #[traced_test]
     fn test_parse_and_store_multiple_housenumbers_in_memory_loop() {
         // Example that processes multiple “addr:housenumber” values in a loop,
         // merging them all for the same street, *without writing each time*.

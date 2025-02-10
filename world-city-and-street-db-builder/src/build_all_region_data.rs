@@ -1,4 +1,5 @@
 // ---------------- [ File: src/build_all_region_data.rs ]
+// ---------------- [ File: src/build_all_region_data.rs ]
 crate::ix!();
 
 /// (6) Build a map of (region => RegionData), by scanning city+street from the DB for each done region.
@@ -74,7 +75,7 @@ mod build_all_region_data_tests {
 
     // 1) Test with empty `done_regions`
     // => the returned map should be empty
-    #[test]
+    #[traced_test]
     fn test_build_all_region_data_empty_done_regions() {
         let (db_arc, _tmp) = create_test_db::<Database>();
         let db_guard = db_arc.lock().unwrap();
@@ -85,7 +86,7 @@ mod build_all_region_data_tests {
     }
 
     // 2) Single region with no city/street => yields empty city_vec & street_vec
-    #[test]
+    #[traced_test]
     fn test_build_all_region_data_single_region_no_data() {
         let (db_arc, _tmp) = create_test_db::<Database>();
         let db_guard = db_arc.lock().unwrap();
@@ -109,7 +110,7 @@ mod build_all_region_data_tests {
     }
 
     // 3) Single region with known city/street => they appear in the RegionData
-    #[test]
+    #[traced_test]
     fn test_build_all_region_data_single_region_some_data() {
         let (db_arc, _tmp) = create_test_db::<Database>();
         let mut db_guard = db_arc.lock().unwrap();
@@ -138,7 +139,7 @@ mod build_all_region_data_tests {
     }
 
     // 4) Two done regions => confirm both appear
-    #[test]
+    #[traced_test]
     fn test_build_all_region_data_multiple_regions() {
         let (db_arc, _tmp) = create_test_db::<Database>();
         let mut db_guard = db_arc.lock().unwrap();
@@ -173,7 +174,7 @@ mod build_all_region_data_tests {
     }
 
     // 5) Partial data for a region => e.g. some city keys exist but no street keys
-    #[test]
+    #[traced_test]
     fn test_build_all_region_data_partial_region_data() {
         let (db_arc, _tmp) = create_test_db::<Database>();
         let mut db_guard = db_arc.lock().unwrap();
@@ -195,7 +196,7 @@ mod build_all_region_data_tests {
     }
 
     // 6) Confirm sorting & dedup logic (some city repeated in DB)
-    #[test]
+    #[traced_test]
     fn test_build_all_region_data_sorting_and_dedup() {
         let (db_arc, _tmp) = create_test_db::<Database>();
         let mut db_guard = db_arc.lock().unwrap();

@@ -1,4 +1,5 @@
 // ---------------- [ File: src/house_number_in_any_range.rs ]
+// ---------------- [ File: src/house_number_in_any_range.rs ]
 crate::ix!();
 
 pub trait HouseNumberInAnyRange {
@@ -73,7 +74,7 @@ mod house_number_in_any_range_tests {
         USRegion::UnitedState(UnitedState::Maryland).into()
     }
 
-    #[test]
+    #[traced_test]
     fn test_house_number_in_any_range_no_data_key() {
         // scenario: DB has no entry for "HNR:MD:some_street" => `house_number_in_any_range` => false
         let (db_arc, _tmp) = create_db::<Database>();
@@ -88,7 +89,7 @@ mod house_number_in_any_range_tests {
         assert!(!in_range, "No data => definitely false");
     }
 
-    #[test]
+    #[traced_test]
     fn test_house_number_in_any_range_empty_stored() {
         // scenario: The DB key exists but has an empty array of sub‐ranges. => false
         let (db_arc, _tmp) = create_db::<Database>();
@@ -109,7 +110,7 @@ mod house_number_in_any_range_tests {
         }
     }
 
-    #[test]
+    #[traced_test]
     fn test_house_number_in_any_range_single_range_not_included() {
         // scenario: single sub‐range => [100..=110], query 99 => false, query 111 => false
         let (db_arc, _tmp) = create_db::<Database>();
@@ -129,7 +130,7 @@ mod house_number_in_any_range_tests {
         }
     }
 
-    #[test]
+    #[traced_test]
     fn test_house_number_in_any_range_single_range_included() {
         // scenario: single sub‐range => [100..=110], query 100 => true, query 105 => true, query=110 => true
         let (db_arc, _tmp) = create_db::<Database>();
@@ -150,7 +151,7 @@ mod house_number_in_any_range_tests {
         }
     }
 
-    #[test]
+    #[traced_test]
     fn test_house_number_in_any_range_multiple_disjoint_ranges() {
         // scenario: multiple sub‐ranges => [1..=10], [20..=30], [40..=50]
         //  => query 5 => true, query 15 => false, query 45 => true
@@ -179,7 +180,7 @@ mod house_number_in_any_range_tests {
         }
     }
 
-    #[test]
+    #[traced_test]
     fn test_house_number_in_any_range_error_on_load() {
         // scenario: if `load_house_number_ranges(...)` returns an Err => we propagate that as DataAccessError
         // We'll do partial approach: forcibly cause an error (e.g., lock poisoning or a RocksDB error).

@@ -1,4 +1,5 @@
 // ---------------- [ File: src/db_decoder.rs ]
+// ---------------- [ File: src/db_decoder.rs ]
 crate::ix!();
 
 /// A trait that encapsulates value-decoding logic based on key prefixes.
@@ -85,7 +86,7 @@ mod database_value_decoder_tests {
 
     /// Tests decode_value_for_key(...) across recognized prefixes, verifying decoding
     /// or error output. Also checks unrecognized prefix => `[Unknown key pattern]`.
-    #[test]
+    #[traced_test]
     fn test_decode_value_for_key_all_scenarios() 
         -> Result<(),io::Error> 
     {

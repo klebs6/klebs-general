@@ -1,4 +1,5 @@
 // ---------------- [ File: src/stdout_backup.rs ]
+// ---------------- [ File: src/stdout_backup.rs ]
 crate::ix!();
 
 use std::io::{self, Read, Write};
@@ -92,14 +93,14 @@ mod test_stdout_backup {
         result
     }
 
-    #[test]
+    #[traced_test]
     fn test_new_creates_backup_ok() {
         let backup_result = StdoutBackup::new();
         assert!(backup_result.is_ok(), "Should create StdoutBackup without error");
         let _backup = backup_result.unwrap();
     }
 
-    #[test]
+    #[traced_test]
     fn test_restore_stdout() {
         // Step 1: redirect stdout to a pipe
         let (backup, reader_fd, writer_fd) = redirect_stdout_to_pipe()
@@ -130,7 +131,7 @@ mod test_stdout_backup {
         // No error expected on double restore in real usage.
     }
 
-    #[test]
+    #[traced_test]
     fn test_drop_calls_restore_stdout_implicitly() {
         // We'll do the same approach, but rely on dropping `backup`.
         let (backup, reader_fd, writer_fd) = redirect_stdout_to_pipe()
@@ -168,7 +169,7 @@ mod test_stdout_backup {
         new_backup.restore().unwrap();
     }
 
-    #[test]
+    #[traced_test]
     fn test_restore_fails_for_bogus_dup2() {
         // We can simulate a partial scenario with a mock or override if we want.
         // But in typical usage, it's hard to force dup2 to fail unless we pass invalid FDs.
@@ -183,7 +184,7 @@ mod test_stdout_backup {
         assert!(result.is_err(), "Should fail to restore from an invalid FD");
     }
 
-    #[test]
+    #[traced_test]
     fn test_drop_ignores_errors() {
         // The drop implementation explicitly ignores errors. 
         // We'll rely on coverage to confirm no panic if there's an error. 

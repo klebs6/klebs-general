@@ -1,4 +1,5 @@
 // ---------------- [ File: src/load_existing_street_ranges.rs ]
+// ---------------- [ File: src/load_existing_street_ranges.rs ]
 crate::ix!();
 
 pub trait LoadExistingStreetRanges {
@@ -62,7 +63,7 @@ mod test_load_existing_street_ranges {
           .expect("Storing test house-number ranges should succeed");
     }
 
-    #[test]
+    #[traced_test]
     fn test_no_stored_data_returns_none() {
         let (db_arc, _temp_dir) = create_temp_db();
         let db_guard = db_arc.lock().unwrap();
@@ -76,7 +77,7 @@ mod test_load_existing_street_ranges {
         assert_eq!(result, None, "No data => expected None");
     }
 
-    #[test]
+    #[traced_test]
     fn test_existing_ranges_return_some_vec() {
         let (db_arc, _temp_dir) = create_temp_db();
         let mut db_guard = db_arc.lock().unwrap();
@@ -97,7 +98,7 @@ mod test_load_existing_street_ranges {
             "Loaded subranges should match what was originally stored");
     }
 
-    #[test]
+    #[traced_test]
     fn test_corrupted_data_returns_error() {
         // We'll directly write invalid bytes under the HNR: key.
         let (db_arc, _temp_dir) = create_temp_db();
@@ -123,7 +124,7 @@ mod test_load_existing_street_ranges {
         }
     }
 
-    #[test]
+    #[traced_test]
     fn test_database_read_error_handling() {
         // If the underlying DB read fails, it should bubble up as a DataAccessError.
         // We'll do a minimal approach by defining a small stub type that always fails

@@ -1,4 +1,5 @@
 // ---------------- [ File: src/world_address.rs ]
+// ---------------- [ File: src/world_address.rs ]
 crate::ix!();
 
 #[derive(Builder,Setters,Getters,Debug,Clone,PartialEq,Eq,PartialOrd,Ord)]
@@ -69,7 +70,7 @@ mod world_address_validation_tests {
     // -----------------------------
     // Negative test: city mismatch
     // -----------------------------
-    #[test]
+    #[traced_test]
     fn validate_address_city_not_found_for_postal_code() {
         let region_md: WorldRegion = USRegion::UnitedState(UnitedState::Maryland).into();
 
@@ -103,7 +104,7 @@ mod world_address_validation_tests {
     // -----------------------------
     // Negative test: street mismatch (postal)
     // -----------------------------
-    #[test]
+    #[traced_test]
     fn validate_address_street_not_found_in_postal_code() {
         let region_md: WorldRegion = USRegion::UnitedState(UnitedState::Maryland).into();
 
@@ -137,7 +138,7 @@ mod world_address_validation_tests {
     // Negative test: *forced* partial DB to produce
     // "StreetNotFoundForCityInRegion"
     // -----------------------------
-    #[test]
+    #[traced_test]
     fn validate_address_street_not_found_in_city() {
         // We'll forcibly insert partial data:
         //  * postal->city => city= "rockville"
@@ -222,7 +223,7 @@ mod world_address_validation_tests {
     // -----------------------------
     // Negative test: region mismatch
     // -----------------------------
-    #[test]
+    #[traced_test]
     fn validate_address_region_mismatch() {
         // We'll store only MD data, but create a VA address => "PostalCodeToCityKeyNotFoundForRegion"
         let region_md: WorldRegion = USRegion::UnitedState(UnitedState::Maryland).into();
@@ -251,7 +252,7 @@ mod world_address_validation_tests {
     // -----------------------------
     // Quick check: missing region in builder
     // -----------------------------
-    #[test]
+    #[traced_test]
     fn validate_address_builder_missing_region() {
         let attempt = WorldAddressBuilder::default()
             .postal_code(PostalCode::new(Country::USA,"21201").unwrap())

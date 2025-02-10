@@ -1,4 +1,5 @@
 // ---------------- [ File: src/write_osm_pbf_file.rs ]
+// ---------------- [ File: src/write_osm_pbf_file.rs ]
 crate::ix!();
 
 /// Asynchronously writes two sets of BlobHeader/Blob pairs
@@ -69,7 +70,7 @@ mod test_write_osm_pbf_file {
         Ok(data)
     }
 
-    #[tokio::test]
+    #[traced_test]
     async fn test_successful_write_and_read_back() {
         // We'll create a temp directory for the file
         let temp_dir = TempDir::new().expect("Failed to create temp dir");
@@ -112,7 +113,7 @@ mod test_write_osm_pbf_file {
         assert_eq!(db, data_blob_bytes);
     }
 
-    #[tokio::test]
+    #[traced_test]
     async fn test_cannot_create_file_returns_error() {
         // We'll try writing to a directory path, expecting an error because we can't create a file with that name
         let temp_dir = TempDir::new().expect("temp dir");
@@ -137,7 +138,7 @@ mod test_write_osm_pbf_file {
         );
     }
 
-    #[tokio::test]
+    #[traced_test]
     async fn test_error_in_writing_blobheader_bytes() {
         // We'll simulate an I/O error by opening a file in read-only mode,
         // so writing the first length prefix fails
@@ -173,7 +174,7 @@ mod test_write_osm_pbf_file {
         assert!(result.is_err(), "Writing to read-only file => error");
     }
 
-    #[tokio::test]
+    #[traced_test]
     async fn test_zero_length_blobs_ok() {
         // A corner case: zero-length header blob, zero-length data blob
         let temp_dir = TempDir::new().expect("temp dir");

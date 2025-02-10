@@ -1,4 +1,5 @@
 // ---------------- [ File: src/get_postal_code_set_for_key.rs ]
+// ---------------- [ File: src/get_postal_code_set_for_key.rs ]
 crate::ix!();
 
 pub trait GetPostalCodeSetForKey {
@@ -26,14 +27,14 @@ mod get_postal_code_set_for_key_tests {
         (db, da, tmp_dir)
     }
 
-    #[test]
+    #[traced_test]
     fn test_get_postal_code_set_no_key() {
         let (_db_arc, da, _tmp) = create_db_and_da::<Database>();
         let result = da.get_postal_code_set("nonexistent");
         assert!(result.is_none());
     }
 
-    #[test]
+    #[traced_test]
     fn test_get_postal_code_set_empty_value() {
         let (db_arc, da, _tmp) = create_db_and_da::<Database>();
         {
@@ -44,7 +45,7 @@ mod get_postal_code_set_for_key_tests {
         assert!(result.is_none());
     }
 
-    #[test]
+    #[traced_test]
     fn test_get_postal_code_set_corrupted_cbor() {
         let (db_arc, da, _tmp) = create_db_and_da::<Database>();
         {
@@ -55,7 +56,7 @@ mod get_postal_code_set_for_key_tests {
         assert!(result.is_none());
     }
 
-    #[test]
+    #[traced_test]
     fn test_get_postal_code_set_valid_data() {
         let (db_arc, da, _tmp) = create_db_and_da::<Database>();
         // We'll store e.g. { "21201", "20850" }
@@ -82,7 +83,7 @@ mod get_postal_code_set_for_key_tests {
         assert!(codes.contains(&"20850".to_string()));
     }
 
-    #[test]
+    #[traced_test]
     fn test_get_postal_code_set_lock_poisoned() {
         let (db_arc, da, _tmp) = create_db_and_da::<Database>();
         // Poison

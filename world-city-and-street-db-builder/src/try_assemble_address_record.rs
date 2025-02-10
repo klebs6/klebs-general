@@ -1,4 +1,5 @@
 // ---------------- [ File: src/try_assemble_address_record.rs ]
+// ---------------- [ File: src/try_assemble_address_record.rs ]
 crate::ix!();
 
 /// Assembles the final `AddressRecord` using the provided city, street, and postcode objects.
@@ -48,7 +49,7 @@ mod test_try_assemble_address_record {
         PostalCode::new(Country::USA, "12345").unwrap()
     }
 
-    #[test]
+    #[traced_test]
     fn test_full_success_all_fields_provided() {
         let city = Some(valid_city());
         let street = Some(valid_street());
@@ -68,7 +69,7 @@ mod test_try_assemble_address_record {
         assert_eq!(record.postcode().unwrap().code(), "12345");
     }
 
-    #[test]
+    #[traced_test]
     fn test_missing_street_still_succeeds_if_address_recordbuilder_allows_it() {
         // If `AddressRecordBuilder` in real code allows street = None,
         // then it might build successfully. If it's required, you'd expect an error.
@@ -91,7 +92,7 @@ mod test_try_assemble_address_record {
         assert!(record.postcode().is_some());
     }
 
-    #[test]
+    #[traced_test]
     fn test_missing_city_fails_if_addressrecordbuilder_requires_it() {
         // Suppose your `AddressRecordBuilder` requires a city. If it's optional, you can adapt.
         let city = None;
@@ -133,7 +134,7 @@ mod test_try_assemble_address_record {
         }
     }
 
-    #[test]
+    #[traced_test]
     fn test_no_fields_provided_fails() {
         // city=None, street=None, postcode=None => definitely fails if your builder requires them.
         let element_id = 103;
@@ -141,7 +142,7 @@ mod test_try_assemble_address_record {
         assert!(result.is_err(), "No fields => expected builder error");
     }
 
-    #[test]
+    #[traced_test]
     fn test_only_street_provided_if_optional_others_missing() {
         // Another scenario if your builder fields are truly optional. 
         // If the real code requires them, adapt the test accordingly.
@@ -159,7 +160,7 @@ mod test_try_assemble_address_record {
         assert!(record.postcode().is_none());
     }
 
-    #[test]
+    #[traced_test]
     fn test_logs_error_if_builder_fails() {
         // We'll rely on the presence of the error log line in the code. We can't 
         // automatically confirm logs in a simple unit test, but we can ensure the error is returned.

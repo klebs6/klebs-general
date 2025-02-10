@@ -1,4 +1,5 @@
 // ---------------- [ File: src/update_aggregator_with_housenumber.rs ]
+// ---------------- [ File: src/update_aggregator_with_housenumber.rs ]
 crate::ix!();
 
 /// Extracts a [`HouseNumberRange`] (if any) from the element and, if found,
@@ -80,7 +81,7 @@ mod test_update_aggregator_with_housenumber {
         HouseNumberRange::new(start, end)
     }
 
-    #[test]
+    #[traced_test]
     fn test_no_housenumber_in_element_no_aggregator_update() {
         // The OSM element lacks "addr:housenumber" => Ok(None) => aggregator not updated
         let element = make_node_with_tags(1, &[
@@ -94,7 +95,7 @@ mod test_update_aggregator_with_housenumber {
         assert!(aggregator.is_empty(), "No housenumber => aggregator remains empty");
     }
 
-    #[test]
+    #[traced_test]
     fn test_valid_housenumber_updates_aggregator() {
         // "addr:housenumber" => "10-20" => extracted => aggregator updated with [10..20].
         let element = make_node_with_tags(2, &[
@@ -109,7 +110,7 @@ mod test_update_aggregator_with_housenumber {
         assert_street_ranges(&aggregator, "teststreet", &[hnr(10,20)]);
     }
 
-    #[test]
+    #[traced_test]
     fn test_parse_error_in_housenumber_no_aggregator_update() {
         // If `extract_house_number_range_from_element` fails, aggregator not updated
         // We'll pass a "nonsense" housenumber so the parse fails.
@@ -124,7 +125,7 @@ mod test_update_aggregator_with_housenumber {
         assert!(aggregator.is_empty(), "Parse error => no aggregator update");
     }
 
-    #[test]
+    #[traced_test]
     fn test_found_housenumber_but_no_street_in_record() {
         // If record.street() is None => aggregator can't be updated with no street key.
         let element = make_node_with_tags(4, &[
@@ -141,7 +142,7 @@ mod test_update_aggregator_with_housenumber {
         assert!(aggregator.is_empty(), "No street => aggregator not updated, even though housenumber found");
     }
 
-    #[test]
+    #[traced_test]
     fn test_aggregator_appends_new_range_for_same_street() {
         // aggregator already has [10..20] for "MainSt". The new housenumber => "25" => appended => [10..20, 25..25]
         // We do not unify them (the aggregator is just storing subranges).

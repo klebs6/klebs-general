@@ -1,4 +1,5 @@
 // ---------------- [ File: src/try_resolve_country.rs ]
+// ---------------- [ File: src/try_resolve_country.rs ]
 crate::ix!();
 
 /// Tries to convert the provided [`WorldRegion`] into a [`Country`].
@@ -33,7 +34,7 @@ mod test_try_resolve_country {
         WorldRegion::Custom("NotARealCountry".to_string())
     }
 
-    #[test]
+    #[traced_test]
     fn test_valid_region_succeeds() {
         let region = valid_region();
         let result = try_resolve_country(region);
@@ -43,7 +44,7 @@ mod test_try_resolve_country {
         assert_eq!(country, Country::USA, "Expected US mapping from the region");
     }
 
-    #[test]
+    #[traced_test]
     fn test_invalid_region_fails() {
         let region = invalid_region();
         let result = try_resolve_country(region);
@@ -55,7 +56,7 @@ mod test_try_resolve_country {
         }
     }
 
-    #[test]
+    #[traced_test]
     fn test_debug_logging_on_success() {
         // The function logs a debug line on success. We can't easily capture logs here
         // unless using a logging test harness, so we'll just confirm it doesn't fail.
@@ -64,7 +65,7 @@ mod test_try_resolve_country {
         assert!(result.is_ok(), "Should not fail for valid region");
     }
 
-    #[test]
+    #[traced_test]
     fn test_trace_logging_on_attempt() {
         // The function logs a trace line "Attempting to convert region=...". 
         // We can't confirm logs in a standard test. We just ensure no error is triggered.

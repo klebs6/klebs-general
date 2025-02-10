@@ -1,4 +1,5 @@
 // ---------------- [ File: src/city_name.rs ]
+// ---------------- [ File: src/city_name.rs ]
 crate::ix!();
 
 /// CityName struct
@@ -55,7 +56,7 @@ impl CityName {
 mod city_name_tests {
     use super::*;
 
-    #[test]
+    #[traced_test]
     fn city_name_construction_valid() {
         // We supply "Baltimore", but after normalize() it should become "baltimore".
         let city = CityName::new("Baltimore");
@@ -65,7 +66,7 @@ mod city_name_tests {
         assert_eq!(city.name(), "baltimore");
     }
 
-    #[test]
+    #[traced_test]
     fn city_name_construction_empty() {
         let city = CityName::new("   ");
         match city {
@@ -76,7 +77,7 @@ mod city_name_tests {
         }
     }
 
-    #[test]
+    #[traced_test]
     fn city_name_with_punctuation() {
         // "Washington, D.C." => "washington d c"
         let city = CityName::new("Washington, D.C.");
@@ -85,7 +86,7 @@ mod city_name_tests {
         assert_eq!(city.name(), "washington d c");
     }
 
-    #[test]
+    #[traced_test]
     fn city_name_with_internal_spaces() {
         // "   New   York  " => "new york"
         let city = CityName::new("   New   York  ");
@@ -94,7 +95,7 @@ mod city_name_tests {
         assert_eq!(city.name(), "new york");
     }
 
-    #[test]
+    #[traced_test]
     fn city_name_builder_valid() {
         let city_result = CityNameBuilder::default()
             .name("Annapolis".to_string())
@@ -105,7 +106,7 @@ mod city_name_tests {
         assert_eq!(city.name(), "annapolis");
     }
 
-    #[test]
+    #[traced_test]
     fn city_name_builder_missing_field() {
         let builder = CityNameBuilder::default();
         let city_result = builder.finalize();
@@ -117,7 +118,7 @@ mod city_name_tests {
         }
     }
 
-    #[test]
+    #[traced_test]
     fn city_name_display() {
         let city = CityName::new("Baltimore").unwrap();
         let displayed = format!("{}", city);
@@ -125,7 +126,7 @@ mod city_name_tests {
         assert_eq!(displayed, "baltimore", "Display should match the final normalized name");
     }
 
-    #[test]
+    #[traced_test]
     fn city_name_comparisons() {
         let city1 = CityName::new("Baltimore").unwrap();  // => "baltimore"
         let city2 = CityName::new("baltimore").unwrap();  // => "baltimore"
@@ -137,7 +138,7 @@ mod city_name_tests {
         assert!(city1 < city3);
     }
 
-    #[test]
+    #[traced_test]
     fn city_name_with_numbers() {
         let city = CityName::new("Area 51");
         assert!(city.is_ok());
@@ -146,7 +147,7 @@ mod city_name_tests {
         assert_eq!(city.name(), "area 51");
     }
 
-    #[test]
+    #[traced_test]
     fn city_name_extreme_length() {
         let long_name = "L".repeat(500);
         let city = CityName::new(&long_name);

@@ -1,4 +1,5 @@
 // ---------------- [ File: src/prepare_osm_header_block.rs ]
+// ---------------- [ File: src/prepare_osm_header_block.rs ]
 crate::ix!();
 
 use crate::proto::osmformat;
@@ -31,7 +32,7 @@ mod test_prepare_osm_header_block {
     use crate::proto::osmformat; // Ensure the correct path to your osmformat is used
     use protobuf::Message;        // For writing/reading the proto if desired
 
-    #[test]
+    #[traced_test]
     fn test_normal_bbox_values() {
         // A typical bounding box near (left=-77, right=-76, top=39, bottom=38) in nano-degrees
         // For instance: (-77_000_000_000, -76_000_000_000, 39_000_000_000, 38_000_000_000)
@@ -53,7 +54,7 @@ mod test_prepare_osm_header_block {
         );
     }
 
-    #[test]
+    #[traced_test]
     fn test_zero_bbox_values() {
         // If the bounding box is all zeros, let's confirm it sets them accordingly.
         let bbox = (0, 0, 0, 0);
@@ -68,7 +69,7 @@ mod test_prepare_osm_header_block {
         assert_eq!(features.len(), 2, "Expected exactly two required features");
     }
 
-    #[test]
+    #[traced_test]
     fn test_negative_or_reversed_bbox() {
         // Some OSM data might have left > right or top < bottom if the data is unusual.
         // In real usage, you'd want to check if that’s correct or not. But let's just confirm
@@ -87,7 +88,7 @@ mod test_prepare_osm_header_block {
         assert_eq!(features[1], "DenseNodes");
     }
 
-    #[test]
+    #[traced_test]
     fn test_serialization_round_trip() {
         // If you want to confirm the proto can be serialized and read back:
         let bbox = (-123456789, 123456789, 999999999, -999999999);

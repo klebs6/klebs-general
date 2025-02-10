@@ -1,4 +1,5 @@
 // ---------------- [ File: src/city_names_for_postal_code_in_region.rs ]
+// ---------------- [ File: src/city_names_for_postal_code_in_region.rs ]
 crate::ix!();
 
 pub trait CityNamesForPostalCodeInRegion {
@@ -57,7 +58,7 @@ mod city_names_for_postal_code_in_region_tests {
         USRegion::UnitedState(UnitedState::Maryland).into()
     }
 
-    #[test]
+    #[traced_test]
     fn test_cities_for_postal_code_no_key() {
         let (db_arc, da) = create_db_and_data_access::<Database>();
         let region = region_usa();
@@ -68,7 +69,7 @@ mod city_names_for_postal_code_in_region_tests {
         assert!(found.is_none(), "No key => None");
     }
 
-    #[test]
+    #[traced_test]
     fn test_cities_for_postal_code_single_city() {
         let (db_arc, da) = create_db_and_data_access::<Database>();
         {
@@ -88,7 +89,7 @@ mod city_names_for_postal_code_in_region_tests {
         assert!(set.contains(&CityName::new("Baltimore").unwrap()));
     }
 
-    #[test]
+    #[traced_test]
     fn test_cities_for_postal_code_multiple_cities() {
         let (db_arc, da) = create_db_and_data_access::<Database>();
         {
@@ -110,7 +111,7 @@ mod city_names_for_postal_code_in_region_tests {
         assert!(set.contains(&CityName::new("Columbia").unwrap()));
     }
 
-    #[test]
+    #[traced_test]
     fn test_cities_for_postal_code_empty_cbor() {
         let (db_arc, da) = create_db_and_data_access::<Database>();
         {
@@ -128,7 +129,7 @@ mod city_names_for_postal_code_in_region_tests {
         assert!(found.is_none(), "Empty => None");
     }
 
-    #[test]
+    #[traced_test]
     fn test_cities_for_postal_code_corrupted_cbor() {
         let (db_arc, da) = create_db_and_data_access::<Database>();
         {
@@ -148,7 +149,7 @@ mod city_names_for_postal_code_in_region_tests {
         assert!(found.is_none(), "Corrupted => decode fails => None");
     }
 
-    #[test]
+    #[traced_test]
     fn test_cities_for_postal_code_lock_poisoning() {
         let (db_arc, da) = create_db_and_data_access::<Database>();
 

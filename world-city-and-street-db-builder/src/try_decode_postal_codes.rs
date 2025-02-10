@@ -1,4 +1,5 @@
 // ---------------- [ File: src/try_decode_postal_codes.rs ]
+// ---------------- [ File: src/try_decode_postal_codes.rs ]
 crate::ix!();
 
 /// Illustrates a hypothetical decode of postal codes from the RocksDB value bytes.
@@ -30,7 +31,7 @@ mod test_try_decode_postal_codes {
     use super::*;
     use tracing::{trace, debug};
 
-    #[test]
+    #[traced_test]
     fn test_empty_value_ok() {
         // Should return Ok(()) and log a debug about "empty value => ignoring".
         let val_bytes: &[u8] = &[];
@@ -38,7 +39,7 @@ mod test_try_decode_postal_codes {
         assert!(result.is_ok(), "Empty bytes => Ok(()) by design");
     }
 
-    #[test]
+    #[traced_test]
     fn test_valid_cbor_value_ok() {
         // We'll create a trivial CBOR. For instance, a single integer or string.
         // Because `try_decode_postal_codes` just calls `serde_cbor::from_slice::<Value>`.
@@ -47,7 +48,7 @@ mod test_try_decode_postal_codes {
         assert!(result.is_ok(), "Well-formed CBOR => Ok");
     }
 
-    #[test]
+    #[traced_test]
     fn test_valid_cbor_structure_ok() {
         // Another scenario: a CBOR map or array
         let example_map = serde_cbor::to_vec(&serde_cbor::Value::Map(vec![
@@ -59,7 +60,7 @@ mod test_try_decode_postal_codes {
         assert!(result.is_ok(), "Complex CBOR => Ok if it's valid");
     }
 
-    #[test]
+    #[traced_test]
     fn test_corrupted_cbor_returns_err() {
         // Provide obviously invalid CBOR => Err("CBOR decode error: ...")
         let invalid_data = b"\xff\x01\x02not-valid-cbor";
@@ -71,7 +72,7 @@ mod test_try_decode_postal_codes {
         );
     }
 
-    #[test]
+    #[traced_test]
     fn test_partial_cbor_returns_err() {
         // A partial/truncated CBOR might also fail
         let partial_cbor = b"\x82\x01"; // indicates an array of length 2, but only 1 item

@@ -1,4 +1,5 @@
 // ---------------- [ File: src/merge_house_number_range.rs ]
+// ---------------- [ File: src/merge_house_number_range.rs ]
 crate::ix!();
 
 /// Merges `new_range` into the existing set of disjoint subranges,
@@ -39,7 +40,7 @@ mod merge_range_tests {
     use super::*;
     use crate::HouseNumberRange;
 
-    #[test]
+    #[traced_test]
     fn test_disjoint_ranges() {
         let existing = vec![
             HouseNumberRange::new(1, 10),
@@ -51,7 +52,7 @@ mod merge_range_tests {
         assert_eq!(merged[1], HouseNumberRange::new(20, 20));
     }
 
-    #[test]
+    #[traced_test]
     fn test_overlapping_ranges() {
         // existing=[1..=10], new=[8..=12] => unify => [1..=12]
         let existing = vec![
@@ -63,7 +64,7 @@ mod merge_range_tests {
         assert_eq!(merged[0], HouseNumberRange::new(1, 12));
     }
 
-    #[test]
+    #[traced_test]
     fn test_adjacent_ranges() {
         // existing=[1..=10], new=[11..=15] => unify => [1..=15]
         let existing = vec![
@@ -75,7 +76,7 @@ mod merge_range_tests {
         assert_eq!(merged[0], HouseNumberRange::new(1, 15));
     }
 
-    #[test]
+    #[traced_test]
     fn test_merge_multiple() {
         let existing = vec![
             HouseNumberRange::new(1, 5),

@@ -1,4 +1,5 @@
 // ---------------- [ File: src/collect_address_and_housenumber_data.rs ]
+// ---------------- [ File: src/collect_address_and_housenumber_data.rs ]
 crate::ix!();
 
 /// Iterates through all OSM elements in the file, extracting both addresses
@@ -180,7 +181,7 @@ mod collect_address_and_housenumber_data_tests {
     // -----------
     // Actual test suite
     // -----------
-    #[test]
+    #[traced_test]
     fn test_collect_address_and_housenumber_data_empty_file() {
         let tmp = TempDir::new().unwrap();
         let path = tmp.path().join("empty.osm.pbf");
@@ -199,7 +200,7 @@ mod collect_address_and_housenumber_data_tests {
         assert!(aggregator.is_empty());
     }
 
-    #[test]
+    #[traced_test]
     fn test_collect_address_and_housenumber_data_corrupted_file() {
         let tmp = TempDir::new().unwrap();
         let path = tmp.path().join("corrupt.osm.pbf");
@@ -222,7 +223,7 @@ mod collect_address_and_housenumber_data_tests {
         assert!(aggregator.is_empty());
     }
 
-    #[test]
+    #[traced_test]
     fn test_collect_address_and_housenumber_data_two_nodes_no_housenumber() {
         let tmp = TempDir::new().unwrap();
         let path = tmp.path().join("two_nodes.osm.pbf");
@@ -248,7 +249,7 @@ mod collect_address_and_housenumber_data_tests {
         assert!(aggregator.is_empty());
     }
 
-    #[test]
+    #[traced_test]
     fn test_collect_address_and_housenumber_data_two_nodes_with_housenumber() {
         let tmp = TempDir::new().unwrap();
         let path = tmp.path().join("two_nodes_hn.osm.pbf");

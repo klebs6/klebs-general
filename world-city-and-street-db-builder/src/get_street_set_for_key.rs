@@ -1,4 +1,5 @@
 // ---------------- [ File: src/get_street_set_for_key.rs ]
+// ---------------- [ File: src/get_street_set_for_key.rs ]
 crate::ix!();
 
 pub trait GetStreetSetForKey {
@@ -26,14 +27,14 @@ mod get_street_set_for_key_tests {
         (db, da, tmp)
     }
 
-    #[test]
+    #[traced_test]
     fn test_get_street_set_no_key() {
         let (_db_arc, da, _td) = create_db_and_da::<Database>();
         let result = da.get_street_set("nonexistent");
         assert!(result.is_none());
     }
 
-    #[test]
+    #[traced_test]
     fn test_get_street_set_empty_value() {
         let (db_arc, da, _td) = create_db_and_da::<Database>();
         {
@@ -44,7 +45,7 @@ mod get_street_set_for_key_tests {
         assert!(result.is_none());
     }
 
-    #[test]
+    #[traced_test]
     fn test_get_street_set_corrupt_data() {
         let (db_arc, da, _td) = create_db_and_da::<Database>();
         {
@@ -55,7 +56,7 @@ mod get_street_set_for_key_tests {
         assert!(result.is_none());
     }
 
-    #[test]
+    #[traced_test]
     fn test_get_street_set_valid_data() {
         let (db_arc, da, _td) = create_db_and_da::<Database>();
         let mut sset = BTreeSet::new();
@@ -78,7 +79,7 @@ mod get_street_set_for_key_tests {
         assert!(names.contains(&"broadway".to_string()));
     }
 
-    #[test]
+    #[traced_test]
     fn test_get_street_set_lock_poisoned() {
         let (db_arc, da, _td) = create_db_and_da::<Database>();
         // Poison

@@ -1,4 +1,5 @@
 // ---------------- [ File: src/load_existing_house_number_ranges.rs ]
+// ---------------- [ File: src/load_existing_house_number_ranges.rs ]
 crate::ix!();
 
 pub trait LoadExistingHouseNumberRanges {
@@ -68,7 +69,7 @@ mod test_load_existing_house_number_ranges {
           .expect("Storing house-number ranges should succeed in test setup");
     }
 
-    #[test]
+    #[traced_test]
     fn test_no_data_returns_empty_vec() {
         let (db_arc, _temp_dir) = create_temp_db();
         let db_guard = db_arc.lock().unwrap();
@@ -81,7 +82,7 @@ mod test_load_existing_house_number_ranges {
         assert!(result.is_empty(), "Expected an empty vector for nonexistent key");
     }
 
-    #[test]
+    #[traced_test]
     fn test_existing_data_is_loaded() {
         let (db_arc, _temp_dir) = create_temp_db();
         let mut db_guard = db_arc.lock().unwrap();
@@ -100,7 +101,7 @@ mod test_load_existing_house_number_ranges {
             "Loaded data must match what was stored");
     }
 
-    #[test]
+    #[traced_test]
     fn test_corrupted_data_returns_error() {
         // The `load_existing_house_number_ranges` method ultimately calls
         // `load_house_number_ranges`, which may fail during CBOR deserialization.
@@ -129,7 +130,7 @@ mod test_load_existing_house_number_ranges {
         }
     }
 
-    #[test]
+    #[traced_test]
     fn test_load_error_propagates_as_data_access_error() {
         // If you want to simulate a RocksDB read error or lock poison,
         // you'd need a mock or specialized DB that returns an error.

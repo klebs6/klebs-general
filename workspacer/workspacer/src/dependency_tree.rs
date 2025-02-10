@@ -7,7 +7,6 @@ pub type WorkspaceDependencyGraph = DiGraph<String, ()>;
 impl<P,H:CrateHandleInterface<P>> GenerateDependencyTree for Workspace<P,H> 
 where for<'async_trait> P: From<PathBuf> + AsRef<Path> + Send + Sync + 'async_trait
 {
-
     type Tree = WorkspaceDependencyGraph;
     type Error = WorkspaceError;
 

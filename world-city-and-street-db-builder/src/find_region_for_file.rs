@@ -1,4 +1,5 @@
 // ---------------- [ File: src/find_region_for_file.rs ]
+// ---------------- [ File: src/find_region_for_file.rs ]
 crate::ix!();
 
 /// Attempts to deduce which known region a given PBF file corresponds to by comparing its
@@ -56,7 +57,7 @@ mod find_region_for_file_tests {
         ]
     }
 
-    #[test]
+    #[traced_test]
     fn test_find_region_for_file_no_filename() {
         // If `file_path.file_name()` is None, (e.g. path = "/some/directory/"),
         // we should return None
@@ -66,7 +67,7 @@ mod find_region_for_file_tests {
         assert!(result.is_none(), "No file name => None");
     }
 
-    #[test]
+    #[traced_test]
     fn test_find_region_for_file_non_utf8() {
         // If the file name is not UTF-8, file_name().to_str() returns None => returns None
         // We can simulate by building an OsString with invalid UTF-8 bytes
@@ -84,7 +85,7 @@ mod find_region_for_file_tests {
         // If you're strictly on Linux or macOS with Unix OS strings, the above works.
     }
 
-    #[test]
+    #[traced_test]
     fn test_find_region_for_file_match_maryland_exact() {
         let md: WorldRegion = USRegion::UnitedState(UnitedState::Maryland).into();
         let path = PathBuf::from("maryland-latest.osm.pbf");
@@ -94,7 +95,7 @@ mod find_region_for_file_tests {
         assert_eq!(result, Some(md), "Exact match => Some(MD)");
     }
 
-    #[test]
+    #[traced_test]
     fn test_find_region_for_file_match_virginia_case_insensitive() {
         let va: WorldRegion = USRegion::UnitedState(UnitedState::Virginia).into();
         let path = PathBuf::from("ViRgInIa-LaTesT.OsM.PbF");
@@ -104,7 +105,7 @@ mod find_region_for_file_tests {
         assert_eq!(result, Some(va), "Case-insensitive match => Some(VA)");
     }
 
-    #[test]
+    #[traced_test]
     fn test_find_region_for_file_match_maryland_md5() {
         let md: WorldRegion = USRegion::UnitedState(UnitedState::Maryland).into();
         // "maryland-latest.abc123.osm.pbf" => expected to match "maryland-latest.osm.pbf"
@@ -115,7 +116,7 @@ mod find_region_for_file_tests {
         assert_eq!(result, Some(md), "MD5 insertion => Some(MD)");
     }
 
-    #[test]
+    #[traced_test]
     fn test_find_region_for_file_no_match() {
         let path = PathBuf::from("unknown-latest.osm.pbf");
         let regions = known_test_regions();
@@ -124,7 +125,7 @@ mod find_region_for_file_tests {
         assert!(result.is_none(), "Unknown => None");
     }
 
-    #[test]
+    #[traced_test]
     fn test_find_region_for_file_non_pbf_extension() {
         // If the file doesn't end with .osm.pbf, we won't match
         let path = PathBuf::from("maryland-latest.osm");
@@ -134,7 +135,7 @@ mod find_region_for_file_tests {
         assert!(result.is_none(), "Not .osm.pbf => None");
     }
 
-    #[test]
+    #[traced_test]
     fn test_find_region_for_file_base_dir_influence() {
         // This test ensures that the base_dir is used in computing expected_filename_for_region.
         // But for normal usage, the final filename is "maryland-latest.osm.pbf" (or etc.).
@@ -148,7 +149,7 @@ mod find_region_for_file_tests {
         assert_eq!(result, Some(md));
     }
 
-    #[test]
+    #[traced_test]
     fn test_find_region_for_file_disambiguates_first_match() {
         // Suppose if two regions had the same expected filename, it returns the first match in known_regions.
         // For demonstration, let's forcibly do that by returning the same expected filename from each region's download link.

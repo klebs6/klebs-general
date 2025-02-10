@@ -5,7 +5,6 @@ crate::ix!();
 impl<P,H:CrateHandleInterface<P>> CleanupWorkspace for Workspace<P,H> 
 where for<'async_trait> P: From<PathBuf> + AsRef<Path> + Send + Sync + 'async_trait
 {
-
     /// Asynchronously cleans up unnecessary files and directories in the workspace.
     async fn cleanup_workspace(&self) -> Result<(), WorkspaceError> {
 

@@ -1,4 +1,5 @@
 // ---------------- [ File: src/create_address_stream_channel.rs ]
+// ---------------- [ File: src/create_address_stream_channel.rs ]
 crate::ix!();
 
 /// Creates a bounded sync channel for streaming address results.
@@ -30,7 +31,7 @@ mod create_address_stream_channel_tests {
     }
 
     /// Basic test: we can create the channel, send one item, receive it, and verify content.
-    #[test]
+    #[traced_test]
     fn test_create_address_stream_channel_basic_send_receive() {
         let (tx, rx) = create_address_stream_channel();
 
@@ -48,7 +49,7 @@ mod create_address_stream_channel_tests {
     }
 
     /// Confirm we can send an `Err(OsmPbfParseError)` as well.
-    #[test]
+    #[traced_test]
     fn test_create_address_stream_channel_send_error() {
         let (tx, rx) = create_address_stream_channel();
 
@@ -68,7 +69,7 @@ mod create_address_stream_channel_tests {
 
     /// Tests that the channel capacity is indeed 1000 by using `try_send(...)`.
     /// We can fill the channel up to 1000 sends, the 1001st should fail with `Full`.
-    #[test]
+    #[traced_test]
     fn test_create_address_stream_channel_capacity() {
         let (tx, _rx) = create_address_stream_channel();
 
@@ -93,7 +94,7 @@ mod create_address_stream_channel_tests {
     }
 
     /// Demonstrates that if we do receive from the channel, we free space and can send again.
-    #[test]
+    #[traced_test]
     fn test_create_address_stream_channel_send_receive_frees_space() {
         let (tx, rx) = create_address_stream_channel();
 

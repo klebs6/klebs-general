@@ -1,4 +1,5 @@
 // ---------------- [ File: src/collect_tags.rs ]
+// ---------------- [ File: src/collect_tags.rs ]
 crate::ix!();
 
 /// Collect tags into a [`HashMap`], generic over any iterator of
@@ -23,7 +24,7 @@ mod collect_tags_tests {
         data.iter().copied()
     }
 
-    #[test]
+    #[traced_test]
     fn test_collect_tags_empty() {
         // No tags => empty map
         let empty_iter = make_tag_iter(&[]);
@@ -31,7 +32,7 @@ mod collect_tags_tests {
         assert!(result.is_empty(), "Expected empty HashMap");
     }
 
-    #[test]
+    #[traced_test]
     fn test_collect_tags_single_pair() {
         // A single key-value
         let data = [("addr:city", "Baltimore")];
@@ -45,7 +46,7 @@ mod collect_tags_tests {
         );
     }
 
-    #[test]
+    #[traced_test]
     fn test_collect_tags_multiple_pairs() {
         // Typical OSM data with multiple tags
         let data = [
@@ -61,7 +62,7 @@ mod collect_tags_tests {
         assert_eq!(result.get("addr:city"), Some(&"TestCity".to_string()));
     }
 
-    #[test]
+    #[traced_test]
     fn test_collect_tags_repeated_keys() {
         // If we have repeated keys, the last one wins (typical HashMap behavior)
         let data = [
@@ -76,7 +77,7 @@ mod collect_tags_tests {
         assert_eq!(val, "residential");
     }
 
-    #[test]
+    #[traced_test]
     fn test_collect_tags_special_chars() {
         // Some keys or values might have punctuation or spaces
         let data = [
@@ -90,7 +91,7 @@ mod collect_tags_tests {
         assert_eq!(result["UPPERCASE"], "MIXED@CASE#1");
     }
 
-    #[test]
+    #[traced_test]
     fn test_collect_tags_unicode() {
         // Ensures we handle non-ASCII chars
         let data = [

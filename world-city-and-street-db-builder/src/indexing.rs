@@ -1,4 +1,5 @@
 // ---------------- [ File: src/indexing.rs ]
+// ---------------- [ File: src/indexing.rs ]
 crate::ix!();
 
 pub type RegionToPostalCodeToStreetsMap = BTreeMap<WorldRegion, BTreeMap<PostalCode, BTreeSet<StreetName>>>;
@@ -126,7 +127,7 @@ impl From<&RegionalRecords> for InMemoryIndexes {
 mod in_memory_indexes_tests {
     use super::*;
 
-    #[test]
+    #[traced_test]
     fn build_inmemory_indexes_from_mock_records() {
 
         let region: WorldRegion = USRegion::UnitedState(UnitedState::Maryland).into();
@@ -179,7 +180,7 @@ mod in_memory_indexes_tests {
             .unwrap()
     }
 
-    #[test]
+    #[traced_test]
     fn test_empty_records_yields_empty_indexes() {
         let region = region_md();
         // RegionalRecords with empty vector
@@ -205,7 +206,7 @@ mod in_memory_indexes_tests {
         assert!(indexes.street_cities().is_empty());
     }
 
-    #[test]
+    #[traced_test]
     fn test_partial_record_is_skipped() {
         // We'll build a single AddressRecord that is missing city/street/postal => is_empty() => skip
         let region = region_md();
@@ -231,7 +232,7 @@ mod in_memory_indexes_tests {
         assert!(indexes.street_cities().is_empty());
     }
 
-    #[test]
+    #[traced_test]
     fn test_single_record_populates_all_maps() {
         // city= "Baltimore", street= "North Avenue", postal= "21201"
         let region = region_md();
@@ -277,7 +278,7 @@ mod in_memory_indexes_tests {
         assert!(city_for_north_avenue.contains(&make_city("Baltimore")));
     }
 
-    #[test]
+    #[traced_test]
     fn test_duplicate_record_deduplicates() {
         // We'll create 2 identical records => they should end up in sets of size 1
         let region = region_md();
@@ -313,7 +314,7 @@ mod in_memory_indexes_tests {
         assert_eq!(city_for_veirs_mill.len(), 1);
     }
 
-    #[test]
+    #[traced_test]
     fn test_multiple_records_same_city_different_postals() {
         // Suppose we have multiple postals for the same city => ensure sets accumulate them
         let region = region_md();
@@ -362,7 +363,7 @@ mod in_memory_indexes_tests {
         assert!(streets_21202.contains(&make_street("North Avenue")));
     }
 
-    #[test]
+    #[traced_test]
     fn test_multiple_regions_are_separate_in_region_postal_code_streets() {
         // The "From<RegionalRecords>" is always for a single region at a time, 
         // but let's see if the code tries to store more than one region key.
@@ -405,7 +406,7 @@ mod in_memory_indexes_tests {
         assert!(idx_va.region_postal_code_streets().contains_key(&region2));
     }
 
-    #[test]
+    #[traced_test]
     fn test_postal_code_to_street_map_for_region_ok() {
         let region = region_md();
         let rec1 = build_address_record(Some("Baltimore"), Some("North Ave"), Some("21201"));
@@ -429,7 +430,7 @@ mod in_memory_indexes_tests {
         assert!(st_set.contains(&make_street("Greenmount")));
     }
 
-    #[test]
+    #[traced_test]
     fn test_postal_code_to_street_map_for_region_none_when_unmatched_region() {
         // We build indexes for region=MD, then query region=VA => None
         let region_md = region_md();
@@ -449,7 +450,7 @@ mod in_memory_indexes_tests {
 
     // We already have a coverage test in the existing code, but let's ensure we re-check 
     // the scenario that the region key is present, but no postal codes in it. 
-    #[test]
+    #[traced_test]
     fn test_postal_code_to_street_map_for_region_present_but_empty() {
         // We'll build an index with an empty record => so region is inserted,
         // but there's no postal code. The function returns Some(BTreeMap) which is empty.
@@ -467,7 +468,7 @@ mod in_memory_indexes_tests {
         assert!(code_map.is_empty());
     }
 
-    #[test]
+    #[traced_test]
     fn test_mock_for_region_smoke_test() {
         // The existing test: build_inmemory_indexes_from_mock_records
         // We'll do a bit more checking on the mock data.

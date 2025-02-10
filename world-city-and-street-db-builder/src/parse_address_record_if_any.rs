@@ -1,4 +1,5 @@
 // ---------------- [ File: src/parse_address_record_if_any.rs ]
+// ---------------- [ File: src/parse_address_record_if_any.rs ]
 crate::ix!();
 
 /// Parses an [`AddressRecord`] from the element if possible, returning `Some(AddressRecord)`
@@ -104,7 +105,7 @@ mod test_parse_address_record_if_any {
         Country::USA
     }
 
-    #[test]
+    #[traced_test]
     fn test_valid_city_street_postcode_returns_some() {
         // Node with full set of valid tags => should parse.
         // e.g.: addr:city=Baltimore, addr:street=Main St, addr:postcode=21201
@@ -129,7 +130,7 @@ mod test_parse_address_record_if_any {
         );
     }
 
-    #[test]
+    #[traced_test]
     fn test_no_addr_tags_returns_none() {
         // Node without any addr:city/addr:street/addr:postcode => None
         let tags = &[("highway", "residential"), ("name", "Random Road")];
@@ -142,7 +143,7 @@ mod test_parse_address_record_if_any {
         );
     }
 
-    #[test]
+    #[traced_test]
     fn test_partial_addr_tags_returns_none() {
         // Node with only addr:city but missing street/postcode => should fail => None
         let tags = &[("addr:city", "Seattle")];
@@ -155,7 +156,7 @@ mod test_parse_address_record_if_any {
         );
     }
 
-    #[test]
+    #[traced_test]
     fn test_invalid_city_name_construction_returns_none() {
         // Suppose "CityName::new" or "AddressRecord::try_from" 
         // fails for an empty or invalid city name, leading to an error => None.
@@ -174,7 +175,7 @@ mod test_parse_address_record_if_any {
         );
     }
 
-    #[test]
+    #[traced_test]
     fn test_invalid_postal_code_for_country_returns_none() {
         // Suppose your `PostalCode::new` fails for some invalid format or mismatch with the country.
         // We'll assume "ABCDE1234" is invalid for the US in your code, for instance.
@@ -192,7 +193,7 @@ mod test_parse_address_record_if_any {
         );
     }
 
-    #[test]
+    #[traced_test]
     fn test_debug_logging_on_error() {
         // If parsing fails, the function logs a debug message and returns None.
         // We'll just confirm it returns None and rely on the logger to do its job

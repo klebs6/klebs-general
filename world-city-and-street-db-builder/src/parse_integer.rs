@@ -1,4 +1,5 @@
 // ---------------- [ File: src/parse_integer.rs ]
+// ---------------- [ File: src/parse_integer.rs ]
 crate::ix!();
 
 /// Parses a string as an unsigned integer (`u32`). Returns a domain error if invalid.
@@ -59,7 +60,7 @@ mod test_parse_integer {
         }
     }
 
-    #[test]
+    #[traced_test]
     fn test_valid_number() {
         // "123" => Ok(123)
         let element_id = 1001;
@@ -67,7 +68,7 @@ mod test_parse_integer {
         assert_ok_eq(result, 123);
     }
 
-    #[test]
+    #[traced_test]
     fn test_leading_whitespace() {
         // "   42" => Ok(42)
         let element_id = 1002;
@@ -75,7 +76,7 @@ mod test_parse_integer {
         assert_ok_eq(result, 42);
     }
 
-    #[test]
+    #[traced_test]
     fn test_zero() {
         // "0" => Ok(0)
         let element_id = 1003;
@@ -83,7 +84,7 @@ mod test_parse_integer {
         assert_ok_eq(result, 0);
     }
 
-    #[test]
+    #[traced_test]
     fn test_negative_number() {
         // "-5" => Err(...)
         let element_id = 1004;
@@ -91,7 +92,7 @@ mod test_parse_integer {
         assert_err_incompatible_node(result, element_id);
     }
 
-    #[test]
+    #[traced_test]
     fn test_non_numeric() {
         // "abc" => Err(...)
         let element_id = 1005;
@@ -99,7 +100,7 @@ mod test_parse_integer {
         assert_err_incompatible_node(result, element_id);
     }
 
-    #[test]
+    #[traced_test]
     fn test_empty_string() {
         // "" => Err(...)
         let element_id = 1006;
@@ -107,7 +108,7 @@ mod test_parse_integer {
         assert_err_incompatible_node(result, element_id);
     }
 
-    #[test]
+    #[traced_test]
     fn test_whitespace_only() {
         // "   " => Err(...)
         let element_id = 1007;
@@ -115,7 +116,7 @@ mod test_parse_integer {
         assert_err_incompatible_node(result, element_id);
     }
 
-    #[test]
+    #[traced_test]
     fn test_u32_max() {
         // "4294967295" => Ok(4294967295) if it fits in u32
         let element_id = 1008;
@@ -125,7 +126,7 @@ mod test_parse_integer {
         assert_ok_eq(result, std::u32::MAX);
     }
 
-    #[test]
+    #[traced_test]
     fn test_overflow_beyond_u32_max() {
         // "4294967296" => This is 2^32, out of range => Err(...)
         let element_id = 1009;

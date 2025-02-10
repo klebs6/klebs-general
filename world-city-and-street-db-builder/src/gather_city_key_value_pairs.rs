@@ -1,4 +1,5 @@
 // ---------------- [ File: src/gather_city_key_value_pairs.rs ]
+// ---------------- [ File: src/gather_city_key_value_pairs.rs ]
 crate::ix!();
 
 /// Performs a prefix-based iteration in RocksDB to find all city keys matching the prefix.
@@ -49,7 +50,7 @@ mod gather_city_key_value_pairs_tests {
         (db, tmp_dir)
     }
 
-    #[test]
+    #[traced_test]
     fn test_gather_city_key_value_pairs_no_matches() {
         let (db_arc, _tmp) = create_test_db::<Database>();
         {
@@ -64,7 +65,7 @@ mod gather_city_key_value_pairs_tests {
         assert!(results.is_empty());
     }
 
-    #[test]
+    #[traced_test]
     fn test_gather_city_key_value_pairs_single_match() {
         let (db_arc, _tmp) = create_test_db::<Database>();
         {
@@ -84,7 +85,7 @@ mod gather_city_key_value_pairs_tests {
         assert_eq!(val_bytes, b"baltimore_data");
     }
 
-    #[test]
+    #[traced_test]
     fn test_gather_city_key_value_pairs_multiple_matches() {
         let (db_arc, _tmp) = create_test_db::<Database>();
         {
@@ -105,7 +106,7 @@ mod gather_city_key_value_pairs_tests {
         assert_eq!(keys_found, vec!["C2Z:US:annapolis", "C2Z:US:baltimore"]);
     }
 
-    #[test]
+    #[traced_test]
     fn test_gather_city_key_value_pairs_non_utf8_key() {
         #[cfg(unix)]
         {
@@ -131,7 +132,7 @@ mod gather_city_key_value_pairs_tests {
         }
     }
 
-    #[test]
+    #[traced_test]
     fn test_gather_city_key_value_pairs_db_error() {
         // There's no built-in direct mechanism for prefix_iterator to fail in normal usage, 
         // but let's do a forced lock poisoning scenario: 

@@ -1,4 +1,5 @@
 // ---------------- [ File: src/prepare_single_node_primitive_block.rs ]
+// ---------------- [ File: src/prepare_single_node_primitive_block.rs ]
 crate::ix!();
 
 use crate::proto::{fileformat,osmformat};
@@ -95,7 +96,7 @@ mod test_prepare_single_node_primitive_block {
     use crate::proto::osmformat; // Adjust if your osmformat module is located elsewhere
     use protobuf::Message;        // For optional serialization checks
 
-    #[test]
+    #[traced_test]
     fn test_no_housenumber_minimal_node() {
         let city = "TestCity";
         let street = "TestStreet";
@@ -152,7 +153,7 @@ mod test_prepare_single_node_primitive_block {
         assert_eq!(vals, [2, 4], "Values should match the city & street strings");
     }
 
-    #[test]
+    #[traced_test]
     fn test_with_housenumber() {
         let city = "TestCity";
         let street = "TestStreet";
@@ -190,7 +191,7 @@ mod test_prepare_single_node_primitive_block {
         assert_eq!(vals, [2, 6, 4], "Paired with city, housenumber, street strings");
     }
 
-    #[test]
+    #[traced_test]
     fn test_lat_lon_out_of_range_logs_warning() {
         // We'll just confirm it doesn't panic, but the logs should contain a warning. 
         // We can't check logs easily in a simple test, but let's ensure it doesn't break.
@@ -210,7 +211,7 @@ mod test_prepare_single_node_primitive_block {
         assert_eq!(node.get_lon(), expected_lon);
     }
 
-    #[test]
+    #[traced_test]
     fn test_stringtable_indices_order() {
         // Confirm that the order is stable: 
         //  0 => ""
@@ -243,7 +244,7 @@ mod test_prepare_single_node_primitive_block {
         }
     }
 
-    #[test]
+    #[traced_test]
     fn test_serialization_and_reparse() {
         let block = prepare_single_node_primitive_block(
             "Baltimore",

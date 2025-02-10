@@ -1,4 +1,5 @@
 // ---------------- [ File: src/filenames_match.rs ]
+// ---------------- [ File: src/filenames_match.rs ]
 crate::ix!();
 
 /// Returns `true` if `actual` matches the `expected` ignoring ASCII case,
@@ -64,7 +65,7 @@ mod filenames_match_tests {
         assert!(filenames_match(expected, actual));
     }
 
-    #[test]
+    #[traced_test]
     fn test_leading_dot_slash_stripping() {
         // If expected => "./maryland-latest.osm.pbf" 
         //   actual => "./MaRyLaNd-Latest.osm.pbf"
@@ -74,7 +75,7 @@ mod filenames_match_tests {
         assert!(filenames_match(expected, actual));
     }
 
-    #[test]
+    #[traced_test]
     fn test_md5_substring_case_insensitive() {
         // e.g. "maryland-latest.osm.pbf" => "maryland-latest.s0m3Md5.osm.pbf"
         // ignoring case => still match
@@ -83,7 +84,7 @@ mod filenames_match_tests {
         assert!(filenames_match(expected, actual));
     }
 
-    #[test]
+    #[traced_test]
     fn test_md5_substring_no_leading_dot() {
         // e.g. actual => "maryland-latestS0m3Md5.osm.pbf"
         // after removing .osm.pbf => we see "maryland-latestS0m3Md5"
@@ -94,7 +95,7 @@ mod filenames_match_tests {
         assert!(!filenames_match(expected, actual));
     }
 
-    #[test]
+    #[traced_test]
     fn test_exact_same_case() {
         let expected = "maryland-latest.osm.pbf";
         let actual   = "maryland-latest.osm.pbf";
@@ -102,7 +103,7 @@ mod filenames_match_tests {
         assert!(filenames_match(expected, actual));
     }
 
-    #[test]
+    #[traced_test]
     fn test_different_suffix() {
         // must end with .osm.pbf ignoring case or fail
         let expected = "maryland-latest.osm.pbf";
@@ -110,7 +111,7 @@ mod filenames_match_tests {
         assert!(!filenames_match(expected, actual));
     }
 
-    #[test]
+    #[traced_test]
     fn test_remainder_dot_only() {
         // If the remainder is ".", that does not qualify as an MD5. 
         // The code says remainder must start with '.' AND have >1 length => Some MD5 => ok
@@ -122,7 +123,7 @@ mod filenames_match_tests {
         assert!(!filenames_match(expected, actual));
     }
 
-    #[test]
+    #[traced_test]
     fn test_empty_remainder_but_not_equal_ignore_case() {
         // e.g. "maryland-latest" != "maryland-otherstuff" ignoring case => we do a final fallback check
         // Actually the function does eq_ignore_ascii_case early if everything is identical ignoring case => returns true.
@@ -132,7 +133,7 @@ mod filenames_match_tests {
         assert!(!filenames_match(expected, actual));
     }
 
-    #[test]
+    #[traced_test]
     fn test_same_base_no_md5_substring() {
         // "maryland-latest.osm.pbf" vs "MaRyLaNd-LaTeSt.osm.pbf"
         // eq_ignore_ascii_case => false, because we have a dash difference => wait, no, dashes are same length though
@@ -152,7 +153,7 @@ mod filenames_match_tests {
         assert!(filenames_match(expected2, actual2));
     }
 
-    #[test]
+    #[traced_test]
     fn test_strip_leading_dot_slash() {
         // show that both have leading "./"
         let expected = "./maryland-latest.osm.pbf";
@@ -161,7 +162,7 @@ mod filenames_match_tests {
         assert!(filenames_match(expected, actual));
     }
 
-    #[test]
+    #[traced_test]
     fn test_completely_different_filenames() {
         // e.g. "foo-bar.osm.pbf" vs. "some-other.osm.pbf"
         // eq_ignore_ascii_case => false, so we do the suffix check => it's okay => we remove .osm.pbf => "foo-bar" vs "some-other"
@@ -171,7 +172,7 @@ mod filenames_match_tests {
         assert!(!filenames_match(expected, actual));
     }
 
-    #[test]
+    #[traced_test]
     fn test_md5_substring_but_wrong_suffix() {
         // "maryland-latest.osm.pbf" => "maryland-latest.abc123.osm.pb"
         // missing the 'f' => fail

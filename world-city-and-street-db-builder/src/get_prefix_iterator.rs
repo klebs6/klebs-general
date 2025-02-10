@@ -1,4 +1,5 @@
 // ---------------- [ File: src/get_prefix_iterator.rs ]
+// ---------------- [ File: src/get_prefix_iterator.rs ]
 crate::ix!();
 
 pub trait GetPrefixIterator {
@@ -54,7 +55,7 @@ mod get_iterator_traits_tests {
         // We can also test numeric sorting, etc. if desired
     }
 
-    #[test]
+    #[traced_test]
     fn test_prefix_iterator_basic() {
         let (db_arc, _tempdir) = create_db();
         insert_test_data(&db_arc);
@@ -71,7 +72,7 @@ mod get_iterator_traits_tests {
         assert_eq!(keys_collected, vec!["prefix:one", "prefix:two", "prefix:zzz"]);
     }
 
-    #[test]
+    #[traced_test]
     fn test_iterator_start() {
         let (db_arc, _tempdir) = create_db();
         insert_test_data(&db_arc);
@@ -100,7 +101,7 @@ mod get_iterator_traits_tests {
         );
     }
 
-    #[test]
+    #[traced_test]
     fn test_prefix_iterator_empty_db() {
         let (db_arc, _tempdir) = create_db::<Database>();
         let db_guard = db_arc.lock().unwrap();
@@ -108,7 +109,7 @@ mod get_iterator_traits_tests {
         assert!(iter.next().is_none(), "No data => no items");
     }
 
-    #[test]
+    #[traced_test]
     fn test_iterator_end_mode() {
         let (db_arc, _tempdir) = create_db();
         insert_test_data(&db_arc);
@@ -125,7 +126,7 @@ mod get_iterator_traits_tests {
         // If we wanted a reverse iteration, we'd do .prev() calls. But the trait doesn't show that usage here.
     }
 
-    #[test]
+    #[traced_test]
     fn test_iterator_lock_poisoned() {
         let (db_arc, _tempdir) = create_db::<Database>();
         // Poison the lock

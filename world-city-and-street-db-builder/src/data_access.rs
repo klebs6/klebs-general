@@ -1,4 +1,5 @@
 // ---------------- [ File: src/data_access.rs ]
+// ---------------- [ File: src/data_access.rs ]
 crate::ix!();
 
 /// DataAccess struct for queries
@@ -94,7 +95,7 @@ mod data_access_tests {
     // Basic .get_xxx_set usage
     // --------------------------------------------
 
-    #[test]
+    #[traced_test]
     fn test_get_city_set_no_key() -> Result<(), DataAccessError> {
         let (_db, da) = create_db_and_da::<Database>()?;
         let result = da.get_city_set("Z2C:US:99999");
@@ -102,7 +103,7 @@ mod data_access_tests {
         Ok(())
     }
 
-    #[test]
+    #[traced_test]
     fn test_get_city_set_valid() -> Result<(), DataAccessError> {
         let (db, da) = create_db_and_da::<Database>()?;
         {
@@ -120,7 +121,7 @@ mod data_access_tests {
         Ok(())
     }
 
-    #[test]
+    #[traced_test]
     fn test_get_city_set_empty() -> Result<(), DataAccessError> {
         let (db, da) = create_db_and_da::<Database>()?;
         {
@@ -134,7 +135,7 @@ mod data_access_tests {
         Ok(())
     }
 
-    #[test]
+    #[traced_test]
     fn test_get_street_set_single() -> Result<(), DataAccessError> {
         let (db, da) = create_db_and_da::<Database>()?;
         {
@@ -151,7 +152,7 @@ mod data_access_tests {
         Ok(())
     }
 
-    #[test]
+    #[traced_test]
     fn test_get_postal_code_set_multiple() -> Result<(), DataAccessError> {
         let (db, da) = create_db_and_da::<Database>()?;
         {
@@ -173,7 +174,7 @@ mod data_access_tests {
     // Testing the trait-based convenience methods
     // --------------------------------------------
 
-    #[test]
+    #[traced_test]
     fn test_postal_codes_for_city_in_region() -> Result<(), DataAccessError> {
         let (db, da) = create_db_and_da::<Database>()?;
         {
@@ -190,7 +191,7 @@ mod data_access_tests {
         Ok(())
     }
 
-    #[test]
+    #[traced_test]
     fn test_street_names_for_city_in_region() -> Result<(), DataAccessError> {
         let (db, da) = create_db_and_da::<Database>()?;
         {
@@ -206,7 +207,7 @@ mod data_access_tests {
         Ok(())
     }
 
-    #[test]
+    #[traced_test]
     fn test_cities_for_postal_code() -> Result<(), DataAccessError> {
         let (db, da) = create_db_and_da::<Database>()?;
         {
@@ -222,7 +223,7 @@ mod data_access_tests {
         Ok(())
     }
 
-    #[test]
+    #[traced_test]
     fn test_street_names_for_postal_code_in_region() -> Result<(), DataAccessError> {
         let (db, da) = create_db_and_da::<Database>()?;
         {
@@ -242,7 +243,7 @@ mod data_access_tests {
     // Checking existence queries
     // --------------------------------------------
 
-    #[test]
+    #[traced_test]
     fn test_street_exists_in_city_true() -> Result<(), DataAccessError> {
         let (db, da) = create_db_and_da::<Database>()?;
         {
@@ -257,7 +258,7 @@ mod data_access_tests {
         Ok(())
     }
 
-    #[test]
+    #[traced_test]
     fn test_street_exists_in_city_false() -> Result<(), DataAccessError> {
         let (_db, da) = create_db_and_da::<Database>()?;
         let exists = da.street_exists_in_city(&region_md(), &city_baltimore(), &street_north_avenue());
@@ -265,7 +266,7 @@ mod data_access_tests {
         Ok(())
     }
 
-    #[test]
+    #[traced_test]
     fn test_street_exists_in_postal_code_true() -> Result<(), DataAccessError> {
         let (db, da) = create_db_and_da::<Database>()?;
         {
@@ -280,7 +281,7 @@ mod data_access_tests {
         Ok(())
     }
 
-    #[test]
+    #[traced_test]
     fn test_street_exists_in_postal_code_false() -> Result<(), DataAccessError> {
         let (_db, da) = create_db_and_da::<Database>()?;
         let exists = da.street_exists_in_postal_code(&region_md(), &postal_21201(), &street_north_avenue());
@@ -288,7 +289,7 @@ mod data_access_tests {
         Ok(())
     }
 
-    #[test]
+    #[traced_test]
     fn test_street_exists_globally_true() -> Result<(), DataAccessError> {
         let (db, da) = create_db_and_da::<Database>()?;
         {
@@ -313,7 +314,7 @@ mod data_access_tests {
         Ok(())
     }
 
-    #[test]
+    #[traced_test]
     fn test_street_exists_globally_false() -> Result<(), DataAccessError> {
         let (_db, da) = create_db_and_da::<Database>()?;
         let region = region_va();
@@ -327,7 +328,7 @@ mod data_access_tests {
     // Lock poisoning scenario
     // --------------------------------------------
 
-    #[test]
+    #[traced_test]
     fn test_lock_poisoning_logged_as_warning() -> Result<(), DataAccessError> {
         let (db, da) = create_db_and_da::<Database>()?;
         // Force a lock poison:

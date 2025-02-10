@@ -1,4 +1,5 @@
 // ---------------- [ File: src/street_names_for_postal_code_in_region.rs ]
+// ---------------- [ File: src/street_names_for_postal_code_in_region.rs ]
 crate::ix!();
 
 pub trait StreetNamesForPostalCodeInRegion {
@@ -58,7 +59,7 @@ mod test_street_names_for_postal_code_in_region {
         db.put(key, val).unwrap();
     }
 
-    #[test]
+    #[traced_test]
     fn test_no_data_returns_none() {
         let (db_arc, _tmp_dir) = create_temp_db();
         let data_access = create_data_access(db_arc.clone());
@@ -74,7 +75,7 @@ mod test_street_names_for_postal_code_in_region {
         );
     }
 
-    #[test]
+    #[traced_test]
     fn test_existing_data_returns_btreeset() {
         let (db_arc, _tmp_dir) = create_temp_db();
         let mut db_guard = db_arc.lock().unwrap();
@@ -102,7 +103,7 @@ mod test_street_names_for_postal_code_in_region {
         );
     }
 
-    #[test]
+    #[traced_test]
     fn test_corrupted_cbor_returns_none() {
         // If the underlying CBOR is invalid, we get None.
         let (db_arc, _tmp_dir) = create_temp_db();
@@ -120,7 +121,7 @@ mod test_street_names_for_postal_code_in_region {
         assert!(result.is_none(), "Corrupted data => None");
     }
 
-    #[test]
+    #[traced_test]
     fn test_different_region_or_postal_code_returns_none() {
         let (db_arc, _tmp_dir) = create_temp_db();
         let mut db_guard = db_arc.lock().unwrap();
@@ -145,7 +146,7 @@ mod test_street_names_for_postal_code_in_region {
         assert!(result_99999.is_none(), "Different postal code => no data => None");
     }
 
-    #[test]
+    #[traced_test]
     fn test_duplicate_street_names_stored_once() {
         // If the DB store has duplicates in the BTreeSet, they unify. 
         // We'll store them and confirm only one instance persists.

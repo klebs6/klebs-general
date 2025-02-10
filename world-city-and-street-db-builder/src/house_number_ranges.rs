@@ -1,4 +1,5 @@
 // ---------------- [ File: src/house_number_ranges.rs ]
+// ---------------- [ File: src/house_number_ranges.rs ]
 // [ File: src/house_number_ranges.rs ]
 crate::ix!();
 
@@ -54,7 +55,7 @@ mod house_number_range_storage_tests {
         StreetName::new(s).unwrap()
     }
 
-    #[test]
+    #[traced_test]
     fn test_store_and_load_house_number_ranges_basic() {
         // 1) Create fresh DB
         let tmp_dir = TempDir::new().unwrap();
@@ -84,7 +85,7 @@ mod house_number_range_storage_tests {
         assert_eq!(loaded, ranges);
     }
 
-    #[test]
+    #[traced_test]
     fn test_house_number_in_any_range() {
         let tmp_dir = TempDir::new().unwrap();
         let db_arc = Database::open(tmp_dir.path()).unwrap();
@@ -108,7 +109,7 @@ mod house_number_range_storage_tests {
         assert!(!db.house_number_in_any_range(&region, &street, 999).unwrap());
     }
 
-    #[test]
+    #[traced_test]
     fn test_load_house_number_ranges_no_key() {
         let tmp_dir = TempDir::new().unwrap();
         let db_arc  = Database::open(tmp_dir.path()).unwrap();
@@ -119,7 +120,7 @@ mod house_number_range_storage_tests {
         assert!(result.is_none(), "No data => None");
     }
 
-    #[test]
+    #[traced_test]
     fn test_house_number_range_contains() {
         let r = HouseNumberRange { start: 10, end: 20 };
         assert!(r.contains(10));

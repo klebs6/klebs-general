@@ -1,4 +1,5 @@
 // ---------------- [ File: src/prefix_transform.rs ]
+// ---------------- [ File: src/prefix_transform.rs ]
 crate::ix!();
 
 /// Create a SliceTransform that extracts everything up to 
@@ -36,7 +37,7 @@ pub fn create_colon_prefix_transform() -> SliceTransform {
 mod prefix_transform_tests {
     use super::*;
 
-    #[test]
+    #[traced_test]
     fn test_dynamic_colon_prefix_extractor() {
         let tmp = TempDir::new().unwrap();
         let db = Database::open(tmp.path()).expect("open DB");
@@ -73,7 +74,7 @@ mod prefix_transform_tests {
         assert_eq!(found2, vec!["Z2C:US:21201"]);
     }
 
-    #[test]
+    #[traced_test]
     fn test_my_colon_prefix_transform() {
         let tmp = TempDir::new().unwrap();
         let db = Database::open(tmp.path()).expect("open DB with prefix transform");

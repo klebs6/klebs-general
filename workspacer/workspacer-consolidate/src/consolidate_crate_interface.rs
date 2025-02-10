@@ -78,4 +78,3 @@ impl ConsolidateCrateInterface for CrateHandle {
         Ok(interface)
     }
 }
-

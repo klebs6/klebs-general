@@ -1,4 +1,5 @@
 // ---------------- [ File: src/street_exists_in_city_in_region.rs ]
+// ---------------- [ File: src/street_exists_in_city_in_region.rs ]
 crate::ix!();
 
 pub trait StreetExistsInCityInRegion {
@@ -62,7 +63,7 @@ mod test_street_exists_in_city_in_region {
         db.put(key, val).expect("Storing city->streets data should succeed");
     }
 
-    #[test]
+    #[traced_test]
     fn test_no_data_returns_false() {
         let (db_arc, _tmp_dir) = create_temp_db();
         let db_guard = db_arc.lock().unwrap();
@@ -77,7 +78,7 @@ mod test_street_exists_in_city_in_region {
         assert!(!result, "No data => should be false");
     }
 
-    #[test]
+    #[traced_test]
     fn test_street_in_city_returns_true() {
         let (db_arc, _tmp_dir) = create_temp_db();
         let mut db_guard = db_arc.lock().unwrap();
@@ -97,7 +98,7 @@ mod test_street_exists_in_city_in_region {
         assert!(result, "Street is in the stored set => should be true");
     }
 
-    #[test]
+    #[traced_test]
     fn test_street_not_in_stored_set_returns_false() {
         let (db_arc, _tmp_dir) = create_temp_db();
         let mut db_guard = db_arc.lock().unwrap();
@@ -119,7 +120,7 @@ mod test_street_exists_in_city_in_region {
         assert!(!result, "Street not in set => false");
     }
 
-    #[test]
+    #[traced_test]
     fn test_different_city_returns_false() {
         let (db_arc, _tmp_dir) = create_temp_db();
         let mut db_guard = db_arc.lock().unwrap();
@@ -140,7 +141,7 @@ mod test_street_exists_in_city_in_region {
         assert!(!result, "Data stored under city1 => city2 lookup => false");
     }
 
-    #[test]
+    #[traced_test]
     fn test_different_region_returns_false() {
         let (db_arc, _tmp_dir) = create_temp_db();
         let mut db_guard = db_arc.lock().unwrap();
@@ -161,7 +162,7 @@ mod test_street_exists_in_city_in_region {
         assert!(!result, "Different region => no matching key => false");
     }
 
-    #[test]
+    #[traced_test]
     fn test_corrupted_data_returns_false() {
         // If the underlying c2s data is corrupted (invalid CBOR),
         // `street_names_for_city_in_region` returns None => false

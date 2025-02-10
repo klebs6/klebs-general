@@ -1,4 +1,5 @@
 // ---------------- [ File: src/validate_street_for_postal_code.rs ]
+// ---------------- [ File: src/validate_street_for_postal_code.rs ]
 crate::ix!();
 
 /// Validates that the `[StreetName]` is present in the set of streets
@@ -87,7 +88,7 @@ mod test_validate_street_for_postal_code {
         db.put(key, val).unwrap();
     }
 
-    #[test]
+    #[traced_test]
     fn test_no_street_set_for_postal_code_returns_error() {
         let (data_access, db_arc, _temp_dir) = create_data_access();
         let region = WorldRegion::try_from_abbreviation("MD").unwrap();
@@ -112,7 +113,7 @@ mod test_validate_street_for_postal_code {
         }
     }
 
-    #[test]
+    #[traced_test]
     fn test_street_not_in_set_returns_error() {
         let (data_access, db_arc, _temp_dir) = create_data_access();
         let mut db_guard = db_arc.lock().unwrap();
@@ -140,7 +141,7 @@ mod test_validate_street_for_postal_code {
         }
     }
 
-    #[test]
+    #[traced_test]
     fn test_street_found_returns_ok() {
         let (data_access, db_arc, _temp_dir) = create_data_access();
         let mut db_guard = db_arc.lock().unwrap();
@@ -159,7 +160,7 @@ mod test_validate_street_for_postal_code {
         assert!(result.is_ok(), "Street is in the set => Ok(())");
     }
 
-    #[test]
+    #[traced_test]
     fn test_corrupted_data_returns_none_and_error() {
         // If the set is invalid CBOR => get_street_set => None => => PostalCodeToStreetKeyNotFoundForRegion
         let (data_access, db_arc, _tmp_dir) = create_data_access();

@@ -1,4 +1,5 @@
 // ---------------- [ File: src/street_exists_in_postal_code_in_region.rs ]
+// ---------------- [ File: src/street_exists_in_postal_code_in_region.rs ]
 crate::ix!();
 
 pub trait StreetExistsInPostalCodeInRegion {
@@ -55,7 +56,7 @@ mod test_street_exists_in_postal_code_in_region {
         db.put(&key, val).expect("Storing postalcode->streets data should succeed");
     }
 
-    #[test]
+    #[traced_test]
     fn test_no_data_returns_false() {
         let (db_arc, _tmp) = create_temp_db();
         let db_guard = db_arc.lock().unwrap();
@@ -69,7 +70,7 @@ mod test_street_exists_in_postal_code_in_region {
         assert!(!result, "No data => false");
     }
 
-    #[test]
+    #[traced_test]
     fn test_street_in_set_returns_true() {
         let (db_arc, _tmp) = create_temp_db();
         let mut db_guard = db_arc.lock().unwrap();
@@ -89,7 +90,7 @@ mod test_street_exists_in_postal_code_in_region {
         assert!(result, "Street is in the stored set => true");
     }
 
-    #[test]
+    #[traced_test]
     fn test_street_not_in_set_returns_false() {
         let (db_arc, _tmp) = create_temp_db();
         let mut db_guard = db_arc.lock().unwrap();
@@ -110,7 +111,7 @@ mod test_street_exists_in_postal_code_in_region {
         assert!(!result, "Should be false if street not in the set");
     }
 
-    #[test]
+    #[traced_test]
     fn test_different_postal_code_returns_false() {
         let (db_arc, _tmp) = create_temp_db();
         let mut db_guard = db_arc.lock().unwrap();
@@ -132,7 +133,7 @@ mod test_street_exists_in_postal_code_in_region {
         assert!(!result, "Stored under pc1 => pc2 lookup => false");
     }
 
-    #[test]
+    #[traced_test]
     fn test_different_region_returns_false() {
         let (db_arc, _tmp) = create_temp_db();
         let mut db_guard = db_arc.lock().unwrap();
@@ -153,7 +154,7 @@ mod test_street_exists_in_postal_code_in_region {
         assert!(!result, "No data for region_va => false");
     }
 
-    #[test]
+    #[traced_test]
     fn test_corrupted_cbor_returns_false() {
         // If the underlying data is invalid CBOR, 
         // `street_names_for_postal_code_in_region` returns None => false

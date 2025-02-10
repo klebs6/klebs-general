@@ -1,4 +1,5 @@
 // ---------------- [ File: src/lib.rs ]
+// ---------------- [ File: src/lib.rs ]
 #![feature(more_qualified_paths)]
 #![feature(type_alias_impl_trait)]
 #![allow(unused_imports)]
@@ -24,6 +25,7 @@ x!{chain_addresses_across_files}
 x!{city_names_for_postal_code_in_region}
 x!{city_name}
 x!{cli}
+x!{cli_hooks}
 x!{collect_address_and_housenumber_data}
 x!{collect_tags}
 x!{compressed_list}

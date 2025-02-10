@@ -1,4 +1,5 @@
 // ---------------- [ File: src/get_cbor_set_typed.rs ]
+// ---------------- [ File: src/get_cbor_set_typed.rs ]
 crate::ix!();
 
 pub trait GetCborSetTyped {
@@ -62,7 +63,7 @@ mod get_cbor_set_typed_tests {
         (db, da, tmp_dir)
     }
 
-    #[test]
+    #[traced_test]
     fn test_get_cbor_set_typed_no_key() {
         // If DB has no such key => val = None => function => returns None
         let (db_arc, da, _tempdir) = create_db_and_da::<Database>();
@@ -71,7 +72,7 @@ mod get_cbor_set_typed_tests {
         assert!(result.is_none(), "No data => None");
     }
 
-    #[test]
+    #[traced_test]
     fn test_get_cbor_set_typed_db_get_error() {
         // If DB's get(...) fails, we log a warning => return None
         let (db_arc, da, _tempdir) = create_db_and_da::<Database>();
@@ -94,7 +95,7 @@ mod get_cbor_set_typed_tests {
         // To truly confirm the error path, you'd need a mock or special environment.
     }
 
-    #[test]
+    #[traced_test]
     fn test_get_cbor_set_typed_lock_poisoned() {
         // If the DB lock is poisoned => log warning => return None
         let (db_arc, da, _tempdir) = create_db_and_da::<Database>();
@@ -110,7 +111,7 @@ mod get_cbor_set_typed_tests {
         // Check logs if desired. The function logs a warning => "Could not get DB lock..."
     }
 
-    #[test]
+    #[traced_test]
     fn test_get_cbor_set_typed_key_exists_empty_val() {
         // If the DB key is present but the value is empty => we parse => decompress => empty => return None
         let (db_arc, da, _tempdir) = create_db_and_da::<Database>();
@@ -123,7 +124,7 @@ mod get_cbor_set_typed_tests {
         assert!(result.is_none(), "Empty value => no set => None");
     }
 
-    #[test]
+    #[traced_test]
     fn test_get_cbor_set_typed_key_exists_corrupted_cbor() {
         // If the DB key is present but the data is corrupted => decompress => empty => None
         let (db_arc, da, _tempdir) = create_db_and_da::<Database>();
@@ -137,7 +138,7 @@ mod get_cbor_set_typed_tests {
         assert!(result.is_none(), "Corrupted => parse => empty => None");
     }
 
-    #[test]
+    #[traced_test]
     fn test_get_cbor_set_typed_valid_data_strings() {
         let (db_arc, da, _tempdir) = create_db_and_da::<Database>();
         // We'll store a set of strings => "hello", "world"
@@ -159,7 +160,7 @@ mod get_cbor_set_typed_tests {
         assert!(unwrapped.contains("world"));
     }
 
-    #[test]
+    #[traced_test]
     fn test_get_cbor_set_typed_valid_data_struct() {
         let (db_arc, da, _tempdir) = create_db_and_da::<Database>();
         // We'll store a set of TestItem { id=1 }, { id=2 }
@@ -183,7 +184,7 @@ mod get_cbor_set_typed_tests {
         assert_eq!(sorted[1].id, 2);
     }
 
-    #[test]
+    #[traced_test]
     fn test_get_cbor_set_typed_duplicates_merged() {
         // BTreeSet merges duplicates
         let (db_arc, da, _tempdir) = create_db_and_da::<Database>();

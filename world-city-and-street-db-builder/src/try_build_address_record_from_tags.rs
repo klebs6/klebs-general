@@ -1,4 +1,5 @@
 // ---------------- [ File: src/try_build_address_record_from_tags.rs ]
+// ---------------- [ File: src/try_build_address_record_from_tags.rs ]
 crate::ix!();
 
 /// Attempts to construct an [`AddressRecord`] from a stream of OSM-style tags.
@@ -101,7 +102,7 @@ mod test_try_build_address_record_from_tags {
         }
     }
 
-    #[test]
+    #[traced_test]
     fn test_successful_build() {
         // Node has addr:city, addr:street, addr:postcode => success
         let tags = &[
@@ -123,7 +124,7 @@ mod test_try_build_address_record_from_tags {
         assert_ok_address(result, "Baltimore", "North Avenue", "21201");
     }
 
-    #[test]
+    #[traced_test]
     fn test_no_address_tags_returns_error() {
         // If none of addr:city, addr:street, addr:postcode are present, we get an error
         let tags = &[("highway", "residential"), ("name", "just a random feature")];
@@ -150,7 +151,7 @@ mod test_try_build_address_record_from_tags {
         }
     }
 
-    #[test]
+    #[traced_test]
     fn test_missing_street_or_city_or_postcode_returns_error() {
         // The function requires all three to exist in the tags or it fails with Incompatible.
         
@@ -182,7 +183,7 @@ mod test_try_build_address_record_from_tags {
         assert_err(result_postcode_only);
     }
 
-    #[test]
+    #[traced_test]
     fn test_invalid_city_name_construction_error() {
         // Suppose an empty city => CityName::new("") fails => error
         let tags = &[
@@ -206,7 +207,7 @@ mod test_try_build_address_record_from_tags {
         }
     }
 
-    #[test]
+    #[traced_test]
     fn test_invalid_street_name_construction_error() {
         // Similar scenario: empty or invalid street => fails
         let tags = &[
@@ -230,7 +231,7 @@ mod test_try_build_address_record_from_tags {
         }
     }
 
-    #[test]
+    #[traced_test]
     fn test_invalid_postcode_construction_error() {
         // If the postal code is invalid for the country => error
         // We'll simulate with something that might fail for the US
@@ -255,7 +256,7 @@ mod test_try_build_address_record_from_tags {
         }
     }
 
-    #[test]
+    #[traced_test]
     fn test_builder_fails_on_addressrecord_build() {
         // Even if city/street/postcode parse is okay, the final `try_assemble_address_record` might fail
         // if the builder enforces something else. We'll simulate an address record builder 

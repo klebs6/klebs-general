@@ -1,4 +1,5 @@
 // ---------------- [ File: src/postal_codes_for_city_in_region.rs ]
+// ---------------- [ File: src/postal_codes_for_city_in_region.rs ]
 crate::ix!();
 
 pub trait PostalCodesForCityInRegion {
@@ -55,7 +56,7 @@ mod test_postal_codes_for_city_in_region {
         db.put(key, val).expect("Storing postal codes should succeed in test setup");
     }
 
-    #[test]
+    #[traced_test]
     fn test_no_data_returns_none() {
         let (db_arc, _tmp) = create_temp_db();
         let data_access = create_data_access(db_arc);
@@ -68,7 +69,7 @@ mod test_postal_codes_for_city_in_region {
         assert!(result.is_none(), "No data => should return None");
     }
 
-    #[test]
+    #[traced_test]
     fn test_some_data_returns_btreeset_of_postal_codes() {
         let (db_arc, _tmp) = create_temp_db();
         let mut db_guard = db_arc.lock().unwrap();
@@ -92,7 +93,7 @@ mod test_postal_codes_for_city_in_region {
         assert_eq!(set, codes, "PostalCode set should match what was stored");
     }
 
-    #[test]
+    #[traced_test]
     fn test_corrupted_data_returns_none() {
         // If the CBOR data is invalid, `get_cbor_set_typed` returns None internally,
         // so we get None from `postal_codes_for_city_in_region`.
@@ -113,7 +114,7 @@ mod test_postal_codes_for_city_in_region {
         assert!(result.is_none(), "Corrupted data => None (decoding fails)");
     }
 
-    #[test]
+    #[traced_test]
     fn test_region_and_city_case_insensitivity() {
         // This depends on your code's normalization. If `city.name()` is already normalized,
         // we can confirm that "Baltimore" with different cases is stored or retrieved.
@@ -137,7 +138,7 @@ mod test_postal_codes_for_city_in_region {
         assert_eq!(result.unwrap(), codes);
     }
 
-    #[test]
+    #[traced_test]
     fn test_different_city_different_key() {
         // If we store data for "frederick" but query "hagerstown", 
         // we expect None because the keys differ.

@@ -1,4 +1,5 @@
 // ---------------- [ File: src/build_city_search_prefix.rs ]
+// ---------------- [ File: src/build_city_search_prefix.rs ]
 crate::ix!();
 
 /// Constructs the RocksDB key prefix for city => postal code data.
@@ -27,7 +28,7 @@ mod build_city_search_prefix_tests {
         );
     }
 
-    #[test]
+    #[traced_test]
     fn test_build_city_search_prefix_maryland() {
         // If your code uses "US" as the abbreviation for any US state, 
         // or "MD" specifically for Maryland, adapt the assertion as needed.
@@ -37,7 +38,7 @@ mod build_city_search_prefix_tests {
         // assert_prefix_for_region(region, "MD");
     }
 
-    #[test]
+    #[traced_test]
     fn test_build_city_search_prefix_virginia() {
         let region = USRegion::UnitedState(UnitedState::Virginia);
         // If your code lumps all US states => abbreviation "US", do:
@@ -46,14 +47,14 @@ mod build_city_search_prefix_tests {
         // assert_prefix_for_region(region, "VA");
     }
 
-    #[test]
+    #[traced_test]
     fn test_build_city_search_prefix_washington_dc() {
         let region = USRegion::USFederalDistrict(USFederalDistrict::DistrictOfColumbia);
         // Possibly "DC"? Or just "US"? Adjust per your code:
         assert_prefix_for_region(region, "DC");
     }
 
-    #[test]
+    #[traced_test]
     fn test_build_city_search_prefix_territory() {
         // Example: Guam or Puerto Rico, if you handle them
         let region = USRegion::USTerritory(USTerritory::Guam);
@@ -62,7 +63,7 @@ mod build_city_search_prefix_tests {
         assert_prefix_for_region(region, "GU");
     }
 
-    #[test]
+    #[traced_test]
     fn test_build_city_search_prefix_non_us_region() {
         // For demonstration, suppose we do some custom region or a global approach:
         // e.g. "Germany", "France", or a default. This depends on your code's approach.
@@ -71,7 +72,7 @@ mod build_city_search_prefix_tests {
         assert_prefix_for_region(region, "GERMANY");
     }
 
-    #[test]
+    #[traced_test]
     fn test_build_city_search_prefix_default_world_region() {
         // If there's a default region variant => e.g. "Unknown"
         // We'll see what abbreviation your code returns. Possibly an empty string, or "??".

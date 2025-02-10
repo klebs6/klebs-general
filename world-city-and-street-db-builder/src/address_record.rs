@@ -1,4 +1,5 @@
 // ---------------- [ File: src/address_record.rs ]
+// ---------------- [ File: src/address_record.rs ]
 crate::ix!();
 
 /// A simple structure to hold address info extracted from OSM.
@@ -46,7 +47,7 @@ mod address_record_tests {
         pairs.into_iter()
     }
 
-    #[test]
+    #[traced_test]
     fn test_collect_tags() {
         let pairs = vec![
             ("addr:city", "Baltimore"),
@@ -59,7 +60,7 @@ mod address_record_tests {
         assert_eq!(map.get("addr:postcode").map(|x| x.as_str()), Some("21201"));
     }
 
-    #[test]
+    #[traced_test]
     fn test_address_record_new_valid() {
         let city = CityName::new("Baltimore").unwrap();
         let street = StreetName::new("North Avenue").unwrap();
@@ -71,7 +72,7 @@ mod address_record_tests {
         assert_eq!(record.postcode().as_ref().unwrap().code(), pc.code());
     }
 
-    #[test]
+    #[traced_test]
     fn test_address_record_macro() {
         let city = CityName::new("Rockville").unwrap();
         let street = StreetName::new("Veirs Mill Rd").unwrap();
@@ -84,7 +85,7 @@ mod address_record_tests {
         assert_eq!(record.postcode().as_ref().unwrap().code(), "20850");
     }
 
-    #[test]
+    #[traced_test]
     fn test_address_record_is_empty() {
         let empty = AddressRecordBuilder::default().build().unwrap();
         assert!(empty.is_empty());
@@ -98,7 +99,7 @@ mod address_record_tests {
         assert!(partial_city.postcode().is_none());
     }
 
-    #[test]
+    #[traced_test]
     fn test_address_record_from_tags_all_fields() {
         let tags = vec![
             ("addr:city", "Fairfax"),
@@ -113,7 +114,7 @@ mod address_record_tests {
         assert_eq!(record.postcode().as_ref().unwrap().code(), "22030");
     }
 
-    #[test]
+    #[traced_test]
     fn test_try_build_address_record_from_tags_no_fields() {
         let tags = vec![];
         let result = try_build_address_record_from_tags(tags.into_iter(), Country::USA, 1001);
@@ -126,7 +127,7 @@ mod address_record_tests {
         }
     }
 
-    #[test]
+    #[traced_test]
     fn test_try_build_address_record_from_tags_invalid_street() {
         // Suppose street is whitespace => StreetName returns error
         let tags = vec![

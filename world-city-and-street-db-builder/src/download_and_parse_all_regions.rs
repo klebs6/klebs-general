@@ -1,4 +1,5 @@
 // ---------------- [ File: src/download_and_parse_all_regions.rs ]
+// ---------------- [ File: src/download_and_parse_all_regions.rs ]
 crate::ix!();
 
 /// Download and parse all specified regions, skipping those already built.
@@ -223,7 +224,7 @@ mod download_and_parse_all_regions_tests {
     // --------------
     // Now the actual test suite
     // --------------
-    #[tokio::test]
+    #[traced_test]
     #[serial]
     async fn test_obtain_pbf_file_for_region_local_exists() {
         let calls = MockCalls::default();
@@ -243,7 +244,7 @@ mod download_and_parse_all_regions_tests {
         assert_eq!(calls.downloads.load(std::sync::atomic::Ordering::SeqCst), 0, "Should not download if local");
     }
 
-    #[tokio::test]
+    #[traced_test]
     #[serial]
     async fn test_obtain_pbf_file_for_region_download() {
         let calls = MockCalls::default();
@@ -262,7 +263,7 @@ mod download_and_parse_all_regions_tests {
         assert_eq!(calls.downloads.load(std::sync::atomic::Ordering::SeqCst), 1);
     }
 
-    #[tokio::test]
+    #[traced_test]
     #[serial]
     async fn test_obtain_pbf_file_for_region_download_fail() {
         let calls = MockCalls::default();

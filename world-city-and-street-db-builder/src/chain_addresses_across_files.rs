@@ -1,4 +1,5 @@
 // ---------------- [ File: src/chain_addresses_across_files.rs ]
+// ---------------- [ File: src/chain_addresses_across_files.rs ]
 crate::ix!();
 
 /// Builds a single chained iterator of [`WorldAddress`] across all `.pbf` files.
@@ -68,7 +69,7 @@ mod chain_addresses_across_files_tests {
     /// and `known_regions` has MD, it returns Some(Maryland). Otherwise returns None.
 
     // 1) No `.pbf` => empty => returns an empty chained iterator
-    #[test]
+    #[traced_test]
     fn test_chain_addresses_across_files_empty_list() {
         let db = Database::open(std::env::temp_dir().join("dummy_chain_db1")).unwrap();
         let known_regions = vec![];
@@ -81,7 +82,7 @@ mod chain_addresses_across_files_tests {
     }
 
     // 2) Single file recognized => yields addresses (assuming the file is valid)
-    #[test]
+    #[traced_test]
     fn test_chain_addresses_across_files_single_recognized() {
         // We'll define "maryland-latest.osm.pbf" as recognized => MD region
         // We'll create a minimal or empty .pbf that yields zero addresses or triggers parse logic.
@@ -113,7 +114,7 @@ mod chain_addresses_across_files_tests {
     }
 
     // 3) Single file unrecognized => skip => yields no addresses
-    #[test]
+    #[traced_test]
     fn test_chain_addresses_across_files_single_unrecognized() {
         let tmp = TempDir::new().unwrap();
         let db = Database::open(tmp.path().join("chain_db3")).unwrap();
@@ -137,7 +138,7 @@ mod chain_addresses_across_files_tests {
     }
 
     // 4) Multiple files => some recognized, some not => chain them
-    #[test]
+    #[traced_test]
     fn test_chain_addresses_across_files_multiple() {
         // We'll define 2 recognized regions => MD, VA
         let tmp = TempDir::new().unwrap();
@@ -178,7 +179,7 @@ mod chain_addresses_across_files_tests {
 
     // 5) Error from addresses_from_pbf_file_with_house_numbers => returns Err
     // e.g. if one recognized file is corrupted => that function returns an error => short-circuit
-    #[test]
+    #[traced_test]
     fn test_chain_addresses_across_files_error_in_mid_loop() {
         let tmp = TempDir::new().unwrap();
         let db = Database::open(tmp.path().join("chain_db5")).unwrap();

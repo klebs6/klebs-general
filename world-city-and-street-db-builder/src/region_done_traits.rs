@@ -1,4 +1,5 @@
 // ---------------- [ File: src/region_done_traits.rs ]
+// ---------------- [ File: src/region_done_traits.rs ]
 crate::ix!();
 
 pub trait CheckIfRegionDone {
@@ -47,7 +48,7 @@ mod test_region_done_traits {
         (db, temp_dir)
     }
 
-    #[test]
+    #[traced_test]
     fn test_region_done_initially_false() {
         let (db_arc, _tmp) = create_temp_db();
         let db_guard = db_arc.lock().unwrap();
@@ -61,7 +62,7 @@ mod test_region_done_traits {
         assert!(!done, "Expected region_done=false for an unmarked region");
     }
 
-    #[test]
+    #[traced_test]
     fn test_mark_region_done_then_check() {
         let (db_arc, _tmp) = create_temp_db();
         {
@@ -81,7 +82,7 @@ mod test_region_done_traits {
         }
     }
 
-    #[test]
+    #[traced_test]
     fn test_multiple_regions_mark_and_check() {
         let (db_arc, _tmp) = create_temp_db();
         let mut db_guard = db_arc.lock().unwrap();
@@ -105,7 +106,7 @@ mod test_region_done_traits {
         assert!(!db_guard.region_done(&dc).unwrap());
     }
 
-    #[test]
+    #[traced_test]
     fn test_error_handling_on_rocksdb_failure() {
         // If we want to test a scenario where region_done or mark_region_done fails 
         // due to a RocksDB error, we can define a minimal failing stub. 
@@ -138,7 +139,7 @@ mod test_region_done_traits {
         }
     }
 
-    #[test]
+    #[traced_test]
     fn test_error_handling_on_rocksdb_failure_mark_done() {
         // Similarly, a stub for mark_region_done:
         struct FailingMarkStub;

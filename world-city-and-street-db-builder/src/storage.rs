@@ -1,4 +1,5 @@
 // ---------------- [ File: src/storage.rs ]
+// ---------------- [ File: src/storage.rs ]
 crate::ix!();
 
 /// A simple "Database" wrapper that sets up the dynamic prefix transform.
@@ -10,11 +11,14 @@ pub struct Database {
 }
 
 impl StorageInterface for Database {}
+unsafe impl Send for Database {}
+unsafe impl Sync for Database {}
 
 pub trait StorageInterface
 : CheckIfRegionDone
 + Send
 + Sync
++ DatabaseDump
 + GetIterator
 + DatabaseGet
 + DatabasePut
@@ -42,7 +46,7 @@ mod database_tests {
     use super::*;
     use std::path::PathBuf;
 
-    #[test]
+    #[traced_test]
     fn open_and_mark_region_done() {
 
         let temp_dir = TempDir::new().expect("Failed to create temp dir");
@@ -58,7 +62,7 @@ mod database_tests {
         assert!(db_guard.region_done(&region).unwrap());
     }
 
-    #[test]
+    #[traced_test]
     fn test_open_basic() {
         // Create a temp dir, open DB, ensures no errors.
         let temp_dir = TempDir::new().expect("Failed to create temp dir");
@@ -66,7 +70,7 @@ mod database_tests {
         assert!(db.is_ok(), "Should open DB successfully in new directory");
     }
 
-    #[test]
+    #[traced_test]
     fn test_open_and_mark_region_done() {
         let temp_dir = TempDir::new().expect("Failed to create temp dir");
         let db = Database::open(&temp_dir).expect("DB should open");
@@ -86,7 +90,7 @@ mod database_tests {
         assert!(done_after, "Region should be marked done");
     }
 
-    #[test]
+    #[traced_test]
     fn test_put_and_get() {
         let temp_dir = TempDir::new().expect("temp dir");
         let db = Database::open(&temp_dir).expect("open db");
@@ -103,7 +107,7 @@ mod database_tests {
         assert_eq!(result.unwrap(), value, "Value matches");
     }
 
-    #[test]
+    #[traced_test]
     fn test_put_overwrite() {
         let temp_dir = TempDir::new().unwrap();
         let db = Database::open(&temp_dir).unwrap();
@@ -124,7 +128,7 @@ mod database_tests {
         assert_eq!(r2, val2, "Overwritten with new value");
     }
 
-    #[test]
+    #[traced_test]
     fn test_write_indexes_basic() {
         let temp_dir = TempDir::new().expect("temp dir");
         let db = Database::open(&temp_dir).expect("open db");
@@ -208,7 +212,7 @@ mod database_tests {
         assert_eq!(decompressed[0].name(), "north avenue");
     }
 
-    #[test]
+    #[traced_test]
     fn test_region_done_persists_between_open() {
         // We'll test that "mark_region_done" => region_done => true 
         // then we close the DB and reopen => still true.
@@ -234,7 +238,7 @@ mod database_tests {
         }
     }
 
-    #[test]
+    #[traced_test]
     fn test_open_invalid_path_permissions() {
         // This is OS-specific. 
         // If we try to open a directory that's read-only, we might get an error. 

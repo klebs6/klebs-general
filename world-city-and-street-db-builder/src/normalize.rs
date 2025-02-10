@@ -1,4 +1,5 @@
 // ---------------- [ File: src/normalize.rs ]
+// ---------------- [ File: src/normalize.rs ]
 crate::ix!();
 
 pub fn normalize(s: &str) -> String {
@@ -25,7 +26,7 @@ pub fn normalize(s: &str) -> String {
 mod normalize_tests {
     use super::*;
 
-    #[test]
+    #[traced_test]
     fn test_normalize() {
         assert_eq!(normalize("Baltimore"), "baltimore");
         assert_eq!(normalize("  baltimore  "), "baltimore");
@@ -38,7 +39,7 @@ mod normalize_tests {
 
     /// Tests the “happy path” scenarios already in the code.
     /// Specifically checks trimming, lowercasing, and punctuation -> space.
-    #[test]
+    #[traced_test]
     fn test_basic_cases() {
         assert_eq!(normalize("Baltimore"), "baltimore");
         assert_eq!(normalize("  baltimore  "), "baltimore");
@@ -52,20 +53,20 @@ mod normalize_tests {
     }
 
     /// Test empty string => expect empty after normalization.
-    #[test]
+    #[traced_test]
     fn test_empty_string() {
         assert_eq!(normalize(""), "");
     }
 
     /// Test a string with only whitespace => expect empty.
-    #[test]
+    #[traced_test]
     fn test_only_whitespace() {
         assert_eq!(normalize("   "), "");
         assert_eq!(normalize("\t\n\r"), "");
     }
 
     /// Test a string with repeated punctuation => they all become spaces => collapsed.
-    #[test]
+    #[traced_test]
     fn test_repeated_punctuation() {
         // "!!!" => " " => then trimmed => ""
         assert_eq!(normalize("!!!"), "");
@@ -76,7 +77,7 @@ mod normalize_tests {
     }
 
     /// Test numeric and alphanumeric strings => ensure they remain except that punctuation is removed.
-    #[test]
+    #[traced_test]
     fn test_numeric_and_alphanumeric() {
         // "Route66" => "route66"
         assert_eq!(normalize("Route66"), "route66");
@@ -87,7 +88,7 @@ mod normalize_tests {
     }
 
     /// Test a string containing ASCII punctuation at the edges.
-    #[test]
+    #[traced_test]
     fn test_leading_trailing_punctuation() {
         // "!!!Hello..." => "   hello   " => "hello"
         assert_eq!(normalize("!!!Hello..."), "hello");
@@ -95,7 +96,7 @@ mod normalize_tests {
 
     /// Test a scenario with multiple consecutive punctuation and spaces => 
     /// ensures all collapsing happens properly.
-    #[test]
+    #[traced_test]
     fn test_complex_collapsing() {
         let input = " - -  BALTIMORE,,   CITY---MD ??? ";
         // Step by step:
@@ -107,7 +108,7 @@ mod normalize_tests {
     }
 
     /// Test a large string to ensure performance is acceptable and logic is correct.
-    #[test]
+    #[traced_test]
     fn test_long_string() {
         // Construct a 500-character string with punctuation
         let repeated = "ABC-123, ".repeat(50); // ~8 chars * 50 => 400 plus spaces => about 450
@@ -123,7 +124,7 @@ mod normalize_tests {
 
     /// Test that non-ASCII punctuation is *not* removed because we only check `is_ascii_punctuation`.
     /// For instance, an em dash (—) will remain as is (converted to lower if it's in letter form, but dash isn't a letter).
-    #[test]
+    #[traced_test]
     fn test_unicode_punctuation() {
         // "City—State" => the '—' is NOT ASCII punctuation => remains unchanged
         // after lowercasing => "city—state"
@@ -135,7 +136,7 @@ mod normalize_tests {
 
     /// A final test verifying the function is stable if we call it multiple times.
     /// i.e. `normalize(normalize(s)) == normalize(s)`.
-    #[test]
+    #[traced_test]
     fn test_idempotence() {
         let inputs = vec![
             "   Baltimore---CITY  ",

@@ -1,4 +1,5 @@
 // ---------------- [ File: src/store_house_number_ranges.rs ]
+// ---------------- [ File: src/store_house_number_ranges.rs ]
 crate::ix!();
 
 pub trait StoreHouseNumberRanges {
@@ -77,7 +78,7 @@ mod test_store_house_number_ranges {
         clist_result.ok().map(|cl| cl.items().clone())
     }
 
-    #[test]
+    #[traced_test]
     fn test_store_empty_range_list() {
         let (db_arc, _tmp) = create_temp_db();
         let mut db_guard = db_arc.lock().unwrap();
@@ -98,7 +99,7 @@ mod test_store_house_number_ranges {
         assert!(loaded.is_empty(), "Expected an empty list after storing empty ranges");
     }
 
-    #[test]
+    #[traced_test]
     fn test_store_non_empty_ranges() {
         let (db_arc, _tmp) = create_temp_db();
         let mut db_guard = db_arc.lock().unwrap();
@@ -119,7 +120,7 @@ mod test_store_house_number_ranges {
         assert_eq!(loaded, ranges_in, "Loaded data should match what was stored");
     }
 
-    #[test]
+    #[traced_test]
     fn test_overwrites_existing_data() {
         let (db_arc, _tmp) = create_temp_db();
         let mut db_guard = db_arc.lock().unwrap();
@@ -146,7 +147,7 @@ mod test_store_house_number_ranges {
         assert_eq!(loaded[0], hnr(100,200));
     }
 
-    #[test]
+    #[traced_test]
     fn test_serde_error_returns_error() {
         // We want to simulate a failure in `serde_cbor::to_vec(...)`. 
         // However, `HouseNumberRange` is trivially serializable. We'll do a minimal approach:
@@ -215,7 +216,7 @@ mod test_store_house_number_ranges {
         }
     }
 
-    #[test]
+    #[traced_test]
     fn test_rocksdb_error_in_db_put() {
         // If the DB put fails, we get an error from store_house_number_ranges. 
         // We'll define a minimal failing stub for DatabasePut to simulate.

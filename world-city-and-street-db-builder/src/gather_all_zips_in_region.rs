@@ -1,4 +1,5 @@
 // ---------------- [ File: src/gather_all_zips_in_region.rs ]
+// ---------------- [ File: src/gather_all_zips_in_region.rs ]
 crate::ix!();
 
 pub trait GatherAllZipsInRegion {
@@ -68,7 +69,7 @@ mod gather_all_zips_in_region_tests {
         // assert!(logs_contain("gather_all_zips_in_region"));
     }
 
-    #[test]
+    #[traced_test]
     fn test_gather_all_zips_in_region_some_keys() {
         let (db_arc, da, _td) = create_test_db_and_dataaccess::<Database>();
         let region: WorldRegion = USRegion::UnitedState(UnitedState::Maryland).into();
@@ -98,7 +99,7 @@ mod gather_all_zips_in_region_tests {
         assert!(set.contains("21401"));
     }
 
-    #[test]
+    #[traced_test]
     fn test_gather_all_zips_in_region_other_region_skipped() {
         let (db_arc, da, _td) = create_test_db_and_dataaccess::<Database>();
 
@@ -126,7 +127,7 @@ mod gather_all_zips_in_region_tests {
         assert_eq!(zips_va[0].code(), "20190");
     }
 
-    #[test]
+    #[traced_test]
     fn test_gather_all_zips_in_region_key_malformed() {
         let (db_arc, da, _td) = create_test_db_and_dataaccess::<Database>();
         let region: WorldRegion = USRegion::UnitedState(UnitedState::Maryland).into();
@@ -147,7 +148,7 @@ mod gather_all_zips_in_region_tests {
         assert_eq!(zips[0].code(), "20850");
     }
 
-    #[test]
+    #[traced_test]
     fn test_gather_all_zips_in_region_invalid_postal_code() {
         let (db_arc, da, _td) = create_test_db_and_dataaccess::<Database>();
         let region: WorldRegion = USRegion::UnitedState(UnitedState::Maryland).into();
@@ -165,7 +166,7 @@ mod gather_all_zips_in_region_tests {
         assert_eq!(zips[0].code(), "21201");
     }
 
-    #[test]
+    #[traced_test]
     fn test_gather_all_zips_in_region_duplicates() {
         // If code sees multiple "Z2C:MD:21201" keys, it pushes them all
         // => gather_all_zips_in_region returns duplicates (the code never dedups).

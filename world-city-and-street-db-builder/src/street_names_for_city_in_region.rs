@@ -1,4 +1,5 @@
 // ---------------- [ File: src/street_names_for_city_in_region.rs ]
+// ---------------- [ File: src/street_names_for_city_in_region.rs ]
 crate::ix!();
 
 pub trait StreetNamesForCityInRegion {
@@ -54,7 +55,7 @@ mod test_street_names_for_city_in_region {
         db.put(key, val).unwrap();
     }
 
-    #[test]
+    #[traced_test]
     fn test_no_data_returns_none() {
         let (db_arc, _tmp_dir) = create_temp_db();
         let data_access = create_data_access(db_arc.clone());
@@ -67,7 +68,7 @@ mod test_street_names_for_city_in_region {
         assert!(result.is_none(), "No data => None");
     }
 
-    #[test]
+    #[traced_test]
     fn test_existing_data_returns_btreeset() {
         let (db_arc, _tmp_dir) = create_temp_db();
         let mut db_guard = db_arc.lock().unwrap();
@@ -91,7 +92,7 @@ mod test_street_names_for_city_in_region {
         assert_eq!(retrieved, streets, "Should match the stored set exactly");
     }
 
-    #[test]
+    #[traced_test]
     fn test_corrupted_cbor_returns_none() {
         // If the CBOR is corrupted, the code returns None instead of Some(...)
         let (db_arc, _tmp_dir) = create_temp_db();
@@ -110,7 +111,7 @@ mod test_street_names_for_city_in_region {
         assert!(result.is_none(), "Corrupted data => None");
     }
 
-    #[test]
+    #[traced_test]
     fn test_different_city_returns_none() {
         // If we only store data for city1 but query city2, we get None
         let (db_arc, _tmp_dir) = create_temp_db();
@@ -131,7 +132,7 @@ mod test_street_names_for_city_in_region {
         assert!(result.is_none(), "Should not find data for a different city");
     }
 
-    #[test]
+    #[traced_test]
     fn test_different_region_returns_none() {
         let (db_arc, _tmp_dir) = create_temp_db();
         let mut db_guard = db_arc.lock().unwrap();
@@ -152,7 +153,7 @@ mod test_street_names_for_city_in_region {
         assert!(result.is_none(), "No data for a different region => None");
     }
 
-    #[test]
+    #[traced_test]
     fn test_duplicate_streets_still_in_btreeset() {
         // If we stored duplicate streets somehow, the BTreeSet should unify them,
         // but let's confirm the final result is still correct.

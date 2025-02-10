@@ -1,4 +1,5 @@
 // ---------------- [ File: src/load_all_streets_for_region.rs ]
+// ---------------- [ File: src/load_all_streets_for_region.rs ]
 crate::ix!();
 
 /// Similarly for street autocomplete. We gather all known street names for region
@@ -54,7 +55,7 @@ mod test_load_all_streets_for_region {
         db.put(&key, value).expect("Failed to insert test data");
     }
 
-    #[test]
+    #[traced_test]
     fn test_empty_db_returns_empty_vec() {
         let (db_arc, _temp_dir) = create_temp_db();
         let db_guard = db_arc.lock().unwrap();
@@ -64,7 +65,7 @@ mod test_load_all_streets_for_region {
         assert!(streets.is_empty(), "Expected no streets in an empty DB");
     }
 
-    #[test]
+    #[traced_test]
     fn test_no_prefix_matches_returns_empty_vec() {
         let (db_arc, _temp_dir) = create_temp_db();
         let mut db_guard = db_arc.lock().unwrap();
@@ -78,7 +79,7 @@ mod test_load_all_streets_for_region {
         assert!(streets.is_empty(), "No keys have prefix S2C:MD:");
     }
 
-    #[test]
+    #[traced_test]
     fn test_well_formed_keys_return_street_names() {
         let (db_arc, _temp_dir) = create_temp_db();
         let mut db_guard = db_arc.lock().unwrap();
@@ -99,7 +100,7 @@ mod test_load_all_streets_for_region {
         );
     }
 
-    #[test]
+    #[traced_test]
     fn test_malformed_keys_are_skipped() {
         let (db_arc, _temp_dir) = create_temp_db();
         let mut db_guard = db_arc.lock().unwrap();
@@ -116,7 +117,7 @@ mod test_load_all_streets_for_region {
                    "Only the properly formed key should be returned");
     }
 
-    #[test]
+    #[traced_test]
     fn test_duplicate_keys_return_all_streets() {
         // The function does not deduplicate results; it just accumulates them in a vector.
         let (db_arc, _temp_dir) = create_temp_db();
@@ -132,7 +133,7 @@ mod test_load_all_streets_for_region {
         assert_eq!(&streets[1], "elm street");
     }
 
-    #[test]
+    #[traced_test]
     fn test_value_contents_ignored() {
         // The function doesn't parse the value at all, only the key. 
         // We'll confirm that an invalid or empty value does not impact the street output.

@@ -1,4 +1,5 @@
 // ---------------- [ File: src/compressed_list.rs ]
+// ---------------- [ File: src/compressed_list.rs ]
 crate::ix!();
 
 /// A simple wrapper for a list of strings that can be compressed.
@@ -55,7 +56,7 @@ mod compressed_list_tests {
         y: i32,
     }
 
-    #[test]
+    #[traced_test]
     fn test_compress_and_decompress_strings_basic() {
         let set: BTreeSet<String> = ["Hello","World","Baltimore"].iter().map(|s| s.to_string()).collect();
         let bytes = compress_set_to_cbor(&set);
@@ -66,7 +67,7 @@ mod compressed_list_tests {
         assert_eq!(set, decompressed_set, "Should match the original set");
     }
 
-    #[test]
+    #[traced_test]
     fn test_compress_and_decompress_strings_with_duplicates() {
         // BTreeSet automatically removes duplicates, so final set is "Hello", "Hello", "World" => "Hello", "World"
         let input = vec!["Hello","Hello","World","World"];
@@ -82,7 +83,7 @@ mod compressed_list_tests {
         assert_eq!(set, de_set);
     }
 
-    #[test]
+    #[traced_test]
     fn test_compress_and_decompress_strings_with_punctuation() {
         // Confirm punctuation-laden strings remain intact after round trip
         let set: BTreeSet<String> = ["Hello!!", "Baltimore--City", "Wi-Fi", "N/A"].iter().map(|s| s.to_string()).collect();
@@ -93,7 +94,7 @@ mod compressed_list_tests {
         assert_eq!(set, de_set, "Punctuation-laden strings remain intact");
     }
 
-    #[test]
+    #[traced_test]
     fn test_compress_and_decompress_empty() {
         let set: BTreeSet<String> = BTreeSet::new();
         let bytes = compress_set_to_cbor(&set);
@@ -103,7 +104,7 @@ mod compressed_list_tests {
         assert!(decompressed.is_empty(), "Decompressed result should be empty");
     }
 
-    #[test]
+    #[traced_test]
     fn test_compress_and_decompress_nonstring_points() {
         // Ensure we can handle arbitrary serializable types
         let mut set = BTreeSet::new();
@@ -119,7 +120,7 @@ mod compressed_list_tests {
         assert_eq!(set, de_set, "All points should round-trip correctly");
     }
 
-    #[test]
+    #[traced_test]
     fn test_compress_and_decompress_large_set() {
         // If we want to test performance or memory usage in moderate scale
         // We'll do e.g. 1000 items. (Be mindful if there's a big cost.)
@@ -136,7 +137,7 @@ mod compressed_list_tests {
         assert_eq!(set, de_set, "Should properly handle a thousand items");
     }
 
-    #[test]
+    #[traced_test]
     fn test_decompress_corrupted_cbor() {
         // Let's pass random bytes or partial data => should yield an empty Vec
         let corrupted_bytes: Vec<u8> = vec![0xde, 0xad, 0xbe, 0xef];
@@ -144,7 +145,7 @@ mod compressed_list_tests {
         assert!(result.is_empty(), "Corrupted CBOR yields an empty list");
     }
 
-    #[test]
+    #[traced_test]
     fn test_decompress_partial_data() {
         // Suppose a valid header for a small CBOR array, but truncated 
         // => also yields empty 

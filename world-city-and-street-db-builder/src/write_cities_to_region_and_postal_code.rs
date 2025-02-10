@@ -1,4 +1,5 @@
 // ---------------- [ File: src/write_cities_to_region_and_postal_code.rs ]
+// ---------------- [ File: src/write_cities_to_region_and_postal_code.rs ]
 crate::ix!();
 
 pub trait WriteCitiesToRegionAndPostalCode {
@@ -65,7 +66,7 @@ mod test_write_cities_to_region_and_postal_code {
         clist_result.ok().map(|cl| cl.items().clone().into_iter().collect())
     }
 
-    #[test]
+    #[traced_test]
     fn test_write_cities_ok() {
         let (db_arc, _temp_dir) = create_temp_db();
         let mut db_guard = db_arc.lock().unwrap();
@@ -89,7 +90,7 @@ mod test_write_cities_to_region_and_postal_code {
         assert_eq!(loaded, city_set, "Data read back should match stored set");
     }
 
-    #[test]
+    #[traced_test]
     fn test_overwrite_existing_cities() {
         let (db_arc, _temp_dir) = create_temp_db();
         let mut db_guard = db_arc.lock().unwrap();
@@ -118,7 +119,7 @@ mod test_write_cities_to_region_and_postal_code {
         assert_eq!(loaded, new_city_set, "Should reflect the new data only");
     }
 
-    #[test]
+    #[traced_test]
     fn test_rocksdb_error_on_put() {
         // If a RocksDB error occurs on put, we return DatabaseConstructionError. 
         // We'll define a minimal failing stub.

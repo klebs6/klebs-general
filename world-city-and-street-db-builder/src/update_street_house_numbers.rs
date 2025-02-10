@@ -1,4 +1,5 @@
 // ---------------- [ File: src/update_street_house_numbers.rs ]
+// ---------------- [ File: src/update_street_house_numbers.rs ]
 crate::ix!();
 
 /// Loads existing house‐number ranges for a street, merges new data, and stores the result.
@@ -58,7 +59,7 @@ mod test_update_street_house_numbers {
         }
     }
 
-    #[test]
+    #[traced_test]
     fn test_no_existing_data_stores_new_ranges() {
         // (1) "no existing data" => new ranges stored directly
         let (db_arc, _tmp) = create_temp_db();
@@ -79,7 +80,7 @@ mod test_update_street_house_numbers {
             "We expect the newly stored data to match what was provided, no merges needed");
     }
 
-    #[test]
+    #[traced_test]
     fn test_existing_data_is_merged() {
         // (2) existing data => unify with new data => store merged
         let (db_arc, _tmp) = create_temp_db();
@@ -105,7 +106,7 @@ mod test_update_street_house_numbers {
             "Overlapping subranges => unified => [10..25]");
     }
 
-    #[test]
+    #[traced_test]
     fn test_existing_and_new_disjoint() {
         // If existing ranges disjoint from new => final = existing + new in sorted order
         let (db_arc, _tmp) = create_temp_db();
@@ -131,7 +132,7 @@ mod test_update_street_house_numbers {
         assert_eq!(result, expected);
     }
 
-    #[test]
+    #[traced_test]
     fn test_load_error_returns_data_access_error() {
         // We'll define a partial stub that fails on `load_existing_house_number_ranges`.
         // Then confirm update_street_house_numbers => DataAccessError.
@@ -184,7 +185,7 @@ mod test_update_street_house_numbers {
         }
     }
 
-    #[test]
+    #[traced_test]
     fn test_store_error_returns_error() {
         // If storing the final merged data fails => we see that error.
         struct FailingStoreDb {
@@ -235,7 +236,7 @@ mod test_update_street_house_numbers {
         }
     }
 
-    #[test]
+    #[traced_test]
     fn test_overlapping_merges_successfully() {
         // A simpler test verifying overlapping new data is merged with existing.
         let (db_arc, _tmp) = create_temp_db();

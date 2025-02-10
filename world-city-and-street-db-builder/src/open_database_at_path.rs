@@ -1,4 +1,5 @@
 // ---------------- [ File: src/open_database_at_path.rs ]
+// ---------------- [ File: src/open_database_at_path.rs ]
 crate::ix!();
 
 pub trait OpenDatabaseAtPath {
@@ -46,7 +47,7 @@ mod test_open_database_at_path {
     use std::sync::Mutex;
 
     /// Creates a brand new RocksDB database in a temp directory and verifies success.
-    #[test]
+    #[traced_test]
     fn test_open_db_in_temp_dir() {
         let temp_dir = TempDir::new().expect("Failed to create temp dir");
         let db_path = temp_dir.path().join("testdb");
@@ -69,7 +70,7 @@ mod test_open_database_at_path {
 
     /// Ensures the DB is created if the directory doesn't exist, 
     /// verifying the `create_if_missing` logic is functioning.
-    #[test]
+    #[traced_test]
     fn test_create_if_missing_subdir() {
         let temp_dir = TempDir::new().expect("Failed to create temp dir");
         let subdir = temp_dir.path().join("nested").join("db_location");
@@ -89,7 +90,7 @@ mod test_open_database_at_path {
 
     /// If we attempt to open a DB path that is a file (not a directory),
     /// RocksDB should fail, as it expects a directory for its data.
-    #[test]
+    #[traced_test]
     fn test_open_db_with_file_path_fails() {
         let temp_dir = TempDir::new().expect("Failed to create temp dir");
         let file_path = temp_dir.path().join("not_a_directory");
@@ -118,7 +119,7 @@ mod test_open_database_at_path {
     }
 
     /// Attempts to open a DB in a read-only directory should fail (on most systems).
-    #[test]
+    #[traced_test]
     fn test_open_db_in_read_only_directory() {
         let temp_dir = TempDir::new().expect("Failed to create temp dir");
         let read_only_dir = temp_dir.path().join("readonly");
@@ -153,7 +154,7 @@ mod test_open_database_at_path {
     /// Verifies that the prefix transform and bloom filter options are set without error.
     /// We can't easily introspect RocksDB's internal state to confirm, but we can open
     /// the DB to ensure no panic or config error arises from these advanced options.
-    #[test]
+    #[traced_test]
     fn test_open_db_with_prefix_transform_and_bloom_filter_enabled() {
         let temp_dir = TempDir::new().expect("Failed to create temp dir");
         let db_path = temp_dir.path().join("prefix_test");

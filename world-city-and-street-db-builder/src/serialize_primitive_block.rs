@@ -1,4 +1,5 @@
 // ---------------- [ File: src/serialize_primitive_block.rs ]
+// ---------------- [ File: src/serialize_primitive_block.rs ]
 crate::ix!();
 
 use crate::proto::{fileformat,osmformat};
@@ -44,7 +45,7 @@ mod test_serialize_primitive_block {
     use protobuf::Message; // For optional round-trip parse checks
     use std::io;
 
-    #[test]
+    #[traced_test]
     fn test_minimal_primitive_block_success() {
         // We'll create the smallest valid PrimitiveBlock: 
         // an empty string table and no primitive groups
@@ -62,7 +63,7 @@ mod test_serialize_primitive_block {
         assert!(!blob_bytes.is_empty(), "Should produce non-empty blob bytes");
     }
 
-    #[test]
+    #[traced_test]
     fn test_basic_primitive_block_with_node() {
         // Create a PrimitiveBlock that has a single PrimitiveGroup with one Node
         let mut node = osmformat::Node::new();
@@ -96,7 +97,7 @@ mod test_serialize_primitive_block {
             "raw_size should match the length of raw data");
     }
 
-    #[test]
+    #[traced_test]
     fn test_round_trip_primitive_block() {
         // We can test that the `primitive_block` is actually embedded in the Blob 
         // and can be parsed back out if needed.
@@ -133,7 +134,7 @@ mod test_serialize_primitive_block {
         assert_eq!(blob_header.get_datasize() as usize, blob_bytes.len());
     }
 
-    #[test]
+    #[traced_test]
     fn test_error_in_primitive_block_serialization() {
         // This function handles errors from `primitive_block.write_to_bytes()`.
         // We can simulate a failure by mocking or forcing an error. 
@@ -210,7 +211,7 @@ mod test_serialize_primitive_block {
         );
     }
 
-    #[test]
+    #[traced_test]
     fn test_error_in_blob_serialization() {
         // Similarly, if writing the `Blob` to bytes fails, we should get an error.
         // The real `fileformat::Blob::write_to_bytes()` might not fail easily. 
@@ -261,7 +262,7 @@ mod test_serialize_primitive_block {
         );
     }
 
-    #[test]
+    #[traced_test]
     fn test_error_in_blobheader_serialization() {
         // The final step is the `BlobHeader` writing. We'll mock that similarly. 
         // This is quite contrived because the real `fileformat::BlobHeader::write_to_bytes()` 

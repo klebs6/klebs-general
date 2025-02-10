@@ -1,4 +1,5 @@
 // ---------------- [ File: src/list_all_addresses_in_pbf_dir.rs ]
+// ---------------- [ File: src/list_all_addresses_in_pbf_dir.rs ]
 crate::ix!();
 
 pub type WorldAddressIterator = impl Iterator<Item=Result<WorldAddress,OsmPbfParseError>>;
@@ -80,7 +81,7 @@ mod list_all_addresses_tests {
         assert_eq!(items.len(), 0, "No recognized region => skip => zero addresses");
     }
 
-    #[test]
+    #[traced_test]
     fn test_list_all_addresses_corrupted_pbf() {
         let temp_dir = TempDir::new().unwrap();
         let db = Database::open(&temp_dir).expect("DB should open");
@@ -108,7 +109,7 @@ mod list_all_addresses_tests {
         assert!(second.is_none());
     }
 
-    #[test]
+    #[traced_test]
     fn test_list_all_addresses_zero_length_pbf() {
         let temp_dir = TempDir::new().unwrap();
         let db = Database::open(&temp_dir).expect("DB should open");
@@ -128,7 +129,7 @@ mod list_all_addresses_tests {
         }
     }
 
-    #[test]
+    #[traced_test]
     fn test_list_all_addresses_multiple_files_mixture() {
         let temp_dir = TempDir::new().unwrap();
         let db = Database::open(&temp_dir).expect("DB should open");

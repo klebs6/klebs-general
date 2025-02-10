@@ -1,4 +1,5 @@
 // ---------------- [ File: src/integrate_house_number_subranges_for_street.rs ]
+// ---------------- [ File: src/integrate_house_number_subranges_for_street.rs ]
 crate::ix!();
 
 /// Integrates a list of new house‐number ranges into existing DB data for the given street,
@@ -15,7 +16,7 @@ crate::ix!();
 ///
 /// * `Ok(())` on success, or if partial failures occurred but we can continue.
 /// * `Err(OsmPbfParseError)` if a critical error prevents further processing.
-pub fn integrate_house_number_subranges_for_street<I:StorageInterface>(
+pub fn integrate_house_number_subranges_for_street<I:StoreHouseNumberRanges + LoadExistingStreetRanges>(
     db:           &mut I,
     world_region: &WorldRegion,
     street:       &StreetName,
@@ -120,7 +121,7 @@ mod test_integrate_house_number_subranges_for_street {
         (region, street)
     }
 
-    #[test]
+    #[traced_test]
     fn test_no_existing_ranges_new_ranges_simple() {
         let (db_arc, _td) = create_temp_db();
         let mut db_guard = db_arc.lock().unwrap();
@@ -138,7 +139,7 @@ mod test_integrate_house_number_subranges_for_street {
         assert_eq!(stored[1], range(20,25));
     }
 
-    #[test]
+    #[traced_test]
     fn test_existing_ranges_empty_new_ranges() {
         let (db_arc, _td) = create_temp_db();
         let mut db_guard = db_arc.lock().unwrap();
@@ -157,7 +158,7 @@ mod test_integrate_house_number_subranges_for_street {
         assert_eq!(stored, existing, "Existing data should be unchanged");
     }
 
-    #[test]
+    #[traced_test]
     fn test_merge_overlapping_ranges() {
         let (db_arc, _td) = create_temp_db();
         let mut db_guard = db_arc.lock().unwrap();
@@ -184,7 +185,7 @@ mod test_integrate_house_number_subranges_for_street {
         assert_eq!(stored[1], range(30, 40));
     }
 
-    #[test]
+    #[traced_test]
     fn test_merge_completely_overlapping_new_range() {
         let (db_arc, _td) = create_temp_db();
         let mut db_guard = db_arc.lock().unwrap();
@@ -205,7 +206,7 @@ mod test_integrate_house_number_subranges_for_street {
         assert_eq!(stored[0], range(100,130));
     }
 
-    #[test]
+    #[traced_test]
     fn test_load_error_logs_warning_but_succeeds() {
         // In real practice, you might implement a mocking layer for `load_existing_street_ranges`
         // to simulate an error. Since the code logs a warning and returns `None`,
@@ -273,7 +274,7 @@ mod test_integrate_house_number_subranges_for_street {
         assert!(result.is_ok(), "Should not be a hard error even if load fails");
     }
 
-    #[test]
+    #[traced_test]
     fn test_store_error_logs_warning_but_succeeds() {
         // Similarly, we can mock or override store in a minimal approach.
 

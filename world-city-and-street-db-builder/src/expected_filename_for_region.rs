@@ -1,4 +1,5 @@
 // ---------------- [ File: src/expected_filename_for_region.rs ]
+// ---------------- [ File: src/expected_filename_for_region.rs ]
 crate::ix!();
 
 /// Returns the expected filename for a given region based on the OSM
@@ -71,7 +72,7 @@ mod expected_filename_for_region_tests {
         }
     }
 
-    #[test]
+    #[traced_test]
     fn test_expected_filename_dir_is_dot() {
         // Suppose the link is 
         // "http://download.geofabrik.de/north-america/us/maryland-latest.osm.pbf"
@@ -83,7 +84,7 @@ mod expected_filename_for_region_tests {
         assert_eq!(out.to_str().unwrap(), "maryland-latest.osm.pbf");
     }
 
-    #[test]
+    #[traced_test]
     fn test_expected_filename_custom_dir() {
         // same link, but dir="/some/path"
         let region = MockRegion::new("http://download.geofabrik.de/north-america/us/maryland-latest.osm.pbf");
@@ -92,7 +93,7 @@ mod expected_filename_for_region_tests {
         assert_eq!(out.to_str().unwrap(), "/some/path/maryland-latest.osm.pbf");
     }
 
-    #[test]
+    #[traced_test]
     fn test_no_slashes_in_link() {
         // If link has no '/', we do fallback => last() won't see segments => 
         // => returns entire link => or fallback => "region-latest.osm.pbf" 
@@ -105,7 +106,7 @@ mod expected_filename_for_region_tests {
         assert_eq!(out.to_str().unwrap(), "just_a_name_without_slash");
     }
 
-    #[test]
+    #[traced_test]
     fn test_empty_link_fallback() {
         // link = "" => .split('/').last() => None => => fallback => "region-latest.osm.pbf"
         let region = MockRegion::new("");
@@ -113,7 +114,7 @@ mod expected_filename_for_region_tests {
         assert_eq!(out.to_str().unwrap(), "region-latest.osm.pbf");
     }
 
-    #[test]
+    #[traced_test]
     fn test_link_ends_with_slash() {
         // If the link is "http://somehost/dir/" => last => "" => fallback => "region-latest.osm.pbf"
         let region = MockRegion::new("http://fakehost/something/dir/");
@@ -121,7 +122,7 @@ mod expected_filename_for_region_tests {
         assert_eq!(out.to_str().unwrap(), "region-latest.osm.pbf");
     }
 
-    #[test]
+    #[traced_test]
     fn test_link_has_query_or_special_chars() {
         // If there's some appended "?v=123" => last => "maryland-latest.osm.pbf?v=123"
         // The code doesn't parse queries, so let's see:

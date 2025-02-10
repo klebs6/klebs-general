@@ -1,4 +1,5 @@
 // ---------------- [ File: src/address_record_from_element_and_country.rs ]
+// ---------------- [ File: src/address_record_from_element_and_country.rs ]
 crate::ix!();
 
 /// Implements conversion from an OSM PBF element and a `Country` into an `AddressRecord`.
@@ -307,7 +308,7 @@ mod address_record_from_osm_tests {
         Ok(())
     }
 
-    #[test]
+    #[traced_test]
     fn test_tryfrom_mixed_elements_in_one_file() {
         // This single .pbf has:
         //   Node #1 => valid address => parse => Ok(AddressRecord)

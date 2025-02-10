@@ -1,4 +1,5 @@
 // ---------------- [ File: src/build_world_address_if_possible.rs ]
+// ---------------- [ File: src/build_world_address_if_possible.rs ]
 crate::ix!();
 
 /// If the [`AddressRecord`] has non-empty (city, street, postcode), build a [`WorldAddress`].
@@ -50,7 +51,7 @@ mod build_world_address_if_possible_tests {
             .expect("AddressRecordBuilder must succeed for these options")
     }
 
-    #[test]
+    #[traced_test]
     fn test_missing_city() {
         // street + postal => present, but city => None => must return None
         let st = StreetName::new("SomeStreet").unwrap();
@@ -62,7 +63,7 @@ mod build_world_address_if_possible_tests {
         assert!(maybe_wa.is_none(), "No city => None");
     }
 
-    #[test]
+    #[traced_test]
     fn test_missing_street() {
         // city + postal => present, but street => None => must return None
         let city = CityName::new("SomeCity").unwrap();
@@ -74,7 +75,7 @@ mod build_world_address_if_possible_tests {
         assert!(maybe_wa.is_none(), "No street => None");
     }
 
-    #[test]
+    #[traced_test]
     fn test_missing_postcode() {
         // city + street => present, but postcode => None => must return None
         let city = CityName::new("Anywhere").unwrap();
@@ -86,7 +87,7 @@ mod build_world_address_if_possible_tests {
         assert!(maybe_wa.is_none(), "No postcode => None");
     }
 
-    #[test]
+    #[traced_test]
     fn test_all_fields_present_success() {
         // city, street, postcode => valid => returns Some(WorldAddress)
         let city = CityName::new("Baltimore").unwrap();
@@ -103,7 +104,7 @@ mod build_world_address_if_possible_tests {
         assert_eq!(wa.postal_code().code(), "21201");
     }
 
-    #[test]
+    #[traced_test]
     fn test_all_fields_present_but_builder_fails() {
         // If build_world_address(...) can fail for some reason (e.g. 
         // an invalid city internally or a forced error), let's simulate:

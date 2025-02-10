@@ -1,4 +1,5 @@
 // ---------------- [ File: src/get_element_id.rs ]
+// ---------------- [ File: src/get_element_id.rs ]
 crate::ix!();
 
 /// Retrieves the element ID (Node, Way, Relation, or DenseNode), or returns "?" if unknown.
@@ -14,6 +15,7 @@ pub fn get_element_id(element: &osmpbf::Element) -> String {
 
 #[cfg(test)]
 mod get_element_id_integration_tests {
+    use super::*;
     use std::{
         fs::File,
         io::{Write, BufWriter},
@@ -25,7 +27,7 @@ mod get_element_id_integration_tests {
     use protobuf::Message;  // from 'protobuf' crate, used by osmpbf
     use crate::get_element_id;
 
-    #[test]
+    #[traced_test]
     fn test_get_element_id_for_all_variants() {
         // 1) Write a minimal OSM PBF file that contains:
         //    - A Node(id=101)

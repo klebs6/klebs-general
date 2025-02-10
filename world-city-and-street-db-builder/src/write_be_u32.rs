@@ -1,4 +1,5 @@
 // ---------------- [ File: src/write_be_u32.rs ]
+// ---------------- [ File: src/write_be_u32.rs ]
 crate::ix!();
 
 /// Writes `value` as a 4-byte big-endian integer into `file`.
@@ -18,7 +19,7 @@ mod test_write_u32_be {
     use tempfile::tempfile;
     use byteorder::BigEndian;
 
-    #[tokio::test]
+    #[traced_test]
     async fn test_write_u32_be_correct_bytes() {
         // We'll create a tempfile and open it with tokio::fs::File to confirm the 4 bytes are as expected.
         let file_temp = tempfile().expect("Failed to create tempfile");
@@ -46,7 +47,7 @@ mod test_write_u32_be {
         assert_eq!(buf, [0x12, 0x34, 0xAB, 0xCD], "Should match the big-endian representation");
     }
 
-    #[tokio::test]
+    #[traced_test]
     async fn test_write_u32_be_zero() {
         let file_temp = tempfile().expect("tempfile");
         let path = file_temp.into_temp_path();
@@ -64,7 +65,7 @@ mod test_write_u32_be {
         assert_eq!(buf, [0,0,0,0]);
     }
 
-    #[tokio::test]
+    #[traced_test]
     async fn test_write_u32_be_max() {
         // 0xFFFFFFFF => [0xFF,0xFF,0xFF,0xFF]
         let file_temp = tempfile().expect("tempfile");
@@ -82,7 +83,7 @@ mod test_write_u32_be {
         assert_eq!(buf, [0xFF,0xFF,0xFF,0xFF]);
     }
 
-    #[tokio::test]
+    #[traced_test]
     async fn test_write_u32_be_error_propagation() {
         // For real error tests, we can define a partial mock or forcibly close the file descriptor, etc.
         // We'll do a simpler approach: open in read-only, so writing fails.

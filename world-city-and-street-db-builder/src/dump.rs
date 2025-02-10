@@ -1,4 +1,5 @@
 // ---------------- [ File: src/dump.rs ]
+// ---------------- [ File: src/dump.rs ]
 crate::ix!();
 
 /// A trait defining methods for dumping and inspecting the contents
@@ -164,7 +165,7 @@ mod dump_tests {
         }
     }
 
-    #[test]
+    #[traced_test]
     fn test_dump_entire_database_contents_empty() {
         let (db, _td) = create_db::<Database>();
         let db_guard = db.lock().unwrap();
@@ -179,7 +180,7 @@ mod dump_tests {
         assert!(!output.contains("Key: "));
     }
 
-    #[test]
+    #[traced_test]
     fn test_dump_unknown_key_pattern() {
         let (db, _td) = create_db::<Database>();
         {
@@ -197,7 +198,7 @@ mod dump_tests {
         assert!(output.contains("Value: [Unknown key pattern]"));
     }
 
-    #[test]
+    #[traced_test]
     fn test_dump_region_done_marker() {
         let (db, _td) = create_db::<Database>();
         {
@@ -214,7 +215,7 @@ mod dump_tests {
         assert!(output.contains("Value: REGION DONE MARKER"));
     }
 
-    #[test]
+    #[traced_test]
     fn test_dump_recognized_prefixes() {
         let (db, _td) = create_db::<Database>();
         {
@@ -253,7 +254,7 @@ mod dump_tests {
                 "Should see street set for S: key");
     }
 
-    #[test]
+    #[traced_test]
     fn test_dump_corrupted_cbor_for_recognized_prefix() {
         let (db, _td) = create_db::<Database>();
         {
@@ -271,7 +272,7 @@ mod dump_tests {
         assert!(output.contains("Failed to decode as Cities:"));
     }
 
-    #[test]
+    #[traced_test]
     fn test_dump_keys_with_prefix() {
         let (db, _td) = create_db::<Database>();
         {

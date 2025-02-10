@@ -1,4 +1,5 @@
 // ---------------- [ File: src/try_construct_city_name.rs ]
+// ---------------- [ File: src/try_construct_city_name.rs ]
 crate::ix!();
 
 /// Attempts to create a `CityName` from a string (if present). Returns an error
@@ -30,7 +31,7 @@ mod test_try_construct_city_name {
     use super::*;
     use crate::errors::*; // Adjust if your error types or CityNameConstructionError live elsewhere
 
-    #[test]
+    #[traced_test]
     fn test_none_input_returns_ok_none() {
         let element_id = 1;
         let result = try_construct_city_name(None, element_id);
@@ -39,7 +40,7 @@ mod test_try_construct_city_name {
         assert!(city_opt.is_none(), "Expected None city");
     }
 
-    #[test]
+    #[traced_test]
     fn test_valid_city_returns_ok_some() {
         let element_id = 2;
         let result = try_construct_city_name(Some("Baltimore"), element_id);
@@ -49,7 +50,7 @@ mod test_try_construct_city_name {
             "Expected normalized 'baltimore' from 'Baltimore'");
     }
 
-    #[test]
+    #[traced_test]
     fn test_empty_city_name_fails() {
         let element_id = 3;
         let result = try_construct_city_name(Some(""), element_id);
@@ -69,7 +70,7 @@ mod test_try_construct_city_name {
         }
     }
 
-    #[test]
+    #[traced_test]
     fn test_whitespace_city_name_fails_if_disallowed() {
         let element_id = 4;
         let result = try_construct_city_name(Some("   "), element_id);
@@ -91,7 +92,7 @@ mod test_try_construct_city_name {
         }
     }
 
-    #[test]
+    #[traced_test]
     fn test_debug_logging_when_cityname_fails() {
         // The code logs an error with `error!` macro if city construction fails. 
         // We can't directly verify logs without a logging capture. 

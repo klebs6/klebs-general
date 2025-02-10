@@ -1,4 +1,5 @@
 // ---------------- [ File: src/gather_pbf_files.rs ]
+// ---------------- [ File: src/gather_pbf_files.rs ]
 crate::ix!();
 
 /// Reads the specified directory, returning a `Vec<PathBuf>` of all `.pbf` files found.
@@ -62,7 +63,7 @@ mod gather_pbf_files_tests {
         }
     }
 
-    #[test]
+    #[traced_test]
     fn test_gather_pbf_files_empty_dir() {
         let tmp = TempDir::new().unwrap();
         let result = gather_pbf_files(tmp.path());
@@ -71,7 +72,7 @@ mod gather_pbf_files_tests {
         assert!(pbf_files.is_empty(), "No .pbf files => empty Vec");
     }
 
-    #[tokio::test]
+    #[traced_test]
     async fn test_gather_pbf_files_mixed_extensions() {
         let tmp = TempDir::new().unwrap();
         let dir_path = tmp.path();
@@ -98,7 +99,7 @@ mod gather_pbf_files_tests {
         assert_eq!(only_path.file_name().unwrap(), "one.pbf");
     }
 
-    #[tokio::test]
+    #[traced_test]
     async fn test_gather_pbf_files_multiple_pbf() {
         let tmp = TempDir::new().unwrap();
         let dir_path = tmp.path();

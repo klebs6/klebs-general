@@ -1,4 +1,5 @@
 // ---------------- [ File: src/create_tiny_osm_pbf.rs ]
+// ---------------- [ File: src/create_tiny_osm_pbf.rs ]
 /// Creates a very small .osm.pbf file with:
 ///   - A single OSMHeader blob
 ///   - A single OSMData blob that contains one node with two address tags
@@ -100,7 +101,7 @@ mod create_tiny_osm_pbf_tests {
         );
     }
 
-    #[tokio::test]
+    #[traced_test]
     async fn test_create_tiny_osm_pbf_success() {
         let tmp = TempDir::new().unwrap();
         let path = tmp.path().join("tiny.osm.pbf");
@@ -110,7 +111,7 @@ mod create_tiny_osm_pbf_tests {
         parse_and_check_pbf(&path);
     }
 
-    #[tokio::test]
+    #[traced_test]
     async fn test_create_tiny_osm_pbf_path_is_directory() {
         let tmp = TempDir::new().unwrap();
         // The function will fail if we pass the directory instead of a file
@@ -122,7 +123,7 @@ mod create_tiny_osm_pbf_tests {
         assert_eq!(err.kind(), ErrorKind::Other, "Directory => Other error kind");
     }
 
-    #[tokio::test]
+    #[traced_test]
     async fn test_create_tiny_osm_pbf_unwritable_path() {
         // OS-specific scenario. On Unix, we can try e.g. "/root/some.pbf"
         // or an invalid path name on Windows. We'll do a partial approach:

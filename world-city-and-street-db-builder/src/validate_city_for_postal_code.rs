@@ -1,4 +1,5 @@
 // ---------------- [ File: src/validate_city_for_postal_code.rs ]
+// ---------------- [ File: src/validate_city_for_postal_code.rs ]
 crate::ix!();
 
 /// Validates that the `[CityName]` is present in the set of cities associated
@@ -83,7 +84,7 @@ mod test_validate_city_for_postal_code {
         db.put(key, val).unwrap();
     }
 
-    #[test]
+    #[traced_test]
     fn test_no_city_set_exists_returns_error() {
         let (data_access, db_arc, _temp_dir) = create_data_access();
         let mut db_guard = db_arc.lock().unwrap();
@@ -104,7 +105,7 @@ mod test_validate_city_for_postal_code {
         }
     }
 
-    #[test]
+    #[traced_test]
     fn test_city_not_found_in_set_returns_error() {
         let (data_access, db_arc, _temp_dir) = create_data_access();
         let mut db_guard = db_arc.lock().unwrap();
@@ -134,7 +135,7 @@ mod test_validate_city_for_postal_code {
         }
     }
 
-    #[test]
+    #[traced_test]
     fn test_city_found_in_set_returns_ok() {
         let (data_access, db_arc, _temp_dir) = create_data_access();
         let mut db_guard = db_arc.lock().unwrap();
@@ -153,7 +154,7 @@ mod test_validate_city_for_postal_code {
         assert!(result.is_ok(), "City is in the set => Ok(())");
     }
 
-    #[test]
+    #[traced_test]
     fn test_corrupted_data_returns_none_and_error() {
         // If the z2c data is invalid CBOR, get_city_set => None => 
         // => we produce PostalCodeToCityKeyNotFoundForRegion

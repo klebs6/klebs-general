@@ -1,4 +1,5 @@
 // ---------------- [ File: src/write_indices.rs ]
+// ---------------- [ File: src/write_indices.rs ]
 crate::ix!();
 
 pub trait WriteIndicesForRegion {
@@ -158,7 +159,7 @@ mod test_write_indices_for_region {
         None
     }
 
-    #[test]
+    #[traced_test]
     fn test_empty_indexes_no_op() {
         let (db_arc, _tmp_dir) = create_temp_db();
         let mut db_guard = db_arc.lock().unwrap();
@@ -173,7 +174,7 @@ mod test_write_indices_for_region {
         // For instance, we expect no new keys. We'll skip that for brevity.
     }
 
-    #[test]
+    #[traced_test]
     fn test_nonempty_indexes_all_written_successfully() {
         let (db_arc, _tmp_dir) = create_temp_db();
         let mut db_guard = db_arc.lock().unwrap();
@@ -196,7 +197,7 @@ mod test_write_indices_for_region {
             "Should match the inserted set from region_postal_code_streets");
     }
 
-    #[test]
+    #[traced_test]
     fn test_partial_error_in_underlying_write_calls() {
         // If one of the underlying calls fails, e.g. write_streets_to_region_and_postal_code,
         // the function returns that error. We'll do a minimal failing DB stub:

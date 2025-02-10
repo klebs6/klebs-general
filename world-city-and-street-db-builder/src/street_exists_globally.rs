@@ -1,4 +1,5 @@
 // ---------------- [ File: src/street_exists_globally.rs ]
+// ---------------- [ File: src/street_exists_globally.rs ]
 crate::ix!();
 
 pub trait StreetExistsGlobally {
@@ -67,7 +68,7 @@ mod test_street_exists_globally {
         db.put(&key, val).unwrap();
     }
 
-    #[test]
+    #[traced_test]
     fn test_no_data_returns_false() {
         let (db_arc, _td) = create_temp_db();
         let db_guard = db_arc.lock().unwrap();
@@ -80,7 +81,7 @@ mod test_street_exists_globally {
         assert!(!result, "No data => street should not exist");
     }
 
-    #[test]
+    #[traced_test]
     fn test_s2c_key_exists_returns_true() {
         let (db_arc, _td) = create_temp_db();
         let mut db_guard = db_arc.lock().unwrap();
@@ -98,7 +99,7 @@ mod test_street_exists_globally {
         assert!(result, "S2C key is present => street should exist");
     }
 
-    #[test]
+    #[traced_test]
     fn test_s2z_key_exists_returns_true() {
         let (db_arc, _td) = create_temp_db();
         let mut db_guard = db_arc.lock().unwrap();
@@ -116,7 +117,7 @@ mod test_street_exists_globally {
         assert!(result, "S2Z key is present => street should exist");
     }
 
-    #[test]
+    #[traced_test]
     fn test_both_keys_exist_also_returns_true() {
         let (db_arc, _td) = create_temp_db();
         let mut db_guard = db_arc.lock().unwrap();
@@ -139,7 +140,7 @@ mod test_street_exists_globally {
         assert!(result, "Having either key is enough => definitely true if both exist");
     }
 
-    #[test]
+    #[traced_test]
     fn test_corrupted_cbor_treated_as_none() {
         // If the CBOR is invalid, `get_city_set` or `get_postal_code_set` returns None => street_exists_globally => false
         let (db_arc, _td) = create_temp_db();
@@ -157,7 +158,7 @@ mod test_street_exists_globally {
         assert!(!result, "Corrupted cbor => decode fails => None => false");
     }
 
-    #[test]
+    #[traced_test]
     fn test_region_is_mismatched() {
         // If we store S2C for region=MD but query region=VA, it returns false
         let (db_arc, _td) = create_temp_db();

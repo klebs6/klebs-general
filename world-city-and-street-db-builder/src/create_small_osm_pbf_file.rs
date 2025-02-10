@@ -1,4 +1,5 @@
 // ---------------- [ File: src/create_small_osm_pbf_file.rs ]
+// ---------------- [ File: src/create_small_osm_pbf_file.rs ]
 crate::ix!();
 
 /// Creates a minimal `.osm.pbf` file with a single Node.
@@ -162,7 +163,7 @@ mod create_small_osm_pbf_file_tests {
         }
     }
 
-    #[tokio::test]
+    #[traced_test]
     async fn test_create_small_osm_pbf_file_success_no_housenumber() {
         let tmp = TempDir::new().unwrap();
         let path = tmp.path().join("single_node.osm.pbf");
@@ -192,7 +193,7 @@ mod create_small_osm_pbf_file_tests {
         parse_and_verify_pbf(&path, lat, lon, "Baltimore", "North Avenue", None);
     }
 
-    #[tokio::test]
+    #[traced_test]
     async fn test_create_small_osm_pbf_file_success_with_housenumber() {
         let tmp = TempDir::new().unwrap();
         let path = tmp.path().join("with_hn.osm.pbf");
@@ -220,7 +221,7 @@ mod create_small_osm_pbf_file_tests {
         parse_and_verify_pbf(&path, lat, lon, "TestCity", "TestStreet", housenumber);
     }
 
-    #[tokio::test]
+    #[traced_test]
     async fn test_create_small_osm_pbf_file_path_is_dir() {
         let tmp = TempDir::new().unwrap();
         // We'll pass the directory path instead of a file => `validate_not_dir(...)` => error
@@ -247,7 +248,7 @@ mod create_small_osm_pbf_file_tests {
         assert_eq!(err.kind(), ErrorKind::Other, "We produce an Other or relevant error kind");
     }
 
-    #[tokio::test]
+    #[traced_test]
     async fn test_create_small_osm_pbf_file_unwritable_path() {
         // We'll try to pass something like '/root/some_unwritable_file.osm.pbf' on Unix,
         // or a bogus path on Windows. This is OS-specific. If we can't reliably 
@@ -263,7 +264,7 @@ mod create_small_osm_pbf_file_tests {
         }
     }
 
-    #[tokio::test]
+    #[traced_test]
     async fn test_create_small_osm_pbf_file_various_bbox() {
         let tmp = TempDir::new().unwrap();
         let path = tmp.path().join("varied_bbox.osm.pbf");
@@ -294,7 +295,7 @@ mod create_small_osm_pbf_file_tests {
         parse_and_verify_pbf(&path, lat, lon, "AnywhereVille", "Main St", None);
     }
 
-    #[tokio::test]
+    #[traced_test]
     async fn test_create_small_osm_pbf_file_lat_lon_out_of_range() {
         // The function doesn't necessarily enforce lat/lon within -90..90 or -180..180.
         // It logs a warning. We'll see if it just proceeds. 

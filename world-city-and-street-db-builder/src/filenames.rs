@@ -1,4 +1,5 @@
 // ---------------- [ File: src/filenames.rs ]
+// ---------------- [ File: src/filenames.rs ]
 crate::ix!();
 
 #[cfg(test)]
@@ -10,7 +11,7 @@ mod filenames_tests {
         USRegion::UnitedState(UnitedState::Maryland).into()
     }
 
-    #[test]
+    #[traced_test]
     fn test_expected_filename_for_region_maryland() {
         let region = make_maryland_world_region();
         let actual_path = expected_filename_for_region(PathBuf::from("."), &region);
@@ -22,7 +23,7 @@ mod filenames_tests {
         );
     }
 
-    #[test]
+    #[traced_test]
     fn test_validate_pbf_filename_correct() {
         let region = make_maryland_world_region();
         let pbf_path = PathBuf::from("maryland-latest.osm.pbf");
@@ -30,7 +31,7 @@ mod filenames_tests {
         assert!(res.is_ok(), "Should accept an exactly matching filename");
     }
 
-    #[test]
+    #[traced_test]
     fn test_validate_pbf_filename_incorrect() {
         let region = make_maryland_world_region();
         let pbf_path = PathBuf::from("virginia-latest.osm.pbf");
@@ -47,7 +48,7 @@ mod filenames_tests {
         }
     }
 
-    #[test]
+    #[traced_test]
     fn test_validate_pbf_filename_case_insensitive() {
         // e.g. "MaRyLaNd-LatEst.oSm.PbF" => we want to accept ignoring ASCII case
         let region = make_maryland_world_region();
@@ -56,7 +57,7 @@ mod filenames_tests {
         assert!(res.is_ok(), "Should allow ignoring ASCII case differences");
     }
 
-    #[test]
+    #[traced_test]
     fn test_validate_pbf_filename_extra_whitespace() {
         // This test verifies we do not do trimming. The code will parse the raw filename.
         // If there's trailing spaces in the actual filename, the test expects an error.
@@ -75,7 +76,7 @@ mod filenames_tests {
     // In real usage, that function also tries to parse the file. If the file doesn't exist,
     // is corrupt, or region is “unimplemented”, we expect specific error behaviors.
 
-    #[tokio::test]
+    #[traced_test]
     async fn test_from_osm_pbf_file_correct() {
         // We assume parse_osm_pbf is already tested, or can be a no-op in unit tests.
         // For demonstration, we’ll forcibly short-circuit parse_osm_pbf to return empty Vec.
@@ -104,7 +105,7 @@ mod filenames_tests {
         }
     }
 
-    #[test]
+    #[traced_test]
     fn test_from_osm_pbf_file_non_existent_file() {
         let region = make_maryland_world_region();
         let pbf_path = PathBuf::from("this_file_does_not_exist.osm.pbf");
@@ -120,8 +121,7 @@ mod filenames_tests {
         }
     }
 
-    #[test]
-    #[should_panic(expected = "does not match expected filename")]
+    #[traced_test]
     fn test_from_osm_pbf_file_unsupported_region() {
         // If your code is supposed to panic for a certain region like Guam,
         // you must actually do `unimplemented!()` or some panic in `from_osm_pbf_file`.
@@ -142,12 +142,10 @@ mod filenames_tests {
         let region: WorldRegion = USRegion::USTerritory(USTerritory::Guam).into();
         let pbf_path = PathBuf::from("guam-latest.osm.pbf");
         let result = RegionalRecords::from_osm_pbf_file(region, &pbf_path);
-        if result.is_err() {
-            panic!("{:#?}",result);
-        }
+        assert!(result.is_err());
     }
 
-    #[tokio::test]
+    #[traced_test]
     async fn test_from_osm_pbf_file_empty_file() {
         let region = make_maryland_world_region();
         let temp_dir = tempfile::TempDir::new().unwrap();
@@ -168,7 +166,7 @@ mod filenames_tests {
         }
     }
 
-    #[test]
+    #[traced_test]
     fn test_parse_osm_pbf_corrupted_file() {
         let region = make_maryland_world_region();
         let temp_dir = tempfile::TempDir::new().unwrap();

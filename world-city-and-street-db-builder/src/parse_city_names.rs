@@ -1,4 +1,5 @@
 // ---------------- [ File: src/parse_city_names.rs ]
+// ---------------- [ File: src/parse_city_names.rs ]
 crate::ix!();
 
 /// Parses city names from the `(key, value)` pairs. Extracts the city substring
@@ -57,14 +58,14 @@ mod test_parse_city_names {
         b"not valid cbor".to_vec()
     }
 
-    #[test]
+    #[traced_test]
     fn test_empty_input_returns_empty_vec() {
         let kv_pairs = Vec::new();
         let result = parse_city_names(kv_pairs);
         assert!(result.is_empty(), "No pairs => no cities");
     }
 
-    #[test]
+    #[traced_test]
     fn test_single_well_formed_key_extracts_city() {
         // key = "C2Z:US:baltimore" => city = "baltimore"
         let kv_pairs = vec![(
@@ -75,7 +76,7 @@ mod test_parse_city_names {
         assert_eq!(result, vec!["baltimore"], "Should parse the city substring");
     }
 
-    #[test]
+    #[traced_test]
     fn test_multiple_keys_extract_multiple_cities() {
         let kv_pairs = vec![
             ("C2Z:US:baltimore".to_string(), make_valid_cbor()),
@@ -95,7 +96,7 @@ mod test_parse_city_names {
         );
     }
 
-    #[test]
+    #[traced_test]
     fn test_malformed_keys_are_skipped() {
         // If extract_city_from_key returns None, we skip the key
         // e.g. "C2Z:US" or "C2Z:US" missing the 3rd part
@@ -111,7 +112,7 @@ mod test_parse_city_names {
         assert_eq!(result, vec!["baltimore"], "Only the valid key should be parsed");
     }
 
-    #[test]
+    #[traced_test]
     fn test_corrupted_cbor_still_extracts_city_but_logs_warning() {
         // The function logs a warning if the decode fails, but still pushes the city name.
         // We can't directly test the log output, but we confirm it doesn't skip the city.
@@ -124,7 +125,7 @@ mod test_parse_city_names {
         assert_eq!(result, vec!["hagerstown"]);
     }
 
-    #[test]
+    #[traced_test]
     fn test_duplicate_keys_return_duplicates() {
         // The function does not deduplicate city names. It pushes them in order encountered.
         let kv_pairs = vec![

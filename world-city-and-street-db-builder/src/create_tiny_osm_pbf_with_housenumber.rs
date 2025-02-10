@@ -1,4 +1,5 @@
 // ---------------- [ File: src/create_tiny_osm_pbf_with_housenumber.rs ]
+// ---------------- [ File: src/create_tiny_osm_pbf_with_housenumber.rs ]
 crate::ix!();
 
 /// Thin wrapper around [`create_small_osm_pbf_file`] producing a single Node
@@ -85,7 +86,7 @@ mod create_tiny_osm_pbf_with_housenumber_tests {
         );
     }
 
-    #[tokio::test]
+    #[traced_test]
     async fn test_create_tiny_osm_pbf_with_housenumber_success() {
         let tmp = TempDir::new().unwrap();
         let pbf_path = tmp.path().join("with_hn.osm.pbf");
@@ -95,7 +96,7 @@ mod create_tiny_osm_pbf_with_housenumber_tests {
         parse_and_verify_with_housenumber(&pbf_path);
     }
 
-    #[tokio::test]
+    #[traced_test]
     async fn test_create_tiny_osm_pbf_with_housenumber_path_is_directory() {
         let tmp = TempDir::new().unwrap();
         // Passing the directory path => should fail
@@ -107,7 +108,7 @@ mod create_tiny_osm_pbf_with_housenumber_tests {
         assert_eq!(err.kind(), ErrorKind::Other, "Directory => error kind=Other");
     }
 
-    #[tokio::test]
+    #[traced_test]
     async fn test_create_tiny_osm_pbf_with_housenumber_unwritable_path() {
         #[cfg(unix)]
         {

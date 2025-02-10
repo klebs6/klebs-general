@@ -1,4 +1,5 @@
 // ---------------- [ File: src/addresses_from_pbf_file_with_house_numbers.rs ]
+// ---------------- [ File: src/addresses_from_pbf_file_with_house_numbers.rs ]
 crate::ix!();
 
 /// The top-level function orchestrates:
@@ -39,10 +40,10 @@ pub fn addresses_from_pbf_file_with_house_numbers<I:StorageInterface + 'static>(
     // Move ownership into background thread
     thread::spawn(move || {
         handle_pbf_house_number_extractor_in_thread(
+            dbc, 
             path, 
             country, 
             world_region, 
-            dbc, 
             tx
         );
     });
@@ -172,7 +173,7 @@ mod addresses_from_pbf_file_with_house_numbers_tests {
         Ok(())
     }
 
-    #[test]
+    #[traced_test]
     fn test_addresses_from_pbf_file_with_house_numbers_unknown_region() {
         // If your code no longer fails for “Guam,” you can just:
         let unknown_region: WorldRegion = USRegion::USTerritory(USTerritory::Guam).into();
@@ -192,7 +193,7 @@ mod addresses_from_pbf_file_with_house_numbers_tests {
     // ----------------------------------------------------------------------
     // 2) Test missing .pbf file => the background thread tries to open => fails => yields an error
     // ----------------------------------------------------------------------
-    #[test]
+    #[traced_test]
     fn test_addresses_from_pbf_file_with_house_numbers_missing_file() {
         let known_region: WorldRegion = USRegion::UnitedState(UnitedState::Maryland).into();
         let db = Database::open(std::env::temp_dir().join("dummy_db_2")).unwrap();
@@ -227,7 +228,7 @@ mod addresses_from_pbf_file_with_house_numbers_tests {
     // ----------------------------------------------------------------------
     // 3) Test valid minimal pbf => we read exactly one address => no housenumber => aggregator is unused
     // ----------------------------------------------------------------------
-    #[test]
+    #[traced_test]
     fn test_addresses_from_pbf_file_with_house_numbers_valid_no_housenumber() {
         let region: WorldRegion = USRegion::UnitedState(UnitedState::Maryland).into();
         let tmp = TempDir::new().unwrap();
@@ -266,7 +267,7 @@ mod addresses_from_pbf_file_with_house_numbers_tests {
     // ----------------------------------------------------------------------
     // 4) Test valid minimal pbf => includes housenumber => aggregator is used => stored in DB
     // ----------------------------------------------------------------------
-    #[test]
+    #[traced_test]
     fn test_addresses_from_pbf_file_with_house_numbers_valid_with_housenumber() {
         let region: WorldRegion = USRegion::UnitedState(UnitedState::Virginia).into();
         let tmp = TempDir::new().unwrap();
@@ -314,7 +315,7 @@ mod addresses_from_pbf_file_with_house_numbers_tests {
     // ----------------------------------------------------------------------
     // 5) Test a corrupted `.pbf` => iterator yields an error mid-parse
     // ----------------------------------------------------------------------
-    #[test]
+    #[traced_test]
     fn test_addresses_from_pbf_file_with_house_numbers_corrupted_pbf() {
         let region: WorldRegion = USRegion::UnitedState(UnitedState::Maryland).into();
         let tmp = TempDir::new().unwrap();
@@ -478,7 +479,7 @@ mod addresses_from_pbf_file_with_house_numbers_tests {
         Ok(())
     }
 
-    #[test]
+    #[traced_test]
     fn test_addresses_from_pbf_file_with_house_numbers_multiple_nodes() {
         // 1) Setup region & DB
         let region: WorldRegion = USRegion::UnitedState(UnitedState::Maryland).into();

@@ -1,4 +1,5 @@
 // ---------------- [ File: src/house_number_aggregator.rs ]
+// ---------------- [ File: src/house_number_aggregator.rs ]
 crate::ix!();
 
 /// A struct that encapsulates the street => house‐number‐ranges mapping.
@@ -177,7 +178,7 @@ impl HouseNumberAggregator {
 
     /// Stores aggregator results into the DB, if possible. Logs warnings on failure.
     /// Depending on desired behavior, you might also send an `Err` to `tx`.
-    pub fn attempt_storing_in_db<I:StorageInterface>(
+    pub fn attempt_storing_in_db<I:LoadExistingStreetRanges + StoreHouseNumberRanges>(
         &mut self,
         db: Arc<Mutex<I>>,
     ) {
@@ -220,7 +221,7 @@ impl HouseNumberAggregator {
     ///
     /// * `Ok(())` if all aggregator data is processed successfully (warnings may still occur).
     /// * `Err(OsmPbfParseError)` if a critical error arises (e.g., DB I/O error).
-    pub fn store_results_in_db<I:StorageInterface>(&self, db: &mut I) 
+    pub fn store_results_in_db<I:StoreHouseNumberRanges + LoadExistingStreetRanges>(&self, db: &mut I) 
         -> Result<(), OsmPbfParseError> 
     {
         trace!(
@@ -246,7 +247,7 @@ impl HouseNumberAggregator {
 mod house_number_aggregator_tests {
     use super::*;
 
-    #[test]
+    #[traced_test]
     fn test_update_with_housenumber_directly() {
         let mut aggregator = HouseNumberAggregator::new();
         let street = StreetName::new("Main St").unwrap();
@@ -259,7 +260,7 @@ mod house_number_aggregator_tests {
         assert_eq!(got[0], range);
     }
 
-    #[test]
+    #[traced_test]
     fn test_update_aggregator_with_housenumber_element() {
         // we can mock an element that yields "addr:housenumber => 200-220" and "addr:street => 'Broadway'".
         // Then we pass a record with street => "Broadway". aggregator => updated.
@@ -303,7 +304,7 @@ mod house_number_aggregator_tests {
         assert_eq!(got[0].end(), &220);
     }
 
-    #[test]
+    #[traced_test]
     fn test_try_infer_street_and_update_housenumber() {
         // aggregator => no AddressRecord => aggregator tries partial parse => merges result
         // We'll mimic a scenario where the aggregator sees "addr:housenumber => 300-310" but no city/street
@@ -325,7 +326,7 @@ mod house_number_aggregator_tests {
         assert_eq!(got[0], HouseNumberRange::new(300, 310));
     }
 
-    #[test]
+    #[traced_test]
     fn test_process_osm_element_send_channel() {
         // aggregator.process_osm_element => if we can build a world address => send via channel
         let mut aggregator = HouseNumberAggregator::new();
@@ -367,7 +368,7 @@ mod house_number_aggregator_tests {
         assert_eq!(good_addr.postal_code().code(), "99999");
     }
 
-    #[test]
+    #[traced_test]
     fn test_parse_and_aggregate_osm_empty() {
         // We can create a mock or an "in-memory" ElementReader with no elements.
         // Because osmpbf is heavily oriented toward reading from actual files,
@@ -391,7 +392,7 @@ mod house_number_aggregator_tests {
         }
     }
 
-    #[test]
+    #[traced_test]
     fn test_process_osm_element_no_address_record() {
         use std::io::Write;
         use tempfile::tempdir;
@@ -439,7 +440,7 @@ mod house_number_aggregator_tests {
         }
     }
 
-    #[test]
+    #[traced_test]
     fn test_store_aggregator_results_empty() {
         let mut aggregator = HashMap::new();
         let tmp_dir = TempDir::new().unwrap();
@@ -453,7 +454,7 @@ mod house_number_aggregator_tests {
         assert!(res.is_ok());
     }
 
-    #[test]
+    #[traced_test]
     fn test_store_aggregator_results_single_street() {
         // aggregator => "north avenue" => [ HouseNumberRange(100..=110) ]
         let mut aggregator = HashMap::new();

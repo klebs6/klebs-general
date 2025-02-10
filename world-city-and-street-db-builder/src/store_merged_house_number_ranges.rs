@@ -1,4 +1,5 @@
 // ---------------- [ File: src/store_merged_house_number_ranges.rs ]
+// ---------------- [ File: src/store_merged_house_number_ranges.rs ]
 crate::ix!();
 
 /// Stores the merged list of house‐number ranges back into the database.
@@ -58,7 +59,7 @@ mod test_store_merged_house_number_ranges {
         clist_result.ok().map(|cl| cl.items().clone())
     }
 
-    #[test]
+    #[traced_test]
     fn test_store_merged_empty_ranges() {
         let (db_arc, _tmp) = create_temp_db();
         let mut db_guard = db_arc.lock().unwrap();
@@ -75,7 +76,7 @@ mod test_store_merged_house_number_ranges {
         assert!(loaded.is_empty(), "We wrote an empty set of ranges");
     }
 
-    #[test]
+    #[traced_test]
     fn test_store_merged_some_ranges() {
         let (db_arc, _tmp) = create_temp_db();
         let mut db_guard = db_arc.lock().unwrap();
@@ -92,7 +93,7 @@ mod test_store_merged_house_number_ranges {
         assert_eq!(loaded, merged, "The data read back should match what was stored");
     }
 
-    #[test]
+    #[traced_test]
     fn test_db_error_propagation() {
         // We can cause a DB error (e.g., RocksDB error on put) to ensure it returns an error.
 
@@ -143,7 +144,7 @@ mod test_store_merged_house_number_ranges {
         }
     }
 
-    #[test]
+    #[traced_test]
     fn test_cbor_error_propagation() {
         // If the cbor serialization fails in store_house_number_ranges, we want to see 
         // the error returned from store_merged_house_number_ranges as well.

@@ -1,4 +1,5 @@
 // ---------------- [ File: src/extract_house_number_range_from_element.rs ]
+// ---------------- [ File: src/extract_house_number_range_from_element.rs ]
 crate::ix!();
 
 /// A macro that generates specialized extraction functions for each OSM element variant
@@ -156,7 +157,7 @@ mod extract_house_number_range_from_element_integration_tests {
         ).await
     }
 
-    #[tokio::test]
+    #[traced_test]
     async fn test_extract_house_number_range_from_node_valid_range() {
         // Create a minimal osm.pbf file with a Node that has a valid house number range "100-110"
         let tmp_dir = TempDir::new().expect("Failed to create temporary directory");
@@ -186,7 +187,7 @@ mod extract_house_number_range_from_element_integration_tests {
         assert!(found, "Expected at least one Node with a valid house number range");
     }
 
-    #[tokio::test]
+    #[traced_test]
     async fn test_extract_house_number_range_from_node_no_housenumber() {
         // Create a minimal file with a Node that does not include addr:housenumber.
         let tmp_dir = TempDir::new().expect("Failed to create temporary directory");
@@ -212,7 +213,7 @@ mod extract_house_number_range_from_element_integration_tests {
         assert!(seen_none, "Expected a Node with no housenumber to yield None");
     }
 
-    #[tokio::test]
+    #[traced_test]
     async fn test_extract_house_number_range_from_node_invalid_housenumber() {
         // Create a minimal file with a Node that has an invalid housenumber (non-numeric)
         let tmp_dir = TempDir::new().expect("Failed to create temporary directory");

@@ -1,4 +1,5 @@
 // ---------------- [ File: src/street_name.rs ]
+// ---------------- [ File: src/street_name.rs ]
 crate::ix!();
 
 /// StreetName struct
@@ -55,7 +56,7 @@ mod street_name_tests {
     // ------------------------------------------------
     // Basic success/failure for StreetName::new
     // ------------------------------------------------
-    #[test]
+    #[traced_test]
     fn street_name_construction_valid() {
         // Because we normalize => "North Avenue" => "north avenue"
         let st = StreetName::new("North Avenue");
@@ -64,7 +65,7 @@ mod street_name_tests {
         assert_eq!(st.name(), "north avenue", "Should be normalized to lowercase");
     }
 
-    #[test]
+    #[traced_test]
     fn street_name_construction_empty() {
         let st = StreetName::new("   ");
         match st {
@@ -78,7 +79,7 @@ mod street_name_tests {
     // ------------------------------------------------
     // Testing punctuation & spacing
     // ------------------------------------------------
-    #[test]
+    #[traced_test]
     fn street_name_with_punctuation() {
         // e.g., "Main St." => "main st"
         let st = StreetName::new("Main St.");
@@ -87,7 +88,7 @@ mod street_name_tests {
         assert_eq!(st.name(), "main st", "Removed punctuation, lowercased");
     }
 
-    #[test]
+    #[traced_test]
     fn street_name_with_internal_spaces() {
         // "  Redwood   Rd  " => "redwood rd"
         let st = StreetName::new("  Redwood   Rd  ");
@@ -99,7 +100,7 @@ mod street_name_tests {
     // ------------------------------------------------
     // Builder usage: partial + finalize
     // ------------------------------------------------
-    #[test]
+    #[traced_test]
     fn street_name_builder_valid() {
         // partial builder usage -> must call .finalize()
         let st = StreetNameBuilder::default().name("Clarendon Blvd".to_string()).finalize();
@@ -108,7 +109,7 @@ mod street_name_tests {
         assert_eq!(st.name(), "clarendon blvd");
     }
 
-    #[test]
+    #[traced_test]
     fn street_name_builder_missing_field() {
         // If we never call .name(...), finalize should yield an error
         let builder = StreetNameBuilder::default();
@@ -124,7 +125,7 @@ mod street_name_tests {
     // ------------------------------------------------
     // Test Display
     // ------------------------------------------------
-    #[test]
+    #[traced_test]
     fn street_name_display() {
         let st = StreetName::new("Sunrise Valley Dr").unwrap();
         let disp = format!("{}", st);
@@ -135,7 +136,7 @@ mod street_name_tests {
     // ------------------------------------------------
     // Comparisons (PartialEq, PartialOrd)
     // ------------------------------------------------
-    #[test]
+    #[traced_test]
     fn street_name_comparisons() {
         let st1 = StreetName::new("Wilson Blvd").unwrap();   // => "wilson blvd"
         let st2 = StreetName::new("wilson blvd").unwrap();   // => "wilson blvd"
@@ -151,7 +152,7 @@ mod street_name_tests {
     // ------------------------------------------------
     // Edge cases: numeric or symbolic
     // ------------------------------------------------
-    #[test]
+    #[traced_test]
     fn street_name_with_numbers() {
         // "Route 66" => "route 66"
         let st = StreetName::new("Route 66");
@@ -160,7 +161,7 @@ mod street_name_tests {
         assert_eq!(st.name(), "route 66");
     }
 
-    #[test]
+    #[traced_test]
     fn street_name_extreme_length() {
         // e.g. 500 chars of "A"
         let long_name = "A".repeat(500);
@@ -178,14 +179,14 @@ mod street_name_tests {
 mod postal_code_tests {
     use super::*;
 
-    #[test]
+    #[traced_test]
     fn postal_code_valid() {
         let code = PostalCode::new(Country::USA, "21201");
         assert!(code.is_ok());
         assert_eq!(code.unwrap().code(), "21201");
     }
 
-    #[test]
+    #[traced_test]
     fn postal_code_empty() {
         let code = PostalCode::new(Country::USA, "  ");
         match code {

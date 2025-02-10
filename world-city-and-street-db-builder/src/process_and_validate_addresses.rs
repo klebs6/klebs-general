@@ -1,4 +1,5 @@
 // ---------------- [ File: src/process_and_validate_addresses.rs ]
+// ---------------- [ File: src/process_and_validate_addresses.rs ]
 crate::ix!();
 
 /// Consumes the address iterator, validating each [`WorldAddress`].
@@ -101,7 +102,7 @@ mod test_process_and_validate_addresses {
         }
     }
 
-    #[test]
+    #[traced_test]
     fn test_all_addresses_valid_returns_ok_true() {
         let mut mock_data_access = MockDataAccess::new();
         // No invalid addresses => everything is considered valid
@@ -126,7 +127,7 @@ mod test_process_and_validate_addresses {
         );
     }
 
-    #[test]
+    #[traced_test]
     fn test_some_addresses_fail_validation_returns_ok_false() {
         let mut mock_data_access = MockDataAccess::new();
 
@@ -149,7 +150,7 @@ mod test_process_and_validate_addresses {
         );
     }
 
-    #[test]
+    #[traced_test]
     fn test_parsing_error_in_iterator_returns_ok_false() {
         // Some addresses fail not due to validation, but a parse error => the item is Err(...)
         // That should set all_valid=false but not produce a big error. 
@@ -173,7 +174,7 @@ mod test_process_and_validate_addresses {
         );
     }
 
-    #[test]
+    #[traced_test]
     fn test_empty_iterator_returns_ok_true() {
         // No addresses => trivially all valid => should return Ok(true).
         let mock_data_access = MockDataAccess::new();

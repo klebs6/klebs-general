@@ -1,4 +1,5 @@
 // ---------------- [ File: src/load_all_cities_for_region.rs ]
+// ---------------- [ File: src/load_all_cities_for_region.rs ]
 crate::ix!();
 
 /// A tiny helper to gather all known city names for a given region.
@@ -82,7 +83,7 @@ mod test_load_all_cities_for_region {
         b"not valid cbor data".to_vec()
     }
 
-    #[test]
+    #[traced_test]
     fn test_no_keys_in_db_returns_empty() {
         let (db_arc, _td) = create_temp_db();
         let db_guard = db_arc.lock().unwrap();
@@ -92,7 +93,7 @@ mod test_load_all_cities_for_region {
         assert!(result.is_empty(), "Expected an empty vector if no C2Z keys exist");
     }
 
-    #[test]
+    #[traced_test]
     fn test_no_c2z_keys_for_this_region_returns_empty() {
         let (db_arc, _td) = create_temp_db();
         let mut db_guard = db_arc.lock().unwrap();
@@ -106,7 +107,7 @@ mod test_load_all_cities_for_region {
         assert!(result.is_empty(), "No keys matching C2Z:MD: => should return empty");
     }
 
-    #[test]
+    #[traced_test]
     fn test_single_city_extracted() {
         let (db_arc, _td) = create_temp_db();
         let mut db_guard = db_arc.lock().unwrap();
@@ -121,7 +122,7 @@ mod test_load_all_cities_for_region {
         assert_eq!(cities[0], "baltimore", "City name should match the key substring");
     }
 
-    #[test]
+    #[traced_test]
     fn test_multiple_cities_extracted() {
         let (db_arc, _td) = create_temp_db();
         let mut db_guard = db_arc.lock().unwrap();
@@ -140,7 +141,7 @@ mod test_load_all_cities_for_region {
         assert_eq!(cities, vec!["annapolis", "baltimore", "frederick"]);
     }
 
-    #[test]
+    #[traced_test]
     fn test_malformed_key_skips_extraction() {
         let (db_arc, _td) = create_temp_db();
         let mut db_guard = db_arc.lock().unwrap();
@@ -165,7 +166,7 @@ mod test_load_all_cities_for_region {
         );
     }
 
-    #[test]
+    #[traced_test]
     fn test_corrupted_cbor_still_extracts_city_name_but_logs_warning() {
         let (db_arc, _td) = create_temp_db();
         let mut db_guard = db_arc.lock().unwrap();
@@ -182,7 +183,7 @@ mod test_load_all_cities_for_region {
         assert_eq!(cities, vec!["baltimore"]);
     }
 
-    #[test]
+    #[traced_test]
     fn test_value_is_empty_bytes_is_still_accepted_but_ignored_for_postal_data() {
         let (db_arc, _td) = create_temp_db();
         let mut db_guard = db_arc.lock().unwrap();

@@ -1,4 +1,5 @@
 // ---------------- [ File: src/parse_housenumber_value.rs ]
+// ---------------- [ File: src/parse_housenumber_value.rs ]
 crate::ix!();
 
 /// Parses a non-empty housenumber string as either a single number or a range.
@@ -95,35 +96,35 @@ mod test_parse_housenumber_value {
         }
     }
 
-    #[test]
+    #[traced_test]
     fn test_parse_single_integer() {
         // "123" => HouseNumberRange(123..=123)
         let res = parse_housenumber_value("123", 1);
         assert_ok_some(res, 123, 123);
     }
 
-    #[test]
+    #[traced_test]
     fn test_parse_simple_range() {
         // "10-20" => HouseNumberRange(10..=20)
         let res = parse_housenumber_value("10-20", 100);
         assert_ok_some(res, 10, 20);
     }
 
-    #[test]
+    #[traced_test]
     fn test_parse_range_with_whitespace() {
         // "  10  -  20  " => HouseNumberRange(10..=20)
         let res = parse_housenumber_value("  10  -  20  ", 999);
         assert_ok_some(res, 10, 20);
     }
 
-    #[test]
+    #[traced_test]
     fn test_reversed_range_returns_ok_none() {
         // "30-20" => reversed => Ok(None)
         let res = parse_housenumber_value("30-20", 2);
         assert_ok_none(res);
     }
 
-    #[test]
+    #[traced_test]
     fn test_parse_error_non_numeric() {
         // e.g. "ABC" => parse error => Err(IncompatibleOsmPbfElement)
         let res = parse_housenumber_value("ABC", 3);
@@ -144,7 +145,7 @@ mod test_parse_housenumber_value {
         }
     }
 
-    #[test]
+    #[traced_test]
     fn test_parse_error_non_numeric_range_end() {
         // "10-XYZ" => parse error => Err(...)
         let res = parse_housenumber_value("10-XYZ", 4);
@@ -165,7 +166,7 @@ mod test_parse_housenumber_value {
         }
     }
 
-    #[test]
+    #[traced_test]
     fn test_parse_error_negative_number() {
         // negative number is not a valid u32 => parse error => Err(...)
         let res = parse_housenumber_value("-5", 5);
@@ -186,7 +187,7 @@ mod test_parse_housenumber_value {
         }
     }
 
-    #[test]
+    #[traced_test]
     fn test_range_with_extra_dash_in_end_portion() {
         // "10-20-30" => we do `find('-')`, giving start=10, end_str="20-30", parse => fail
         let res = parse_housenumber_value("10-20-30", 6);
@@ -207,14 +208,14 @@ mod test_parse_housenumber_value {
         }
     }
 
-    #[test]
+    #[traced_test]
     fn test_zero_as_valid_single_number() {
         // It's not explicitly disallowed, so "0" => HouseNumberRange(0..=0).
         let res = parse_housenumber_value("0", 10);
         assert_ok_some(res, 0, 0);
     }
 
-    #[test]
+    #[traced_test]
     fn test_leading_dash_is_non_numeric() {
         // e.g. "- 20" => parse fails for the start half
         let res = parse_housenumber_value("- 20", 11);

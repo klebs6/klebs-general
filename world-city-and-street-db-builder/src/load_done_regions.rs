@@ -1,4 +1,5 @@
 // ---------------- [ File: src/load_done_regions.rs ]
+// ---------------- [ File: src/load_done_regions.rs ]
 crate::ix!();
 
 /// (5) Helper function to load the set of “done” regions by scanning for `META:REGION_DONE:<abbrev>`.
@@ -55,7 +56,7 @@ mod test_load_done_regions {
         db.put(key, value).expect("Inserting done marker should succeed");
     }
 
-    #[test]
+    #[traced_test]
     fn test_empty_db_returns_empty_vector() {
         let (db_arc, _temp_dir) = create_temp_db();
         let db_guard = db_arc.lock().unwrap();
@@ -64,7 +65,7 @@ mod test_load_done_regions {
         assert!(done_regions.is_empty(), "No meta keys => expected empty result");
     }
 
-    #[test]
+    #[traced_test]
     fn test_single_meta_key_parsed_correctly() {
         let (db_arc, _temp_dir) = create_temp_db();
         let mut db_guard = db_arc.lock().unwrap();
@@ -78,7 +79,7 @@ mod test_load_done_regions {
             "Expected the region loaded from the single meta key");
     }
 
-    #[test]
+    #[traced_test]
     fn test_multiple_meta_keys_return_multiple_regions() {
         let (db_arc, _temp_dir) = create_temp_db();
         let mut db_guard = db_arc.lock().unwrap();
@@ -97,7 +98,7 @@ mod test_load_done_regions {
         assert!(abbrs.contains(&"DC".to_string()));
     }
 
-    #[test]
+    #[traced_test]
     fn test_unparsable_meta_key_is_skipped() {
         let (db_arc, _temp_dir) = create_temp_db();
         let mut db_guard = db_arc.lock().unwrap();
@@ -110,7 +111,7 @@ mod test_load_done_regions {
         assert!(done_regions.is_empty(), "No valid region should be parsed from invalid abbreviation");
     }
 
-    #[test]
+    #[traced_test]
     fn test_duplicate_meta_keys_for_same_region() {
         let (db_arc, _temp_dir) = create_temp_db();
         let mut db_guard = db_arc.lock().unwrap();

@@ -1,4 +1,5 @@
 // ---------------- [ File: src/validate_all_addresses.rs ]
+// ---------------- [ File: src/validate_all_addresses.rs ]
 crate::ix!();
 
 /// Validates all addresses from `.pbf` files in a directory against the database.
@@ -87,7 +88,7 @@ mod validate_all_addresses_tests {
         Ok(())
     }
 
-    #[test]
+    #[traced_test]
     fn test_validate_all_addresses_empty_dir() -> Result<(), AddressValidationError> {
         let (db, tmp) = create_db()?;
         // No .pbf files in directory.

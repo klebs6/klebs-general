@@ -1,4 +1,5 @@
 // ---------------- [ File: src/write_postal_codes_to_region_and_city.rs ]
+// ---------------- [ File: src/write_postal_codes_to_region_and_city.rs ]
 crate::ix!();
 
 pub trait WritePostalCodesToRegionAndCity {
@@ -61,7 +62,7 @@ mod test_write_postal_codes_to_region_and_city {
         }
     }
 
-    #[test]
+    #[traced_test]
     fn test_write_nonempty_postalcodes_success() {
         let (db_arc, _tmp) = create_temp_db();
         let mut db_guard = db_arc.lock().unwrap();
@@ -85,7 +86,7 @@ mod test_write_postal_codes_to_region_and_city {
         assert_eq!(loaded, pc_set, "The stored data should match our input set");
     }
 
-    #[test]
+    #[traced_test]
     fn test_overwrite_existing_postal_codes() {
         let (db_arc, _tmp) = create_temp_db();
         let mut db_guard = db_arc.lock().unwrap();
@@ -114,7 +115,7 @@ mod test_write_postal_codes_to_region_and_city {
         assert_eq!(stored, new_pc, "The new data should have overwritten the old data");
     }
 
-    #[test]
+    #[traced_test]
     fn test_write_empty_set() {
         let (db_arc, _tmp) = create_temp_db();
         let mut db_guard = db_arc.lock().unwrap();
@@ -134,7 +135,7 @@ mod test_write_postal_codes_to_region_and_city {
         assert!(loaded.is_empty(), "Decoded set is empty");
     }
 
-    #[test]
+    #[traced_test]
     fn test_rocksdb_put_error() {
         // If put fails => returns DatabaseConstructionError::RocksDB
         struct FailingDbStub;

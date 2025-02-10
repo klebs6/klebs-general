@@ -1,4 +1,5 @@
 // ---------------- [ File: src/process_single_osm_element.rs ]
+// ---------------- [ File: src/process_single_osm_element.rs ]
 crate::ix!();
 
 /// For one OSM element, we:
@@ -99,7 +100,7 @@ mod test_process_single_osm_element {
         );
     }
 
-    #[test]
+    #[traced_test]
     fn test_valid_address_record_and_hnr() {
         // A node with tags for city, street, postcode, plus housenumber => 1) parse address, 2) parse HNR
         let tags = &[
@@ -139,7 +140,7 @@ mod test_process_single_osm_element {
         );
     }
 
-    #[test]
+    #[traced_test]
     fn test_no_hnr_but_valid_address_record() {
         // Node has city/street/postcode but no housenumber => addresses gets appended, 
         // but no entry in street_hnr_map
@@ -174,7 +175,7 @@ mod test_process_single_osm_element {
         assert!(street_hnr_map.is_empty(), "No housenumber => no street entry");
     }
 
-    #[test]
+    #[traced_test]
     fn test_hnr_but_no_valid_address_record() {
         // Node has housenumber, but city/street is missing or invalid => parse fails => no addresses.
         // We attempt to parse address again if the first time fails, just to see if there's a street name.
@@ -202,7 +203,7 @@ mod test_process_single_osm_element {
         assert!(street_hnr_map.is_empty(), "No street => no HNR insertion");
     }
 
-    #[test]
+    #[traced_test]
     fn test_extract_hnr_and_street_even_if_addressrecord_failed_initially() {
         // Suppose the first parse fails for some reason (maybe an invalid postcode),
         // but we do have a city/street => so we re-try AddressRecord::try_from => 
@@ -236,7 +237,7 @@ mod test_process_single_osm_element {
         assert!(street_hnr_map.is_empty(), "No valid street => no insertion");
     }
 
-    #[test]
+    #[traced_test]
     fn test_parse_error_in_hnr_not_fatal_for_address() {
         // If housenumber parse fails, it returns an Err => we skip adding to street map
         // but the address record could still succeed if city/street/postcode is valid.
@@ -258,7 +259,7 @@ mod test_process_single_osm_element {
         assert!(street_hnr_map.is_empty(), "HNR parse fails => no entry in street map");
     }
 
-    #[test]
+    #[traced_test]
     fn test_no_parse_error_spread() {
         // The function returns Ok(()) regardless of parse failures internally, 
         // we rely on the warnings/logs. We'll ensure no panic or error is returned 

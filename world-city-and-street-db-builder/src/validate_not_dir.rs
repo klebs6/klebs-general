@@ -1,4 +1,5 @@
 // ---------------- [ File: src/validate_not_dir.rs ]
+// ---------------- [ File: src/validate_not_dir.rs ]
 crate::ix!();
 
 /// Ensures the path does not point to an existing directory.
@@ -21,7 +22,7 @@ mod test_validate_not_dir {
     use std::path::PathBuf;
     use tracing::error; // adjust if needed
 
-    #[test]
+    #[traced_test]
     fn test_directory_returns_error() {
         let temp_dir = TempDir::new().expect("Failed to create temporary directory");
         let dir_path = temp_dir.path();
@@ -38,7 +39,7 @@ mod test_validate_not_dir {
         );
     }
 
-    #[test]
+    #[traced_test]
     fn test_file_path_returns_ok() {
         let temp_dir = TempDir::new().expect("Failed to create temporary directory");
         let file_path = temp_dir.path().join("test_file.txt");
@@ -50,7 +51,7 @@ mod test_validate_not_dir {
         assert!(result.is_ok(), "A file path => should be Ok(())");
     }
 
-    #[test]
+    #[traced_test]
     fn test_nonexistent_path_returns_ok() {
         let temp_dir = TempDir::new().expect("Failed to create temporary directory");
         let nonexistent = temp_dir.path().join("does_not_exist");
@@ -60,7 +61,7 @@ mod test_validate_not_dir {
         assert!(result.is_ok(), "A nonexistent path => Ok(())");
     }
 
-    #[test]
+    #[traced_test]
     fn test_symlink_to_dir_might_be_error_if_it_is_a_dir() {
         // Depending on your OS and how you handle symlinks, 
         // `path.is_dir()` might evaluate the symlink target. 
@@ -80,7 +81,7 @@ mod test_validate_not_dir {
         }
     }
 
-    #[test]
+    #[traced_test]
     fn test_symlink_to_file_should_ok_or_err_depending_on_target() {
         // Similarly, if the symlink points to a file, the function might treat it as a file => Ok(()),
         // or if it leads to a directory => error. We'll do a file scenario here:

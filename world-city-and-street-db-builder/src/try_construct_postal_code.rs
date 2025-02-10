@@ -1,4 +1,5 @@
 // ---------------- [ File: src/try_construct_postal_code.rs ]
+// ---------------- [ File: src/try_construct_postal_code.rs ]
 crate::ix!();
 
 /// Attempts to create a `PostalCode` from a string (if present). Returns an error
@@ -35,7 +36,7 @@ mod test_try_construct_postal_code {
         Country::USA // or whichever is appropriate
     }
 
-    #[test]
+    #[traced_test]
     fn test_none_input_returns_ok_none() {
         let element_id = 10;
         let result = try_construct_postal_code(test_country(), None, element_id);
@@ -43,7 +44,7 @@ mod test_try_construct_postal_code {
         assert!(result.unwrap().is_none());
     }
 
-    #[test]
+    #[traced_test]
     fn test_valid_postcode_returns_ok_some() {
         let element_id = 11;
         let result = try_construct_postal_code(test_country(), Some("12345"), element_id);
@@ -52,7 +53,7 @@ mod test_try_construct_postal_code {
         assert_eq!(pc.code(), "12345", "Should match the input");
     }
 
-    #[test]
+    #[traced_test]
     fn test_empty_postcode_fails() {
         let element_id = 12;
         let result = try_construct_postal_code(test_country(), Some(""), element_id);
@@ -66,7 +67,7 @@ mod test_try_construct_postal_code {
         }
     }
 
-    #[test]
+    #[traced_test]
     fn test_invalid_postcode_fails() {
         let element_id = 13;
         // Suppose "ABCD" is invalid for the country
@@ -81,7 +82,7 @@ mod test_try_construct_postal_code {
         }
     }
 
-    #[test]
+    #[traced_test]
     fn test_debug_logging_on_error() {
         // The function logs an error if postal code construction fails.
         // We can't confirm logs in a basic test; we simply confirm the error is returned.

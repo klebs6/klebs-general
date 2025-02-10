@@ -1,4 +1,5 @@
 // ---------------- [ File: src/meta_key.rs ]
+// ---------------- [ File: src/meta_key.rs ]
 crate::ix!();
 
 #[derive(Getters,Setters,Debug,Clone,PartialEq,Eq)]
@@ -31,7 +32,7 @@ impl From<WorldRegion> for MetaKeyForRegion {
 mod meta_key_tests {
     use super::*;
 
-    #[test]
+    #[traced_test]
     fn test_meta_key_from_world_region_maryland() {
         // Suppose region.abbreviation() => "US" (or "MD", depending on your code).
         let region: WorldRegion = USRegion::UnitedState(UnitedState::Maryland).into();
@@ -45,7 +46,7 @@ mod meta_key_tests {
         assert_eq!(mk.key(), &expected, "Key should follow the 'META:REGION_DONE:...' format");
     }
 
-    #[test]
+    #[traced_test]
     fn test_meta_key_from_world_region_virginia() {
         let region: WorldRegion = USRegion::UnitedState(UnitedState::Virginia).into();
         let mk = MetaKeyForRegion::from(region);
@@ -56,7 +57,7 @@ mod meta_key_tests {
         assert_eq!(mk.key(), &expected);
     }
 
-    #[test]
+    #[traced_test]
     fn test_meta_key_as_ref_u8() {
         // We can confirm that AsRef<[u8]> yields the bytes of mk.key()
         let region: WorldRegion = USRegion::UnitedState(UnitedState::Maryland).into();
@@ -67,7 +68,7 @@ mod meta_key_tests {
         assert_eq!(bytes, mk.key().as_bytes());
     }
 
-    #[test]
+    #[traced_test]
     fn test_meta_key_eq() {
         // Test that two MetaKeyForRegion are equal if their region/key are the same
         let region_a: WorldRegion = USRegion::UnitedState(UnitedState::Maryland).into();
@@ -81,7 +82,7 @@ mod meta_key_tests {
         assert_ne!(mk_a1, mk_b,  "Different region => different meta key => not equal");
     }
 
-    #[test]
+    #[traced_test]
     fn test_meta_key_debug_display() {
         // Checking we can Debug-print the struct. 
         // The derived Debug might show "MetaKeyForRegion { region: ..., key: ... }".

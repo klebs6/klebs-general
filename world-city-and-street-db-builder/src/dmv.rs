@@ -1,4 +1,5 @@
 // ---------------- [ File: src/dmv.rs ]
+// ---------------- [ File: src/dmv.rs ]
 crate::ix!();
 
 /// Builds (or updates) a RocksDB database with DC/MD/VA data, downloading
@@ -70,7 +71,7 @@ mod dmv_database_tests {
         db.get(meta_key.key().as_bytes()).unwrap().is_some()
     }
 
-    #[tokio::test]
+    #[traced_test]
     #[disable]
     async fn test_build_dmv_database_success() {
 

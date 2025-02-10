@@ -1,4 +1,5 @@
 // ---------------- [ File: src/parse_osm_pbf_and_build_house_number_ranges.rs ]
+// ---------------- [ File: src/parse_osm_pbf_and_build_house_number_ranges.rs ]
 crate::ix!();
 
 /// Loads an OSM PBF file, extracting all [`AddressRecord`]s and accumulating
@@ -71,7 +72,7 @@ mod test_load_osm_data_with_housenumbers {
     // (1) Full Integration Test using a Tiny PBF
     // ===========================================================================
     // If your codebase includes helpers like `create_tiny_osm_pbf(...)`, you can do:
-    #[test]
+    #[traced_test]
     fn test_load_osm_data_with_housenumbers_tiny_pbf_success() {
         // We assume `create_tiny_osm_pbf_with_housenumber` or similar is available
         // for making a minimal PBF file with city/street/housenumber. 
@@ -135,7 +136,7 @@ mod test_load_osm_data_with_housenumbers {
 
     /// Demonstrates the scenario where `infer_country_from_region` fails, returning an error
     /// before the code attempts to read the file.
-    #[test]
+    #[traced_test]
     fn test_infer_country_fails_returns_error() {
         // We'll define a region not convertible to a Country, for example.
         // Suppose you have `WorldRegion::Unknown`, or you can create a region
@@ -155,7 +156,7 @@ mod test_load_osm_data_with_housenumbers {
 
     /// Demonstrates the scenario where the file can't be opened (not found, etc.),
     /// leading to an error from `open_osm_pbf_reader`.
-    #[test]
+    #[traced_test]
     fn test_file_open_fails_returns_error() {
         // We'll pick a region that can be successfully converted to a Country.
         let region = USRegion::UnitedState(UnitedState::Maryland).into();
@@ -181,7 +182,7 @@ mod test_load_osm_data_with_housenumbers {
     /// but an error occurs mid-processing in `collect_address_and_housenumber_data`.
     /// We can force an error with a partial mock if you'd like. 
     /// For simplicity, we'll create an invalid/corrupted PBF so reading fails during iteration.
-    #[test]
+    #[traced_test]
     fn test_mid_processing_parse_error() {
         // We'll create a "bogus" .pbf file with random content that isn't valid OSM data.
         let temp_dir = TempDir::new().expect("Failed to create temp dir");

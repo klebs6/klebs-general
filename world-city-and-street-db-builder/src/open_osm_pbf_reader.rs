@@ -1,4 +1,5 @@
 // ---------------- [ File: src/open_osm_pbf_reader.rs ]
+// ---------------- [ File: src/open_osm_pbf_reader.rs ]
 crate::ix!();
 
 pub fn open_osm_pbf_reader(path: impl AsRef<Path>)
@@ -16,7 +17,7 @@ pub fn open_osm_pbf_reader(path: impl AsRef<Path>)
 mod open_osm_pbf_reader_tests {
     use super::*;
 
-    #[test]
+    #[traced_test]
     fn test_open_osm_pbf_reader_valid() {
         let tmp_dir = TempDir::new().unwrap();
         let pbf_path = tmp_dir.path().join("sample.osm.pbf");
@@ -39,7 +40,7 @@ mod open_osm_pbf_reader_tests {
         }
     }
 
-    #[test]
+    #[traced_test]
     fn test_open_osm_pbf_reader_missing_file() {
         let path = PathBuf::from("/non/existent/path/to.pbf");
         let result = open_osm_pbf_reader(&path);

@@ -1,4 +1,5 @@
 // ---------------- [ File: src/load_house_number_ranges.rs ]
+// ---------------- [ File: src/load_house_number_ranges.rs ]
 crate::ix!();
 
 pub trait LoadHouseNumberRanges {
@@ -103,7 +104,7 @@ mod test_load_house_number_ranges {
           .expect("Storing house-number ranges should succeed in test setup");
     }
 
-    #[test]
+    #[traced_test]
     fn test_no_key_returns_none() {
         // If there's no key in the DB, we expect None as the result.
         let (db_arc, _tmp) = create_temp_db();
@@ -118,7 +119,7 @@ mod test_load_house_number_ranges {
         assert_eq!(result, None, "Expected None when no key is in DB");
     }
 
-    #[test]
+    #[traced_test]
     fn test_valid_data_returns_some_ranges() {
         // We'll store valid CBOR data (two house number ranges) and confirm we can load them.
         let (db_arc, _tmp) = create_temp_db();
@@ -141,7 +142,7 @@ mod test_load_house_number_ranges {
         assert_eq!(loaded, ranges_in, "Loaded ranges should match stored data");
     }
 
-    #[test]
+    #[traced_test]
     fn test_corrupted_cbor_data_causes_error() {
         // We'll write invalid CBOR bytes, ensuring that an error is returned.
         let (db_arc, _tmp) = create_temp_db();
@@ -174,7 +175,7 @@ mod test_load_house_number_ranges {
         }
     }
 
-    #[test]
+    #[traced_test]
     fn test_rocksdb_read_error_propagates() {
         // If a RocksDB read fails, that is typically converted to `DataAccessError::Io`.
         // We'll create a minimal stub that fails on `get(...)` to test the propagation.

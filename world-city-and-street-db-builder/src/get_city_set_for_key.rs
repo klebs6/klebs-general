@@ -1,4 +1,5 @@
 // ---------------- [ File: src/get_city_set_for_key.rs ]
+// ---------------- [ File: src/get_city_set_for_key.rs ]
 crate::ix!();
 
 pub trait GetCitySetForKey {
@@ -33,14 +34,14 @@ mod get_city_set_for_key_tests {
         (db, da, tmp_dir)
     }
 
-    #[test]
+    #[traced_test]
     fn test_get_city_set_no_such_key() {
         let (_db_arc, da, _tmp) = create_db_and_da::<Database>();
         let result = da.get_city_set("missing_key");
         assert!(result.is_none(), "No key => None");
     }
 
-    #[test]
+    #[traced_test]
     fn test_get_city_set_empty_value() {
         let (db_arc, da, _tmp) = create_db_and_da::<Database>();
         {
@@ -52,7 +53,7 @@ mod get_city_set_for_key_tests {
         assert!(result.is_none(), "Empty => None");
     }
 
-    #[test]
+    #[traced_test]
     fn test_get_city_set_corrupted_cbor() {
         let (db_arc, da, _tmp) = create_db_and_da::<Database>();
         {
@@ -63,7 +64,7 @@ mod get_city_set_for_key_tests {
         assert!(result.is_none(), "Corrupted => None");
     }
 
-    #[test]
+    #[traced_test]
     fn test_get_city_set_valid_data() {
         let (db_arc, da, _tmp) = create_db_and_da::<Database>();
         // We'll store e.g. {"baltimore","annapolis"} 
@@ -91,7 +92,7 @@ mod get_city_set_for_key_tests {
         assert_eq!(names, vec!["annapolis", "baltimore"]);
     }
 
-    #[test]
+    #[traced_test]
     fn test_get_city_set_lock_poisoned() {
         let (db_arc, da, _tmp) = create_db_and_da::<Database>();
         // Poison the lock:

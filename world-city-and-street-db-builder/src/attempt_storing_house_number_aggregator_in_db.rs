@@ -1,4 +1,5 @@
 // ---------------- [ File: src/attempt_storing_house_number_aggregator_in_db.rs ]
+// ---------------- [ File: src/attempt_storing_house_number_aggregator_in_db.rs ]
 // ---------------- [ File: src/attempt_storing_in_db.rs ]
 crate::ix!();
 
@@ -38,7 +39,7 @@ mod attempt_storing_house_number_aggregator_in_db_tests {
     // ---------------------------------------------------------------------
     // 1) test with an empty aggregator => no actual writes
     // ---------------------------------------------------------------------
-    #[test]
+    #[traced_test]
     fn test_attempt_storing_house_number_aggregator_in_db_empty() {
         let db_arc = create_test_db();
         let region = md_region();
@@ -64,7 +65,7 @@ mod attempt_storing_house_number_aggregator_in_db_tests {
     // ---------------------------------------------------------------------
     // 2) test with a single-street aggregator => success => aggregator stored
     // ---------------------------------------------------------------------
-    #[test]
+    #[traced_test]
     fn test_attempt_storing_house_number_aggregator_in_db_non_empty() {
         let db_arc = create_test_db();
         let region = md_region();
@@ -95,7 +96,7 @@ mod attempt_storing_house_number_aggregator_in_db_tests {
     // ---------------------------------------------------------------------
     // 3) test DB lock poisoning => it logs a warning and does not panic
     // ---------------------------------------------------------------------
-    #[test]
+    #[traced_test]
     fn test_attempt_storing_house_number_aggregator_in_db_lock_poisoned() {
         let db_arc = create_test_db();
         let region = md_region();
@@ -126,7 +127,7 @@ mod attempt_storing_house_number_aggregator_in_db_tests {
     // ---------------------------------------------------------------------
     // This scenario requires either a custom DB or hooking `store_house_number_aggregator_results`
     // to force an error. We'll illustrate how it might look logically:
-    #[test]
+    #[traced_test]
     fn test_attempt_storing_house_number_aggregator_in_db_error_storing() {
         // If your real code does not provide a direct way to simulate an error from store_house_number_aggregator_results,
         // you can skip or adapt. For demonstration, let's define a "FakeDB" or a boolean error injection.

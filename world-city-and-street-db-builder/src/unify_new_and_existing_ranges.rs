@@ -1,4 +1,5 @@
 // ---------------- [ File: src/unify_new_and_existing_ranges.rs ]
+// ---------------- [ File: src/unify_new_and_existing_ranges.rs ]
 crate::ix!();
 
 /// Merges newly provided house‐number ranges with the existing set.
@@ -39,7 +40,7 @@ mod test_unify_new_and_existing_ranges {
         strs.join(", ")
     }
 
-    #[test]
+    #[traced_test]
     fn test_no_new_ranges() {
         // If `new_ranges` is empty, the original `current` should remain unchanged.
         let current = vec![hnr(1, 10), hnr(20, 25)];
@@ -52,7 +53,7 @@ mod test_unify_new_and_existing_ranges {
         );
     }
 
-    #[test]
+    #[traced_test]
     fn test_no_existing_ranges() {
         // If `current` is empty, the result should just be `new_ranges`.
         let current = vec![];
@@ -65,7 +66,7 @@ mod test_unify_new_and_existing_ranges {
         );
     }
 
-    #[test]
+    #[traced_test]
     fn test_disjoint_new_ranges() {
         // new ranges do not overlap => appended in sorted order by merge_house_number_range.
         // current=[1..5, 10..15], new=[6..7, 18..20]
@@ -83,7 +84,7 @@ mod test_unify_new_and_existing_ranges {
         );
     }
 
-    #[test]
+    #[traced_test]
     fn test_merge_overlapping_new_ranges() {
         // current=[10..15], new=[12..18]
         // final => [10..18]
@@ -100,7 +101,7 @@ mod test_unify_new_and_existing_ranges {
         );
     }
 
-    #[test]
+    #[traced_test]
     fn test_multiple_new_ranges_some_overlap() {
         // current=[1..5, 10..15], new=[5..6, 12..18, 30..40]
         // merge => 
@@ -120,7 +121,7 @@ mod test_unify_new_and_existing_ranges {
         );
     }
 
-    #[test]
+    #[traced_test]
     fn test_subrange_new_range() {
         // new range is fully contained in an existing range => no expansion.
         let current = vec![hnr(10,20)];
@@ -131,7 +132,7 @@ mod test_unify_new_and_existing_ranges {
             "New subrange inside existing => no change");
     }
 
-    #[test]
+    #[traced_test]
     fn test_superset_new_range() {
         // new range fully covers an existing range => unify => new bigger range
         let current = vec![hnr(100,110)];
@@ -142,7 +143,7 @@ mod test_unify_new_and_existing_ranges {
         assert_eq!(result, expected);
     }
 
-    #[test]
+    #[traced_test]
     fn test_merge_is_transitive_across_new_ranges() {
         // If new has overlapping items among themselves, the final merges them all.
         // current=[10..11], new=[11..14, 14..16] => step by step:
@@ -159,7 +160,7 @@ mod test_unify_new_and_existing_ranges {
         );
     }
 
-    #[test]
+    #[traced_test]
     fn test_merge_order_independence() {
         // unify_new_and_existing_ranges processes new ranges in order, but final result
         // should be consistent. We'll confirm the final set doesn't differ if we reorder new.

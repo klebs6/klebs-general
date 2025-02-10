@@ -1,4 +1,5 @@
 // ---------------- [ File: src/validate_pbf_filename.rs ]
+// ---------------- [ File: src/validate_pbf_filename.rs ]
 crate::ix!();
 
 /// Validates that `pbf_path` has a filename matching what we'd expect for `region`.
@@ -53,7 +54,7 @@ mod test_validate_pbf_filename {
         USRegion::UnitedState(UnitedState::Maryland).into()
     }
 
-    #[test]
+    #[traced_test]
     fn test_exact_filename_match_ok() {
         // If the expected filename is "maryland-latest.osm.pbf" 
         // and actual is exactly that, ignoring ASCII case => Ok(()).
@@ -66,7 +67,7 @@ mod test_validate_pbf_filename {
         assert!(result.is_ok(), "Exact match => should be Ok(())");
     }
 
-    #[test]
+    #[traced_test]
     fn test_case_insensitive_match_ok() {
         // e.g. "MaRyLaNd-LaTeSt.oSm.PbF" => ignoring case => ok
         let pbf_path = PathBuf::from("MaRyLaNd-LaTeSt.oSm.PbF");
@@ -76,7 +77,7 @@ mod test_validate_pbf_filename {
         assert!(result.is_ok(), "Case-insensitive match => should be Ok");
     }
 
-    #[test]
+    #[traced_test]
     fn test_optional_md5_block_ok() {
         // e.g. "maryland-latest.123abc45.oSm.PbF"
         // If filenames_match(...) function allows "maryland-latest.<md5>.osm.pbf", it should pass
@@ -87,7 +88,7 @@ mod test_validate_pbf_filename {
         assert!(result.is_ok(), "Filename with optional .<md5> => Ok");
     }
 
-    #[test]
+    #[traced_test]
     fn test_leading_dot_slash_ignored_ok() {
         // e.g. "./maryland-latest.osm.pbf"
         // The code strips leading "./" if present. => should pass
@@ -98,7 +99,7 @@ mod test_validate_pbf_filename {
         assert!(result.is_ok(), "Leading './' => ignored => Ok");
     }
 
-    #[test]
+    #[traced_test]
     fn test_mismatch_returns_error() {
         // e.g. "virginia-latest.osm.pbf" but region => maryland => error
         let pbf_path = PathBuf::from("virginia-latest.osm.pbf");
@@ -116,7 +117,7 @@ mod test_validate_pbf_filename {
         }
     }
 
-    #[test]
+    #[traced_test]
     fn test_path_is_directory_returns_error_on_filename_extraction() {
         // If the path is a directory, .file_name() => None => we get InvalidInputFile
         let temp_dir = TempDir::new().expect("Failed to create temp dir");
@@ -131,7 +132,7 @@ mod test_validate_pbf_filename {
         }
     }
 
-    #[test]
+    #[traced_test]
     fn test_no_file_name_component_returns_error() {
         // Another scenario: PathBuf::from("/") => file_name => None
         // e.g. on Unix, root path => no filename
@@ -144,7 +145,7 @@ mod test_validate_pbf_filename {
         }
     }
 
-    #[test]
+    #[traced_test]
     fn test_file_name_unreadable_in_utf8_returns_error() {
         // On some platforms, you could have non-UTF8 filenames => .to_str() => None => error
         // We'll simulate that with ill-formed UTF-8. 

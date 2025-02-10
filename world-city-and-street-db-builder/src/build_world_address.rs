@@ -1,4 +1,5 @@
 // ---------------- [ File: src/build_world_address.rs ]
+// ---------------- [ File: src/build_world_address.rs ]
 crate::ix!();
 
 /// Helper that builds a `WorldAddress` from region, city, street, postal.
@@ -34,7 +35,7 @@ pub fn build_world_address(
 mod build_world_address_tests {
     use super::*;
 
-    #[test]
+    #[traced_test]
     fn test_build_world_address_fail() {
         // Verify that creating a CityName with an empty string fails.
         let city_result = CityName::new("");
@@ -45,7 +46,7 @@ mod build_world_address_tests {
         assert!(street_result.is_err(), "Expected whitespace street to fail");
     }
 
-    #[test]
+    #[traced_test]
     fn test_build_world_address_ok() {
         let region = WorldRegion::default();
         let city = CityName::new("MyCity").unwrap();
@@ -61,7 +62,7 @@ mod build_world_address_tests {
         assert_eq!(addr.postal_code().code(), "12345");
     }
 
-    #[test]
+    #[traced_test]
     fn test_build_world_address_with_different_country() {
         // If your code uses `PostalCode::new(Country::CANADA, "H0H0H0")` or something,
         // you can test that logic. We'll do a simple example:
@@ -79,7 +80,7 @@ mod build_world_address_tests {
         assert_eq!(addr.postal_code().code(), "h3z2y7");
     }
 
-    #[test]
+    #[traced_test]
     fn test_build_world_address_fail_on_empty_city() {
         // `CityName::new("")` => Error => can't even build `CityName`.
         let empty_city = CityName::new("");
@@ -92,7 +93,7 @@ mod build_world_address_tests {
         // So we typically fail earlier in city creation logic.
     }
 
-    #[test]
+    #[traced_test]
     fn test_build_world_address_fail_on_whitespace_street() {
         let region = WorldRegion::default();
         let city = CityName::new("ValidCity").unwrap();
@@ -106,7 +107,7 @@ mod build_world_address_tests {
         // So we can't even proceed to call build_world_address.
     }
 
-    #[test]
+    #[traced_test]
     fn test_build_world_address_postal_code_failure() {
         // Suppose an empty or invalid postal code => fails creation
         let invalid_pc = PostalCode::new(Country::USA, "   ");
@@ -117,7 +118,7 @@ mod build_world_address_tests {
         // If your code returns Ok(PostalCode) for odd data, adapt accordingly.
     }
 
-    #[test]
+    #[traced_test]
     fn test_build_world_address_very_long_names() {
         let region = WorldRegion::default();
 
@@ -150,7 +151,7 @@ mod build_world_address_tests {
         assert_eq!(addr.postal_code().code(), "99999");
     }
 
-    #[test]
+    #[traced_test]
     fn test_build_world_address_placeholder_error_on_builder_fail() {
         // Suppose the builder logic might fail if something is omitted or 
         // if a partial bug triggers `map_err(...)`.

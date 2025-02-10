@@ -1,4 +1,5 @@
 // ---------------- [ File: src/try_construct_street_name.rs ]
+// ---------------- [ File: src/try_construct_street_name.rs ]
 crate::ix!();
 
 /// Attempts to create a `StreetName` from a string (if present). Returns an error
@@ -31,7 +32,7 @@ mod test_try_construct_street_name {
     use crate::errors::*;
     use tracing::{trace, debug, error};
 
-    #[test]
+    #[traced_test]
     fn test_none_input_returns_ok_none() {
         let element_id = 10;
         let result = try_construct_street_name(None, element_id);
@@ -39,7 +40,7 @@ mod test_try_construct_street_name {
         assert!(result.unwrap().is_none());
     }
 
-    #[test]
+    #[traced_test]
     fn test_valid_street_returns_some() {
         let element_id = 11;
         let result = try_construct_street_name(Some("Main Street"), element_id);
@@ -51,7 +52,7 @@ mod test_try_construct_street_name {
         );
     }
 
-    #[test]
+    #[traced_test]
     fn test_empty_street_fails() {
         let element_id = 12;
         let result = try_construct_street_name(Some(""), element_id);
@@ -72,7 +73,7 @@ mod test_try_construct_street_name {
         }
     }
 
-    #[test]
+    #[traced_test]
     fn test_whitespace_street_fails() {
         let element_id = 13;
         let result = try_construct_street_name(Some("   "), element_id);
@@ -86,7 +87,7 @@ mod test_try_construct_street_name {
         }
     }
 
-    #[test]
+    #[traced_test]
     fn test_debug_logging_when_streetname_fails() {
         // The function logs an error with the `error!` macro if street construction fails.
         // We can't directly verify logs in a standard test, but we confirm the error is returned.

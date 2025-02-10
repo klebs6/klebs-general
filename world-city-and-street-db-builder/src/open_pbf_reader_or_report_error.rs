@@ -1,4 +1,5 @@
 // ---------------- [ File: src/open_pbf_reader_or_report_error.rs ]
+// ---------------- [ File: src/open_pbf_reader_or_report_error.rs ]
 crate::ix!();
 
 /// Helper that attempts to open the OSM PBF file. If successful, returns the reader.
@@ -34,7 +35,7 @@ mod test_open_pbf_reader_or_report_error {
     /// Tests the success path where `open_osm_pbf_reader` can open a valid file.
     /// We'll create a tiny file, possibly not a real .osm.pbf, but enough to test the file I/O part.
     /// The parsing might fail later, but we're only testing the open step here.
-    #[test]
+    #[traced_test]
     fn test_opens_valid_file_returns_some() {
         let temp_dir = TempDir::new().expect("Failed to create temp dir");
         let file_path = temp_dir.path().join("test_data.pbf");
@@ -56,7 +57,7 @@ mod test_open_pbf_reader_or_report_error {
     }
 
     /// Tests the failure path when the file does not exist, expecting None and an error to be sent.
-    #[test]
+    #[traced_test]
     fn test_file_not_found_returns_none_sends_error() {
         let temp_dir = TempDir::new().expect("Failed to create temp dir");
         let non_existent_path = temp_dir.path().join("no_such_file.pbf");
@@ -88,7 +89,7 @@ mod test_open_pbf_reader_or_report_error {
 
     /// Tests the failure path when the path is a directory rather than a file.
     /// We expect None and an error to be sent.
-    #[test]
+    #[traced_test]
     fn test_open_directory_returns_none_sends_error() {
         let temp_dir = TempDir::new().expect("Failed to create temp dir");
         // The `temp_dir` itself is a directory
@@ -120,7 +121,7 @@ mod test_open_pbf_reader_or_report_error {
 
     /// Optionally, if you want to test a locked file or permission error,
     /// you could do so under UNIX. This is more advanced and not always portable.
-    #[test]
+    #[traced_test]
     #[cfg(unix)]
     fn test_permission_denied_sends_error() {
         use std::os::unix::fs::PermissionsExt;
@@ -157,7 +158,7 @@ mod test_open_pbf_reader_or_report_error {
 
     /// Tests that if the function returns Some(reader), no error is sent in the channel.
     /// Already covered in the success test, but let's confirm no partial failures occur.
-    #[test]
+    #[traced_test]
     fn test_no_error_sent_on_success() {
         let temp_dir = TempDir::new().expect("Failed to create temp dir");
         let file_path = temp_dir.path().join("valid_file.pbf");

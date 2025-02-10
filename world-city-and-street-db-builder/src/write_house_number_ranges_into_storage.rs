@@ -1,4 +1,5 @@
 // ---------------- [ File: src/write_house_number_ranges_into_storage.rs ]
+// ---------------- [ File: src/write_house_number_ranges_into_storage.rs ]
 crate::ix!();
 
 /// Merges and writes all provided house‐number ranges into storage for the given region.
@@ -74,7 +75,7 @@ mod test_write_house_number_ranges_into_storage {
         }
     }
 
-    #[test]
+    #[traced_test]
     fn test_empty_map_no_op_success() {
         // If house_number_ranges is empty => no iteration => success
         let (db_arc, _tmp) = create_temp_db();
@@ -87,7 +88,7 @@ mod test_write_house_number_ranges_into_storage {
         assert!(result.is_ok(), "Empty input => no updates => Ok(())");
     }
 
-    #[test]
+    #[traced_test]
     fn test_single_street_success() {
         // house_number_ranges => { "MainSt" => [10..20] }
         // existing data => none => final => [10..20]
@@ -107,7 +108,7 @@ mod test_write_house_number_ranges_into_storage {
         assert_eq!(final_data, vec![hnr(10,20)]);
     }
 
-    #[test]
+    #[traced_test]
     fn test_multiple_streets_success() {
         // house_number_ranges => { "ASt" => [1..2], "BSt" => [5..8] }, plus merges existing data
         // We'll store some existing data for each street, then confirm final after merges
@@ -145,7 +146,7 @@ mod test_write_house_number_ranges_into_storage {
         assert_eq!(final_c, vec![hnr(100,105)], "CSt => no existing => stored new");
     }
 
-    #[test]
+    #[traced_test]
     fn test_partial_error_aborts_and_returns_err() {
         // If `update_street_house_numbers` fails for any street, the function returns an error.
         // We'll define a stub that fails on the second street, verifying the function returns that error.
@@ -214,7 +215,7 @@ mod test_write_house_number_ranges_into_storage {
         // This test ensures that if any street fails to update, the entire function returns that error
     }
 
-    #[test]
+    #[traced_test]
     fn test_all_succeed_after_multiple_calls() {
         // If we call the function multiple times with different data, it should handle them cumulatively.
         // This is more of an integration test style scenario.

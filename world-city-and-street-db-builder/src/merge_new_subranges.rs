@@ -1,4 +1,5 @@
 // ---------------- [ File: src/merge_new_subranges.rs ]
+// ---------------- [ File: src/merge_new_subranges.rs ]
 crate::ix!();
 
 /// Merges newly extracted subranges into the existing list, returning a consolidated list.
@@ -50,7 +51,7 @@ mod test_merge_new_subranges {
         }
     }
 
-    #[test]
+    #[traced_test]
     fn test_no_new_ranges() {
         // If `new_ranges` is empty, the function should return `current` unchanged.
         let current = vec![hnr(1, 5), hnr(10, 15)];
@@ -59,7 +60,7 @@ mod test_merge_new_subranges {
         assert_eq!(merged, current, "Merging empty new ranges should leave current unchanged");
     }
 
-    #[test]
+    #[traced_test]
     fn test_current_empty() {
         // If `current` is empty, the result should simply be `new_ranges`.
         let current = vec![];
@@ -71,7 +72,7 @@ mod test_merge_new_subranges {
         );
     }
 
-    #[test]
+    #[traced_test]
     fn test_disjoint_ranges() {
         // If new ranges do not overlap with current, they should be simply appended in sorted order.
         // The underlying merge helper typically sorts or merges, but let's confirm final result.
@@ -89,7 +90,7 @@ mod test_merge_new_subranges {
         );
     }
 
-    #[test]
+    #[traced_test]
     fn test_overlap_new_range() {
         // If new ranges overlap with existing, they should unify.
         // e.g. current=[10..15], new=[12..18] => merged=[10..18].
@@ -105,7 +106,7 @@ mod test_merge_new_subranges {
         );
     }
 
-    #[test]
+    #[traced_test]
     fn test_multiple_new_ranges_some_overlap() {
         // Some new ranges do not overlap, others do.
         // current = [1..5, 10..15]
@@ -124,7 +125,7 @@ mod test_merge_new_subranges {
         );
     }
 
-    #[test]
+    #[traced_test]
     fn test_new_subrange_is_contained_in_existing() {
         // If new range is fully within an existing range, no expansion needed.
         let current = vec![hnr(10,20)];
@@ -136,7 +137,7 @@ mod test_merge_new_subranges {
         );
     }
 
-    #[test]
+    #[traced_test]
     fn test_new_range_superset_of_existing() {
         // If new range fully covers an existing range, the result should unify into the new range.
         let current = vec![hnr(100,110)];
@@ -146,7 +147,7 @@ mod test_merge_new_subranges {
         assert_eq!(merged, expected, "Should unify into a single larger range");
     }
 
-    #[test]
+    #[traced_test]
     fn test_merge_is_transitive_within_new_ranges() {
         // If we have multiple new ranges that themselves overlap, we want a final unify.
         // current: [1..2], new: [2..5, 5..7]
@@ -159,7 +160,7 @@ mod test_merge_new_subranges {
         assert_eq!(merged, expected, "All overlapping subranges unify transitively");
     }
 
-    #[test]
+    #[traced_test]
     fn test_merge_order_does_not_affect_result() {
         // The function processes `new_ranges` in the given order, each time merging
         // with `current`. We'll confirm that even if we reorder the new ranges,

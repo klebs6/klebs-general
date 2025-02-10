@@ -35,6 +35,7 @@ INDIVIDUAL_TEST := expected_filename_for_region
 INDIVIDUAL_TEST := gather_city_key_value_pairs
 INDIVIDUAL_TEST := get_prefix_iterator
 INDIVIDUAL_TEST := handle_pbf_house_number_extractor_in_thread
+INDIVIDUAL_TEST := test_handle_extractor_aggregator_store_fails
 
 #INDIVIDUAL_TEST := cli
 #INDIVIDUAL_TEST := street_name_test
@@ -46,8 +47,8 @@ INDIVIDUAL_TEST := handle_pbf_house_number_extractor_in_thread
 #-----------------------------------------------------[this section lets us choose how we want to test]
 DEFAULT := test
 #DEFAULT := test_file
-#DEFAULT := test_one
-#CEFAULT := test_file_one
+DEFAULT := test_one
+#DEFAULT := test_file_one
 #DEFAULT := test_all
 #DEFAULT := run
 

@@ -1,4 +1,5 @@
 // ---------------- [ File: src/infer_country_from_region.rs ]
+// ---------------- [ File: src/infer_country_from_region.rs ]
 crate::ix!();
 
 /// Converts a [`WorldRegion`] into a [`Country`], logging the attempt and result.
@@ -16,7 +17,7 @@ pub fn infer_country_from_region(
 mod infer_country_from_region_tests {
     use super::*;
 
-    #[test]
+    #[traced_test]
     fn test_infer_country_from_known_region() {
         // Suppose a typical region => USRegion::UnitedState(UnitedState::Maryland)
         // => we expect Country::USA
@@ -27,7 +28,7 @@ mod infer_country_from_region_tests {
         assert_eq!(country, Country::USA, "Maryland => USA");
     }
 
-    #[test]
+    #[traced_test]
     fn test_infer_country_from_known_federal_district() {
         // e.g. DC => Country::USA (depending on your code)
         let region: WorldRegion = USRegion::USFederalDistrict(USFederalDistrict::DistrictOfColumbia).into();

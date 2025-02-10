@@ -1,4 +1,5 @@
 // ---------------- [ File: src/write_cities_to_region_and_street.rs ]
+// ---------------- [ File: src/write_cities_to_region_and_street.rs ]
 crate::ix!();
 
 pub trait WriteCitiesToRegionAndStreet {
@@ -65,7 +66,7 @@ mod test_write_cities_to_region_and_street {
         }
     }
 
-    #[test]
+    #[traced_test]
     fn test_write_cities_first_time() {
         // No prior data => store new set => verify it’s correct
         let (db_arc, _temp_dir) = create_temp_db();
@@ -90,7 +91,7 @@ mod test_write_cities_to_region_and_street {
         assert_eq!(stored, cities, "Retrieved set should match what we stored");
     }
 
-    #[test]
+    #[traced_test]
     fn test_overwrite_existing_cities() {
         // If there's already data, writing a new set overwrites it.
         let (db_arc, _temp_dir) = create_temp_db();
@@ -120,7 +121,7 @@ mod test_write_cities_to_region_and_street {
         assert_eq!(stored, new_cities, "Should reflect the newly stored data only");
     }
 
-    #[test]
+    #[traced_test]
     fn test_empty_set_is_stored() {
         // It's valid to store an empty set. We'll confirm it decodes as an empty set later.
         let (db_arc, _temp_dir) = create_temp_db();
@@ -141,7 +142,7 @@ mod test_write_cities_to_region_and_street {
         assert!(stored.is_empty(), "Should decode as empty set");
     }
 
-    #[test]
+    #[traced_test]
     fn test_rocksdb_error_on_put() {
         // If put fails => returns DatabaseConstructionError. We'll define a minimal failing stub.
 

@@ -1,10 +1,12 @@
 // ---------------- [ File: src/errors.rs ]
+// ---------------- [ File: src/errors.rs ]
 crate::ix!();
 
 error_tree!{
 
     #[derive(PartialEq)]
     pub enum DataAccessError {
+        MockDbAlwaysFailsOnLoad,
         #[cmp_neq]
         Io(io::Error),
         LockPoisoned,
@@ -84,6 +86,7 @@ error_tree!{
 
     #[derive(PartialEq)]
     pub enum DatabaseConstructionError {
+        MockDbAlwaysFailsOnStore,
         DataAccessError,
         OsmPbfParseError(OsmPbfParseError),
         RocksDB(rocksdb::Error),
