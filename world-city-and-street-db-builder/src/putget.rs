@@ -181,9 +181,7 @@ mod test_database_put_get {
         let db_stub = FailingDbStub;
         let result = db_stub.get(b"some_key");
         match result {
-            Err(DatabaseConstructionError::RocksDB(e)) => {
-                assert_eq!(e.to_string(), "Simulated read error");
-            }
+            Err(DataAccessError::SimulatedReadError) => { }
             other => panic!("Expected RocksDB read error, got {:?}", other),
         }
     }

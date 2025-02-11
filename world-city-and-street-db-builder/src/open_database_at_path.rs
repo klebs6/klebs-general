@@ -24,7 +24,7 @@ impl OpenDatabaseAtPath for Database {
         // Optionally enable prefix bloom filters
         opts.set_memtable_prefix_bloom_ratio(0.1);
 
-        let db = DB::open(&opts, path)?;
+        let db = DB::open(&opts, path).map_err(|e| DataAccessError::RocksDB(e))?;
 
         let db = DatabaseBuilder::default()
             .db(Arc::new(db))

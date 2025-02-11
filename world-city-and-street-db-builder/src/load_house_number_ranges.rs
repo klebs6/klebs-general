@@ -160,7 +160,7 @@ mod test_load_house_number_ranges {
         let result = data_access.load_house_number_ranges(&region, &street);
 
         match result {
-            Err(DataAccessError::OsmPbfPareseError(e)) => {
+            Err(DataAccessError::OsmPbfParseError(e)) => {
                 // The error message should indicate a deserialization failure
             }
             Err(e) => {
@@ -178,7 +178,7 @@ mod test_load_house_number_ranges {
         struct FailingDbStub;
         impl DatabaseGet for FailingDbStub {
             fn get(&self, _key: impl AsRef<[u8]>) -> Result<Option<Vec<u8>>, DataAccessError> {
-                Err(DatabaseConstructionError::SimulatedReadError)
+                Err(DataAccessError::SimulatedReadError)
             }
         }
 

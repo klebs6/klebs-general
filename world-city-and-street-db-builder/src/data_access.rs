@@ -1,5 +1,4 @@
 // ---------------- [ File: src/data_access.rs ]
-// ---------------- [ File: src/data_access.rs ]
 crate::ix!();
 
 /// DataAccess struct for queries
@@ -47,8 +46,8 @@ mod data_access_tests {
     fn create_db_and_da<I:StorageInterface>() 
         -> Result<(Arc<Mutex<I>>, DataAccess<I>), WorldCityAndStreetDbBuilderError> 
     {
-        let tmp = TempDir::new()?;                // => DataAccessError::Io if fails
-        let db  = I::open(tmp.path())?;     // => DataAccessError::DatabaseConstructionError if fails
+        let tmp = TempDir::new().map_err(|e| DataAccessError::Io(e))?;      // => DataAccessError::Io if fails
+        let db  = I::open(tmp.path())?; // => DataAccessError::DatabaseConstructionError if fails
         let da  = DataAccess::with_db(db.clone());
         Ok((db, da))
     }

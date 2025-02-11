@@ -271,7 +271,7 @@ mod database_tests {
             let invalid_path = PathBuf::from("/root/some_path_we_cant_write");
             let result = Database::open(&invalid_path);
             match result {
-                Err(DatabaseConstructionError::RocksDB(e)) => {
+                Err(WorldCityAndStreetDbBuilderError::DatabaseConstructionError(DatabaseConstructionError::RocksDB(e))) => {
                     // e.g. "Invalid argument" or "IO error"
                     debug!("Got a rocksdb open error as expected: {}", e);
                 },

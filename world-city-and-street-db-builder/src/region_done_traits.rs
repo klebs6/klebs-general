@@ -1,5 +1,4 @@
 // ---------------- [ File: src/region_done_traits.rs ]
-// ---------------- [ File: src/region_done_traits.rs ]
 crate::ix!();
 
 pub trait CheckIfRegionDone {
@@ -131,7 +130,7 @@ mod test_region_done_traits {
         match result {
             Err(DataAccessError::SimulatedReadError) => { },
             b => {
-                panic!("Expected a SimulatedReadError, but got {}", b);
+                panic!("Expected a SimulatedReadError, but got {:?}", b);
             }
         }
     }
