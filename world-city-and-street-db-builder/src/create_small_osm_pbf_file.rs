@@ -1,5 +1,4 @@
 // ---------------- [ File: src/create_small_osm_pbf_file.rs ]
-// ---------------- [ File: src/create_small_osm_pbf_file.rs ]
 crate::ix!();
 
 /// Creates a minimal `.osm.pbf` file with a single Node.
@@ -29,18 +28,21 @@ crate::ix!();
 /// * `Ok(())` on success.
 /// * `Err(std::io::Error)` if I/O or serialization fails.
 pub async fn create_small_osm_pbf_file(
-    path: &Path,
-    bbox: (i64, i64, i64, i64),
-    city: &str,
-    street: &str,
+    path:        &Path,
+    bbox:        (i64, i64, i64, i64),
+    city:        &str,
+    street:      &str,
+    postcode:    &str,
     housenumber: Option<&str>,
-    lat: f64,
-    lon: f64,
-    node_id: i64,
+    lat:         f64,
+    lon:         f64,
+    node_id:     i64,
+
 ) -> std::io::Result<()> {
+
     trace!(
-        "create_small_osm_pbf_file: invoked for path={:?}, node_id={}, city={}, street={}, housenumber={:?}, lat={}, lon={}",
-        path, node_id, city, street, housenumber, lat, lon
+        "create_small_osm_pbf_file: invoked for path={:?}, node_id={}, city={}, street={}, postcode={:?}, housenumber={:?}, lat={}, lon={}",
+        path, node_id, city, street, postcode, housenumber, lat, lon
     );
 
     // Ensure path is suitable for file creation
@@ -52,7 +54,15 @@ pub async fn create_small_osm_pbf_file(
         serialize_osm_header_block(header_block)?;
 
     // 2) Prepare PrimitiveBlock with a single node & optional housenumber, then serialize
-    let primitive_block = prepare_single_node_primitive_block(city, street, housenumber, lat, lon, node_id);
+    let primitive_block = prepare_single_node_primitive_block(
+        city, 
+        street, 
+        postcode, 
+        housenumber, 
+        lat, 
+        lon, 
+        node_id
+    );
     let (data_blobheader_bytes, data_blob_bytes) =
         serialize_primitive_block(primitive_block)?;
 
@@ -174,12 +184,14 @@ mod create_small_osm_pbf_file_tests {
         let lon = -76.616_f64;
         let city = "Baltimore";
         let street = "North Avenue";
+        let postcode = "11111";
 
         let res = create_small_osm_pbf_file(
             &path,
             bbox,
             city,
             street,
+            postcode,
             None, // no housenumber
             lat,
             lon,
@@ -204,12 +216,14 @@ mod create_small_osm_pbf_file_tests {
         let city = "TestCity";
         let street = "TestStreet";
         let housenumber = Some("100-110");
+        let postcode = "11111";
 
         let res = create_small_osm_pbf_file(
             &path,
             bbox,
             city,
             street,
+            postcode,
             housenumber,
             lat,
             lon,
@@ -236,6 +250,7 @@ mod create_small_osm_pbf_file_tests {
             bbox,
             "City",
             "Street",
+            "11111",
             None,
             lat,
             lon,
@@ -259,7 +274,19 @@ mod create_small_osm_pbf_file_tests {
         {
             let path = PathBuf::from("/this/path/is/not/writable.osm.pbf");
             let bbox = (-77_000_000_000, -76_000_000_000, 39_000_000_000, 38_000_000_000);
-            let res = create_small_osm_pbf_file(&path, bbox, "City", "Street", None, 39.0, -76.0, 123).await;
+
+            let res = create_small_osm_pbf_file(
+                &path, 
+                bbox, 
+                "City", 
+                "Street", 
+                "11111", 
+                None, 
+                39.0, 
+                -76.0, 
+                123
+            ).await;
+
             assert!(res.is_err(), "Unwritable path => error");
         }
     }
@@ -275,6 +302,7 @@ mod create_small_osm_pbf_file_tests {
 
         let city = "AnywhereVille";
         let street = "Main St";
+        let postcode = "11111";
         let lat = 45.5;
         let lon = -119.5;
 
@@ -283,6 +311,7 @@ mod create_small_osm_pbf_file_tests {
             bbox,
             city,
             street,
+            postcode,
             None,
             lat,
             lon,
@@ -309,12 +338,14 @@ mod create_small_osm_pbf_file_tests {
         let lon = 200.0;
         let city = "OutOfRangeCity";
         let street = "SomeRoad";
+        let postcode = "11111";
 
         let res = create_small_osm_pbf_file(
             &path,
             bbox,
             city,
             street,
+            postcode,
             Some("42"),
             lat,
             lon,

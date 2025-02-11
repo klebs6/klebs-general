@@ -40,7 +40,6 @@ pub fn parse_city_names(kv_pairs: Vec<(String, Vec<u8>)>) -> Vec<String> {
 }
 
 #[cfg(test)]
-#[disable]
 mod test_parse_city_names {
     use super::*;
     use std::collections::BTreeSet;

@@ -1,5 +1,4 @@
 // ---------------- [ File: src/chain_addresses_across_files.rs ]
-// ---------------- [ File: src/chain_addresses_across_files.rs ]
 crate::ix!();
 
 /// Builds a single chained iterator of [`WorldAddress`] across all `.pbf` files.
@@ -140,13 +139,14 @@ mod chain_addresses_across_files_tests {
     // 4) Multiple files => some recognized, some not => chain them
     #[traced_test]
     fn test_chain_addresses_across_files_multiple() {
+
         // We'll define 2 recognized regions => MD, VA
-        let tmp = TempDir::new().unwrap();
-        let db = Database::open(tmp.path().join("chain_db4")).unwrap();
+        let tmp                   = TempDir::new().unwrap();
+        let db                    = Database::open(tmp.path().join("chain_db4")).unwrap();
         let known_md: WorldRegion = USRegion::UnitedState(UnitedState::Maryland).into();
         let known_va: WorldRegion = USRegion::UnitedState(UnitedState::Virginia).into();
-        let known_regions = vec![known_md, known_va];
-        let pbf_dir = tmp.path();
+        let known_regions         = vec![known_md, known_va];
+        let pbf_dir               = tmp.path();
 
         // recognized => "maryland-latest.osm.pbf"
         let md_path = pbf_dir.join("maryland-latest.osm.pbf");
@@ -177,42 +177,64 @@ mod chain_addresses_across_files_tests {
         // yield the chain from the 2 recognized ones.
     }
 
-    // 5) Error from addresses_from_pbf_file_with_house_numbers => returns Err
-    // e.g. if one recognized file is corrupted => that function returns an error => short-circuit
     #[traced_test]
     fn test_chain_addresses_across_files_error_in_mid_loop() {
-        let tmp = TempDir::new().unwrap();
-        let db = Database::open(tmp.path().join("chain_db5")).unwrap();
-        let region = USRegion::UnitedState(UnitedState::Maryland).into();
-        let known_regions = vec![region];
-        let pbf_dir = tmp.path();
 
-        // File #1 => recognized => but it's "maryland-latest.osm.pbf" and let's corrupt it => parse error
+        let tmp           = TempDir::new().unwrap();
+        let db            = Database::open(tmp.path().join("chain_db5")).unwrap();
+        let region        = USRegion::UnitedState(UnitedState::Maryland).into();
+        let known_regions = vec![region];
+        let pbf_dir       = tmp.path();
+
+        // File #1 => recognized => "maryland-latest.osm.pbf" => but we'll corrupt it
         let md_path = pbf_dir.join("maryland-latest.osm.pbf");
         create_corrupted_pbf(&md_path).unwrap();
 
-        // File #2 => recognized => "maryland-latest2.osm.pbf" => skip or recognized? 
-        // If your code specifically checks "maryland-latest.osm.pbf" ignoring ASCII case, 
-        // then "maryland-latest2" might not match. We'll do a second recognized name:
-        let md2_path = pbf_dir.join("maryland-latest.osm.pbf.md5");
-        // or "maryland-latest.abcdef.osm.pbf" if your code allows appended .abcdef before .osm.pbf
+        // File #2 => recognized => "maryland-latest.abc123.osm.pbf" => just an empty, valid file
+        let md2_path = pbf_dir.join("maryland-latest.abc123.osm.pbf");
         create_empty_pbf(&md2_path).unwrap();
 
-        // The first recognized file => parse error => chain_addresses_across_files returns an Err immediately (since the function calls addresses_from_pbf_file_with_house_numbers and returns its error).
-        let result = chain_addresses_across_files(
-            vec![md_path.clone(), md2_path.clone()],
+        // Now call our chain function
+        //
+        // Because our code sets up a *lazy* iterator, it won't parse each file
+        // until we *iterate*. So building the chain succeeds immediately:
+        let chain_result = chain_addresses_across_files(
+            vec![md_path, md2_path],
             &known_regions,
             db.clone(),
             pbf_dir
         );
-        // We expect an immediate error from the first file's parse:
-        assert!(result.is_err(), "Corrupted PBF => parse error => Err(...) from chain fn");
+        assert!(
+            chain_result.is_ok(),
+            "We expect to build a lazy chain successfully, even if the first file is corrupted."
+        );
 
-        match result.err().unwrap() {
-            OsmPbfParseError::OsmPbf(_) => {
-                // good => parse error
+        // Now consume the iterator to trigger the actual parse:
+        let chain_it = chain_result.unwrap();
+        let mut all_items: Vec<Result<WorldAddress, OsmPbfParseError>> = chain_it.collect();
+
+        // The *first* file in the chain is corrupted => the *first* item in `all_items`
+        // should be an Err(OsmPbfParseError::OsmPbf(...)).
+        // 
+        // If we found a parse error, we never get real addresses from that file,
+        // but the code won't parse the second file until/unless we keep iterating.
+        // 
+        // We'll just check that our first item is the parse error we expected:
+        assert!(
+            !all_items.is_empty(),
+            "We expected at least one parse attempt to fail with an error, but got zero items."
+        );
+
+        match &all_items[0] {
+            Err(OsmPbfParseError::OsmPbf(_)) => {
+                // Great — we got exactly the parse error we wanted for the first corrupted file.
             }
-            other => panic!("Expected parse error from corrupted pbf, got: {:?}", other),
-        }
+            other => {
+                panic!("Expected parse error from the corrupted file as the first item; got {:?}", other)
+            }
+            }
+
+        // Optionally, if you keep pulling items, you might see them from the second file,
+        // but the typical approach is to bail out on the first parse error anyway.
     }
 }

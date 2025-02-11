@@ -1,5 +1,4 @@
 // ---------------- [ File: src/collect_address_and_housenumber_data.rs ]
-// ---------------- [ File: src/collect_address_and_housenumber_data.rs ]
 crate::ix!();
 
 /// Iterates through all OSM elements in the file, extracting both addresses

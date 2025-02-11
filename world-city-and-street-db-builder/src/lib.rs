@@ -69,7 +69,6 @@ x!{list_all_addresses_in_pbf_dir}
 x!{load_all_cities_for_region}
 x!{load_all_streets_for_region}
 x!{load_done_regions}
-x!{load_existing_house_number_ranges}
 x!{load_existing_street_ranges}
 x!{load_house_number_ranges}
 x!{merge_house_number_range}

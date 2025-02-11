@@ -150,6 +150,7 @@ mod extract_house_number_range_from_element_integration_tests {
             (-77_000_000_000, -76_000_000_000, 39_000_000_000, 38_000_000_000),
             "TestCity",
             "TestStreet",
+            "11111",
             housenumber,
             39.283,
             -76.616,

@@ -4,13 +4,13 @@ crate::ix!();
 
 pub trait OpenDatabaseAtPath {
     fn open(path: impl AsRef<std::path::Path>) 
-        -> Result<Arc<Mutex<Self>>, DatabaseConstructionError>;
+        -> Result<Arc<Mutex<Self>>, WorldCityAndStreetDbBuilderError>;
 }
 
 impl OpenDatabaseAtPath for Database {
 
     fn open(path: impl AsRef<std::path::Path>)
-        -> Result<Arc<Mutex<Self>>, DatabaseConstructionError>
+        -> Result<Arc<Mutex<Self>>, WorldCityAndStreetDbBuilderError>
     {
         let mut opts = Options::default();
         opts.create_if_missing(true);

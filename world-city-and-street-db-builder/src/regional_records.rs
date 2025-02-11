@@ -60,7 +60,6 @@ impl RegionalRecords {
 }
 
 #[cfg(test)]
-#[disable]
 mod test_regional_records {
     use super::*;
 
@@ -272,7 +271,7 @@ mod test_regional_records {
     #[traced_test]
     #[serial]
     fn test_write_to_storage_with_region_not_done() {
-        let (db_arc, _dir) = create_test_db();
+        let (db_arc, _dir) = create_test_db::<Database>();
         let mut db_guard = db_arc.lock().unwrap();
 
         let region: WorldRegion = USRegion::UnitedState(UnitedState::Maryland).into();
@@ -294,7 +293,7 @@ mod test_regional_records {
         };
 
         // Now attempt to store
-        let result = rr.write_to_storage(&mut db_guard);
+        let result = rr.write_to_storage(&mut *db_guard);
         assert!(result.is_ok(), "Expected write_to_storage to succeed.");
 
         // Check region_done => true
@@ -307,7 +306,7 @@ mod test_regional_records {
     #[traced_test]
     #[serial]
     fn test_write_to_storage_with_region_already_done() {
-        let (db_arc, _dir) = create_test_db();
+        let (db_arc, _dir) = create_test_db::<Database>();
         let mut db_guard = db_arc.lock().unwrap();
 
         let region: WorldRegion = USRegion::UnitedState(UnitedState::Virginia).into();
@@ -327,7 +326,7 @@ mod test_regional_records {
             house_number_ranges: Default::default()
         };
 
-        let result = rr.write_to_storage(&mut db_guard);
+        let result = rr.write_to_storage(&mut *db_guard);
         assert!(result.is_ok(), "write_to_storage should succeed, but do nothing.");
 
         // Because region was already done, we do not expect it to rewrite or 

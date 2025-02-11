@@ -1,5 +1,4 @@
 // ---------------- [ File: src/load_all_cities_for_region.rs ]
-// ---------------- [ File: src/load_all_cities_for_region.rs ]
 crate::ix!();
 
 /// A tiny helper to gather all known city names for a given region.
@@ -40,7 +39,6 @@ pub fn load_all_cities_for_region<I:StorageInterface>(db: &I, region: &WorldRegi
 }
 
 #[cfg(test)]
-#[disable]
 mod test_load_all_cities_for_region {
     use super::*;
     use tempfile::TempDir;
@@ -85,17 +83,17 @@ mod test_load_all_cities_for_region {
 
     #[traced_test]
     fn test_no_keys_in_db_returns_empty() {
-        let (db_arc, _td) = create_temp_db();
+        let (db_arc, _td) = create_temp_db::<Database>();
         let db_guard = db_arc.lock().unwrap();
 
         let region = USRegion::UnitedState(UnitedState::Maryland).into();
-        let result = load_all_cities_for_region(&db_guard, &region);
+        let result = load_all_cities_for_region(&*db_guard, &region);
         assert!(result.is_empty(), "Expected an empty vector if no C2Z keys exist");
     }
 
     #[traced_test]
     fn test_no_c2z_keys_for_this_region_returns_empty() {
-        let (db_arc, _td) = create_temp_db();
+        let (db_arc, _td) = create_temp_db::<Database>();
         let mut db_guard = db_arc.lock().unwrap();
 
         // We'll store something unrelated, e.g. C2S or S2C, not matching the prefix "C2Z:<abbr>:"
@@ -103,38 +101,38 @@ mod test_load_all_cities_for_region {
         db_guard.put("C2Z:CA:toronto", b"dummy cbor").unwrap(); // different region abbr
 
         let region = USRegion::UnitedState(UnitedState::Maryland).into();
-        let result = load_all_cities_for_region(&db_guard, &region);
+        let result = load_all_cities_for_region(&*db_guard, &region);
         assert!(result.is_empty(), "No keys matching C2Z:MD: => should return empty");
     }
 
     #[traced_test]
     fn test_single_city_extracted() {
-        let (db_arc, _td) = create_temp_db();
+        let (db_arc, _td) = create_temp_db::<Database>();
         let mut db_guard = db_arc.lock().unwrap();
 
         let region = USRegion::UnitedState(UnitedState::Maryland).into();
         let valid_data = make_valid_cbor_for_test_postal();
 
-        put_c2z_data(&mut db_guard, &region, "baltimore", &valid_data);
+        put_c2z_data(&mut *db_guard, &region, "baltimore", &valid_data);
 
-        let cities = load_all_cities_for_region(&db_guard, &region);
+        let cities = load_all_cities_for_region(&*db_guard, &region);
         assert_eq!(cities.len(), 1, "Should find exactly one city");
         assert_eq!(cities[0], "baltimore", "City name should match the key substring");
     }
 
     #[traced_test]
     fn test_multiple_cities_extracted() {
-        let (db_arc, _td) = create_temp_db();
+        let (db_arc, _td) = create_temp_db::<Database>();
         let mut db_guard = db_arc.lock().unwrap();
 
         let region = USRegion::UnitedState(UnitedState::Maryland).into();
         let valid_data = make_valid_cbor_for_test_postal();
 
-        put_c2z_data(&mut db_guard, &region, "baltimore", &valid_data);
-        put_c2z_data(&mut db_guard, &region, "frederick", &valid_data);
-        put_c2z_data(&mut db_guard, &region, "annapolis", &valid_data);
+        put_c2z_data(&mut *db_guard, &region, "baltimore", &valid_data);
+        put_c2z_data(&mut *db_guard, &region, "frederick", &valid_data);
+        put_c2z_data(&mut *db_guard, &region, "annapolis", &valid_data);
 
-        let mut cities = load_all_cities_for_region(&db_guard, &region);
+        let mut cities = load_all_cities_for_region(&*db_guard, &region);
         cities.sort();
 
         assert_eq!(cities.len(), 3, "Expected three distinct city extractions");
@@ -143,7 +141,7 @@ mod test_load_all_cities_for_region {
 
     #[traced_test]
     fn test_malformed_key_skips_extraction() {
-        let (db_arc, _td) = create_temp_db();
+        let (db_arc, _td) = create_temp_db::<Database>();
         let mut db_guard = db_arc.lock().unwrap();
 
         let region = USRegion::UnitedState(UnitedState::Maryland).into();
@@ -156,9 +154,9 @@ mod test_load_all_cities_for_region {
         db_guard.put("C2Z:MD:", &valid_data).unwrap();
 
         // We'll put one valid key so there's at least one city in DB.
-        put_c2z_data(&mut db_guard, &region, "rockville", &valid_data);
+        put_c2z_data(&mut *db_guard, &region, "rockville", &valid_data);
 
-        let cities = load_all_cities_for_region(&db_guard, &region);
+        let cities = load_all_cities_for_region(&*db_guard, &region);
         assert_eq!(
             cities,
             vec!["rockville"],
@@ -168,31 +166,31 @@ mod test_load_all_cities_for_region {
 
     #[traced_test]
     fn test_corrupted_cbor_still_extracts_city_name_but_logs_warning() {
-        let (db_arc, _td) = create_temp_db();
+        let (db_arc, _td) = create_temp_db::<Database>();
         let mut db_guard = db_arc.lock().unwrap();
 
         let region = USRegion::UnitedState(UnitedState::Maryland).into();
         let corrupted_data = make_corrupted_cbor();
 
-        put_c2z_data(&mut db_guard, &region, "baltimore", &corrupted_data);
+        put_c2z_data(&mut *db_guard, &region, "baltimore", &corrupted_data);
 
         // The city name "baltimore" will appear from the key, 
         // but decoding the CBOR is expected to fail. We only discard that data, 
         // but we still capture the city name from the key substring.
-        let cities = load_all_cities_for_region(&db_guard, &region);
+        let cities = load_all_cities_for_region(&*db_guard, &region);
         assert_eq!(cities, vec!["baltimore"]);
     }
 
     #[traced_test]
     fn test_value_is_empty_bytes_is_still_accepted_but_ignored_for_postal_data() {
-        let (db_arc, _td) = create_temp_db();
+        let (db_arc, _td) = create_temp_db::<Database>();
         let mut db_guard = db_arc.lock().unwrap();
 
         let region = USRegion::UnitedState(UnitedState::Maryland).into();
         // Storing an empty value
-        put_c2z_data(&mut db_guard, &region, "silver_spring", &[]);
+        put_c2z_data(&mut *db_guard, &region, "silver_spring", &[]);
 
-        let cities = load_all_cities_for_region(&db_guard, &region);
+        let cities = load_all_cities_for_region(&*db_guard, &region);
         assert_eq!(cities, vec!["silver_spring"], "City name is extracted from key, ignoring empty value");
     }
 }

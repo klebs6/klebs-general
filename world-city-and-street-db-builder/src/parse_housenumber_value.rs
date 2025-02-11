@@ -55,7 +55,6 @@ pub fn parse_housenumber_value(
 }
 
 #[cfg(test)]
-#[disable]
 mod test_parse_housenumber_value {
     use super::*;
 
@@ -67,8 +66,8 @@ mod test_parse_housenumber_value {
     ) {
         match result {
             Ok(Some(range)) => {
-                assert_eq!(range.start(), expected_start, "Range start mismatch");
-                assert_eq!(range.end(), expected_end, "Range end mismatch");
+                assert_eq!(*range.start(), expected_start, "Range start mismatch");
+                assert_eq!(*range.end(), expected_end, "Range end mismatch");
             }
             Ok(None) => panic!("Expected Some(HouseNumberRange), got Ok(None)"),
             Err(e) => panic!("Expected Some(HouseNumberRange), got Err({:?})", e),

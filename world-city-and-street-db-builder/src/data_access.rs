@@ -44,7 +44,9 @@ mod data_access_tests {
     /// Creates a fresh Database + DataAccess. 
     /// The question mark operator (`?`) will automatically convert errors 
     /// to DataAccessError, thanks to error_tree! definitions.
-    fn create_db_and_da<I:StorageInterface>() -> Result<(Arc<Mutex<I>>, DataAccess<I>), DataAccessError> {
+    fn create_db_and_da<I:StorageInterface>() 
+        -> Result<(Arc<Mutex<I>>, DataAccess<I>), WorldCityAndStreetDbBuilderError> 
+    {
         let tmp = TempDir::new()?;                // => DataAccessError::Io if fails
         let db  = I::open(tmp.path())?;     // => DataAccessError::DatabaseConstructionError if fails
         let da  = DataAccess::with_db(db.clone());
@@ -56,7 +58,7 @@ mod data_access_tests {
         db: &mut I,
         key: &str,
         items: &BTreeSet<T>
-    ) -> Result<(), DataAccessError> {
+    ) -> Result<(), DatabaseConstructionError> {
         let cbor_data = compress_set_to_cbor(items);
         db.put(key, cbor_data)?; // => DataAccessError::DatabaseConstructionError
         Ok(())
@@ -96,7 +98,7 @@ mod data_access_tests {
     // --------------------------------------------
 
     #[traced_test]
-    fn test_get_city_set_no_key() -> Result<(), DataAccessError> {
+    fn test_get_city_set_no_key() -> Result<(), WorldCityAndStreetDbBuilderError> {
         let (_db, da) = create_db_and_da::<Database>()?;
         let result = da.get_city_set("Z2C:US:99999");
         assert!(result.is_none());
@@ -104,7 +106,7 @@ mod data_access_tests {
     }
 
     #[traced_test]
-    fn test_get_city_set_valid() -> Result<(), DataAccessError> {
+    fn test_get_city_set_valid() -> Result<(), WorldCityAndStreetDbBuilderError> {
         let (db, da) = create_db_and_da::<Database>()?;
         {
             let mut db_guard = db.lock().map_err(|_| DataAccessError::LockPoisoned)?;
@@ -122,7 +124,7 @@ mod data_access_tests {
     }
 
     #[traced_test]
-    fn test_get_city_set_empty() -> Result<(), DataAccessError> {
+    fn test_get_city_set_empty() -> Result<(), WorldCityAndStreetDbBuilderError> {
         let (db, da) = create_db_and_da::<Database>()?;
         {
             let mut db_guard = db.lock().map_err(|_| DataAccessError::LockPoisoned)?;
@@ -136,7 +138,7 @@ mod data_access_tests {
     }
 
     #[traced_test]
-    fn test_get_street_set_single() -> Result<(), DataAccessError> {
+    fn test_get_street_set_single() -> Result<(), WorldCityAndStreetDbBuilderError> {
         let (db, da) = create_db_and_da::<Database>()?;
         {
             let mut db_guard = db.lock().map_err(|_| DataAccessError::LockPoisoned)?;
@@ -153,7 +155,7 @@ mod data_access_tests {
     }
 
     #[traced_test]
-    fn test_get_postal_code_set_multiple() -> Result<(), DataAccessError> {
+    fn test_get_postal_code_set_multiple() -> Result<(), WorldCityAndStreetDbBuilderError> {
         let (db, da) = create_db_and_da::<Database>()?;
         {
             let mut db_guard = db.lock().map_err(|_| DataAccessError::LockPoisoned)?;
@@ -175,7 +177,7 @@ mod data_access_tests {
     // --------------------------------------------
 
     #[traced_test]
-    fn test_postal_codes_for_city_in_region() -> Result<(), DataAccessError> {
+    fn test_postal_codes_for_city_in_region() -> Result<(), WorldCityAndStreetDbBuilderError> {
         let (db, da) = create_db_and_da::<Database>()?;
         {
             let mut guard = db.lock().map_err(|_| DataAccessError::LockPoisoned)?;
@@ -192,7 +194,7 @@ mod data_access_tests {
     }
 
     #[traced_test]
-    fn test_street_names_for_city_in_region() -> Result<(), DataAccessError> {
+    fn test_street_names_for_city_in_region() -> Result<(), WorldCityAndStreetDbBuilderError> {
         let (db, da) = create_db_and_da::<Database>()?;
         {
             let mut guard = db.lock().map_err(|_| DataAccessError::LockPoisoned)?;
@@ -208,7 +210,7 @@ mod data_access_tests {
     }
 
     #[traced_test]
-    fn test_cities_for_postal_code() -> Result<(), DataAccessError> {
+    fn test_cities_for_postal_code() -> Result<(), WorldCityAndStreetDbBuilderError> {
         let (db, da) = create_db_and_da::<Database>()?;
         {
             let mut guard = db.lock().map_err(|_| DataAccessError::LockPoisoned)?;
@@ -224,7 +226,7 @@ mod data_access_tests {
     }
 
     #[traced_test]
-    fn test_street_names_for_postal_code_in_region() -> Result<(), DataAccessError> {
+    fn test_street_names_for_postal_code_in_region() -> Result<(), WorldCityAndStreetDbBuilderError> {
         let (db, da) = create_db_and_da::<Database>()?;
         {
             let mut guard = db.lock().map_err(|_| DataAccessError::LockPoisoned)?;
@@ -244,7 +246,7 @@ mod data_access_tests {
     // --------------------------------------------
 
     #[traced_test]
-    fn test_street_exists_in_city_true() -> Result<(), DataAccessError> {
+    fn test_street_exists_in_city_true() -> Result<(), WorldCityAndStreetDbBuilderError> {
         let (db, da) = create_db_and_da::<Database>()?;
         {
             let mut guard = db.lock().map_err(|_| DataAccessError::LockPoisoned)?;
@@ -259,7 +261,7 @@ mod data_access_tests {
     }
 
     #[traced_test]
-    fn test_street_exists_in_city_false() -> Result<(), DataAccessError> {
+    fn test_street_exists_in_city_false() -> Result<(), WorldCityAndStreetDbBuilderError> {
         let (_db, da) = create_db_and_da::<Database>()?;
         let exists = da.street_exists_in_city(&region_md(), &city_baltimore(), &street_north_avenue());
         assert!(!exists);
@@ -267,7 +269,7 @@ mod data_access_tests {
     }
 
     #[traced_test]
-    fn test_street_exists_in_postal_code_true() -> Result<(), DataAccessError> {
+    fn test_street_exists_in_postal_code_true() -> Result<(), WorldCityAndStreetDbBuilderError> {
         let (db, da) = create_db_and_da::<Database>()?;
         {
             let mut guard = db.lock().map_err(|_| DataAccessError::LockPoisoned)?;
@@ -282,7 +284,7 @@ mod data_access_tests {
     }
 
     #[traced_test]
-    fn test_street_exists_in_postal_code_false() -> Result<(), DataAccessError> {
+    fn test_street_exists_in_postal_code_false() -> Result<(), WorldCityAndStreetDbBuilderError> {
         let (_db, da) = create_db_and_da::<Database>()?;
         let exists = da.street_exists_in_postal_code(&region_md(), &postal_21201(), &street_north_avenue());
         assert!(!exists);
@@ -290,7 +292,7 @@ mod data_access_tests {
     }
 
     #[traced_test]
-    fn test_street_exists_globally_true() -> Result<(), DataAccessError> {
+    fn test_street_exists_globally_true() -> Result<(), WorldCityAndStreetDbBuilderError> {
         let (db, da) = create_db_and_da::<Database>()?;
         {
             let mut guard = db.lock().map_err(|_| DataAccessError::LockPoisoned)?;
@@ -315,7 +317,7 @@ mod data_access_tests {
     }
 
     #[traced_test]
-    fn test_street_exists_globally_false() -> Result<(), DataAccessError> {
+    fn test_street_exists_globally_false() -> Result<(), WorldCityAndStreetDbBuilderError> {
         let (_db, da) = create_db_and_da::<Database>()?;
         let region = region_va();
         let street = street_catlett_road();
@@ -329,7 +331,7 @@ mod data_access_tests {
     // --------------------------------------------
 
     #[traced_test]
-    fn test_lock_poisoning_logged_as_warning() -> Result<(), DataAccessError> {
+    fn test_lock_poisoning_logged_as_warning() -> Result<(), WorldCityAndStreetDbBuilderError> {
         let (db, da) = create_db_and_da::<Database>()?;
         // Force a lock poison:
         let _ = std::panic::catch_unwind(|| {

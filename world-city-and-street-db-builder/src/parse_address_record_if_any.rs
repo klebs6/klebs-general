@@ -26,7 +26,6 @@ pub fn parse_address_record_if_any(
 }
 
 #[cfg(test)]
-#[disable]
 mod test_parse_address_record_if_any {
     use super::*;
     use osmpbf::{Element, Node};
@@ -62,7 +61,7 @@ mod test_parse_address_record_if_any {
     ) {
         match (expected_city, actual.city()) {
             (Some(exp_city), Some(actual_city)) => {
-                assert_eq!(actual_city.name(), exp_city.to_lowercase());
+                assert_eq!(*actual_city.name(), exp_city.to_lowercase());
             }
             (None, None) => {}
             (Some(_), None) | (None, Some(_)) => {
@@ -75,7 +74,7 @@ mod test_parse_address_record_if_any {
 
         match (expected_street, actual.street()) {
             (Some(exp_street), Some(actual_street)) => {
-                assert_eq!(actual_street.name(), exp_street.to_lowercase());
+                assert_eq!(*actual_street.name(), exp_street.to_lowercase());
             }
             (None, None) => {}
             (Some(_), None) | (None, Some(_)) => {

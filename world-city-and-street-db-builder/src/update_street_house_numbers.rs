@@ -1,5 +1,4 @@
 // ---------------- [ File: src/update_street_house_numbers.rs ]
-// ---------------- [ File: src/update_street_house_numbers.rs ]
 crate::ix!();
 
 /// Loads existing house‐number ranges for a street, merges new data, and stores the result.
@@ -16,10 +15,9 @@ pub fn update_street_house_numbers<I:StorageInterface>(
         new_ranges.len()
     );
 
-    let existing = db.load_existing_house_number_ranges(region, street)
-        .map_err(|_| DatabaseConstructionError::DataAccessError)?;
+    let existing = db.load_house_number_ranges(region, street)?;
 
-    let merged = unify_new_and_existing_ranges(existing, new_ranges);
+    let merged = unify_new_and_existing_ranges(existing.unwrap_or(vec![]), new_ranges);
 
     db.store_house_number_ranges(region, street, &merged)?;
 
@@ -137,7 +135,7 @@ mod test_update_street_house_numbers {
         // We'll define a partial stub that fails on `load_existing_house_number_ranges`.
         // Then confirm update_street_house_numbers => DataAccessError.
         struct FailingLoadDb;
-        impl LoadExistingHouseNumberRanges for FailingLoadDb {
+        impl LoadHouseNumberRanges for FailingLoadDb {
             fn load_existing_house_number_ranges(
                 &self, 
                 _region: &WorldRegion, 
@@ -192,7 +190,7 @@ mod test_update_street_house_numbers {
             // We'll hold a vector for existing data, so we can pass the load step
             existing: Vec<HouseNumberRange>,
         }
-        impl LoadExistingHouseNumberRanges for FailingStoreDb {
+        impl LoadHouseNumberRanges for FailingStoreDb {
             fn load_existing_house_number_ranges(
                 &self, 
                 _region: &WorldRegion, 

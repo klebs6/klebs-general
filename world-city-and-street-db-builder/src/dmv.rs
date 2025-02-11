@@ -12,12 +12,7 @@ pub async fn build_dmv_database<I:StorageInterface>(
 ) -> Result<Arc<Mutex<I>>, WorldCityAndStreetDbBuilderError> 
 {
     // 1) Open (or create) the DB
-    let db = match I::open(db_path) {
-        Ok(db_arc) => db_arc,
-        Err(e) => {
-            return Err(WorldCityAndStreetDbBuilderError::DatabaseConstructionError(e));
-        }
-    };
+    let db = I::open(db_path)?;
 
     // 2) For each DMV region, try to parse if not already done
     {

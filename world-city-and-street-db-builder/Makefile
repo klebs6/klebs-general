@@ -16,41 +16,26 @@ TEST_FILE  := tests/test_scale_layer.rs
 #-------------------------------------[done-below]
 ACTIVE_PACKAGE := world-city-and-street-db-builder
 #-----------------------------------------------------[]
-INDIVIDUAL_TEST := filenames_tests
-INDIVIDUAL_TEST := address_record_tests
-INDIVIDUAL_TEST := city_name
-INDIVIDUAL_TEST := world_address
-INDIVIDUAL_TEST := test_build_world_address_fail
-INDIVIDUAL_TEST := test_parse_and_aggregate_osm_empty
-INDIVIDUAL_TEST := osm_parser_tests::test_parse_osm_pbf_corrupted_file
-#INDIVIDUAL_TEST := verify_md5_checksum_mismatch
-INDIVIDUAL_TEST := build_city_search_prefix
-INDIVIDUAL_TEST := build_world_address
-INDIVIDUAL_TEST := build_world_address_if_possible
-INDIVIDUAL_TEST := capture_stdout
-INDIVIDUAL_TEST := chain_addresses_across_files
-INDIVIDUAL_TEST := collect_address_and_housenumber_data
-INDIVIDUAL_TEST := db_decoder
-
-#INDIVIDUAL_TEST := cli
-#INDIVIDUAL_TEST := street_name_test
-#INDIVIDUAL_TEST := list_all_addresses
-#INDIVIDUAL_TEST := validate_all_addresses
-#INDIVIDUAL_TEST := download_and_parse_all
-#INDIVIDUAL_TEST := dump
-
+INDIVIDUAL_TEST := test_load_done_regions
+#INDIVIDUAL_TEST := test_load_existing_house_number_ranges
+#INDIVIDUAL_TEST := test_load_existing_street_ranges
+#INDIVIDUAL_TEST := test_load_house_number_ranges
+#INDIVIDUAL_TEST := merge_range_tests
+#INDIVIDUAL_TEST := test_merge_new_subranges
+#INDIVIDUAL_TEST := meta_key_tests
+INDIVIDUAL_TEST := build_all_region_data
 #-----------------------------------------------------[this section lets us choose how we want to test]
 DEFAULT := test
-#DEFAULT := test_file
 #DEFAULT := test_one
+
+#DEFAULT := test_file
 #DEFAULT := test_file_one
 #DEFAULT := test_all
 #DEFAULT := run
 
 default: $(DEFAULT)
 
-
-#NOCAPTURE := --nocapture
+#NOCAPTURE := --nocapture --test-threads=1
 #NOCAPTURE := 
 
 #----------------------------------------------[here are our rules]
@@ -59,6 +44,9 @@ run:
 
 build:
 	RUSTFLAGS=$(RUSTFLAGS) $(CARGO) $(BUILD) $(FEATURES)
+
+build_tests:
+	RUSTFLAGS=$(RUSTFLAGS) $(CARGO) $(BUILD) --tests $(FEATURES)
 
 active:
 	RUSTFLAGS=$(RUSTFLAGS) $(CARGO) $(BUILD) -p $(ACTIVE_PACKAGE) $(FEATURES)

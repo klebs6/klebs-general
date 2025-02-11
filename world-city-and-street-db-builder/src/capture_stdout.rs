@@ -1,154 +1,74 @@
 // ---------------- [ File: src/capture_stdout.rs ]
-// ---------------- [ File: src/capture_stdout.rs ]
 crate::ix!();
 
-use std::io::{self, Read, Write};
-use std::os::unix::io::{AsRawFd, RawFd};
-
-/// Captures everything printed to stdout during the execution of the given closure.
+/// Captures everything printed to stdout within a closure `f()`, returning
+/// it as a `String`. We lock a global mutex so no other test thread can 
+/// manipulate or write to stdout concurrently.
 ///
-/// This function creates an OS pipe and redirects stdout to the write end of that pipe.
-/// After the closure is executed, stdout is restored and the contents of the pipe are
-/// read and returned as a `String`.
-///
-/// # Arguments
-///
-/// * `f` - A closure that performs printing to stdout.
-///
-/// # Returns
-///
-/// * `Ok(String)` containing the captured output on success.
-/// * An `io::Error` if any system call (dup, dup2, pipe, or I/O operation) fails.
+/// **NOTE**: If your entire test suite is run with `--test-threads=1` or
+/// each test using `#[serial]`, you can omit this global lock. But the lock
+/// is a safe extra layer in case other code touches stdout in parallel.
 ///
 /// # Safety
-///
-/// This function uses unsafe code to manipulate file descriptors via libc functions.
-///
+/// - We do an `unsafe` call to `libc::dup2(...)`. This is safe only if no other
+///   threads are using stdout concurrently (which is why we lock).
 pub fn capture_stdout<F: FnOnce()>(f: F) -> io::Result<String> {
-    // Save the original stdout.
+
+    /// Initialize the global lock on first use.
+    fn capture_stdout_global_lock() -> &'static Mutex<()> {
+        /// A global lock ensuring that only one `capture_stdout` call runs at a time.
+        /// We use `OnceLock` so it’s lazily initialized and a `static Mutex`.
+        static STDOUT_CAPTURE_LOCK: OnceLock<Mutex<()>> = OnceLock::new();
+
+        eprintln!("locking global lock");
+        STDOUT_CAPTURE_LOCK.get_or_init(|| Mutex::new(()))
+    }
+
+    // Acquire the global lock so no other thread manipulates stdout:
+    //
+    // Instead of .expect(...) which fails on poison, we recover from poison:
+    let _lock_guard = match capture_stdout_global_lock().lock() {
+        Ok(guard) => guard,
+        Err(poisoned) => {
+            warn!("capture_stdout: global lock was poisoned; continuing anyway.");
+            poisoned.into_inner() // recover guard from the poisoned lock
+        }
+    };
+
+    eprintln!("Backing up original stdout");
     let backup = StdoutBackup::new()?;
 
-    // Create a pipe. The write end (writer) will be used to capture stdout,
-    // while the read end (reader) will be used later to collect the output.
+    eprintln!("Creating an os_pipe so we can read what’s written");
     let (mut reader, writer) = os_pipe::pipe()?;
 
+    eprintln!("Redirecting stdout to the pipe's writer");
     let stdout_fd = io::stdout().as_raw_fd();
-
-    // Redirect stdout to the pipe's writer.
     if unsafe { libc::dup2(writer.as_raw_fd(), stdout_fd) } == -1 {
+        error!("dup2 call returned -1");
         return Err(io::Error::last_os_error());
     }
 
-    // Execute the closure that writes to stdout.
+    eprintln!("Running the user closure");
     f();
 
-    // Flush stdout to ensure all buffered output is written to the pipe.
-    io::stdout().flush()?;
+    eprintln!("Flushing stdout so that everytihgn is definitely in the pipe");
+    std::io::stdout().flush()?;
 
-    // Restore the original stdout using the backup.
+    eprintln!("Restoring stdout");
     backup.restore()?;
 
-    // Drop the writer to signal EOF on the reading side of the pipe.
+    eprintln!("Dropping the writer so the read end sees EOF once data is read");
     drop(writer);
 
-    // Read everything from the pipe.
+    eprintln!("Reading the entire pipe");
     let mut buffer = Vec::new();
     reader.read_to_end(&mut buffer)?;
 
+    eprintln!("Converting from possibly non-utf8 to a string using .from_utf8_lossy()");
     Ok(String::from_utf8_lossy(&buffer).to_string())
 }
 
 #[cfg(test)]
-pub mod capture_stdout_tests {
-    use super::*;
-
-    /// Ensures that capturing stdout from an empty closure yields an empty string.
-    #[traced_test]
-    fn test_capture_stdout_empty_closure() -> Result<(), Box<dyn Error>> {
-        let captured = capture_stdout(|| {})?;
-        assert_eq!(captured, "");
-        Ok(())
-    }
-
-    /// Verifies that a single-line print statement is captured correctly.
-    #[traced_test]
-    fn test_capture_stdout_single_line() -> Result<(), Box<dyn Error>> {
-        let captured = capture_stdout(|| {
-            println!("Hello, test!");
-        })?;
-        // Use `trim()` to remove the trailing newline introduced by `println!`.
-        assert_eq!(captured.trim(), "Hello, test!");
-        Ok(())
-    }
-
-    /// Confirms that multiple lines of output are captured in their original form.
-    #[traced_test]
-    fn test_capture_stdout_multiple_lines() -> Result<(), Box<dyn Error>> {
-        let captured = capture_stdout(|| {
-            println!("Line one");
-            println!("Line two");
-            println!("Line three");
-        })?;
-        let expected = "Line one\nLine two\nLine three\n";
-        assert_eq!(captured, expected);
-        Ok(())
-    }
-
-    /// Checks that very large output is captured fully without truncation.
-    #[traced_test]
-    fn test_capture_stdout_large_output() -> Result<(), Box<dyn Error>> {
-        // Generate a large string of repeated characters.
-        let large_data = "a".repeat(8192);
-        let captured = capture_stdout(|| {
-            print!("{}", large_data);
-        })?;
-        assert_eq!(captured.len(), 8192);
-        assert!(captured.chars().all(|c| c == 'a'));
-        Ok(())
-    }
-
-    /// Ensures that non-UTF8 byte sequences are captured and converted via `from_utf8_lossy`.
-    #[traced_test]
-    fn test_capture_stdout_non_utf8() -> Result<(), Box<dyn Error>> {
-        // Some arbitrary bytes that are not valid UTF-8 for certain code points.
-        let bad_bytes = [0x66, 0x6F, 0x80, 0xFE, 0xFF];
-        let captured = capture_stdout(|| {
-            // Write raw bytes to stdout. This requires a lower-level write.
-            use std::io::Write;
-            let stdout = std::io::stdout();
-            let mut handle = stdout.lock();
-            // In real usage, handle errors appropriately; here we expect.
-            handle.write_all(&bad_bytes).expect("expected successful write_all");
-        })?;
-
-        // The output won't match the original bytes exactly due to UTF-8 replacement,
-        // but it should contain the valid ones and replace invalid ones.
-        // "fo" is valid ASCII, so they remain unchanged; the other bytes become replacement chars.
-        assert!(captured.starts_with("fo"));
-        assert!(captured.contains('\u{FFFD}'));
-        Ok(())
-    }
-
-    /// Verifies that stdout is restored even if the closure panics mid-execution.
-    ///
-    /// We cannot validate partial output in a normal test because the panic
-    /// interrupts printing, but at minimum we ensure that the function
-    /// does not leave stdout unusable after returning.
-    #[traced_test]
-    fn test_capture_stdout_closure_panics() {
-        use std::panic;
-
-        let result = panic::catch_unwind(|| {
-            let _ = capture_stdout(|| {
-                println!("This should partially print before panicking.");
-                panic!("Simulated failure");
-            });
-        });
-
-        // We expect the closure to panic.
-        assert!(result.is_err());
-        // If stdout wasn't restored, subsequent prints in this test could fail,
-        // but we rely on normal Cargo test execution to confirm restoration.
-        println!("Stdout should still work after the panic.");
-    }
+mod capture_stdout_tests {
+    // see tests/manual_harness.rs for these
 }

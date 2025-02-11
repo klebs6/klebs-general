@@ -1,5 +1,4 @@
 // ---------------- [ File: src/obtain_pbf_file_for_region.rs ]
-// ---------------- [ File: src/obtain_pbf_file_for_region.rs ]
 crate::ix!();
 
 pub async fn obtain_pbf_file_for_region(
@@ -10,7 +9,6 @@ pub async fn obtain_pbf_file_for_region(
 }
 
 #[cfg(test)]
-#[disable]
 mod test_obtain_pbf_file_for_region {
     use super::*;
     use std::path::{PathBuf, Path};
@@ -63,16 +61,12 @@ mod test_obtain_pbf_file_for_region {
                     Ok(path.clone())
                 }
                 MockBehavior::DownloadFailure => {
-                    Err(WorldCityAndStreetDbBuilderError::DownloadError(
-                        DownloadError::HttpStatusCode(404),
-                    ))
+                    Err(WorldCityAndStreetDbBuilderError::SimulatedDownloadFailure)
                 }
                 MockBehavior::UnknownRegion => {
                     // Some code path that might produce an error for unrecognized region
                     // Adjust the variant or error type to match your real usage
-                    Err(WorldCityAndStreetDbBuilderError::DatabaseConstructionError(
-                        DatabaseConstructionError::DataAccessError
-                    ))
+                    Err(WorldCityAndStreetDbBuilderError::SimulatedUnknownRegionError)
                 }
             }
         }
@@ -135,14 +129,9 @@ mod test_obtain_pbf_file_for_region {
         let temp_dir = TempDir::new().expect("Failed to create temp dir");
         let result = obtain_pbf_file_for_mock_region(&region_mock, temp_dir.path()).await;
         assert!(result.is_err(), "Should fail if the download simulation fails");
-        if let Err(WorldCityAndStreetDbBuilderError::DownloadError(e)) = result {
-            // We can match against the exact error variant or code if desired
-            match e {
-                DownloadError::HttpStatusCode(code) => {
-                    assert_eq!(code, 404, "Should reflect the simulated 404 download error");
-                }
-                other => panic!("Expected HttpStatusCode(404) error, got {:?}", other),
-            }
+
+        if let Err(WorldCityAndStreetDbBuilderError::SimulatedDownloadFailure) = result {
+            // fine
         } else {
             panic!("Expected WorldCityAndStreetDbBuilderError::DownloadError(...)");
         }

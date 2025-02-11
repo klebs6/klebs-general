@@ -34,9 +34,9 @@ pub fn try_build_address_record_from_tags<'a>(
     let (city_raw, street_raw, postcode_raw) = try_extract_address_tags(&tags, element_id)?;
 
     // 2. Parse each tag into its strongly-typed representation.
-    let city     = try_construct_city_name(city_raw, element_id)?;
-    let street   = try_construct_street_name(street_raw, element_id)?;
-    let postcode = try_construct_postal_code(country, postcode_raw, element_id)?;
+    let city     = try_construct_city_name(Some(city_raw), element_id)?;
+    let street   = try_construct_street_name(Some(street_raw), element_id)?;
+    let postcode = try_construct_postal_code(country, Some(postcode_raw), element_id)?;
 
     // 3. Assemble the final [`AddressRecord`].
     let record = try_assemble_address_record(city, street, postcode, element_id)?;

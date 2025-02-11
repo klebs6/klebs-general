@@ -39,7 +39,6 @@ where
 }
 
 #[cfg(test)]
-#[disable]
 mod test_process_and_validate_addresses {
     use super::*;
     use std::sync::{Arc, Mutex};
@@ -71,8 +70,7 @@ mod test_process_and_validate_addresses {
         }
     }
 
-    impl ValidateWith for WorldAddress {
-        type Validator = MockDataAccess;
+    impl ValidateWith<MockDataAccess> for WorldAddress {
         type Error = InvalidWorldAddress;
 
         fn validate_with(&self, validator: &MockDataAccess) -> Result<(), Self::Error> {
@@ -91,7 +89,7 @@ mod test_process_and_validate_addresses {
 
     // We'll also implement a trivial conversion from the real DataAccess to the MockDataAccess trait,
     // just so the function signature remains the same. But for real usage, you might mock DataAccess differently.
-    impl From<MockDataAccess> for DataAccess {
+    impl<I:StorageInterface> From<MockDataAccess> for DataAccess<I> {
         fn from(_mock: MockDataAccess) -> Self {
             // Real DataAccess is presumably more complex. For the sake of this test,
             // we won't fully convert. In reality you'd reorganize the code or 
@@ -214,7 +212,7 @@ mod test_process_and_validate_addresses {
     /// Creates a "real" DataAccess from the mock, if your function requires a real DataAccess param.
     /// In this minimal demonstration, we just store the mock in a static field,
     /// but in real usage you'd likely modify the function signature to accept the mock directly.
-    fn create_data_access_for_mock(_mock: &MockDataAccess) -> DataAccess {
+    fn create_data_access_for_mock<I:StorageInterface>(_mock: &MockDataAccess) -> DataAccess<I> {
         // If you want to adapt the real DataAccess to reference the mock,
         // you could store the mock in a global or Arc<Mutex> inside DataAccess. 
         // For now, let's return a dummy DataAccess. 

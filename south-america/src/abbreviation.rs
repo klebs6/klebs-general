@@ -42,7 +42,7 @@ impl TryFromAbbreviation for SouthAmericaRegion {
                 "SR" => SouthAmericaRegion::Suriname,
                 "UY" => SouthAmericaRegion::Uruguay,
                 "VE" => SouthAmericaRegion::Venezuela,
-                _    => unreachable!(),
+                _    => return Err(TryFromAbbreviationError::InvalidAbbreviation),
             };
 
             // If region got set, return it:

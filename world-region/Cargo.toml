@@ -1,3 +1,4 @@
+cargo-features = ["edition2024"]
 [package]
 name          = "world-region"
 version       = "0.6.0"

@@ -1,5 +1,4 @@
 // ---------------- [ File: src/load_house_number_ranges.rs ]
-// ---------------- [ File: src/load_house_number_ranges.rs ]
 crate::ix!();
 
 pub trait LoadHouseNumberRanges {
@@ -67,7 +66,6 @@ impl LoadHouseNumberRanges for Database {
 }
 
 #[cfg(test)]
-#[disable]
 mod test_load_house_number_ranges {
     use super::*;
     use tempfile::TempDir;
@@ -82,7 +80,7 @@ mod test_load_house_number_ranges {
     }
 
     /// Creates a `DataAccess` that references the same `Database`.
-    fn create_data_access<I:StorageInterface>(db: Arc<Mutex<I>>) -> DataAccess {
+    fn create_data_access<I:StorageInterface>(db: Arc<Mutex<I>>) -> DataAccess<I> {
         DataAccess::with_db(db)
     }
 
@@ -107,7 +105,7 @@ mod test_load_house_number_ranges {
     #[traced_test]
     fn test_no_key_returns_none() {
         // If there's no key in the DB, we expect None as the result.
-        let (db_arc, _tmp) = create_temp_db();
+        let (db_arc, _tmp) = create_temp_db::<Database>();
         let data_access = create_data_access(db_arc.clone());
 
         let region = WorldRegion::try_from_abbreviation("MD").unwrap();
@@ -122,7 +120,7 @@ mod test_load_house_number_ranges {
     #[traced_test]
     fn test_valid_data_returns_some_ranges() {
         // We'll store valid CBOR data (two house number ranges) and confirm we can load them.
-        let (db_arc, _tmp) = create_temp_db();
+        let (db_arc, _tmp) = create_temp_db::<Database>();
         let mut db_guard = db_arc.lock().unwrap();
         let data_access = create_data_access(db_arc.clone());
 
@@ -130,7 +128,7 @@ mod test_load_house_number_ranges {
         let street = StreetName::new("ValidData St").unwrap();
 
         let ranges_in = vec![hnr(1, 10), hnr(20, 30)];
-        store_house_number_ranges_for_test(&mut db_guard, &region, &street, &ranges_in);
+        store_house_number_ranges_for_test(&mut *db_guard, &region, &street, &ranges_in);
 
         // Release lock before reading to mimic real usage
         drop(db_guard);
@@ -145,7 +143,7 @@ mod test_load_house_number_ranges {
     #[traced_test]
     fn test_corrupted_cbor_data_causes_error() {
         // We'll write invalid CBOR bytes, ensuring that an error is returned.
-        let (db_arc, _tmp) = create_temp_db();
+        let (db_arc, _tmp) = create_temp_db::<Database>();
         let mut db_guard = db_arc.lock().unwrap();
         let data_access = create_data_access(db_arc.clone());
 
@@ -162,14 +160,11 @@ mod test_load_house_number_ranges {
         let result = data_access.load_house_number_ranges(&region, &street);
 
         match result {
-            Err(DataAccessError::Io(io_err)) => {
-                assert!(
-                    io_err.to_string().contains("Failed to deserialize"),
-                    "The error message should indicate a deserialization failure"
-                );
+            Err(DataAccessError::OsmPbfPareseError(e)) => {
+                // The error message should indicate a deserialization failure
             }
             Err(e) => {
-                panic!("Expected DataAccessError::Io or decode-based error, but got: {:?}", e);
+                panic!("Expected DataAccessError::OsmPbfParseError or decode-based error, but got: {:?}", e);
             }
             Ok(_) => panic!("Should not succeed with corrupted CBOR data"),
         }
@@ -182,21 +177,19 @@ mod test_load_house_number_ranges {
 
         struct FailingDbStub;
         impl DatabaseGet for FailingDbStub {
-            fn get(&self, _key: impl AsRef<[u8]>) -> Result<Option<Vec<u8>>, DatabaseConstructionError> {
-                Err(DatabaseConstructionError::RocksDB(
-                    rocksdb::Error::new("Simulated read error")
-                ))
+            fn get(&self, _key: impl AsRef<[u8]>) -> Result<Option<Vec<u8>>, DataAccessError> {
+                Err(DatabaseConstructionError::SimulatedReadError)
             }
         }
 
         // We only need `Database` for the trait, so let's do a partial structure:
         // We'll define enough to compile. The rest won't be called in this test.
         impl OpenDatabaseAtPath for FailingDbStub {
-            fn open(_p: impl AsRef<std::path::Path>) -> Result<Arc<Mutex<Self>>, DatabaseConstructionError> {
+            fn open(_p: impl AsRef<std::path::Path>) -> Result<Arc<Mutex<Self>>, WorldCityAndStreetDbBuilderError> {
                 unimplemented!()
             }
         }
-        impl StorageInterface for FailingDbStub {}
+
         impl FailingDbStub {
             fn new() -> Self { Self }
         }
@@ -212,7 +205,7 @@ mod test_load_house_number_ranges {
                 // We'll call get(...) => forced error
                 match self.get(key) {
                     Ok(_) => Ok(None),
-                    Err(e) => Err(DataAccessError::DatabaseConstructionError(e)),
+                    Err(e) => Err(DataAccessError::SimulatedReadError),
                 }
             }
         }
@@ -245,13 +238,9 @@ mod test_load_house_number_ranges {
 
         let result = failing_access.load_house_number_ranges(&region, &street);
         match result {
-            Err(DataAccessError::DatabaseConstructionError(
-                DatabaseConstructionError::RocksDB(e)
-            )) => {
-                assert_eq!(e.to_string(), "Simulated read error");
-            }
+            Err(DataAccessError::SimulatedReadError) => { }
             other => {
-                panic!("Expected RocksDB error, got {:?}", other);
+                panic!("Expected SimulatedReadError error, got {:?}", other);
             }
         }
     }

@@ -15,6 +15,7 @@ pub async fn create_tiny_osm_pbf_with_housenumber(path: impl AsRef<Path>) -> std
         (-77_000_000_000, -76_000_000_000, 39_000_000_000, 38_000_000_000),
         "TestCity",
         "TestStreet",
+        "11111", //postcode
         Some("100-110"),
         39.283,
         -76.616,

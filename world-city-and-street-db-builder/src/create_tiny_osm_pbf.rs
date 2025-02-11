@@ -1,5 +1,4 @@
 // ---------------- [ File: src/create_tiny_osm_pbf.rs ]
-// ---------------- [ File: src/create_tiny_osm_pbf.rs ]
 /// Creates a very small .osm.pbf file with:
 ///   - A single OSMHeader blob
 ///   - A single OSMData blob that contains one node with two address tags
@@ -35,6 +34,7 @@ pub async fn create_tiny_osm_pbf(path: impl AsRef<Path>) -> std::io::Result<()> 
         (-77_000_000_000, -76_000_000_000, 39_000_000_000, 38_000_000_000),
         "test city fixture",
         "test street fixture",
+        "11111", //postcode
         None,
         39.283,
         -76.616,

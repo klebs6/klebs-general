@@ -55,7 +55,6 @@ pub fn process_single_osm_element(
 }
 
 #[cfg(test)]
-#[disable]
 mod test_process_single_osm_element {
     use super::*;
     use std::collections::HashMap;
@@ -127,9 +126,9 @@ mod test_process_single_osm_element {
         // 1) Check that an AddressRecord was created
         assert_eq!(addresses.len(), 1, "Should push exactly one address record");
         let record = &addresses[0];
-        assert_eq!(record.city().unwrap().name(), "baltimore");
-        assert_eq!(record.street().unwrap().name(), "north avenue");
-        assert_eq!(record.postcode().unwrap().code(), "21201");
+        assert_eq!(record.city().as_ref().unwrap().name(), "baltimore");
+        assert_eq!(record.street().as_ref().unwrap().name(), "north avenue");
+        assert_eq!(record.postcode().as_ref().unwrap().code(), "21201");
 
         // 2) Check that the HNR was extracted and assigned under street "north avenue"
         assert_eq!(street_hnr_map.len(), 1, "Should have exactly one street in the map");
@@ -167,9 +166,9 @@ mod test_process_single_osm_element {
         // Should have 1 address
         assert_eq!(addresses.len(), 1);
         let record = &addresses[0];
-        assert_eq!(record.city().unwrap().name(), "test city");
-        assert_eq!(record.street().unwrap().name(), "test street");
-        assert_eq!(record.postcode().unwrap().code(), "99999");
+        assert_eq!(record.city().as_ref().unwrap().name(), "test city");
+        assert_eq!(record.street().as_ref().unwrap().name(), "test street");
+        assert_eq!(record.postcode().as_ref().unwrap().code(), "99999");
 
         // But no HNR => street_hnr_map should remain empty
         assert!(street_hnr_map.is_empty(), "No housenumber => no street entry");

@@ -32,7 +32,6 @@ pub fn retrieve_housenumber_value(
 }
 
 #[cfg(test)]
-#[disable]
 mod test_retrieve_housenumber_value {
     use super::*;
     use std::collections::HashMap;

@@ -5,7 +5,7 @@ pub type WorldRegionSupplier =
     Box<dyn Fn() -> Vec<WorldRegion> + Send + Sync + 'static>;
 
 pub type DatabaseOpener<I> =
-    Box<dyn Fn(&Path) -> Result<Arc<Mutex<I>>, DatabaseConstructionError> + Send + Sync + 'static>;
+    Box<dyn Fn(&Path) -> Result<Arc<Mutex<I>>, WorldCityAndStreetDbBuilderError> + Send + Sync + 'static>;
 
 pub type DownloadAndParseHook<I> =
     Box<dyn for<'r> Fn(&'r WorldRegion,

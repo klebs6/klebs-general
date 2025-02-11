@@ -1,5 +1,4 @@
 // ---------------- [ File: src/build_all_region_data.rs ]
-// ---------------- [ File: src/build_all_region_data.rs ]
 crate::ix!();
 
 /// (6) Build a map of (region => RegionData), by scanning city+street from the DB for each done region.

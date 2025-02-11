@@ -1,5 +1,4 @@
 // ---------------- [ File: src/address_record.rs ]
-// ---------------- [ File: src/address_record.rs ]
 crate::ix!();
 
 /// A simple structure to hold address info extracted from OSM.
@@ -137,12 +136,8 @@ mod address_record_tests {
         let result = try_build_address_record_from_tags(tags.into_iter(), Country::USA, 123);
         assert!(result.is_err());
         match result.err().unwrap() {
-            IncompatibleOsmPbfElement::IncompatibleOsmPbfNode(
-                IncompatibleOsmPbfNode::StreetNameConstructionError(
-                    StreetNameConstructionError::InvalidName { attempted_name }
-                )
-            ) => {
-                assert_eq!(attempted_name.trim(), "");
+            IncompatibleOsmPbfElement::IncompatibleOsmPbfNode(IncompatibleOsmPbfNode::Incompatible { id }) => {
+                assert_eq!(id, 123);
             }
             other => panic!("Expected StreetNameConstructionError, got: {:?}", other),
         }

@@ -11,12 +11,14 @@ error_tree!{
 
     #[derive(PartialEq)]
     pub enum DataAccessError {
+        SimulatedReadError,
         MockDbAlwaysFailsOnLoad,
         #[cmp_neq]
         Io(io::Error),
         LockPoisoned,
-        DatabaseConstructionError(DatabaseConstructionError),
         PostalCodeError(PostalCodeConstructionError),
+        RocksDB(rocksdb::Error),
+        OsmPbfParseError(OsmPbfParseError),
     }
 
     pub enum AddressValidationError {
@@ -93,7 +95,9 @@ error_tree!{
     #[derive(PartialEq)]
     pub enum DatabaseConstructionError {
         MockDbAlwaysFailsOnStore,
-        DataAccessError,
+        SimulatedStoreFailure,
+        SimulatedReadError,
+        DataAccessError(DataAccessError),
         OsmPbfParseError(OsmPbfParseError),
         RocksDB(rocksdb::Error),
     }
@@ -102,11 +106,14 @@ error_tree!{
     pub enum WorldCityAndStreetDbBuilderError {
 
         SimulatedDownloadFailure,
+        SimulatedUnknownRegionError,
 
         #[cmp_neq]
         DownloadError(DownloadError),
 
         DatabaseConstructionError(DatabaseConstructionError),
+        OsmPbfParseError(OsmPbfParseError),
+        DataAccessError(DataAccessError),
         DbLockError,
         NotAllAddressesValidatedSuccessfully,
     }

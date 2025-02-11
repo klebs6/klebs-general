@@ -1,5 +1,4 @@
 // ---------------- [ File: tests/mini_pbf_integration_test.rs ]
-// ---------------- [ File: tests/mini_pbf_integration_test.rs ]
 /// This file demonstrates an **integration test** that uses a small `.osm.pbf` fixture
 /// to test the full pipeline:
 ///   1. Loading the file with `osmpbf::ElementReader`
@@ -33,6 +32,7 @@ async fn test_parse_tiny_osm_pbf_fixture() {
     let mut addresses = Vec::new();
     // For each element in the PBF, we try converting it to an AddressRecord:
     let parse_result = reader.for_each(|element| {
+        println!("element: {:#?}", element);
         match AddressRecord::try_from((&element, &Country::USA)) {
             Ok(addr) => {
                 addresses.push(addr);

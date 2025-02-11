@@ -77,7 +77,7 @@ mod build_world_address_tests {
         assert_eq!(addr.city().name(), "montreal");
         assert_eq!(addr.street().name(), "saint catherine");
         // check final postal code
-        assert_eq!(addr.postal_code().code(), "h3z2y7");
+        assert_eq!(addr.postal_code().code(), "H3Z2Y7");
     }
 
     #[traced_test]

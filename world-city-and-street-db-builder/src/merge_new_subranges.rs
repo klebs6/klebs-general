@@ -25,7 +25,6 @@ pub fn merge_new_subranges(
 }
 
 #[cfg(test)]
-#[disable]
 mod test_merge_new_subranges {
     use super::*;
     use std::fmt;
@@ -43,12 +42,6 @@ mod test_merge_new_subranges {
             .map(|rng| format!("[{}..={}]", rng.start(), rng.end()))
             .collect();
         items.join(", ")
-    }
-
-    impl fmt::Debug for HouseNumberRange {
-        fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-            write!(f, "[{}..={}]", self.start(), self.end())
-        }
     }
 
     #[traced_test]

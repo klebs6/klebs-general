@@ -22,7 +22,6 @@ pub fn normalize(s: &str) -> String {
 }
 
 #[cfg(test)]
-#[disable]
 mod normalize_tests {
     use super::*;
 

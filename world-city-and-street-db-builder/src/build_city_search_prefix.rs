@@ -1,5 +1,4 @@
 // ---------------- [ File: src/build_city_search_prefix.rs ]
-// ---------------- [ File: src/build_city_search_prefix.rs ]
 crate::ix!();
 
 /// Constructs the RocksDB key prefix for city => postal code data.
@@ -33,7 +32,7 @@ mod build_city_search_prefix_tests {
         // If your code uses "US" as the abbreviation for any US state, 
         // or "MD" specifically for Maryland, adapt the assertion as needed.
         let region = USRegion::UnitedState(UnitedState::Maryland);
-        assert_prefix_for_region(region, "US"); 
+        assert_prefix_for_region(region, "MD"); 
         // or if you expect "MD", do:
         // assert_prefix_for_region(region, "MD");
     }
@@ -42,7 +41,7 @@ mod build_city_search_prefix_tests {
     fn test_build_city_search_prefix_virginia() {
         let region = USRegion::UnitedState(UnitedState::Virginia);
         // If your code lumps all US states => abbreviation "US", do:
-        assert_prefix_for_region(region, "US");
+        assert_prefix_for_region(region, "VA");
         // Otherwise, if you have something like "VA", do:
         // assert_prefix_for_region(region, "VA");
     }
@@ -69,7 +68,7 @@ mod build_city_search_prefix_tests {
         // e.g. "Germany", "France", or a default. This depends on your code's approach.
         let region = WorldRegion::Europe(EuropeRegion::Germany(GermanyRegion::default()));
         // If your code's abbreviation => "DE", or "GERMANY", or "??", adapt as needed:
-        assert_prefix_for_region(region, "GERMANY");
+        assert_prefix_for_region(region, "DE-BE");
     }
 
     #[traced_test]
@@ -78,6 +77,6 @@ mod build_city_search_prefix_tests {
         // We'll see what abbreviation your code returns. Possibly an empty string, or "??".
         let region = WorldRegion::default();
         // Suppose .abbreviation() => "unknown"
-        assert_prefix_for_region(region, "unknown");
+        assert_prefix_for_region(region, "DZ");//Africa region default is "Algeria"
     }
 }

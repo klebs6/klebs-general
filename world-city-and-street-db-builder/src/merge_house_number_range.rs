@@ -35,7 +35,6 @@ pub fn merge_house_number_range(
 }
 
 #[cfg(test)]
-#[disable]
 mod merge_range_tests {
     use super::*;
     use crate::HouseNumberRange;

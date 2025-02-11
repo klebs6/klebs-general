@@ -18,18 +18,17 @@ impl DatabasePut for Database {
 //--------------------------------
 pub trait DatabaseGet {
     fn get(&self, key: impl AsRef<[u8]>) 
-        -> Result<Option<Vec<u8>>,DatabaseConstructionError>;
+        -> Result<Option<Vec<u8>>,DataAccessError>;
 }
 
 impl DatabaseGet for Database {
 
-    fn get(&self, key: impl AsRef<[u8]>) -> Result<Option<Vec<u8>>,DatabaseConstructionError> {
+    fn get(&self, key: impl AsRef<[u8]>) -> Result<Option<Vec<u8>>,DataAccessError> {
         Ok(self.db().get(key)?)
     }
 }
 
 #[cfg(test)]
-#[disable]
 mod test_database_put_get {
     use super::*;
     use tempfile::TempDir;
@@ -47,7 +46,7 @@ mod test_database_put_get {
 
     #[traced_test]
     fn test_put_and_get_round_trip() {
-        let (db_arc, _tmp_dir) = create_temp_db();
+        let (db_arc, _tmp_dir) = create_temp_db::<Database>();
         let mut db_guard = db_arc.lock().unwrap();
 
         // We'll store a key-value pair
@@ -67,7 +66,7 @@ mod test_database_put_get {
 
     #[traced_test]
     fn test_get_non_existent_key_returns_none() {
-        let (db_arc, _tmp_dir) = create_temp_db();
+        let (db_arc, _tmp_dir) = create_temp_db::<Database>();
         let db_guard = db_arc.lock().unwrap();
 
         let missing_key = b"no_such_key";
@@ -78,7 +77,7 @@ mod test_database_put_get {
 
     #[traced_test]
     fn test_overwrite_existing_key() {
-        let (db_arc, _tmp_dir) = create_temp_db();
+        let (db_arc, _tmp_dir) = create_temp_db::<Database>();
         let mut db_guard = db_arc.lock().unwrap();
 
         let key = b"testkey";
@@ -99,7 +98,7 @@ mod test_database_put_get {
     #[traced_test]
     fn test_empty_value() {
         // Confirm that storing an empty value is valid.
-        let (db_arc, _tmp_dir) = create_temp_db();
+        let (db_arc, _tmp_dir) = create_temp_db::<Database>();
         let mut db_guard = db_arc.lock().unwrap();
 
         let key = b"empty_value_key";
@@ -113,7 +112,7 @@ mod test_database_put_get {
     #[traced_test]
     fn test_large_value() {
         // We'll attempt storing a larger value (like ~1MB). Some configurations might have limitations.
-        let (db_arc, _tmp_dir) = create_temp_db();
+        let (db_arc, _tmp_dir) = create_temp_db::<Database>();
         let mut db_guard = db_arc.lock().unwrap();
 
         let key = b"large_value";
@@ -128,7 +127,7 @@ mod test_database_put_get {
     #[traced_test]
     fn test_unicode_in_key_and_value() {
         // We'll try non-ASCII keys and values to ensure everything is handled as raw bytes.
-        let (db_arc, _tmp_dir) = create_temp_db();
+        let (db_arc, _tmp_dir) = create_temp_db::<Database>();
         let mut db_guard = db_arc.lock().unwrap();
 
         let key = "ключ".as_bytes();  // Russian for "key"
@@ -153,7 +152,7 @@ mod test_database_put_get {
             fn put(&mut self, _key: impl AsRef<[u8]>, _val: impl AsRef<[u8]>) 
                 -> Result<(), DatabaseConstructionError> 
             {
-                Err(DatabaseConstructionError::RocksDB(rocksdb::Error::new("Simulated failure")))
+                Err(DatabaseConstructionError::SimulatedStoreFailure)
             }
         }
 
@@ -173,9 +172,9 @@ mod test_database_put_get {
         struct FailingDbStub;
         impl DatabaseGet for FailingDbStub {
             fn get(&self, _key: impl AsRef<[u8]>) 
-                -> Result<Option<Vec<u8>>, DatabaseConstructionError> 
+                -> Result<Option<Vec<u8>>, DataAccessError> 
             {
-                Err(DatabaseConstructionError::RocksDB(rocksdb::Error::new("Simulated read error")))
+                Err(DataAccessError::SimulatedReadError)
             }
         }
 

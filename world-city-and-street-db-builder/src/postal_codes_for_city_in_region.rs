@@ -1,5 +1,4 @@
 // ---------------- [ File: src/postal_codes_for_city_in_region.rs ]
-// ---------------- [ File: src/postal_codes_for_city_in_region.rs ]
 crate::ix!();
 
 pub trait PostalCodesForCityInRegion {
@@ -25,7 +24,6 @@ impl<I:StorageInterface> PostalCodesForCityInRegion for DataAccess<I> {
 }
 
 #[cfg(test)]
-#[disable]
 mod test_postal_codes_for_city_in_region {
     use super::*;
     use tempfile::TempDir;
@@ -58,7 +56,7 @@ mod test_postal_codes_for_city_in_region {
 
     #[traced_test]
     fn test_no_data_returns_none() {
-        let (db_arc, _tmp) = create_temp_db();
+        let (db_arc, _tmp) = create_temp_db::<Database>();
         let data_access = create_data_access(db_arc);
 
         // Suppose region=MD, city=baltimore, but we never stored any c2z data
@@ -71,7 +69,7 @@ mod test_postal_codes_for_city_in_region {
 
     #[traced_test]
     fn test_some_data_returns_btreeset_of_postal_codes() {
-        let (db_arc, _tmp) = create_temp_db();
+        let (db_arc, _tmp) = create_temp_db::<Database>();
         let mut db_guard = db_arc.lock().unwrap();
         let data_access = create_data_access(db_arc.clone());
 
@@ -83,7 +81,7 @@ mod test_postal_codes_for_city_in_region {
         codes.insert(PostalCode::new(Country::USA, "21201").unwrap());
         codes.insert(PostalCode::new(Country::USA, "21230").unwrap());
 
-        put_c2z_postal_codes(&mut db_guard, &region, &city, &codes);
+        put_c2z_postal_codes(&mut *db_guard, &region, &city, &codes);
 
         drop(db_guard); // release the lock before reading
 
@@ -97,7 +95,7 @@ mod test_postal_codes_for_city_in_region {
     fn test_corrupted_data_returns_none() {
         // If the CBOR data is invalid, `get_cbor_set_typed` returns None internally,
         // so we get None from `postal_codes_for_city_in_region`.
-        let (db_arc, _tmp) = create_temp_db();
+        let (db_arc, _tmp) = create_temp_db::<Database>();
         let mut db_guard = db_arc.lock().unwrap();
         let data_access = create_data_access(db_arc.clone());
 
@@ -118,7 +116,7 @@ mod test_postal_codes_for_city_in_region {
     fn test_region_and_city_case_insensitivity() {
         // This depends on your code's normalization. If `city.name()` is already normalized,
         // we can confirm that "Baltimore" with different cases is stored or retrieved.
-        let (db_arc, _tmp) = create_temp_db();
+        let (db_arc, _tmp) = create_temp_db::<Database>();
         let mut db_guard = db_arc.lock().unwrap();
         let data_access = create_data_access(db_arc.clone());
 
@@ -127,7 +125,7 @@ mod test_postal_codes_for_city_in_region {
         let city = CityName::new("BaLtImOrE").unwrap(); // The CityName constructor normalizes it
         let mut codes = BTreeSet::new();
         codes.insert(PostalCode::new(Country::USA, "21201").unwrap());
-        put_c2z_postal_codes(&mut db_guard, &region, &city, &codes);
+        put_c2z_postal_codes(&mut *db_guard, &region, &city, &codes);
 
         drop(db_guard);
 
@@ -142,7 +140,7 @@ mod test_postal_codes_for_city_in_region {
     fn test_different_city_different_key() {
         // If we store data for "frederick" but query "hagerstown", 
         // we expect None because the keys differ.
-        let (db_arc, _tmp) = create_temp_db();
+        let (db_arc, _tmp) = create_temp_db::<Database>();
         let mut db_guard = db_arc.lock().unwrap();
         let data_access = create_data_access(db_arc.clone());
 
@@ -152,7 +150,7 @@ mod test_postal_codes_for_city_in_region {
 
         let mut codes = BTreeSet::new();
         codes.insert(PostalCode::new(Country::USA, "21701").unwrap());
-        put_c2z_postal_codes(&mut db_guard, &region, &city_frederick, &codes);
+        put_c2z_postal_codes(&mut *db_guard, &region, &city_frederick, &codes);
 
         drop(db_guard);
 

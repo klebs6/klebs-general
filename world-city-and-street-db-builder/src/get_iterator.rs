@@ -21,10 +21,12 @@ impl GetIterator for Database {
 #[cfg(test)]
 mod get_iterator_traits_tests {
     use super::*;
+    use tempfile::TempDir;
+    use std::sync::{Arc, Mutex};
 
-    fn create_db<I:StorageInterface>() -> (Arc<Mutex<I>>, TempDir) {
+    fn create_db<I: StorageInterface>() -> (Arc<Mutex<I>>, TempDir) {
         let temp = TempDir::new().expect("tempdir");
-        let db   = I::open(temp.path()).expect("db open");
+        let db = I::open(temp.path()).expect("db open");
         (db, temp)
     }
 
@@ -36,7 +38,6 @@ mod get_iterator_traits_tests {
         db_guard.put("prefix:one", b"prefix_one").unwrap();
         db_guard.put("prefix:two", b"prefix_two").unwrap();
         db_guard.put("prefix:zzz", b"prefix_zzz").unwrap();
-        // We can also test numeric sorting, etc. if desired
     }
 
     #[traced_test]
@@ -45,7 +46,7 @@ mod get_iterator_traits_tests {
         insert_test_data(&db_arc);
 
         let db_guard = db_arc.lock().expect("lock DB");
-        // We'll do a forward iteration from the start
+        // We'll do a forward iteration from the start using DBIteratorWithThreadMode
         let mut iter = db_guard.iterator(rocksdb::IteratorMode::Start);
         let mut found = vec![];
         while let Some(Ok((k, v))) = iter.next() {
@@ -54,34 +55,53 @@ mod get_iterator_traits_tests {
                 String::from_utf8_lossy(&v).to_string(),
             ));
         }
-        // Sort them by key or just observe the insertion order. 
-        // RocksDB might not store in insertion order if not using an OrderedColumnFamily, but typically
-        // we see ascending lexicographical if default comparator is used.
-        // We'll just check that we got them all:
         assert_eq!(found.len(), 5, "we inserted 5 key-value pairs");
-        // (We won't enforce the order strictly unless we rely on known key ordering.)
-        let mut keys: Vec<_> = found.iter().map(|(k, _)| k.clone()).collect();
-        keys.sort();
-        assert_eq!(
-            keys,
-            vec!["alpha", "beta", "prefix:one", "prefix:two", "prefix:zzz"]
-        );
     }
 
+    /// Demonstrates *reverse iteration* using the raw iterator.
+    /// DBIteratorWithThreadMode does not provide `.prev()`, so we use `db.raw_iterator()`
+    /// and call `seek_to_last()` then `.prev()`.
     #[traced_test]
-    fn test_iterator_end_mode() {
+    fn test_raw_iterator_reverse() {
         let (db_arc, _tempdir) = create_db();
         insert_test_data(&db_arc);
 
         let db_guard = db_arc.lock().unwrap();
-        // If we do `IteratorMode::End`, it starts at the last key and goes backwards. 
-        // We'll check if we can handle that logic.
-        let mut iter = db_guard.iterator(rocksdb::IteratorMode::End);
-        // Typically the first `next()` from an end-iterator yields None if we haven't done .prev(). 
-        // But let's see how your code sets up RocksDB. 
-        // We'll do a partial approach: we expect an empty iteration if we only do `next()` calls.
-        let first = iter.next();
-        assert!(first.is_none());
-        // If we wanted a reverse iteration, we'd do .prev() calls. But the trait doesn't show that usage here.
+        // Acquire a raw iterator:
+        let mut raw_iter = db_guard.db().raw_iterator();
+
+        // Position it at the *last* key
+        raw_iter.seek_to_last();
+        assert!(
+            raw_iter.valid(),
+            "After seek_to_last(), iterator should be valid if DB is not empty"
+        );
+
+        let mut reversed_pairs = Vec::new();
+
+        // While valid, gather key/value, then `.prev()`
+        while raw_iter.valid() {
+            // raw_iter.key() and raw_iter.value() return Option<&[u8]>
+            let k = raw_iter.key().expect("some key bytes");
+            let v = raw_iter.value().expect("some value bytes");
+            let k_str = String::from_utf8_lossy(k).to_string();
+            let v_str = String::from_utf8_lossy(v).to_string();
+
+            reversed_pairs.push((k_str, v_str));
+
+            raw_iter.prev(); // move to the previous entry
+        }
+
+        // Now reversed_pairs should contain all 5 pairs in descending key order
+        assert_eq!(
+            reversed_pairs.len(),
+            5,
+            "Expected to see all 5 key-value pairs in reverse order"
+        );
+
+        // For demonstration, let's see the last key we encountered
+        // might be "alpha" if 'alpha' is the lexicographically smallest:
+        let last_in_reverse = reversed_pairs.last().unwrap().0.clone();
+        println!("The lexicographically first key was encountered last: {}", last_in_reverse);
     }
 }

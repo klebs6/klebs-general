@@ -4,13 +4,13 @@ crate::ix!();
 
 pub trait CheckIfRegionDone {
     fn region_done(&self, region: &WorldRegion) 
-        -> Result<bool,rocksdb::Error>;
+        -> Result<bool,DataAccessError>;
 }
 
 impl CheckIfRegionDone for Database {
 
     /// Check if region already done
-    fn region_done(&self, region: &WorldRegion) -> Result<bool,rocksdb::Error> {
+    fn region_done(&self, region: &WorldRegion) -> Result<bool,DataAccessError> {
         Ok(self.db().get(MetaKeyForRegion::from(*region))?.is_some())
     }
 }
@@ -33,7 +33,6 @@ impl MarkRegionAsDone for Database {
 }
 
 #[cfg(test)]
-#[disable]
 mod test_region_done_traits {
     use super::*;
     use tempfile::TempDir;
@@ -50,7 +49,7 @@ mod test_region_done_traits {
 
     #[traced_test]
     fn test_region_done_initially_false() {
-        let (db_arc, _tmp) = create_temp_db();
+        let (db_arc, _tmp) = create_temp_db::<Database>();
         let db_guard = db_arc.lock().unwrap();
 
         // For a region that is not marked, region_done should be false.
@@ -64,7 +63,7 @@ mod test_region_done_traits {
 
     #[traced_test]
     fn test_mark_region_done_then_check() {
-        let (db_arc, _tmp) = create_temp_db();
+        let (db_arc, _tmp) = create_temp_db::<Database>();
         {
             let mut db_guard = db_arc.lock().unwrap();
             let region = WorldRegion::try_from_abbreviation("VA")
@@ -84,7 +83,7 @@ mod test_region_done_traits {
 
     #[traced_test]
     fn test_multiple_regions_mark_and_check() {
-        let (db_arc, _tmp) = create_temp_db();
+        let (db_arc, _tmp) = create_temp_db::<Database>();
         let mut db_guard = db_arc.lock().unwrap();
 
         let md = WorldRegion::try_from_abbreviation("MD").unwrap();
@@ -118,8 +117,8 @@ mod test_region_done_traits {
         struct FailingDbStub;
 
         impl CheckIfRegionDone for FailingDbStub {
-            fn region_done(&self, _region: &WorldRegion) -> Result<bool, rocksdb::Error> {
-                Err(rocksdb::Error::new("Simulated DB read error"))
+            fn region_done(&self, _region: &WorldRegion) -> Result<bool, DataAccessError> {
+                Err(DataAccessError::SimulatedReadError)
             }
         }
 
@@ -130,11 +129,9 @@ mod test_region_done_traits {
         let region = WorldRegion::try_from_abbreviation("MD").unwrap();
         let result = stub.region_done(&region);
         match result {
-            Err(e) => {
-                assert_eq!(e.to_string(), "Simulated DB read error");
-            },
-            Ok(b) => {
-                panic!("Expected an error, but got Ok({})", b);
+            Err(DataAccessError::SimulatedReadError) => { },
+            b => {
+                panic!("Expected a SimulatedReadError, but got {}", b);
             }
         }
     }
@@ -148,9 +145,7 @@ mod test_region_done_traits {
             fn mark_region_done(&mut self, _region: &WorldRegion) 
                 -> Result<(), DatabaseConstructionError> 
             {
-                Err(DatabaseConstructionError::RocksDB(
-                    rocksdb::Error::new("Simulated DB write error")
-                ))
+                Err(DatabaseConstructionError::SimulatedStoreFailure)
             }
         }
 
@@ -158,9 +153,7 @@ mod test_region_done_traits {
         let region = WorldRegion::try_from_abbreviation("VA").unwrap();
         let result = stub.mark_region_done(&region);
         match result {
-            Err(DatabaseConstructionError::RocksDB(e)) => {
-                assert_eq!(e.to_string(), "Simulated DB write error");
-            }
+            Err(DatabaseConstructionError::SimulatedStoreFailure) => { }
             other => panic!("Expected RocksDB error, got {:?}", other),
         }
     }

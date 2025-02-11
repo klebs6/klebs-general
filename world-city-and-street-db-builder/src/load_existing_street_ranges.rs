@@ -30,7 +30,6 @@ impl LoadExistingStreetRanges for Database {
 }
 
 #[cfg(test)]
-#[disable]
 mod test_load_existing_street_ranges {
     use super::*;
     use std::sync::{Arc, Mutex};
@@ -65,7 +64,7 @@ mod test_load_existing_street_ranges {
 
     #[traced_test]
     fn test_no_stored_data_returns_none() {
-        let (db_arc, _temp_dir) = create_temp_db();
+        let (db_arc, _temp_dir) = create_temp_db::<Database>();
         let db_guard = db_arc.lock().unwrap();
 
         let region = WorldRegion::try_from_abbreviation("MD").unwrap();
@@ -79,7 +78,7 @@ mod test_load_existing_street_ranges {
 
     #[traced_test]
     fn test_existing_ranges_return_some_vec() {
-        let (db_arc, _temp_dir) = create_temp_db();
+        let (db_arc, _temp_dir) = create_temp_db::<Database>();
         let mut db_guard = db_arc.lock().unwrap();
 
         let region = WorldRegion::try_from_abbreviation("MD").unwrap();
@@ -87,7 +86,7 @@ mod test_load_existing_street_ranges {
 
         // We'll store two subranges
         let ranges_in = vec![hnr(100, 110), hnr(120, 130)];
-        store_test_ranges(&mut db_guard, &region, &street, &ranges_in);
+        store_test_ranges(&mut *db_guard, &region, &street, &ranges_in);
 
         let result = db_guard
             .load_existing_street_ranges(&region, &street)
@@ -101,7 +100,7 @@ mod test_load_existing_street_ranges {
     #[traced_test]
     fn test_corrupted_data_returns_error() {
         // We'll directly write invalid bytes under the HNR: key.
-        let (db_arc, _temp_dir) = create_temp_db();
+        let (db_arc, _temp_dir) = create_temp_db::<Database>();
         let mut db_guard = db_arc.lock().unwrap();
 
         let region = WorldRegion::try_from_abbreviation("MD").unwrap();

@@ -10,6 +10,26 @@ pub struct Database {
     db: Arc<rocksdb::DB>,
 }
 
+impl fmt::Debug for Database {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        // Try to obtain a useful property from the DB.
+        // "rocksdb.stats" returns a string with various configuration and runtime statistics.
+        let stats = self.db
+            .property_value("rocksdb.stats")
+            .unwrap_or_else(|_| Some("Unavailable".to_string()));
+        
+        // You can include other properties similarly:
+        // let num_levels = self.db
+        //     .property_value("rocksdb.num-files-at-level0")
+        //     .unwrap_or_else(|_| "Unavailable".to_string());
+
+        f.debug_struct("Database")
+            .field("rocksdb.stats", &stats)
+            // .field("num-files-at-level0", &num_levels)
+            .finish()
+    }
+}
+
 impl StorageInterface for Database {}
 unsafe impl Send for Database {}
 unsafe impl Sync for Database {}
@@ -18,13 +38,14 @@ pub trait StorageInterface
 : CheckIfRegionDone
 + Send
 + Sync
++ Debug
 + DatabaseDump
 + GetIterator
 + DatabaseGet
 + DatabasePut
 + GetPrefixIterator
 + HouseNumberInAnyRange
-+ LoadExistingHouseNumberRanges
++ LoadHouseNumberRanges
 + LoadExistingStreetRanges
 + LoadHouseNumberRanges
 + LoadHouseNumberRanges 

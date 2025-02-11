@@ -1,5 +1,4 @@
 // ---------------- [ File: src/list_all_addresses_in_pbf_dir.rs ]
-// ---------------- [ File: src/list_all_addresses_in_pbf_dir.rs ]
 crate::ix!();
 
 pub type WorldAddressIterator = impl Iterator<Item=Result<WorldAddress,OsmPbfParseError>>;
@@ -37,7 +36,6 @@ pub fn list_all_addresses_in_pbf_dir<I:StorageInterface + 'static>(
 }
 
 #[cfg(test)]
-#[disable]
 mod list_all_addresses_tests {
     use super::*;
 

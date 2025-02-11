@@ -1,5 +1,4 @@
 // ---------------- [ File: src/house_number_ranges.rs ]
-// ---------------- [ File: src/house_number_ranges.rs ]
 // [ File: src/house_number_ranges.rs ]
 crate::ix!();
 
@@ -12,7 +11,7 @@ crate::ix!();
 ///   - or subdivide partial ranges. 
 /// This example keeps it simple: if you skip 101..139, 
 /// just store multiple disjoint ranges. 
-#[derive(Getters,Setters,Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Getters,Setters,Clone,Serialize,Deserialize,PartialEq,Eq)]
 #[getset(get="pub",set="pub")]
 pub struct HouseNumberRange {
     /// first house number in the sub-range (inclusive)
@@ -20,6 +19,13 @@ pub struct HouseNumberRange {
     /// last house number in the sub-range (inclusive)
     end:   u32,
 }
+
+impl fmt::Debug for HouseNumberRange {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "[{}..={}]", self.start(), self.end())
+    }
+}
+
 
 impl HouseNumberRange {
 
