@@ -59,44 +59,9 @@ mod test_process_single_osm_element {
     use super::*;
     use std::collections::HashMap;
 
-    /// A helper that creates a minimal OSM Node with the provided tags.
-    /// We’ll store these tags so `Node::tags()` yields them in the test.
-    fn make_node_with_tags(id: i64, tags: &[(&str, &str)]) -> osmpbf::Element<'static> {
-        let mut node = osmpbf::Node::default();
-        node.set_id(id);
-        for (k, v) in tags {
-            node.tags_mut().insert(k.to_string(), v.to_string());
-        }
-        osmpbf::Element::Node(node)
-    }
-
     /// Returns a sample country. In real code, you might pick `Country::USA` or another.
     fn test_country() -> Country {
         Country::USA
-    }
-
-    /// Asserts that `street_hnr_map` has exactly one entry under the given street name,
-    /// and that the list of ranges matches `expected_ranges`.
-    fn assert_street_hnr_map_contains(
-        street_hnr_map: &HashMap<StreetName, Vec<HouseNumberRange>>,
-        street_name: &str,
-        expected_ranges: &[[u32; 2]],
-    ) {
-        let found = street_hnr_map.iter().find(|(st, _)| st.name() == street_name);
-        assert!(found.is_some(), "Expected a street name '{}' in the map", street_name);
-        let (street_key, ranges_vec) = found.unwrap();
-
-        // Convert expected_ranges into HouseNumberRange for easy comparison
-        let expected_vec: Vec<HouseNumberRange> = expected_ranges
-            .iter()
-            .map(|[start, end]| HouseNumberRange::new(*start, *end))
-            .collect();
-
-        assert_eq!(
-            ranges_vec, &expected_vec,
-            "Mismatch in house number subranges for street '{}'",
-            street_key.name()
-        );
     }
 
     #[traced_test]
@@ -108,12 +73,12 @@ mod test_process_single_osm_element {
             ("addr:postcode", "21201"),
             ("addr:housenumber", "10-20"),
         ];
-        let node = make_node_with_tags(111, tags);
+        let node = MockNode::new(111, tags);
 
         let mut addresses = Vec::new();
         let mut street_hnr_map = HashMap::new();
         let result = process_single_osm_element(
-            &node,
+            &node.as_element(),
             &test_country(),
             &mut addresses,
             &mut street_hnr_map,
@@ -132,7 +97,7 @@ mod test_process_single_osm_element {
 
         // 2) Check that the HNR was extracted and assigned under street "north avenue"
         assert_eq!(street_hnr_map.len(), 1, "Should have exactly one street in the map");
-        assert_street_hnr_map_contains(
+        assert_street_house_number_map_contains(
             &street_hnr_map,
             "north avenue",
             &[[10, 20]],
@@ -148,12 +113,12 @@ mod test_process_single_osm_element {
             ("addr:street", "Test Street"),
             ("addr:postcode", "99999"),
         ];
-        let node = make_node_with_tags(222, tags);
+        let node = MockNode::new(222, tags);
 
         let mut addresses = Vec::new();
         let mut street_hnr_map = HashMap::new();
         let result = process_single_osm_element(
-            &node,
+            &node.as_element(),
             &test_country(),
             &mut addresses,
             &mut street_hnr_map,
@@ -183,12 +148,12 @@ mod test_process_single_osm_element {
             ("addr:housenumber", "50-60"),
             // No city or street => can't form an AddressRecord
         ];
-        let node = make_node_with_tags(333, tags);
+        let node = MockNode::new(333, tags);
 
         let mut addresses = Vec::new();
         let mut street_hnr_map = HashMap::new();
         let result = process_single_osm_element(
-            &node,
+            &node.as_element(),
             &test_country(),
             &mut addresses,
             &mut street_hnr_map,
@@ -221,11 +186,11 @@ mod test_process_single_osm_element {
             ("addr:postcode", ""), // if your code fails on empty or invalid
             ("addr:housenumber", "99"),
         ];
-        let node = make_node_with_tags(444, tags);
+        let node = MockNode::new(444, tags);
 
         let mut addresses = Vec::new();
         let mut street_hnr_map = HashMap::new();
-        let result = process_single_osm_element(&node, &test_country(), &mut addresses, &mut street_hnr_map);
+        let result = process_single_osm_element(&node.as_element(), &test_country(), &mut addresses, &mut street_hnr_map);
         assert!(result.is_ok());
 
         // Because the postcode is empty, the AddressRecord parse might fail => addresses = []
@@ -246,11 +211,18 @@ mod test_process_single_osm_element {
             ("addr:postcode", "22222"),
             ("addr:housenumber", "invalidRange"), // parse fails
         ];
-        let node = make_node_with_tags(555, tags);
+        let node = MockNode::new(555, tags);
 
         let mut addresses = Vec::new();
         let mut street_hnr_map = HashMap::new();
-        let result = process_single_osm_element(&node, &test_country(), &mut addresses, &mut street_hnr_map);
+
+        let result = process_single_osm_element(
+            &node.as_element(), 
+            &test_country(), 
+            &mut addresses, 
+            &mut street_hnr_map
+        );
+
         assert!(result.is_ok());
 
         // We get the address, but no HNR
@@ -267,11 +239,18 @@ mod test_process_single_osm_element {
             ("foo", "bar"),
             ("another", "tag")
         ];
-        let node = make_node_with_tags(666, tags);
+        let node = MockNode::new(666, tags);
 
         let mut addresses = Vec::new();
         let mut street_hnr_map = HashMap::new();
-        let result = process_single_osm_element(&node, &test_country(), &mut addresses, &mut street_hnr_map);
+
+        let result = process_single_osm_element(
+            &node.as_element(), 
+            &test_country(), 
+            &mut addresses, 
+            &mut street_hnr_map
+        );
+
         assert!(result.is_ok());
         // addresses empty, street_hnr_map empty
         assert!(addresses.is_empty());

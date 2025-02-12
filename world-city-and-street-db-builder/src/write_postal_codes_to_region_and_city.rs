@@ -22,7 +22,6 @@ impl WritePostalCodesToRegionAndCity for Database {
 }
 
 #[cfg(test)]
-#[disable]
 mod test_write_postal_codes_to_region_and_city {
     use super::*;
     use std::collections::BTreeSet;

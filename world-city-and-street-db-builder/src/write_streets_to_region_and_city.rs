@@ -20,7 +20,6 @@ impl WriteStreetsToRegionAndCity for Database {
 }
 
 #[cfg(test)]
-#[disable]
 mod test_write_streets_to_region_and_city {
     use super::*;
     use std::collections::BTreeSet;

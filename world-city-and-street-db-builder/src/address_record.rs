@@ -41,11 +41,6 @@ impl AddressRecord {
 mod address_record_tests {
     use super::*;
 
-    // A quick helper for mocking an iterator over (&str, &str).
-    pub fn mock_tag_iter<'a>(pairs: Vec<(&'a str, &'a str)>) -> impl Iterator<Item = (&'a str, &'a str)> {
-        pairs.into_iter()
-    }
-
     #[traced_test]
     fn test_collect_tags() {
         let pairs = vec![

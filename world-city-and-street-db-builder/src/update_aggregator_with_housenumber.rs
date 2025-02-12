@@ -33,26 +33,6 @@ mod test_update_aggregator_with_housenumber {
     use osmpbf::{Node, Element};
     use tracing::{trace, debug};
 
-    /// A small helper to create a mock OSM `Node` with specific tags for testing.
-    /// We'll store tags in `node.tags_mut()` so `Element::Node(node).tags()` yields them.
-    fn make_node_with_tags(id: i64, tags: &[(&str, &str)]) -> Element<'static> {
-        let mut node = Node::default();
-        node.set_id(id);
-        for (k, v) in tags {
-            node.tags_mut().insert(k.to_string(), v.to_string());
-        }
-        Element::Node(node)
-    }
-
-    /// A minimal helper for building an `AddressRecord` with a street,
-    /// ignoring city/postcode if not relevant for the aggregator usage.
-    fn make_address_record_with_street(street_name: &str) -> AddressRecord {
-        AddressRecordBuilder::default()
-            .street(Some(StreetName::new(street_name).unwrap()))
-            .build()
-            .expect("Should build a minimal AddressRecord with just a street")
-    }
-
     /// A convenience for comparing the aggregator's contents against expected ranges for a street.
     fn assert_street_ranges(
         aggregator: &HashMap<StreetName, Vec<HouseNumberRange>>,

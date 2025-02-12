@@ -1,6 +1,8 @@
 // ---------------- [ File: src/mock.rs ]
-// ---------------- [ File: src/mock.rs ]
 crate::ix!();
+
+use osmpbf::{Blob,BlobHeader,BlobDecode,PrimitiveGroup,PrimitiveBlock};
+use crate::proto::{osmformat,fileformat};
 
 impl Mock for WorldAddress {
 

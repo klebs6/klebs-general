@@ -1,5 +1,4 @@
 // ---------------- [ File: src/write_be_u32.rs ]
-// ---------------- [ File: src/write_be_u32.rs ]
 crate::ix!();
 
 /// Writes `value` as a 4-byte big-endian integer into `file`.

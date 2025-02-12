@@ -1,5 +1,4 @@
 // ---------------- [ File: src/lib.rs ]
-// ---------------- [ File: src/lib.rs ]
 #![feature(more_qualified_paths)]
 #![feature(type_alias_impl_trait)]
 #![allow(unused_imports)]
@@ -12,6 +11,12 @@ pub mod proto {
     include!(concat!(env!("OUT_DIR"), "/mod.rs"));
 }
 
+x!{mock_node}
+x!{mock_data_access}
+x!{mock_tag_iter}
+x!{assert_address_record_matches_raw}
+x!{assert_street_house_number_map_contains}
+x!{mock_address}
 x!{address_record_from_element_and_country}
 x!{address_record}
 x!{addresses_from_pbf_file_with_house_numbers}

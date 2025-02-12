@@ -1,5 +1,4 @@
 // ---------------- [ File: src/write_streets_to_region_and_postal_code.rs ]
-// ---------------- [ File: src/write_streets_to_region_and_postal_code.rs ]
 crate::ix!();
 
 pub trait WriteStreetsToRegionAndPostalCode {
@@ -24,7 +23,6 @@ impl WriteStreetsToRegionAndPostalCode for Database {
 }
 
 #[cfg(test)]
-#[disable]
 mod test_write_streets_to_region_and_postal_code {
     use super::*;
     use std::collections::BTreeSet;

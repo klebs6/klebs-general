@@ -1,8 +1,7 @@
 // ---------------- [ File: src/imports.rs ]
-// ---------------- [ File: src/imports.rs ]
 pub(crate) use usa::*;
 pub(crate) use europe::*;
-pub(crate) use osmpbf::{TagIter,ElementReader,Element};
+pub(crate) use osmpbf::{BlobDecode,PrimitiveBlock,TagIter,ElementReader,Element};
 pub(crate) use export_magic::*;
 pub(crate) use error_tree::*;
 pub(crate) use md5::*;

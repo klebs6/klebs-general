@@ -71,6 +71,7 @@ error_tree!{
 
     #[derive(PartialEq)]
     pub enum OsmPbfParseError {
+        SimulatedParseFail,
         ExpectedFilenameError(ExpectedFilenameError),
 
         #[cmp_neq]

@@ -1,5 +1,4 @@
 // ---------------- [ File: src/street_names_for_city_in_region.rs ]
-// ---------------- [ File: src/street_names_for_city_in_region.rs ]
 crate::ix!();
 
 pub trait StreetNamesForCityInRegion {

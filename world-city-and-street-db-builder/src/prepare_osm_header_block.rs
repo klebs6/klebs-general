@@ -39,13 +39,13 @@ mod test_prepare_osm_header_block {
         let header_block = prepare_osm_header_block(bbox);
 
         // Check the bounding box fields
-        assert_eq!(header_block.get_bbox().left(), bbox.0);
-        assert_eq!(header_block.get_bbox().right(), bbox.1);
-        assert_eq!(header_block.get_bbox().top(), bbox.2);
-        assert_eq!(header_block.get_bbox().bottom(), bbox.3);
+        assert_eq!(header_block.bbox.left,   Some(bbox.0));
+        assert_eq!(header_block.bbox.right,  Some(bbox.1));
+        assert_eq!(header_block.bbox.top,    Some(bbox.2));
+        assert_eq!(header_block.bbox.bottom, Some(bbox.3));
 
         // Check required features
-        let features = header_block.get_required_features();
+        let features = header_block.required_features;
         assert!(
             features.contains(&"OsmSchema-V0.6".to_string())
                 && features.contains(&"DenseNodes".to_string()),
@@ -59,12 +59,12 @@ mod test_prepare_osm_header_block {
         let bbox = (0, 0, 0, 0);
         let header_block = prepare_osm_header_block(bbox);
 
-        assert_eq!(header_block.get_bbox().left(), 0);
-        assert_eq!(header_block.get_bbox().right(), 0);
-        assert_eq!(header_block.get_bbox().top(), 0);
-        assert_eq!(header_block.get_bbox().bottom(), 0);
+        assert_eq!(header_block.bbox.left, Some(0));
+        assert_eq!(header_block.bbox.right, Some(0));
+        assert_eq!(header_block.bbox.top, Some(0));
+        assert_eq!(header_block.bbox.bottom, Some(0));
 
-        let features = header_block.get_required_features();
+        let features = header_block.required_features;
         assert_eq!(features.len(), 2, "Expected exactly two required features");
     }
 
@@ -76,13 +76,13 @@ mod test_prepare_osm_header_block {
         let bbox = (100, 50, -100, -150);
         let header_block = prepare_osm_header_block(bbox);
 
-        assert_eq!(header_block.get_bbox().left(), 100);
-        assert_eq!(header_block.get_bbox().right(), 50);
-        assert_eq!(header_block.get_bbox().top(), -100);
-        assert_eq!(header_block.get_bbox().bottom(), -150);
+        assert_eq!(header_block.bbox.left,   Some(100));
+        assert_eq!(header_block.bbox.right,  Some(50));
+        assert_eq!(header_block.bbox.top,    Some(-100));
+        assert_eq!(header_block.bbox.bottom, Some(-150));
 
         // The function doesn't attempt to fix or reorder them, so we just confirm the raw assignment.
-        let features = header_block.get_required_features();
+        let features = header_block.required_features;
         assert_eq!(features[0], "OsmSchema-V0.6");
         assert_eq!(features[1], "DenseNodes");
     }
@@ -101,13 +101,13 @@ mod test_prepare_osm_header_block {
             protobuf::Message::parse_from_bytes(&bytes)
                 .expect("Should deserialize successfully");
 
-        let parsed_bbox = header_block_parsed.get_bbox();
-        assert_eq!(parsed_bbox.left(), bbox.0);
-        assert_eq!(parsed_bbox.right(), bbox.1);
-        assert_eq!(parsed_bbox.top(), bbox.2);
-        assert_eq!(parsed_bbox.bottom(), bbox.3);
+        let parsed_bbox = header_block_parsed.bbox;
+        assert_eq!(parsed_bbox.left,   Some(bbox.0));
+        assert_eq!(parsed_bbox.right,  Some(bbox.1));
+        assert_eq!(parsed_bbox.top,    Some(bbox.2));
+        assert_eq!(parsed_bbox.bottom, Some(bbox.3));
 
-        let features = header_block_parsed.get_required_features();
+        let features = header_block_parsed.required_features;
         assert!(
             features.contains(&"OsmSchema-V0.6".to_string()) 
             && features.contains(&"DenseNodes".to_string())

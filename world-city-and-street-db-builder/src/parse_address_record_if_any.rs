@@ -1,5 +1,4 @@
 // ---------------- [ File: src/parse_address_record_if_any.rs ]
-// ---------------- [ File: src/parse_address_record_if_any.rs ]
 crate::ix!();
 
 /// Parses an [`AddressRecord`] from the element if possible, returning `Some(AddressRecord)`
@@ -31,74 +30,6 @@ mod test_parse_address_record_if_any {
     use osmpbf::{Element, Node};
     use std::collections::HashMap;
 
-    /// A small helper to construct a mock `Node` with the given `id`
-    /// and a set of `(key, value)` tags.  
-    /// In real code, building an `osmpbf::Element` can be more involved,
-    /// but for these tests, we can rely on the in-memory approach:
-    fn make_node_with_tags(id: i64, tags: &[(&str, &str)]) -> Element<'static> {
-        // Build an in-memory `Node` that implements `.tags()`.
-        // We'll create a custom Node that holds these tag pairs in a `HashMap`.
-        // Then wrap it as `Element::Node(...)`.
-        let mut node = Node::default();
-        node.set_id(id);
-
-        // We'll store the tags in the node's internal data. The library's real usage may differ,
-        // but for testing, we just want the `.tags()` method to yield our pairs.
-        for (k, v) in tags {
-            node.tags_mut().insert(k.to_string(), v.to_string());
-        }
-
-        Element::Node(node)
-    }
-
-    /// A small helper to confirm whether the returned `AddressRecord` matches
-    /// our expected city/street/postcode, if any.
-    fn assert_address_record_matches(
-        actual: &AddressRecord,
-        expected_city: Option<&str>,
-        expected_street: Option<&str>,
-        expected_postcode: Option<&str>,
-    ) {
-        match (expected_city, actual.city()) {
-            (Some(exp_city), Some(actual_city)) => {
-                assert_eq!(*actual_city.name(), exp_city.to_lowercase());
-            }
-            (None, None) => {}
-            (Some(_), None) | (None, Some(_)) => {
-                panic!(
-                    "Mismatch in city presence. Expected: {:?}, got: {:?}",
-                    expected_city, actual.city()
-                );
-            }
-        }
-
-        match (expected_street, actual.street()) {
-            (Some(exp_street), Some(actual_street)) => {
-                assert_eq!(*actual_street.name(), exp_street.to_lowercase());
-            }
-            (None, None) => {}
-            (Some(_), None) | (None, Some(_)) => {
-                panic!(
-                    "Mismatch in street presence. Expected: {:?}, got: {:?}",
-                    expected_street, actual.street()
-                );
-            }
-        }
-
-        match (expected_postcode, actual.postcode()) {
-            (Some(exp_postcode), Some(actual_code)) => {
-                assert_eq!(actual_code.code(), exp_postcode);
-            }
-            (None, None) => {}
-            (Some(_), None) | (None, Some(_)) => {
-                panic!(
-                    "Mismatch in postcode presence. Expected: {:?}, got: {:?}",
-                    expected_postcode, actual.postcode()
-                );
-            }
-        }
-    }
-
     /// We'll use `Country::USA` for all tests. Adjust as needed for your codebase.
     fn test_country() -> Country {
         Country::USA
@@ -113,9 +44,9 @@ mod test_parse_address_record_if_any {
             ("addr:street", "Main St"),
             ("addr:postcode", "21201"),
         ];
-        let element = make_node_with_tags(1001, tags);
+        let node = MockNode::new(1001, tags);
 
-        let record_opt = parse_address_record_if_any(&element, &test_country());
+        let record_opt = parse_address_record_if_any(&node.as_element(), &test_country());
         assert!(
             record_opt.is_some(),
             "Expected Some(AddressRecord) for valid city/street/postcode tags"
@@ -133,9 +64,9 @@ mod test_parse_address_record_if_any {
     fn test_no_addr_tags_returns_none() {
         // Node without any addr:city/addr:street/addr:postcode => None
         let tags = &[("highway", "residential"), ("name", "Random Road")];
-        let element = make_node_with_tags(2002, tags);
+        let node = MockNode::new(2002, tags);
 
-        let record_opt = parse_address_record_if_any(&element, &test_country());
+        let record_opt = parse_address_record_if_any(&node.as_element(), &test_country());
         assert!(
             record_opt.is_none(),
             "Expected None if no address tags are found"
@@ -146,9 +77,9 @@ mod test_parse_address_record_if_any {
     fn test_partial_addr_tags_returns_none() {
         // Node with only addr:city but missing street/postcode => should fail => None
         let tags = &[("addr:city", "Seattle")];
-        let element = make_node_with_tags(3003, tags);
+        let node = MockNode::new(3003, tags);
 
-        let record_opt = parse_address_record_if_any(&element, &test_country());
+        let record_opt = parse_address_record_if_any(&node.as_element(), &test_country());
         assert!(
             record_opt.is_none(),
             "Expected None if missing at least street or postcode"
@@ -165,9 +96,9 @@ mod test_parse_address_record_if_any {
             ("addr:street", "Main St"),
             ("addr:postcode", "99999"),
         ];
-        let element = make_node_with_tags(4004, tags);
+        let node = MockNode::new(4004, tags);
 
-        let record_opt = parse_address_record_if_any(&element, &test_country());
+        let record_opt = parse_address_record_if_any(&node.as_element(), &test_country());
         assert!(
             record_opt.is_none(),
             "Expected None if city name fails validation"
@@ -183,9 +114,9 @@ mod test_parse_address_record_if_any {
             ("addr:street", "Test Street"),
             ("addr:postcode", "ABCDE1234"), 
         ];
-        let element = make_node_with_tags(5005, tags);
+        let node = MockNode::new(5005, tags);
 
-        let record_opt = parse_address_record_if_any(&element, &test_country());
+        let record_opt = parse_address_record_if_any(&node.as_element(), &test_country());
         assert!(
             record_opt.is_none(),
             "Expected None if postal code fails validation for the country"
@@ -202,9 +133,9 @@ mod test_parse_address_record_if_any {
             // Missing street => error
             ("addr:postcode", "21000"),
         ];
-        let element = make_node_with_tags(6006, tags);
+        let node = MockNode::new(6006, tags);
 
-        let record_opt = parse_address_record_if_any(&element, &test_country());
+        let record_opt = parse_address_record_if_any(&node.as_element(), &test_country());
         assert!(record_opt.is_none());
     }
 }
