@@ -1,0 +1,15 @@
+[dependencies]
+erasable     = "1.3.0"
+export-magic = "0.3.6"
+
+[package]
+edition       = "2024"
+name          = "unsafe-erased"
+version       = "0.1.0"
+authors       = [ "klebs tpk3.mx@gmail.com" ]
+description   = "This crate can be used for unsafe type erasure. caution is advised."
+documentation = "https://docs.rs/unsafe_erased"
+repository    = "https://github.com/klebs6/klebs-general"
+readme        = "README.md"
+keywords      = ["type-erasure", "unsafe" ]
+license       = "MIT"
