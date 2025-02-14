@@ -1,5 +1,4 @@
 // ---------------- [ File: src/parse_city_names.rs ]
-// ---------------- [ File: src/parse_city_names.rs ]
 crate::ix!();
 
 /// Parses city names from the `(key, value)` pairs. Extracts the city substring

@@ -143,7 +143,7 @@ mod test_update_street_house_numbers {
         );
 
         match result {
-            Err(DatabaseConstructionError::SimulatedStoreFailure) => {
+            Err(DatabaseConstructionError::DataAccessError(_)) => {
                 // Good
             }
             other => panic!("Expected DataAccessError, got {:?}", other),

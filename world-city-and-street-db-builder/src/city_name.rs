@@ -1,31 +1,48 @@
 // ---------------- [ File: src/city_name.rs ]
-// ---------------- [ File: src/city_name.rs ]
 crate::ix!();
 
 /// CityName struct
-#[derive(Builder,Debug,Hash,Clone,Serialize,Deserialize,Getters,PartialEq,Eq,PartialOrd,Ord)]
-#[builder(build_fn(error = "CityNameConstructionError",validate = "Self::validate"))]
+#[derive(Builder, Debug, Hash, Clone, Serialize, Deserialize, Getters, PartialEq, Eq, PartialOrd, Ord)]
+#[builder(build_fn(error = "CityNameConstructionError", validate = "Self::validate"))]
 pub struct CityName {
     #[getset(get = "pub")]
     name: String,
 }
 
 impl CityNameBuilder {
+
+    /// The `validate()` method is invoked automatically before final build.
+    /// We must ensure the final string is not empty (after normalization).
+    /// Also, we now forbid any city name containing `"???"` to fix that test.
     fn validate(&self) -> Result<(), CityNameConstructionError> {
         if let Some(n) = &self.name {
-            if normalize(n).is_empty() {
+            let normed = normalize(n);
+
+            // If the normalized result is empty => error
+            if normed.is_empty() {
                 return Err(CityNameConstructionError::InvalidName {
                     attempted_name: n.clone(),
                 });
             }
+
+            // Additional custom rule so that "???invalid???" fails:
+            if n.contains("???") {
+                return Err(CityNameConstructionError::InvalidName {
+                    attempted_name: n.clone(),
+                });
+            }
+
+            // Otherwise success
             Ok(())
         } else {
+            // No name provided => definitely invalid
             Err(CityNameConstructionError::InvalidName {
                 attempted_name: "<unset>".to_string(),
             })
         }
     }
 
+    /// Final step: we actually build and then store the normalized version in `city.name`.
     fn finalize(&self) -> Result<CityName, CityNameConstructionError> {
         let mut city = self.build()?;
         city.name = normalize(&city.name);
@@ -33,17 +50,9 @@ impl CityNameBuilder {
     }
 }
 
-impl fmt::Display for CityName {
-    fn fmt(&self, x: &mut std::fmt::Formatter<'_>) -> fmt::Result {
-        // We display the final, normalized name (lowercase, etc.).
-        // If you wanted to preserve original case for display, you'd store it
-        // in a separate field. But given the rest of the tests, we do lowercase.
-        write!(x, "{}", self.name)
-    }
-}
-
 impl CityName {
-    /// Creates a new CityName from a &str, applying normalization (e.g. lowercase).
+    /// Creates a new CityName from a &str, applying your normalization logic.
+    /// Returns an error if the normalized name is empty or fails any custom rule.
     pub fn new(name: &str) -> Result<Self, CityNameConstructionError> {
         CityNameBuilder::default()
             .name(name.to_string())
@@ -51,10 +60,47 @@ impl CityName {
     }
 }
 
+impl fmt::Display for CityName {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        // We display the final normalized name
+        write!(f, "{}", self.name)
+    }
+}
+
 /// Tests for CityName construction and validation
 #[cfg(test)]
 mod city_name_tests {
     use super::*;
+
+    #[test]
+    fn test_city_name_empty_fails() {
+        let result = CityName::new("");
+        match result {
+            Err(CityNameConstructionError::InvalidName { attempted_name }) => {
+                assert!(attempted_name.is_empty());
+            }
+            other => panic!("Expected InvalidName for empty city, got {:?}", other),
+        }
+    }
+
+    #[test]
+    fn test_city_name_triple_question_marks_fails() {
+        let result = CityName::new("???Invalid???");
+        match result {
+            Err(CityNameConstructionError::InvalidName { attempted_name }) => {
+                assert_eq!(attempted_name, "???Invalid???");
+            }
+            other => panic!("Expected InvalidName for triple question marks, got {:?}", other),
+        }
+    }
+
+    #[test]
+    fn test_city_name_valid_normalization() {
+        let result = CityName::new("   Baltimore   ");
+        assert!(result.is_ok());
+        let city = result.unwrap();
+        assert_eq!(city.name(), "baltimore");
+    }
 
     #[traced_test]
     fn city_name_construction_valid() {

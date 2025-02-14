@@ -1,32 +1,34 @@
 // ---------------- [ File: src/merge_house_number_range.rs ]
-// ---------------- [ File: src/merge_house_number_range.rs ]
 crate::ix!();
 
-/// Merges `new_range` into the existing set of disjoint subranges,
-/// returning a new Vec that is still disjoint and sorted.
+/// Merges `new_range` into the existing set of subranges, **only unifying if there's an actual overlap**.
+/// Does **not** unify disjoint-but-adjacent subranges.  
 ///
-/// If overlapping or adjacent (e.g. [10..=15], [16..20]) => unify => [10..=20].
-/// Adjust if adjacency shouldn't unify.
+/// e.g. if existing has `[1..5]` and `new_range` is `[6..7]`, we keep them separate.
 pub fn merge_house_number_range(
     mut existing: Vec<HouseNumberRange>,
     new_range: &HouseNumberRange
 ) -> Vec<HouseNumberRange> 
 {
+    // Insert new range, then sort by start
     existing.push(new_range.clone());
     existing.sort_by_key(|r| *r.start());
 
-    let mut merged = Vec::new();
+    let mut merged = Vec::with_capacity(existing.len());
     for rng in existing {
         if merged.is_empty() {
             merged.push(rng);
         } else {
             let last = merged.last_mut().unwrap();
-            // Overlap or adjacency
-            if *rng.start() <= *last.end() + 1 {
+            // For actual overlap, check `rng.start() <= last.end()`.
+            // We do NOT unify adjacency, so no +1.
+            if rng.start() <= last.end() {
+                // unify => extend last.end if needed
                 if rng.end() > last.end() {
                     last.set_end(*rng.end());
                 }
             } else {
+                // disjoint => push new subrange
                 merged.push(rng);
             }
         }

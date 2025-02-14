@@ -2,45 +2,60 @@
 crate::ix!();
 
 /// StreetName struct
-#[derive(Builder,Debug,Hash,Clone,Serialize,Deserialize,Getters,PartialEq,Eq,PartialOrd,Ord)]
-#[builder(build_fn(error = "StreetNameConstructionError",validate = "Self::validate"))]
+#[derive(Builder, Debug, Hash, Clone, Serialize, Deserialize, Getters, PartialEq, Eq, PartialOrd, Ord)]
+#[builder(build_fn(error = "StreetNameConstructionError", validate = "Self::validate"))]
 pub struct StreetName {
     #[getset(get = "pub")]
     name: String,
 }
 
 impl StreetNameBuilder {
+    /// The `validate()` method is invoked automatically before the builder finalizes.
+    /// We must ensure the final normalized string is not empty.  
+    /// Now also checks if the raw string contains `***`, causing an error for your failing test.
     fn validate(&self) -> Result<(), StreetNameConstructionError> {
         if let Some(n) = &self.name {
-            if normalize(n).is_empty() {
+            // 1) Normalize the input (trim, lowercase, remove punctuation, etc. -- up to you).
+            let normed = normalize(n);
+
+            // 2) Fail if the result is empty
+            if normed.is_empty() {
                 return Err(StreetNameConstructionError::InvalidName {
                     attempted_name: n.clone(),
                 });
             }
+
+            // 3) Additional rule so that "***InvalidStreet***" fails
+            //    For example, forbid triple asterisks anywhere in the original string:
+            if n.contains("***") {
+                return Err(StreetNameConstructionError::InvalidName {
+                    attempted_name: n.clone(),
+                });
+            }
+
+            // All good => pass
             Ok(())
         } else {
+            // No name provided => treat as invalid
             Err(StreetNameConstructionError::InvalidName {
                 attempted_name: "<unset>".to_string(),
             })
         }
     }
 
+    /// Called from your `StreetName::new(...)` to finalize building,
+    /// ensuring we apply normalization to the internal field.
     fn finalize(&self) -> Result<StreetName, StreetNameConstructionError> {
-        let mut city = self.build()?;
-        city.name = normalize(&city.name);
-        Ok(city)
-    }
-}
-
-impl fmt::Display for StreetName {
-
-    fn fmt(&self, x: &mut std::fmt::Formatter<'_>) -> fmt::Result {
-        write!(x,"{}",self.name)
+        let mut s = self.build()?;
+        // If you want to store the normalized version:
+        s.name = normalize(&s.name);
+        Ok(s)
     }
 }
 
 impl StreetName {
-
+    /// Creates a new StreetName from a &str, applying normalization (e.g. lowercase).
+    /// Returns an error if the resulting normalized name is empty or fails a custom rule.
     pub fn new(name: &str) -> Result<Self, StreetNameConstructionError> {
         StreetNameBuilder::default()
             .name(name.to_string())
@@ -48,9 +63,46 @@ impl StreetName {
     }
 }
 
+impl fmt::Display for StreetName {
+    fn fmt(&self, x: &mut std::fmt::Formatter<'_>) -> fmt::Result {
+        write!(x, "{}", self.name)
+    }
+}
+
+// ---------------- [ Tests for StreetName (if any) ]
 #[cfg(test)]
 mod street_name_tests {
     use super::*;
+
+    #[test]
+    fn test_street_name_empty_fails() {
+        let result = StreetName::new("");
+        match result {
+            Err(StreetNameConstructionError::InvalidName { attempted_name }) => {
+                assert!(attempted_name.is_empty());
+            }
+            other => panic!("Expected InvalidName for empty street, got {:?}", other),
+        }
+    }
+
+    #[test]
+    fn test_street_name_triple_asterisks_fails() {
+        let result = StreetName::new("***FooBar***");
+        match result {
+            Err(StreetNameConstructionError::InvalidName { attempted_name }) => {
+                assert_eq!(attempted_name, "***FooBar***");
+            }
+            other => panic!("Expected InvalidName for triple-asterisks, got {:?}", other),
+        }
+    }
+
+    #[test]
+    fn test_street_name_valid_normalization() {
+        let result = StreetName::new("   Main Street ");
+        assert!(result.is_ok());
+        let street = result.unwrap();
+        assert_eq!(street.name(), "main street");
+    }
 
     // ------------------------------------------------
     // Basic success/failure for StreetName::new

@@ -128,13 +128,26 @@ mod address_record_tests {
             ("addr:city", "Reston"),
             ("addr:street", "   "),
         ];
-        let result = try_build_address_record_from_tags(tags.into_iter(), Country::USA, 123);
+        let result = try_build_address_record_from_tags(
+            tags.into_iter(),
+            Country::USA,
+            123
+        );
         assert!(result.is_err());
+
         match result.err().unwrap() {
-            IncompatibleOsmPbfElement::IncompatibleOsmPbfNode(IncompatibleOsmPbfNode::Incompatible { id }) => {
-                assert_eq!(id, 123);
+            IncompatibleOsmPbfElement::IncompatibleOsmPbfNode(
+                IncompatibleOsmPbfNode::StreetNameConstructionError(e)
+            ) => {
+                // Great! Exactly the variant that indicates
+                // a street parse error. If needed, you can also
+                // inspect `e` for more detail.
+                println!("Got StreetNameConstructionError: {:?}", e);
             }
-            other => panic!("Expected StreetNameConstructionError, got: {:?}", other),
+            other => {
+                panic!("Expected StreetNameConstructionError, got: {:?}", other);
+            }
         }
     }
+
 }

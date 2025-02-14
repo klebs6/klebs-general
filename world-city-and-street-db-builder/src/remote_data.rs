@@ -1,5 +1,4 @@
 // ---------------- [ File: src/remote_data.rs ]
-// ---------------- [ File: src/remote_data.rs ]
 crate::ix!();
 
 /// Tests for download and MD5 verification (mocked, since we won't do real network ops here)

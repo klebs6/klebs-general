@@ -1,5 +1,4 @@
 // ---------------- [ File: src/prefix_transform.rs ]
-// ---------------- [ File: src/prefix_transform.rs ]
 crate::ix!();
 
 /// Create a `SliceTransform` that extracts everything **up to and including** the second `':'`

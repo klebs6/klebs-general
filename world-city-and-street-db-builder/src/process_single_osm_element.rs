@@ -1,5 +1,4 @@
 // ---------------- [ File: src/process_single_osm_element.rs ]
-// ---------------- [ File: src/process_single_osm_element.rs ]
 crate::ix!();
 
 /// For one OSM element, we:

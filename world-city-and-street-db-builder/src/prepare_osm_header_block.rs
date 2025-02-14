@@ -1,5 +1,4 @@
 // ---------------- [ File: src/prepare_osm_header_block.rs ]
-// ---------------- [ File: src/prepare_osm_header_block.rs ]
 crate::ix!();
 
 use crate::proto::osmformat;

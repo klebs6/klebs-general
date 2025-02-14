@@ -1,5 +1,4 @@
 // ---------------- [ File: src/parse_osm_pbf_and_build_house_number_ranges.rs ]
-// ---------------- [ File: src/parse_osm_pbf_and_build_house_number_ranges.rs ]
 crate::ix!();
 
 /// Loads an OSM PBF file, extracting all [`AddressRecord`]s and accumulating

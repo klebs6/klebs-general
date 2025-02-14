@@ -1,5 +1,4 @@
 // ---------------- [ File: src/retrieve_housenumber_value.rs ]
-// ---------------- [ File: src/retrieve_housenumber_value.rs ]
 crate::ix!();
 
 /// Retrieves the `addr:housenumber` value from the collected tags, if present and non-empty.

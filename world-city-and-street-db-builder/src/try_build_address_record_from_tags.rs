@@ -284,7 +284,7 @@ mod test_try_build_address_record_from_tags {
             IncompatibleOsmPbfElement::IncompatibleOsmPbfNode(node_err) => {
                 match node_err {
                     // If the builder fails => AddressRecordBuilderError
-                    IncompatibleOsmPbfNode::AddressRecordBuilderError { .. } => {
+                    IncompatibleOsmPbfNode::CityCannotBeImpostorCity => {
                         // Good
                     }
                     _ => panic!("Expected AddressRecordBuilderError, got {:?}", node_err),

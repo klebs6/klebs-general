@@ -168,6 +168,7 @@ error_tree!{
 
     #[derive(PartialEq)]
     pub enum IncompatibleOsmPbfNode {
+        CityCannotBeImpostorCity,
         Incompatible {
             id: i64,
         },

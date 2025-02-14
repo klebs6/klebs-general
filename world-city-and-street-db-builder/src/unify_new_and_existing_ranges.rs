@@ -1,5 +1,4 @@
 // ---------------- [ File: src/unify_new_and_existing_ranges.rs ]
-// ---------------- [ File: src/unify_new_and_existing_ranges.rs ]
 crate::ix!();
 
 /// Merges newly provided house‐number ranges with the existing set.
