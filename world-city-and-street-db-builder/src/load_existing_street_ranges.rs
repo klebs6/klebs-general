@@ -35,15 +35,6 @@ mod test_load_existing_street_ranges {
     use std::sync::{Arc, Mutex};
     use tempfile::TempDir;
 
-    /// Creates a temporary database for testing, returning the
-    /// `(Arc<Mutex<Database>>, TempDir)` pair so that the
-    /// temp directory remains valid throughout the test.
-    fn create_temp_db<I:StorageInterface>() -> (Arc<Mutex<I>>, TempDir) {
-        let temp_dir = TempDir::new().expect("Failed to create temporary directory");
-        let db = I::open(temp_dir.path()).expect("Failed to open database in temp dir");
-        (db, temp_dir)
-    }
-
     /// Convenience helper to generate a `HouseNumberRange` for test usage.
     fn hnr(start: u32, end: u32) -> HouseNumberRange {
         HouseNumberRange::new(start, end)

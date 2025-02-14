@@ -1,5 +1,4 @@
 // ---------------- [ File: src/regional_records.rs ]
-// ---------------- [ File: src/regional_records.rs ]
 crate::ix!();
 
 #[derive(Builder,Debug,Getters)]
@@ -9,7 +8,7 @@ pub struct RegionalRecords {
     region:  WorldRegion,
     records: Vec<AddressRecord>,
     #[builder(default)]
-    house_number_ranges: HashMap<StreetName,Vec<HouseNumberRange>>,
+    house_number_ranges: HouseNumberAggregator,
 }
 
 impl RegionalRecords {
@@ -115,7 +114,7 @@ mod test_regional_records {
         let rr = RegionalRecords {
             region,
             records: recs,
-            house_number_ranges: Default::default()
+            house_number_ranges: HouseNumberAggregator::new(&region)
         };
         let c = rr.country();
         assert_eq!(c, Country::USA, "Expected region=MD => country=USA");
@@ -142,7 +141,7 @@ mod test_regional_records {
         let rr = RegionalRecords {
             region,
             records,
-            house_number_ranges: Default::default()
+            house_number_ranges: HouseNumberAggregator::new(&region)
         };
 
         assert_eq!(rr.len(), 2, "Expected exactly 2 records.");
@@ -289,7 +288,7 @@ mod test_regional_records {
         let rr = RegionalRecords {
             region,
             records: recs,
-            house_number_ranges: Default::default()
+            house_number_ranges: HouseNumberAggregator::new(&region)
         };
 
         // Now attempt to store
@@ -323,7 +322,7 @@ mod test_regional_records {
         let rr = RegionalRecords {
             region,
             records: recs,
-            house_number_ranges: Default::default()
+            house_number_ranges: HouseNumberAggregator::new(&region)
         };
 
         let result = rr.write_to_storage(&mut *db_guard);

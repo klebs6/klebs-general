@@ -1,9 +1,8 @@
 // ---------------- [ File: src/store_merged_house_number_ranges.rs ]
-// ---------------- [ File: src/store_merged_house_number_ranges.rs ]
 crate::ix!();
 
 /// Stores the merged list of house‐number ranges back into the database.
-pub fn store_merged_house_number_ranges<I:StorageInterface>(
+pub fn store_merged_house_number_ranges<I:StoreHouseNumberRanges>(
     db:     &mut I,
     region: &WorldRegion,
     street: &StreetName,
@@ -25,19 +24,10 @@ pub fn store_merged_house_number_ranges<I:StorageInterface>(
 }
 
 #[cfg(test)]
-#[disable]
 mod test_store_merged_house_number_ranges {
     use super::*;
     use std::sync::{Arc, Mutex};
     use tempfile::TempDir;
-
-    /// Creates a temporary database for testing, returning `(Arc<Mutex<Database>>, TempDir)`.
-    /// The `TempDir` ensures the directory remains valid until the end of the test.
-    fn create_temp_db<I:StorageInterface>() -> (Arc<Mutex<I>>, TempDir) {
-        let tmp = TempDir::new().expect("Failed to create temp directory");
-        let db = I::open(tmp.path()).expect("Failed to open database in temp dir");
-        (db, tmp)
-    }
 
     /// Convenience helper for constructing a `HouseNumberRange`.
     fn hnr(start: u32, end: u32) -> HouseNumberRange {
@@ -52,7 +42,7 @@ mod test_store_merged_house_number_ranges {
         street: &StreetName,
     ) -> Option<Vec<HouseNumberRange>> {
         // We rely on the same key used internally
-        let key = house_number_ranges_key(region, street);
+        let key       = house_number_ranges_key(region, street);
         let bytes_opt = db.get(key.as_bytes()).ok()??;
         let clist_result: Result<crate::compressed_list::CompressedList<HouseNumberRange>, _> =
             serde_cbor::from_slice(&bytes_opt);
@@ -61,74 +51,42 @@ mod test_store_merged_house_number_ranges {
 
     #[traced_test]
     fn test_store_merged_empty_ranges() {
-        let (db_arc, _tmp) = create_temp_db();
+        let (db_arc, _tmp) = create_temp_db::<Database>();
         let mut db_guard = db_arc.lock().unwrap();
 
         let region = WorldRegion::try_from_abbreviation("MD").unwrap();
         let street = StreetName::new("Empty Street").unwrap();
 
         let merged = vec![]; // no ranges
-        let result = store_merged_house_number_ranges(&mut db_guard, &region, &street, &merged);
+        let result = store_merged_house_number_ranges(&mut *db_guard, &region, &street, &merged);
         assert!(result.is_ok(), "Storing empty ranges should succeed");
 
-        let loaded = load_ranges_from_db(&db_guard, &region, &street)
+        let loaded = load_ranges_from_db(&*db_guard, &region, &street)
             .expect("Should at least store an empty list, not None");
         assert!(loaded.is_empty(), "We wrote an empty set of ranges");
     }
 
     #[traced_test]
     fn test_store_merged_some_ranges() {
-        let (db_arc, _tmp) = create_temp_db();
-        let mut db_guard = db_arc.lock().unwrap();
 
-        let region = WorldRegion::try_from_abbreviation("VA").unwrap();
-        let street = StreetName::new("Main St").unwrap();
+        let (db_arc, _tmp) = create_temp_db::<Database>();
+        let mut db_guard   = db_arc.lock().unwrap();
+        let region         = WorldRegion::try_from_abbreviation("VA").unwrap();
+        let street         = StreetName::new("Main St").unwrap();
+        let merged         = vec![hnr(1,10), hnr(20,30)];
+        let result         = store_merged_house_number_ranges(&mut *db_guard, &region, &street, &merged);
 
-        let merged = vec![hnr(1,10), hnr(20,30)];
-        let result = store_merged_house_number_ranges(&mut db_guard, &region, &street, &merged);
         assert!(result.is_ok(), "Storing a non-empty list should succeed");
 
-        let loaded = load_ranges_from_db(&db_guard, &region, &street)
+        let loaded = load_ranges_from_db(&*db_guard, &region, &street)
             .expect("Should find stored data");
+
         assert_eq!(loaded, merged, "The data read back should match what was stored");
     }
 
     #[traced_test]
     fn test_db_error_propagation() {
         // We can cause a DB error (e.g., RocksDB error on put) to ensure it returns an error.
-
-        struct FailingDbStub;
-        impl DatabasePut for FailingDbStub {
-            fn put(&mut self, _key: impl AsRef<[u8]>, _val: impl AsRef<[u8]>) 
-                -> Result<(), DatabaseConstructionError> 
-            {
-                Err(DatabaseConstructionError::RocksDB(
-                    rocksdb::Error::new("Simulated put error")
-                ))
-            }
-        }
-        // For store_house_number_ranges
-        impl StorageInterface for FailingDbStub {}
-        impl OpenDatabaseAtPath for FailingDbStub {
-            fn open(_p: impl AsRef<std::path::Path>) 
-                -> Result<Arc<Mutex<Self>>, DatabaseConstructionError> 
-            {
-                unimplemented!()
-            }
-        }
-        impl StoreHouseNumberRanges for FailingDbStub {
-            fn store_house_number_ranges(
-                &mut self, 
-                _region: &WorldRegion,
-                _street: &StreetName,
-                _ranges: &[HouseNumberRange]
-            ) -> Result<(), DatabaseConstructionError> {
-                // We'll skip cbor logic for brevity in the stub
-                // Just fail on put
-                self.put(b"somekey", b"someval")?;
-                Ok(())
-            }
-        }
 
         let mut failing_db = FailingDbStub;
         let region = WorldRegion::try_from_abbreviation("MD").unwrap();
@@ -178,13 +136,13 @@ mod test_store_merged_house_number_ranges {
                 Ok(())
             }
         }
-        impl StorageInterface for CborFailingDb {}
         impl OpenDatabaseAtPath for CborFailingDb {
             fn open(_p: impl AsRef<std::path::Path>) 
-                -> Result<Arc<Mutex<Self>>, DatabaseConstructionError> {
+                -> Result<Arc<Mutex<Self>>, WorldCityAndStreetDbBuilderError> {
                 unimplemented!()
             }
         }
+
         impl StoreHouseNumberRanges for CborFailingDb {
             fn store_house_number_ranges(
                 &mut self,
@@ -193,7 +151,7 @@ mod test_store_merged_house_number_ranges {
                 _ranges: &[HouseNumberRange],
             ) -> Result<(), DatabaseConstructionError> {
                 // We'll forcibly cause cbor error
-                let e = serde_cbor::Error::custom("Simulated cbor serialization error");
+                let e = serde_cbor::Error::message("Simulated cbor serialization error");
                 let msg = format!("Failed to serialize HouseNumberRanges: {}", e);
                 return Err(OsmPbfParseError::HouseNumberRangeSerdeError { msg }.into());
             }

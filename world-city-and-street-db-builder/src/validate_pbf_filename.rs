@@ -38,7 +38,6 @@ pub fn validate_pbf_filename(
 }
 
 #[cfg(test)]
-#[disable]
 mod test_validate_pbf_filename {
     use super::*;
     use tempfile::TempDir;

@@ -1,5 +1,4 @@
 // ---------------- [ File: src/try_build_address_record_from_tags.rs ]
-// ---------------- [ File: src/try_build_address_record_from_tags.rs ]
 crate::ix!();
 
 /// Attempts to construct an [`AddressRecord`] from a stream of OSM-style tags.
@@ -17,8 +16,8 @@ crate::ix!();
 /// * `Ok(AddressRecord)` if a valid record can be built.
 /// * `Err(IncompatibleOsmPbfElement)` otherwise.
 pub fn try_build_address_record_from_tags<'a>(
-    tags_iter: impl Iterator<Item = (&'a str, &'a str)>,
-    country: Country,
+    tags_iter:  impl Iterator<Item = (&'a str, &'a str)>,
+    country:    Country,
     element_id: i64,
 ) -> Result<AddressRecord, IncompatibleOsmPbfElement> {
     trace!("try_build_address_record_from_tags: Start for element_id={}", element_id);
@@ -34,9 +33,9 @@ pub fn try_build_address_record_from_tags<'a>(
     let (city_raw, street_raw, postcode_raw) = try_extract_address_tags(&tags, element_id)?;
 
     // 2. Parse each tag into its strongly-typed representation.
-    let city     = try_construct_city_name(Some(city_raw), element_id)?;
-    let street   = try_construct_street_name(Some(street_raw), element_id)?;
-    let postcode = try_construct_postal_code(country, Some(postcode_raw), element_id)?;
+    let city     = try_construct_city_name(city_raw, element_id)?;
+    let street   = try_construct_street_name(street_raw, element_id)?;
+    let postcode = try_construct_postal_code(country, postcode_raw, element_id)?;
 
     // 3. Assemble the final [`AddressRecord`].
     let record = try_assemble_address_record(city, street, postcode, element_id)?;
@@ -46,14 +45,13 @@ pub fn try_build_address_record_from_tags<'a>(
 }
 
 #[cfg(test)]
-#[disable]
 mod test_try_build_address_record_from_tags {
     use super::*;
     use crate::errors::*;
     use std::collections::HashMap;
 
     /// A helper that creates a mock iterator of (&str, &str) from a slice of (key, value) pairs.
-    fn make_tag_iter(tags: &[(&str, &str)]) -> impl Iterator<Item = (&'_ str, &'_ str)> {
+    fn make_tag_iter<'a>(tags: &'a [(&'a str, &'a str)]) -> impl Iterator<Item = (&'a str, &'a str)> {
         tags.iter().map(|&(k, v)| (k, v))
     }
 
@@ -85,9 +83,9 @@ mod test_try_build_address_record_from_tags {
             Ok(rec) => {
                 // Compare city/street/postcode ignoring case, 
                 // or as your code does. We'll do lowercase for convenience.
-                assert_eq!(rec.city().unwrap().name(), expected_city.to_lowercase());
-                assert_eq!(rec.street().unwrap().name(), expected_street.to_lowercase());
-                assert_eq!(rec.postcode().unwrap().code(), expected_postcode);
+                assert_eq!(*rec.city().as_ref().unwrap().name(), expected_city.to_lowercase());
+                assert_eq!(*rec.street().as_ref().unwrap().name(), expected_street.to_lowercase());
+                assert_eq!(rec.postcode().as_ref().unwrap().code(), expected_postcode);
                 rec
             }
             Err(e) => panic!("Expected Ok(AddressRecord), got Err({:?})", e),

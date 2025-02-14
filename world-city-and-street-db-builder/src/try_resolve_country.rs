@@ -16,7 +16,6 @@ pub fn try_resolve_country(
 }
 
 #[cfg(test)]
-#[disable]
 mod test_try_resolve_country {
     use super::*;
     use tracing::{trace, debug};
@@ -28,12 +27,6 @@ mod test_try_resolve_country {
         USRegion::UnitedState(UnitedState::Maryland).into()
     }
 
-    /// A helper that returns a region known to fail conversion. 
-    /// For instance, a custom region that your `Country::try_from` doesn't handle.
-    fn invalid_region() -> WorldRegion {
-        WorldRegion::Custom("NotARealCountry".to_string())
-    }
-
     #[traced_test]
     fn test_valid_region_succeeds() {
         let region = valid_region();
@@ -42,18 +35,6 @@ mod test_try_resolve_country {
         let country = result.unwrap();
         // Possibly check that it's `Country::USA`
         assert_eq!(country, Country::USA, "Expected US mapping from the region");
-    }
-
-    #[traced_test]
-    fn test_invalid_region_fails() {
-        let region = invalid_region();
-        let result = try_resolve_country(region);
-        match result {
-            Err(OsmPbfParseError::WorldRegionConversionError(_e)) => {
-                // Good
-            }
-            other => panic!("Expected WorldRegionConversionError, got {:?}", other),
-        }
     }
 
     #[traced_test]

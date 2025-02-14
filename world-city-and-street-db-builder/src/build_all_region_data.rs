@@ -29,13 +29,6 @@ mod build_all_region_data_tests {
     use std::collections::{BTreeSet, HashMap};
     use tempfile::TempDir;
 
-    /// Utility to create a fresh `Database` in a temporary directory.
-    fn create_test_db<I:StorageInterface>() -> (Arc<Mutex<I>>, TempDir) {
-        let tmp = TempDir::new().expect("tempdir creation failed");
-        let db = I::open(tmp.path()).expect("Failed to open DB");
-        (db, tmp)
-    }
-
     /// Helper that inserts a set of city names for a given region into DB
     /// under the `C2Z:` prefix, simulating how `load_all_cities_for_region(...)` fetches them.
     fn insert_cities_for_region<I:StorageInterface>(
@@ -76,7 +69,7 @@ mod build_all_region_data_tests {
     // => the returned map should be empty
     #[traced_test]
     fn test_build_all_region_data_empty_done_regions() {
-        let (db_arc, _tmp) = create_test_db::<Database>();
+        let (db_arc, _tmp) = create_temp_db::<Database>();
         let db_guard = db_arc.lock().unwrap();
 
         let done_regions: Vec<WorldRegion> = Vec::new();
@@ -87,7 +80,7 @@ mod build_all_region_data_tests {
     // 2) Single region with no city/street => yields empty city_vec & street_vec
     #[traced_test]
     fn test_build_all_region_data_single_region_no_data() {
-        let (db_arc, _tmp) = create_test_db::<Database>();
+        let (db_arc, _tmp) = create_temp_db::<Database>();
         let db_guard = db_arc.lock().unwrap();
 
         let region = WorldRegion::default(); // e.g. USRegion::UnitedState(UnitedState::Maryland)
@@ -111,7 +104,7 @@ mod build_all_region_data_tests {
     // 3) Single region with known city/street => they appear in the RegionData
     #[traced_test]
     fn test_build_all_region_data_single_region_some_data() {
-        let (db_arc, _tmp) = create_test_db::<Database>();
+        let (db_arc, _tmp) = create_temp_db::<Database>();
         let mut db_guard = db_arc.lock().unwrap();
 
         let region = USRegion::UnitedState(UnitedState::Maryland).into();
@@ -140,7 +133,7 @@ mod build_all_region_data_tests {
     // 4) Two done regions => confirm both appear
     #[traced_test]
     fn test_build_all_region_data_multiple_regions() {
-        let (db_arc, _tmp) = create_test_db::<Database>();
+        let (db_arc, _tmp) = create_temp_db::<Database>();
         let mut db_guard = db_arc.lock().unwrap();
 
         let region_md = USRegion::UnitedState(UnitedState::Maryland).into();
@@ -175,7 +168,7 @@ mod build_all_region_data_tests {
     // 5) Partial data for a region => e.g. some city keys exist but no street keys
     #[traced_test]
     fn test_build_all_region_data_partial_region_data() {
-        let (db_arc, _tmp) = create_test_db::<Database>();
+        let (db_arc, _tmp) = create_temp_db::<Database>();
         let mut db_guard = db_arc.lock().unwrap();
 
         let region = USRegion::UnitedState(UnitedState::Maryland).into();
@@ -197,7 +190,7 @@ mod build_all_region_data_tests {
     // 6) Confirm sorting & dedup logic (some city repeated in DB)
     #[traced_test]
     fn test_build_all_region_data_sorting_and_dedup() {
-        let (db_arc, _tmp) = create_test_db::<Database>();
+        let (db_arc, _tmp) = create_temp_db::<Database>();
         let mut db_guard = db_arc.lock().unwrap();
 
         let region = USRegion::UnitedState(UnitedState::Maryland).into();

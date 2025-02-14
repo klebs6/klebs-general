@@ -1,5 +1,4 @@
 // ---------------- [ File: src/street_names_for_postal_code_in_region.rs ]
-// ---------------- [ File: src/street_names_for_postal_code_in_region.rs ]
 crate::ix!();
 
 pub trait StreetNamesForPostalCodeInRegion {
@@ -27,24 +26,11 @@ impl<I:StorageInterface> StreetNamesForPostalCodeInRegion for DataAccess<I> {
 }
 
 #[cfg(test)]
-#[disable]
 mod test_street_names_for_postal_code_in_region {
     use super::*;
     use std::collections::BTreeSet;
     use std::sync::{Arc, Mutex};
     use tempfile::TempDir;
-
-    /// Creates a temporary database and returns `(Arc<Mutex<Database>>, TempDir)`.
-    fn create_temp_db<I:StorageInterface>() -> (Arc<Mutex<I>>, TempDir) {
-        let temp_dir = TempDir::new().expect("Failed to create temporary directory");
-        let db = I::open(temp_dir.path()).expect("Failed to open database in temp dir");
-        (db, temp_dir)
-    }
-
-    /// Builds a `DataAccess` reference that points to the same Database.
-    fn create_data_access<I:StorageInterface>(db_arc: Arc<Mutex<I>>) -> DataAccess {
-        DataAccess::with_db(db_arc)
-    }
 
     /// Helper that stores a set of streets under the key that `s_key(region, postal_code)` generates.
     /// This simulates what the code normally does at ingest time.
@@ -61,8 +47,8 @@ mod test_street_names_for_postal_code_in_region {
 
     #[traced_test]
     fn test_no_data_returns_none() {
-        let (db_arc, _tmp_dir) = create_temp_db();
-        let data_access = create_data_access(db_arc.clone());
+        let (db_arc, _tmp_dir) = create_temp_db::<Database>();
+        let data_access = DataAccess::with_db(db_arc.clone());
 
         let region = WorldRegion::try_from_abbreviation("MD").unwrap();
         let postal_code = PostalCode::new(Country::USA, "00000").unwrap();
@@ -77,9 +63,9 @@ mod test_street_names_for_postal_code_in_region {
 
     #[traced_test]
     fn test_existing_data_returns_btreeset() {
-        let (db_arc, _tmp_dir) = create_temp_db();
+        let (db_arc, _tmp_dir) = create_temp_db::<Database>();
         let mut db_guard = db_arc.lock().unwrap();
-        let data_access = create_data_access(db_arc.clone());
+        let data_access = DataAccess::with_db(db_arc.clone());
 
         let region = WorldRegion::try_from_abbreviation("MD").unwrap();
         let postal_code = PostalCode::new(Country::USA, "21201").unwrap();
@@ -91,7 +77,7 @@ mod test_street_names_for_postal_code_in_region {
         streets.insert(StreetName::new("Eutaw St").unwrap());
 
         // Store
-        put_s_data(&mut db_guard, &region, &postal_code, &streets);
+        put_s_data(&mut *db_guard, &region, &postal_code, &streets);
 
         // Now query
         let result = data_access.street_names_for_postal_code_in_region(&region, &postal_code);
@@ -106,9 +92,9 @@ mod test_street_names_for_postal_code_in_region {
     #[traced_test]
     fn test_corrupted_cbor_returns_none() {
         // If the underlying CBOR is invalid, we get None.
-        let (db_arc, _tmp_dir) = create_temp_db();
+        let (db_arc, _tmp_dir) = create_temp_db::<Database>();
         let mut db_guard = db_arc.lock().unwrap();
-        let data_access = create_data_access(db_arc.clone());
+        let data_access = DataAccess::with_db(db_arc.clone());
 
         let region = WorldRegion::try_from_abbreviation("MD").unwrap();
         let postal_code = PostalCode::new(Country::USA, "21201").unwrap();
@@ -123,9 +109,9 @@ mod test_street_names_for_postal_code_in_region {
 
     #[traced_test]
     fn test_different_region_or_postal_code_returns_none() {
-        let (db_arc, _tmp_dir) = create_temp_db();
+        let (db_arc, _tmp_dir) = create_temp_db::<Database>();
         let mut db_guard = db_arc.lock().unwrap();
-        let data_access = create_data_access(db_arc.clone());
+        let data_access = DataAccess::with_db(db_arc.clone());
 
         let region_md = WorldRegion::try_from_abbreviation("MD").unwrap();
         let region_va = WorldRegion::try_from_abbreviation("VA").unwrap();
@@ -135,7 +121,7 @@ mod test_street_names_for_postal_code_in_region {
 
         let mut streets_md = BTreeSet::new();
         streets_md.insert(StreetName::new("North Ave").unwrap());
-        put_s_data(&mut db_guard, &region_md, &pc_21201, &streets_md);
+        put_s_data(&mut *db_guard, &region_md, &pc_21201, &streets_md);
 
         // If we query region_va instead => no data
         let result_va = data_access.street_names_for_postal_code_in_region(&region_va, &pc_21201);
@@ -150,9 +136,9 @@ mod test_street_names_for_postal_code_in_region {
     fn test_duplicate_street_names_stored_once() {
         // If the DB store has duplicates in the BTreeSet, they unify. 
         // We'll store them and confirm only one instance persists.
-        let (db_arc, _tmp_dir) = create_temp_db();
+        let (db_arc, _tmp_dir) = create_temp_db::<Database>();
         let mut db_guard = db_arc.lock().unwrap();
-        let data_access = create_data_access(db_arc.clone());
+        let data_access = DataAccess::with_db(db_arc.clone());
 
         let region = WorldRegion::try_from_abbreviation("MD").unwrap();
         let postal_code = PostalCode::new(Country::USA, "21000").unwrap();
@@ -163,7 +149,7 @@ mod test_street_names_for_postal_code_in_region {
         let mut streets = BTreeSet::new();
         streets.insert(street_1);
         streets.insert(street_2); // same name => no effect
-        put_s_data(&mut db_guard, &region, &postal_code, &streets);
+        put_s_data(&mut *db_guard, &region, &postal_code, &streets);
 
         let retrieved_opt = data_access.street_names_for_postal_code_in_region(&region, &postal_code);
         assert!(retrieved_opt.is_some(), "We inserted data => Some(...)");

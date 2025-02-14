@@ -13,7 +13,6 @@ pub fn validate_not_dir(path: &Path) -> std::io::Result<()> {
 }
 
 #[cfg(test)]
-#[disable]
 mod test_validate_not_dir {
     use super::*;
     use tempfile::TempDir;

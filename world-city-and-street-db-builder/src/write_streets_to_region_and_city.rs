@@ -31,13 +31,6 @@ mod test_write_streets_to_region_and_city {
         StreetName::new(name).unwrap()
     }
 
-    /// Opens a temporary `Database` and returns `(Arc<Mutex<Database>>, TempDir)`.
-    fn create_temp_db<I:StorageInterface>() -> (Arc<Mutex<I>>, TempDir) {
-        let temp_dir = TempDir::new().expect("Failed to create temp dir");
-        let db = I::open(temp_dir.path()).expect("Failed to open database in temp dir");
-        (db, temp_dir)
-    }
-
     /// Reads back the stored streets for `(region, city)` by constructing `c2s_key`.
     /// Returns `None` if the key is missing or decoding fails.
     fn load_streets_from_c2s<I:StorageInterface>(
@@ -58,7 +51,7 @@ mod test_write_streets_to_region_and_city {
 
     #[traced_test]
     fn test_write_nonempty_streets_success() {
-        let (db_arc, _temp_dir) = create_temp_db();
+        let (db_arc, _temp_dir) = create_temp_db::<Database>();
         let mut db_guard = db_arc.lock().unwrap();
 
         let region = WorldRegion::try_from_abbreviation("MD").unwrap();
@@ -74,7 +67,7 @@ mod test_write_streets_to_region_and_city {
             .expect("Should write successfully");
 
         // Read back
-        let loaded_opt = load_streets_from_c2s(&db_guard, &region, &city);
+        let loaded_opt = load_streets_from_c2s(&*db_guard, &region, &city);
         assert!(loaded_opt.is_some(), "Should have stored data");
         let loaded = loaded_opt.unwrap();
         assert_eq!(loaded, streets, "The stored data should match our input set");
@@ -82,7 +75,7 @@ mod test_write_streets_to_region_and_city {
 
     #[traced_test]
     fn test_overwrite_existing_streets() {
-        let (db_arc, _temp_dir) = create_temp_db();
+        let (db_arc, _temp_dir) = create_temp_db::<Database>();
         let mut db_guard = db_arc.lock().unwrap();
 
         let region = WorldRegion::try_from_abbreviation("VA").unwrap();
@@ -104,14 +97,14 @@ mod test_write_streets_to_region_and_city {
             .expect("write updated set");
 
         // Confirm old data replaced
-        let stored_opt = load_streets_from_c2s(&db_guard, &region, &city);
+        let stored_opt = load_streets_from_c2s(&*db_guard, &region, &city);
         let stored = stored_opt.unwrap();
         assert_eq!(stored, new_streets, "The new data should have overwritten the old data");
     }
 
     #[traced_test]
     fn test_write_empty_set() {
-        let (db_arc, _temp_dir) = create_temp_db();
+        let (db_arc, _temp_dir) = create_temp_db::<Database>();
         let mut db_guard = db_arc.lock().unwrap();
 
         let region = WorldRegion::try_from_abbreviation("DC").unwrap();
@@ -123,7 +116,7 @@ mod test_write_streets_to_region_and_city {
             .expect("Should store empty set successfully");
 
         // Read back => should decode as empty set
-        let loaded_opt = load_streets_from_c2s(&db_guard, &region, &city);
+        let loaded_opt = load_streets_from_c2s(&*db_guard, &region, &city);
         assert!(loaded_opt.is_some(), "Key should exist for empty set");
         let stored = loaded_opt.unwrap();
         assert!(stored.is_empty(), "Decoded set is empty");
@@ -131,41 +124,6 @@ mod test_write_streets_to_region_and_city {
 
     #[traced_test]
     fn test_rocksdb_put_error() {
-        // If put fails => returns DatabaseConstructionError::RocksDB
-        struct FailingDbStub;
-        impl DatabasePut for FailingDbStub {
-            fn put(
-                &mut self, 
-                _key: impl AsRef<[u8]>, 
-                _val: impl AsRef<[u8]>
-            ) -> Result<(), DatabaseConstructionError> {
-                Err(DatabaseConstructionError::RocksDB(
-                    rocksdb::Error::new("Simulated put error")
-                ))
-            }
-        }
-        // Combine with trait
-        impl StorageInterface for FailingDbStub {}
-        impl OpenDatabaseAtPath for FailingDbStub {
-            fn open(_p: impl AsRef<std::path::Path>) 
-                -> Result<Arc<Mutex<Self>>, DatabaseConstructionError> 
-            {
-                unimplemented!()
-            }
-        }
-        impl WriteStreetsToRegionAndCity for FailingDbStub {
-            fn write_streets_to_region_and_city(
-                &mut self, 
-                region: &WorldRegion, 
-                city: &CityName, 
-                streets: &BTreeSet<StreetName>
-            ) -> Result<(), DatabaseConstructionError> {
-                let key = c2s_key(region, city);
-                let val = compress_set_to_cbor(streets);
-                self.put(key, val)?; // forcibly fails
-                Ok(())
-            }
-        }
 
         let mut db_stub = FailingDbStub;
         let region = WorldRegion::try_from_abbreviation("MD").unwrap();

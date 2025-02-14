@@ -35,14 +35,6 @@ mod test_load_done_regions {
     use tempfile::TempDir;
     use std::sync::{Arc, Mutex};
 
-    /// Creates a temporary database and returns both the DB and the TempDir
-    /// so the directory remains valid for the test's duration.
-    fn create_temp_db<I:StorageInterface>() -> (Arc<Mutex<I>>, TempDir) {
-        let temp_dir = TempDir::new().expect("Failed to create temporary directory");
-        let db       = I::open(temp_dir.path()).expect("Failed to open database in temp dir");
-        (db, temp_dir)
-    }
-
     /// Puts a marker key `META:REGION_DONE:<abbr>` in the DB. This simulates a region 
     /// that has completed processing.
     fn mark_region_done_manually<I:StorageInterface>(

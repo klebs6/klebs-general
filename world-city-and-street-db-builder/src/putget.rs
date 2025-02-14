@@ -35,15 +35,6 @@ mod test_database_put_get {
     use std::sync::{Arc, Mutex};
     use std::str;
 
-    /// Creates a temporary RocksDB-based `Database` for testing,
-    /// returning `(Arc<Mutex<Database>>, TempDir)` so the temp directory
-    /// remains valid for the test's scope.
-    fn create_temp_db<I:StorageInterface>() -> (Arc<Mutex<I>>, TempDir) {
-        let tmp = TempDir::new().expect("Failed to create temp directory");
-        let db = I::open(tmp.path()).expect("Failed to open database in temp dir");
-        (db, tmp)
-    }
-
     #[traced_test]
     fn test_put_and_get_round_trip() {
         let (db_arc, _tmp_dir) = create_temp_db::<Database>();

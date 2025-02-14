@@ -49,7 +49,6 @@ pub async fn write_osm_pbf_file(
 }
 
 #[cfg(test)]
-#[disable]
 mod test_write_osm_pbf_file {
     use super::*;
     use tokio::io::{AsyncReadExt, AsyncSeekExt, SeekFrom};

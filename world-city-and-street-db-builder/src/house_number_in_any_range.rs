@@ -68,12 +68,6 @@ mod house_number_in_any_range_tests {
             .expect("storing house number ranges should succeed");
     }
 
-    /// Constructs a typical region object for your tests. 
-    /// In a real environment, pick the region that best matches your system (MD, VA, DC, etc.).
-    fn example_region() -> WorldRegion {
-        USRegion::UnitedState(UnitedState::Maryland).into()
-    }
-
     #[traced_test]
     fn test_house_number_in_any_range_no_data_key() {
         // scenario: DB has no entry for "HNR:MD:some_street" => `house_number_in_any_range` => false

@@ -60,7 +60,6 @@ impl WriteIndicesForRegion for Database {
 }
 
 #[cfg(test)]
-#[disable]
 mod test_write_indices_for_region {
     use super::*;
     use std::collections::{BTreeMap, BTreeSet};
@@ -129,13 +128,6 @@ mod test_write_indices_for_region {
             .unwrap()
     }
 
-    /// Opens a temporary DB so we can check final stored data.
-    fn create_temp_db<I:StorageInterface>() -> (Arc<Mutex<I>>, TempDir) {
-        let temp_dir = TempDir::new().expect("Failed to create temp dir");
-        let db = I::open(temp_dir.path()).expect("Failed to open DB");
-        (db, temp_dir)
-    }
-
     // A simple read-back approach for verifying data:
     // We'll call the underlying get or decode logic for each prefix key
     // if desired. For brevity, we might do partial checks or rely on 
@@ -161,7 +153,7 @@ mod test_write_indices_for_region {
 
     #[traced_test]
     fn test_empty_indexes_no_op() {
-        let (db_arc, _tmp_dir) = create_temp_db();
+        let (db_arc, _tmp_dir) = create_temp_db::<Database>();
         let mut db_guard = db_arc.lock().unwrap();
         let region = WorldRegion::try_from_abbreviation("MD").unwrap();
 
@@ -176,7 +168,7 @@ mod test_write_indices_for_region {
 
     #[traced_test]
     fn test_nonempty_indexes_all_written_successfully() {
-        let (db_arc, _tmp_dir) = create_temp_db();
+        let (db_arc, _tmp_dir) = create_temp_db::<Database>();
         let mut db_guard = db_arc.lock().unwrap();
         let region = WorldRegion::try_from_abbreviation("MD").unwrap();
         let indexes = make_inmemory_indexes(&region);
@@ -187,7 +179,7 @@ mod test_write_indices_for_region {
         // Optionally, we can check one or two representative keys to confirm data got stored.
         // For example, we know indexes => "S:{region}:10001" => {MainStreet, SecondAve}.
         let postal_10001 = PostalCode::new(Country::USA, "10001").unwrap();
-        let loaded_streets_10001 = load_s_key(&db_guard, &region, &postal_10001)
+        let loaded_streets_10001 = load_s_key(&*db_guard, &region, &postal_10001)
             .expect("Should have data for 10001");
         // Our make_inmemory_indexes inserted "MainStreet" & "SecondAve" 
         let expected: BTreeSet<StreetName> = 
@@ -199,121 +191,8 @@ mod test_write_indices_for_region {
 
     #[traced_test]
     fn test_partial_error_in_underlying_write_calls() {
-        // If one of the underlying calls fails, e.g. write_streets_to_region_and_postal_code,
-        // the function returns that error. We'll do a minimal failing DB stub:
-        struct FailingDb;
-        impl DatabasePut for FailingDb {
-            fn put(&mut self, _key: impl AsRef<[u8]>, _val: impl AsRef<[u8]>) 
-                -> Result<(), DatabaseConstructionError> 
-            {
-                // We'll fail once we see a certain key or on the first call
-                Err(DatabaseConstructionError::RocksDB(rocksdb::Error::new("Simulated put failure")))
-            }
-        }
 
-        // We only need the write traits used by `write_indices_for_region`.
-        // So define minimal stubs for them, each calling put.
-        impl WriteStreetsToRegionAndPostalCode for FailingDb {
-            fn write_streets_to_region_and_postal_code(
-                &mut self, 
-                _region: &WorldRegion, 
-                _postal_code: &PostalCode, 
-                _streets: &BTreeSet<StreetName>
-            ) -> Result<(), DatabaseConstructionError> {
-                self.put(b"some_key", b"some_value")?;
-                Ok(())
-            }
-        }
-        impl WriteCitiesToRegionAndPostalCode for FailingDb {
-            fn write_cities_to_region_and_postal_code(
-                &mut self, 
-                _region: &WorldRegion, 
-                _postal_code: &PostalCode, 
-                _cities: &BTreeSet<CityName>
-            ) -> Result<(), DatabaseConstructionError> {
-                self.put(b"some_key", b"some_value")?;
-                Ok(())
-            }
-        }
-        impl WritePostalCodesToRegionAndCity for FailingDb {
-            fn write_postal_codes_to_region_and_city(
-                &mut self,
-                _region: &WorldRegion,
-                _city: &CityName,
-                _postal_codes: &BTreeSet<PostalCode>
-            ) -> Result<(), DatabaseConstructionError> {
-                self.put(b"some_key", b"some_value")?;
-                Ok(())
-            }
-        }
-        impl WriteStreetsToRegionAndCity for FailingDb {
-            fn write_streets_to_region_and_city(
-                &mut self,
-                _region: &WorldRegion,
-                _city: &CityName,
-                _streets: &BTreeSet<StreetName>
-            ) -> Result<(), DatabaseConstructionError> {
-                self.put(b"some_key", b"some_value")?;
-                Ok(())
-            }
-        }
-        impl WritePostalCodesToRegionAndStreet for FailingDb {
-            fn write_postal_codes_to_region_and_street(
-                &mut self,
-                _region: &WorldRegion,
-                _street: &StreetName,
-                _postal_codes: &BTreeSet<PostalCode>
-            ) -> Result<(), DatabaseConstructionError> {
-                self.put(b"some_key", b"some_value")?;
-                Ok(())
-            }
-        }
-        impl WriteCitiesToRegionAndStreet for FailingDb {
-            fn write_cities_to_region_and_street(
-                &mut self,
-                _region: &WorldRegion,
-                _street: &StreetName,
-                _cities: &BTreeSet<CityName>
-            ) -> Result<(), DatabaseConstructionError> {
-                self.put(b"some_key", b"some_value")?;
-                Ok(())
-            }
-        }
-        impl StorageInterface for FailingDb {}
-        impl OpenDatabaseAtPath for FailingDb {
-            fn open(_path: impl AsRef<std::path::Path>) 
-                -> Result<Arc<Mutex<Self>>, DatabaseConstructionError> {
-                unimplemented!()
-            }
-        }
-        impl WriteIndicesForRegion for FailingDb {
-            fn write_indices_for_region(
-                &mut self, 
-                region: &WorldRegion, 
-                indexes: &InMemoryIndexes
-            ) -> Result<(), DatabaseConstructionError> {
-                info!("Failing stub => calls each write method, but put always fails");
-                // replicate the logic of the real function, or call it if you want a partial approach
-                // We'll do the real logic:
-                
-                // if let Some(state_map) = indexes.postal_code_to_street_map_for_region(region) {
-                //     for (postal_code, streets) in state_map {
-                //         self.write_streets_to_region_and_postal_code(region, postal_code, streets)?;
-                //     }
-                // }
-                // for (postal_code, cities) in indexes.postal_code_cities() {
-                //     self.write_cities_to_region_and_postal_code(region, postal_code, cities)?;
-                // }
-                // ... etc for each
-
-                // We'll skip the detail for brevity, but each call fails on put(...) => error
-                Err(DatabaseConstructionError::RocksDB(
-                    rocksdb::Error::new("Simulated put failure")
-                ))
-            }
-        }
-
-        let mut db_stub = FailingDb;
+        let mut db_stub = FailingDbStub;
         let region = WorldRegion::try_from_abbreviation("MD").unwrap();
         let indexes = InMemoryIndexesBuilder::default().build().unwrap(); // or a non-empty if you prefer
 

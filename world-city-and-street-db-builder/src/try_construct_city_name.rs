@@ -1,5 +1,4 @@
 // ---------------- [ File: src/try_construct_city_name.rs ]
-// ---------------- [ File: src/try_construct_city_name.rs ]
 crate::ix!();
 
 /// Attempts to create a `CityName` from a string (if present). Returns an error
@@ -26,7 +25,6 @@ pub fn try_construct_city_name(
 }
 
 #[cfg(test)]
-#[disable]
 mod test_try_construct_city_name {
     use super::*;
     use crate::errors::*; // Adjust if your error types or CityNameConstructionError live elsewhere

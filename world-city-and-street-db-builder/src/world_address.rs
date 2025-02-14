@@ -34,7 +34,6 @@ impl<V:GetCitySetForKey + GetStreetSetForKey> ValidateWith<V> for WorldAddress {
 // or you can keep them inline with a `#[cfg(test)] mod world_address_validation_tests;`
 
 #[cfg(test)]
-#[disable]
 mod world_address_validation_tests {
     use super::*;
 
@@ -54,7 +53,7 @@ mod world_address_validation_tests {
             let mut db_guard = db.lock().unwrap();
             let recs = RegionalRecords::mock_for_region(&region_va);
             debug!("regional records for VA: {:#?}", recs);
-            recs.write_to_storage(&mut db_guard).unwrap();
+            recs.write_to_storage(&mut *db_guard).unwrap();
         }
 
         // 3) Validate the default mock address, which should now exist
@@ -79,7 +78,7 @@ mod world_address_validation_tests {
         {
             let mut db_guard = db.lock().unwrap();
             let recs = RegionalRecords::mock_for_region(&region_md);
-            recs.write_to_storage(&mut db_guard).unwrap();
+            recs.write_to_storage(&mut *db_guard).unwrap();
         }
         let da = DataAccess::with_db(db.clone());
 
@@ -113,7 +112,7 @@ mod world_address_validation_tests {
         {
             let mut db_guard = db.lock().unwrap();
             let recs = RegionalRecords::mock_for_region(&region_md);
-            recs.write_to_storage(&mut db_guard).unwrap();
+            recs.write_to_storage(&mut *db_guard).unwrap();
         }
 
         let da = DataAccess::with_db(db.clone());
@@ -232,7 +231,7 @@ mod world_address_validation_tests {
         {
             let mut db_guard = db.lock().unwrap();
             let recs = RegionalRecords::mock_for_region(&region_md);
-            recs.write_to_storage(&mut db_guard).unwrap();
+            recs.write_to_storage(&mut *db_guard).unwrap();
         }
 
         let da = DataAccess::with_db(db.clone());

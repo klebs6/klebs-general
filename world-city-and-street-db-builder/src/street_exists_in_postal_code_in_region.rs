@@ -24,25 +24,11 @@ impl<I:StorageInterface> StreetExistsInPostalCodeInRegion for DataAccess<I> {
 }
 
 #[cfg(test)]
-#[disable]
 mod test_street_exists_in_postal_code_in_region {
     use super::*;
     use std::collections::BTreeSet;
     use std::sync::{Arc, Mutex};
     use tempfile::TempDir;
-
-    /// Creates a temporary database for testing, returning `(Arc<Mutex<Database>>, TempDir)`.
-    /// The `TempDir` ensures that the directory remains valid for the duration of the tests.
-    fn create_temp_db<I:StorageInterface>() -> (Arc<Mutex<I>>, TempDir) {
-        let temp_dir = TempDir::new().expect("Failed to create temp dir");
-        let db = I::open(temp_dir.path()).expect("Failed to open database in temp dir");
-        (db, temp_dir)
-    }
-
-    /// Creates a [`DataAccess`] referencing the same database.
-    fn create_data_access<I:StorageInterface>(db_arc: Arc<Mutex<I>>) -> DataAccess<I> {
-        DataAccess::with_db(db_arc)
-    }
 
     /// Helper to store a set of street names under the key returned by `s_key(region, postal_code)`.
     fn put_s_data<I: StorageInterface>(
@@ -58,9 +44,9 @@ mod test_street_exists_in_postal_code_in_region {
 
     #[traced_test]
     fn test_no_data_returns_false() {
-        let (db_arc, _tmp) = create_temp_db();
+        let (db_arc, _tmp) = create_temp_db::<Database>();
         let db_guard = db_arc.lock().unwrap();
-        let data_access = create_data_access(db_arc.clone());
+        let data_access = DataAccess::with_db(db_arc.clone());
 
         let region = WorldRegion::try_from_abbreviation("MD").unwrap();
         let pc = PostalCode::new(Country::USA, "99999").unwrap();
@@ -72,9 +58,9 @@ mod test_street_exists_in_postal_code_in_region {
 
     #[traced_test]
     fn test_street_in_set_returns_true() {
-        let (db_arc, _tmp) = create_temp_db();
+        let (db_arc, _tmp) = create_temp_db::<Database>();
         let mut db_guard = db_arc.lock().unwrap();
-        let data_access = create_data_access(db_arc.clone());
+        let data_access = DataAccess::with_db(db_arc.clone());
 
         let region = WorldRegion::try_from_abbreviation("MD").unwrap();
         let pc = PostalCode::new(Country::USA, "21201").unwrap();
@@ -83,7 +69,7 @@ mod test_street_exists_in_postal_code_in_region {
         // Insert the street in the set
         let mut streets = BTreeSet::new();
         streets.insert(street.clone());
-        put_s_data(&mut db_guard, &region, &pc, &streets);
+        put_s_data(&mut *db_guard, &region, &pc, &streets);
 
         // Query
         let result = data_access.street_exists_in_postal_code(&region, &pc, &street);
@@ -92,9 +78,9 @@ mod test_street_exists_in_postal_code_in_region {
 
     #[traced_test]
     fn test_street_not_in_set_returns_false() {
-        let (db_arc, _tmp) = create_temp_db();
+        let (db_arc, _tmp) = create_temp_db::<Database>();
         let mut db_guard = db_arc.lock().unwrap();
-        let data_access = create_data_access(db_arc.clone());
+        let data_access = DataAccess::with_db(db_arc.clone());
 
         let region = WorldRegion::try_from_abbreviation("MD").unwrap();
         let pc = PostalCode::new(Country::USA, "21230").unwrap();
@@ -104,7 +90,7 @@ mod test_street_exists_in_postal_code_in_region {
 
         let mut streets = BTreeSet::new();
         streets.insert(known.clone());
-        put_s_data(&mut db_guard, &region, &pc, &streets);
+        put_s_data(&mut *db_guard, &region, &pc, &streets);
 
         // The missing street isn't in the set
         let result = data_access.street_exists_in_postal_code(&region, &pc, &missing);
@@ -113,9 +99,9 @@ mod test_street_exists_in_postal_code_in_region {
 
     #[traced_test]
     fn test_different_postal_code_returns_false() {
-        let (db_arc, _tmp) = create_temp_db();
+        let (db_arc, _tmp) = create_temp_db::<Database>();
         let mut db_guard = db_arc.lock().unwrap();
-        let data_access = create_data_access(db_arc.clone());
+        let data_access = DataAccess::with_db(db_arc.clone());
 
         let region = WorldRegion::try_from_abbreviation("MD").unwrap();
 
@@ -126,7 +112,7 @@ mod test_street_exists_in_postal_code_in_region {
         // Insert for pc1
         let mut streets = BTreeSet::new();
         streets.insert(street.clone());
-        put_s_data(&mut db_guard, &region, &pc1, &streets);
+        put_s_data(&mut *db_guard, &region, &pc1, &streets);
 
         // Query for pc2 => no match
         let result = data_access.street_exists_in_postal_code(&region, &pc2, &street);
@@ -135,9 +121,9 @@ mod test_street_exists_in_postal_code_in_region {
 
     #[traced_test]
     fn test_different_region_returns_false() {
-        let (db_arc, _tmp) = create_temp_db();
+        let (db_arc, _tmp) = create_temp_db::<Database>();
         let mut db_guard = db_arc.lock().unwrap();
-        let data_access = create_data_access(db_arc.clone());
+        let data_access = DataAccess::with_db(db_arc.clone());
 
         let region_md = WorldRegion::try_from_abbreviation("MD").unwrap();
         let region_va = WorldRegion::try_from_abbreviation("VA").unwrap();
@@ -147,7 +133,7 @@ mod test_street_exists_in_postal_code_in_region {
 
         let mut streets = BTreeSet::new();
         streets.insert(street.clone());
-        put_s_data(&mut db_guard, &region_md, &pc, &streets);
+        put_s_data(&mut *db_guard, &region_md, &pc, &streets);
 
         // Query with region_va => not found
         let result = data_access.street_exists_in_postal_code(&region_va, &pc, &street);
@@ -158,9 +144,9 @@ mod test_street_exists_in_postal_code_in_region {
     fn test_corrupted_cbor_returns_false() {
         // If the underlying data is invalid CBOR, 
         // `street_names_for_postal_code_in_region` returns None => false
-        let (db_arc, _tmp) = create_temp_db();
+        let (db_arc, _tmp) = create_temp_db::<Database>();
         let mut db_guard = db_arc.lock().unwrap();
-        let data_access = create_data_access(db_arc.clone());
+        let data_access = DataAccess::with_db(db_arc.clone());
 
         let region = WorldRegion::try_from_abbreviation("MD").unwrap();
         let pc = PostalCode::new(Country::USA, "21201").unwrap();

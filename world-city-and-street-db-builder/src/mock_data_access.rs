@@ -61,3 +61,19 @@ pub fn create_data_access_for_mock<I:StorageInterface>(_mock: &MockDataAccess) -
     let db = I::open(tmp.path()).expect("Failed to open RocksDB in temp dir");
     DataAccess::with_db(db)
 }
+
+/// Opens a temporary `Database` for testing.
+pub fn create_temp_db<I:StorageInterface>() -> (Arc<Mutex<I>>, TempDir) {
+    let temp_dir = TempDir::new().expect("Failed to create temp dir");
+    let db = I::open(temp_dir.path()).expect("Failed to open database in temp dir");
+    (db, temp_dir)
+}
+
+/// Creates a DataAccess from a newly opened DB in a temp directory.
+pub fn create_data_access<I:StorageInterface>() -> (DataAccess<I>, Arc<Mutex<I>>, TempDir) {
+    let temp_dir = TempDir::new().expect("Failed to create temp directory");
+    let db = I::open(temp_dir.path()).expect("Failed to open DB");
+    let db_arc = db.clone();
+    let data_access = DataAccess::with_db(db);
+    (data_access, db_arc, temp_dir)
+}

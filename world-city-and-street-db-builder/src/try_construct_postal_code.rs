@@ -1,5 +1,4 @@
 // ---------------- [ File: src/try_construct_postal_code.rs ]
-// ---------------- [ File: src/try_construct_postal_code.rs ]
 crate::ix!();
 
 /// Attempts to create a `PostalCode` from a string (if present). Returns an error
@@ -27,7 +26,6 @@ pub fn try_construct_postal_code(
 }
 
 #[cfg(test)]
-#[disable]
 mod test_try_construct_postal_code {
     use super::*;
     use crate::errors::*; // Adjust if PostalCodeConstructionError or IncompatibleOsmPbfElement live elsewhere

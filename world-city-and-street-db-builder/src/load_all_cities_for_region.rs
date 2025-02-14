@@ -44,15 +44,6 @@ mod test_load_all_cities_for_region {
     use tempfile::TempDir;
     use std::sync::{Arc,Mutex};
 
-    /// Creates a temporary database for testing.
-    /// Returns `(Arc<Mutex<Database>>, TempDir)` so that the temp directory
-    /// remains valid for the lifetime of the tests.
-    fn create_temp_db<I:StorageInterface>() -> (Arc<Mutex<I>>, TempDir) {
-        let tmp = TempDir::new().expect("Failed to create temp dir");
-        let db = I::open(tmp.path()).expect("Failed to open database in temp dir");
-        (db, tmp)
-    }
-
     /// Stores CBOR-encoded data under the `C2Z:{region_abbr}:{city}` key.
     /// This helps simulate city->postal-code data in RocksDB, though we only
     /// need to confirm the city extraction logic for the key.

@@ -38,14 +38,6 @@ mod test_region_done_traits {
     use std::sync::{Arc, Mutex};
     use std::path::PathBuf;
 
-    /// Creates a temporary database and returns `(Arc<Mutex<Database>>, TempDir)`.
-    /// The `TempDir` ensures all files are cleaned up after the test.
-    fn create_temp_db<I:StorageInterface>() -> (Arc<Mutex<I>>, TempDir) {
-        let temp_dir = TempDir::new().expect("Failed to create temp directory");
-        let db = I::open(temp_dir.path()).expect("Failed to open database in temp dir");
-        (db, temp_dir)
-    }
-
     #[traced_test]
     fn test_region_done_initially_false() {
         let (db_arc, _tmp) = create_temp_db::<Database>();

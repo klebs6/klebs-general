@@ -1,5 +1,4 @@
 // ---------------- [ File: src/try_assemble_address_record.rs ]
-// ---------------- [ File: src/try_assemble_address_record.rs ]
 crate::ix!();
 
 /// Assembles the final `AddressRecord` using the provided city, street, and postcode objects.
@@ -31,7 +30,6 @@ pub fn try_assemble_address_record(
 }
 
 #[cfg(test)]
-#[disable]
 mod test_try_assemble_address_record {
     use super::*;
     use crate::errors::*;
@@ -62,11 +60,11 @@ mod test_try_assemble_address_record {
         
         // Confirm the record has the fields
         assert!(record.city().is_some());
-        assert_eq!(record.city().unwrap().name(), "testcity");
+        assert_eq!(record.city().as_ref().unwrap().name(), "testcity");
         assert!(record.street().is_some());
-        assert_eq!(record.street().unwrap().name(), "teststreet");
+        assert_eq!(record.street().as_ref().unwrap().name(), "teststreet");
         assert!(record.postcode().is_some());
-        assert_eq!(record.postcode().unwrap().code(), "12345");
+        assert_eq!(record.postcode().as_ref().unwrap().code(), "12345");
     }
 
     #[traced_test]

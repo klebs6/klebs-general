@@ -1,241 +1,244 @@
 // ---------------- [ File: src/house_number_aggregator.rs ]
-// ---------------- [ File: src/house_number_aggregator.rs ]
 crate::ix!();
 
-/// A struct that encapsulates the street => house‐number‐ranges mapping.
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct HouseNumberAggregator {
     world_region: WorldRegion,
     country:      Country,
     map:          HashMap<StreetName, Vec<HouseNumberRange>>,
 }
 
-impl HouseNumberAggregator {
+impl Default for HouseNumberAggregator {
 
-    /// Create a new, empty aggregator.
-    pub fn new(world_region: &WorldRegion) -> Self {
-        tracing::trace!("HouseNumberAggregator::new => constructing empty aggregator");
-        Self {
-            world_region: world_region.clone(),
-            country:      (*world_region).try_into().expect("building a HouseNumberAggregator: expected a country from the WorldRegion"),
+    fn default() -> Self {
+        HouseNumberAggregator {
+            world_region: USRegion::UnitedState(UnitedState::Maryland).into(),
+            country:      Country::USA,
             map:          HashMap::new(),
         }
     }
+}
 
-    pub fn new_with_map(world_region: &WorldRegion, map: HashMap<StreetName,Vec<HouseNumberRange>>) -> Self {
+impl HouseNumberAggregator {
+    //-------------------------------------------------
+    // Constructors
+    //-------------------------------------------------
+    pub fn new(world_region: &WorldRegion) -> Self {
+        trace!("HouseNumberAggregator::new => constructing empty aggregator");
         Self {
             world_region: world_region.clone(),
-            country:      (*world_region).try_into().expect("building a HouseNumberAggregator: expected a country from the WorldRegion"),
-            map
+            country: Country::try_from(*world_region)
+                .expect("expected a valid Country from WorldRegion"),
+            map: HashMap::new(),
         }
     }
 
-    pub fn len(&self) -> usize { self.map.len() }
+    pub fn new_with_map(
+        world_region: &WorldRegion,
+        map: HashMap<StreetName, Vec<HouseNumberRange>>
+    ) -> Self {
+        Self {
+            world_region: world_region.clone(),
+            country: Country::try_from(*world_region)
+                .expect("expected a valid Country"),
+            map,
+        }
+    }
 
-    /// Attempts to parse the OSM PBF data, populate `aggregator`, and stream out addresses.
-    /// Returns an error if parsing fails or an error is encountered mid-processing.
-    pub fn try_parse_and_aggregate_house_numbers<R:Read+Send+Sync>(
+    //-------------------------------------------------
+    // HashMap-like convenience methods
+    //-------------------------------------------------
+
+    /// Returns `Some(&Vec<HouseNumberRange>)` if street is present.
+    pub fn get(&self, street: &StreetName) -> Option<&Vec<HouseNumberRange>> {
+        self.map.get(street)
+    }
+
+    /// Inserts (overwrites) the Vec of HouseNumberRange for `street`.
+    /// Returns the old Vec if present.
+    pub fn insert(
         &mut self,
-        reader: osmpbf::ElementReader<R>,
-        tx:     &std::sync::mpsc::SyncSender<Result<WorldAddress, OsmPbfParseError>>,
+        street: StreetName,
+        ranges: Vec<HouseNumberRange>
+    ) -> Option<Vec<HouseNumberRange>> {
+        self.map.insert(street, ranges)
+    }
+
+    /// Like `HashMap::entry`.
+    pub fn entry(
+        &mut self,
+        street: StreetName
+    ) -> std::collections::hash_map::Entry<StreetName, Vec<HouseNumberRange>> {
+        self.map.entry(street)
+    }
+
+    /// Iterate all (StreetName, Vec<HouseNumberRange>) pairs.
+    pub fn iter(&self) -> std::collections::hash_map::Iter<StreetName, Vec<HouseNumberRange>> {
+        self.map.iter()
+    }
+
+    /// Just the keys (i.e. the StreetNames).
+    pub fn keys(&self) -> std::collections::hash_map::Keys<StreetName, Vec<HouseNumberRange>> {
+        self.map.keys()
+    }
+
+    pub fn as_map(&self) -> &HashMap<StreetName, Vec<HouseNumberRange>> {
+        &self.map
+    }
+
+    pub fn as_map_mut(&mut self) -> &mut HashMap<StreetName, Vec<HouseNumberRange>> {
+        &mut self.map
+    }
+
+    /// For direct usage: aggregator.add_subrange_for_street(&my_street, &my_range).
+    pub fn add_subrange_for_street(
+        &mut self,
+        street: &StreetName,
+        subrange: &HouseNumberRange
+    ) {
+        self.map.entry(street.clone())
+            .or_default()
+            .push(subrange.clone());
+    }
+
+    //-------------------------------------------------
+    // Aggregator stats
+    //-------------------------------------------------
+
+    pub fn len(&self) -> usize {
+        self.map.len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.map.is_empty()
+    }
+
+    //-------------------------------------------------
+    // The OSM parsing logic
+    //-------------------------------------------------
+
+    /// Orchestrates reading from an OSM PBF, storing any discovered subranges in `self`,
+    /// and sending each [`WorldAddress`] to `tx`.
+    pub fn try_parse_and_aggregate_house_numbers<R: Read + Send + Sync>(
+        &mut self,
+        reader: ElementReader<R>,
+        tx: &SyncSender<Result<WorldAddress, OsmPbfParseError>>,
     ) -> Result<(), OsmPbfParseError> {
         trace!(
-            "try_parse_and_aggregate_house_numbers: Parsing OSM from reader with region={:?}, country={:?}",
-            self.world_region, self.country
+            "try_parse_and_aggregate_house_numbers: region={:?}, country={:?}, before={}",
+            self.world_region,
+            self.country,
+            self.map.len()
         );
-
         self.parse_and_aggregate_osm(reader, tx)
     }
 
-    /// Reads all elements from the `ElementReader`, extracts address info,
-    /// sends `WorldAddress` objects through `tx`, and accumulates
-    /// `HouseNumberRange` data into `aggregator`.
-    ///
-    /// On any parse error from `osmpbf::ElementReader::for_each`, returns it
-    /// as an `OsmPbfParseError::OsmPbf(...)`.
-    pub fn parse_and_aggregate_osm<R:Read + Send + Sync>(
+    /// Does the `.for_each` loop on `reader`.
+    pub fn parse_and_aggregate_osm<R: Read + Send + Sync>(
         &mut self,
-        reader:     ElementReader<R>,
-        tx:         &SyncSender<Result<WorldAddress, OsmPbfParseError>>,
-    ) -> Result<(), OsmPbfParseError>
-    {
-        trace!("parse_and_aggregate_osm: starting iteration over PBF elements.");
-
-        // for_each returns an `osmpbf::Result<()>`.
-        let result = reader.for_each(|element| {
-            // We process each element inside this closure:
-            self.process_osm_element(element, tx);
+        reader: ElementReader<R>,
+        tx: &SyncSender<Result<WorldAddress, OsmPbfParseError>>,
+    ) -> Result<(), OsmPbfParseError> {
+        let parse_result = reader.for_each(|element| {
+            self.process_element_and_add_subrange(element, tx);
         });
 
-        // If for_each fails with an osmpbf::Error, we wrap it:
-        if let Err(osmpbf_err) = result {
-            error!("parse_and_aggregate_osm: Error reading PBF => {:?}", osmpbf_err);
-            return Err(OsmPbfParseError::OsmPbf(osmpbf_err));
+        if let Err(e) = parse_result {
+            error!("parse_and_aggregate_osm: error reading pbf => {:?}", e);
+            return Err(OsmPbfParseError::OsmPbf(e));
         }
-
-        debug!("parse_and_aggregate_osm: Completed iteration over OSM data.");
         Ok(())
     }
 
-    /// Processes a single OSM element. If it contains a valid (city, street, postcode),
-    /// we build a [`WorldAddress`] and send it to the consumer over `tx`. Then, if
-    /// there's an `addr:housenumber`, we update the aggregator’s entry for that street
-    /// with the new house‐number range. If anything fails in parsing, we skip and continue.
-    ///
-    /// # Arguments
-    ///
-    /// * `element`    - The OSM element to process (Node, Way, Relation, DenseNode).
-    /// * `country`    - Inferred country for this region (used in `AddressRecord` parsing).
-    /// * `region`     - The region, used in constructing a [`WorldAddress`].
-    /// * `tx`         - A synchronous sender for streaming out results as [`Result<WorldAddress, OsmPbfParseError>`].
-    /// * `aggregator` - Map of `StreetName` to a list of [`HouseNumberRange`] objects, updated in-place.
-    pub fn process_osm_element(
+    /// For each element, parse an [`AddressRecord`], build a [`WorldAddress`],
+    /// send it, and store subranges if any.
+    fn process_element_and_add_subrange(
         &mut self,
-        element:    osmpbf::Element,
-        tx:         &std::sync::mpsc::SyncSender<Result<WorldAddress, OsmPbfParseError>>,
+        element: Element,
+        tx: &SyncSender<Result<WorldAddress, OsmPbfParseError>>,
     ) {
-        trace!("process_osm_element: entering for an OSM element, ID={}", get_element_id(&element));
-
-        // Step 1: Try parsing an [`AddressRecord`] from the element.
-        let record_option = parse_address_record_if_any(&element, &self.country);
-
-        if let Some(record) = &record_option {
-            trace!("process_osm_element: got an AddressRecord => attempting to build WorldAddress");
-            // Step 2: Attempt to build a [`WorldAddress`] from (region, city, street, postcode).
-            if let Some(world_address) = build_world_address_if_possible(&self.world_region, record) {
-                // Step 3: Send the [`WorldAddress`] through `tx` unless the channel has closed.
+        // 1) Attempt an AddressRecord
+        let record_opt = parse_address_record_if_any(&element, &self.country);
+        if let Some(record) = record_opt {
+            // 2) Attempt a full WorldAddress
+            if let Some(world_address) = build_world_address_if_possible(&self.world_region, &record) {
+                // 3) send
                 if tx.send(Ok(world_address)).is_err() {
-                    debug!("process_osm_element: receiver dropped; halting further processing.");
+                    debug!("process_element_and_add_subrange: receiver closed => stop");
                     return;
                 }
-
-                // Step 4: Try extracting a house-number range and, if found, associate it with the street.
-                self.update_with_housenumber(&element, record);
-            } else {
-                debug!("process_osm_element: could not build WorldAddress => skipping aggregator update");
+                // 4) gather subrange
+                self.add_subrange_from_element(&element, &record);
             }
         } else {
-            // AddressRecord parse failed or wasn't present => we can still check for a house-number range
-            trace!("process_osm_element: no AddressRecord => checking for house-number range with partial data");
-            self.try_infer_street_and_update_housenumber_aggregator(&element);
+            // fallback partial parse
+            self.try_infer_subrange_without_full_record(element);
         }
     }
 
-    /// In cases where we didn't parse an [`AddressRecord`] fully, we still might have `addr:housenumber`.
-    /// We attempt a partial parse for the street, and if found, update the aggregator.
-    pub fn try_infer_street_and_update_housenumber_aggregator(
-        &mut self,
-        element: &osmpbf::Element,
-    ) {
-        match extract_house_number_range_from_element(element) {
-            Ok(Some(range)) => {
-                // Attempt to parse enough of an address record to see if there's a street
-                if let Ok(record2) = AddressRecord::try_from((element, &self.country)) {
-                    if let Some(street) = record2.street() {
-                        debug!(
-                            "try_infer_street_and_update_housenumber_aggregator: storing housenumber range={:?} for street='{}'",
-                            range, street
-                        );
-                        self.map.entry(street.clone()).or_default().push(range);
+    /// If partial parse reveals a street & subrange => store.
+    fn try_infer_subrange_without_full_record(&mut self, element: Element) {
+        match extract_house_number_range_from_element(&element) {
+            Ok(Some(rng)) => {
+                if let Ok(partial_rec) = AddressRecord::try_from((&element, &self.country)) {
+                    if let Some(street) = partial_rec.street() {
+                        self.map.entry(street.clone())
+                            .or_default()
+                            .push(rng);
                     }
                 }
             }
-            Ok(None) => {
-                // No housenumber => skip
-            }
-            Err(e) => {
-                debug!("try_infer_street_and_update_housenumber_aggregator: error extracting => {:?}", e);
-            }
+            Ok(None) => { /* no subrange => skip */ }
+            Err(e) => debug!("try_infer_subrange_without_full_record: error => {:?}", e),
         }
     }
 
-    /// Attempts to parse a house number from the `element`, and if present, 
-    /// associates it with the street from the given `AddressRecord`.
-    pub fn update_with_housenumber(
-        &mut self,
-        element: &osmpbf::Element,
-        record: &AddressRecord
-    ) {
+    /// Called if we have a real `Element` plus an [`AddressRecord`].
+    /// If `addr:housenumber` => store it in aggregator.
+    fn add_subrange_from_element(&mut self, element: &Element, record: &AddressRecord) {
         match extract_house_number_range_from_element(element) {
-            Ok(Some(range)) => {
+            Ok(Some(rng)) => {
                 if let Some(street_name) = record.street() {
-                    tracing::trace!(
-                        "HouseNumberAggregator::update_with_housenumber: street={}, range={:?}",
-                        street_name,
-                        range
-                    );
-                    self.map.entry(street_name.clone()).or_default().push(range);
+                    self.map.entry(street_name.clone())
+                        .or_default()
+                        .push(rng);
                 }
             }
-            Ok(None) => {
-                // no housenumber => skip
-            }
-            Err(e) => {
-                tracing::debug!("update_aggregator_with_housenumber: error => {:?}", e);
-            }
+            Ok(None) => {}
+            Err(e) => debug!("add_subrange_from_element: error => {:?}", e),
         }
     }
 
-    /// Stores aggregator results into the DB, if possible. Logs warnings on failure.
-    /// Depending on desired behavior, you might also send an `Err` to `tx`.
-    pub fn attempt_storing_in_db<I:LoadExistingStreetRanges + StoreHouseNumberRanges>(
+    //-------------------------------------------------
+    // "storing in DB" logic
+    //-------------------------------------------------
+
+    /// Merges aggregator subranges into the DB for each street
+    pub fn store_results_in_db<I: LoadExistingStreetRanges + StoreHouseNumberRanges>(
+        &self,
+        db: &mut I
+    ) -> Result<(), OsmPbfParseError> {
+        for (street, subranges) in &self.map {
+            integrate_house_number_subranges_for_street(db, &self.world_region, street, subranges)?;
+        }
+        Ok(())
+    }
+
+    /// Locks DB and stores. 
+    pub fn attempt_storing_in_db<I: LoadExistingStreetRanges + StoreHouseNumberRanges>(
         &mut self,
         db: Arc<Mutex<I>>,
     ) {
-        trace!(
-            "attempt_storing_in_db: Storing aggregator with {} streets for region={:?}",
-            self.len(),
-            &self.world_region
-        );
-
         match db.lock() {
             Ok(mut db_guard) => {
-                debug!(
-                    "attempt_storing_in_db: DB lock acquired; storing aggregator with {} streets",
-                    self.len()
-                );
                 if let Err(e) = self.store_results_in_db(&mut *db_guard) {
-                    warn!(
-                        "attempt_storing_in_db: Failed storing aggregator results: {:?}",
-                        e
-                    );
+                    warn!("Failed storing aggregator => {:?}", e);
                 }
             }
             Err(_) => {
-                warn!("attempt_storing_in_db: Could not lock DB for region={:?}", &self.world_region);
+                warn!("DB lock poisoned, aggregator not stored");
             }
         }
-    }
-
-    /// Takes the aggregator (`street -> Vec<HouseNumberRange>`) and merges each entry
-    /// with existing data in the database, storing the final sets back. Logs warnings
-    /// on failures, but continues processing.
-    ///
-    /// # Arguments
-    ///
-    /// * `db`           - A mutable reference to the database.
-    /// * `world_region` - The region scoping these house‐number entries.
-    /// * `aggregator`   - A map from `StreetName` to a list of new [`HouseNumberRange`] objects.
-    ///
-    /// # Returns
-    ///
-    /// * `Ok(())` if all aggregator data is processed successfully (warnings may still occur).
-    /// * `Err(OsmPbfParseError)` if a critical error arises (e.g., DB I/O error).
-    pub fn store_results_in_db<I:StoreHouseNumberRanges + LoadExistingStreetRanges>(&self, db: &mut I) 
-        -> Result<(), OsmPbfParseError> 
-    {
-        trace!(
-            "store_results_in_db: storing data for {} streets in region={:?}",
-            self.len(),
-            &self.world_region
-        );
-
-        for (street, subranges) in self.map.iter() {
-            integrate_house_number_subranges_for_street(db, &self.world_region, &street, subranges)?;
-        }
-
-        info!("store_results_in_db: All aggregator data processed.");
-        Ok(())
     }
 }
 
@@ -243,17 +246,19 @@ impl HouseNumberAggregator {
 // USAGE / Example Test
 // ------------------------------------------------------------
 #[cfg(test)]
-#[disable]
 mod house_number_aggregator_tests {
     use super::*;
 
     #[traced_test]
     fn test_update_with_housenumber_directly() {
-        let mut aggregator = HouseNumberAggregator::new();
-        let street = StreetName::new("Main St").unwrap();
-        let range = HouseNumberRange::new(100, 110);
 
-        aggregator.update_with_housenumber(&street, range.clone());
+        let region = example_region();
+
+        let mut aggregator = HouseNumberAggregator::new(&region);
+        let street         = StreetName::new("Main St").unwrap();
+        let range          = HouseNumberRange::new(100, 110);
+
+        aggregator.add_subrange_for_street(&street, &range);
         assert_eq!(aggregator.as_map().len(), 1);
         let got = aggregator.as_map().get(&street).unwrap();
         assert_eq!(got.len(), 1);
@@ -270,8 +275,9 @@ mod house_number_aggregator_tests {
         // For demonstration, we skip creating a real Node. 
         // If your code needs a real Node, do so with a test fixture or a minimal mock.
 
+        let region = example_region();
         // aggregator
-        let mut aggregator = HouseNumberAggregator::new();
+        let mut aggregator = HouseNumberAggregator::new(&region);
 
         // we'll pretend the element => "addr:housenumber => 200-220"
         // and the record => city=..., street=..., etc. 
@@ -292,9 +298,9 @@ mod house_number_aggregator_tests {
         // Then we check aggregator.
 
         // For demonstration, let's call aggregator.update_with_housenumber directly:
-        aggregator.update_with_housenumber(
+        aggregator.add_subrange_for_street(
             &StreetName::new("Broadway").unwrap(),
-            HouseNumberRange::new(200, 220)
+            &HouseNumberRange::new(200, 220)
         );
 
         // check aggregator
@@ -310,14 +316,15 @@ mod house_number_aggregator_tests {
         // We'll mimic a scenario where the aggregator sees "addr:housenumber => 300-310" but no city/street
         // in the main record. Then we do a partial parse => we get a fallback street => aggregator updated.
 
-        let mut aggregator = HouseNumberAggregator::new();
+        let region = example_region();
+        let mut aggregator = HouseNumberAggregator::new(&region);
         // aggregator.try_infer_street_and_update_housenumber_aggregator(&mock_element, &country);
 
         // Then aggregator => (some street => [300..310])
         // We'll do direct manual approach:
-        aggregator.update_with_housenumber(
+        aggregator.add_subrange_for_street(
             &StreetName::new("FallbackStreet").unwrap(),
-            HouseNumberRange::new(300, 310)
+            &HouseNumberRange::new(300, 310)
         );
 
         assert_eq!(aggregator.as_map().len(), 1);
@@ -328,8 +335,11 @@ mod house_number_aggregator_tests {
 
     #[traced_test]
     fn test_process_osm_element_send_channel() {
+
+        let region = example_region();
+
         // aggregator.process_osm_element => if we can build a world address => send via channel
-        let mut aggregator = HouseNumberAggregator::new();
+        let mut aggregator = HouseNumberAggregator::new(&region);
         let (tx, rx) = mpsc::sync_channel::<Result<WorldAddress, OsmPbfParseError>>(5);
 
         // Suppose we have an element that is a Node with "addr:city => FooCity", "addr:street => FooStreet", 
@@ -339,9 +349,9 @@ mod house_number_aggregator_tests {
         // aggregator.process_osm_element(element, &Country::USA, &example_region(), &tx);
 
         // We'll mock the outcome: we do aggregator.update_with_housenumber => aggregator updated
-        aggregator.update_with_housenumber(
+        aggregator.add_subrange_for_street(
             &StreetName::new("FooStreet").unwrap(),
-            HouseNumberRange::new(100, 100)
+            &HouseNumberRange::new(100, 100)
         );
         // we also push an address into the channel
         let mock_address = WorldAddressBuilder::default()
@@ -375,13 +385,13 @@ mod house_number_aggregator_tests {
         // you might do a real file with zero elements or use a custom approach.
         // For demonstration, let's do a partial approach:
 
-        let empty_reader = ElementReader::from_path("/dev/null").unwrap(); 
-        let country = Country::USA;
-        let region = WorldRegion::default(); // or something
-        let (tx, rx) = mpsc::sync_channel::<Result<WorldAddress, OsmPbfParseError>>(10);
-        let mut aggregator: HashMap<StreetName, Vec<HouseNumberRange>> = HashMap::new();
+        let empty_reader   = ElementReader::from_path("/dev/null").unwrap();
+        let country        = Country::USA;
+        let region         = WorldRegion::default(); // or something
+        let (tx, rx)       = mpsc::sync_channel::<Result<WorldAddress, OsmPbfParseError>>(10);
+        let mut aggregator = HouseNumberAggregator::new(&region);
 
-        let res = parse_and_aggregate_osm(empty_reader, &country, &region, &tx, &mut aggregator);
+        let res = aggregator.parse_and_aggregate_osm(empty_reader, &tx);
         // Might fail if /dev/null or empty => error. If so, adapt your test or skip it on Windows, etc.
         if res.is_ok() {
             // aggregator empty => good
@@ -418,16 +428,16 @@ mod house_number_aggregator_tests {
         create_tiny_osm_pbf_no_tags(&pbf_path).unwrap();
 
         // 2) Use ElementReader to parse
-        let reader = osmpbf::ElementReader::from_path(&pbf_path).unwrap();
+        let reader  = osmpbf::ElementReader::from_path(&pbf_path).unwrap();
         let country = Country::USA;
-        let region = WorldRegion::default();
+        let region  = WorldRegion::default();
 
         // 3) aggregator + channel
         let (tx, rx) = std::sync::mpsc::sync_channel::<Result<WorldAddress, OsmPbfParseError>>(10);
-        let mut aggregator: HashMap<StreetName, Vec<HouseNumberRange>> = HashMap::new();
+        let mut aggregator = HouseNumberAggregator::new(&region);
 
         // 4) Call parse_and_aggregate_osm or process each element
-        let result = parse_and_aggregate_osm(reader, &country, &region, &tx, &mut aggregator);
+        let result = aggregator.parse_and_aggregate_osm(reader, &tx);
 
         // 5) If the file is truly minimal and has no addr:* tags, aggregator stays empty,
         //    and no addresses are sent.
@@ -442,23 +452,28 @@ mod house_number_aggregator_tests {
 
     #[traced_test]
     fn test_store_aggregator_results_empty() {
-        let mut aggregator = HashMap::new();
-        let tmp_dir = TempDir::new().unwrap();
-        let db = Database::open(tmp_dir.path()).unwrap();
-        let mut db_guard = db.lock().unwrap();
+
+        let region         = example_region();
+        let mut aggregator = HouseNumberAggregator::new(&region);
+        let tmp_dir        = TempDir::new().unwrap();
+        let db             = Database::open(tmp_dir.path()).unwrap();
+        let mut db_guard   = db.lock().unwrap();
 
         let region = WorldRegion::default();
 
         // storing an empty aggregator => no effect
-        let res = store_results_in_db(&mut db_guard, &region, aggregator);
+        let res = aggregator.store_results_in_db(&mut *db_guard);
         assert!(res.is_ok());
     }
 
     #[traced_test]
     fn test_store_aggregator_results_single_street() {
+
         // aggregator => "north avenue" => [ HouseNumberRange(100..=110) ]
-        let mut aggregator = HashMap::new();
-        let street = StreetName::new("North Avenue").unwrap();
+        let region         = example_region();
+        let mut aggregator = HouseNumberAggregator::new(&region);
+        let street         = StreetName::new("North Avenue").unwrap();
+
         aggregator.insert(street.clone(), vec![HouseNumberRange::new(100, 110)]);
 
         let tmp_dir = TempDir::new().unwrap();
@@ -469,7 +484,7 @@ mod house_number_aggregator_tests {
             {
                 let mut db_guard = db.lock().unwrap();
 
-                let res = store_results_in_db(&mut db_guard, &region, aggregator);
+                let res = aggregator.store_results_in_db(&mut *db_guard);
                 assert!(res.is_ok());
 
                 // Optionally load them back with load_house_number_ranges
@@ -483,5 +498,4 @@ mod house_number_aggregator_tests {
             }
         }
     }
-
 }

@@ -71,19 +71,6 @@ mod test_load_house_number_ranges {
     use tempfile::TempDir;
     use std::sync::{Arc, Mutex};
 
-    /// Creates a temporary database and returns `(Arc<Mutex<Database>>, TempDir)` so
-    /// that the temp directory remains valid for the duration of the tests.
-    fn create_temp_db<I:StorageInterface>() -> (Arc<Mutex<I>>, TempDir) {
-        let temp_dir = TempDir::new().expect("Failed to create temp dir");
-        let db = I::open(temp_dir.path()).expect("Failed to open database in temp dir");
-        (db, temp_dir)
-    }
-
-    /// Creates a `DataAccess` that references the same `Database`.
-    fn create_data_access<I:StorageInterface>(db: Arc<Mutex<I>>) -> DataAccess<I> {
-        DataAccess::with_db(db)
-    }
-
     /// Convenience for building a `HouseNumberRange`.
     fn hnr(start: u32, end: u32) -> HouseNumberRange {
         HouseNumberRange::new(start, end)
@@ -106,7 +93,7 @@ mod test_load_house_number_ranges {
     fn test_no_key_returns_none() {
         // If there's no key in the DB, we expect None as the result.
         let (db_arc, _tmp) = create_temp_db::<Database>();
-        let data_access = create_data_access(db_arc.clone());
+        let data_access = DataAccess::with_db(db_arc.clone());
 
         let region = WorldRegion::try_from_abbreviation("MD").unwrap();
         let street = StreetName::new("NoData Street").unwrap();
@@ -119,19 +106,21 @@ mod test_load_house_number_ranges {
 
     #[traced_test]
     fn test_valid_data_returns_some_ranges() {
+
+        let region    = WorldRegion::try_from_abbreviation("MD").unwrap();
+        let street    = StreetName::new("ValidData St").unwrap();
+        let ranges_in = vec![hnr(1, 10), hnr(20, 30)];
+
         // We'll store valid CBOR data (two house number ranges) and confirm we can load them.
         let (db_arc, _tmp) = create_temp_db::<Database>();
-        let mut db_guard = db_arc.lock().unwrap();
-        let data_access = create_data_access(db_arc.clone());
 
-        let region = WorldRegion::try_from_abbreviation("MD").unwrap();
-        let street = StreetName::new("ValidData St").unwrap();
+        let data_access = DataAccess::with_db(db_arc.clone());
 
-        let ranges_in = vec![hnr(1, 10), hnr(20, 30)];
-        store_house_number_ranges_for_test(&mut *db_guard, &region, &street, &ranges_in);
+        {
+            let mut db_guard = db_arc.lock().unwrap();
 
-        // Release lock before reading to mimic real usage
-        drop(db_guard);
+            store_house_number_ranges_for_test(&mut *db_guard, &region, &street, &ranges_in);
+        }
 
         let loaded = data_access
             .load_house_number_ranges(&region, &street)
@@ -145,7 +134,7 @@ mod test_load_house_number_ranges {
         // We'll write invalid CBOR bytes, ensuring that an error is returned.
         let (db_arc, _tmp) = create_temp_db::<Database>();
         let mut db_guard = db_arc.lock().unwrap();
-        let data_access = create_data_access(db_arc.clone());
+        let data_access = DataAccess::with_db(db_arc.clone());
 
         let region = WorldRegion::try_from_abbreviation("MD").unwrap();
         let street = StreetName::new("Corrupted Street").unwrap();

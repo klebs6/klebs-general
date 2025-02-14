@@ -33,13 +33,6 @@ mod test_write_postal_codes_to_region_and_city {
         PostalCode::new(country, code).unwrap()
     }
 
-    /// Opens a temporary `Database` for testing.
-    fn create_temp_db<I:StorageInterface>() -> (Arc<Mutex<I>>, TempDir) {
-        let temp_dir = TempDir::new().expect("Failed to create temp dir");
-        let db = I::open(temp_dir.path()).expect("Failed to open database in temp dir");
-        (db, temp_dir)
-    }
-
     /// Reads the stored postal codes for `(region, city)` by constructing `c2z_key`.
     /// Returns `None` if key is missing or decoding fails.
     fn load_postal_codes_from_c2z<I:StorageInterface>(
@@ -63,7 +56,7 @@ mod test_write_postal_codes_to_region_and_city {
 
     #[traced_test]
     fn test_write_nonempty_postalcodes_success() {
-        let (db_arc, _tmp) = create_temp_db();
+        let (db_arc, _tmp) = create_temp_db::<Database>();
         let mut db_guard = db_arc.lock().unwrap();
 
         let region = WorldRegion::try_from_abbreviation("MD").unwrap();
@@ -79,7 +72,7 @@ mod test_write_postal_codes_to_region_and_city {
             .expect("Should write successfully");
 
         // Now read back
-        let loaded_opt = load_postal_codes_from_c2z(&db_guard, &region, &city);
+        let loaded_opt = load_postal_codes_from_c2z(&*db_guard, &region, &city);
         assert!(loaded_opt.is_some(), "Should have stored data");
         let loaded = loaded_opt.unwrap();
         assert_eq!(loaded, pc_set, "The stored data should match our input set");
@@ -87,7 +80,7 @@ mod test_write_postal_codes_to_region_and_city {
 
     #[traced_test]
     fn test_overwrite_existing_postal_codes() {
-        let (db_arc, _tmp) = create_temp_db();
+        let (db_arc, _tmp) = create_temp_db::<Database>();
         let mut db_guard = db_arc.lock().unwrap();
 
         let region = WorldRegion::try_from_abbreviation("VA").unwrap();
@@ -109,14 +102,14 @@ mod test_write_postal_codes_to_region_and_city {
             .expect("write updated set");
 
         // Confirm old data replaced
-        let stored_opt = load_postal_codes_from_c2z(&db_guard, &region, &city);
+        let stored_opt = load_postal_codes_from_c2z(&*db_guard, &region, &city);
         let stored = stored_opt.unwrap();
         assert_eq!(stored, new_pc, "The new data should have overwritten the old data");
     }
 
     #[traced_test]
     fn test_write_empty_set() {
-        let (db_arc, _tmp) = create_temp_db();
+        let (db_arc, _tmp) = create_temp_db::<Database>();
         let mut db_guard = db_arc.lock().unwrap();
 
         let region = WorldRegion::try_from_abbreviation("DC").unwrap();
@@ -128,7 +121,7 @@ mod test_write_postal_codes_to_region_and_city {
             .expect("Should store empty set successfully");
 
         // Read back => should decode as empty set
-        let loaded_opt = load_postal_codes_from_c2z(&db_guard, &region, &city);
+        let loaded_opt = load_postal_codes_from_c2z(&*db_guard, &region, &city);
         assert!(loaded_opt.is_some(), "Key should exist for empty set");
         let loaded = loaded_opt.unwrap();
         assert!(loaded.is_empty(), "Decoded set is empty");
@@ -136,39 +129,6 @@ mod test_write_postal_codes_to_region_and_city {
 
     #[traced_test]
     fn test_rocksdb_put_error() {
-        // If put fails => returns DatabaseConstructionError::RocksDB
-        struct FailingDbStub;
-        impl DatabasePut for FailingDbStub {
-            fn put(&mut self, _key: impl AsRef<[u8]>, _val: impl AsRef<[u8]>) 
-                -> Result<(), DatabaseConstructionError> 
-            {
-                Err(DatabaseConstructionError::RocksDB(
-                    rocksdb::Error::new("Simulated put error")
-                ))
-            }
-        }
-        // Combine with trait
-        impl StorageInterface for FailingDbStub {}
-        impl OpenDatabaseAtPath for FailingDbStub {
-            fn open(_p: impl AsRef<std::path::Path>) 
-                -> Result<Arc<Mutex<Self>>, DatabaseConstructionError> 
-            {
-                unimplemented!()
-            }
-        }
-        impl WritePostalCodesToRegionAndCity for FailingDbStub {
-            fn write_postal_codes_to_region_and_city(
-                &mut self, 
-                region: &WorldRegion, 
-                city: &CityName, 
-                postal_codes: &BTreeSet<PostalCode>
-            ) -> Result<(),DatabaseConstructionError> {
-                let key = c2z_key(region, city);
-                let val = compress_set_to_cbor(postal_codes);
-                self.put(key, val)?;
-                Ok(())
-            }
-        }
 
         let mut db_stub = FailingDbStub;
         let region = WorldRegion::try_from_abbreviation("MD").unwrap();

@@ -38,14 +38,6 @@ mod test_load_all_streets_for_region {
     use tempfile::TempDir;
     use std::sync::{Arc, Mutex};
 
-    /// Creates a temporary database for testing and returns `(db, temp_dir)`.
-    /// The temp directory ensures the DB files exist only for the test duration.
-    fn create_temp_db<I:StorageInterface>() -> (Arc<Mutex<I>>, TempDir) {
-        let temp_dir = TempDir::new().expect("Failed to create temp directory");
-        let db       = I::open(temp_dir.path()).expect("Failed to open database in temp dir");
-        (db, temp_dir)
-    }
-
     /// Places data in the DB under the `S2C:{region_abbr}:{street}` key.
     /// We don't care about the exact value stored, since `load_all_streets_for_region`
     /// only extracts the street substring from the key.

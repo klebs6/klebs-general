@@ -44,7 +44,6 @@ pub fn validate_street_for_city<V:GetStreetSetForKey>(
 }
 
 #[cfg(test)]
-#[disable]
 mod test_validate_street_for_city {
     use super::*;
     use std::collections::BTreeSet;
@@ -64,16 +63,6 @@ mod test_validate_street_for_city {
             .unwrap()
     }
 
-    /// Creates a `DataAccess` from a newly opened RocksDB (in a temp dir).
-    fn create_data_access<I:StorageInterface>() -> (DataAccess<I>, Arc<Mutex<I>>, TempDir) {
-        let temp_dir = TempDir::new().expect("Failed to create temp dir");
-        let db = I::open(temp_dir.path()).expect("Failed to open DB in temp dir");
-        let db_arc = db.clone();
-        let data_access = DataAccess::with_db(db);
-
-        (data_access, db_arc, temp_dir)
-    }
-
     /// Helper to store a set of streets under the `c_key(region, city)` used by the code.
     fn put_c_key_streets<I:StorageInterface>(
         db:      &mut I,
@@ -88,7 +77,7 @@ mod test_validate_street_for_city {
 
     #[traced_test]
     fn test_no_street_set_for_city_returns_error() {
-        let (data_access, db_arc, _temp_dir) = create_data_access();
+        let (data_access, db_arc, _temp_dir) = create_data_access::<Database>();
         let region = WorldRegion::try_from_abbreviation("MD").unwrap();
         let city = CityName::new("Baltimore").unwrap();
         let street = StreetName::new("North Avenue").unwrap();
@@ -112,7 +101,7 @@ mod test_validate_street_for_city {
 
     #[traced_test]
     fn test_street_not_found_in_city_returns_error() {
-        let (data_access, db_arc, _temp_dir) = create_data_access();
+        let (data_access, db_arc, _temp_dir) = create_data_access::<Database>();
         let mut db_guard = db_arc.lock().unwrap();
 
         let region = WorldRegion::try_from_abbreviation("VA").unwrap();
@@ -123,7 +112,7 @@ mod test_validate_street_for_city {
         // Insert a set that includes `Wilson Blvd` but not `NonExistent Street`.
         let mut streets = BTreeSet::new();
         streets.insert(street_wilson.clone());
-        put_c_key_streets(&mut db_guard, &region, &city_arlington, &streets);
+        put_c_key_streets(&mut *db_guard, &region, &city_arlington, &streets);
 
         // Now create an address with the missing street
         let addr = make_world_address(region, city_arlington, street_missing.clone());
@@ -136,7 +125,7 @@ mod test_validate_street_for_city {
             }) => {
                 assert_eq!(street.name(), "nonexistent street");
                 assert_eq!(city.name(), "arlington");
-                assert!(matches!(region, WorldRegion::USRegion(_)),
+                assert!(matches!(region, WorldRegion::NorthAmerica(_)),
                     "Should match the region we used");
             }
             other => panic!("Expected StreetNotFoundForCityInRegion, got {:?}", other),
@@ -145,7 +134,7 @@ mod test_validate_street_for_city {
 
     #[traced_test]
     fn test_street_found_in_city_returns_ok() {
-        let (data_access, db_arc, _temp_dir) = create_data_access();
+        let (data_access, db_arc, _temp_dir) = create_data_access::<Database>();
         let mut db_guard = db_arc.lock().unwrap();
 
         let region = WorldRegion::try_from_abbreviation("DC").unwrap();
@@ -155,7 +144,7 @@ mod test_validate_street_for_city {
         // Insert a set with `Pennsylvania Ave`
         let mut streets = BTreeSet::new();
         streets.insert(street_pa.clone());
-        put_c_key_streets(&mut db_guard, &region, &city_dc, &streets);
+        put_c_key_streets(&mut *db_guard, &region, &city_dc, &streets);
 
         // Construct an address referencing that city + street
         let addr = make_world_address(region, city_dc, street_pa);
@@ -166,7 +155,7 @@ mod test_validate_street_for_city {
     #[traced_test]
     fn test_corrupted_cbor_returns_none_and_error() {
         // If the underlying set is invalid cbor => get_street_set(...) => None => same error as no data
-        let (data_access, db_arc, _temp_dir) = create_data_access();
+        let (data_access, db_arc, _temp_dir) = create_data_access::<Database>();
         let mut db_guard = db_arc.lock().unwrap();
 
         let region = WorldRegion::try_from_abbreviation("MD").unwrap();

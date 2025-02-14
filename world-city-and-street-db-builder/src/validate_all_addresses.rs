@@ -1,5 +1,4 @@
 // ---------------- [ File: src/validate_all_addresses.rs ]
-// ---------------- [ File: src/validate_all_addresses.rs ]
 crate::ix!();
 
 /// Validates all addresses from `.pbf` files in a directory against the database.
@@ -29,7 +28,7 @@ pub fn validate_all_addresses<I:StorageInterface + 'static>(
         db.clone()
     )?;
 
-    let data_access = create_data_access(db.clone());
+    let data_access = DataAccess::with_db(db);
 
     let all_valid = process_and_validate_addresses(address_iter, &data_access)?;
 
@@ -37,7 +36,6 @@ pub fn validate_all_addresses<I:StorageInterface + 'static>(
 }
 
 #[cfg(test)]
-#[disable]
 mod validate_all_addresses_tests {
     use super::*;
 
@@ -45,19 +43,15 @@ mod validate_all_addresses_tests {
         USRegion::UnitedState(UnitedState::Maryland).into()
     }
 
-    fn create_db<I:StorageInterface>() -> Result<(Arc<Mutex<I>>, TempDir), AddressValidationError> {
-        let tmp = TempDir::new()?;
-        let db = I::open(tmp.path())?;
-        Ok((db, tmp))
-    }
-
     fn store_valid_address<I:StorageInterface>(
-        db: &mut I,
+        db:     &mut I,
         region: &WorldRegion,
-        city: &CityName,
+        city:   &CityName,
         street: &StreetName,
         postal: &PostalCode,
+
     ) -> Result<(), AddressValidationError> {
+
         let mut cset = BTreeSet::new();
         cset.insert(city.clone());
         db.put(z2c_key(region, postal), compress_set_to_cbor(&cset))?;
@@ -90,7 +84,7 @@ mod validate_all_addresses_tests {
 
     #[traced_test]
     fn test_validate_all_addresses_empty_dir() -> Result<(), AddressValidationError> {
-        let (db, tmp) = create_db()?;
+        let (db, tmp) = create_temp_db::<Database>();
         // No .pbf files in directory.
         let r = validate_all_addresses(db, &tmp.path());
         assert!(r.is_ok());
@@ -99,11 +93,11 @@ mod validate_all_addresses_tests {
 
     #[traced_test]
     async fn test_validate_all_addresses_single_valid() -> Result<(), AddressValidationError> {
-        let (db, tmp) = create_db()?;
+        let (db, tmp) = create_temp_db::<Database>();
         {
             let mut guard = db.lock().map_err(|_| AddressValidationError::LockPoisoned)?;
             store_valid_address(
-                &mut guard,
+                &mut *guard,
                 &region_md(),
                 &CityName::new("Baltimore").unwrap(),
                 &StreetName::new("North Avenue").unwrap(),
@@ -124,7 +118,7 @@ mod validate_all_addresses_tests {
 
     #[traced_test]
     async fn test_validate_all_addresses_incomplete_address() -> Result<(), AddressValidationError> {
-        let (db, tmp) = create_db()?;
+        let (db, tmp) = create_temp_db::<Database>();
         let pbf_file = tmp.path().join("maryland-latest.osm.pbf");
         // Write mock data that simulates an incomplete address.
         write_mock_addresses(&pbf_file, &["incomplete city/street"]).await?;
@@ -138,7 +132,7 @@ mod validate_all_addresses_tests {
 
     #[traced_test]
     async fn test_validate_all_addresses_missing_db_data() -> Result<(), AddressValidationError> {
-        let (db, tmp) = create_db()?;
+        let (db, tmp) = create_temp_db::<Database>();
         let pbf_file = tmp.path().join("maryland-latest.osm.pbf");
         // Write mock data that simulates an address that the parser yields,
         // but the DB does not contain corresponding valid address data.
@@ -157,7 +151,7 @@ mod validate_all_addresses_tests {
 
     #[traced_test]
     async fn test_validate_all_addresses_corrupt_file() -> Result<(), AddressValidationError> {
-        let (db, tmp) = create_db()?;
+        let (db, tmp) = create_temp_db::<Database>();
         let pbf_file = tmp.path().join("maryland-latest.osm.pbf");
         let random_bytes = [0u8, 1, 2, 3, 255];
         write_fake_pbf(&pbf_file, &random_bytes).await?;
@@ -171,18 +165,18 @@ mod validate_all_addresses_tests {
 
     #[traced_test]
     async fn test_validate_all_addresses_all_ok() -> Result<(), AddressValidationError> {
-        let (db, tmp) = create_db()?;
+        let (db, tmp) = create_temp_db::<Database>();
         {
             let mut guard = db.lock().map_err(|_| AddressValidationError::LockPoisoned)?;
             store_valid_address(
-                &mut guard,
+                &mut *guard,
                 &region_md(),
                 &CityName::new("Baltimore").unwrap(),
                 &StreetName::new("North Avenue").unwrap(),
                 &PostalCode::new(Country::USA, "21201").unwrap(),
             )?;
             store_valid_address(
-                &mut guard,
+                &mut *guard,
                 &region_md(),
                 &CityName::new("Rockville").unwrap(),
                 &StreetName::new("Veirs Mill").unwrap(),
@@ -200,11 +194,11 @@ mod validate_all_addresses_tests {
 
     #[traced_test]
     async fn test_logging_every_100th_address() -> Result<(), AddressValidationError> {
-        let (db, tmp) = create_db()?;
+        let (db, tmp) = create_temp_db::<Database>();
         {
             let mut guard = db.lock().map_err(|_| AddressValidationError::LockPoisoned)?;
             store_valid_address(
-                &mut guard,
+                &mut *guard,
                 &region_md(),
                 &CityName::new("TestCity").unwrap(),
                 &StreetName::new("TestStreet").unwrap(),

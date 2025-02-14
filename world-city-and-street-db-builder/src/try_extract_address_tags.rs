@@ -1,41 +1,38 @@
 // ---------------- [ File: src/try_extract_address_tags.rs ]
-// ---------------- [ File: src/try_extract_address_tags.rs ]
 crate::ix!();
 
+/// Tries to extract address tags from the provided `tags` map.
+/// If at least one of `addr:city`, `addr:street`, or `addr:postcode` is present,
+/// returns a tuple of optional string slices corresponding to these tags.
+/// Returns an error if none of these tags are present.
 pub fn try_extract_address_tags(
     tags: &HashMap<String, String>,
     element_id: i64,
-) -> Result<(&str, &str, &str), IncompatibleOsmPbfElement> {
+) -> Result<(Option<&str>, Option<&str>, Option<&str>), IncompatibleOsmPbfElement> {
 
-    let city_raw     = tags.get("addr:city").map(|s| s.as_str());
-    let street_raw   = tags.get("addr:street").map(|s| s.as_str());
-    let postcode_raw = tags.get("addr:postcode").map(|s| s.as_str());
+    let city_opt     = tags.get("addr:city").map(|s| s.as_str());
+    let street_opt   = tags.get("addr:street").map(|s| s.as_str());
+    let postcode_opt = tags.get("addr:postcode").map(|s| s.as_str());
 
-    // Instead of "if all three are missing => error," we now say:
-    match (city_raw, street_raw, postcode_raw) {
-        (Some(c), Some(st), Some(pc)) => {
-            Ok((c, st, pc))
-        }
-        _ => {
-            // Return an error to signal "this element doesn't have
-            // a *complete* set of address tags => skip it"
-            Err(
-                IncompatibleOsmPbfElement::IncompatibleOsmPbfNode(
-                    IncompatibleOsmPbfNode::Incompatible { id: element_id }
-                )
+    // If none of the address tags are present, return an error.
+    if city_opt.is_none() && street_opt.is_none() && postcode_opt.is_none() {
+        Err(
+            IncompatibleOsmPbfElement::IncompatibleOsmPbfNode(
+                IncompatibleOsmPbfNode::Incompatible { id: element_id }
             )
-        }
+        )
+    } else {
+        Ok((city_opt, street_opt, postcode_opt))
     }
 }
 
 #[cfg(test)]
-#[disable]
 mod test_try_extract_address_tags {
     use super::*;
     use std::collections::HashMap;
     use tracing::{trace, warn};
 
-    /// A small helper that builds a `HashMap<String, String>` from a slice of `(key, value)` tuples.
+    /// Helper that builds a `HashMap<String, String>` from a slice of `(key, value)` pairs.
     fn build_tags(pairs: &[(&str, &str)]) -> HashMap<String, String> {
         let mut map = HashMap::new();
         for (k, v) in pairs {
@@ -46,7 +43,6 @@ mod test_try_extract_address_tags {
 
     #[traced_test]
     fn test_no_address_tags_returns_error() {
-        // If city, street, and postcode are all missing => IncompatibleOsmPbfElement::IncompatibleOsmPbfNode => ...
         let tags = build_tags(&[("name", "JustAFeature"), ("highway", "residential")]);
         let element_id = 1001;
 
@@ -63,13 +59,11 @@ mod test_try_extract_address_tags {
 
     #[traced_test]
     fn test_only_city_tag_returns_ok() {
-        // The doc says returns an error if *none* are present; 
-        // if city is present, that is "at least one," so it should be Ok((Some(...), None, None)).
         let tags = build_tags(&[("addr:city", "TestCity")]);
         let element_id = 1002;
 
         let result = try_extract_address_tags(&tags, element_id);
-        assert!(result.is_ok(), "City only => success (some partial presence is allowed)");
+        assert!(result.is_ok(), "City only => success (partial presence is allowed)");
         let (city_opt, street_opt, postcode_opt) = result.unwrap();
         assert_eq!(city_opt, Some("TestCity"));
         assert!(street_opt.is_none());

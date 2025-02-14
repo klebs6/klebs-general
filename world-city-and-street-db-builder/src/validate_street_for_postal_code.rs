@@ -1,5 +1,4 @@
 // ---------------- [ File: src/validate_street_for_postal_code.rs ]
-// ---------------- [ File: src/validate_street_for_postal_code.rs ]
 crate::ix!();
 
 /// Validates that the `[StreetName]` is present in the set of streets
@@ -43,7 +42,6 @@ pub fn validate_street_for_postal_code<V:GetStreetSetForKey>(
 }
 
 #[cfg(test)]
-#[disable]
 mod test_validate_street_for_postal_code {
     use super::*;
     use std::collections::BTreeSet;
@@ -67,15 +65,6 @@ mod test_validate_street_for_postal_code {
             .unwrap()
     }
 
-    /// Creates a DataAccess from a newly opened DB in a temp directory.
-    fn create_data_access<I:StorageInterface>() -> (DataAccess<I>, Arc<Mutex<I>>, TempDir) {
-        let temp_dir = TempDir::new().expect("Failed to create temp directory");
-        let db = I::open(temp_dir.path()).expect("Failed to open DB");
-        let db_arc = db.clone();
-        let data_access = DataAccess::with_db(db);
-        (data_access, db_arc, temp_dir)
-    }
-
     /// Inserts a set of streets under the `s_key(region, postal_code)`.
     fn put_s_key_streets<I:StorageInterface>(
         db:          &mut I,
@@ -90,8 +79,9 @@ mod test_validate_street_for_postal_code {
 
     #[traced_test]
     fn test_no_street_set_for_postal_code_returns_error() {
-        let (data_access, db_arc, _temp_dir) = create_data_access();
+        let (data_access, db_arc, _temp_dir) = create_data_access::<Database>();
         let region = WorldRegion::try_from_abbreviation("MD").unwrap();
+        let region_abbr = region.abbreviation();
         let postal_code = PostalCode::new(Country::USA, "12345").unwrap();
         let street = StreetName::new("Main St").unwrap();
         let addr = make_world_address(region, postal_code, street);
@@ -104,7 +94,7 @@ mod test_validate_street_for_postal_code {
             }) => {
                 assert!(
                     s_key.contains("S:"),
-                    "Should be an 'S:{region_abbr}:{postalcode}' pattern"
+                    "Should be an 'S:{region_abbr}:{postal_code:?}' pattern"
                 );
                 assert_eq!(postal_code.code(), "12345");
                 // region check if needed
@@ -115,7 +105,7 @@ mod test_validate_street_for_postal_code {
 
     #[traced_test]
     fn test_street_not_in_set_returns_error() {
-        let (data_access, db_arc, _temp_dir) = create_data_access();
+        let (data_access, db_arc, _temp_dir) = create_data_access::<Database>();
         let mut db_guard = db_arc.lock().unwrap();
 
         let region = WorldRegion::try_from_abbreviation("MD").unwrap();
@@ -126,7 +116,7 @@ mod test_validate_street_for_postal_code {
         // Insert a set that includes `Howard St` but not `NotHere Blvd`.
         let mut streets = BTreeSet::new();
         streets.insert(street_existing.clone());
-        put_s_key_streets(&mut db_guard, &region, &postal_code, &streets);
+        put_s_key_streets(&mut *db_guard, &region, &postal_code, &streets);
 
         let addr = make_world_address(region, postal_code, street_missing.clone());
         let result = validate_street_for_postal_code(&addr, &data_access);
@@ -143,7 +133,7 @@ mod test_validate_street_for_postal_code {
 
     #[traced_test]
     fn test_street_found_returns_ok() {
-        let (data_access, db_arc, _temp_dir) = create_data_access();
+        let (data_access, db_arc, _temp_dir) = create_data_access::<Database>();
         let mut db_guard = db_arc.lock().unwrap();
 
         let region = WorldRegion::try_from_abbreviation("MD").unwrap();
@@ -153,7 +143,7 @@ mod test_validate_street_for_postal_code {
         // Insert the street into the set
         let mut streets = BTreeSet::new();
         streets.insert(street.clone());
-        put_s_key_streets(&mut db_guard, &region, &postal_code, &streets);
+        put_s_key_streets(&mut *db_guard, &region, &postal_code, &streets);
 
         let addr = make_world_address(region, postal_code, street);
         let result = validate_street_for_postal_code(&addr, &data_access);
@@ -163,7 +153,7 @@ mod test_validate_street_for_postal_code {
     #[traced_test]
     fn test_corrupted_data_returns_none_and_error() {
         // If the set is invalid CBOR => get_street_set => None => => PostalCodeToStreetKeyNotFoundForRegion
-        let (data_access, db_arc, _tmp_dir) = create_data_access();
+        let (data_access, db_arc, _tmp_dir) = create_data_access::<Database>();
         let mut db_guard = db_arc.lock().unwrap();
 
         let region = WorldRegion::try_from_abbreviation("MD").unwrap();

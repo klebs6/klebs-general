@@ -1,5 +1,4 @@
 // ---------------- [ File: src/validate_city_for_postal_code.rs ]
-// ---------------- [ File: src/validate_city_for_postal_code.rs ]
 crate::ix!();
 
 /// Validates that the `[CityName]` is present in the set of cities associated
@@ -43,7 +42,6 @@ pub fn validate_city_for_postal_code<V:GetCitySetForKey>(
 }
 
 #[cfg(test)]
-#[disable]
 mod test_validate_city_for_postal_code {
     use super::*;
     use std::collections::BTreeSet;
@@ -62,16 +60,6 @@ mod test_validate_city_for_postal_code {
             .unwrap()
     }
 
-    /// Creates a temporary database and wraps it in `DataAccess`.
-    fn create_data_access<I:StorageInterface>() -> (DataAccess, Arc<Mutex<I>>, TempDir) {
-        let temp_dir = TempDir::new().expect("Failed to create temp dir");
-        let db = I::open(temp_dir.path()).expect("Failed to open DB in temp dir");
-        let db_arc = db.clone();
-        let data_access = DataAccess::with_db(db);
-
-        (data_access, db_arc, temp_dir)
-    }
-
     /// Helper that stores a set of cities under `z2c_key(region, postal_code)`.
     fn put_z2c_data<I:StorageInterface>(
         db:          &mut I,
@@ -86,13 +74,14 @@ mod test_validate_city_for_postal_code {
 
     #[traced_test]
     fn test_no_city_set_exists_returns_error() {
-        let (data_access, db_arc, _temp_dir) = create_data_access();
+
+        let (data_access, db_arc, _temp_dir) = create_data_access::<Database>();
         let mut db_guard = db_arc.lock().unwrap();
 
-        let region = WorldRegion::try_from_abbreviation("MD").unwrap();
-        let city = CityName::new("Baltimore").unwrap();
+        let region      = WorldRegion::try_from_abbreviation("MD").unwrap();
+        let city        = CityName::new("Baltimore").unwrap();
         let postal_code = PostalCode::new(Country::USA, "21201").unwrap();
-        let addr = make_world_address(region, city, postal_code);
+        let addr        = make_world_address(region, city, postal_code);
 
         // We intentionally do not store anything under z2c => so get_city_set => None
         let result = validate_city_for_postal_code(&addr, &data_access);
@@ -107,19 +96,19 @@ mod test_validate_city_for_postal_code {
 
     #[traced_test]
     fn test_city_not_found_in_set_returns_error() {
-        let (data_access, db_arc, _temp_dir) = create_data_access();
+        let (data_access, db_arc, _temp_dir) = create_data_access::<Database>();
         let mut db_guard = db_arc.lock().unwrap();
 
-        let region = WorldRegion::try_from_abbreviation("MD").unwrap();
+        let region         = WorldRegion::try_from_abbreviation("MD").unwrap();
         let city_baltimore = CityName::new("Baltimore").unwrap();
         let city_annapolis = CityName::new("Annapolis").unwrap();
-        let postal_code = PostalCode::new(Country::USA, "21201").unwrap();
-        let addr = make_world_address(region, city_baltimore.clone(), postal_code.clone());
+        let postal_code    = PostalCode::new(Country::USA, "21201").unwrap();
+        let addr           = make_world_address(region, city_baltimore.clone(), postal_code.clone());
 
         // We'll store a set that contains [Annapolis], but not Baltimore
         let mut city_set = BTreeSet::new();
         city_set.insert(city_annapolis);
-        put_z2c_data(&mut db_guard, &addr.region(), &addr.postal_code(), &city_set);
+        put_z2c_data(&mut *db_guard, &addr.region(), &addr.postal_code(), &city_set);
 
         let result = validate_city_for_postal_code(&addr, &data_access);
         match result {
@@ -128,8 +117,7 @@ mod test_validate_city_for_postal_code {
             }) => {
                 assert_eq!(city.name(), "baltimore");
                 assert_eq!(postal_code.code(), "21201");
-                assert!(matches!(region, WorldRegion::USRegion(_)) || matches!(region, WorldRegion::Custom(_)),
-                    "Region is the same as the address region");
+                assert!(matches!(region, WorldRegion::NorthAmerica(_)), "Region is the same as the address region");
             }
             other => panic!("Expected CityNotFoundForPostalCodeInRegion, got {:?}", other),
         }
@@ -137,18 +125,18 @@ mod test_validate_city_for_postal_code {
 
     #[traced_test]
     fn test_city_found_in_set_returns_ok() {
-        let (data_access, db_arc, _temp_dir) = create_data_access();
+        let (data_access, db_arc, _temp_dir) = create_data_access::<Database>();
         let mut db_guard = db_arc.lock().unwrap();
 
-        let region = WorldRegion::try_from_abbreviation("MD").unwrap();
+        let region         = WorldRegion::try_from_abbreviation("MD").unwrap();
         let city_baltimore = CityName::new("Baltimore").unwrap();
-        let postal_code = PostalCode::new(Country::USA, "21201").unwrap();
-        let addr = make_world_address(region, city_baltimore.clone(), postal_code.clone());
+        let postal_code    = PostalCode::new(Country::USA, "21201").unwrap();
+        let addr           = make_world_address(region, city_baltimore.clone(), postal_code.clone());
 
         // Store a set that DOES contain Baltimore
         let mut city_set = BTreeSet::new();
         city_set.insert(city_baltimore.clone());
-        put_z2c_data(&mut db_guard, &addr.region(), &addr.postal_code(), &city_set);
+        put_z2c_data(&mut *db_guard, &addr.region(), &addr.postal_code(), &city_set);
 
         let result = validate_city_for_postal_code(&addr, &data_access);
         assert!(result.is_ok(), "City is in the set => Ok(())");
@@ -158,13 +146,13 @@ mod test_validate_city_for_postal_code {
     fn test_corrupted_data_returns_none_and_error() {
         // If the z2c data is invalid CBOR, get_city_set => None => 
         // => we produce PostalCodeToCityKeyNotFoundForRegion
-        let (data_access, db_arc, _temp_dir) = create_data_access();
+        let (data_access, db_arc, _temp_dir) = create_data_access::<Database>();
         let mut db_guard = db_arc.lock().unwrap();
 
-        let region = WorldRegion::try_from_abbreviation("MD").unwrap();
-        let city = CityName::new("CorruptCity").unwrap();
+        let region      = WorldRegion::try_from_abbreviation("MD").unwrap();
+        let city        = CityName::new("CorruptCity").unwrap();
         let postal_code = PostalCode::new(Country::USA, "99999").unwrap();
-        let addr = make_world_address(region, city, postal_code);
+        let addr        = make_world_address(region, city, postal_code);
 
         // Insert invalid data
         let z2c_k = z2c_key(&addr.region(), &addr.postal_code());

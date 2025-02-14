@@ -2,7 +2,6 @@
 crate::ix!();
 
 #[cfg(test)]
-#[disable]
 mod attempt_storing_house_number_aggregator_in_db_tests {
     use super::*;
     use std::sync::{Arc, Mutex};
@@ -12,12 +11,6 @@ mod attempt_storing_house_number_aggregator_in_db_tests {
     /// A helper to generate a test region, e.g. Maryland
     fn md_region() -> WorldRegion {
         USRegion::UnitedState(UnitedState::Maryland).into()
-    }
-
-    /// Creates a minimal DB in a temporary directory (for short‐lived tests).
-    fn create_test_db<I:StorageInterface>() -> Arc<Mutex<I>> {
-        let tmp = TempDir::new().expect("failed to create temp dir");
-        I::open(tmp.path()).expect("failed to open DB")
     }
 
     /// Builds a small aggregator for a single street => single HouseNumberRange.
@@ -39,12 +32,12 @@ mod attempt_storing_house_number_aggregator_in_db_tests {
     // ---------------------------------------------------------------------
     #[traced_test]
     fn test_attempt_storing_house_number_aggregator_in_db_empty() {
-        let db_arc = create_test_db();
+        let (db_arc,_td) = create_temp_db::<Database>();
         let region = md_region();
-        let aggregator = HashMap::new(); // empty
+        let mut aggregator = HouseNumberAggregator::new(&region);
 
         // This should do nothing but log debug statements
-        aggregator.attempt_storing_in_db(db_arc.clone(), &region);
+        aggregator.attempt_storing_in_db(db_arc.clone());
 
         // verify nothing was written => no "HNR" keys
         let db_guard = db_arc.lock().unwrap();
@@ -65,11 +58,11 @@ mod attempt_storing_house_number_aggregator_in_db_tests {
     // ---------------------------------------------------------------------
     #[traced_test]
     fn test_attempt_storing_house_number_aggregator_in_db_non_empty() {
-        let db_arc = create_test_db();
+        let (db_arc,_td) = create_temp_db::<Database>();
         let region = md_region();
-        let aggregator = build_single_street_aggregator();
+        let mut aggregator = build_single_street_aggregator();
 
-        aggregator.attempt_storing_in_db(db_arc.clone(), &region);
+        aggregator.attempt_storing_in_db(db_arc.clone());
 
         // verify that the aggregator subranges were stored
         let db_guard = db_arc.lock().unwrap();
@@ -96,9 +89,9 @@ mod attempt_storing_house_number_aggregator_in_db_tests {
     // ---------------------------------------------------------------------
     #[traced_test]
     fn test_attempt_storing_house_number_aggregator_in_db_lock_poisoned() {
-        let db_arc = create_test_db();
+        let (db_arc,_td) = create_temp_db::<Database>();
         let region = md_region();
-        let aggregator = build_single_street_aggregator();
+        let mut aggregator = build_single_street_aggregator();
 
         // Force the lock to become poisoned
         let _ = std::panic::catch_unwind(|| {
@@ -108,7 +101,7 @@ mod attempt_storing_house_number_aggregator_in_db_tests {
 
         // Now the lock is poisoned
         // The function should catch the Err and log a warning
-        aggregator.attempt_storing_in_db(db_arc.clone(), &region);
+        aggregator.attempt_storing_in_db(db_arc.clone());
 
         // There's no easy way to confirm the actual warning log, but at least we confirm
         // it doesn't panic and doesn't store anything.
@@ -134,7 +127,7 @@ mod attempt_storing_house_number_aggregator_in_db_tests {
         fn fake_store_house_number_aggregator_results<I:StorageInterface>(
             _db:           &mut I,
             _world_region: &WorldRegion,
-            _aggregator:   HashMap<StreetName, Vec<HouseNumberRange>>,
+            _aggregator:   HouseNumberAggregator,
         ) -> Result<(), OsmPbfParseError> {
             Err(OsmPbfParseError::IoError(std::io::Error::new(
                 std::io::ErrorKind::Other,
@@ -149,12 +142,12 @@ mod attempt_storing_house_number_aggregator_in_db_tests {
         fn test_version_of_attempt_storing<I:StorageInterface>(
             db:         Arc<Mutex<I>>,
             region:     &WorldRegion,
-            aggregator: HashMap<StreetName, Vec<HouseNumberRange>>,
+            aggregator: HouseNumberAggregator,
         ) {
             match db.lock() {
                 Ok(mut db_guard) => {
                     if let Err(e) = fake_store_house_number_aggregator_results(
-                        &mut db_guard,
+                        &mut *db_guard,
                         region,
                         aggregator,
                     ) {
@@ -169,7 +162,7 @@ mod attempt_storing_house_number_aggregator_in_db_tests {
         }
 
         // final usage
-        let db_arc = create_test_db();
+        let (db_arc,_td) = create_temp_db::<Database>();
         let aggregator = build_single_street_aggregator();
         // We'll do region => "Maryland"
         let region = md_region();

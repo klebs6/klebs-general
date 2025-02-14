@@ -10,7 +10,7 @@ pub fn process_single_osm_element(
     element:        &osmpbf::Element,
     country:        &Country,
     addresses:      &mut Vec<AddressRecord>,
-    street_hnr_map: &mut HashMap<StreetName, Vec<HouseNumberRange>>,
+    street_hnr_map: &mut HouseNumberAggregator,
 
 ) -> Result<(), OsmPbfParseError> {
 
@@ -47,7 +47,7 @@ pub fn process_single_osm_element(
                 hnr,
                 street
             );
-            street_hnr_map.entry(street.clone()).or_default().push(hnr);
+            street_hnr_map.add_subrange_for_street(&street,&hnr);
         }
     }
 
@@ -75,14 +75,17 @@ mod test_process_single_osm_element {
         ];
         let node = MockNode::new(111, tags);
 
-        let mut addresses = Vec::new();
-        let mut street_hnr_map = HashMap::new();
+        let mut addresses      = Vec::new();
+        let region             = example_region();
+        let mut street_hnr_map = HouseNumberAggregator::new(&region);
+
         let result = process_single_osm_element(
             &node.as_element(),
             &test_country(),
             &mut addresses,
             &mut street_hnr_map,
         );
+
         assert!(
             result.is_ok(),
             "Should succeed processing a valid address & housenumber"
@@ -116,7 +119,7 @@ mod test_process_single_osm_element {
         let node = MockNode::new(222, tags);
 
         let mut addresses = Vec::new();
-        let mut street_hnr_map = HashMap::new();
+        let mut street_hnr_map = HouseNumberAggregator::new(&example_region());
         let result = process_single_osm_element(
             &node.as_element(),
             &test_country(),
@@ -151,7 +154,7 @@ mod test_process_single_osm_element {
         let node = MockNode::new(333, tags);
 
         let mut addresses = Vec::new();
-        let mut street_hnr_map = HashMap::new();
+        let mut street_hnr_map = HouseNumberAggregator::new(&example_region());
         let result = process_single_osm_element(
             &node.as_element(),
             &test_country(),
@@ -189,7 +192,7 @@ mod test_process_single_osm_element {
         let node = MockNode::new(444, tags);
 
         let mut addresses = Vec::new();
-        let mut street_hnr_map = HashMap::new();
+        let mut street_hnr_map = HouseNumberAggregator::new(&example_region());
         let result = process_single_osm_element(&node.as_element(), &test_country(), &mut addresses, &mut street_hnr_map);
         assert!(result.is_ok());
 
@@ -214,7 +217,7 @@ mod test_process_single_osm_element {
         let node = MockNode::new(555, tags);
 
         let mut addresses = Vec::new();
-        let mut street_hnr_map = HashMap::new();
+        let mut street_hnr_map = HouseNumberAggregator::new(&example_region());
 
         let result = process_single_osm_element(
             &node.as_element(), 
@@ -242,7 +245,7 @@ mod test_process_single_osm_element {
         let node = MockNode::new(666, tags);
 
         let mut addresses = Vec::new();
-        let mut street_hnr_map = HashMap::new();
+        let mut street_hnr_map = HouseNumberAggregator::new(&example_region());
 
         let result = process_single_osm_element(
             &node.as_element(), 

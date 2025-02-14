@@ -1,5 +1,4 @@
 // ---------------- [ File: src/try_construct_street_name.rs ]
-// ---------------- [ File: src/try_construct_street_name.rs ]
 crate::ix!();
 
 /// Attempts to create a `StreetName` from a string (if present). Returns an error
@@ -26,7 +25,6 @@ pub fn try_construct_street_name(
 }
 
 #[cfg(test)]
-#[disable]
 mod test_try_construct_street_name {
     use super::*;
     use crate::errors::*;

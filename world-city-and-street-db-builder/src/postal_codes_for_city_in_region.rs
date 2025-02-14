@@ -30,18 +30,6 @@ mod test_postal_codes_for_city_in_region {
     use std::sync::{Arc, Mutex};
     use std::collections::BTreeSet;
 
-    /// Creates an in-memory or temporary database, returns `(Arc<Mutex<Database>>, TempDir)`.
-    fn create_temp_db<I:StorageInterface>() -> (Arc<Mutex<I>>, TempDir) {
-        let tmp = TempDir::new().expect("Failed to create temp dir");
-        let db  = I::open(tmp.path()).expect("Failed to open database in temp dir");
-        (db, tmp)
-    }
-
-    /// Builds a `DataAccess` reference from the same underlying `Database`.
-    fn create_data_access<I:StorageInterface>(db_arc: Arc<Mutex<I>>) -> DataAccess<I> {
-        DataAccess::with_db(db_arc)
-    }
-
     /// Convenience to store a `BTreeSet<PostalCode>` under the `C2Z:{region_abbr}:{city}` key.
     fn put_c2z_postal_codes<I:StorageInterface>(
         db:     &mut I,
@@ -57,7 +45,7 @@ mod test_postal_codes_for_city_in_region {
     #[traced_test]
     fn test_no_data_returns_none() {
         let (db_arc, _tmp) = create_temp_db::<Database>();
-        let data_access = create_data_access(db_arc);
+        let data_access = DataAccess::with_db(db_arc);
 
         // Suppose region=MD, city=baltimore, but we never stored any c2z data
         let region = WorldRegion::try_from_abbreviation("MD").unwrap();
@@ -71,7 +59,7 @@ mod test_postal_codes_for_city_in_region {
     fn test_some_data_returns_btreeset_of_postal_codes() {
         let (db_arc, _tmp) = create_temp_db::<Database>();
         let mut db_guard = db_arc.lock().unwrap();
-        let data_access = create_data_access(db_arc.clone());
+        let data_access = DataAccess::with_db(db_arc.clone());
 
         let region = WorldRegion::try_from_abbreviation("MD").unwrap();
         let city = CityName::new("baltimore").unwrap();
@@ -97,7 +85,7 @@ mod test_postal_codes_for_city_in_region {
         // so we get None from `postal_codes_for_city_in_region`.
         let (db_arc, _tmp) = create_temp_db::<Database>();
         let mut db_guard = db_arc.lock().unwrap();
-        let data_access = create_data_access(db_arc.clone());
+        let data_access = DataAccess::with_db(db_arc.clone());
 
         let region = WorldRegion::try_from_abbreviation("MD").unwrap();
         let city = CityName::new("annapolis").unwrap();
@@ -118,7 +106,7 @@ mod test_postal_codes_for_city_in_region {
         // we can confirm that "Baltimore" with different cases is stored or retrieved.
         let (db_arc, _tmp) = create_temp_db::<Database>();
         let mut db_guard = db_arc.lock().unwrap();
-        let data_access = create_data_access(db_arc.clone());
+        let data_access = DataAccess::with_db(db_arc.clone());
 
         // We'll store data for city="baltimore" => c2z:MD:baltimore
         let region = WorldRegion::try_from_abbreviation("MD").unwrap();
@@ -142,7 +130,7 @@ mod test_postal_codes_for_city_in_region {
         // we expect None because the keys differ.
         let (db_arc, _tmp) = create_temp_db::<Database>();
         let mut db_guard = db_arc.lock().unwrap();
-        let data_access = create_data_access(db_arc.clone());
+        let data_access = DataAccess::with_db(db_arc.clone());
 
         let region = WorldRegion::try_from_abbreviation("MD").unwrap();
         let city_frederick = CityName::new("frederick").unwrap();

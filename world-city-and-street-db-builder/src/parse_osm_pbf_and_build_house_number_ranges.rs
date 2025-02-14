@@ -23,7 +23,8 @@ crate::ix!();
 pub fn load_osm_data_with_housenumbers(
     path: impl AsRef<Path>,
     region: &WorldRegion,
-) -> Result<(Vec<AddressRecord>, HashMap<StreetName, Vec<HouseNumberRange>>), OsmPbfParseError> {
+) -> Result<(Vec<AddressRecord>, HouseNumberAggregator), OsmPbfParseError> {
+
     trace!(
         "load_osm_data_with_housenumbers: start path={:?}, region={:?}",
         path.as_ref(),
@@ -37,7 +38,7 @@ pub fn load_osm_data_with_housenumbers(
     let reader = open_osm_pbf_reader(&path)?;
 
     // Step 3: We’ll accumulate addresses and house‐number ranges in memory.
-    let mut street_hnr_map: HashMap<StreetName, Vec<HouseNumberRange>> = HashMap::new();
+    let mut street_hnr_map = HouseNumberAggregator::new(region);
     let mut addresses = Vec::new();
 
     // Step 4: Process the PBF file’s elements in a single pass.

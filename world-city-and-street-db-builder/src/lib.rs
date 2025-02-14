@@ -19,6 +19,7 @@ x!{assert_street_house_number_map_contains}
 x!{mock_address}
 x!{address_record_from_element_and_country}
 x!{address_record}
+x!{mock_failing_db}
 x!{addresses_from_pbf_file_with_house_numbers}
 x!{attempt_storing_house_number_aggregator_in_db}
 x!{build_all_region_data}
@@ -35,7 +36,6 @@ x!{collect_address_and_housenumber_data}
 x!{collect_tags}
 x!{compressed_list}
 x!{create_address_stream_channel}
-x!{create_data_access}
 x!{create_small_osm_pbf_file}
 x!{create_tiny_osm_pbf_with_housenumber}
 x!{create_tiny_osm_pbf}

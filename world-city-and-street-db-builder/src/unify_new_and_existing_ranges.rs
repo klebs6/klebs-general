@@ -21,7 +21,6 @@ pub fn unify_new_and_existing_ranges(
 }
 
 #[cfg(test)]
-#[disable]
 mod test_unify_new_and_existing_ranges {
     use super::*;
     use tracing::trace;

@@ -8,7 +8,7 @@ pub fn collect_address_and_housenumber_data(
     reader: osmpbf::ElementReader<std::io::BufReader<std::fs::File>>,
     country: &Country,
     addresses: &mut Vec<AddressRecord>,
-    street_hnr_map: &mut HashMap<StreetName, Vec<HouseNumberRange>>,
+    street_hnr_map: &mut HouseNumberAggregator,
 ) -> Result<(), OsmPbfParseError> {
     trace!("collect_address_and_housenumber_data: starting iteration");
 
@@ -190,8 +190,9 @@ mod collect_address_and_housenumber_data_tests {
         let reader = osmpbf::ElementReader::from_path(&path).unwrap();
         let country = Country::USA;
 
+        let region = example_region();
         let mut addresses = Vec::new();
-        let mut aggregator = HashMap::new();
+        let mut aggregator = HouseNumberAggregator::new(&region);
 
         let res = collect_address_and_housenumber_data(reader, &country, &mut addresses, &mut aggregator);
         assert!(res.is_ok(), "Empty file => no parse error, just 0 elements");
@@ -207,8 +208,9 @@ mod collect_address_and_housenumber_data_tests {
 
         let reader = osmpbf::ElementReader::from_path(&path).unwrap();
         let country = Country::USA;
+        let region = example_region();
         let mut addresses = Vec::new();
-        let mut aggregator = HashMap::new();
+        let mut aggregator = HouseNumberAggregator::new(&region);
 
         let res = collect_address_and_housenumber_data(reader, &country, &mut addresses, &mut aggregator);
         assert!(res.is_err(), "Corrupted => parse error => Err(...)");
@@ -230,7 +232,8 @@ mod collect_address_and_housenumber_data_tests {
 
         let reader = osmpbf::ElementReader::from_path(&path).unwrap();
         let mut addresses = Vec::new();
-        let mut aggregator = HashMap::new();
+        let region = example_region();
+        let mut aggregator = HouseNumberAggregator::new(&region);
         let country = Country::USA;
 
         let result = collect_address_and_housenumber_data(reader, &country, &mut addresses, &mut aggregator);
@@ -258,7 +261,8 @@ mod collect_address_and_housenumber_data_tests {
 
         let reader = osmpbf::ElementReader::from_path(&path).unwrap();
         let mut addresses = Vec::new();
-        let mut aggregator = HashMap::new();
+        let region = example_region();
+        let mut aggregator = HouseNumberAggregator::new(&region);
         let country = Country::USA;
 
         let res = collect_address_and_housenumber_data(reader, &country, &mut addresses, &mut aggregator);
