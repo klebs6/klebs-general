@@ -78,6 +78,7 @@ mod test_street_names_for_postal_code_in_region {
 
         // Store
         put_s_data(&mut *db_guard, &region, &postal_code, &streets);
+        drop(db_guard);
 
         // Now query
         let result = data_access.street_names_for_postal_code_in_region(&region, &postal_code);
@@ -102,6 +103,7 @@ mod test_street_names_for_postal_code_in_region {
 
         // Insert invalid data
         db_guard.put(key, b"invalid cbor").unwrap();
+        drop(db_guard);
 
         let result = data_access.street_names_for_postal_code_in_region(&region, &postal_code);
         assert!(result.is_none(), "Corrupted data => None");
@@ -122,6 +124,7 @@ mod test_street_names_for_postal_code_in_region {
         let mut streets_md = BTreeSet::new();
         streets_md.insert(StreetName::new("North Ave").unwrap());
         put_s_data(&mut *db_guard, &region_md, &pc_21201, &streets_md);
+        drop(db_guard);
 
         // If we query region_va instead => no data
         let result_va = data_access.street_names_for_postal_code_in_region(&region_va, &pc_21201);
@@ -150,6 +153,7 @@ mod test_street_names_for_postal_code_in_region {
         streets.insert(street_1);
         streets.insert(street_2); // same name => no effect
         put_s_data(&mut *db_guard, &region, &postal_code, &streets);
+        drop(db_guard);
 
         let retrieved_opt = data_access.street_names_for_postal_code_in_region(&region, &postal_code);
         assert!(retrieved_opt.is_some(), "We inserted data => Some(...)");

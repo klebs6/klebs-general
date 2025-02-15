@@ -146,9 +146,7 @@ mod test_write_cities_to_region_and_street {
 
         let result = failing_stub.write_cities_to_region_and_street(&region, &street, &city_set);
         match result {
-            Err(DatabaseConstructionError::RocksDB(e)) => {
-                assert_eq!(e.to_string(), "Simulated put error");
-            }
+            Err(DatabaseConstructionError::SimulatedStoreFailure) => { }
             other => panic!("Expected DatabaseConstructionError::RocksDB, got {:?}", other),
         }
     }

@@ -117,6 +117,7 @@ mod test_validate_street_for_postal_code {
         let mut streets = BTreeSet::new();
         streets.insert(street_existing.clone());
         put_s_key_streets(&mut *db_guard, &region, &postal_code, &streets);
+        drop(db_guard);
 
         let addr = make_world_address(region, postal_code, street_missing.clone());
         let result = validate_street_for_postal_code(&addr, &data_access);
@@ -144,6 +145,7 @@ mod test_validate_street_for_postal_code {
         let mut streets = BTreeSet::new();
         streets.insert(street.clone());
         put_s_key_streets(&mut *db_guard, &region, &postal_code, &streets);
+        drop(db_guard);
 
         let addr = make_world_address(region, postal_code, street);
         let result = validate_street_for_postal_code(&addr, &data_access);
@@ -162,6 +164,7 @@ mod test_validate_street_for_postal_code {
 
         let s_k = s_key(&region, &postal_code);
         db_guard.put(s_k.clone(), b"invalid cbor").unwrap();
+        drop(db_guard);
 
         let addr = make_world_address(region, postal_code, street);
         let result = validate_street_for_postal_code(&addr, &data_access);

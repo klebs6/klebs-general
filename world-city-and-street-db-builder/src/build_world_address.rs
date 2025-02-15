@@ -1,5 +1,4 @@
 // ---------------- [ File: src/build_world_address.rs ]
-// ---------------- [ File: src/build_world_address.rs ]
 crate::ix!();
 
 /// Helper that builds a `WorldAddress` from region, city, street, postal.

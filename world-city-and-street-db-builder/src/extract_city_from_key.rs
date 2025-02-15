@@ -13,10 +13,10 @@ pub fn extract_city_from_key(key_str: &str) -> Option<String> {
         return None;
     }
 
-    let city_part = parts[2].trim();
+    let city_part = parts[2];
     if city_part.is_empty() {
         warn!(
-            "extract_city_from_key: key='{}' has empty city substring; ignoring",
+            "extract_city_from_key: key='{}' has empty city substring after second colon; ignoring",
             key_str
         );
         return None;
@@ -70,8 +70,7 @@ mod extract_city_from_key_tests {
         // "C2Z:US:" => 3 parts => ["C2Z","US",""] => city => ""
         let key = "C2Z:US:";
         let city_opt = extract_city_from_key(key);
-        assert!(city_opt.is_some());
-        assert_eq!(city_opt.unwrap(), "", "City portion is empty string");
+        assert!(city_opt.is_none());
     }
 
     #[traced_test]

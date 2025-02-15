@@ -69,6 +69,7 @@ mod test_street_names_for_city_in_region {
         streets.insert(StreetName::new("Pratt Street").unwrap());
 
         put_c2s_data(&mut *db_guard, &region, &city, &streets);
+        drop(db_guard);
 
         // Now retrieve
         let result = data_access.street_names_for_city_in_region(&region, &city);
@@ -90,6 +91,7 @@ mod test_street_names_for_city_in_region {
         // Write invalid bytes
         let key = c2s_key(&region, &city);
         db_guard.put(key, b"not valid cbor").unwrap();
+        drop(db_guard);
 
         // Attempt to read => should fail decode => None
         let result = data_access.street_names_for_city_in_region(&region, &city);
@@ -111,6 +113,7 @@ mod test_street_names_for_city_in_region {
         let mut streets = BTreeSet::new();
         streets.insert(StreetName::new("Market Street").unwrap());
         put_c2s_data(&mut *db_guard, &region, &city_stored, &streets);
+        drop(db_guard);
 
         // Query for Hagerstown => None
         let result = data_access.street_names_for_city_in_region(&region, &city_missing);
@@ -132,6 +135,7 @@ mod test_street_names_for_city_in_region {
         let mut streets = BTreeSet::new();
         streets.insert(StreetName::new("CrossLine").unwrap());
         put_c2s_data(&mut *db_guard, &region_md, &city, &streets);
+        drop(db_guard);
 
         // Query for region_va => should be none
         let result = data_access.street_names_for_city_in_region(&region_va, &city);
@@ -157,6 +161,7 @@ mod test_street_names_for_city_in_region {
         streets.insert(street_dup1);
         streets.insert(street_dup2); // won't have any effect beyond the first
         put_c2s_data(&mut *db_guard, &region, &city, &streets);
+        drop(db_guard);
 
         // We get the set with one item
         let result = data_access.street_names_for_city_in_region(&region, &city).unwrap();

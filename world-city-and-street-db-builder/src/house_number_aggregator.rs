@@ -468,34 +468,35 @@ mod house_number_aggregator_tests {
 
     #[traced_test]
     fn test_store_aggregator_results_single_street() {
-
-        // aggregator => "north avenue" => [ HouseNumberRange(100..=110) ]
+        // 1) Create an aggregator for some region (example_region).
         let region         = example_region();
         let mut aggregator = HouseNumberAggregator::new(&region);
-        let street         = StreetName::new("North Avenue").unwrap();
 
+        // 2) Insert a single street => [100..=110]
+        let street         = StreetName::new("North Avenue").unwrap();
         aggregator.insert(street.clone(), vec![HouseNumberRange::new(100, 110)]);
 
+        // 3) Open a fresh DB
         let tmp_dir = TempDir::new().unwrap();
-        let db = Database::open(tmp_dir.path()).unwrap();
-        {
-            let region = WorldRegion::default();
+        let db      = Database::open(tmp_dir.path()).unwrap();
+        let mut db_guard = db.lock().unwrap();
 
-            {
-                let mut db_guard = db.lock().unwrap();
+        // 4) Store aggregator => merges subranges into DB
+        let res = aggregator.store_results_in_db(&mut *db_guard);
+        assert!(res.is_ok(), "Storing aggregator results should succeed");
 
-                let res = aggregator.store_results_in_db(&mut *db_guard);
-                assert!(res.is_ok());
+        // 5) Now read them back *using the same region*:
+        let loaded_opt = db_guard.load_house_number_ranges(&region, &street)
+            .expect("Should not fail loading stored data");
 
-                // Optionally load them back with load_house_number_ranges
-                let loaded_opt = db_guard.load_house_number_ranges(&region, &street).unwrap();
-                assert!(loaded_opt.is_some());
-                let loaded = loaded_opt.unwrap();
-                assert_eq!(loaded.len(), 1);
-                let rng = &loaded[0];
-                assert_eq!(rng.start(), &100);
-                assert_eq!(rng.end(), &110);
-            }
-        }
+        assert!(
+            loaded_opt.is_some(),
+            "We must use the same region used to store subranges"
+        );
+
+        let loaded = loaded_opt.unwrap();
+        assert_eq!(loaded.len(), 1);
+        assert_eq!(loaded[0].start(), &100);
+        assert_eq!(loaded[0].end(),   &110);
     }
 }

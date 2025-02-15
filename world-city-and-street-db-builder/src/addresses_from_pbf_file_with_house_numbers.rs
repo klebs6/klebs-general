@@ -1,5 +1,4 @@
 // ---------------- [ File: src/addresses_from_pbf_file_with_house_numbers.rs ]
-// ---------------- [ File: src/addresses_from_pbf_file_with_house_numbers.rs ]
 crate::ix!();
 
 /// The top-level function orchestrates:

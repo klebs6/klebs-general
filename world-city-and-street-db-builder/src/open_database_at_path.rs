@@ -1,5 +1,4 @@
 // ---------------- [ File: src/open_database_at_path.rs ]
-// ---------------- [ File: src/open_database_at_path.rs ]
 crate::ix!();
 
 pub trait OpenDatabaseAtPath {

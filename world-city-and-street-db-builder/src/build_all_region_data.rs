@@ -1,25 +1,67 @@
 // ---------------- [ File: src/build_all_region_data.rs ]
 crate::ix!();
 
-/// (6) Build a map of (region => RegionData), by scanning city+street from the DB for each done region.
-pub fn build_all_region_data<I:StorageInterface>(db: &I, done_regions: &[WorldRegion]) -> HashMap<WorldRegion, RegionData> {
-    let mut map = HashMap::new();
-    for r in done_regions {
-        let mut city_vec = load_all_cities_for_region(db, r);
-        let mut street_vec = load_all_streets_for_region(db, r);
+#[tracing::instrument(level = "trace", skip(db))]
+pub fn build_all_region_data<I: StorageInterface>(
+    db: &I,
+    done_regions: &[WorldRegion]
+) -> std::collections::HashMap<WorldRegion, RegionData> {
+    use std::collections::HashMap;
+    trace!(
+        "build_all_region_data: invoked with {} done_regions: {:?}",
+        done_regions.len(),
+        done_regions
+    );
 
-        // Sort them so fuzzy matching has a stable order, though not strictly required.
+    let mut map = HashMap::new();
+    for region in done_regions {
+        trace!("build_all_region_data: processing region={:?}", region);
+
+        // 1) Load cities (prefix C2Z:)
+        let mut city_vec = load_all_cities_for_region(db, region);
+        // 2) Load streets (prefix S2C:)
+        let mut street_vec = load_all_streets_for_region(db, region);
+
+        trace!(
+            "build_all_region_data: region={:?} => raw city_vec={:?}, raw street_vec={:?}",
+            region,
+            city_vec,
+            street_vec
+        );
+
+        // Sort them
         city_vec.sort();
         street_vec.sort();
 
-        let rd = RegionDataBuilder::default()
-            .cities(city_vec)
-            .streets(street_vec)
-            .build()
-            .unwrap();
+        trace!(
+            "build_all_region_data: region={:?} => after sort => city_vec={:?}, street_vec={:?}",
+            region,
+            city_vec,
+            street_vec
+        );
 
-        map.insert(*r, rd);
+        // 3) Build the RegionData
+        let rd = RegionDataBuilder::default()
+            .cities(city_vec.clone())
+            .streets(street_vec.clone())
+            .build()
+            .expect("RegionData builder should never fail");
+
+        trace!(
+            "build_all_region_data: region={:?} => final city_count={}, street_count={}",
+            region,
+            rd.cities().len(),
+            rd.streets().len()
+        );
+
+        // Insert into the map
+        map.insert(*region, rd);
     }
+
+    trace!(
+        "build_all_region_data: done. returning map with {} entries",
+        map.len()
+    );
     map
 }
 

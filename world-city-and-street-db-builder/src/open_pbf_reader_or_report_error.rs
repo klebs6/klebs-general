@@ -1,13 +1,13 @@
 // ---------------- [ File: src/open_pbf_reader_or_report_error.rs ]
-// ---------------- [ File: src/open_pbf_reader_or_report_error.rs ]
 crate::ix!();
 
 /// Helper that attempts to open the OSM PBF file. If successful, returns the reader.
 /// On failure, sends the error through `tx` and returns `None`.
 pub fn open_pbf_reader_or_report_error(
     path: &PathBuf,
-    tx: &std::sync::mpsc::SyncSender<Result<WorldAddress, OsmPbfParseError>>,
+    tx:   &std::sync::mpsc::SyncSender<Result<WorldAddress, OsmPbfParseError>>,
 ) -> Option<osmpbf::ElementReader<std::io::BufReader<std::fs::File>>> {
+
     trace!("open_pbf_reader_or_report_error: Opening OSM PBF at {:?}", path);
 
     match open_osm_pbf_reader(path) {
@@ -104,7 +104,7 @@ mod test_open_pbf_reader_or_report_error {
             .expect("Expected an error to be sent")
             .unwrap_err();
         match err_msg {
-            OsmPbfParseError::OsmPbf(e) => {
+            OsmPbfParseError::IoError(e) => {
                 // For a directory, likely a "Is a directory" or "IO error" message
                 assert!(
                     e.to_string().contains("directory") ||
@@ -112,7 +112,7 @@ mod test_open_pbf_reader_or_report_error {
                     "Error message should reflect that it's not a valid file. Got: {:?}", e
                 );
             },
-            other => panic!("Expected OsmPbf(...) error, got {:?}", other),
+            other => panic!("Expected IoError(...) error, got {:?}", other),
         }
         // No more messages
         assert!(rx.try_recv().is_err(), "No further messages expected");

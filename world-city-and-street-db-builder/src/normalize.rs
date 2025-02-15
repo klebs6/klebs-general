@@ -1,5 +1,4 @@
 // ---------------- [ File: src/normalize.rs ]
-// ---------------- [ File: src/normalize.rs ]
 crate::ix!();
 
 pub fn normalize(s: &str) -> String {

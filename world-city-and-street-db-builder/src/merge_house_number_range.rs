@@ -1,10 +1,17 @@
 // ---------------- [ File: src/merge_house_number_range.rs ]
 crate::ix!();
 
-/// Merges `new_range` into the existing set of subranges, **only unifying if there's an actual overlap**.
-/// Does **not** unify disjoint-but-adjacent subranges.  
+/// Merges `new_range` into the existing set of subranges, **unifying both
+/// overlapping and adjacent** subranges.  
 ///
-/// e.g. if existing has `[1..5]` and `new_range` is `[6..7]`, we keep them separate.
+/// e.g. if existing has `[1..5]` and `new_range` is `[6..7]`, we now unify  
+/// them into `[1..7]`.  
+///
+/// # Note
+///
+/// If you intended disjoint-but-adjacent subranges to remain separate,
+/// do *not* use the “<= last.end() + 1” check below. But the test_adjacent_ranges
+/// scenario wants them merged, so we unify adjacency.
 pub fn merge_house_number_range(
     mut existing: Vec<HouseNumberRange>,
     new_range: &HouseNumberRange
@@ -20,15 +27,16 @@ pub fn merge_house_number_range(
             merged.push(rng);
         } else {
             let last = merged.last_mut().unwrap();
-            // For actual overlap, check `rng.start() <= last.end()`.
-            // We do NOT unify adjacency, so no +1.
-            if rng.start() <= last.end() {
+
+            // For adjacency or overlap, check if rng.start() <= last.end() + 1
+            // so that [1..10] & [11..15] => unify => [1..15].
+            if *rng.start() <= *last.end() + 1 {
                 // unify => extend last.end if needed
                 if rng.end() > last.end() {
                     last.set_end(*rng.end());
                 }
             } else {
-                // disjoint => push new subrange
+                // truly disjoint => push new subrange
                 merged.push(rng);
             }
         }

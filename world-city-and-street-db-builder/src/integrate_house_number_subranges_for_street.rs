@@ -212,20 +212,24 @@ mod test_integrate_house_number_subranges_for_street {
 
     #[traced_test]
     fn test_store_error_logs_warning_but_succeeds() {
-
         let mut failing_db = FailingStoreDatabase::new().unwrap();
+        {
+            let mut guard = failing_db.lock().unwrap();
 
-        // Insert an existing range (via the inner DB)
+            // Use the newly added helper to store initial data via the inner DB
+            let region = USRegion::UnitedState(UnitedState::Maryland).into();
+            let street = StreetName::new("Fail Street").unwrap();
+
+            guard
+                .store_ranges_via_inner(&region, &street, &[HouseNumberRange::new(10, 15)])
+                .expect("Storing initial ranges in the real DB should succeed");
+            }
+
+        // Now the next store will fail but only logs a warning instead of returning an error
+        let mut guard = failing_db.lock().unwrap();
         let region = USRegion::UnitedState(UnitedState::Maryland).into();
         let street = StreetName::new("Fail Street").unwrap();
-
-        let mut guard = failing_db.lock().unwrap();
-
-        guard.store_house_number_ranges(&region, &street, &[range(10, 15)])
-            .expect("Storing to real DB works");
-
-        // Attempt to integrate; the store error should be logged but not returned as a hard error.
-        let new_ranges = vec![range(12, 18)];
+        let new_ranges = vec![HouseNumberRange::new(12, 18)];
 
         let result = integrate_house_number_subranges_for_street(
             &mut *guard, 
@@ -234,6 +238,9 @@ mod test_integrate_house_number_subranges_for_street {
             &new_ranges
         );
 
-        assert!(result.is_ok(), "Store error logs a warning, not a hard error");
+        assert!(
+            result.is_ok(),
+            "Store error logs a warning, but function returns Ok(()) anyway"
+        );
     }
 }

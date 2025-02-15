@@ -73,27 +73,17 @@ mod test_load_osm_data_with_housenumbers {
     // If your codebase includes helpers like `create_tiny_osm_pbf(...)`, you can do:
     #[traced_test]
     async fn test_load_osm_data_with_housenumbers_tiny_pbf_success() {
-        // We assume `create_tiny_osm_pbf_with_housenumber` or similar is available
-        // for making a minimal PBF file with city/street/housenumber. 
-        // If not, you can craft your own small .osm.pbf fixture.
-
+        // Create a minimal PBF file containing city="TestCity", street="TestStreet",
+        // postcode="11111", and housenumber="100-110"
         let temp_dir = TempDir::new().expect("Failed to create temp directory");
         let pbf_path = temp_dir.path().join("tiny_test.osm.pbf");
 
-        // For example, if you have a helper that writes a single node with:
-        //    city="TestCity", street="TestStreet", housenumber="100-110"
-        // we can do:
         if let Err(e) = create_tiny_osm_pbf_with_housenumber(&pbf_path).await {
             eprintln!("Could not create tiny PBF file: {:?}", e);
-            // This test won't succeed, so let's just skip
-            return;
+            return; // skip the rest if creation fails
         }
 
-        // Choose a region that can be converted to a valid `Country` in `infer_country_from_region`.
-        // For instance, USRegion::UnitedState(UnitedState::Maryland).into().
         let region = USRegion::UnitedState(UnitedState::Maryland).into();
-
-        // Now call the function under test
         let result = load_osm_data_with_housenumbers(&pbf_path, &region);
         assert!(
             result.is_ok(),
@@ -102,7 +92,6 @@ mod test_load_osm_data_with_housenumbers {
         );
 
         let (addresses, street_hnr_map) = result.unwrap();
-        // We expect at least 1 address, 1 street with house‐number data
         assert_eq!(
             addresses.len(),
             1,
@@ -114,18 +103,43 @@ mod test_load_osm_data_with_housenumbers {
             "One street's house‐number range data expected"
         );
 
-        // Optionally verify the address/street details
+        // We now confirm the fixture actually has a postcode of "11111" 
+        // (since create_tiny_osm_pbf_with_housenumber sets addr:postcode="11111").
         let addr = &addresses[0];
-        assert_eq!(addr.city().as_ref().unwrap().name(), "testcity");
-        assert_eq!(addr.street().as_ref().unwrap().name(), "teststreet");
-        assert_eq!(addr.postcode().is_none(), true, "No postcode in tiny fixture? If included, check it here.");
+        assert_eq!(
+            addr.city().as_ref().unwrap().name(),
+            "testcity",
+            "Expected city to be 'testcity'"
+        );
+        assert_eq!(
+            addr.street().as_ref().unwrap().name(),
+            "teststreet",
+            "Expected street to be 'teststreet'"
+        );
+        assert!(
+            addr.postcode().is_some(),
+            "We expect a postcode because the fixture sets one"
+        );
+        assert_eq!(
+            addr.postcode().as_ref().unwrap().code(),
+            "11111",
+            "Fixture uses 11111 as the test postcode"
+        );
 
         let (street_key, ranges_vec) = street_hnr_map.iter().next().unwrap();
-        assert_eq!(street_key.name(), "teststreet");
-        assert_eq!(ranges_vec.len(), 1, "Should have exactly one merged range for '100-110'");
+        assert_eq!(
+            street_key.name(),
+            "teststreet",
+            "The aggregator's single street key should match"
+        );
+        assert_eq!(
+            ranges_vec.len(),
+            1,
+            "Should have exactly one subrange for '100-110'"
+        );
         let range = &ranges_vec[0];
-        assert_eq!(*range.start(), 100);
-        assert_eq!(*range.end(), 110);
+        assert_eq!(*range.start(), 100, "Range start");
+        assert_eq!(*range.end(), 110, "Range end");
     }
 
     // ===========================================================================
@@ -176,15 +190,23 @@ mod test_load_osm_data_with_housenumbers {
 
         match result {
             Err(OsmPbfParseError::OsmPbf(e)) => {
-                // Depending on the error from `osmpbf`, might say "invalid file format"
+                // The actual error message often says "blob header is too big: 1416128883 bytes", 
+                // so we allow that in addition to other parse-error strings:
+                let msg = e.to_string();
                 assert!(
-                    e.to_string().contains("invalid") 
-                        || e.to_string().contains("corrupt")
-                        || e.to_string().contains("OSM PBF parse error"),
-                    "Expected parse error. Got: {:?}", e
+                    msg.contains("blob header is too big")
+                    || msg.contains("HeaderTooBig")
+                    || msg.contains("invalid")
+                    || msg.contains("corrupt")
+                    || msg.contains("OSM PBF parse error"),
+                    "Expected parse error, got: {}",
+                    msg
                 );
             }
-            other => panic!("Expected OsmPbfParseError::OsmPbf for corrupted data. Got {:?}", other),
+            other => panic!(
+                "Expected Err(OsmPbfParseError::OsmPbf) for corrupted data. Got {:?}",
+                other
+            ),
         }
     }
 }

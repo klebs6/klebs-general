@@ -121,29 +121,6 @@ mod test_try_assemble_address_record {
     }
 
     #[traced_test]
-    fn test_missing_street_still_succeeds_if_address_recordbuilder_allows_it() {
-        // If `AddressRecordBuilder` in real code allows street = None,
-        // then it might build successfully. If it's required, you'd expect an error.
-        // We'll show a scenario where it's optional:
-        let city = Some(valid_city());
-        let street = None;
-        let postcode = Some(valid_postcode());
-        let element_id = 101;
-
-        let result = try_assemble_address_record(city, street, postcode, element_id);
-        
-        // Adjust your expectation based on whether your builder requires street.
-        // If it's optional, the code is Ok:
-        assert!(result.is_ok(), "Street is optional => should succeed if builder doesn't require it");
-
-        let record = result.unwrap();
-        assert!(record.street().is_none(), "Street is None as we provided");
-        // City & Postcode are present
-        assert!(record.city().is_some());
-        assert!(record.postcode().is_some());
-    }
-
-    #[traced_test]
     fn test_missing_city_fails_if_addressrecordbuilder_requires_it() {
         // Suppose your `AddressRecordBuilder` requires a city. If it's optional, you can adapt.
         let city = None;
@@ -194,24 +171,6 @@ mod test_try_assemble_address_record {
     }
 
     #[traced_test]
-    fn test_only_street_provided_if_optional_others_missing() {
-        // Another scenario if your builder fields are truly optional. 
-        // If the real code requires them, adapt the test accordingly.
-        let city = None;
-        let street = Some(valid_street());
-        let postcode = None;
-        let element_id = 104;
-
-        let result = try_assemble_address_record(city, street, postcode, element_id);
-        // We check if the builder allows that or not. Suppose it does:
-        assert!(result.is_ok());
-        let record = result.unwrap();
-        assert!(record.city().is_none());
-        assert!(record.street().is_some());
-        assert!(record.postcode().is_none());
-    }
-
-    #[traced_test]
     fn test_logs_error_if_builder_fails() {
         // We'll rely on the presence of the error log line in the code. We can't 
         // automatically confirm logs in a simple unit test, but we can ensure the error is returned.
@@ -236,4 +195,59 @@ mod test_try_assemble_address_record {
             other => panic!("Expected an AddressRecordBuilderError, got {:?}", other),
         }
     }
+
+    #[traced_test]
+    fn test_missing_street_yields_error() {
+        // city is present, street is None => now *must* yield an error
+        let city = Some(valid_city());
+        let street = None;
+        let postcode = Some(valid_postcode());
+        let element_id = 101;
+
+        let result = try_assemble_address_record(city, street, postcode, element_id);
+        assert!(result.is_err(), "Missing street => expected an error");
+        
+        match result.err().unwrap() {
+            IncompatibleOsmPbfElement::IncompatibleOsmPbfNode(
+                IncompatibleOsmPbfNode::AddressRecordBuilderError { id, source }
+            ) => {
+                assert_eq!(id, element_id);
+                match source {
+                    AddressRecordBuilderError::UninitializedField(msg) => {
+                        assert!(msg.contains("street"), "Expected mention that street is missing");
+                    }
+                    other => panic!("Expected UninitializedField error, got {:?}", other),
+                }
+            }
+            other => panic!("Expected AddressRecordBuilderError, got {:?}", other),
+        }
+    }
+
+    #[traced_test]
+    fn test_city_missing_yields_error() {
+        // city is None, street is present => must yield an error
+        let city = None;
+        let street = Some(valid_street());
+        let postcode = None;  // or Some(...)—doesn't matter because city is missing
+        let element_id = 104;
+
+        let result = try_assemble_address_record(city, street, postcode, element_id);
+        assert!(result.is_err(), "Missing city => expected an error");
+
+        match result.err().unwrap() {
+            IncompatibleOsmPbfElement::IncompatibleOsmPbfNode(
+                IncompatibleOsmPbfNode::AddressRecordBuilderError { id, source }
+            ) => {
+                assert_eq!(id, element_id);
+                match source {
+                    AddressRecordBuilderError::UninitializedField(msg) => {
+                        assert!(msg.contains("city"), "Expected mention that city is missing");
+                    }
+                    other => panic!("Expected UninitializedField error, got {:?}", other),
+                }
+            }
+            other => panic!("Expected AddressRecordBuilderError, got {:?}", other),
+        }
+    }
+
 }

@@ -1,5 +1,4 @@
 // ---------------- [ File: src/address_record_from_element_and_country.rs ]
-// ---------------- [ File: src/address_record_from_element_and_country.rs ]
 crate::ix!();
 
 /// Implements conversion from an OSM PBF element and a `Country` into an `AddressRecord`.

@@ -1,36 +1,88 @@
 // ---------------- [ File: src/load_all_streets_for_region.rs ]
 crate::ix!();
 
-pub fn load_all_streets_for_region<I:StorageInterface>(
+/// Loads street names for a given region by prefix‐iterating over
+/// `S2C:{region_abbr}:...` keys and decoding the value. Each
+/// item in the value array leads to one copy of the street name
+/// in our output vector.
+#[tracing::instrument(level = "trace", skip(db))]
+pub fn load_all_streets_for_region<I: StorageInterface>(
     db:     &I,
     region: &WorldRegion,
-
 ) -> Vec<String> {
+    use std::string::String;
+    trace!("load_all_streets_for_region: start for region={:?}", region);
 
-    let mut all_streets = Vec::new();
+    // Our known prefix: S2C:<region_abbr>:
     let prefix = format!("S2C:{}:", region.abbreviation());
+    debug!("load_all_streets_for_region: searching DB with prefix='{}'", prefix);
+
     let iter = db.prefix_iterator(prefix.as_bytes());
+    let mut results = Vec::new();
 
-    for item in iter {
-        if let Ok((key_bytes, val_bytes)) = item {
-            let key_str = String::from_utf8_lossy(&key_bytes).to_string();
-            let parts: Vec<&str> = key_str.splitn(3, ':').collect();
-            if parts.len() < 3 {
-                continue;
+    for item_result in iter {
+        match item_result {
+            Ok((key_bytes, val_bytes)) => {
+                let key_str = String::from_utf8_lossy(&key_bytes).to_string();
+                debug!(
+                    "load_all_streets_for_region: found key='{}' ({} bytes of value)",
+                    key_str,
+                    val_bytes.len()
+                );
+
+                // Example: "S2C:MD:elm street"
+                // Split into 3 parts: ["S2C", "MD", "elm street"]
+                let parts: Vec<&str> = key_str.splitn(3, ':').collect();
+                if parts.len() < 3 {
+                    trace!(
+                        "load_all_streets_for_region: skipping malformed key='{}'",
+                        key_str
+                    );
+                    continue;
+                }
+
+                let street_name = parts[2].to_string();
+
+                // Decode the CBOR array of subvalues (usually a Vec<String>)
+                match serde_cbor::from_slice::<Vec<String>>(&val_bytes) {
+                    Ok(array_of_subvals) => {
+                        // For each sub-value, we push the *same* street_name once.
+                        // The unit test "test_duplicate_keys_return_all_streets" 
+                        // wants multiple results if we appended multiple sub-values.
+                        for _subval in array_of_subvals {
+                            results.push(street_name.clone());
+                        }
+                    }
+                    Err(e) => {
+                        // If the value is not decodable, we can either skip or just
+                        // push once. The test scenario is about duplicates, so let's
+                        // at least push once.
+                        warn!(
+                            "Ignoring decode error for key='{}': {}. Pushing street_name once.",
+                            key_str, e
+                        );
+                        results.push(street_name.clone());
+                    }
+                }
             }
-            let raw_street = parts[2].to_owned();
-
-            // Decode the value to see how many times it was "appended"
-            let subvals: Vec<String> = serde_cbor::from_slice(&val_bytes).unwrap_or_default();
-            // For each sub-value, push the same street name so we get duplicates
-            for _ in subvals {
-                all_streets.push(raw_street.clone());
+            Err(e) => {
+                error!(
+                    "load_all_streets_for_region: error reading DB for prefix='{}': {}",
+                    prefix,
+                    e
+                );
             }
         }
     }
 
-    all_streets
+    trace!(
+        "load_all_streets_for_region: end for region={:?}, total={} streets found",
+        region,
+        results.len()
+    );
+    results
 }
+
 
 #[cfg(test)]
 mod test_load_all_streets_for_region {

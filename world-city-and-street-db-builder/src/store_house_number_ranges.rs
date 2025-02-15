@@ -218,10 +218,10 @@ mod test_store_house_number_ranges {
         let result = db_stub.store_house_number_ranges(&region, &street, &ranges_in);
 
         match result {
-            Err(DatabaseConstructionError::RocksDB(e)) => {
-                assert_eq!(e.to_string(), "Simulated RocksDB put error");
+            Err(DatabaseConstructionError::SimulatedStoreFailure) => {
+
             }
-            other => panic!("Expected DatabaseConstructionError::RocksDB, got {:?}", other),
+            other => panic!("Expected DatabaseConstructionError::SimulatedStoreFailure, got {:?}", other),
         }
     }
 }

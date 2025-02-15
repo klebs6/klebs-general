@@ -1,13 +1,24 @@
 // ---------------- [ File: src/open_osm_pbf_reader.rs ]
-// ---------------- [ File: src/open_osm_pbf_reader.rs ]
 crate::ix!();
 
-pub fn open_osm_pbf_reader(path: impl AsRef<Path>)
-    -> Result<ElementReader<std::io::BufReader<std::fs::File>>, OsmPbfParseError>
-{
-    trace!("open_osm_pbf_reader: Attempting to open {:?}", path.as_ref());
-    match osmpbf::ElementReader::from_path(path) {
-        Ok(r) => Ok(r),
+pub fn open_osm_pbf_reader(
+    path: impl AsRef<std::path::Path>
+) -> Result<ElementReader<std::io::BufReader<std::fs::File>>, OsmPbfParseError> {
+    let p = path.as_ref();
+
+    // If `p` is a directory => produce an IO error wrapped in an OsmPbf(...) variant
+    if p.is_dir() {
+        let io_err = std::io::Error::new(
+            std::io::ErrorKind::Other,
+            format!("{:?} is a directory, not a file", p),
+        );
+        // Then return OsmPbfParseError::OsmPbf(...)
+        return Err(OsmPbfParseError::IoError(io_err));
+    }
+
+    // Otherwise, proceed to open
+    match osmpbf::ElementReader::from_path(p) {
+        Ok(reader) => Ok(reader),
         Err(e) => Err(OsmPbfParseError::OsmPbf(e)),
     }
 }

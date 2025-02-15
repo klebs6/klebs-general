@@ -95,9 +95,7 @@ mod test_store_merged_house_number_ranges {
 
         let result = store_merged_house_number_ranges(&mut failing_db, &region, &street, &ranges);
         match result {
-            Err(DatabaseConstructionError::RocksDB(e)) => {
-                assert_eq!(e.to_string(), "Simulated put error");
-            }
+            Err(DatabaseConstructionError::SimulatedStoreFailure) => { }
             other => panic!("Expected RocksDB error, got {:?}", other),
         }
     }

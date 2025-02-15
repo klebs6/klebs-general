@@ -5,39 +5,91 @@
 // to control whether addresses pass/fail validation.
 crate::ix!();
 
-// A simple MockDataAccess that can store a set of addresses that should fail validation.
-// If the address is in the fail set, validate returns an error. Otherwise, it returns Ok.
 #[derive(Clone, Default)]
 pub struct MockDataAccess {
+    // 1) Addresses that should fail no matter what
     invalid_addresses: Arc<Mutex<Vec<WorldAddress>>>,
+    // 2) A map from (regionAbbrev, postalCode) -> set of valid cityNames
+    postal_to_city_map: Arc<Mutex<HashMap<(String, String), HashSet<String>>>>,
 }
 
 impl MockDataAccess {
     pub fn new() -> Self {
         Self {
-            invalid_addresses: Arc::new(Mutex::new(vec![])),
+            invalid_addresses: Arc::new(Mutex::new(Vec::new())),
+            postal_to_city_map: Arc::new(Mutex::new(HashMap::new())),
         }
     }
 
+    /// If we push an address in here, we always fail it in `validate_with`.
     pub fn invalidate_address(&mut self, addr: WorldAddress) {
         let mut lock = self.invalid_addresses.lock().unwrap();
         lock.push(addr);
     }
+
+    /// This is the method your test calls.  It records a set of city names that
+    /// are valid for `(regionAbbrev, postalCode)`.
+    pub fn add_postal_code_city_list(
+        &mut self,
+        region_abbrev: &str,
+        postal_code: &str,
+        cities: Vec<&str>,
+    ) {
+        let mut map_lock = self.postal_to_city_map.lock().unwrap();
+        let key = (region_abbrev.to_string(), postal_code.to_string());
+        let entry = map_lock.entry(key).or_insert_with(HashSet::new);
+        for c in cities {
+            entry.insert(c.to_string());
+        }
+    }
 }
 
+// Then, in `validate_with`, we check both “invalid_addresses” *and* the city–postal map.
 impl ValidateWith<MockDataAccess> for WorldAddress {
     type Error = InvalidWorldAddress;
 
-    fn validate_with(&self, validator: &MockDataAccess) -> Result<(), Self::Error> {
-        let lock = validator.invalid_addresses.lock().unwrap();
+    fn validate_with(&self, mock: &MockDataAccess) -> Result<(), Self::Error> {
+        // 1) If this address is in the “invalid_addresses” list => fail
+        let lock = mock.invalid_addresses.lock().unwrap();
         if lock.contains(self) {
-            Err(InvalidWorldAddress::StreetNotFoundForPostalCodeInRegion {
+            return Err(InvalidWorldAddress::StreetNotFoundForPostalCodeInRegion {
                 street: self.street().clone(),
                 region: *self.region(),
                 postal_code: self.postal_code().clone(),
-            })
-        } else {
-            Ok(())
+            });
+        }
+        drop(lock);
+
+        // 2) Otherwise, check if city is valid for (region, postalCode).
+        //    We'll assume your `WorldAddress` has region().abbrev() or similar:
+        let region_abbrev = self.region().abbreviation();
+        let pc = self.postal_code().code();
+        let city = self.city().name();
+
+        let map = mock.postal_to_city_map.lock().unwrap();
+        let key = (region_abbrev.to_string(), pc.to_string());
+        match map.get(&key) {
+            Some(valid_cities) => {
+                if valid_cities.contains(city) {
+                    // Great, city is recognized => pass
+                    Ok(())
+                } else {
+                    // City not recognized => fail
+                    Err(InvalidWorldAddress::CityNotFoundForPostalCodeInRegion {
+                        city: self.city().clone(),
+                        region: *self.region(),
+                        postal_code: self.postal_code().clone(),
+                    })
+                }
+            }
+            None => {
+                // No entry at all for this region+postal => fail
+                Err(InvalidWorldAddress::PostalCodeToCityKeyNotFoundForRegion {
+                    z2c_key: format!("Z2C:{:?}:{}", self.region(), pc),
+                    region: *self.region(),
+                    postal_code: self.postal_code().clone(),
+                })
+            }
         }
     }
 }

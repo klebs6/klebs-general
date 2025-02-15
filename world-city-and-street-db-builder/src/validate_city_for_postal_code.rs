@@ -82,6 +82,7 @@ mod test_validate_city_for_postal_code {
         let city        = CityName::new("Baltimore").unwrap();
         let postal_code = PostalCode::new(Country::USA, "21201").unwrap();
         let addr        = make_world_address(region, city, postal_code);
+        drop(db_guard);
 
         // We intentionally do not store anything under z2c => so get_city_set => None
         let result = validate_city_for_postal_code(&addr, &data_access);
@@ -109,6 +110,7 @@ mod test_validate_city_for_postal_code {
         let mut city_set = BTreeSet::new();
         city_set.insert(city_annapolis);
         put_z2c_data(&mut *db_guard, &addr.region(), &addr.postal_code(), &city_set);
+        drop(db_guard);
 
         let result = validate_city_for_postal_code(&addr, &data_access);
         match result {
@@ -137,6 +139,7 @@ mod test_validate_city_for_postal_code {
         let mut city_set = BTreeSet::new();
         city_set.insert(city_baltimore.clone());
         put_z2c_data(&mut *db_guard, &addr.region(), &addr.postal_code(), &city_set);
+        drop(db_guard);
 
         let result = validate_city_for_postal_code(&addr, &data_access);
         assert!(result.is_ok(), "City is in the set => Ok(())");
@@ -157,6 +160,7 @@ mod test_validate_city_for_postal_code {
         // Insert invalid data
         let z2c_k = z2c_key(&addr.region(), &addr.postal_code());
         db_guard.put(z2c_k.clone(), b"not valid cbor").unwrap();
+        drop(db_guard);
 
         let result = validate_city_for_postal_code(&addr, &data_access);
         match result {

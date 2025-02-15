@@ -127,9 +127,7 @@ mod test_write_cities_to_region_and_postal_code {
             .write_cities_to_region_and_postal_code(&region, &postal_code, &city_set);
 
         match result {
-            Err(DatabaseConstructionError::RocksDB(e)) => {
-                assert_eq!(e.to_string(), "Simulated put error");
-            }
+            Err(DatabaseConstructionError::SimulatedStoreFailure) => { }
             other => panic!("Expected RocksDB error, got {:?}", other),
         }
     }

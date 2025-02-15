@@ -148,7 +148,7 @@ mod test_obtain_pbf_file_for_region {
         let result = obtain_pbf_file_for_mock_region(&region_mock, temp_dir.path()).await;
         assert!(result.is_err(), "Should fail if the region is unknown");
         // For demonstration, we match the error variant
-        if let Err(WorldCityAndStreetDbBuilderError::DatabaseConstructionError(_)) = result {
+        if let Err(WorldCityAndStreetDbBuilderError::SimulatedUnknownRegionError) = result {
             // Good, it matches our simulated unknown region error
         } else {
             panic!("Expected DatabaseConstructionError for unknown region scenario");

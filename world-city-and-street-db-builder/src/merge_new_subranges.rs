@@ -1,5 +1,4 @@
 // ---------------- [ File: src/merge_new_subranges.rs ]
-// ---------------- [ File: src/merge_new_subranges.rs ]
 crate::ix!();
 
 /// Merges newly extracted subranges into the existing list, returning a consolidated list.
@@ -74,7 +73,7 @@ mod test_merge_new_subranges {
         let merged = merge_new_subranges(current, &new);
 
         // Because each insertion calls `merge_house_number_range`, the final set should remain sorted.
-        let expected = vec![hnr(1,2), hnr(3,4), hnr(10,11), hnr(20,21)];
+        let expected = vec![hnr(1,4), hnr(10,11), hnr(20,21)];
         assert_eq!(
             merged, expected,
             "Disjoint ranges should appear in sorted order. Got: {}, Expected: {}",

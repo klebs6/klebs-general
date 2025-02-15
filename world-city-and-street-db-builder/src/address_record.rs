@@ -149,5 +149,4 @@ mod address_record_tests {
             }
         }
     }
-
 }

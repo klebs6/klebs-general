@@ -1,5 +1,4 @@
 // ---------------- [ File: src/validate_street_for_city.rs ]
-// ---------------- [ File: src/validate_street_for_city.rs ]
 crate::ix!();
 
 /// Validates that the `[StreetName]` is present in the set of streets
@@ -113,6 +112,7 @@ mod test_validate_street_for_city {
         let mut streets = BTreeSet::new();
         streets.insert(street_wilson.clone());
         put_c_key_streets(&mut *db_guard, &region, &city_arlington, &streets);
+        drop(db_guard);
 
         // Now create an address with the missing street
         let addr = make_world_address(region, city_arlington, street_missing.clone());
@@ -145,6 +145,7 @@ mod test_validate_street_for_city {
         let mut streets = BTreeSet::new();
         streets.insert(street_pa.clone());
         put_c_key_streets(&mut *db_guard, &region, &city_dc, &streets);
+        drop(db_guard);
 
         // Construct an address referencing that city + street
         let addr = make_world_address(region, city_dc, street_pa);
@@ -164,6 +165,7 @@ mod test_validate_street_for_city {
 
         let c_k = c_key(&region, &city);
         db_guard.put(c_k.clone(), b"invalid cbor").unwrap();
+        drop(db_guard);
 
         let addr = make_world_address(region, city, street);
         let result = validate_street_for_city(&addr, &data_access);

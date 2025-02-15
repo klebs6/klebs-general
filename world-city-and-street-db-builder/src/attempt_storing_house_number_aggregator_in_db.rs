@@ -14,18 +14,15 @@ mod attempt_storing_house_number_aggregator_in_db_tests {
     }
 
     /// Builds a small aggregator for a single street => single HouseNumberRange.
+    /// **FIX**: We must pass `md_region()` to `new_with_map` so the aggregator
+    /// uses the same region that this test expects.
     fn build_single_street_aggregator() -> HouseNumberAggregator {
         let street = StreetName::new("North Avenue").unwrap();
         let range = HouseNumberRange::new(100, 110);
         let mut map = HashMap::new();
         map.insert(street, vec![range]);
-        HouseNumberAggregator::new_with_map(&WorldRegion::default(),map)
+        HouseNumberAggregator::new_with_map(&md_region(), map)
     }
-
-    /// By default, `store_house_number_aggregator_results(...)` is what does the real DB I/O.
-    /// If you want to test an error scenario, you might intercept that function or mock it.
-    /// Below we rely on the real function for success cases and show
-    /// a technique for *optionally* injecting an error via a custom DB approach if needed.
 
     // ---------------------------------------------------------------------
     // 1) test with an empty aggregator => no actual writes
@@ -105,7 +102,6 @@ mod attempt_storing_house_number_aggregator_in_db_tests {
 
         // There's no easy way to confirm the actual warning log, but at least we confirm
         // it doesn't panic and doesn't store anything.
-        // If you'd like, you can see that the aggregator is not stored.
         let try_lock = db_arc.lock();
         assert!(
             try_lock.is_err(),
@@ -116,8 +112,6 @@ mod attempt_storing_house_number_aggregator_in_db_tests {
     // ---------------------------------------------------------------------
     // 4) optional test if you can mock or simulate store errors
     // ---------------------------------------------------------------------
-    // This scenario requires either a custom DB or hooking `store_house_number_aggregator_results`
-    // to force an error. We'll illustrate how it might look logically:
     #[traced_test]
     fn test_attempt_storing_house_number_aggregator_in_db_error_storing() {
         // If your real code does not provide a direct way to simulate an error from store_house_number_aggregator_results,

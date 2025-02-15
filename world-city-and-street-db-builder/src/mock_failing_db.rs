@@ -246,6 +246,18 @@ impl FailingStoreDatabase {
     pub fn set_existing(&mut self, existing: Vec<HouseNumberRange>) {
         self.existing = existing;
     }
+
+    /// Allows us to store data directly into the underlying real DB
+    /// without triggering the "SimulatedStoreFailure" override.
+    pub fn store_ranges_via_inner(
+        &mut self,
+        region: &WorldRegion,
+        street: &StreetName,
+        ranges: &[HouseNumberRange],
+    ) -> Result<(), DatabaseConstructionError> {
+        // Use self.inner's store method, which is the real DB
+        self.inner.store_house_number_ranges(region, street, ranges)
+    }
 }
 
 impl OpenDatabaseAtPath for FailingStoreDatabase {

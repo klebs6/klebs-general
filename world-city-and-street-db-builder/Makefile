@@ -16,27 +16,15 @@ TEST_FILE  := tests/test_scale_layer.rs
 #-------------------------------------[done-below]
 ACTIVE_PACKAGE := world-city-and-street-db-builder
 #-----------------------------------------------------[]
-#INDIVIDUAL_TEST := address_record_tests
-#INDIVIDUAL_TEST := attempt_storing_house_number_aggregator_in_db_tests
-#INDIVIDUAL_TEST := build_all_region_data_tests
-#INDIVIDUAL_TEST := collect_address_and_housenumber_data_tests
-#INDIVIDUAL_TEST := extract_city_from_key_tests
-#INDIVIDUAL_TEST := house_number_aggregator_tests
-#INDIVIDUAL_TEST := test_database_put_get
-#INDIVIDUAL_TEST := test_integrate_house_number_subranges_for_street
-#INDIVIDUAL_TEST := test_load_existing_street_ranges
-#INDIVIDUAL_TEST := test_load_osm_data_with_housenumbers
-#INDIVIDUAL_TEST := test_merge_new_subranges
-#INDIVIDUAL_TEST := test_mock_node
-#INDIVIDUAL_TEST := test_obtain_pbf_file_for_region
-#INDIVIDUAL_TEST := test_open_pbf_reader_or_report_error
-#INDIVIDUAL_TEST := test_parse_address_record_if_any
-#INDIVIDUAL_TEST := test_parse_integer
-#INDIVIDUAL_TEST := test_process_and_validate_addresses
-#INDIVIDUAL_TEST := test_process_single_osm_element
-#INDIVIDUAL_TEST := test_store_house_number_ranges
-#INDIVIDUAL_TEST := test_store_merged_house_number_ranges
-INDIVIDUAL_TEST := test_try_assemble_address_record
+INDIVIDUAL_TEST := test_load_all_cities_for_region
+
+INDIVIDUAL_TEST := write_be_u32
+INDIVIDUAL_TEST := write_indices
+#INDIVIDUAL_TEST := write_osm_pbf_file
+#INDIVIDUAL_TEST := write_postal_codes_to_region_and_city
+#INDIVIDUAL_TEST := write_postal_codes_to_region_and_street
+#INDIVIDUAL_TEST := write_streets_to_region_and_city
+#INDIVIDUAL_TEST := write_streets_to_region_and_postal_code
 
 #-----------------------------------------------------[this section lets us choose how we want to test]
 DEFAULT := test

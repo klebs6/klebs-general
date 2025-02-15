@@ -1,7 +1,6 @@
 // ---------------- [ File: src/parse_integer.rs ]
 crate::ix!();
 
-/// Parses a string as an unsigned integer (`u32`). Returns a domain error if invalid.
 pub fn parse_integer(
     s: &str,
     element_id: i64,
@@ -12,15 +11,33 @@ pub fn parse_integer(
         element_id
     );
 
-    s.parse::<u32>().map_err(|parse_err| {
+    // 1) Trim leading/trailing whitespace
+    let trimmed = s.trim();
+
+    // 2) If trimming leaves empty, return an error
+    if trimmed.is_empty() {
         error!(
-            "parse_integer: unable to parse '{}' as u32 (element_id={}): {}",
-            s, element_id, parse_err
+            "parse_integer: cannot parse empty or whitespace-only string (element_id={})",
+            element_id
         );
-        IncompatibleOsmPbfElement::IncompatibleOsmPbfNode(
+        return Err(IncompatibleOsmPbfElement::IncompatibleOsmPbfNode(
             IncompatibleOsmPbfNode::Incompatible { id: element_id }
-        )
-    })
+        ));
+    }
+
+    // 3) Attempt to parse the trimmed string
+    match trimmed.parse::<u32>() {
+        Ok(val) => Ok(val),
+        Err(parse_err) => {
+            error!(
+                "parse_integer: unable to parse '{}' as u32 (element_id={}): {}",
+                s, element_id, parse_err
+            );
+            Err(IncompatibleOsmPbfElement::IncompatibleOsmPbfNode(
+                IncompatibleOsmPbfNode::Incompatible { id: element_id }
+            ))
+        }
+    }
 }
 
 #[cfg(test)]
