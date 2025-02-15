@@ -1,5 +1,4 @@
 // ---------------- [ File: src/collect_tags.rs ]
-// ---------------- [ File: src/collect_tags.rs ]
 crate::ix!();
 
 /// Collect tags into a [`HashMap`], generic over any iterator of

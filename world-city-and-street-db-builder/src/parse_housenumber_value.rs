@@ -13,6 +13,25 @@ pub fn parse_housenumber_value(
     element_id: i64,
 ) -> Result<Option<HouseNumberRange>, IncompatibleOsmPbfElement> {
 
+    let hn_value = hn_value.trim();
+
+    // Grab the leading digit sequence only (stop at first non-digit).
+    let numeric_prefix: String = hn_value
+        .chars()
+        .take_while(|ch| ch.is_ascii_digit())
+        .collect();
+
+    // If no digits at all, skip it
+    if numeric_prefix.is_empty() {
+        debug!(
+            "parse_house_number_value: skipping '{}'; element_id={} => no leading digits",
+            hn_value, element_id
+        );
+        return Ok(None);
+    }
+
+    let hn_value = numeric_prefix;
+
     trace!(
         "parse_housenumber_value: attempting to parse='{}' (element_id={})",
         hn_value,
@@ -43,7 +62,7 @@ pub fn parse_housenumber_value(
         Ok(Some(range))
     } else {
         // single integer
-        let single_num = parse_integer(hn_value, element_id)?;
+        let single_num = parse_integer(&hn_value, element_id)?;
         let range = HouseNumberRange::new(single_num, single_num);
         debug!(
             "parse_housenumber_value: parsed single '{}' => {:?} (element_id={})",

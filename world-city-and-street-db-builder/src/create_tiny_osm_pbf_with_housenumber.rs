@@ -1,5 +1,4 @@
 // ---------------- [ File: src/create_tiny_osm_pbf_with_housenumber.rs ]
-// ---------------- [ File: src/create_tiny_osm_pbf_with_housenumber.rs ]
 crate::ix!();
 
 /// Thin wrapper around [`create_small_osm_pbf_file`] producing a single Node

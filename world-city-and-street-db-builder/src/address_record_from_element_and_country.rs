@@ -76,11 +76,11 @@ macro_rules! generate_osm_address_record_converters {
 
                 match try_build_address_record_from_tags(tag_iter, country, id) {
                     Ok(record) => {
-                        trace!("Successfully converted {} (id={}) into AddressRecord", $label, id);
+                        //trace!("Successfully converted {} (id={}) into AddressRecord", $label, id);
                         Ok(record)
                     }
                     Err(e) => {
-                        error!("Failed to convert {} (id={}): {:?}", $label, id, e);
+                        //error!("Failed to convert {} (id={}): {:?}", $label, id, e);
                         Err(match e {
                             IncompatibleOsmPbfElement::IncompatibleOsmPbfNode(node_err) => {
                                 $err_mapping(id, node_err)

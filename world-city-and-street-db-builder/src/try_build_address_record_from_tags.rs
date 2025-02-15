@@ -40,7 +40,7 @@ pub fn try_build_address_record_from_tags<'a>(
     // 3. Assemble the final [`AddressRecord`].
     let record = try_assemble_address_record(city, street, postcode, element_id)?;
 
-    info!("try_build_address_record_from_tags: Successfully built AddressRecord for element_id={}", element_id);
+    trace!("try_build_address_record_from_tags: Successfully built AddressRecord for element_id={}", element_id);
     Ok(record)
 }
 

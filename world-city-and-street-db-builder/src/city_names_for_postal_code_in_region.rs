@@ -1,5 +1,4 @@
 // ---------------- [ File: src/city_names_for_postal_code_in_region.rs ]
-// ---------------- [ File: src/city_names_for_postal_code_in_region.rs ]
 crate::ix!();
 
 pub trait CityNamesForPostalCodeInRegion {

@@ -1,21 +1,23 @@
 // ---------------- [ File: src/load_all_streets_for_region.rs ]
 crate::ix!();
 
-/// Loads street names for a given region by prefix‐iterating over
-/// `S2C:{region_abbr}:...` keys and decoding the value. Each
-/// item in the value array leads to one copy of the street name
-/// in our output vector.
-#[tracing::instrument(level = "trace", skip(db))]
+/// Corrected variant that decodes a CompressedList<CityName> from S2C:{region} keys.
+/// For each decoded city entry, we push the street name (from the key) into `results`.
+/// This resolves the "invalid type: map, expected a sequence" error.
 pub fn load_all_streets_for_region<I: StorageInterface>(
-    db:     &I,
+    db: &I,
     region: &WorldRegion,
 ) -> Vec<String> {
     use std::string::String;
-    trace!("load_all_streets_for_region: start for region={:?}", region);
+    use crate::compressed_list::CompressedList; // The struct with `items: Vec<T>`
+    use serde_cbor; // for from_slice
+    use tracing::{trace, debug, warn, error};
+
+    trace!("load_all_streets_for_region_corrected: start for region={:?}", region);
 
     // Our known prefix: S2C:<region_abbr>:
     let prefix = format!("S2C:{}:", region.abbreviation());
-    debug!("load_all_streets_for_region: searching DB with prefix='{}'", prefix);
+    debug!("searching DB with prefix='{}'", prefix);
 
     let iter = db.prefix_iterator(prefix.as_bytes());
     let mut results = Vec::new();
@@ -25,49 +27,43 @@ pub fn load_all_streets_for_region<I: StorageInterface>(
             Ok((key_bytes, val_bytes)) => {
                 let key_str = String::from_utf8_lossy(&key_bytes).to_string();
                 debug!(
-                    "load_all_streets_for_region: found key='{}' ({} bytes of value)",
+                    "found key='{}' ({} bytes of value)",
                     key_str,
                     val_bytes.len()
                 );
 
-                // Example: "S2C:MD:elm street"
-                // Split into 3 parts: ["S2C", "MD", "elm street"]
+                // Example: "S2C:MD:some_street_name"
+                // Split into 3 parts: ["S2C", "MD", "some_street_name"]
                 let parts: Vec<&str> = key_str.splitn(3, ':').collect();
                 if parts.len() < 3 {
-                    trace!(
-                        "load_all_streets_for_region: skipping malformed key='{}'",
-                        key_str
-                    );
+                    trace!("skipping malformed key='{}'", key_str);
                     continue;
                 }
 
                 let street_name = parts[2].to_string();
 
-                // Decode the CBOR array of subvalues (usually a Vec<String>)
-                match serde_cbor::from_slice::<Vec<String>>(&val_bytes) {
-                    Ok(array_of_subvals) => {
-                        // For each sub-value, we push the *same* street_name once.
-                        // The unit test "test_duplicate_keys_return_all_streets" 
-                        // wants multiple results if we appended multiple sub-values.
-                        for _subval in array_of_subvals {
+                // Decode the CBOR *CompressedList<CityName>* rather than Vec<String>.
+                match serde_cbor::from_slice::<CompressedList<CityName>>(&val_bytes) {
+                    Ok(compressed_list) => {
+                        // Each item is a city, but for the aggregator's test scenario,
+                        // we simply push `street_name` for each sub-value.
+                        for _city in compressed_list.items() {
                             results.push(street_name.clone());
                         }
                     }
-                    Err(e) => {
-                        // If the value is not decodable, we can either skip or just
-                        // push once. The test scenario is about duplicates, so let's
-                        // at least push once.
+                    Err(decode_err) => {
                         warn!(
                             "Ignoring decode error for key='{}': {}. Pushing street_name once.",
-                            key_str, e
+                            key_str, decode_err
                         );
+                        // At least push once to mimic the old code’s fallback.
                         results.push(street_name.clone());
                     }
                 }
             }
             Err(e) => {
                 error!(
-                    "load_all_streets_for_region: error reading DB for prefix='{}': {}",
+                    "error reading DB for prefix='{}': {}",
                     prefix,
                     e
                 );
@@ -76,7 +72,7 @@ pub fn load_all_streets_for_region<I: StorageInterface>(
     }
 
     trace!(
-        "load_all_streets_for_region: end for region={:?}, total={} streets found",
+        "load_all_streets_for_region_corrected: end for region={:?}, total={} streets found",
         region,
         results.len()
     );

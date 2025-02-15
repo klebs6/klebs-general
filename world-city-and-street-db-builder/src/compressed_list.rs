@@ -1,5 +1,4 @@
 // ---------------- [ File: src/compressed_list.rs ]
-// ---------------- [ File: src/compressed_list.rs ]
 crate::ix!();
 
 /// A simple wrapper for a list of strings that can be compressed.

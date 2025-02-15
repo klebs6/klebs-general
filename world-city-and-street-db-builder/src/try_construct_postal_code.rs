@@ -1,26 +1,59 @@
 // ---------------- [ File: src/try_construct_postal_code.rs ]
 crate::ix!();
 
-/// Attempts to create a `PostalCode` from a string (if present). Returns an error
-/// if construction fails.
+/// Try to parse the `postcode_raw` as one or more codes separated by `';'`.
+/// Returns `Ok(Some(PostalCode))` if at least one is valid, `Ok(None)` if `postcode_raw` is `None`,
+/// or `Err(...)` if *all* subcodes are invalid.
+#[tracing::instrument(level = "trace", skip_all)]
 pub fn try_construct_postal_code(
     country: Country,
     postcode_raw: Option<&str>,
     element_id: i64,
 ) -> Result<Option<PostalCode>, IncompatibleOsmPbfElement> {
+    use tracing::{debug, error};
+
     if let Some(raw_value) = postcode_raw {
-        trace!("try_construct_postal_code: Parsing postcode for element_id={}", element_id);
-        match PostalCode::new(country, raw_value) {
-            Ok(pc) => Ok(Some(pc)),
-            Err(e) => {
-                error!("try_construct_postal_code: PostalCode construction error for element_id={}: {:?}", element_id, e);
-                Err(IncompatibleOsmPbfElement::IncompatibleOsmPbfNode(
-                    IncompatibleOsmPbfNode::PostalCodeConstructionError(e),
-                ))
+        // Split on semicolons to handle multiple codes like "23060;23233"
+        let candidates: Vec<&str> = raw_value.split(';').map(|s| s.trim()).collect();
+
+        // Try each sub‐code; keep the first one that parses successfully
+        for candidate in &candidates {
+            if candidate.is_empty() {
+                continue; // skip empty piece
+            }
+            match PostalCode::new(country, candidate) {
+                Ok(pc) => {
+                    debug!(
+                        "try_construct_postal_code: sub-code '{}' is valid => {}",
+                        candidate, pc.code()
+                    );
+                    return Ok(Some(pc));
+                }
+                Err(err) => {
+                    error!(
+                        "try_construct_postal_code: sub-code '{}' failed parse => {:?}",
+                        candidate, err
+                    );
+                    // but keep trying other sub‐codes
+                }
             }
         }
+
+        // If we reach here, *none* of the sub‐codes were valid
+        error!(
+            "try_construct_postal_code: all sub‐codes invalid. Original='{}' (element_id={})",
+            raw_value, element_id
+        );
+        return Err(IncompatibleOsmPbfElement::IncompatibleOsmPbfNode(
+            IncompatibleOsmPbfNode::PostalCodeConstructionError(
+                crate::PostalCodeConstructionError::InvalidFormat {
+                    attempted_code: raw_value.to_string(),
+                    attempted_country: Some(country),
+                }
+            )
+        ));
     } else {
-        debug!("try_construct_postal_code: No postcode tag for element_id={}", element_id);
+        // If no postcode tag at all, this is not an error; just "None".
         Ok(None)
     }
 }
