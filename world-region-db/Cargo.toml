@@ -1,0 +1,76 @@
+[package]
+name = "world-region-db"
+version = "0.1.0"
+edition = "2024"
+
+[[bin]]
+name = "world-city-and-street-db-builder"
+path = "src/main.rs"
+
+[dependencies]
+abbreviation-trait     = "0.3.0"
+async-trait            = "*"
+disable_macro            = "*"
+byteorder              = "*"
+strum                  = "0.24"
+bytes                  = "*"
+country                = "*"
+derive_builder         = "*"
+error-tree             = "*"
+export-magic           = "*"
+file-downloader        = "0.2.0"
+osmpbf-file-downloader-derive = "*"
+file-downloader-derive = "*"
+futures-util           = "0.3"
+getset                 = "*"
+libc                   = "*"
+md5                    = "*"
+once_cell              = "*"
+os_pipe                = "*"
+osmpbf                 = "*"
+postal-code            = "*"
+reqwest                = { version = "0.11", features = ["blocking", "json", "stream"] }
+rocksdb                = "0.20"
+serde                  = { version = "1", features    = ["derive"] }
+serde_cbor             = {version = "0.11", features = ["unsealed_read_write"] }
+serial_test            = "*"
+structopt              = "0.3"
+tempfile               = "3"
+tokio                  = { version = "1", features    = ["full"] }
+traced-test            = "*"
+tracing                = "*"
+tracing-setup          = "*"
+tracing-subscriber     = "0.3"
+usa                    = "0.8.0"
+europe                 = "0.7.0"
+world-region           = { version = "0.6.0", path = "../world-region" }
+prost                  = "0.11"
+fuzzy-matcher          = "*"
+rustyline              = "*"
+
+[dev-dependencies]
+osm-pbf = "*"
+
+[build-dependencies]
+prost-build = "0.11"
+
+[dependencies.protobuf]
+version = "3.1"
+
+[build-dependencies.protobuf-codegen]
+version = "3.1"
+
+[[test]]
+name = "manual_harness"
+path = "tests/manual_harness.rs"
+harness = false
+
+[[test]]
+name = "stdout_backup_harness"
+path = "tests/stdout_backup_harness.rs"
+harness = false
+
+[[test]]
+name = "db_decoder"
+path = "tests/db_decoder_harness.rs"
+harness = false
