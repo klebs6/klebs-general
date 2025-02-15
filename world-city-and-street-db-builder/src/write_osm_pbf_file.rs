@@ -205,14 +205,15 @@ mod test_write_osm_pbf_file {
         let temp_dir = TempDir::new().expect("temp dir");
         let pbf_path = temp_dir.path().join("empty_blobs.osm.pbf");
 
-        // Build an empty Blob + BlobHeader for the first block
-        let header_blob_bytes = make_blob(&[]);  // no data
+        // These produce a valid BlobHeader & Blob with zero-length raw data,
+        // but the protobuf serialization is NOT an empty Vec.
+        let header_blob_bytes = make_blob(&[]);
         let header_blobheader_bytes = make_blobheader("OSMHeader", header_blob_bytes.len());
 
-        // Build an empty Blob + BlobHeader for the second block
         let data_blob_bytes = make_blob(&[]);
         let data_blobheader_bytes = make_blobheader("OSMData", data_blob_bytes.len());
 
+        // write the file
         write_osm_pbf_file(
             &pbf_path,
             &header_blobheader_bytes,
@@ -223,20 +224,27 @@ mod test_write_osm_pbf_file {
             .await
             .expect("Should succeed even if zero-length");
 
+        // read
         let mut file = tokio::fs::File::open(&pbf_path).await
             .expect("open file for reading");
 
-        let (empty_hbh, empty_hb) = read_pbf_block(&mut file).await
+        // block #1
+        let (hbh_data, hb_data) = read_pbf_block(&mut file).await
             .expect("reading first block");
-        assert!(empty_hb.is_empty(),  "header_blob was zero-length");
-        // The hbh_data itself is *not* necessarily empty at the byte level
-        // because a real proto with datasize=0 might be a few bytes.
-        // But if you want to confirm it’s the same bytes you wrote:
-        assert_eq!(empty_hbh, header_blobheader_bytes);
+        assert_eq!(hbh_data, header_blobheader_bytes);
 
-        let (empty_dbh, empty_db) = read_pbf_block(&mut file).await
+        // Instead of `assert!(hb_data.is_empty())`, parse it and check `.raw` is empty:
+        let parsed_header_blob = fileformat::Blob::parse_from_bytes(&hb_data).unwrap();
+        assert_eq!(parsed_header_blob.raw_size(), 0);
+        assert!(parsed_header_blob.raw().is_empty());
+
+        // block #2
+        let (dbh_data, db_data) = read_pbf_block(&mut file).await
             .expect("reading second block");
-        assert!(empty_db.is_empty(),  "data_blob was zero-length");
-        assert_eq!(empty_dbh, data_blobheader_bytes);
+        assert_eq!(dbh_data, data_blobheader_bytes);
+
+        let parsed_data_blob = fileformat::Blob::parse_from_bytes(&db_data).unwrap();
+        assert_eq!(parsed_data_blob.raw_size(), 0);
+        assert!(parsed_data_blob.raw().is_empty());
     }
 }
