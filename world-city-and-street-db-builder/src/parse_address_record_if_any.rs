@@ -81,8 +81,8 @@ mod test_parse_address_record_if_any {
 
         let record_opt = parse_address_record_if_any(&node.as_element(), &test_country());
         assert!(
-            record_opt.is_none(),
-            "Expected None if missing at least street or postcode"
+            record_opt.is_some(),
+            "Expected Some even though missing at least street or postcode"
         );
     }
 
@@ -136,6 +136,6 @@ mod test_parse_address_record_if_any {
         let node = MockNode::new(6006, tags);
 
         let record_opt = parse_address_record_if_any(&node.as_element(), &test_country());
-        assert!(record_opt.is_none());
+        assert!(record_opt.is_some());
     }
 }

@@ -12,63 +12,70 @@ pub fn parse_housenumber_value(
     hn_value: &str,
     element_id: i64,
 ) -> Result<Option<HouseNumberRange>, IncompatibleOsmPbfElement> {
-
-    let hn_value = hn_value.trim();
-
-    // Grab the leading digit sequence only (stop at first non-digit).
-    let numeric_prefix: String = hn_value
-        .chars()
-        .take_while(|ch| ch.is_ascii_digit())
-        .collect();
-
-    // If no digits at all, skip it
-    if numeric_prefix.is_empty() {
+    // Trim the incoming string
+    let s = hn_value.trim();
+    if s.is_empty() {
+        // In this implementation, we interpret an empty or all-whitespace value
+        // as "nothing to parse," hence Ok(None). You can decide whether
+        // this should be an error instead, depending on your needs.
         debug!(
-            "parse_house_number_value: skipping '{}'; element_id={} => no leading digits",
-            hn_value, element_id
+            "parse_housenumber_value: skipping empty string => no digits (element_id={})",
+            element_id
         );
         return Ok(None);
     }
 
-    let hn_value = numeric_prefix;
-
     trace!(
         "parse_housenumber_value: attempting to parse='{}' (element_id={})",
-        hn_value,
+        s,
         element_id
     );
 
-    if let Some(idx) = hn_value.find('-') {
-        let (start_str, rest) = hn_value.split_at(idx);
-        // skip the dash
-        let end_str = &rest[1..];
+    // Split on '-' and trim around each portion
+    let parts: Vec<&str> = s.split('-').map(|part| part.trim()).collect();
 
-        let start_num = parse_integer(start_str.trim(), element_id)?;
-        let end_num = parse_integer(end_str.trim(), element_id)?;
-
-        if start_num > end_num {
+    match parts.len() {
+        1 => {
+            // No dash present => parse as a single integer
+            let number = parse_integer(parts[0], element_id)?;
+            let range = HouseNumberRange::new(number, number);
             debug!(
-                "parse_housenumber_value: reversed or invalid range '{}-{}' => ignoring (element_id={})",
-                start_num, end_num, element_id
+                "parse_housenumber_value: parsed single '{}' => {:?} (element_id={})",
+                s, range, element_id
             );
-            return Ok(None);
+            Ok(Some(range))
         }
+        2 => {
+            // One dash present => parse start and end
+            let start_num = parse_integer(parts[0], element_id)?;
+            let end_num = parse_integer(parts[1], element_id)?;
 
-        let range = HouseNumberRange::new(start_num, end_num);
-        debug!(
-            "parse_housenumber_value: parsed valid range '{}' => {:?} (element_id={})",
-            hn_value, range, element_id
-        );
-        Ok(Some(range))
-    } else {
-        // single integer
-        let single_num = parse_integer(&hn_value, element_id)?;
-        let range = HouseNumberRange::new(single_num, single_num);
-        debug!(
-            "parse_housenumber_value: parsed single '{}' => {:?} (element_id={})",
-            hn_value, range, element_id
-        );
-        Ok(Some(range))
+            if start_num > end_num {
+                // We treat reversed or invalid ranges as ignorable => Ok(None)
+                debug!(
+                    "parse_housenumber_value: reversed or invalid range '{}-{}' => ignoring (element_id={})",
+                    start_num, end_num, element_id
+                );
+                Ok(None)
+            } else {
+                let range = HouseNumberRange::new(start_num, end_num);
+                debug!(
+                    "parse_housenumber_value: parsed valid range '{}' => {:?} (element_id={})",
+                    s, range, element_id
+                );
+                Ok(Some(range))
+            }
+        }
+        _ => {
+            // More than one dash => cannot parse it properly
+            debug!(
+                "parse_housenumber_value: invalid format => multiple dashes => parse error (element_id={})",
+                element_id
+            );
+            Err(IncompatibleOsmPbfElement::IncompatibleOsmPbfNode(
+                IncompatibleOsmPbfNode::Incompatible { id: element_id },
+            ))
+        }
     }
 }
 
@@ -206,7 +213,7 @@ mod test_parse_housenumber_value {
 
     #[traced_test]
     fn test_range_with_extra_dash_in_end_portion() {
-        // "10-20-30" => we do `find('-')`, giving start=10, end_str="20-30", parse => fail
+        // "10-20-30" => we do split on '-', giving ["10", "20", "30"], parse => fail
         let res = parse_housenumber_value("10-20-30", 6);
         let err = assert_err(res);
         match err {
@@ -227,14 +234,14 @@ mod test_parse_housenumber_value {
 
     #[traced_test]
     fn test_zero_as_valid_single_number() {
-        // It's not explicitly disallowed, so "0" => HouseNumberRange(0..=0).
+        // "0" => HouseNumberRange(0..=0)
         let res = parse_housenumber_value("0", 10);
         assert_ok_some(res, 0, 0);
     }
 
     #[traced_test]
     fn test_leading_dash_is_non_numeric() {
-        // e.g. "- 20" => parse fails for the start half
+        // "- 20" => split => ["", "20"] => the first piece is empty => parse fails
         let res = parse_housenumber_value("- 20", 11);
         let err = assert_err(res);
         match err {

@@ -228,6 +228,9 @@ mod collect_address_and_housenumber_data_tests {
     fn test_collect_address_and_housenumber_data_two_nodes_no_housenumber() {
         let tmp = TempDir::new().unwrap();
         let path = tmp.path().join("two_nodes.osm.pbf");
+        // Node #1 => "testcity", "teststreet", "99999"
+        // Node #2 => city="testcity" only
+        // No housenumber => aggregator stays empty
         create_test_pbf_two_nodes(&path, None).unwrap();
 
         let reader = osmpbf::ElementReader::from_path(&path).unwrap();
@@ -239,15 +242,27 @@ mod collect_address_and_housenumber_data_tests {
         let result = collect_address_and_housenumber_data(reader, &country, &mut addresses, &mut aggregator);
         assert!(result.is_ok());
 
-        // Node #1 => city="testcity", street="teststreet", pc="99999" => => 1 address
-        // Node #2 => missing street => skip
-        assert_eq!(addresses.len(), 1, "Should capture Node #1 as an address, skip #2");
-        let rec = &addresses[0];
-        assert_eq!(rec.city().as_ref().unwrap().name(), "testcity");
-        assert_eq!(rec.street().as_ref().unwrap().name(), "teststreet");
-        assert_eq!(rec.postcode().as_ref().unwrap().code(), "99999");
+        // Now we expect BOTH Node #1 and Node #2 to yield an AddressRecord 
+        // because partial is accepted. So, addresses.len() should be 2.
+        assert_eq!(
+            addresses.len(),
+            2,
+            "Now we allow partial => both nodes become addresses"
+        );
 
-        // aggregator => no housenumber => aggregator empty
+        // Check Node #1 (index=0)
+        let rec1 = &addresses[0];
+        assert_eq!(rec1.city().as_ref().unwrap().name(), "testcity");
+        assert_eq!(rec1.street().as_ref().unwrap().name(), "teststreet");
+        assert_eq!(rec1.postcode().as_ref().unwrap().code(), "99999");
+
+        // Check Node #2 (index=1)
+        let rec2 = &addresses[1];
+        assert_eq!(rec2.city().as_ref().unwrap().name(), "testcity");
+        assert!(rec2.street().is_none(), "No street => none is valid");
+        assert!(rec2.postcode().is_none(), "No postcode => none is valid");
+
+        // aggregator => still empty, no housenumber 
         assert!(aggregator.is_empty());
     }
 
@@ -255,8 +270,8 @@ mod collect_address_and_housenumber_data_tests {
     fn test_collect_address_and_housenumber_data_two_nodes_with_housenumber() {
         let tmp = TempDir::new().unwrap();
         let path = tmp.path().join("two_nodes_hn.osm.pbf");
-        // Node #1 => city="TestCity", street="TestStreet", pc="99999", housenumber="100-110"
-        // Node #2 => partial => skip
+        // Node #1 => city="testcity", street="teststreet", zip="99999", housenumber="100-110"
+        // Node #2 => partial => city only
         create_test_pbf_two_nodes(&path, Some("100-110")).unwrap();
 
         let reader = osmpbf::ElementReader::from_path(&path).unwrap();
@@ -268,21 +283,28 @@ mod collect_address_and_housenumber_data_tests {
         let res = collect_address_and_housenumber_data(reader, &country, &mut addresses, &mut aggregator);
         assert!(res.is_ok());
 
-        // addresses => Node #1 => has city/street/postal => 1 address
-        assert_eq!(addresses.len(), 1);
-        let rec = &addresses[0];
-        assert_eq!(rec.city().as_ref().unwrap().name(), "testcity");
-        assert_eq!(rec.street().as_ref().unwrap().name(), "teststreet");
-        assert_eq!(rec.postcode().as_ref().unwrap().code(), "99999");
+        // Now we accept partial => we get 2 addresses, not just 1
+        assert_eq!(addresses.len(), 2);
 
-        // aggregator => Node #1 => "100-110"
-        assert_eq!(aggregator.len(), 1, "One street => aggregator entry");
+        // [0] => node #1 with full fields
+        let rec1 = &addresses[0];
+        assert_eq!(rec1.city().as_ref().unwrap().name(), "testcity");
+        assert_eq!(rec1.street().as_ref().unwrap().name(), "teststreet");
+        assert_eq!(rec1.postcode().as_ref().unwrap().code(), "99999");
+
+        // aggregator => single subrange for "teststreet" => 100..=110
+        assert_eq!(aggregator.len(), 1);
         let street = StreetName::new("TestStreet").unwrap();
         let rng_vec = aggregator.get(&street).expect("street aggregator found");
         assert_eq!(rng_vec.len(), 1);
-        let hnr = &rng_vec[0];
-        assert_eq!(hnr.start(), &100);
-        assert_eq!(hnr.end(), &110);
+        assert_eq!(rng_vec[0].start(), &100);
+        assert_eq!(rng_vec[0].end(), &110);
+
+        // [1] => node #2 => city‐only
+        let rec2 = &addresses[1];
+        assert_eq!(rec2.city().as_ref().unwrap().name(), "testcity");
+        assert!(rec2.street().is_none());
+        assert!(rec2.postcode().is_none());
     }
 
     // If you want to test extremely large files or performance, you can do so by 

@@ -1,6 +1,9 @@
 // ---------------- [ File: src/chain_addresses_across_files.rs ]
 crate::ix!();
 
+/// A revised version of `chain_addresses_across_files` that adds more
+/// fine-grained debug/info logs about which files match which region.
+///
 /// Builds a single chained iterator of [`WorldAddress`] across all `.pbf` files.
 /// For each file, we attempt to determine the region and parse the file, skipping
 /// those with unknown regions.
@@ -9,37 +12,56 @@ crate::ix!();
 ///
 /// * `Ok(Box<dyn Iterator<Item = Result<WorldAddress, OsmPbfParseError>>>)` on success.
 /// * `Err(OsmPbfParseError)` if an error arises parsing a given file.
-pub fn chain_addresses_across_files<I:StorageInterface + 'static>(
+///
+pub fn chain_addresses_across_files<I: StorageInterface + 'static>(
     pbf_files:     Vec<PathBuf>,
     known_regions: &[WorldRegion],
     db:            Arc<Mutex<I>>,
     pbf_dir:       &Path,
 ) -> Result<Box<dyn Iterator<Item = Result<WorldAddress, OsmPbfParseError>>>, OsmPbfParseError> {
-    trace!("chain_addresses_across_files: building iterator for {} files", pbf_files.len());
+    use std::iter;
+    use tracing::{info, debug, warn, trace};
 
-    // Start with an empty iterator
+    trace!(
+        "chain_addresses_across_files_with_logging: building iterator for {} pbf files",
+        pbf_files.len()
+    );
+
     let mut chained_iter = Box::new(iter::empty()) as Box<dyn Iterator<Item = _>>;
+    let mut recognized_count = 0usize;
+    let mut unrecognized_count = 0usize;
 
     for file_path in pbf_files {
         match find_region_for_file(&file_path, known_regions, pbf_dir)? {
             Some(region) => {
+                recognized_count += 1;
                 debug!(
-                    "chain_addresses_across_files: associating file {:?} with region={:?}",
+                    "chain_addresses_across_files_with_logging: associating {:?} with region={:?}",
                     file_path, region
                 );
+                // build the file_iter
                 let file_iter = addresses_from_pbf_file_with_house_numbers(
-                    file_path,
+                    file_path.clone(),
                     region,
-                    db.clone()
+                    db.clone(),
                 )?;
-                // Chain it to the existing iterator
+                // chain it
                 chained_iter = Box::new(chained_iter.chain(file_iter));
             }
             None => {
-                warn!("chain_addresses_across_files: could not determine region for file {:?}; skipping", file_path);
+                unrecognized_count += 1;
+                warn!(
+                    "chain_addresses_across_files_with_logging: could not determine region for file {:?}; skipping",
+                    file_path
+                );
             }
         }
     }
+
+    info!(
+        "chain_addresses_across_files_with_logging: recognized {} files, skipped {} unknown region files",
+        recognized_count, unrecognized_count
+    );
 
     Ok(chained_iter)
 }

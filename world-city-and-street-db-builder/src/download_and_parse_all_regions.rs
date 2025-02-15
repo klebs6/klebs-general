@@ -1,5 +1,4 @@
 // ---------------- [ File: src/download_and_parse_all_regions.rs ]
-// ---------------- [ File: src/download_and_parse_all_regions.rs ]
 crate::ix!();
 
 /// Download and parse all specified regions, skipping those already built.
@@ -15,35 +14,93 @@ pub async fn download_and_parse_regions<I:StorageInterface>(
     Ok(())
 }
 
-pub async fn download_and_parse_region<I:StorageInterface>(
+/// Improved version of `download_and_parse_region` with extra debug logging
+/// to show each step's progress. In your production code, you can merge these
+/// log lines into the existing `download_and_parse_region(...)`.
+pub async fn download_and_parse_region<I: StorageInterface>(
     region:           &WorldRegion,
     target_dir:       impl AsRef<Path> + Send + Sync,
     db:               &mut I,
     write_to_storage: bool,
 ) -> Result<(), WorldCityAndStreetDbBuilderError> {
-
+    use tracing::{trace, debug, info, warn, error};
+    
     info!("Processing region: {:?}", region);
 
-    // Check if region is already done:
-    if db.region_done(region)? {
-        info!("Region {:?} already built, skipping download & parse", region);
-        return Ok(());
+    // 1) Check if region is already done
+    match db.region_done(region) {
+        Ok(true) => {
+            info!("Region {:?} is already built. Skipping download & parse.", region);
+            return Ok(());
+        }
+        Ok(false) => {
+            debug!("Region {:?} not done yet => continuing.", region);
+        }
+        Err(e) => {
+            warn!("Could not check if region done: {:?}", e);
+            return Err(WorldCityAndStreetDbBuilderError::DataAccessError(e));
+        }
     }
 
-    let pbf_file = obtain_pbf_file_for_region(region,target_dir).await?;
+    // 2) Attempt to locate or download the region’s .pbf
+    let pbf_file = match obtain_pbf_file_for_region(region, target_dir).await {
+        Ok(path) => {
+            debug!("PBF path for region {:?} => {:?}", region, path);
+            path
+        }
+        Err(e) => {
+            error!("Could not obtain PBF file for region {:?}: {:?}", region, e);
+            return Err(e);
+        }
+    };
 
-    info!("obtained pbf_file: {:?}", pbf_file);
+    // 3) Parse the .pbf, collecting addresses & aggregator
+    info!("Parsing PBF file: {:?}", pbf_file);
+    let regional_records = match RegionalRecords::from_osm_pbf_file(*region, pbf_file) {
+        Ok(rr) => {
+            debug!(
+                "Successfully parsed {} records for region {:?}",
+                rr.len(), region
+            );
+            rr
+        }
+        Err(parse_err) => {
+            error!(
+                "Failed to parse .pbf for region {:?}: {:?}",
+                region, parse_err
+            );
+            return Err(WorldCityAndStreetDbBuilderError::OsmPbfParseError(parse_err));
+        }
+    };
 
-    let regional_records = RegionalRecords::from_osm_pbf_file(*region, pbf_file)?;
-
-    info!("scanned {} regional_records for {:?}", regional_records.len(), region);
-
+    // 4) Optionally write data to storage
     if write_to_storage {
-        regional_records.write_to_storage(db)?;
+        info!(
+            "Writing regional records to DB for region {:?} ...",
+            region
+        );
+        if let Err(e) = regional_records.write_to_storage(db) {
+            error!(
+                "Could not store region {:?} data into DB: {:?}",
+                region, e
+            );
+            return Err(WorldCityAndStreetDbBuilderError::DatabaseConstructionError(e));
+        }
+        debug!(
+            "Done storing region {:?}; total address records: {}",
+            region, regional_records.len()
+        );
+    } else {
+        trace!(
+            "write_to_storage=false => skipping DB writes for region {:?}",
+            region
+        );
     }
 
+    info!("Done processing region {:?}.", region);
     Ok(())
 }
+
 
 #[cfg(test)]
 mod download_and_parse_all_regions_tests {
