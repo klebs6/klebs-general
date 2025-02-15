@@ -1,7 +1,5 @@
 cargo-features = ["edition2024"]
 [package]
-name          = "world-region"
-version       = "0.6.0"
 authors       = [ "klebs tpk3.mx@gmail.com" ]
 categories    = ["internationalization"]
 description   = "A Rust crate providing enums and conversions for World regions and their subregions, building on the africa, europe, north-america, etc crates."
@@ -9,8 +7,10 @@ documentation = "https://docs.rs/world-region"
 edition       = "2024"
 keywords      = ["world-region", "geography", "countries", "regions", "rust"]
 license       = "MIT"
+name          = "world-region"
 readme        = "README.md"
 repository    = "https://github.com/klebs6/klebs-general"
+version       = "0.6.0"
 
 [dependencies]
 abbreviation-trait           = "0.3.0"
