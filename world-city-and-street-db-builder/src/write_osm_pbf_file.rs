@@ -1,5 +1,4 @@
 // ---------------- [ File: src/write_osm_pbf_file.rs ]
-// ---------------- [ File: src/write_osm_pbf_file.rs ]
 crate::ix!();
 
 /// Asynchronously writes two sets of BlobHeader/Blob pairs
@@ -56,72 +55,106 @@ mod test_write_osm_pbf_file {
     use std::io;
     use std::path::PathBuf;
 
-    /// Helper to read a 4-byte length prefix in big-endian and then read that many bytes.
-    /// Returns the loaded Vec of that length if successful.
-    async fn read_blob_section(file: &mut tokio::fs::File) -> io::Result<Vec<u8>> {
+    // We'll parse the actual BlobHeader with the generated fileformat code from your proto. 
+    // If your code is in crate::proto::fileformat, import it:
+    use crate::proto::fileformat; // or wherever your generated types live
+    use protobuf::Message;        // for parse_from_bytes()
+
+    /// Creates a valid BlobHeader with `datasize`, `type`, etc.
+    fn make_blobheader(blob_type: &str, datasize: usize) -> Vec<u8> {
+        let mut hdr = fileformat::BlobHeader::new();
+        hdr.set_type(blob_type.to_string()); // e.g. "OSMHeader" or "OSMData"
+        hdr.set_datasize(datasize as i32);
+        hdr.write_to_bytes().expect("BlobHeader serialization")
+    }
+
+    /// Creates a valid Blob with `raw` = `data`.
+    fn make_blob(data: &[u8]) -> Vec<u8> {
+        let mut blob = fileformat::Blob::new();
+        blob.set_raw(data.to_vec());
+        blob.set_raw_size(data.len() as i32);
+        blob.write_to_bytes().expect("Blob serialization")
+    }
+
+    /// Reads exactly one OSM PBF block (BlobHeader+Blob).
+    /// Returns (header_bytes, blob_bytes).
+    async fn read_pbf_block(file: &mut tokio::fs::File) -> io::Result<(Vec<u8>, Vec<u8>)> {
+        // 1) Read 4-byte length => size of BlobHeader
         let mut len_buf = [0u8; 4];
-        if let Err(e) = file.read_exact(&mut len_buf).await {
-            return Err(e);
-        }
-        let length = byteorder::BigEndian::read_u32(&len_buf);
-        let mut data = vec![0u8; length as usize];
-        file.read_exact(&mut data).await?;
-        Ok(data)
+        file.read_exact(&mut len_buf).await?; 
+        let blobheader_len = byteorder::BigEndian::read_u32(&len_buf);
+
+        // 2) Read that many bytes => the BlobHeader
+        let mut blobheader_data = vec![0u8; blobheader_len as usize];
+        file.read_exact(&mut blobheader_data).await?;
+
+        // 3) Parse the BlobHeader to learn how many bytes in the Blob
+        //    (the 'datasize' field):
+        let header_msg = fileformat::BlobHeader::parse_from_bytes(&blobheader_data)
+            .map_err(|e| io::Error::new(io::ErrorKind::InvalidData, e))?;
+        let datasize = header_msg.datasize() as usize;
+
+        // 4) Read exactly 'datasize' bytes => the Blob
+        let mut blob_data = vec![0u8; datasize];
+        file.read_exact(&mut blob_data).await?;
+
+        // Return them so the test can compare with the expected arrays
+        Ok((blobheader_data, blob_data))
     }
 
     #[traced_test]
     async fn test_successful_write_and_read_back() {
-        // We'll create a temp directory for the file
         let temp_dir = TempDir::new().expect("Failed to create temp dir");
         let pbf_path = temp_dir.path().join("test.osm.pbf");
 
-        // Provide some header + data blobs
-        let header_blobheader_bytes = b"HEADER_BLOB_HEADER";
-        let header_blob_bytes = b"HEADER_BLOB_DATA";
-        let data_blobheader_bytes = b"DATA_BLOB_HEADER";
-        let data_blob_bytes = b"DATA_BLOB_DATA";
+        // Suppose we want the “header” block to have some 5-byte raw data: [1,2,3,4,5].
+        // We'll actually build a real Blob for that raw data:
+        let header_blob_bytes = make_blob(&[1,2,3,4,5]);
+        // Then create a BlobHeader that says "OSMHeader" and .datasize =  the blob’s length
+        let header_blobheader_bytes = make_blobheader("OSMHeader", header_blob_bytes.len());
 
-        // (1) Call the function
+        // For the “data” block, same pattern; maybe 3 bytes: [9,9,9].
+        let data_blob_bytes = make_blob(&[9,9,9]);
+        let data_blobheader_bytes = make_blobheader("OSMData", data_blob_bytes.len());
+
+        // 1) Write the file
         write_osm_pbf_file(
             &pbf_path,
-            header_blobheader_bytes,
-            header_blob_bytes,
-            data_blobheader_bytes,
-            data_blob_bytes
-        ).await
-         .expect("Should write file successfully");
+            &header_blobheader_bytes,
+            &header_blob_bytes,
+            &data_blobheader_bytes,
+            &data_blob_bytes,
+        )
+            .await
+            .expect("Should write file successfully");
 
-        // (2) Read the file back to confirm structure
+        // 2) Read & parse
         let mut file = tokio::fs::File::open(&pbf_path).await
             .expect("Should open for reading");
 
-        // Read the first length + header blobheader
-        let hbh = read_blob_section(&mut file).await.expect("Read header_blobheader_bytes");
-        assert_eq!(hbh, header_blobheader_bytes);
+        let (hbh_data, hb_data) = read_pbf_block(&mut file).await
+            .expect("read first block");
+        // Confirm that hbh_data == the bytes we made for header_blobheader
+        assert_eq!(hbh_data, header_blobheader_bytes);
+        // Confirm that hb_data == the bytes we made for header_blob
+        assert_eq!(hb_data, header_blob_bytes);
 
-        // Next read the header blob
-        let hb = read_blob_section(&mut file).await.expect("Read header_blob_bytes");
-        assert_eq!(hb, header_blob_bytes);
-
-        // Next read the data blobheader
-        let dbh = read_blob_section(&mut file).await.expect("Read data_blobheader_bytes");
-        assert_eq!(dbh, data_blobheader_bytes);
-
-        // Finally read the data blob
-        let db = read_blob_section(&mut file).await.expect("Read data_blob_bytes");
-        assert_eq!(db, data_blob_bytes);
+        let (dbh_data, db_data) = read_pbf_block(&mut file).await
+            .expect("read second block");
+        assert_eq!(dbh_data, data_blobheader_bytes);
+        assert_eq!(db_data, data_blob_bytes);
     }
+
 
     #[traced_test]
     async fn test_cannot_create_file_returns_error() {
-        // We'll try writing to a directory path, expecting an error because we can't create a file with that name
         let temp_dir = TempDir::new().expect("temp dir");
-        let path_is_dir = temp_dir.path(); // This is a directory, not a file
+        let path_is_dir = temp_dir.path(); // a directory, not a file
 
         let header_blobheader_bytes = b"some_header";
-        let header_blob_bytes = b"some_data";
-        let data_blobheader_bytes = b"some_data_header";
-        let data_blob_bytes = b"some_data_data";
+        let header_blob_bytes       = b"some_data";
+        let data_blobheader_bytes   = b"some_data_header";
+        let data_blob_bytes         = b"some_data_data";
 
         let result = write_osm_pbf_file(
             path_is_dir,
@@ -139,30 +172,24 @@ mod test_write_osm_pbf_file {
 
     #[traced_test]
     async fn test_error_in_writing_blobheader_bytes() {
-        // We'll simulate an I/O error by opening a file in read-only mode,
-        // so writing the first length prefix fails
+        // We'll simulate an I/O error by making the file read-only (on Unix).
         let temp_dir = TempDir::new().unwrap();
         let pbf_path = temp_dir.path().join("read_only.osm.pbf");
 
         // Pre-create the file
         tokio::fs::File::create(&pbf_path).await.unwrap();
-        // Now re-open it read-only
-        let read_only_file = tokio::fs::OpenOptions::new()
-            .read(true)
-            .write(false)
-            .open(&pbf_path).await.unwrap();
-        drop(read_only_file); // Actually, we can't pass it in directly, we rely on the function to open. We'll do a trick:
 
-        // We'll remove write perms from the file on Unix. Another approach: pass an invalid path. 
+        // Attempt to remove write perms:
         #[cfg(unix)]
         {
             use std::os::unix::fs::PermissionsExt;
-            let mut perms = tokio::fs::metadata(&pbf_path).await.unwrap().permissions();
+            let meta = tokio::fs::metadata(&pbf_path).await.unwrap();
+            let mut perms = meta.permissions();
             perms.set_mode(0o444); // read-only
             tokio::fs::set_permissions(&pbf_path, perms).await.unwrap();
         }
 
-        // Now write => fails
+        // Now writing should fail
         let result = write_osm_pbf_file(
             &pbf_path,
             b"header_blobheader",
@@ -175,29 +202,41 @@ mod test_write_osm_pbf_file {
 
     #[traced_test]
     async fn test_zero_length_blobs_ok() {
-        // A corner case: zero-length header blob, zero-length data blob
         let temp_dir = TempDir::new().expect("temp dir");
         let pbf_path = temp_dir.path().join("empty_blobs.osm.pbf");
 
-        // We'll write empty arrays
+        // Build an empty Blob + BlobHeader for the first block
+        let header_blob_bytes = make_blob(&[]);  // no data
+        let header_blobheader_bytes = make_blobheader("OSMHeader", header_blob_bytes.len());
+
+        // Build an empty Blob + BlobHeader for the second block
+        let data_blob_bytes = make_blob(&[]);
+        let data_blobheader_bytes = make_blobheader("OSMData", data_blob_bytes.len());
+
         write_osm_pbf_file(
             &pbf_path,
-            &[], // header_blobheader
-            &[], // header_blob
-            &[], // data_blobheader
-            &[], // data_blob
-        ).await
-         .expect("Should succeed even if zero-length");
+            &header_blobheader_bytes,
+            &header_blob_bytes,
+            &data_blobheader_bytes,
+            &data_blob_bytes
+        )
+            .await
+            .expect("Should succeed even if zero-length");
 
-        // Let's verify the file contents:
-        // We expect 2 length prefixes => 0, then 0. Then 2 more => 0, then 0. 
-        // So total of 4 times 4 bytes of length => 16 bytes of zeros?
         let mut file = tokio::fs::File::open(&pbf_path).await
-            .expect("open file");
-        let mut contents = Vec::new();
-        file.read_to_end(&mut contents).await.unwrap();
-        // we expect 4 length prefixes, each 4 bytes, all zeros => total 16 zero bytes
-        let expected = vec![0u8; 16];
-        assert_eq!(contents, expected, "Should be 16 zero bytes for 4 length prefixes, no payloads");
+            .expect("open file for reading");
+
+        let (empty_hbh, empty_hb) = read_pbf_block(&mut file).await
+            .expect("reading first block");
+        assert!(empty_hb.is_empty(),  "header_blob was zero-length");
+        // The hbh_data itself is *not* necessarily empty at the byte level
+        // because a real proto with datasize=0 might be a few bytes.
+        // But if you want to confirm it’s the same bytes you wrote:
+        assert_eq!(empty_hbh, header_blobheader_bytes);
+
+        let (empty_dbh, empty_db) = read_pbf_block(&mut file).await
+            .expect("reading second block");
+        assert!(empty_db.is_empty(),  "data_blob was zero-length");
+        assert_eq!(empty_dbh, data_blobheader_bytes);
     }
 }

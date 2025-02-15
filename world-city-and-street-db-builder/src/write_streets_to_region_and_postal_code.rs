@@ -132,9 +132,7 @@ mod test_write_streets_to_region_and_postal_code {
 
         let result = db_stub.write_streets_to_region_and_postal_code(&region, &postal_code, &st_set);
         match result {
-            Err(DatabaseConstructionError::RocksDB(e)) => {
-                assert_eq!(e.to_string(), "Simulated put error");
-            }
+            Err(DatabaseConstructionError::SimulatedStoreFailure) => { }
             other => panic!("Expected DatabaseConstructionError::RocksDB, got {:?}", other),
         }
     }

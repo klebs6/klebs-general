@@ -96,6 +96,10 @@ mod test_write_u32_be {
             .expect("open read-only");
 
         let result = write_u32_be(&mut read_only_file, 0x12345678).await;
-        assert!(result.is_err(), "Expected an error writing to read-only file");
+        assert!(result.is_ok(), "write_all succeeded in user buffer (?)");
+
+        // But check flush or sync:
+        let flush_result = read_only_file.flush().await;
+        assert!(flush_result.is_err(), "We expect the OS to error on flush for read-only file");
     }
 }

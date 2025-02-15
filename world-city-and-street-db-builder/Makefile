@@ -18,9 +18,7 @@ ACTIVE_PACKAGE := world-city-and-street-db-builder
 #-----------------------------------------------------[]
 INDIVIDUAL_TEST := test_load_all_cities_for_region
 
-INDIVIDUAL_TEST := write_be_u32
-INDIVIDUAL_TEST := write_indices
-#INDIVIDUAL_TEST := write_osm_pbf_file
+INDIVIDUAL_TEST := write_osm_pbf_file
 #INDIVIDUAL_TEST := write_postal_codes_to_region_and_city
 #INDIVIDUAL_TEST := write_postal_codes_to_region_and_street
 #INDIVIDUAL_TEST := write_streets_to_region_and_city
@@ -28,7 +26,7 @@ INDIVIDUAL_TEST := write_indices
 
 #-----------------------------------------------------[this section lets us choose how we want to test]
 DEFAULT := test
-DEFAULT := test_one
+#DEFAULT := test_one
 
 #DEFAULT := test_file
 #DEFAULT := test_file_one

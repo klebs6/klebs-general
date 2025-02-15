@@ -197,10 +197,8 @@ mod test_write_indices_for_region {
 
         let result = db_stub.write_indices_for_region(&region, &indexes);
         match result {
-            Err(DatabaseConstructionError::RocksDB(e)) => {
-                assert_eq!(e.to_string(), "Simulated put failure");
-            }
-            other => panic!("Expected DatabaseConstructionError::RocksDB, got {:?}", other),
+            Err(DatabaseConstructionError::SimulatedStoreFailure) => { }
+            other => panic!("Expected DatabaseConstructionError::SimulatedStoreFailure, got {:?}", other),
         }
     }
 }

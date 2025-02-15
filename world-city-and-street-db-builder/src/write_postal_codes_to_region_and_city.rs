@@ -138,9 +138,7 @@ mod test_write_postal_codes_to_region_and_city {
 
         let result = db_stub.write_postal_codes_to_region_and_city(&region, &city, &pc_set);
         match result {
-            Err(DatabaseConstructionError::RocksDB(e)) => {
-                assert_eq!(e.to_string(), "Simulated put error");
-            }
+            Err(DatabaseConstructionError::SimulatedStoreFailure) => { }
             other => panic!("Expected RocksDB error, got {:?}", other),
         }
     }

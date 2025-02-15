@@ -14,12 +14,12 @@ pub type StreetToCitiesMap              = BTreeMap<StreetName, BTreeSet<CityName
 #[getset(get="pub",set="pub",get_mut="pub")]
 #[builder(setter(into))]
 pub struct InMemoryIndexes {
-    region_postal_code_streets: RegionToPostalCodeToStreetsMap, // State -> PostalCode -> Streets
-    postal_code_cities:         PostalCodeToCityMap,            // PostalCode -> Cities
-    city_postal_codes:          CityToPostalCodeMap,            // City -> PostalCodes
-    city_streets:               CityToStreetMap,                // City -> Streets
-    street_postal_codes:        StreetToPostalCodeMap,          // Street -> PostalCodes
-    street_cities:              StreetToCitiesMap,              // Street -> Cities
+    #[builder(default)] region_postal_code_streets: RegionToPostalCodeToStreetsMap, // State -> PostalCode -> Streets
+    #[builder(default)] postal_code_cities:         PostalCodeToCityMap,            // PostalCode -> Cities
+    #[builder(default)] city_postal_codes:          CityToPostalCodeMap,            // City -> PostalCodes
+    #[builder(default)] city_streets:               CityToStreetMap,                // City -> Streets
+    #[builder(default)] street_postal_codes:        StreetToPostalCodeMap,          // Street -> PostalCodes
+    #[builder(default)] street_cities:              StreetToCitiesMap,              // Street -> Cities
 }
 
 impl InMemoryIndexes {
