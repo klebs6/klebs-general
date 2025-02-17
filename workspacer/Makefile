@@ -36,9 +36,12 @@ DEFAULT := test
 #DEFAULT := test_one
 #DEFAULT := test_file_one
 DEFAULT := test_all
+DEFAULT := run_bin
 #DEFAULT := run
 
 default: $(DEFAULT)
+
+BIN_TARGET := pin-wildcard-deps
 
 NOCAPTURE := --nocapture
 #NOCAPTURE := 
@@ -47,6 +50,9 @@ NOCAPTURE := --nocapture
 
 run:
 	RUSTFLAGS=$(RUSTFLAGS) $(CARGO) $(RUN) -p $(ACTIVE_PACKAGE) $(FEATURES)
+
+run_bin:
+	RUSTFLAGS=$(RUSTFLAGS) $(CARGO) $(RUN) --bin $(BIN_TARGET) $(FEATURES)
 
 build:
 	RUSTFLAGS=$(RUSTFLAGS) $(CARGO) $(BUILD) $(FEATURES)

@@ -1,5 +1,5 @@
 [dependencies]
-workspacer-3p              = { version = "0.1.0", path = "../workspacer-3p" }
+workspacer-3p              = { version = "0.2.0", path = "../workspacer-3p" }
 get-file-size              = { version = "0.1.0", path = "../get-file-size" }
 lightweight-command-runner = { version = "0.1.0", path = "../lightweight-command-runner" }
 

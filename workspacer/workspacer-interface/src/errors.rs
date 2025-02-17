@@ -214,9 +214,19 @@ error_tree!{
         ChannelRecvError(std::sync::mpsc::RecvError),
     }
 
+    #[derive(Clone)]
+    pub enum WorkspaceGitError {
+        FailedToRunGitStatusMakeSureGitIsInstalled,
+        WorkingDirectoryIsNotCleanAborting,
+        IoError {
+            io: Arc<io::Error>,
+        }
+    }
+
     // Enum representing possible errors in the `workspace-detail` crate.
     #[derive(Clone)]
     pub enum WorkspaceError {
+        WorkspaceGitError(WorkspaceGitError),
         CrateError(CrateError),
         CratePinFailed {
             crate_path: PathBuf,

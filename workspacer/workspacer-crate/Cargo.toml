@@ -1,8 +1,8 @@
 [dependencies]
-workspacer-interface = { version = "0.1.0", path = "../workspacer-interface" }
-workspacer-3p        = { version = "0.1.0", path = "../workspacer-3p" }
-workspacer-syntax    = { version = "0.1.0", path = "../workspacer-syntax" }
-workspacer-toml      = { version = "0.1.0", path = "../workspacer-toml" }
+workspacer-interface = { version = "0.2.0", path = "../workspacer-interface" }
+workspacer-3p        = { version = "0.2.0", path = "../workspacer-3p" }
+workspacer-syntax    = { version = "0.2.0", path = "../workspacer-syntax" }
+workspacer-toml      = { version = "0.2.0", path = "../workspacer-toml" }
 get-file-size        = { version = "0.1.0", path = "../get-file-size" }
 
 [package]

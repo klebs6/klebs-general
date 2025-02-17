@@ -5,6 +5,7 @@ pub trait WorkspaceInterface<P,T>
 : GetCrates<P,T>
 + Send
 + Sync
++ EnsureGitClean<Error=WorkspaceGitError>
 + NumCrates
 + PinAllWildcardDependencies<Error=WorkspaceError>
 + CleanupWorkspace
@@ -29,10 +30,14 @@ T: CrateHandleInterface<P>
 {}
 
 #[async_trait]
-pub trait PinAllWildcardDependencies {
-
+pub trait EnsureGitClean {
     type Error;
+    async fn ensure_git_clean(&self) -> Result<(), Self::Error>;
+}
 
+#[async_trait]
+pub trait PinAllWildcardDependencies {
+    type Error;
     async fn pin_all_wildcard_dependencies(&self) -> Result<(), Self::Error>;
 }
 
