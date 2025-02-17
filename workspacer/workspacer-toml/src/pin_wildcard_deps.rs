@@ -105,7 +105,7 @@ fn pin_deps_in_table(
             Item::Value(Value::String { .. }) => {
                 let current_str = dep_item.as_str().unwrap_or("");
                 if current_str == "*" {
-                    if let Some(new_ver) = pick_highest_version(dep_name, lock_versions) {
+                    if let Some(new_ver) = pick_highest_version(&dep_name, lock_versions) {
                         info!(
                             "Pinning wildcard dep '{}' from '*' to '{}'",
                             dep_name, new_ver
@@ -123,7 +123,7 @@ fn pin_deps_in_table(
             Item::Value(Value::InlineTable(inline_tab)) => {
                 if let Some(version_item) = inline_tab.get("version") {
                     if version_item.as_str() == Some("*") {
-                        if let Some(new_ver) = pick_highest_version(dep_name, lock_versions) {
+                        if let Some(new_ver) = pick_highest_version(&dep_name, lock_versions) {
                             info!(
                                 "Pinning wildcard dep '{}' from '*' to '{}'",
                                 dep_name, new_ver
