@@ -1,6 +1,6 @@
 [package]
 name = "workspacer-3p"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2024"
 authors = ["klebs tpk3.mx@gmail.com"]
 description = "Workspacer is a Rust library for managing and validating workspaces and crates, with support for test coverage, circular dependency detection, and publishing readiness. This crate encapsulates its third party deps."
@@ -28,26 +28,26 @@ toml                    = "0.8.19"
 petgraph                = "0.6.5"
 cargo_metadata          = "0.18.1"
 tokio                   = {version  = "1.40.0", features      = ["full"] }
-toml_edit               = { version = "*", features = ["parse", "display"] }
-cargo-lock              = "*"
-getset = "*"
-tempfile = "*"
-derive_builder = "*"
+toml_edit               = { version = "*", features           = ["parse", "display"] }
+cargo-lock              = "10.1.0"
+getset                  = "0.1.4"
+tempfile                = "3.17.0"
+derive_builder          = "0.20.2"
 tokio-stream            = "0.1.16"
 tokio-util              = "0.7.12"
 futures                 = "0.3.30"
 async-trait             = "0.1.83"
 tracing                 = "0.1.40"
 uuid                    = {version  = "1.10.0", features      = ["v4"] }
-tracing-subscriber      = { version = "0.3", default-features = false, features = ["fmt", "std", "env-filter"] }
+tracing-subscriber      = { version = "0.3", default-features = false, features        = ["fmt", "std", "env-filter"] }
 disable_macro           = "0.3.6"
 ra_ap_syntax            = "0.0.237"
 scan-crate-for-typedefs = "0.8.1"
 async-try-from          = "0.1.0"
 
 [dev-dependencies]
-indoc = "2.0.5"
-mockall = "0.11.4"
+indoc      = "2.0.5"
+mockall    = "0.11.4"
 quickcheck = "1.0"
 
 [build-dependencies]
