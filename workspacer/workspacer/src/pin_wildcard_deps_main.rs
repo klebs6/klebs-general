@@ -7,6 +7,8 @@ use workspacer::*;
 #[tokio::main]
 async fn main() -> Result<(), WorkspaceError> {
 
+    configure_tracing();
+
     let workspace = Workspace::<PathBuf,CrateHandle>::new(&PathBuf::from(".")).await?;
 
     // 1) Assert Git working tree is clean

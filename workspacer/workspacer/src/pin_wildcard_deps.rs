@@ -21,6 +21,8 @@ where
             });
         }
 
+        info!("Reading Cargo.lock from {:?}", lock_path);
+
         let lockfile_str = tokio::fs::read_to_string(&lock_path).await
             .map_err(|e| WorkspaceError::IoError {
                 io_error: e.into(),
@@ -47,15 +49,21 @@ where
                 .insert(version.clone());
         }
 
+        debug!("Constructed lock_versions map with {} crates", lock_versions.len());
+
         // 4) Pin each crate in the workspace
         for crate_handle in self.crates() {
-            // We assume the `CrateHandle` has a method `pin_wildcard_dependencies(...)`.
+
+            let crate_path = crate_handle.as_ref().to_path_buf();
+
+            info!("Pinning wildcard deps in crate at {:?}", crate_path);
+
             crate_handle
                 .pin_wildcard_dependencies(&lock_versions)
                 .await
                 .map_err(|e| WorkspaceError::CratePinFailed {
-                    crate_path: crate_handle.as_ref().to_path_buf(),
-                    source:     Box::new(e),
+                    crate_path,
+                    source: Box::new(e),
                 })?;
         }
 

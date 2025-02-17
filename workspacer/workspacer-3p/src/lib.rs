@@ -25,6 +25,7 @@ pub use petgraph::graph::{DiGraph, NodeIndex};
 pub use petgraph::algo::tarjan_scc;
 pub use std::fmt;
 pub use tracing::{info,debug,error,warn};
+pub use tracing_setup::configure_tracing;
 pub use regex::Regex;
 
 pub use notify::{Config as NotifyConfig,Event,EventKind,RecommendedWatcher, RecursiveMode, Watcher};
