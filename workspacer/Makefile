@@ -1,4 +1,4 @@
-.PHONY: build vendor json active test test_one test_all
+.PHONY: build vendor json active test test_one test_all pin_wildcard_deps
 
 ENTRYPOINT := example_main
 
@@ -36,12 +36,10 @@ DEFAULT := test
 #DEFAULT := test_one
 #DEFAULT := test_file_one
 DEFAULT := test_all
-DEFAULT := run_bin
+#DEFAULT := pin_wildcard_deps
 #DEFAULT := run
 
 default: $(DEFAULT)
-
-BIN_TARGET := pin-wildcard-deps
 
 NOCAPTURE := --nocapture
 #NOCAPTURE := 
@@ -51,8 +49,8 @@ NOCAPTURE := --nocapture
 run:
 	RUSTFLAGS=$(RUSTFLAGS) $(CARGO) $(RUN) -p $(ACTIVE_PACKAGE) $(FEATURES)
 
-run_bin:
-	RUSTFLAGS=$(RUSTFLAGS) $(CARGO) $(RUN) --bin $(BIN_TARGET) $(FEATURES)
+pin_wildcard_dep:
+	RUSTFLAGS=$(RUSTFLAGS) $(CARGO) $(RUN) --bin pin-wildcard-deps $(FEATURES)
 
 build:
 	RUSTFLAGS=$(RUSTFLAGS) $(CARGO) $(BUILD) $(FEATURES)

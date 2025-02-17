@@ -94,7 +94,7 @@ fn fix_nested_tables(item: &mut Item, lock_versions: &BTreeMap<String, BTreeSet<
     }
 }
 
-/// Walk each dependency in a table, pinning wildcard versions.
+/// This is where we also log when a dep is actually pinned.
 fn pin_deps_in_table(
     table: &mut Table,
     lock_versions: &BTreeMap<String, BTreeSet<Version>>,
@@ -105,34 +105,40 @@ fn pin_deps_in_table(
             Item::Value(Value::String { .. }) => {
                 let current_str = dep_item.as_str().unwrap_or("");
                 if current_str == "*" {
-                    if let Some(new_ver) = pick_highest_version(&dep_name, lock_versions) {
+                    if let Some(new_ver) = pick_highest_version(dep_name, lock_versions) {
+                        info!(
+                            "Pinning wildcard dep '{}' from '*' to '{}'",
+                            dep_name, new_ver
+                        );
                         *dep_item = Item::Value(Value::from(new_ver));
                     } else {
                         warn!(
-                            "wildcard dep '{}' was not found in Cargo.lock",
+                            "wildcard dep '{}' was not found in Cargo.lock; leaving as '*'",
                             dep_name
                         );
                     }
                 }
             }
-            // e.g. `dep = { version = "*", features = ["foo"] }`
+            // e.g. `dep = { version = "*", features = [...] }`
             Item::Value(Value::InlineTable(inline_tab)) => {
                 if let Some(version_item) = inline_tab.get("version") {
                     if version_item.as_str() == Some("*") {
-                        if let Some(new_ver) = pick_highest_version(&dep_name, lock_versions) {
+                        if let Some(new_ver) = pick_highest_version(dep_name, lock_versions) {
+                            info!(
+                                "Pinning wildcard dep '{}' from '*' to '{}'",
+                                dep_name, new_ver
+                            );
                             inline_tab.insert("version", Value::from(new_ver));
                         } else {
                             warn!(
-                                "wildcard dep '{}' was not found in Cargo.lock",
+                                "wildcard dep '{}' was not found in Cargo.lock; leaving as '*'",
                                 dep_name
                             );
                         }
                     }
                 }
             }
-            _ => {
-                // Possibly dotted tables or other forms. Usually do nothing.
-            }
+            _ => {}
         }
     }
 }
