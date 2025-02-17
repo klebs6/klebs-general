@@ -1,6 +1,7 @@
 // ---------------- [ File: workspacer-3p/src/lib.rs ]
 pub use std::path::{Path, PathBuf};
-pub use tempfile;
+pub use tempfile::{self,TempDir,NamedTempFile};
+pub use std::os::unix::fs::PermissionsExt;
 pub use export_magic::*;
 pub use error_tree::*;
 pub use tokio::fs::{self,File};
