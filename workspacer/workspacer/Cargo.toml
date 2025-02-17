@@ -2,6 +2,7 @@
 workspacer-interface       = { version = "0.3.0", path = "../workspacer-interface" }
 workspacer-3p              = { version = "0.3.0", path = "../workspacer-3p" }
 workspacer-crate           = { version = "0.3.0", path = "../workspacer-crate" }
+workspacer-toml            = { version = "0.3.0", path = "../workspacer-toml" }
 generate-report-trait      = { version = "0.1.0", path = "../generate-report-trait" }
 lightweight-command-runner = { version = "0.1.0", path = "../lightweight-command-runner" }
 

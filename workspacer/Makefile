@@ -36,7 +36,7 @@ DEFAULT := test
 #DEFAULT := test_one
 #DEFAULT := test_file_one
 DEFAULT := test_all
-#DEFAULT := pin_wildcard_deps
+DEFAULT := pin_wildcard_deps
 #DEFAULT := run
 
 default: $(DEFAULT)

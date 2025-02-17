@@ -5,7 +5,7 @@ pub trait WorkspaceInterface<P,T>
 : GetCrates<P,T>
 + Send
 + Sync
-+ EnsureGitClean<Error=WorkspaceGitError>
++ EnsureGitClean<Error=GitError>
 + NumCrates
 + PinAllWildcardDependencies<Error=WorkspaceError>
 + CleanupWorkspace

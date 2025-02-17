@@ -26,7 +26,10 @@ impl ConsolidateCrateInterface for CrateHandle {
         for file in source_files {
             // 1) read file contents
             let code = fs::read_to_string(&file).await.map_err(|e| {
-                CrateError::IoError { io_error: Arc::new(e) }
+                CrateError::IoError { 
+                    io_error: Arc::new(e),
+                    context: format!("could not read file {:?} contents to string", file),
+                }
             })?;
 
             // 2) parse the code (not the path)

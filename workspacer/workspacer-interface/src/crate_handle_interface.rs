@@ -5,7 +5,9 @@ pub trait CrateHandleInterface<P>
 : ValidateIntegrity<Error=CrateError>
 + Send
 + Sync
++ EnsureGitClean<Error=GitError>
 + PinWildcardDependencies<Error=CrateError>
++ PinAllWildcardDependencies<Error=CrateError>
 + ReadyForCargoPublish<Error=CrateError>
 + CheckIfSrcDirectoryContainsValidFiles
 + CheckIfReadmeExists

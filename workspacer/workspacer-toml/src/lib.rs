@@ -13,3 +13,4 @@ x!{pin_wildcard_deps}
 x!{ready_for_cargo_publish}
 x!{validate_integrity}
 x!{validate_toml}
+x!{build_lock_versions}

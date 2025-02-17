@@ -180,6 +180,10 @@ error_tree!{
 
     #[derive(Clone)]
     pub enum CrateError {
+        LockfileParseFailed {
+            path:    PathBuf,
+            message: String,
+        },
         // Error indicating that a file was not found.
         FileNotFound {
             missing_file: PathBuf,
@@ -199,6 +203,7 @@ error_tree!{
 
         IoError {
             io_error: Arc<io::Error>,
+            context: String,
         },
     }
 }
@@ -209,24 +214,26 @@ error_tree!{
     pub enum WatchError {
         NotifyError(Arc<notify::Error>),
         IoError {
-            io: Arc<io::Error>,
+            io:      Arc<io::Error>,
+            context: String,
         },
         ChannelRecvError(std::sync::mpsc::RecvError),
     }
 
     #[derive(Clone)]
-    pub enum WorkspaceGitError {
+    pub enum GitError {
         FailedToRunGitStatusMakeSureGitIsInstalled,
         WorkingDirectoryIsNotCleanAborting,
         IoError {
-            io: Arc<io::Error>,
+            io:      Arc<io::Error>,
+            context: String,
         }
     }
 
     // Enum representing possible errors in the `workspace-detail` crate.
     #[derive(Clone)]
     pub enum WorkspaceError {
-        WorkspaceGitError(WorkspaceGitError),
+        GitError(GitError),
         CrateError(CrateError),
         CratePinFailed {
             crate_path: PathBuf,
