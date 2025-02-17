@@ -1,0 +1,31 @@
+[package]
+name = "world-region-repl"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+world-region-db                  = { version = "*", path     = "../world-region-db" }
+strum                            = "*"
+export-magic                     = "*"
+world-region                     = { version = "*", path = "../world-region" }
+fuzzy-matcher                    = "*"
+crossterm                        = "*"
+rustyline                        = "*"
+traced-test                      = "*"
+tracing                          = "*"
+tracing-setup                    = "*"
+tracing-subscriber               = "0.3"
+tokio                            = { version = "1", features = ["full"] }
+structopt                        = "0.3"
+tempfile                         = "3"
+serde                            = { version = "1", features = ["derive"] }
+serde_cbor                       = "0.11"
+serial_test                      = "*"
+getset                           = "*"
+derive_builder                   = "*"
+usa                              = "0.8.0"
+country                          = "*"
+postal-code                      = "*"
+abbreviation-trait               = "*"
+error-tree                       = "*"
+file-downloader                  = "0.2.0"

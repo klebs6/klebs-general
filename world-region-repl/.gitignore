@@ -1,0 +1,6 @@
+**/target/**
+**/vendor/**
+interactive_repl_history.txt
+build.log
+**/pbf/**
+**/dmv_db/**
