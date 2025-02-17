@@ -1,8 +1,8 @@
 [dependencies]
-workspacer-3p        = "0.1.0"
-workspacer-crate     = "0.1.0"
-workspacer-interface = "0.1.0"
-get-file-size        = "0.1.0"
+workspacer-3p        = { version = "0.1.0", path = "../workspacer-3p" }
+workspacer-crate     = { version = "0.1.0", path = "../workspacer-crate" }
+workspacer-interface = { version = "0.1.0", path = "../workspacer-interface" }
+get-file-size        = { version = "0.1.0", path = "../get-file-size" }
 
 [package]
 name        = "workspacer-mock"

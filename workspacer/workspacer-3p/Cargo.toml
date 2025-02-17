@@ -28,6 +28,11 @@ toml                    = "0.8.19"
 petgraph                = "0.6.5"
 cargo_metadata          = "0.18.1"
 tokio                   = {version  = "1.40.0", features      = ["full"] }
+toml_edit               = { version = "*", features = ["parse", "display"] }
+cargo-lock              = "*"
+getset = "*"
+tempfile = "*"
+derive_builder = "*"
 tokio-stream            = "0.1.16"
 tokio-util              = "0.7.12"
 futures                 = "0.3.30"

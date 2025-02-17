@@ -15,13 +15,13 @@ ACTIVE_PACKAGE := command-runner
 ACTIVE_PACKAGE := generate-report
 ACTIVE_PACKAGE := get-file-size
 ACTIVE_PACKAGE := workspacer-toml
-ACTIVE_PACKAGE := workspacer-interface
-ACTIVE_PACKAGE := workspacer-crate
-ACTIVE_PACKAGE := workspacer-3p
-ACTIVE_PACKAGE := workspacer-consolidate
+#ACTIVE_PACKAGE := workspacer-interface
+#ACTIVE_PACKAGE := workspacer-crate
+#ACTIVE_PACKAGE := workspacer-3p
+#ACTIVE_PACKAGE := workspacer-consolidate
 #ACTIVE_PACKAGE := workspacer-mock
 #ACTIVE_PACKAGE := workspacer-syntax
-ACTIVE_PACKAGE := workspacer
+#ACTIVE_PACKAGE := workspacer
 
 INDIVIDUAL_TEST := test_errors
 

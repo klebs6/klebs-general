@@ -22,6 +22,7 @@ error_tree!{
         },
         WriteError {
             io: Arc<io::Error>,
+            cargo_toml_file: PathBuf,
         },
     }
 
@@ -50,10 +51,18 @@ error_tree!{
             cargo_toml_file: PathBuf,
             toml_parse_error: toml::de::Error,
         },
+        TomlEditError {
+            cargo_toml_file: PathBuf,
+            toml_parse_error: toml_edit::TomlError,
+        },
         
         // Error indicating that a file was not found.
         FileNotFound {
             missing_file: PathBuf,
+        },
+
+        FileIsNotAFile {
+            invalid_path: PathBuf,
         },
     }
 
@@ -186,7 +195,7 @@ error_tree!{
         },
 
         DirectoryError(DirectoryError),
-        InvalidCargoToml(CargoTomlError),
+        CargoTomlError(CargoTomlError),
 
         IoError {
             io_error: Arc<io::Error>,
@@ -209,12 +218,21 @@ error_tree!{
     #[derive(Clone)]
     pub enum WorkspaceError {
         CrateError(CrateError),
+        CratePinFailed {
+            crate_path: PathBuf,
+            source:     Box<CrateError>,
+        },
 
         TokioJoinError {
             join_error: Arc<tokio::task::JoinError>,
         },
         IoError {
             io_error: Arc<io::Error>,
+            context:  String,
+        },
+        InvalidLockfile {
+            path:    PathBuf,
+            message: String,
         },
 
         // Error indicating that a file was not found.
@@ -266,6 +284,7 @@ impl From<io::Error> for WorkspaceError {
     fn from(io_error: io::Error) -> Self {
         WorkspaceError::IoError {
             io_error: Arc::new(io_error),
+            context: "no explicit context".to_string()
         }
     }
 }

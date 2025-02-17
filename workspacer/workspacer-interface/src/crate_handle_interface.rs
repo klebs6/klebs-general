@@ -1,11 +1,11 @@
 // ---------------- [ File: workspacer-interface/src/crate_handle_interface.rs ]
-// ---------------- [ File: workspacer-interface/src/crate_handle_interface.rs ]
 crate::ix!();
 
 pub trait CrateHandleInterface<P>
 : ValidateIntegrity<Error=CrateError>
 + Send
 + Sync
++ PinWildcardDependencies<Error=CrateError>
 + ReadyForCargoPublish<Error=CrateError>
 + CheckIfSrcDirectoryContainsValidFiles
 + CheckIfReadmeExists

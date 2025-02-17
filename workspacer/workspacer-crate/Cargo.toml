@@ -1,9 +1,9 @@
 [dependencies]
-workspacer-interface = "0.1.0"
-workspacer-3p        = "0.1.0"
-workspacer-syntax    = "0.1.0"
-workspacer-toml      = "0.1.0"
-get-file-size        = "0.1.0"
+workspacer-interface = { version = "0.1.0", path = "../workspacer-interface" }
+workspacer-3p        = { version = "0.1.0", path = "../workspacer-3p" }
+workspacer-syntax    = { version = "0.1.0", path = "../workspacer-syntax" }
+workspacer-toml      = { version = "0.1.0", path = "../workspacer-toml" }
+get-file-size        = { version = "0.1.0", path = "../get-file-size" }
 
 [package]
 name        = "workspacer-crate"

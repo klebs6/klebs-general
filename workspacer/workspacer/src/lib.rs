@@ -14,3 +14,4 @@ x!{workspace}
 x!{dependency_tree}
 x!{detect_circular_dependencies}
 x!{linting}
+x!{pin_wildcard_deps}

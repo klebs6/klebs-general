@@ -28,6 +28,7 @@ mod test_default_command_runner {
         assert!(output.is_ok(), "Command should run successfully");
 
         let output = output.unwrap();
+        let output = output.unwrap();
         let stdout = String::from_utf8_lossy(&output.stdout);
         assert!(stdout.contains("hello"), "Output should contain 'hello'");
     }

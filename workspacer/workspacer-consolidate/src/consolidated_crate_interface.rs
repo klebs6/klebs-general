@@ -1,5 +1,4 @@
 // ---------------- [ File: workspacer-consolidate/src/consolidated_crate_interface.rs ]
-// ---------------- [ File: workspacer-consolidate/src/consolidated_crate_interface.rs ]
 crate::ix!();
 
 pub struct ConsolidatedCrateInterface {

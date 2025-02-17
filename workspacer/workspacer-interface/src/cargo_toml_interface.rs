@@ -1,11 +1,11 @@
 // ---------------- [ File: workspacer-interface/src/cargo_toml_interface.rs ]
-// ---------------- [ File: workspacer-interface/src/cargo_toml_interface.rs ]
 crate::ix!();
 
 pub trait CargoTomlInterface
 : CheckExistence<Error=CargoTomlError>
 + Send
 + Sync
++ PinWildcardDependencies<Error=CargoTomlError>
 + CheckRequiredFieldsForPublishing<Error=CargoTomlError>
 + CheckVersionValidityForPublishing<Error=CargoTomlError>
 + CheckRequiredFieldsForIntegrity<Error=CargoTomlError>
@@ -16,6 +16,17 @@ pub trait CargoTomlInterface
 + ValidateIntegrity<Error=CargoTomlError>
 + AsRef<Path>
 {}
+
+#[async_trait]
+pub trait PinWildcardDependencies {
+
+    type Error;
+
+    async fn pin_wildcard_dependencies(
+        &self,
+        lock_versions: &BTreeMap<String, BTreeSet<semver::Version>>,
+    ) -> Result<(), Self::Error>;
+}
 
 pub trait CheckExistence {
 

@@ -1,5 +1,4 @@
 // ---------------- [ File: workspacer-interface/src/workspace_interface.rs ]
-// ---------------- [ File: workspacer-interface/src/workspace_interface.rs ]
 crate::ix!();
 
 pub trait WorkspaceInterface<P,T>
@@ -7,6 +6,7 @@ pub trait WorkspaceInterface<P,T>
 + Send
 + Sync
 + NumCrates
++ PinAllWildcardDependencies<Error=WorkspaceError>
 + CleanupWorkspace
 + WatchAndReload
 + RunTestsWithCoverage
@@ -27,6 +27,14 @@ where
 for<'async_trait> P: From<PathBuf> + AsRef<Path> + Send + Sync + 'async_trait,
 T: CrateHandleInterface<P>
 {}
+
+#[async_trait]
+pub trait PinAllWildcardDependencies {
+
+    type Error;
+
+    async fn pin_all_wildcard_dependencies(&self) -> Result<(), Self::Error>;
+}
 
 pub trait GetCrates<P,T> 
 where 

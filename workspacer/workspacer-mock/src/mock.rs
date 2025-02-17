@@ -1,5 +1,4 @@
 // ---------------- [ File: workspacer-mock/src/mock.rs ]
-// ---------------- [ File: workspacer-mock/src/mock.rs ]
 crate::ix!();
 
 /// Creates a mock workspace with the specified crate configurations asynchronously.

@@ -1,7 +1,8 @@
 // ---------------- [ File: workspacer-crate/src/crate_handle.rs ]
 crate::ix!();
 
-#[derive(Debug, Clone)]
+#[derive(Getters,Debug,Clone)]
+#[getset(get="pub")]
 pub struct CrateHandle {
     crate_path:        PathBuf,
     cargo_toml_handle: CargoToml,

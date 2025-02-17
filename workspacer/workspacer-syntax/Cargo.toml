@@ -1,5 +1,5 @@
 [dependencies]
-workspacer-3p = "0.1.0"
+workspacer-3p = { version = "0.1.0", path = "../workspacer-3p" }
 
 [package]
 name        = "workspacer-syntax"
