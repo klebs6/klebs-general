@@ -14,7 +14,7 @@ categories = ["development-tools"]
 
 [dependencies]
 export-magic            = "0.3.6"
-error-tree              = "*"
+error-tree              = "0.3.7"
 traced-test             = "1.0.2"
 tracing-setup           = "1.0.2"
 serde                   = "1.0.210"

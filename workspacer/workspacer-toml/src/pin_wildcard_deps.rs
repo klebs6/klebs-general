@@ -24,7 +24,7 @@ impl PinWildcardDependencies for CargoToml {
         lock_versions: &BTreeMap<String, BTreeSet<Version>>,
     ) -> Result<(), Self::Error> {
 
-        info!("Reading Cargo.toml from {:?}", self.as_ref());
+        debug!("Reading Cargo.toml from {:?}", self.as_ref());
 
         // 1) Read original TOML text so we can re-parse with toml_edit
         let original_toml_str = tokio::fs::read_to_string(self.as_ref()).await
@@ -39,12 +39,12 @@ impl PinWildcardDependencies for CargoToml {
             })?;
 
         // 3) Pin the wildcards in the Document
-        info!("Pinning wildcard deps in doc...");
+        debug!("Pinning wildcard deps in doc...");
         pin_wildcards_in_doc(&mut doc, lock_versions);
 
         // 4) Write updated TOML back in original order
         let pinned_str = doc.to_string(); 
-        info!("Writing pinned TOML back to {:?}", self.as_ref());
+        debug!("Writing pinned TOML back to {:?}", self.as_ref());
 
         tokio::fs::write(self.as_ref(), pinned_str).await
             .map_err(|e| CargoTomlWriteError::WriteError {

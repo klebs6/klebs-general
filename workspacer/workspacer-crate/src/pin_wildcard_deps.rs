@@ -16,7 +16,7 @@ impl PinWildcardDependencies for CrateHandle {
         lock_versions: &BTreeMap<String, BTreeSet<cargo_lock::Version>>,
     ) -> Result<(), CrateError> {
 
-        info!("Delegating to cargo_toml_handle for wildcard pinning");
+        //info!("Delegating to cargo_toml_handle for wildcard pinning");
 
         // Delegates to cargo_toml_handle's method
         self.cargo_toml_handle()
