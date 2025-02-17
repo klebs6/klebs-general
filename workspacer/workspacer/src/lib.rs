@@ -16,3 +16,4 @@ x!{detect_circular_dependencies}
 x!{linting}
 x!{pin_wildcard_deps}
 x!{ensure_git_clean}
+x!{name_all_files}

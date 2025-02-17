@@ -10,6 +10,10 @@ lightweight-command-runner = { version = "0.1.0", path = "../lightweight-command
 path = "src/pin_wildcard_deps_main.rs"
 name = "pin-wildcard-deps"
 
+[[bin]]
+path = "src/name_all_files_main.rs"
+name = "name-all-files"
+
 [package]
 name        = "workspacer"
 version     = "0.3.0"
