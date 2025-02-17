@@ -1,3 +1,4 @@
+// ---------------- [ File: workspacer-toml/src/validate_integrity.rs ]
 crate::ix!();
 
 impl ValidateIntegrity for CargoToml {

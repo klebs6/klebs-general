@@ -55,4 +55,3 @@ mod lines_property_tests {
         arb_lines_test(); // calls quickcheck
     }
 }
-

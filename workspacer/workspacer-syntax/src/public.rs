@@ -40,4 +40,3 @@ pub fn is_node_public(node: &SyntaxNode) -> bool {
     println!("Node kind: {:?}, Is public: {}", kind, is_public);
     is_public
 }
-

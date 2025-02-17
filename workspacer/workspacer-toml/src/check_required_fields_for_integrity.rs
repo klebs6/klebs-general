@@ -1,3 +1,4 @@
+// ---------------- [ File: workspacer-toml/src/check_required_fields_for_integrity.rs ]
 crate::ix!();
 
 impl CheckRequiredFieldsForIntegrity for CargoToml {

@@ -1,3 +1,4 @@
+// ---------------- [ File: workspacer-toml/src/check_version_validity_for_publishing.rs ]
 crate::ix!();
 
 impl CheckVersionValidityForPublishing for CargoToml {

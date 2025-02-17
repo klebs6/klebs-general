@@ -233,6 +233,9 @@ error_tree!{
     // Enum representing possible errors in the `workspace-detail` crate.
     #[derive(Clone)]
     pub enum WorkspaceError {
+        ActuallyInSingleCrate {
+            path: PathBuf,
+        },
         GitError(GitError),
         CrateError(CrateError),
         CratePinFailed {

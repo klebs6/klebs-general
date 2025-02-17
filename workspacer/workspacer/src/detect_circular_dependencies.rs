@@ -28,4 +28,3 @@ where for<'async_trait> P: From<PathBuf> + AsRef<Path> + Send + Sync + 'async_tr
         }
     }
 }
-

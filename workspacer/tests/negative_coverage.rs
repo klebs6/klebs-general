@@ -70,4 +70,3 @@ mod negative_coverage_tests {
         Ok(())
     }
 }
-

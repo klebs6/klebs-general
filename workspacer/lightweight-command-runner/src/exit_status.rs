@@ -1,4 +1,4 @@
-// ---------------- [ File: command-runner/src/exit_status.rs ]
+// ---------------- [ File: lightweight-command-runner/src/exit_status.rs ]
 crate::ix!();
 
 #[cfg(unix)]
