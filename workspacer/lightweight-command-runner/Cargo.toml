@@ -1,5 +1,5 @@
 [dependencies]
-export-magic = "*"
+export-magic = "0.3.6"
 tokio        = { version = "1.40.0", features = ["full"] }
 
 [package]

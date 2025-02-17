@@ -1,7 +1,7 @@
 [dependencies]
 workspacer-interface = { version = "0.2.0", path = "../workspacer-interface" }
-workspacer-3p        = { version = "*", path = "../workspacer-3p" }
-derive_builder       = "*"
+workspacer-3p        = { version = "0.2.0", path = "../workspacer-3p" }
+derive_builder       = "0.20.2"
 
 [package]
 name        = "workspacer-toml"
