@@ -11,7 +11,7 @@ pub use std::convert::AsRef;
 pub use async_trait::async_trait;
 pub use uuid::*;
 pub use std::str::FromStr;
-
+pub use structopt::{self,StructOpt};
 pub use toml_edit;
 pub use cargo_lock;
 pub use getset::{self,Getters,Setters};
@@ -24,13 +24,17 @@ pub use std::process::Stdio;
 pub use cargo_metadata::PackageId;
 pub use petgraph::graph::{DiGraph, NodeIndex};
 pub use petgraph::algo::tarjan_scc;
-pub use std::fmt;
-pub use tracing::{info,debug,error,warn};
-pub use tracing_setup::configure_tracing;
-pub use regex::Regex;
+pub use std::fmt::{self,Write,Display};
+pub use std::thread;
+pub use std::fmt::Result as FmtResult;
+pub use tracing::{self,info,trace,debug,error,warn};
+pub use colored;
+pub use traced_test::traced_test;
+pub use tracing_setup::*;
+pub use regex::{self,Regex};
 
 pub use notify::{Config as NotifyConfig,Event,EventKind,RecommendedWatcher, RecursiveMode, Watcher};
-pub use std::sync::{Arc,mpsc::channel};
+pub use std::sync::{Mutex,Arc,mpsc::channel};
 pub use std::time::Duration;
 
 pub use tokio::sync::{mpsc,mpsc::Sender};
@@ -48,6 +52,7 @@ pub use ra_ap_syntax::{self,ast};
 
 pub use async_try_from::*;
 pub use ra_ap_syntax::ast::{
+    HasGenericParams,
     HasName,
     HasVisibility,
     HasAttrs,

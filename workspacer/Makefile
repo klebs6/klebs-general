@@ -18,12 +18,14 @@ ACTIVE_PACKAGE := workspacer-toml
 #ACTIVE_PACKAGE := workspacer-interface
 #ACTIVE_PACKAGE := workspacer-crate
 #ACTIVE_PACKAGE := workspacer-3p
-#ACTIVE_PACKAGE := workspacer-consolidate
+ACTIVE_PACKAGE := workspacer-consolidate
 #ACTIVE_PACKAGE := workspacer-mock
-#ACTIVE_PACKAGE := workspacer-syntax
+ACTIVE_PACKAGE := workspacer-syntax
 #ACTIVE_PACKAGE := workspacer
 
-INDIVIDUAL_TEST := test_errors
+INDIVIDUAL_TEST := consolidate_crate_interface
+INDIVIDUAL_TEST := test_consolidate_crate_interface_exhaustive
+INDIVIDUAL_TEST := gather_impl_methods
 
 #FEATURES := --features "enable_stress_test"
 FEATURES := --features ""
@@ -35,13 +37,14 @@ DEFAULT := test
 #DEFAULT := test_file
 #DEFAULT := test_one
 #DEFAULT := test_file_one
-DEFAULT := test_all
+#DEFAULT := test_all
 #DEFAULT := pin_wildcard_deps
+DEFAULT := consolidate_crate_interface
 #DEFAULT := run
 
 default: $(DEFAULT)
 
-NOCAPTURE := --nocapture
+#NOCAPTURE := --nocapture
 #NOCAPTURE := 
 
 #----------------------------------------------[here are our rules]
@@ -51,6 +54,9 @@ run:
 
 pin_wildcard_dep:
 	RUSTFLAGS=$(RUSTFLAGS) $(CARGO) $(RUN) --bin pin-wildcard-deps $(FEATURES)
+
+consolidate_crate_interface:
+	RUSTFLAGS=$(RUSTFLAGS) $(CARGO) $(RUN) --bin consolidate-crate-interface $(FEATURES) -- --path workspacer-toml 
 
 build:
 	RUSTFLAGS=$(RUSTFLAGS) $(CARGO) $(BUILD) $(FEATURES)

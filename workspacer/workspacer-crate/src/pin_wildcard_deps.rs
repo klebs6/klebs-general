@@ -13,7 +13,7 @@ impl PinWildcardDependencies for CrateHandle {
     ///  - Writes the updated Cargo.toml in-place.
     async fn pin_wildcard_dependencies(
         &self,
-        lock_versions: &BTreeMap<String, BTreeSet<cargo_lock::Version>>,
+        lock_versions: &LockVersionMap,
     ) -> Result<(), CrateError> {
 
         //info!("Delegating to cargo_toml_handle for wildcard pinning");

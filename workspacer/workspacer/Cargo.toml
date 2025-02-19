@@ -3,16 +3,23 @@ workspacer-interface       = { version = "0.4.0", path = "../workspacer-interfac
 workspacer-3p              = { version = "0.4.0", path = "../workspacer-3p" }
 workspacer-crate           = { version = "0.4.0", path = "../workspacer-crate" }
 workspacer-toml            = { version = "0.4.0", path = "../workspacer-toml" }
+workspacer-consolidate     = { version = "0.4.0", path = "../workspacer-consolidate" }
 generate-report-trait      = { version = "0.1.0", path = "../generate-report-trait" }
 lightweight-command-runner = { version = "0.1.0", path = "../lightweight-command-runner" }
+structopt = "*"
 
 [[bin]]
-path = "src/pin_wildcard_deps_main.rs"
+path = "src/bin/pin_wildcard_deps.rs"
 name = "pin-wildcard-deps"
 
 [[bin]]
-path = "src/name_all_files_main.rs"
+path = "src/bin/name_all_files.rs"
 name = "name-all-files"
+
+[[bin]]
+path = "src/bin/consolidate_crate_interface.rs"
+name = "consolidate-crate-interface"
+
 
 [package]
 name        = "workspacer"

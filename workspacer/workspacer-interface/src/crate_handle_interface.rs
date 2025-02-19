@@ -5,6 +5,7 @@ pub trait CrateHandleInterface<P>
 : ValidateIntegrity<Error=CrateError>
 + Send
 + Sync
++ ReadFileString
 + EnsureGitClean<Error=GitError>
 + NameAllFiles<Error=CrateError>
 + PinWildcardDependencies<Error=CrateError>
@@ -32,6 +33,14 @@ where
 
     CrateError: From<<P as HasCargoTomlPathBuf>::Error>,
 {}
+
+/// We add a new method to CrateHandleInterface so we can read file text from 
+/// an in-memory mock or from the real filesystem. For your real code, 
+/// you might implement it differently.
+#[async_trait]
+pub trait ReadFileString {
+    async fn read_file_string(&self, path: &Path) -> Result<String, CrateError>;
+}
 
 // A trait for "naming all .rs files" with a comment tag
 #[async_trait]

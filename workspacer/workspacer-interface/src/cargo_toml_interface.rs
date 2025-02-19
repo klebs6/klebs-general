@@ -17,6 +17,8 @@ pub trait CargoTomlInterface
 + AsRef<Path>
 {}
 
+pub type LockVersionMap = BTreeMap<String, BTreeSet<semver::Version>>;
+
 #[async_trait]
 pub trait PinWildcardDependencies {
 
@@ -24,7 +26,7 @@ pub trait PinWildcardDependencies {
 
     async fn pin_wildcard_dependencies(
         &self,
-        lock_versions: &BTreeMap<String, BTreeSet<semver::Version>>,
+        lock_versions: &LockVersionMap,
     ) -> Result<(), Self::Error>;
 }
 

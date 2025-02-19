@@ -1,83 +1,48 @@
 // ---------------- [ File: workspacer-consolidate/src/consolidate_crate_interface.rs ]
 crate::ix!();
 
-use tokio::fs;
-
 #[async_trait]
 pub trait ConsolidateCrateInterface {
-    type Consolidated;
-    type Error;
-
-    async fn consolidate_crate_interface(&self) -> Result<Self::Consolidated, Self::Error>;
+    async fn consolidate_crate_interface(
+        &self,
+        options: &ConsolidationOptions
+    ) -> Result<ConsolidatedCrateInterface, CrateError>;
 }
 
 #[async_trait]
-impl ConsolidateCrateInterface for CrateHandle {
-
-    type Consolidated = ConsolidatedCrateInterface;
-    type Error = CrateError;
-
-    async fn consolidate_crate_interface(&self) 
-        -> Result<Self::Consolidated, CrateError> 
-    {
+impl<T> ConsolidateCrateInterface for T
+where
+    T: CrateHandleInterface<PathBuf> + Sync + Send,
+{
+    async fn consolidate_crate_interface(
+        &self,
+        options: &ConsolidationOptions,
+    ) -> Result<ConsolidatedCrateInterface, CrateError> {
+        trace!("Consolidating crate interface.");
         let source_files = self.source_files_excluding(&[]).await?;
-        let mut interface = ConsolidatedCrateInterface::new();
+        let mut result = ConsolidatedCrateInterface::new();
 
-        for file in source_files {
-            // 1) read file contents
-            let code = fs::read_to_string(&file).await.map_err(|e| {
-                CrateError::IoError { 
-                    io_error: Arc::new(e),
-                    context: format!("could not read file {:?} contents to string", file),
-                }
-            })?;
+        for file_path in source_files {
+            let code = self.read_file_string(&file_path).await?;
+            let parse_result = SourceFile::parse(&code, Edition::Edition2024);
+            let sf = parse_result.tree();
+            let items = gather_crate_items(&sf, options);
 
-            // 2) parse the code (not the path)
-            //    If you want an edition, e.g. 2021, do:
-            let syntax = SourceFile::parse(&code, Edition::Edition2024).syntax_node();
-
-            println!("Parsing file: {}", file.display());
-
-            // 3) Now do the usual scanning over descendants:
-            for node in syntax.descendants() {
-                if !is_node_public(&node) {
-                    continue;
-                }
-
-                let docs = extract_docs(&node);
-
-                match_ast! {
-                    match node {
-                        ast::Fn(it) => {
-                            println!("Public function: {:?}", it.name());
-                            interface.add_fn(CrateInterfaceItem::new(it, docs));
-                        },
-                        ast::Struct(it) => {
-                            println!("Public struct: {:?}", it.name());
-                            interface.add_struct(CrateInterfaceItem::new(it, docs));
-                        },
-                        ast::Enum(it) => {
-                            println!("Public enum: {:?}", it.name());
-                            interface.add_enum(CrateInterfaceItem::new(it, docs));
-                        },
-                        ast::Trait(it) => {
-                            println!("Public trait: {:?}", it.name());
-                            interface.add_trait(CrateInterfaceItem::new(it, docs));
-                        },
-                        ast::TypeAlias(it) => {
-                            println!("Public type alias: {:?}", it.name());
-                            interface.add_type(CrateInterfaceItem::new(it, docs));
-                        },
-                        ast::MacroRules(it) => {
-                            println!("Public macro: {:?}", it.name());
-                            interface.add_macro(CrateInterfaceItem::new(it, docs));
-                        },
-                        _ => {}
-                    }
+            for item in items {
+                match item {
+                    ConsolidatedItem::Fn(ci) => result.add_fn(ci),
+                    ConsolidatedItem::Struct(ci) => result.add_struct(ci),
+                    ConsolidatedItem::Enum(ci) => result.add_enum(ci),
+                    ConsolidatedItem::Trait(ci) => result.add_trait(ci),
+                    ConsolidatedItem::TypeAlias(ci) => result.add_type_alias(ci),
+                    ConsolidatedItem::Macro(ci) => result.add_macro(ci),
+                    ConsolidatedItem::Module(mi) => result.add_module(mi),
+                    ConsolidatedItem::ImplBlock(ib) => result.add_impl(ib),
                 }
             }
         }
 
-        Ok(interface)
+        info!("Crate interface consolidation complete.");
+        Ok(result)
     }
 }

@@ -1,108 +1,67 @@
 // ---------------- [ File: workspacer-consolidate/src/consolidated_crate_interface.rs ]
 crate::ix!();
 
+#[derive(Getters, Debug)]
 pub struct ConsolidatedCrateInterface {
-    traits:  Vec<CrateInterfaceItem<ast::Trait>>,
-    fns:     Vec<CrateInterfaceItem<ast::Fn>>,
-    structs: Vec<CrateInterfaceItem<ast::Struct>>,
-    enums:   Vec<CrateInterfaceItem<ast::Enum>>,
-    types:   Vec<CrateInterfaceItem<ast::TypeAlias>>,
-    macros:  Vec<CrateInterfaceItem<ast::MacroRules>>,
+    fns:          Vec<CrateInterfaceItem<ast::Fn>>,
+    structs:      Vec<CrateInterfaceItem<ast::Struct>>,
+    enums:        Vec<CrateInterfaceItem<ast::Enum>>,
+    traits:       Vec<CrateInterfaceItem<ast::Trait>>,
+    type_aliases: Vec<CrateInterfaceItem<ast::TypeAlias>>,
+    macros:       Vec<CrateInterfaceItem<ast::MacroRules>>,
+    impls:        Vec<ImplBlockInterface>,
+    modules:      Vec<ModuleInterface>,
 }
 
 unsafe impl Send for ConsolidatedCrateInterface {}
+unsafe impl Sync for ConsolidatedCrateInterface {}
 
 impl fmt::Display for ConsolidatedCrateInterface {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        for item in self.get_traits() {
-            writeln!(f, "{}", item)?;
+        macro_rules! print_items {
+            ($vec:expr, $f:expr) => {
+                for (i, item) in $vec.iter().enumerate() {
+                    writeln!($f, "{}", item)?;
+                    if i + 1 < $vec.len() {
+                        writeln!($f)?;
+                    }
+                }
+            };
         }
 
-        for item in self.get_fns() {
-            writeln!(f, "{}", item)?;
-        }
-
-        for item in self.get_structs() {
-            writeln!(f, "{}", item)?;
-        }
-
-        for item in self.get_enums() {
-            writeln!(f, "{}", item)?;
-        }
-
-        for item in self.get_types() {
-            writeln!(f, "{}", item)?;
-        }
-
-        for item in self.get_macros() {
-            writeln!(f, "{}", item)?;
-        }
+        print_items!(self.enums, f);
+        print_items!(self.traits, f);
+        print_items!(self.type_aliases, f);
+        print_items!(self.macros, f);
+        print_items!(self.structs, f);
+        print_items!(self.fns, f);
+        print_items!(self.impls, f);
+        print_items!(self.modules, f);
 
         Ok(())
     }
 }
 
 impl ConsolidatedCrateInterface {
-
-    // Constructor for creating an empty interface
     pub fn new() -> Self {
         Self {
-            traits:  Vec::new(),
-            fns:     Vec::new(),
-            structs: Vec::new(),
-            enums:   Vec::new(),
-            types:   Vec::new(),
-            macros:  Vec::new(),
+            fns: vec![],
+            structs: vec![],
+            enums: vec![],
+            traits: vec![],
+            type_aliases: vec![],
+            macros: vec![],
+            impls: vec![],
+            modules: vec![],
         }
     }
 
-    // Methods to get traits, functions, structs, enums, etc.
-    pub fn get_traits(&self) -> &Vec<CrateInterfaceItem<ast::Trait>> {
-        &self.traits
-    }
-
-    pub fn get_fns(&self) -> &Vec<CrateInterfaceItem<ast::Fn>> {
-        &self.fns
-    }
-
-    pub fn get_structs(&self) -> &Vec<CrateInterfaceItem<ast::Struct>> {
-        &self.structs
-    }
-
-    pub fn get_enums(&self) -> &Vec<CrateInterfaceItem<ast::Enum>> {
-        &self.enums
-    }
-
-    pub fn get_types(&self) -> &Vec<CrateInterfaceItem<ast::TypeAlias>> {
-        &self.types
-    }
-
-    pub fn get_macros(&self) -> &Vec<CrateInterfaceItem<ast::MacroRules>> {
-        &self.macros
-    }
-
-    // Methods to add new items
-    pub fn add_trait(&mut self, item: CrateInterfaceItem<ast::Trait>) {
-        self.traits.push(item);
-    }
-
-    pub fn add_fn(&mut self, item: CrateInterfaceItem<ast::Fn>) {
-        self.fns.push(item);
-    }
-
-    pub fn add_struct(&mut self, item: CrateInterfaceItem<ast::Struct>) {
-        self.structs.push(item);
-    }
-
-    pub fn add_enum(&mut self, item: CrateInterfaceItem<ast::Enum>) {
-        self.enums.push(item);
-    }
-
-    pub fn add_type(&mut self, item: CrateInterfaceItem<ast::TypeAlias>) {
-        self.types.push(item);
-    }
-
-    pub fn add_macro(&mut self, item: CrateInterfaceItem<ast::MacroRules>) {
-        self.macros.push(item);
-    }
+    pub fn add_fn(&mut self, item: CrateInterfaceItem<ast::Fn>) { self.fns.push(item); }
+    pub fn add_struct(&mut self, item: CrateInterfaceItem<ast::Struct>) { self.structs.push(item); }
+    pub fn add_enum(&mut self, item: CrateInterfaceItem<ast::Enum>) { self.enums.push(item); }
+    pub fn add_trait(&mut self, item: CrateInterfaceItem<ast::Trait>) { self.traits.push(item); }
+    pub fn add_type_alias(&mut self, item: CrateInterfaceItem<ast::TypeAlias>) { self.type_aliases.push(item); }
+    pub fn add_macro(&mut self, item: CrateInterfaceItem<ast::MacroRules>) { self.macros.push(item); }
+    pub fn add_impl(&mut self, ib: ImplBlockInterface) { self.impls.push(ib); }
+    pub fn add_module(&mut self, ib: ModuleInterface) { self.modules.push(ib); }
 }

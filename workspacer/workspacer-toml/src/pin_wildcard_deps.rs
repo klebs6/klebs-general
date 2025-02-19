@@ -21,7 +21,7 @@ impl PinWildcardDependencies for CargoToml {
     /// NOTE: This writes the updated TOML **in-place** to `self.path`.
     async fn pin_wildcard_dependencies(
         &self,
-        lock_versions: &BTreeMap<String, BTreeSet<Version>>,
+        lock_versions: &LockVersionMap,
     ) -> Result<(), Self::Error> {
 
         debug!("Reading Cargo.toml from {:?}", self.as_ref());
@@ -59,7 +59,7 @@ impl PinWildcardDependencies for CargoToml {
 /// This helper updates all wildcard dependencies in a `Document`.
 fn pin_wildcards_in_doc(
     doc:           &mut Document,
-    lock_versions: &BTreeMap<String, BTreeSet<Version>>,
+    lock_versions: &LockVersionMap,
 ) {
     // Fix top-level sections like [dependencies], [dev-dependencies], etc.
     for (key, item) in doc.as_table_mut().iter_mut() {
