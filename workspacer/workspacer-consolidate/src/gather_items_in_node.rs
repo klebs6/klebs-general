@@ -1,3 +1,4 @@
+// ---------------- [ File: src/gather_items_in_node.rs ]
 crate::ix!();
 
 // --------------------------------------------------------------------------------
@@ -5,7 +6,7 @@ crate::ix!();
 // --------------------------------------------------------------------------------
 pub fn gather_items_in_node(
     parent_node: &SyntaxNode,
-    options: &ConsolidationOptions,
+    options:     &ConsolidationOptions,
 ) -> Vec<ConsolidatedItem> {
     let mut items = Vec::new();
 
@@ -40,23 +41,30 @@ pub fn gather_items_in_node(
                     items.push(ConsolidatedItem::Module(mod_interface));
                 }
             }
-
             SyntaxKind::IMPL => {
                 if let Some(impl_ast) = ast::Impl::cast(child.clone()) {
+                    // First check if we skip the impl entirely:
                     if should_skip_impl(&impl_ast, options) {
                         continue;
                     }
-                    let docs = if *options.include_docs() {
-                        extract_docs(impl_ast.syntax())
-                    } else {
-                        None
-                    };
-                    let attrs = gather_all_attrs(impl_ast.syntax());
-                    let signature = generate_impl_signature(&impl_ast, docs.as_ref());
-                    let methods = gather_impl_methods(&impl_ast, options);
-                    let type_aliases = gather_assoc_type_aliases(&impl_ast, options);
 
-                    let ib = ImplBlockInterface::new(docs, attrs, signature, methods, type_aliases);
+                    let docs      = None; // or gather docs
+                    let attrs     = None; // or gather_all_attrs
+                    let signature = generate_impl_signature(&impl_ast, docs.as_ref());
+
+                    // Then gather the *filtered* methods + aliases
+                    let included_methods = gather_impl_methods(&impl_ast, options);
+                    let included_aliases = gather_assoc_type_aliases(&impl_ast, options);
+
+                    // Make the interface
+                    let ib = ImplBlockInterface::new(
+                        docs,
+                        attrs,
+                        signature,
+                        included_methods,
+                        included_aliases,
+                    );
+
                     items.push(ConsolidatedItem::ImplBlock(ib));
                 }
             }

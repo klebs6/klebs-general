@@ -1,4 +1,4 @@
-// ---------------- [ File: workspacer/src/detect_circular_dependencies.rs ]
+// ---------------- [ File: src/detect_circular_dependencies.rs ]
 crate::ix!();
 
 #[async_trait]

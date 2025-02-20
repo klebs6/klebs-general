@@ -1,4 +1,4 @@
-// ---------------- [ File: workspacer-toml/src/cargo_toml_handle.rs ]
+// ---------------- [ File: src/cargo_toml_handle.rs ]
 crate::ix!();
 
 /// Handle to manipulate and verify the `Cargo.toml` file

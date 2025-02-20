@@ -1,4 +1,4 @@
-// ---------------- [ File: workspacer-syntax/src/extract_docs_from_ast_node.rs ]
+// ---------------- [ File: src/extract_docs_from_ast_node.rs ]
 crate::ix!();
 
 /// Extracts doc lines from `///` or `/** ... */`. We do NOT gather `#[doc="..."]` attributes here.

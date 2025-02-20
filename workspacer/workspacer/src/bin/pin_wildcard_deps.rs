@@ -1,4 +1,4 @@
-// ---------------- [ File: workspacer/src/pin_wildcard_deps_main.rs ]
+// ---------------- [ File: src/bin/pin_wildcard_deps.rs ]
 //! src/bin/pin_wildcards.rs
 use workspacer_3p::*;
 use workspacer_interface::*;

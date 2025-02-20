@@ -1,3 +1,4 @@
+// ---------------- [ File: src/impl_block_interface.rs ]
 crate::ix!();
 
 #[derive(Getters,Debug)]
@@ -6,17 +7,17 @@ pub struct ImplBlockInterface {
     docs:           Option<String>,
     attributes:     Option<String>,
     signature_text: String,
-    methods:        Vec<CrateInterfaceItem<ast::Fn>>,
-    type_aliases:   Vec<CrateInterfaceItem<ast::TypeAlias>>,
+    methods:        Vec<crate::crate_interface_item::CrateInterfaceItem<ast::Fn>>,
+    type_aliases:   Vec<crate::crate_interface_item::CrateInterfaceItem<ast::TypeAlias>>,
 }
 
 impl ImplBlockInterface {
     pub fn new(
-        docs: Option<String>,
-        attributes: Option<String>,
+        docs:           Option<String>,
+        attributes:     Option<String>,
         signature_text: String,
-        methods: Vec<CrateInterfaceItem<ast::Fn>>,
-        type_aliases: Vec<CrateInterfaceItem<ast::TypeAlias>>,
+        methods:        Vec<CrateInterfaceItem<ast::Fn>>,
+        type_aliases:   Vec<CrateInterfaceItem<ast::TypeAlias>>,
     ) -> Self {
         Self {
             docs,
@@ -29,38 +30,43 @@ impl ImplBlockInterface {
 }
 
 impl fmt::Display for ImplBlockInterface {
+
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        // doc lines first
+        // If we choose to always show the impl block, even if empty,
+        // do something like:
+
         if let Some(d) = &self.docs {
             for line in d.lines() {
                 writeln!(f, "{}", line)?;
             }
         }
-        // then attributes
         if let Some(a) = &self.attributes {
-            let lines: Vec<_> = a.lines()
-                .filter(|l| !l.trim().starts_with("#[doc =")) // skip doc= if present
-                .collect();
-            for line in lines {
+            for line in a.lines() {
                 writeln!(f, "{}", line)?;
             }
         }
 
+        // If no items, show single line “impl Something for T {}”
+        if self.methods.is_empty() && self.type_aliases.is_empty() {
+            return write!(f, "{} {{}}", self.signature_text);
+        }
+
+        // Otherwise, multi-line display
         writeln!(f, "{} {{", self.signature_text)?;
 
-        // Indent each type alias and method the same
         for ta in &self.type_aliases {
-            for l in format!("{}", ta).lines() {
-                writeln!(f, "    {}", l)?;
+            let text = format!("{}", ta);
+            for line in text.lines() {
+                writeln!(f, "    {}", line)?;
             }
         }
         for m in &self.methods {
-            for l in format!("{}", m).lines() {
-                writeln!(f, "    {}", l)?;
+            let text = format!("{}", m);
+            for line in text.lines() {
+                writeln!(f, "    {}", line)?;
             }
         }
 
-        writeln!(f, "}}")?;
-        Ok(())
+        writeln!(f, "}}")
     }
 }

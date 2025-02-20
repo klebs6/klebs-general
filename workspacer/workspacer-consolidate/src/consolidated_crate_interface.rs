@@ -1,4 +1,4 @@
-// ---------------- [ File: workspacer-consolidate/src/consolidated_crate_interface.rs ]
+// ---------------- [ File: src/consolidated_crate_interface.rs ]
 crate::ix!();
 
 #[derive(Getters, Debug)]
@@ -45,14 +45,14 @@ impl fmt::Display for ConsolidatedCrateInterface {
 impl ConsolidatedCrateInterface {
     pub fn new() -> Self {
         Self {
-            fns: vec![],
-            structs: vec![],
-            enums: vec![],
-            traits: vec![],
+            fns:          vec![],
+            structs:      vec![],
+            enums:        vec![],
+            traits:       vec![],
             type_aliases: vec![],
-            macros: vec![],
-            impls: vec![],
-            modules: vec![],
+            macros:       vec![],
+            impls:        vec![],
+            modules:      vec![],
         }
     }
 

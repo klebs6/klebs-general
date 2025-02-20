@@ -1,4 +1,4 @@
-// ---------------- [ File: get-file-size/src/imports.rs ]
+// ---------------- [ File: src/imports.rs ]
 pub(crate) use export_magic::*;
 pub(crate) use error_tree::*;
 pub(crate) use async_trait::*;

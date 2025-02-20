@@ -1,4 +1,4 @@
-// ---------------- [ File: workspacer-consolidate/src/lib.rs ]
+// ---------------- [ File: src/lib.rs ]
 #[macro_use] mod imports; use imports::*;
 
 x!{consolidate_crate_interface}
@@ -19,3 +19,5 @@ x!{gather_crate_items}
 x!{gather_items_in_node}
 x!{gather_all_attrs}
 x!{gather_fn_item}
+x!{leading_spaces}
+x!{merge_doc_attrs}

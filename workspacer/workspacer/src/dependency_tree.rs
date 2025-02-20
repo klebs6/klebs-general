@@ -1,4 +1,4 @@
-// ---------------- [ File: workspacer/src/dependency_tree.rs ]
+// ---------------- [ File: src/dependency_tree.rs ]
 crate::ix!();
 
 pub type WorkspaceDependencyGraph = DiGraph<String, ()>;

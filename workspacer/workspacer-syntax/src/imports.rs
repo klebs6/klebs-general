@@ -1,3 +1,2 @@
-// ---------------- [ File: workspacer-syntax/src/imports.rs ]
-
+// ---------------- [ File: src/imports.rs ]
 pub(crate) use workspacer_3p::*;

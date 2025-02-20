@@ -1,4 +1,4 @@
-// ---------------- [ File: workspacer/src/workspace_analysis.rs ]
+// ---------------- [ File: src/workspace_analysis.rs ]
 crate::ix!();
 
 #[async_trait]

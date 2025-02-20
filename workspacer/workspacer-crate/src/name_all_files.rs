@@ -1,3 +1,4 @@
+// ---------------- [ File: src/name_all_files.rs ]
 crate::ix!();
 
 // Implementation for a single crate. Gathers all `.rs` files (src + tests) *recursively*,
@@ -162,7 +163,6 @@ async fn gather_rs_files_recursively(root_dir: impl AsRef<Path>) -> Result<Vec<P
     Ok(result)
 }
 
-// ---------------- [ File: workspacer-crate/src/name_all_files_test.rs ]
 
 #[cfg(test)]
 mod test_name_all_files_for_crate_handle {
@@ -225,7 +225,6 @@ edition = "2021"
         // A file with a bracketed marker
         let file_path = temp.path().join("src/lib.rs");
         let original_contents = r#"
-// ------------------------- [ File: some/weird/path.rs ]
 fn example() {
     println!("Hello, world!");
 }
@@ -420,7 +419,6 @@ fn main() {}
 
         let nested_file = temp.path().join("src").join("nested").join("deep.rs");
         let contents = r#"
-// -------------- [ File: old_deep_marker ]
 fn deep() {}
 "#;
         create_file_with_contents(&nested_file, contents).await;
@@ -458,7 +456,6 @@ fn deep() {}
 
         let file_path = temp.path().join("src").join("locked.rs");
         let contents = r#"
-// -------------- [ File: old_marker ]
 fn locked() {}
 "#;
         create_file_with_contents(&file_path, contents).await;

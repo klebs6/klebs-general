@@ -1,10 +1,9 @@
+// ---------------- [ File: src/gather_module.rs ]
 crate::ix!();
-
-// ---------------- [ File: workspacer-consolidate/src/lib.rs ] (wherever gather_module is)
 
 pub fn gather_module(
     module_ast: &ast::Module,
-    options: &ConsolidationOptions
+    options:    &ConsolidationOptions
 ) -> Option<ModuleInterface> {
 
     // ... skip logic omitted for brevity ...

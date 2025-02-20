@@ -1,4 +1,4 @@
-// ---------------- [ File: workspacer-toml/src/lib.rs ]
+// ---------------- [ File: src/lib.rs ]
 #[macro_use] mod imports; use imports::*;
 
 x!{cargo_toml_handle}

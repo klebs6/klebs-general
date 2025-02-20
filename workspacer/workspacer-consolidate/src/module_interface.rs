@@ -1,3 +1,4 @@
+// ---------------- [ File: src/module_interface.rs ]
 crate::ix!();
 
 // ---------------------------------------------------------------------------
@@ -47,5 +48,3 @@ impl fmt::Display for ModuleInterface {
         Ok(())
     }
 }
-
-

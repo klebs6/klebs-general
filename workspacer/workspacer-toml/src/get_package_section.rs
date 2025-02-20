@@ -1,4 +1,4 @@
-// ---------------- [ File: workspacer-toml/src/get_package_section.rs ]
+// ---------------- [ File: src/get_package_section.rs ]
 crate::ix!();
 
 impl GetPackageSection for CargoToml {

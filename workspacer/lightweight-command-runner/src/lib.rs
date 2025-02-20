@@ -1,4 +1,4 @@
-// ---------------- [ File: lightweight-command-runner/src/lib.rs ]
+// ---------------- [ File: src/lib.rs ]
 #[macro_use] mod imports; use imports::*;
 
 x!{command_runner}

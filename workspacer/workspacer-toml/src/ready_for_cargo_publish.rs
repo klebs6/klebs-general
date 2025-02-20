@@ -1,4 +1,4 @@
-// ---------------- [ File: workspacer-toml/src/ready_for_cargo_publish.rs ]
+// ---------------- [ File: src/ready_for_cargo_publish.rs ]
 crate::ix!();
 
 #[async_trait]

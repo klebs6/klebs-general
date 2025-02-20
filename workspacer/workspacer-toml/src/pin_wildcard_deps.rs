@@ -1,4 +1,4 @@
-// ---------------- [ File: workspacer-toml/src/pin_wildcard_deps.rs ]
+// ---------------- [ File: src/pin_wildcard_deps.rs ]
 crate::ix!();
 
 use std::collections::{BTreeMap, BTreeSet};

@@ -40,6 +40,7 @@ DEFAULT := test
 #DEFAULT := test_all
 #DEFAULT := pin_wildcard_deps
 DEFAULT := consolidate_crate_interface
+#DEFAULT := name_all_files
 #DEFAULT := run
 
 default: $(DEFAULT)
@@ -57,6 +58,9 @@ pin_wildcard_dep:
 
 consolidate_crate_interface:
 	RUSTFLAGS=$(RUSTFLAGS) $(CARGO) $(RUN) --bin consolidate-crate-interface $(FEATURES) -- --path workspacer-toml 
+
+name_all_files:
+	RUSTFLAGS=$(RUSTFLAGS) $(CARGO) $(RUN) --bin name-all-files $(FEATURES)
 
 build:
 	RUSTFLAGS=$(RUSTFLAGS) $(CARGO) $(BUILD) $(FEATURES)

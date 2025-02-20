@@ -1,3 +1,4 @@
+// ---------------- [ File: src/is_in_test_module.rs ]
 crate::ix!();
 
 /// Returns true if any ancestor is a `mod` that has `#[cfg(test)]`.

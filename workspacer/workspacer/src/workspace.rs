@@ -1,4 +1,4 @@
-// ---------------- [ File: workspacer/src/workspace.rs ]
+// ---------------- [ File: src/workspace.rs ]
 crate::ix!();
 
 #[derive(Debug)]

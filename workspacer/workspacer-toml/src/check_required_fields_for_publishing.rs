@@ -1,4 +1,4 @@
-// ---------------- [ File: workspacer-toml/src/check_required_fields_for_publishing.rs ]
+// ---------------- [ File: src/check_required_fields_for_publishing.rs ]
 crate::ix!();
 
 impl CheckRequiredFieldsForPublishing for CargoToml {

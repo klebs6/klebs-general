@@ -1,3 +1,4 @@
+// ---------------- [ File: src/consolidated_item.rs ]
 crate::ix!();
 
 /// An enum representing any consolidated item that can live in a module.
@@ -17,14 +18,14 @@ pub enum ConsolidatedItem {
 impl fmt::Display for ConsolidatedItem {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            ConsolidatedItem::Fn(item) => write!(f, "{}", item),
-            ConsolidatedItem::Struct(item) => write!(f, "{}", item),
-            ConsolidatedItem::Enum(item) => write!(f, "{}", item),
-            ConsolidatedItem::Trait(item) => write!(f, "{}", item),
+            ConsolidatedItem::Fn(item)        => write!(f, "{}", item),
+            ConsolidatedItem::Struct(item)    => write!(f, "{}", item),
+            ConsolidatedItem::Enum(item)      => write!(f, "{}", item),
+            ConsolidatedItem::Trait(item)     => write!(f, "{}", item),
             ConsolidatedItem::TypeAlias(item) => write!(f, "{}", item),
-            ConsolidatedItem::Macro(item) => write!(f, "{}", item),
-            ConsolidatedItem::Module(mi) => write!(f, "{}", mi),
-            ConsolidatedItem::ImplBlock(ib) => write!(f, "{}", ib),
+            ConsolidatedItem::Macro(item)     => write!(f, "{}", item),
+            ConsolidatedItem::Module(mi)      => write!(f, "{}", mi),
+            ConsolidatedItem::ImplBlock(ib)   => write!(f, "{}", ib),
         }
     }
 }

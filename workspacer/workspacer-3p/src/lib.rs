@@ -1,4 +1,4 @@
-// ---------------- [ File: workspacer-3p/src/lib.rs ]
+// ---------------- [ File: src/lib.rs ]
 pub use std::path::{Path, PathBuf};
 pub use tempfile::{self,TempDir,NamedTempFile};
 pub use std::os::unix::fs::PermissionsExt;

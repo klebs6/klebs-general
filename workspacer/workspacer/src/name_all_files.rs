@@ -1,3 +1,4 @@
+// ---------------- [ File: src/name_all_files.rs ]
 crate::ix!();
 
 // Implementation for an entire workspace. Iterates over all crates, calling `name_all_files`

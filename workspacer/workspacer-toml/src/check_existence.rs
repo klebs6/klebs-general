@@ -1,4 +1,4 @@
-// ---------------- [ File: workspacer-toml/src/check_existence.rs ]
+// ---------------- [ File: src/check_existence.rs ]
 crate::ix!();
 
 #[allow(dead_code)] // remove if needed

@@ -1,3 +1,4 @@
+// ---------------- [ File: src/gather_all_attrs.rs ]
 crate::ix!();
 
 /// Gather all the raw attributes (e.g. `#[derive(Debug)]`, `#[cfg(feature="xyz")]`, etc.)

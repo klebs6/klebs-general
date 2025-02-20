@@ -1,4 +1,4 @@
-// ---------------- [ File: workspacer-interface/src/lib.rs ]
+// ---------------- [ File: src/lib.rs ]
 #[macro_use] mod imports; use imports::*;
 
 x!{crate_handle_interface}

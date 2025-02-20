@@ -1,5 +1,4 @@
-// ---------------- [ File: generate-report/src/lib.rs ]
-
+// ---------------- [ File: src/lib.rs ]
 pub trait GenerateReport {
 
     type Report;

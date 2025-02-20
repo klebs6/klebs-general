@@ -1,3 +1,4 @@
+// ---------------- [ File: src/gather_crate_items.rs ]
 crate::ix!();
 
 pub fn gather_crate_items(
@@ -6,5 +7,3 @@ pub fn gather_crate_items(
 ) -> Vec<ConsolidatedItem> {
     gather_items_in_node(sf.syntax(), options)
 }
-
-

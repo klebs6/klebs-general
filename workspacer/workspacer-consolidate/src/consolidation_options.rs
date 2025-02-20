@@ -1,3 +1,4 @@
+// ---------------- [ File: src/consolidation_options.rs ]
 crate::ix!();
 
 /// A small "options" struct controlling whether to include doc comments, private items, etc.
@@ -17,7 +18,7 @@ impl ConsolidationOptions {
     pub fn new() -> Self {
         Self {
             include_docs:       false,
-            include_private:    true,
+            include_private:    false,
             include_test_items: false,
             include_fn_bodies:  false,
         }

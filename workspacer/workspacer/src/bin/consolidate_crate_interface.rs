@@ -1,4 +1,4 @@
-// ---------------- [ File: workspacer/src/consolidate_crate_interface.rs ]
+// ---------------- [ File: src/bin/consolidate_crate_interface.rs ]
 //! src/bin/consolidate_crate_interface.rs
 use workspacer_3p::*;
 use structopt::*;
@@ -33,7 +33,7 @@ impl ConsolidateCrateInterfaceCli {
         // could possibly extend these with cli flags, if desired
         let opts = ConsolidationOptions::new()
             .with_docs()
-            .with_private_items()
+            //.with_private_items()
             .with_test_items()
             .with_fn_bodies()
             ;
@@ -42,7 +42,7 @@ impl ConsolidateCrateInterfaceCli {
 
         let consolidated = single_crate.consolidate_crate_interface(&opts).await?;
 
-        println!("{}", consolidated);
+        info!("\n\n{}", consolidated);
 
         Ok(())
     }

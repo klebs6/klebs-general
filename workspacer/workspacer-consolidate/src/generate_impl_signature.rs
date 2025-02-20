@@ -1,3 +1,4 @@
+// ---------------- [ File: src/generate_impl_signature.rs ]
 crate::ix!();
 
 // Return something like "impl SomeTrait for T" WITHOUT braces

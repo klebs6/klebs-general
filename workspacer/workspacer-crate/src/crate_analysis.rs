@@ -1,4 +1,4 @@
-// ---------------- [ File: workspacer-crate/src/crate_analysis.rs ]
+// ---------------- [ File: src/crate_analysis.rs ]
 crate::ix!();
 
 #[derive(Debug,Clone)]

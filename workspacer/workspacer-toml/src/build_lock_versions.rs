@@ -1,4 +1,4 @@
-// ---------------- [ File: workspacer-toml/src/build_lock_versions.rs ]
+// ---------------- [ File: src/build_lock_versions.rs ]
 crate::ix!();
 
 /// A shared helper that reads `Cargo.lock` from `root` and builds a map of crate->versions.

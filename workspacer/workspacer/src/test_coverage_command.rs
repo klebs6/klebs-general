@@ -1,4 +1,4 @@
-// ---------------- [ File: workspacer/src/test_coverage_command.rs ]
+// ---------------- [ File: src/test_coverage_command.rs ]
 crate::ix!();
 
 pub struct TestCoverageCommand {

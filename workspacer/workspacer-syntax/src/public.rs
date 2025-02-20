@@ -1,19 +1,20 @@
-// ---------------- [ File: workspacer-syntax/src/public.rs ]
+// ---------------- [ File: src/public.rs ]
 crate::ix!();
 
-/// Returns true if the node has `pub` (or `pub(...)`) visibility.
-/// For macros, also checks if `#[macro_export]`.
+// src/public.rs (or wherever you have is_node_public):
+//
 pub fn is_node_public(node: &SyntaxNode) -> bool {
-    let has_visibility = |node: &SyntaxNode| {
+    // This helper checks if the node literally has a `Visibility` child spelled `pub`,
+    // e.g. `pub fn something()`.
+    let has_visibility = || {
         node.children()
             .find_map(ast::Visibility::cast)
-            .map_or(false, |vis| matches!(
-                vis.kind(),
-                ast::VisibilityKind::Pub
-                | ast::VisibilityKind::PubCrate
-                | ast::VisibilityKind::PubSuper
-                | ast::VisibilityKind::PubSelf
-            ))
+            // If we find a Visibility node, check if it starts with "pub"
+            // or "pub(" or any recognized variant.
+            .map_or(false, |vis| {
+                let text = vis.syntax().text().to_string();
+                text.starts_with("pub")
+            })
     };
 
     let kind = node.kind();
@@ -22,8 +23,8 @@ pub fn is_node_public(node: &SyntaxNode) -> bool {
         | SyntaxKind::STRUCT
         | SyntaxKind::ENUM
         | SyntaxKind::TRAIT
-        | SyntaxKind::TYPE_ALIAS => has_visibility(node),
-
+        | SyntaxKind::TYPE_ALIAS => has_visibility(),
+        
         SyntaxKind::MACRO_RULES => {
             // special check if there's an attribute like #[macro_export]
             use ra_ap_syntax::ast::HasAttrs;
@@ -39,7 +40,10 @@ pub fn is_node_public(node: &SyntaxNode) -> bool {
                 }
                 false
             })
-        },
+
+        }
+
+        // Everything else is not considered "public"
         _ => false,
     };
 

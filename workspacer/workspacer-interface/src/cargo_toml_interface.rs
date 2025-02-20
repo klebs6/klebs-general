@@ -1,4 +1,4 @@
-// ---------------- [ File: workspacer-interface/src/cargo_toml_interface.rs ]
+// ---------------- [ File: src/cargo_toml_interface.rs ]
 crate::ix!();
 
 pub trait CargoTomlInterface

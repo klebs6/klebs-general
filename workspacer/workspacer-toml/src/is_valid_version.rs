@@ -1,6 +1,4 @@
-// ---------------- [ File: workspacer-toml/src/is_valid_version.rs ]
-// ---------------- [ File: workspacer-toml/src/is_valid_version.rs ]
-// ---------------- [ File: workspacer-toml/src/is_valid_version.rs ]
+// ---------------- [ File: src/is_valid_version.rs ]
 crate::ix!();
 
 impl IsValidVersion for CargoToml {

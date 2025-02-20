@@ -1,4 +1,4 @@
-// ---------------- [ File: lightweight-command-runner/src/command_runner.rs ]
+// ---------------- [ File: src/command_runner.rs ]
 crate::ix!();
 
 pub trait CommandRunner: Send + Sync {

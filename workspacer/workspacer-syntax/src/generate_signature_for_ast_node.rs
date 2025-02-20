@@ -1,4 +1,4 @@
-// ---------------- [ File: workspacer-syntax/src/generate_signature_for_ast_node.rs ]
+// ---------------- [ File: src/generate_signature_for_ast_node.rs ]
 crate::ix!();
 
 /// A trait to generate a "signature" string (or declaration line)
@@ -6,24 +6,7 @@ crate::ix!();
 pub trait GenerateSignature: fmt::Debug + Clone {
     /// Generate a textual signature, optionally embedding doc lines
     /// (passed in from your doc-extraction routine).
-    fn generate_signature(&self, docs: Option<&String>) -> String;
-}
-
-/// If you want doc lines above the signature, convert each line from `docs`
-/// into `/// ...` lines (if they aren’t already). Then you can insert them
-/// before or within the final signature string.
-pub fn format_docs_for_signature(docs: Option<&String>) -> String {
-    if let Some(d) = docs {
-        let trimmed = d.trim();
-        if trimmed.is_empty() {
-            "".to_string()
-        } else {
-            // Add a newline after them so the signature is on a new line
-            format!("{trimmed}\n")
-        }
-    } else {
-        "".to_string()
-    }
+    fn generate_signature(&self) -> String;
 }
 
 /// Minimal post-processing for spacing around `->` and `where`.
@@ -34,77 +17,82 @@ pub fn post_process_spacing(signature: &str) -> String {
         .replace(">where", "> where")
 }
 
-// --------------------------------------------------------------------
-// Implementation for `ast::Fn`
-// --------------------------------------------------------------------
 impl GenerateSignature for ast::Fn {
-    fn generate_signature(&self, docs: Option<&String>) -> String {
-        // 1) Convert doc lines into something we can prepend
-        let doc_comment_str = format_docs_for_signature(docs);
+    fn generate_signature(&self) -> String {
+        // For clarity, we omit doc lines, etc. The key is the parameter logic below.
 
-        // 2) Visibility, e.g. "pub "
+        // 1) Gather visibility and async tokens (unchanged from your code)
         let vis_str = self
             .visibility()
             .map(|v| format!("{} ", v.syntax().text()))
             .unwrap_or_default();
-
-        // 3) Possibly "async "
         let async_str = if let Some(token) = self.async_token() {
-            format!("{} ", token.text()) // e.g. "async "
+            format!("{} ", token.text())
         } else {
             "".to_string()
         };
 
-        // 4) `fn`
+        // 2) The function name
         let fn_keyword = "fn";
-
-        // 5) The function name or <anon>
         let name_str = self
             .name()
             .map(|n| n.text().to_string())
             .unwrap_or_else(|| "<anon>".to_string());
 
-        // 6) Gather generics, e.g. <T: Debug>
+        // 3) Generic params, e.g. "<T>"
         let generic_params = self
             .generic_param_list()
             .map(|gp| gp.syntax().text().to_string())
             .unwrap_or_default();
 
-        // 7) Gather parameters
+        // 4) Build a vector of parameter texts
         let mut param_texts = Vec::new();
-        if let Some(plist) = self.param_list() {
-            for param in plist.params() {
-                // Check if param is a `SelfParam` (e.g. &self) or normal `Param`
-                if let Some(self_param) = ast::SelfParam::cast(param.syntax().clone()) {
-                    // e.g. "&self", "&mut self", "self"
-                    let amp_str = if self_param.amp_token().is_some() { "&" } else { "" };
-                    let lifetime_str = self_param
-                        .lifetime()
-                        .map(|lt| lt.syntax().text().to_string())
-                        .unwrap_or_default();
-                    let mut_str = if self_param.mut_token().is_some() { "mut " } else { "" };
 
-                    // combine them into e.g. "&'a mut self"
-                    // handle spacing carefully so we don't get double spaces
-                    if !amp_str.is_empty() || !lifetime_str.is_empty() || !mut_str.is_empty() {
-                        // e.g. "&'a " + "mut " + "self"
-                        let middle = if !lifetime_str.is_empty() {
-                            format!("{} ", lifetime_str)
-                        } else {
-                            "".to_string()
-                        };
-                        let param_str = format!("{}{}{}self", amp_str, middle, mut_str);
-                        param_texts.push(param_str.trim().to_string());
-                    } else {
-                        param_texts.push("self".to_string());
+        // (A) If we have a param_list node, check for self_param, then normal params:
+        if let Some(plist) = self.param_list() {
+            // For debugging if you like:
+            debug!("DEBUG: param_list = {}", plist.syntax().text());
+
+            // ---- STEP A1: Check for a "self_param"
+            if let Some(sp) = plist.self_param() {
+                // This is where `&self` or `&mut self` or just `self` is stored
+                debug!("DEBUG: found self param syntax = '{}'", sp.syntax().text());
+
+                let has_amp = sp.amp_token().is_some();  
+                let has_mut = sp.mut_token().is_some();
+                let lifetime_str = sp
+                    .lifetime()
+                    .map(|lt| lt.syntax().text().to_string())
+                    .unwrap_or_default();
+
+                // build e.g. "&'a mut self"
+                let mut pieces = String::new();
+                if has_amp {
+                    pieces.push('&');
+                    if !lifetime_str.is_empty() {
+                        pieces.push_str(&lifetime_str);
+                        pieces.push(' ');
                     }
-                } else if let Some(normal_param) = ast::Param::cast(param.syntax().clone()) {
-                    // normal param with pattern + type
-                    let pat_str = normal_param
+                }
+                if has_mut {
+                    pieces.push_str("mut ");
+                }
+                pieces.push_str("self");
+                param_texts.push(pieces.trim_end().to_string());
+            }
+
+            // ---- STEP A2: For the rest of the parameters
+            // (These do NOT include self_param())
+            for param in plist.params() {
+                debug!("DEBUG: normal param syntax = '{}'", param.syntax().text());
+
+                if let Some(normal) = ast::Param::cast(param.syntax().clone()) {
+                    // parse pattern + type
+                    let pat_str = normal
                         .pat()
                         .map(|p| p.syntax().text().to_string())
                         .unwrap_or_default();
-                    let ty_str = normal_param
+                    let ty_str = normal
                         .ty()
                         .map(|t| t.syntax().text().to_string())
                         .unwrap_or_default();
@@ -119,14 +107,16 @@ impl GenerateSignature for ast::Fn {
                         param_texts.push("<unknown_param>".to_string());
                     }
                 } else {
-                    // fallback if neither a SelfParam nor normal Param
+                    // In practice, we rarely hit this, but just in case:
                     param_texts.push("<unrecognized_param>".to_string());
                 }
             }
         }
+
+        // 5) Join the param texts
         let params_str = param_texts.join(", ");
 
-        // 8) Return type, e.g. " -> String"
+        // 6) Return type
         let ret_str = if let Some(ret_type) = self.ret_type() {
             if let Some(ty_node) = ret_type.ty() {
                 format!(" -> {}", ty_node.syntax().text())
@@ -137,18 +127,17 @@ impl GenerateSignature for ast::Fn {
             "".to_string()
         };
 
-        // 9) Where clause, e.g. " where T: Debug"
+        // 7) Where clause
         let where_str = if let Some(wc) = self.where_clause() {
             format!(" {}", wc.syntax().text())
         } else {
             "".to_string()
         };
 
-        // Construct the raw function signature
+        // Build final
         let raw_sig = format!(
-            "{doc_comment_str}{vis_str}{async_str}{fn_keyword} {name_str}{generic_params}({params_str}){ret_str}{where_str}"
+            "{vis_str}{async_str}{fn_keyword} {name_str}{generic_params}({params_str}){ret_str}{where_str}"
         );
-
         post_process_spacing(&raw_sig)
     }
 }
@@ -157,8 +146,7 @@ impl GenerateSignature for ast::Fn {
 // Implementation for `ast::Struct`
 // --------------------------------------------------------------------
 impl GenerateSignature for ast::Struct {
-    fn generate_signature(&self, docs: Option<&String>) -> String {
-        let doc_comment_str = format_docs_for_signature(docs);
+    fn generate_signature(&self) -> String {
 
         // Possibly pub
         let vis_str = self
@@ -232,7 +220,7 @@ impl GenerateSignature for ast::Struct {
         let core = format!(
             "{vis_str}struct {name}{generic_params_raw}{where_clause} {fields_text}",
         );
-        let final_sig = format!("{doc_comment_str}{core}");
+        let final_sig = format!("{core}");
         post_process_spacing(&final_sig)
     }
 }
@@ -241,8 +229,7 @@ impl GenerateSignature for ast::Struct {
 // Implementation for `ast::Trait`
 // --------------------------------------------------------------------
 impl GenerateSignature for ast::Trait {
-    fn generate_signature(&self, docs: Option<&String>) -> String {
-        let doc_comment_str = format_docs_for_signature(docs);
+    fn generate_signature(&self) -> String {
 
         let vis_str = self
             .visibility()
@@ -273,7 +260,7 @@ impl GenerateSignature for ast::Trait {
         let core = format!(
             "{vis_str}trait {name}{generic_params_raw}{where_clause} ",
         );
-        let final_sig = format!("{doc_comment_str}{core}");
+        let final_sig = format!("{core}");
         post_process_spacing(&final_sig)
     }
 }
@@ -282,8 +269,7 @@ impl GenerateSignature for ast::Trait {
 // Implementation for `ast::Enum`
 // --------------------------------------------------------------------
 impl GenerateSignature for ast::Enum {
-    fn generate_signature(&self, docs: Option<&String>) -> String {
-        let doc_comment_str = format_docs_for_signature(docs);
+    fn generate_signature(&self) -> String {
 
         let vis_str = self
             .visibility()
@@ -314,7 +300,7 @@ impl GenerateSignature for ast::Enum {
         let core = format!(
             "{vis_str}enum {name}{generic_params_raw}{where_clause} ",
         );
-        let final_sig = format!("{doc_comment_str}{core}");
+        let final_sig = format!("{core}");
         post_process_spacing(&final_sig)
     }
 }
@@ -323,8 +309,7 @@ impl GenerateSignature for ast::Enum {
 // Implementation for `ast::MacroRules`
 // --------------------------------------------------------------------
 impl GenerateSignature for ast::MacroRules {
-    fn generate_signature(&self, docs: Option<&String>) -> String {
-        let doc_comment_str = format_docs_for_signature(docs);
+    fn generate_signature(&self) -> String {
 
         let name = self
             .name()
@@ -332,7 +317,7 @@ impl GenerateSignature for ast::MacroRules {
             .unwrap_or_else(|| "<unknown_macro>".to_string());
 
         let core = format!("macro_rules! {name} ");
-        let final_sig = format!("{doc_comment_str}{core}");
+        let final_sig = format!("{core}");
         post_process_spacing(&final_sig)
     }
 }
@@ -341,8 +326,7 @@ impl GenerateSignature for ast::MacroRules {
 // Implementation for `ast::TypeAlias`
 // --------------------------------------------------------------------
 impl GenerateSignature for ast::TypeAlias {
-    fn generate_signature(&self, docs: Option<&String>) -> String {
-        let doc_comment_str = format_docs_for_signature(docs);
+    fn generate_signature(&self) -> String {
 
         let name = self
             .name()
@@ -380,7 +364,7 @@ impl GenerateSignature for ast::TypeAlias {
             "{visibility}type {name}{generic_params_raw}{where_clause} = {aliased_type};",
         );
 
-        let final_sig = format!("{doc_comment_str}{core}");
+        let final_sig = format!("{core}");
         post_process_spacing(&final_sig)
     }
 }

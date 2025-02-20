@@ -1,4 +1,4 @@
-// ---------------- [ File: workspacer/src/lib.rs ]
+// ---------------- [ File: src/lib.rs ]
 #[macro_use] mod imports; use imports::*;
 
 x!{watch_and_reload}
