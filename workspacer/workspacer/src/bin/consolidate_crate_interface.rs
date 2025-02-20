@@ -35,8 +35,13 @@ impl ConsolidateCrateInterfaceCli {
             .with_docs()
             //.with_private_items()
             .with_test_items()
-            .with_fn_bodies()
+            //.with_fn_bodies()
+            //.with_only_test_items()
+            //.with_fn_bodies_in_tests()
             ;
+
+        // optionally logs helpful warnings
+        opts.validate(); 
 
         info!("consolidation_options: {:#?}", opts);
 

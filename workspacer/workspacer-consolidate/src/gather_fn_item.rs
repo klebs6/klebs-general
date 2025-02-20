@@ -14,14 +14,28 @@ pub fn gather_fn_item(
 
     let attributes = gather_all_attrs(fn_ast.syntax());
 
-    let body_source = if *options.include_fn_bodies() {
-        if let Some(block_expr) = fn_ast.body() {
-            Some(block_expr.syntax().text().to_string())
+    let is_test_item = is_in_test_module(fn_ast.syntax().clone()) || has_cfg_test_attr(fn_ast.syntax());
+
+    let body_source = if is_test_item {
+        if *options.include_fn_bodies_in_tests() {
+            if let Some(block_expr) = fn_ast.body() {
+                Some(block_expr.syntax().text().to_string())
+            } else {
+                None
+            }
         } else {
             None
         }
     } else {
-        None
+        if *options.include_fn_bodies() {
+            if let Some(block_expr) = fn_ast.body() {
+                Some(block_expr.syntax().text().to_string())
+            } else {
+                None
+            }
+        } else {
+            None
+        }
     };
 
     CrateInterfaceItem::new(fn_ast.clone(), docs, attributes, body_source)
