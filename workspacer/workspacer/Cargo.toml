@@ -6,7 +6,7 @@ workspacer-toml            = { version = "0.4.0", path = "../workspacer-toml" }
 workspacer-consolidate     = { version = "0.4.0", path = "../workspacer-consolidate" }
 generate-report-trait      = { version = "0.1.0", path = "../generate-report-trait" }
 lightweight-command-runner = { version = "0.1.0", path = "../lightweight-command-runner" }
-structopt = "*"
+structopt = "0.3.26"
 
 [[bin]]
 path = "src/bin/pin_wildcard_deps.rs"
