@@ -17,8 +17,8 @@ path = "src/bin/name_all_files.rs"
 name = "workspacer-name-all-files"
 
 [[bin]]
-path = "src/bin/consolidate_crate_interface.rs"
-name = "workspacer-consolidate-crate-interface"
+path = "src/bin/show_consolidated_crate_interface.rs"
+name = "workspacer-show-consolidated-crate-interface"
 
 [package]
 name        = "workspacer"

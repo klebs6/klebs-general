@@ -54,10 +54,10 @@ run:
 	RUSTFLAGS=$(RUSTFLAGS) $(CARGO) $(RUN) -p $(ACTIVE_PACKAGE) $(FEATURES)
 
 pin_wildcard_dep:
-	RUSTFLAGS=$(RUSTFLAGS) $(CARGO) $(RUN) --bin pin-wildcard-deps $(FEATURES)
+	RUSTFLAGS=$(RUSTFLAGS) $(CARGO) $(RUN) --bin workspacer-pin-wildcard-deps $(FEATURES)
 
 consolidate_crate_interface:
-	RUSTFLAGS=$(RUSTFLAGS) $(CARGO) $(RUN) --bin consolidate-crate-interface $(FEATURES) -- --path workspacer-toml 
+	RUSTFLAGS=$(RUSTFLAGS) $(CARGO) $(RUN) --bin workspacer-show-consolidated-crate-interface $(FEATURES) -- --path workspacer-toml --no-show-docs --no-show-private-items --no-show-fn-bodies
 
 name_all_files:
 	RUSTFLAGS=$(RUSTFLAGS) $(CARGO) $(RUN) --bin name-all-files $(FEATURES)
