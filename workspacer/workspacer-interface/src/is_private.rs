@@ -1,3 +1,4 @@
+// ---------------- [ File: src/is_private.rs ]
 crate::ix!();
 
 impl<H> IsPrivate for H
