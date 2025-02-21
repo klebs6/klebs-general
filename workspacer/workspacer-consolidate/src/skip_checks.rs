@@ -9,13 +9,13 @@ pub fn should_skip_item(node: &SyntaxNode, options: &ConsolidationOptions) -> bo
 
     // If user wants only test items, skip if this is not a test item.
     if *options.only_test_items() && !is_test_item {
-        info!("Skipping item: only_test_items=true but this item is not a test => {}", snippet);
+        debug!("Skipping item: only_test_items=true but this item is not a test => {}", snippet);
         return true;
     }
 
     // If it’s a test item but we do not want test items => skip.
     if is_test_item && !options.include_test_items() {
-        info!("Skipping item: test item but include_test_items=false => {}", snippet);
+        debug!("Skipping item: test item but include_test_items=false => {}", snippet);
         return true;
     }
 
@@ -24,7 +24,7 @@ pub fn should_skip_item(node: &SyntaxNode, options: &ConsolidationOptions) -> bo
 
     // If it’s not test-item, not visible, and user excludes private => skip
     if !is_test_item && !is_public_or_trait_impl && !options.include_private() {
-        info!("Skipping item: private item but include_private=false => {}", snippet);
+        debug!("Skipping item: private item but include_private=false => {}", snippet);
         return true;
     }
 
@@ -51,13 +51,13 @@ pub fn should_skip_impl(impl_ast: &ast::Impl, options: &ConsolidationOptions) ->
 
     // If user wants ONLY test items, skip this impl block if it's not a test.
     if *options.only_test_items() && !is_test_item {
-        info!("Skipping impl: only_test_items=true but impl is not a test => {}", snippet);
+        debug!("Skipping impl: only_test_items=true but impl is not a test => {}", snippet);
         return true;
     }
 
     // If the impl itself has #[cfg(test)], skip if we don’t want test items
     if has_cfg_test_attr(impl_ast.syntax()) && !options.include_test_items() {
-        info!("Skipping impl: impl has #[cfg(test)] but include_test_items=false => {}", snippet);
+        debug!("Skipping impl: impl has #[cfg(test)] but include_test_items=false => {}", snippet);
         return true;
     }
 

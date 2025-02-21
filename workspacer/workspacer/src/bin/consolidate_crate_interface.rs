@@ -37,7 +37,7 @@ impl ConsolidateCrateInterfaceCli {
             .with_test_items()
             //.with_fn_bodies()
             //.with_only_test_items()
-            //.with_fn_bodies_in_tests()
+            .with_fn_bodies_in_tests()
             ;
 
         // optionally logs helpful warnings

@@ -10,16 +10,15 @@ structopt = "*"
 
 [[bin]]
 path = "src/bin/pin_wildcard_deps.rs"
-name = "pin-wildcard-deps"
+name = "workspacer-pin-wildcard-deps"
 
 [[bin]]
 path = "src/bin/name_all_files.rs"
-name = "name-all-files"
+name = "workspacer-name-all-files"
 
 [[bin]]
 path = "src/bin/consolidate_crate_interface.rs"
-name = "consolidate-crate-interface"
-
+name = "workspacer-consolidate-crate-interface"
 
 [package]
 name        = "workspacer"
