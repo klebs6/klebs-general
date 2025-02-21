@@ -1,6 +1,9 @@
 // ---------------- [ File: src/lib.rs ]
 pub use std::path::{Path, PathBuf};
 pub use tempfile::{self,TempDir,NamedTempFile};
+pub use named_item::*;
+pub use reqwest::{self};
+pub use std::borrow::Cow;
 pub use std::os::unix::fs::PermissionsExt;
 pub use export_magic::*;
 pub use error_tree::*;
@@ -22,7 +25,7 @@ pub use std::collections::{BTreeMap,BTreeSet,HashMap};
 pub use tokio::process::Command;
 pub use std::process::Stdio;
 pub use cargo_metadata::PackageId;
-pub use petgraph::graph::{DiGraph, NodeIndex};
+pub use petgraph::{self,graph::{DiGraph, NodeIndex}};
 pub use petgraph::algo::tarjan_scc;
 pub use std::fmt::{self,Write,Display};
 pub use std::thread;

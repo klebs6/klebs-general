@@ -5,6 +5,10 @@ pub trait CrateHandleInterface<P>
 : ValidateIntegrity<Error=CrateError>
 + Send
 + Sync
++ Named
++ Versioned
++ IsPrivate<Error=CrateError>
++ TryPublish<Error=CrateError>
 + ReadFileString
 + EnsureGitClean<Error=GitError>
 + NameAllFiles<Error=CrateError>
@@ -33,6 +37,24 @@ where
 
     CrateError: From<<P as HasCargoTomlPathBuf>::Error>,
 {}
+
+pub trait Versioned {
+    type Error: std::fmt::Debug;
+    fn version(&self) -> Result<semver::Version,Self::Error>;
+}
+
+pub trait IsPrivate {
+    type Error;
+    fn is_private(&self) -> Result<bool,Self::Error>;
+}
+
+#[async_trait]
+pub trait TryPublish {
+    type Error;
+    async fn try_publish(
+        &self,
+    ) -> Result<(), Self::Error>;
+}
 
 /// We add a new method to CrateHandleInterface so we can read file text from 
 /// an in-memory mock or from the real filesystem. For your real code, 

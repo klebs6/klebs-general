@@ -9,6 +9,20 @@ pub struct CrateHandle {
     cargo_toml_handle: CargoToml,
 }
 
+impl Named for CrateHandle {
+
+    fn name(&self) -> Cow<'_, str> {
+        Cow::Owned(self.cargo_toml_handle.package_name().expect("expect that our crate has a package name"))
+    }
+}
+
+impl Versioned for CrateHandle {
+    type Error = CrateError;
+    fn version(&self) -> Result<semver::Version,Self::Error> {
+        Ok(self.cargo_toml_handle.version()?)
+    }
+}
+
 impl<P> CrateHandleInterface<P> for CrateHandle 
 where 
     for<'async_trait> 

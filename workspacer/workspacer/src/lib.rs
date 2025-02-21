@@ -17,3 +17,4 @@ x!{linting}
 x!{pin_wildcard_deps}
 x!{ensure_git_clean}
 x!{name_all_files}
+x!{publish_public_crates_in_topological_order}

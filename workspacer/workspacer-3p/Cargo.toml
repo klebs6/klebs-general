@@ -13,6 +13,8 @@ keywords = ["workspace", "crate", "validation", "coverage", "dependency"]
 categories = ["development-tools"]
 
 [dependencies]
+named-item              = "*"
+reqwest = "*"
 export-magic            = "0.3.6"
 error-tree              = "0.3.7"
 traced-test             = "1.0.2"

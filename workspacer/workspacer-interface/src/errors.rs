@@ -64,6 +64,7 @@ error_tree!{
         FileIsNotAFile {
             invalid_path: PathBuf,
         },
+        SemverError(Arc<semver::Error>),
     }
 
     #[derive(Clone)]
@@ -180,6 +181,21 @@ error_tree!{
 
     #[derive(Clone)]
     pub enum CrateError {
+        CargoPublishFailedForCrateWithExitCode {
+            crate_name:    String,
+            crate_version: semver::Version,
+            exit_code:     Option<i32>,
+        },
+        FailedtoRunCargoPublish {
+            crate_name:    String,
+            crate_version: semver::Version,
+            io_err:        Arc<io::Error>,
+        },
+        FailedCratesIoCheck {
+            crate_name:    String,
+            crate_version: semver::Version,
+            error:         Arc<reqwest::Error>,
+        },
         LockfileParseFailed {
             path:    PathBuf,
             message: String,
@@ -233,6 +249,9 @@ error_tree!{
     // Enum representing possible errors in the `workspace-detail` crate.
     #[derive(Clone)]
     pub enum WorkspaceError {
+        CycleDetectedInWorkspaceDependencyGraph {
+            cycle_node_id: NodeIndex,
+        },
         ActuallyInSingleCrate {
             path: PathBuf,
         },

@@ -5,6 +5,7 @@ pub trait CargoTomlInterface
 : CheckExistence<Error=CargoTomlError>
 + Send
 + Sync
++ Versioned<Error=CargoTomlError>
 + PinWildcardDependencies<Error=CargoTomlError>
 + CheckRequiredFieldsForPublishing<Error=CargoTomlError>
 + CheckVersionValidityForPublishing<Error=CargoTomlError>

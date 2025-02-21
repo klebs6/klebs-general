@@ -5,3 +5,4 @@ x!{crate_handle_interface}
 x!{cargo_toml_interface}
 x!{workspace_interface}
 x!{errors}
+x!{is_private}

@@ -8,3 +8,5 @@ x!{pin_wildcard_deps}
 x!{ensure_git_clean}
 x!{name_all_files}
 x!{read_file_string}
+x!{is_version_published_on_crates_io}
+x!{try_publish_crate}

@@ -12,7 +12,26 @@ pub struct CargoToml {
 
 impl CargoTomlInterface for CargoToml {}
 
+impl Versioned for CargoToml {
+
+    type Error = CargoTomlError;
+
+    fn version(&self) -> Result<semver::Version,Self::Error> {
+        self.check_required_fields_for_integrity()?;
+        let package = self.get_package_section()?;
+        let version_toml = package.get("version").unwrap();
+        Ok(semver::Version::parse(&version_toml.to_string()).map_err(|e| Arc::new(e))?)
+    }
+}
+
 impl CargoToml {
+
+    pub fn package_name(&self) -> Result<String,CargoTomlError> {
+        self.check_required_fields_for_integrity()?;
+        let package = self.get_package_section()?;
+        let name = package.get("name").unwrap();
+        Ok(name.to_string())
+    }
 
     /// Creates a new handle from the path to `Cargo.toml`
     pub async fn new<P>(cargo_toml_path: P) -> Result<Self, CargoTomlError> 

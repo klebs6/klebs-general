@@ -20,6 +20,10 @@ name = "workspacer-name-all-files"
 path = "src/bin/show_consolidated_crate_interface.rs"
 name = "workspacer-show-consolidated-crate-interface"
 
+[[bin]]
+path = "src/bin/publish_public_crates_in_order.rs"
+name = "workspacer-publish-public-crates-in-order"
+
 [package]
 name        = "workspacer"
 version     = "0.5.0"
