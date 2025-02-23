@@ -1,0 +1,16 @@
+[dependencies.generate-report-trait]
+path = "../generate-report-trait"
+[dependencies.workspacer-3p]
+path = "../workspacer-3p"
+[dependencies.workspacer-crate-interface]
+path = "../workspacer-crate-interface"
+[dependencies.workspacer-errors]
+path = "../workspacer-errors"
+[dependencies.workspacer-workspace]
+path = "../workspacer-workspace"
+[dependencies.workspacer-workspace-interface]
+path = "../workspacer-workspace-interface"
+[package]
+edition = "2024"
+name = "workspacer-test-coverage"
+version = "0.1.0"

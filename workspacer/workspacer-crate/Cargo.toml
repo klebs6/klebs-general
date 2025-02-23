@@ -1,16 +1,31 @@
 [dependencies]
-workspacer-interface = { version = "0.5.0", path = "../workspacer-interface" }
-workspacer-3p        = { version = "0.5.0", path = "../workspacer-3p" }
-workspacer-syntax    = { version = "0.5.0", path = "../workspacer-syntax" }
-workspacer-toml      = { version = "0.5.0", path = "../workspacer-toml" }
-get-file-size        = { version = "0.1.0", path = "../get-file-size" }
-derive_builder       = "0.20.2"
-
+derive_builder = "0.20.2"
+[dependencies.get-file-size]
+path = "../get-file-size"
+version = "0.1.0"
+[dependencies.workspacer-3p]
+path = "../workspacer-3p"
+version = "0.5.0"
+[dependencies.workspacer-crate-interface]
+path = "../workspacer-crate-interface"
+[dependencies.workspacer-errors]
+path = "../workspacer-errors"
+[dependencies.workspacer-interface]
+path = "../workspacer-interface"
+version = "0.5.0"
+[dependencies.workspacer-syntax]
+path = "../workspacer-syntax"
+version = "0.5.0"
+[dependencies.workspacer-toml]
+path = "../workspacer-toml"
+version = "0.5.0"
+[dependencies.workspacer-toml-interface]
+path = "../workspacer-toml-interface"
 [package]
-name        = "workspacer-crate"
-version     = "0.5.0"
-edition     = "2024"
-authors     = ["klebs tpk3.mx@gmail.com"]
-repository  = "https://github.com/klebs6/klebs-general"
+authors = [ "klebs tpk3.mx@gmail.com" ]
 description = "Core library for analyzing and extracting the public interface of individual Rust crates as part of the Workspacer suite."
-license     = "MIT OR Apache-2.0"
+edition = "2024"
+license = "MIT OR Apache-2.0"
+name = "workspacer-crate"
+repository = "https://github.com/klebs6/klebs-general"
+version = "0.5.0"

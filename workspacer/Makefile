@@ -11,35 +11,59 @@ RUN        := run
 TEST       := test
 
 #-------------------------------------[done-below]
-ACTIVE_PACKAGE := command-runner
-ACTIVE_PACKAGE := generate-report
+ACTIVE_PACKAGE := generate-report-trait
 ACTIVE_PACKAGE := get-file-size
-ACTIVE_PACKAGE := workspacer-toml
-#ACTIVE_PACKAGE := workspacer-interface
-#ACTIVE_PACKAGE := workspacer-crate
-#ACTIVE_PACKAGE := workspacer-3p
-ACTIVE_PACKAGE := workspacer-consolidate
-#ACTIVE_PACKAGE := workspacer-mock
-ACTIVE_PACKAGE := workspacer-syntax
+ACTIVE_PACKAGE := lightweight-command-runner
+ACTIVE_PACKAGE := workspacer-crate-interface
+ACTIVE_PACKAGE := workspacer-interface
+ACTIVE_PACKAGE := workspacer-toml-interface
+ACTIVE_PACKAGE := workspacer-workspace-interface
+ACTIVE_PACKAGE := workspacer-analysis
+ACTIVE_PACKAGE := workspacer-3p
+ACTIVE_PACKAGE := workspacer-add-and-initialize-crate
+ACTIVE_PACKAGE := workspacer-cleanup
+ACTIVE_PACKAGE := workspacer-crate
+ACTIVE_PACKAGE := workspacer-detect-circular-deps
+#ACTIVE_PACKAGE := workspacer-docs
+#ACTIVE_PACKAGE := workspacer-ensure-all-source-files-are-registered
+#ACTIVE_PACKAGE := workspacer-errors
+#ACTIVE_PACKAGE := workspacer-git
+#ACTIVE_PACKAGE := workspacer-linting
+#ACTIVE_PACKAGE := workspacer-lock
+#ACTIVE_PACKAGE := workspacer-metadata
+ACTIVE_PACKAGE := workspacer-mock
+#ACTIVE_PACKAGE := workspacer-name-all-files
+#ACTIVE_PACKAGE := workspacer-pin
+#ACTIVE_PACKAGE := workspacer-publish
+#ACTIVE_PACKAGE := workspacer-readme-writer
+#ACTIVE_PACKAGE := workspacer-rebuild-or-test
+#ACTIVE_PACKAGE := workspacer-sort-and-format-imports
+#ACTIVE_PACKAGE := workspacer-syntax
+#ACTIVE_PACKAGE := workspacer-test-coverage
+#ACTIVE_PACKAGE := workspacer-toml
+#ACTIVE_PACKAGE := workspacer-watch-and-reload
+#ACTIVE_PACKAGE := workspacer-workspace
+#ACTIVE_PACKAGE := workspacer-consolidate
 #ACTIVE_PACKAGE := workspacer
 
 INDIVIDUAL_TEST := consolidate_crate_interface
-INDIVIDUAL_TEST := test_consolidate_crate_interface_exhaustive
-INDIVIDUAL_TEST := gather_impl_methods
 
 #FEATURES := --features "enable_stress_test"
 FEATURES := --features ""
 
 TEST_FILE  := tests/test_scale_layer.rs
 
+CONSOLIDATE_CRATE := workspacer-toml
+
 #-----------------------------------------------------[this section lets us choose how we want to test]
 DEFAULT := test
 #DEFAULT := test_file
 #DEFAULT := test_one
 #DEFAULT := test_file_one
-#DEFAULT := test_all
+DEFAULT := test_all
 #DEFAULT := pin_wildcard_deps
-DEFAULT := consolidate_crate_interface
+#DEFAULT := consolidate_crate_interface
+#DEFAULT := publish_public_crates_in_order
 #DEFAULT := name_all_files
 #DEFAULT := run
 
@@ -56,8 +80,11 @@ run:
 pin_wildcard_dep:
 	RUSTFLAGS=$(RUSTFLAGS) $(CARGO) $(RUN) --bin workspacer-pin-wildcard-deps $(FEATURES)
 
+publish_public_crates_in_order:
+	RUSTFLAGS=$(RUSTFLAGS) $(CARGO) $(RUN) --bin workspacer-publish-public-crates-in-order $(FEATURES) -- --dry-run
+
 consolidate_crate_interface:
-	RUSTFLAGS=$(RUSTFLAGS) $(CARGO) $(RUN) --bin workspacer-show-consolidated-crate-interface $(FEATURES) -- --path workspacer-interface --no-show-docs --no-show-private-items --no-show-fn-bodies
+	RUSTFLAGS=$(RUSTFLAGS) $(CARGO) $(RUN) --bin workspacer-show-consolidated-crate-interface $(FEATURES) -- --path $(CONSOLIDATE_CRATE) --no-show-docs --no-show-private-items
 
 name_all_files:
 	RUSTFLAGS=$(RUSTFLAGS) $(CARGO) $(RUN) --bin name-all-files $(FEATURES)

@@ -6,7 +6,7 @@ crate::ix!();
 #[builder(setter(into))]
 pub struct CrateHandle {
     crate_path:        PathBuf,
-    cargo_toml_handle: CargoToml,
+    cargo_toml_handle: Arc<CargoToml>,
 }
 
 impl Named for CrateHandle {
@@ -56,7 +56,7 @@ where
 
         let cargo_toml_path = crate_path.cargo_toml_path_buf().await?;
 
-        let cargo_toml_handle = CargoToml::new(cargo_toml_path).await?;
+        let cargo_toml_handle = Arc::new(CargoToml::new(cargo_toml_path).await?);
 
         Ok(Self {
             cargo_toml_handle,
@@ -212,8 +212,8 @@ impl GetFilesInDirectoryWithExclusions for CrateHandle {
 
 impl HasCargoToml for CrateHandle {
 
-    fn cargo_toml<'a>(&'a self) -> &'a dyn CargoTomlInterface {
-        &self.cargo_toml_handle
+    fn cargo_toml(&self) -> Arc<dyn CargoTomlInterface> {
+        self.cargo_toml_handle.clone()
     }
 }
 
@@ -224,20 +224,351 @@ impl AsRef<Path> for CrateHandle {
     }
 }
 
-#[async_trait]
-impl ReadyForCargoPublish for CrateHandle {
+// Tests for the `CrateHandle` struct and its implemented traits.
+//
+// We verify that the crate handle can:
+// - Extract name/version from `Cargo.toml`
+// - Check for `src/` existence and presence of `main.rs` or `lib.rs`
+// - Check for `README.md` existence
+// - Enumerate source and test files
+// - Verify readiness for publishing
+// - Validate integrity
+#[cfg(test)]
+mod test_crate_handle {
+    use super::*;
+    use std::path::{Path, PathBuf};
+    use tempfile::tempdir;
+    use tokio::fs::{File, create_dir_all};
+    use tokio::io::AsyncWriteExt;
 
-    type Error = CrateError;
+    // A small helper that creates and writes arbitrary text to a file.
+    async fn write_file(file_path: &Path, content: &str) {
+        if let Some(parent_dir) = file_path.parent() {
+            create_dir_all(parent_dir)
+                .await
+                .expect("Failed to create parent directories");
+        }
+        let mut f = File::create(file_path)
+            .await
+            .unwrap_or_else(|e| panic!("Could not create file {}: {e}", file_path.display()));
+        f.write_all(content.as_bytes())
+            .await
+            .unwrap_or_else(|e| panic!("Failed to write to file {}: {e}", file_path.display()));
+    }
 
-    /// Checks if the crate is ready for Cargo publishing
-    async fn ready_for_cargo_publish(&self) -> Result<(), Self::Error> {
+    // Creates a basic "Cargo.toml" content.  
+    // By default, includes `[package] name, version, authors, license`.
+    fn minimal_cargo_toml(name: &str, version: &str) -> String {
+        format!(
+            r#"[package]
+name = "{name}"
+version = "{version}"
+authors = ["Some Body"]
+license = "MIT"
+"#,
+        )
+    }
 
-        let cargo_toml = self.cargo_toml();
-        cargo_toml.ready_for_cargo_publish().await?;
+    /// Helper to build a `CrateHandle` by placing a Cargo.toml file (and optional other files)
+    /// in a temporary directory, then calling `CrateHandle::new(...)`.
+    async fn create_crate_handle_in_temp(
+        crate_name: &str,
+        crate_version: &str,
+        create_src_dir: bool,
+        create_tests_dir: bool,
+        create_readme: bool,
+        main_or_lib: Option<&str>, // "main" or "lib" or None
+    ) -> CrateHandle {
+        let tmp_dir = tempdir().expect("Failed to create temp dir");
+        let root_path = tmp_dir.path().to_path_buf();
 
-        self.check_readme_exists()?;
-        self.check_src_directory_contains_valid_files()?;
+        // Write Cargo.toml
+        let cargo_toml_content = minimal_cargo_toml(crate_name, crate_version);
+        let cargo_toml_path = root_path.join("Cargo.toml");
+        write_file(&cargo_toml_path, &cargo_toml_content).await;
 
-        Ok(())
+        // Optionally create src and main.rs or lib.rs
+        if create_src_dir {
+            if let Some(which) = main_or_lib {
+                // which should be "main" or "lib"
+                let file_name = format!("{which}.rs");
+                let file_path = root_path.join("src").join(file_name);
+                write_file(&file_path, "// sample content").await;
+            }
+        }
+
+        // Optionally create tests directory
+        if create_tests_dir {
+            let test_file_path = root_path.join("tests").join("test_basic.rs");
+            write_file(&test_file_path, "// test file content").await;
+        }
+
+        // Optionally create README.md
+        if create_readme {
+            let readme_path = root_path.join("README.md");
+            write_file(&readme_path, "# My Crate\nSome description.").await;
+        }
+
+        // Now build a type that implements `HasCargoTomlPathBuf` for the root path
+        // We'll define a minimal struct to do that:
+        #[derive(Clone)]
+        struct TempCratePath(PathBuf);
+
+        impl AsRef<Path> for TempCratePath {
+            fn as_ref(&self) -> &Path {
+                self.0.as_ref()
+            }
+        }
+
+        // Create the input object
+        let temp_crate_path = TempCratePath(root_path.clone());
+
+        // Finally call CrateHandle::new
+        CrateHandle::new(&temp_crate_path)
+            .await
+            .expect("Failed to create CrateHandle from temp directory")
+    }
+
+    // ------------------------------------------------------------------------
+    // Actual tests
+    // ------------------------------------------------------------------------
+
+    /// 1) Test that name() and version() work for a minimal crate.
+    #[tokio::test]
+    async fn test_name_and_version() {
+        let handle = create_crate_handle_in_temp("test_crate", "0.1.0", false, false, false, None).await;
+        assert_eq!(handle.name(), "test_crate");
+        let ver = handle.version().expect("Expected valid version");
+        assert_eq!(ver.to_string(), "0.1.0");
+    }
+
+    /// 2) Test check_src_directory_contains_valid_files when we have src/main.rs
+    #[tokio::test]
+    async fn test_check_src_directory_contains_valid_files_main_rs() {
+        let handle = create_crate_handle_in_temp(
+            "mycrate",
+            "0.1.0",
+            true,  // create src
+            false, // no tests
+            false, // no readme
+            Some("main"), // place main.rs
+        )
+        .await;
+
+        // Should not error
+        handle.check_src_directory_contains_valid_files().expect("Should find main.rs");
+    }
+
+    /// 3) Test check_src_directory_contains_valid_files when we have neither main.rs nor lib.rs => error
+    #[tokio::test]
+    async fn test_check_src_directory_contains_valid_files_missing_main_and_lib() {
+        let handle = create_crate_handle_in_temp(
+            "mycrate",
+            "0.1.0",
+            true,  // create src dir
+            false, // no tests
+            false, // no readme
+            None,  // no main or lib
+        )
+        .await;
+
+        let result = handle.check_src_directory_contains_valid_files();
+        assert!(result.is_err(), "Expected an error because neither main.rs nor lib.rs is present");
+        match result {
+            Err(CrateError::FileNotFound { missing_file }) => {
+                let missing = missing_file.to_string_lossy();
+                assert!(
+                    missing.contains("main.rs or lib.rs"),
+                    "Error message should mention main.rs or lib.rs"
+                );
+            }
+            _ => panic!("Expected CrateError::FileNotFound with mention of main.rs or lib.rs"),
+        }
+    }
+
+    /// 4) Test check_readme_exists => success when README.md is present
+    #[tokio::test]
+    async fn test_check_readme_exists_ok() {
+        let handle = create_crate_handle_in_temp(
+            "mycrate",
+            "0.1.0",
+            true,   // src
+            false,  // tests
+            true,   // readme
+            Some("lib"), 
+        )
+        .await;
+
+        // Should not error
+        handle.check_readme_exists().expect("README.md should exist");
+    }
+
+    /// 5) Test check_readme_exists => error when no README.md
+    #[tokio::test]
+    async fn test_check_readme_exists_missing() {
+        let handle = create_crate_handle_in_temp(
+            "mycrate",
+            "0.1.0",
+            true,  // src
+            false, // tests
+            false, // readme missing
+            Some("lib"),
+        )
+        .await;
+
+        let result = handle.check_readme_exists();
+        assert!(result.is_err());
+        match result {
+            Err(CrateError::FileNotFound { missing_file }) => {
+                let missing = missing_file.to_string_lossy();
+                assert!(
+                    missing.contains("README.md"),
+                    "Expected error referencing README.md"
+                );
+            }
+            _ => panic!("Expected CrateError::FileNotFound for missing README.md"),
+        }
+    }
+
+    /// 6) Test has_tests_directory => false if we never created it, true if we did.
+    #[tokio::test]
+    async fn test_has_tests_directory() {
+        let handle_no_tests = create_crate_handle_in_temp(
+            "mycrate",
+            "0.1.0",
+            true,
+            false, // no tests
+            false,
+            Some("lib"),
+        )
+        .await;
+        assert!(!handle_no_tests.has_tests_directory(), "Expected false, no tests/ folder");
+
+        let handle_with_tests = create_crate_handle_in_temp(
+            "mycrate",
+            "0.1.0",
+            true,
+            true, // yes tests
+            false,
+            Some("lib"),
+        )
+        .await;
+        assert!(handle_with_tests.has_tests_directory(), "Expected true, tests/ folder created");
+    }
+
+    /// 7) Test get_source_files_excluding and get_test_files
+    #[tokio::test]
+    async fn test_file_enumeration_in_source_and_tests() {
+        let handle = create_crate_handle_in_temp(
+            "mycrate",
+            "0.1.0",
+            true,  // create src
+            true,  // create tests
+            true,  // readme
+            Some("lib"),
+        )
+        .await;
+
+        // Add one more file in src
+        let extra_src = handle.as_ref().join("src").join("extra.rs");
+        write_file(&extra_src, "// extra file").await;
+
+        // Add one more file in tests
+        let extra_test = handle.as_ref().join("tests").join("extra_test.rs");
+        write_file(&extra_test, "// extra test file").await;
+
+        // Now ask for the source files
+        let src_files = handle.source_files_excluding(&[]).await.expect("Should list src files");
+        // We expect 2: lib.rs + extra.rs
+        assert_eq!(src_files.len(), 2, "Should find 2 .rs files in src");
+
+        // Now check test files
+        let test_files = handle.test_files().await.expect("Should list test files");
+        // We expect 2: test_basic.rs + extra_test.rs
+        assert_eq!(test_files.len(), 2, "Should find 2 .rs files in tests");
+    }
+
+    /// 8) Test source_files_excluding to ensure we skip any excluded file(s).
+    #[tokio::test]
+    async fn test_source_files_excluding() {
+        let handle = create_crate_handle_in_temp(
+            "excluded_crate",
+            "0.1.0",
+            true,
+            false,
+            true,
+            Some("lib"),
+        )
+        .await;
+
+        // Add one more file in src
+        let extra_src = handle.as_ref().join("src").join("exclude_me.rs");
+        write_file(&extra_src, "// exclude me").await;
+
+        // If we exclude "exclude_me.rs", we should only see "lib.rs"
+        let src_files = handle.source_files_excluding(&["exclude_me.rs"]).await.unwrap();
+        assert_eq!(src_files.len(), 1, "Expected to exclude exclude_me.rs");
+        let only_file_name = src_files[0]
+            .file_name()
+            .unwrap()
+            .to_string_lossy()
+            .into_owned();
+        assert_eq!(only_file_name, "lib.rs");
+    }
+
+    /// Test validate_integrity => ensures the crate has Cargo.toml, a valid src file, and readme, etc.
+    /// Actually, `validate_integrity` does not require a README (the code checks `check_src_directory_contains_valid_files` and `check_readme_exists`). 
+    /// So this test will confirm it fails if `main.rs/lib.rs` is missing or if `Cargo.toml` is invalid, etc.
+    #[tokio::test]
+    async fn test_validate_integrity() {
+        // a) valid scenario
+        let handle_ok = create_crate_handle_in_temp(
+            "integrity_crate",
+            "0.1.1",
+            true,
+            false,
+            true,
+            Some("lib"),
+        )
+        .await;
+        let res_ok = handle_ok.validate_integrity();
+        assert!(res_ok.is_ok(), "Expected valid integrity with a src file and README");
+
+        // b) missing main.rs/lib.rs => should fail
+        let handle_bad_src = create_crate_handle_in_temp(
+            "bad_src_crate",
+            "0.1.0",
+            true,
+            false,
+            true,
+            None, // no main/lib
+        )
+        .await;
+        let res_bad_src = handle_bad_src.validate_integrity();
+        assert!(res_bad_src.is_err(), "Expected integrity check to fail with missing main.rs/lib.rs");
+
+        // c) missing README is not actually checked in `validate_integrity` as of the above code,
+        //    but let's confirm we do see an error if it's included. Actually, from the posted code,
+        //    `check_readme_exists()` is indeed called in `validate_integrity()`. So it should fail.
+        let handle_no_readme = create_crate_handle_in_temp(
+            "no_readme_crate",
+            "0.1.0",
+            true,
+            false,
+            false,
+            Some("main"),
+        )
+        .await;
+        let res_no_readme = handle_no_readme.validate_integrity();
+        assert!(res_no_readme.is_err(), "Expected missing README.md error");
+        match res_no_readme {
+            Err(CrateError::FileNotFound { missing_file }) => {
+                assert!(
+                    missing_file.ends_with("README.md"),
+                    "Expected error referencing missing README.md"
+                );
+            }
+            _ => panic!("Expected FileNotFound referencing README.md"),
+        }
     }
 }

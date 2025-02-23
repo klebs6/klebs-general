@@ -1,6 +1,7 @@
 // ---------------- [ File: src/lib.rs ]
 pub use std::path::{Path, PathBuf};
-pub use tempfile::{self,TempDir,NamedTempFile};
+pub use tempfile::{self,tempdir,TempDir,NamedTempFile};
+pub use std::fs::create_dir_all;
 pub use named_item::*;
 pub use reqwest::{self};
 pub use std::borrow::Cow;
@@ -27,6 +28,7 @@ pub use std::process::Stdio;
 pub use cargo_metadata::PackageId;
 pub use petgraph::{self,graph::{DiGraph, NodeIndex}};
 pub use petgraph::algo::tarjan_scc;
+pub use petgraph::visit::EdgeRef;
 pub use std::fmt::{self,Write,Display};
 pub use std::thread;
 pub use std::fmt::Result as FmtResult;
@@ -54,15 +56,11 @@ pub use ra_ap_syntax::*;
 pub use ra_ap_syntax::{self,ast};
 
 pub use async_try_from::*;
-pub use ra_ap_syntax::ast::{
-    HasGenericParams,
-    HasName,
-    HasVisibility,
-    HasAttrs,
-};
+pub use ra_ap_syntax::ast::{HasGenericParams, HasName, HasVisibility, HasAttrs, };
 pub use toml;
 pub use toml::Value as TomlValue;
 pub use serde_json;
 pub use derive_builder::{self,Builder};
 
 //pub use scan_crate_for_typedefs::is_node_public;
+

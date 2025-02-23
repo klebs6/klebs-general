@@ -1,0 +1,23 @@
+[dependencies.workspacer-3p]
+path = "../workspacer-3p"
+[dependencies.workspacer-crate]
+path = "../workspacer-crate"
+[dependencies.workspacer-crate-interface]
+path = "../workspacer-crate-interface"
+[dependencies.workspacer-errors]
+path = "../workspacer-errors"
+[dependencies.workspacer-git]
+path = "../workspacer-git"
+[dependencies.workspacer-lock]
+path = "../workspacer-lock"
+[dependencies.workspacer-toml]
+path = "../workspacer-toml"
+[dependencies.workspacer-workspace]
+path = "../workspacer-workspace"
+[package]
+edition = "2024"
+name = "workspacer-pin"
+version = "0.1.0"
+[[bin]]
+name = "workspacer-pin-wildcard-deps"
+path = "src/bin/pin_wildcard_deps.rs"

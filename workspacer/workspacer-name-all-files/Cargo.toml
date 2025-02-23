@@ -1,0 +1,19 @@
+[dependencies.workspacer-3p]
+path = "../workspacer-3p"
+[dependencies.workspacer-crate]
+path = "../workspacer-crate"
+[dependencies.workspacer-crate-interface]
+path = "../workspacer-crate-interface"
+[dependencies.workspacer-errors]
+path = "../workspacer-errors"
+[dependencies.workspacer-toml]
+path = "../workspacer-toml"
+[dependencies.workspacer-workspace]
+path = "../workspacer-workspace"
+[package]
+edition = "2024"
+name = "workspacer-name-all-files"
+version = "0.1.0"
+[[bin]]
+name = "workspacer-name-all-files"
+path = "src/bin/name_all_files.rs"

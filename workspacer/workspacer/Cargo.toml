@@ -1,34 +1,66 @@
 [dependencies]
-workspacer-interface       = { version = "0.5.0", path = "../workspacer-interface" }
-workspacer-3p              = { version = "0.5.0", path = "../workspacer-3p" }
-workspacer-crate           = { version = "0.5.0", path = "../workspacer-crate" }
-workspacer-toml            = { version = "0.5.0", path = "../workspacer-toml" }
-workspacer-consolidate     = { version = "0.5.0", path = "../workspacer-consolidate" }
-generate-report-trait      = { version = "0.1.0", path = "../generate-report-trait" }
-lightweight-command-runner = { version = "0.1.0", path = "../lightweight-command-runner" }
 structopt = "0.3.26"
-
-[[bin]]
-path = "src/bin/pin_wildcard_deps.rs"
-name = "workspacer-pin-wildcard-deps"
-
-[[bin]]
-path = "src/bin/name_all_files.rs"
-name = "workspacer-name-all-files"
-
-[[bin]]
-path = "src/bin/show_consolidated_crate_interface.rs"
-name = "workspacer-show-consolidated-crate-interface"
-
-[[bin]]
-path = "src/bin/publish_public_crates_in_order.rs"
-name = "workspacer-publish-public-crates-in-order"
-
+[dependencies.generate-report-trait]
+path = "../generate-report-trait"
+version = "0.1.0"
+[dependencies.lightweight-command-runner]
+path = "../lightweight-command-runner"
+version = "0.1.0"
+[dependencies.workspacer-3p]
+path = "../workspacer-3p"
+[dependencies.workspacer-analysis]
+path = "../workspacer-analysis"
+[dependencies.workspacer-cleanup]
+path = "../workspacer-cleanup"
+[dependencies.workspacer-consolidate]
+path = "../workspacer-consolidate"
+version = "0.5.0"
+[dependencies.workspacer-crate]
+path = "../workspacer-crate"
+version = "0.5.0"
+[dependencies.workspacer-crate-interface]
+path = "../workspacer-crate-interface"
+[dependencies.workspacer-detect-circular-deps]
+path = "../workspacer-detect-circular-deps"
+[dependencies.workspacer-docs]
+path = "../workspacer-docs"
+[dependencies.workspacer-errors]
+path = "../workspacer-errors"
+[dependencies.workspacer-git]
+path = "../workspacer-git"
+[dependencies.workspacer-interface]
+path = "../workspacer-interface"
+version = "0.5.0"
+[dependencies.workspacer-linting]
+path = "../workspacer-linting"
+[dependencies.workspacer-metadata]
+path = "../workspacer-metadata"
+[dependencies.workspacer-name-all-files]
+path = "../workspacer-name-all-files"
+[dependencies.workspacer-pin]
+path = "../workspacer-pin"
+[dependencies.workspacer-publish]
+path = "../workspacer-publish"
+[dependencies.workspacer-rebuild-or-test]
+path = "../workspacer-rebuild-or-test"
+[dependencies.workspacer-syntax]
+path = "../workspacer-syntax"
+[dependencies.workspacer-test-coverage]
+path = "../workspacer-test-coverage"
+[dependencies.workspacer-toml]
+path = "../workspacer-toml"
+version = "0.5.0"
+[dependencies.workspacer-watch-and-reload]
+path = "../workspacer-watch-and-reload"
+[dependencies.workspacer-workspace]
+path = "../workspacer-workspace"
+[dependencies.workspacer-workspace-interface]
+path = "../workspacer-workspace-interface"
 [package]
-name        = "workspacer"
-version     = "0.6.0"
-edition     = "2024"
-authors     = ["klebs tpk3.mx@gmail.com"]
-repository  = "https://github.com/klebs6/klebs-general"
+authors = [ "klebs tpk3.mx@gmail.com" ]
 description = "An asynchronous workspace management library for Rust projects, providing utilities for automation, analysis, and maintenance of multi-crate workspaces."
-license     = "MIT OR Apache-2.0"
+edition = "2024"
+license = "MIT OR Apache-2.0"
+name = "workspacer"
+repository = "https://github.com/klebs6/klebs-general"
+version = "0.6.0"

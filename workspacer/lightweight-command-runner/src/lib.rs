@@ -1,9 +1,6 @@
 // ---------------- [ File: src/lib.rs ]
 #[macro_use] mod imports; use imports::*;
 
-x!{command_runner}
-x!{exit_status}
-
 #[cfg(test)]
 mod test_default_command_runner {
     use super::*;
@@ -33,3 +30,5 @@ mod test_default_command_runner {
         assert!(stdout.contains("hello"), "Output should contain 'hello'");
     }
 }
+x!{command_runner}
+x!{exit_status}

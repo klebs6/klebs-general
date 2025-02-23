@@ -1,12 +1,8 @@
 // ---------------- [ File: src/lib.rs ]
 #[macro_use] mod imports; use imports::*;
 
-x!{crate_analysis}
 x!{crate_handle}
 x!{mock_crate_config}
-x!{pin_wildcard_deps}
-x!{ensure_git_clean}
-x!{name_all_files}
-x!{read_file_string}
+x!{is_private}
 x!{is_version_published_on_crates_io}
-x!{try_publish_crate}
+x!{read_file_string}

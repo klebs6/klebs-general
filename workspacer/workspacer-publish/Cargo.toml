@@ -1,0 +1,26 @@
+[dependencies]
+structopt = "*"
+
+[dependencies.workspacer-3p]
+path = "../workspacer-3p"
+[dependencies.workspacer-crate]
+path = "../workspacer-crate"
+[dependencies.workspacer-crate-interface]
+path = "../workspacer-crate-interface"
+[dependencies.workspacer-detect-circular-deps]
+path = "../workspacer-detect-circular-deps"
+[dependencies.workspacer-errors]
+path = "../workspacer-errors"
+[dependencies.workspacer-toml]
+path = "../workspacer-toml"
+[dependencies.workspacer-toml-interface]
+path = "../workspacer-toml-interface"
+[dependencies.workspacer-workspace]
+path = "../workspacer-workspace"
+[package]
+edition = "2024"
+name = "workspacer-publish"
+version = "0.1.0"
+[[bin]]
+name = "workspacer-publish-public-crates-in-order"
+path = "src/bin/publish_public_crates_in_order.rs"

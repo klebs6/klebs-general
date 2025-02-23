@@ -6,3 +6,4 @@ pub trait GenerateReport {
 
     fn generate_report(&self) -> Result<Self::Report,Self::Error>;
 }
+

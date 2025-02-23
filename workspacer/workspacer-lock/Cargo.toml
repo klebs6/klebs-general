@@ -1,0 +1,8 @@
+[dependencies.workspacer-3p]
+path = "../workspacer-3p"
+[dependencies.workspacer-errors]
+path = "../workspacer-errors"
+[package]
+edition = "2024"
+name = "workspacer-lock"
+version = "0.1.0"
