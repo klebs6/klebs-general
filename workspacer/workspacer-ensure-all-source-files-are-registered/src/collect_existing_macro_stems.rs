@@ -42,7 +42,7 @@ pub fn collect_existing_mod_macro_stems(
             // If user wrote `pub mod foo;` we bail, since that might conflict with x! usage
             if let Some(name_ident) = mod_item.name() {
                 let mod_name = name_ident.text().to_string();
-                if !mod_name.is_empty() {
+                if !mod_name.is_empty() && mod_name != "imports" {
                     return Err(SourceFileRegistrationError::FoundARawModNameWhichWeDontHandlePleaseRemoveOrUnifyWithXMacros {
                         mod_name
                     });
