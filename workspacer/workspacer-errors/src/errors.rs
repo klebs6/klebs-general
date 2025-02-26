@@ -10,12 +10,22 @@ error_tree!{
             offending_item: String,
         },
         CrateError(CrateError),
-        LibRsSyntaxErrors { parse_errors: Vec<String> },
-        LibRsParseTreeError,
+        LibRsSyntaxErrors { 
+            parse_errors: Vec<String> 
+        },
+        LibRsParseTreeError {
+            file_path: PathBuf,
+        },
         FoundAnUnhandlableTopLevelMacroCallWithAttributes,
-        MultipleItemsInXMacroUnsupported { chunk: String },
-        FoundARawModNameWhichWeDontHandlePleaseRemoveOrUnifyWithXMacros { mod_name: String },
-        EncounteredAnXMacroAfterWeAlreadySawANonAttributeItem_NotRewritingSafely,
+        MultipleItemsInXMacroUnsupported { 
+            chunk: String 
+        },
+        FoundARawModNameWhichWeDontHandlePleaseRemoveOrUnifyWithXMacros { 
+            mod_name:  String 
+        },
+        EncounteredAnXMacroAfterWeAlreadySawANonAttributeItem_NotRewritingSafely {
+            file_path: PathBuf,
+        },
     }
 
     #[derive(Clone)]

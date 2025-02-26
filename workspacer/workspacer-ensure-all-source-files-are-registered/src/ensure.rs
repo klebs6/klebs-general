@@ -35,12 +35,7 @@ impl EnsureAllSourceFilesAreRegistered for CrateHandle
 
     async fn ensure_all_source_files_are_registered(&self) -> Result<(), Self::Error> {
         // Step 1) Gather bin-target exclusions from Cargo.toml (sync call, no awaits)
-        let bin_exclusions = self.gather_bin_target_names().map_err(|e| {
-            // If needed, wrap or unify with SourceFileRegistrationError
-            SourceFileRegistrationError::LibRsSyntaxErrors {
-                parse_errors: vec![format!("Error gathering bin targets: {e:?}")]
-            }
-        })?;
+        let bin_exclusions = self.gather_bin_target_names()?;
 
         // Step 2) Collect .rs files in src/, skipping known special ones (this is async)
         let all_src_files = self.source_files_excluding(&[]).await.map_err(|e| {
