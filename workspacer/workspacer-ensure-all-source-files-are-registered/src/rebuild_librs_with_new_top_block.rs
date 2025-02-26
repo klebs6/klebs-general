@@ -1,22 +1,18 @@
 // ---------------- [ File: src/rebuild_librs_with_new_top_block.rs ]
 crate::ix!();
 
-/// We’ll store references to existing x! macros in the order they appear.
 #[derive(Debug)]
 struct ExistingMacro {
-    pub text: String,       // the full macro call text, e.g. "x!{command_runner}"
-    pub range: TextRange,   // so we can remove it from the file
+    pub text: String,     // the full macro call text, e.g. "x!{command_runner}"
+    pub range: TextRange, // so we can remove it from the file
 }
 
-/// Return true if this is `#[macro_use] mod imports; use imports::*;`
 fn is_imports_line(item: &ast::Item) -> bool {
-    // If it's a `mod imports;`
     if let Some(module_item) = ast::Module::cast(item.syntax().clone()) {
         if let Some(name_ident) = module_item.name() {
             return name_ident.text() == "imports";
         }
     } else if let Some(use_item) = ast::Use::cast(item.syntax().clone()) {
-        // e.g. "use imports::*;"
         let text = use_item.syntax().text().to_string();
         if text.contains("imports::*") {
             return true;
@@ -25,13 +21,11 @@ fn is_imports_line(item: &ast::Item) -> bool {
     false
 }
 
-/// Return Some("x!{foo}") if this item is an x! macro, or None otherwise.
+/// Returns Some("x!{foo}") if it's an `x!{...}` macro call, else None.
 fn is_x_macro(item: &ast::Item) -> Option<String> {
     let mac_call = ast::MacroCall::cast(item.syntax().clone())?;
     let path = mac_call.path()?;
-    let path_text = path.syntax().text().to_string();
-    if path_text.trim() == "x" {
-        // The entire item text
+    if path.syntax().text().to_string().trim() == "x" {
         let macro_text = item.syntax().text().to_string();
         Some(macro_text)
     } else {
@@ -39,26 +33,36 @@ fn is_x_macro(item: &ast::Item) -> Option<String> {
     }
 }
 
+/// Extract the stem from a macro call like `x!{some_name}` => `"some_name"`.
+fn parse_x_macro_stem(macro_text: &str) -> Option<String> {
+    let start = macro_text.find('{')?;
+    let end   = macro_text.rfind('}')?;
+    if start+1 < end {
+        Some(macro_text[start+1..end].trim().to_string())
+    } else {
+        None
+    }
+}
+
 /// Rebuilds `lib.rs` so that:
-///  1) `#[macro_use] mod imports; use imports::*;` lines stay at the very top
-///  2) Then a single block of x! macros (old + new)
-///  3) Everything else remains exactly as-is in the original text
+///  1) The existing `#[macro_use] mod imports; use imports::*;` lines remain at the top
+///  2) We remove all x! calls from anywhere in the file, unify them with new stems, sort them,
+///     and insert them as a single block **right after** the last import line
+///  3) Everything else remains exactly as-is
 ///
-/// `existing_new_stems` is the set of new `.rs` stems we discovered, e.g. ["my_new_file"].
+/// `existing_new_stems`: e.g. ["my_new_file"]
 pub fn rebuild_lib_rs_with_new_top_block(
     parsed_file: &SourceFile,
     old_text: &str,
     existing_new_stems: &[String],
-    file_path: &Path, // optional, for error messages
+    file_path: &Path,
 ) -> Result<String, SourceFileRegistrationError> 
 {
     let file_syntax: SyntaxNode = parsed_file.syntax().clone();
 
-    // 1) Identify lines that are `imports` items => track their position
-    //    Identify existing x! macros => remove them, but store them in an ordered list.
-    //    We'll keep everything else in place.
-    let mut imports_ranges = vec![]; 
-    let mut existing_macros = Vec::new(); 
+    // 1) Identify lines that are `imports`, plus any existing x! macros
+    let mut imports_ranges = vec![];
+    let mut existing_macros = vec![];
 
     for item in parsed_file.items() {
         if is_imports_line(&item) {
@@ -71,62 +75,51 @@ pub fn rebuild_lib_rs_with_new_top_block(
         }
     }
 
-    // 2) Remove the existing macros from the text
-    //    We'll keep the import lines as is, so we do NOT remove them from the file.
-    //    That means they'll remain exactly where they are in `old_text`.
-    //    Sort by descending start offset so we can remove them without messing up earlier offsets.
+    // 2) Sort macros by ascending start offset, then remove them from the text in descending order
+    //    so we don't disrupt the offsets for earlier macros.
     existing_macros.sort_by_key(|m| m.range.start());
-    existing_macros.reverse();
-
+    // remove them in reverse
     let mut edited_text = old_text.to_string();
-    for mac in &existing_macros {
-        let start = usize::from(mac.range.start());
-        let end   = usize::from(mac.range.end());
-        if end <= edited_text.len() {
+    for mac in existing_macros.iter().rev() {
+        let start = usize::from(mac.range.start()).min(edited_text.len());
+        let end   = usize::from(mac.range.end()).min(edited_text.len());
+        if start < end {
             edited_text.replace_range(start..end, "");
         }
     }
 
-    // 3) We'll unify the existing macros with new stems. We keep the existing order for old macros,
-    //    then append any new stems that aren't already in the file. We'll detect which stems are already present?
-    //    For simplicity, let's just append them. If you want to skip duplicates, do so.
-    
-    // (a) Gather the existing stems from the macros we found
-    // e.g. "x!{command_runner}" => "command_runner"
-    // We'll do a small parse. If the item has "x!{my_stem}", we parse out `my_stem`.
-    let mut existing_stems = Vec::new();
-    for mac in existing_macros.iter().rev() {
-        // The macros are reversed, so we re-reverse them here if we want the original top-down order.
+    // 3) Parse out the stems from existing macros, unify them with `existing_new_stems`.
+    //    We'll then sort them so final x! calls are alphabetical.
+    let mut stems = Vec::new();
+    // The macros are reversed, so if we want top-down order, let's re-reverse the iteration:
+    for mac in existing_macros.iter() {
         if let Some(stem) = parse_x_macro_stem(&mac.text) {
-            existing_stems.push(stem);
+            stems.push(stem);
         }
     }
-    // now `existing_stems` is in the original top-down order. The earliest macro is first.
+    // stems is in bottom-up order, so let's reverse to get top-down order if you prefer:
+    stems.reverse();
 
-    // (b) unify them with `existing_new_stems`
-    // We'll skip duplicates if desired:
+    // unify with new stems
     for new_stem in existing_new_stems {
-        if !existing_stems.contains(new_stem) {
-            existing_stems.push(new_stem.clone());
+        if !stems.contains(new_stem) {
+            stems.push(new_stem.clone());
         }
     }
+    // **Sort them** for alphabetical order
+    stems.sort();
 
-    // 4) Build a single block of `x!{...}` lines
-    //    e.g. 
-    //    // ---------------- [ File: src/lib.rs ]
-    //    x!{command_runner}
-    //    x!{exit_status}
-    //    x!{my_new_file}
-    let mut lines = vec![];
-    lines.push("// ---------------- [ File: src/lib.rs ]".to_string());
-    for stem in existing_stems {
+    // 4) Build a single block of x! calls:
+    //  // ---------------- [ File: src/lib.rs ]
+    //  x!{some_stem}
+    //  x!{another_stem}
+    let mut lines = vec!["// ---------------- [ File: src/lib.rs ]".to_string()];
+    for stem in stems {
         lines.push(format!("x!{{{}}}", stem));
     }
-    let new_top_block = lines.join("\n");
+    let new_block = lines.join("\n");
 
-    // 5) Insert that new block right after the last import item (i.e. below all `imports`).
-    //    If there are no import lines, we can place it at the top or do some fallback.
-    //    We'll find the highest end offset among them and insert after that offset.
+    // 5) Insert that block right after the last import line
     let mut max_import_end: Option<usize> = None;
     for rng in &imports_ranges {
         let end_usize = usize::from(rng.end());
@@ -136,31 +129,25 @@ pub fn rebuild_lib_rs_with_new_top_block(
     }
     let insertion_offset = max_import_end.unwrap_or(0);
 
-    // 6) Now we splice the block into the `edited_text`.
+    // 6) Splice the new block into `edited_text`
     let mut final_text = String::new();
-    final_text.push_str(&edited_text[..insertion_offset]);
-    final_text.push('\n');
-    final_text.push_str(&new_top_block);
-    final_text.push('\n');
-    final_text.push_str(&edited_text[insertion_offset..]);
+    if insertion_offset > edited_text.len() {
+        // If it’s out of range for some reason, clamp
+        let clamped = edited_text.len();
+        final_text.push_str(&edited_text[..clamped]);
+        final_text.push('\n');
+        final_text.push_str(&new_block);
+        final_text.push('\n');
+        // no remainder
+    } else {
+        final_text.push_str(&edited_text[..insertion_offset]);
+        final_text.push('\n');
+        final_text.push_str(&new_block);
+        final_text.push('\n');
+        final_text.push_str(&edited_text[insertion_offset..]);
+    }
 
     Ok(final_text)
-}
-
-/// This tries to parse e.g. "x!{command_runner}" => "command_runner".
-fn parse_x_macro_stem(macro_text: &str) -> Option<String> {
-    // We can do a naive approach. 
-    // If macro_text is "x!{my_stem}", we find the substring between '{' and '}'.
-    // This won't handle complex cases, but works for typical usage.
-    let start = macro_text.find('{')?;
-    let end = macro_text.rfind('}')?;
-    if start+1 < end {
-        let chunk = macro_text[start+1..end].trim().to_string();
-        // e.g. "command_runner"
-        Some(chunk)
-    } else {
-        None
-    }
 }
 
 #[cfg(test)]
