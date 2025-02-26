@@ -11,7 +11,7 @@ repository = "https://github.com/klebs6/klebs-general"
 categories = ["development-tools"]
 
 [[bin]]
-name = "crate-activity"
+name = "act"
 path = "src/main.rs"
 
 [dependencies]

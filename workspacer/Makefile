@@ -47,6 +47,8 @@ ACTIVE_PACKAGE := workspacer-ensure-all-source-files-are-registered
 #ACTIVE_PACKAGE := workspacer
 
 INDIVIDUAL_TEST := find_top_block_insertion_offset
+INDIVIDUAL_TEST := rebuild_librs_with_new_top_block
+INDIVIDUAL_TEST := test_ensure_all_source_files_are_registered_ast
 
 #FEATURES := --features "enable_stress_test"
 FEATURES := --features ""
@@ -58,12 +60,13 @@ CONSOLIDATE_CRATE := workspacer-toml
 #-----------------------------------------------------[this section lets us choose how we want to test]
 DEFAULT := test
 #DEFAULT := test_file
-DEFAULT := test_one
+#DEFAULT := test_one
 #DEFAULT := test_file_one
 #DEFAULT := test_all
 #DEFAULT := test_individual
 #DEFAULT := pin_wildcard_deps
 #DEFAULT := consolidate_crate_interface
+DEFAULT := ensure
 #DEFAULT := publish_public_crates_in_order
 #DEFAULT := name_all_files
 #DEFAULT := run
@@ -83,6 +86,9 @@ pin_wildcard_dep:
 
 publish_public_crates_in_order:
 	RUSTFLAGS=$(RUSTFLAGS) $(CARGO) $(RUN) --bin workspacer-publish-public-crates-in-order $(FEATURES) -- --dry-run
+
+ensure:
+	RUSTFLAGS=$(RUSTFLAGS) $(CARGO) $(RUN) --bin workspacer-ensure-all-source-files-are-registered $(FEATURES)
 
 consolidate_crate_interface:
 	RUSTFLAGS=$(RUSTFLAGS) $(CARGO) $(RUN) --bin workspacer-show-consolidated-crate-interface $(FEATURES) -- --path $(CONSOLIDATE_CRATE) --no-show-docs --no-show-private-items

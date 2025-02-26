@@ -274,6 +274,7 @@ error_tree!{
     // Enum representing possible errors in the `workspace-detail` crate.
     #[derive(Clone)]
     pub enum WorkspaceError {
+        SourceFileRegistrationError(SourceFileRegistrationError),
         CycleDetectedInWorkspaceDependencyGraph {
             cycle_node_id: NodeIndex,
         },

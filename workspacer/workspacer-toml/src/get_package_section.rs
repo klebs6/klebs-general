@@ -13,12 +13,30 @@ impl GetPackageSection for CargoToml {
     }
 }
 
-impl GatherBinTargetNames for CargoToml
-{
+impl GatherBinTargetNames for CargoToml {
     type Error = CargoTomlError;
 
     fn gather_bin_target_names(&self) -> Result<Vec<String>, Self::Error> {
-        todo!();
+        let binding = Vec::new();
+        // 1) Look up `[bin]` array if it exists
+        let bin_array = self
+            .content()
+            .get("bin")
+            .and_then(|val| val.as_array())
+            .unwrap_or(&binding);
+
+        // 2) For each bin entry, if there's a `name` field, we produce "name.rs"
+        let mut result = Vec::new();
+        for bin_val in bin_array {
+            if let Some(tbl) = bin_val.as_table() {
+                if let Some(name_val) = tbl.get("name").and_then(|nv| nv.as_str()) {
+                    let fname = format!("{}.rs", name_val);
+                    result.push(fname);
+                }
+            }
+        }
+
+        Ok(result)
     }
 }
 

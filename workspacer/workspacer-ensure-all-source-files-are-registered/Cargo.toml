@@ -2,13 +2,20 @@
 path = "../workspacer-3p"
 [dependencies.workspacer-crate]
 path = "../workspacer-crate"
+[dependencies.workspacer-workspace]
+path = "../workspacer-workspace"
 [dependencies.workspacer-crate-interface]
 path = "../workspacer-crate-interface"
 [dependencies.workspacer-errors]
 path = "../workspacer-errors"
+[dependencies.workspacer-git]
+path = "../workspacer-git"
 [dependencies.workspacer-toml-interface]
 path = "../workspacer-toml-interface"
 [package]
 edition = "2024"
 name = "workspacer-ensure-all-source-files-are-registered"
 version = "0.1.0"
+[[bin]]
+path = "src/bin/ensure_all_source_files_are_registered.rs"
+name = "workspacer-ensure-all-source-files-are-registered"
