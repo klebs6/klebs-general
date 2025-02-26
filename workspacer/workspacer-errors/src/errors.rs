@@ -5,6 +5,10 @@ error_tree!{
 
     #[derive(Clone)]
     pub enum SourceFileRegistrationError {
+        EncounteredAnXMacroAfterWeAlreadySawANonAttributeItem {
+            file_path:      PathBuf,
+            offending_item: String,
+        },
         CrateError(CrateError),
         LibRsSyntaxErrors { parse_errors: Vec<String> },
         LibRsParseTreeError,
