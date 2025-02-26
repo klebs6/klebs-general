@@ -102,7 +102,7 @@ impl EnsureAllSourceFilesAreRegistered for CrateHandle
             let new_top_block = make_top_block_macro_lines(&existing_macro_stems);
 
             // Rebuild final text
-            rebuild_lib_rs_with_new_top_block(&parsed_file, &old_lib_text, &new_top_block, lib_rs_path.as_ref())?
+            rebuild_lib_rs_with_new_top_block(&parsed_file, &old_lib_text, &[new_top_block], lib_rs_path.as_ref())?
 
         };
         // ---- End of parse/manipulation block => `final_text` is now fully built. 
