@@ -1,46 +1,99 @@
 // ---------------- [ File: src/rebuild_librs_with_new_top_block.rs ]
 crate::ix!();
 
+// A small helper to detect `#[macro_use] mod imports; use imports::*;`
+fn is_imports_item(item: &ast::Item) -> bool {
+    if let Some(module_item) = ast::Module::cast(item.syntax().clone()) {
+        if let Some(name_ident) = module_item.name() {
+            return name_ident.text() == "imports";
+        }
+    } else if let Some(use_item) = ast::Use::cast(item.syntax().clone()) {
+        let text = use_item.syntax().text().to_string();
+        return text.contains("imports::*");
+    }
+    false
+}
+
+// A small helper to detect a `#[cfg(test)] mod something { ... }` item.
+fn is_cfg_test_module(item: &ast::Item) -> bool {
+    // The item must be a module
+    let mod_item = if let Some(m) = ast::Module::cast(item.syntax().clone()) {
+        m
+    } else {
+        return false;
+    };
+    // Then it must have an attribute with cfg(test)
+    for attr in mod_item.attrs() {
+        let text = attr.syntax().text().to_string();
+        if text.contains("cfg(test") {
+            return true;
+        }
+    }
+    false
+}
+
+fn short_item_description(item: &ast::Item) -> String {
+    let text = item.syntax().text().to_string();
+    text.lines().next().unwrap_or("").trim().into()
+}
+
+/// Rebuilds `lib.rs` by:
+/// - Keeping imports at the top,
+/// - Then putting x! macros,
+/// - Then test modules,
+/// - Everything else is either appended or triggers an error (your choice).
+/// The `file_path` is used for error messages only.
 pub fn rebuild_lib_rs_with_new_top_block(
     parsed_file: &SourceFile,
     old_text: &str,
     new_top_block: &str,
-    file_path: &Path,  // so we can mention in error
+    file_path: &Path, // so we can mention in errors
 ) -> Result<String, SourceFileRegistrationError> {
-    let mut segments_to_cut = vec![];
-    let mut found_non_attr_item_before_macro = false;
+    let file_syntax: SyntaxNode = parsed_file.syntax().clone();
 
+    // We'll store these items + their text ranges.
+    let mut imports_items = vec![];
+    let mut macros_items = vec![];
+    let mut test_modules = vec![];
+    let mut others = vec![];
+
+    // 1) Classify items
     for item in parsed_file.items() {
-        // is it an x! macro?
-        if let Some(mac_item) = ast::MacroCall::cast(item.syntax().clone()) {
+        if is_imports_item(&item) {
+            imports_items.push(item);
+        } else if let Some(mac_item) = ast::MacroCall::cast(item.syntax().clone()) {
+            // Check if it’s x! macro
             if let Some(path) = mac_item.path() {
                 if path.syntax().text().to_string().trim() == "x" {
-                    if found_non_attr_item_before_macro {
-                        let snippet = short_item_description(&item);
-                        return Err(
-                            SourceFileRegistrationError::EncounteredAnXMacroAfterWeAlreadySawANonAttributeItem {
-                                file_path: file_path.to_path_buf(),
-                                offending_item: snippet,
-                            }
-                        );
-                    }
-                    segments_to_cut.push(mac_item.syntax().text_range());
-                    continue;
+                    // It's an x! macro => store in macros_items
+                    macros_items.push(item);
+                } else {
+                    // If you want to skip e.g. "foo!{}" macros, or treat them as others, your choice
+                    others.push(item);
                 }
             }
-        }
-        // If not an x! macro, is it "mod imports" or "use imports::*"?
-        if is_allowed_imports_item(&item) {
-            // skip => do nothing
+        } else if is_cfg_test_module(&item) {
+            test_modules.push(item);
         } else {
-            // real item => block further x! macros
-            found_non_attr_item_before_macro = true;
+            // e.g. a real function or something
+            // Your policy: do you want to keep them? error? reorder them? 
+            // Let's do "error" if we find a real item at top. 
+            // Or you can store them in `others` to re-insert them below everything else.
+            others.push(item);
         }
     }
 
+    // 2) Remove the macros + test modules from text (since we want to re-insert them).
+    // If we also want to remove imports from text so we can re-insert them first, do so. 
+    // In your snippet, you want to keep imports in place. So let's remove only macros & test mods.
+    let mut segments_to_remove = vec![];
+    for it in macros_items.iter().chain(test_modules.iter()) {
+        segments_to_remove.push(it.syntax().text_range());
+    }
+    // Sort by start offset descending
+    segments_to_remove.sort_by_key(|r| u32::from(r.start()));
     let mut edited_text = old_text.to_string();
-    segments_to_cut.sort_by_key(|r| u32::from(r.start()));
-    for range in segments_to_cut.into_iter().rev() {
+    for range in segments_to_remove.into_iter().rev() {
         let start = usize::from(range.start());
         let end = usize::from(range.end());
         if end <= edited_text.len() {
@@ -48,38 +101,43 @@ pub fn rebuild_lib_rs_with_new_top_block(
         }
     }
 
+    // 3) Now we build new segments for macros + test modules
+    //    Instead of re-inserting macros in alphabetical order, let's keep original order:
+    //    But you can do macros_items.sort_by(...) if you want to reorder them.
+    let macros_str = macros_items
+        .iter()
+        .map(|m| m.syntax().text().to_string())
+        .collect::<Vec<_>>()
+        .join("\n");
+    let test_mods_str = test_modules
+        .iter()
+        .map(|tm| tm.syntax().text().to_string())
+        .collect::<Vec<_>>()
+        .join("\n\n");
+
+    // 4) Insert `new_top_block` near the top
+    //    Then macros, then test modules, then the remainder of the file.
+    //    If you want to keep imports in place, don't remove them from text. 
+    //    Our code hasn’t removed them, so they remain where they are. 
+    //    We'll just insert macros/test after the top block. 
     let insertion_offset = find_top_block_insertion_offset(parsed_file, &edited_text)?;
+
     let mut final_text = String::new();
+    // everything before insertion
     final_text.push_str(&edited_text[..insertion_offset]);
+    // now our top block lines
     final_text.push_str(new_top_block);
     final_text.push('\n');
+    // the macros we extracted from the file
+    final_text.push_str(&macros_str);
+    final_text.push('\n');
+    // the test modules
+    final_text.push_str(&test_mods_str);
+    final_text.push('\n');
+    // then the remainder of the file
     final_text.push_str(&edited_text[insertion_offset..]);
+
     Ok(final_text)
-}
-
-// Helper to detect if it's "mod imports" or "use imports::*"
-fn is_allowed_imports_item(item: &ast::Item) -> bool {
-    if let Some(module_item) = ast::Module::cast(item.syntax().clone()) {
-        if let Some(name_ident) = module_item.name() {
-            if name_ident.text() == "imports" {
-                // Possibly check for #[macro_use] attribute too
-                return true;
-            }
-        }
-    } else if let Some(use_item) = ast::Use::cast(item.syntax().clone()) {
-        let text = use_item.syntax().text().to_string();
-        if text.contains("imports::*") {
-            return true;
-        }
-    }
-    false
-}
-
-// Grab a short snippet from the item
-fn short_item_description(item: &ast::Item) -> String {
-    let text = item.syntax().text().to_string();
-    let first_line = text.lines().next().unwrap_or("").trim();
-    first_line.to_string()
 }
 
 #[cfg(test)]
