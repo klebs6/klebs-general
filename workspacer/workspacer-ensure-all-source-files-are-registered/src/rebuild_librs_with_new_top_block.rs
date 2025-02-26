@@ -1,47 +1,53 @@
 // ---------------- [ File: src/rebuild_librs_with_new_top_block.rs ]
 crate::ix!();
 
-/// Rebuilds `lib.rs` by removing any existing x! macros from the top-level,
-/// then inserting our new top block, preserving everything else.
 pub fn rebuild_lib_rs_with_new_top_block(
-    parsed_file:   &SourceFile,
-    old_text:      &str,
-    new_top_block: &str
+    parsed_file: &SourceFile,
+    old_text: &str,
+    new_top_block: &str,
+    file_path: &Path,  // so we can mention in error
 ) -> Result<String, SourceFileRegistrationError> {
-    let file_syntax: SyntaxNode = parsed_file.syntax().clone();
     let mut segments_to_cut = vec![];
     let mut found_non_attr_item_before_macro = false;
 
-    // 1) Iterate over top-level items; if we see an x! macro, we remove it —
-    //    unless we've already encountered a "real" item, in which case we error out.
     for item in parsed_file.items() {
+        // is it an x! macro?
         if let Some(mac_item) = ast::MacroCall::cast(item.syntax().clone()) {
             if let Some(path) = mac_item.path() {
                 if path.syntax().text().to_string().trim() == "x" {
                     if found_non_attr_item_before_macro {
-                        return Err(SourceFileRegistrationError::EncounteredAnXMacroAfterWeAlreadySawANonAttributeItem_NotRewritingSafely);
+                        let snippet = short_item_description(&item);
+                        return Err(
+                            SourceFileRegistrationError::EncounteredAnXMacroAfterWeAlreadySawANonAttributeItem {
+                                file_path: file_path.to_path_buf(),
+                                offending_item: snippet,
+                            }
+                        );
                     }
                     segments_to_cut.push(mac_item.syntax().text_range());
+                    continue;
                 }
             }
+        }
+        // If not an x! macro, is it "mod imports" or "use imports::*"?
+        if is_allowed_imports_item(&item) {
+            // skip => do nothing
         } else {
-            // It's not a MacroCall => treat as a real item => no more macros
+            // real item => block further x! macros
             found_non_attr_item_before_macro = true;
         }
     }
 
-    // 2) Remove old x! macros from the text
     let mut edited_text = old_text.to_string();
     segments_to_cut.sort_by_key(|r| u32::from(r.start()));
-    for range in segments_to_cut.iter().rev() {
+    for range in segments_to_cut.into_iter().rev() {
         let start = usize::from(range.start());
-        let end   = usize::from(range.end());
+        let end = usize::from(range.end());
         if end <= edited_text.len() {
             edited_text.replace_range(start..end, "");
         }
     }
 
-    // 3) Insert `new_top_block` near the top, using the `parsed_file`.
     let insertion_offset = find_top_block_insertion_offset(parsed_file, &edited_text)?;
     let mut final_text = String::new();
     final_text.push_str(&edited_text[..insertion_offset]);
@@ -49,6 +55,31 @@ pub fn rebuild_lib_rs_with_new_top_block(
     final_text.push('\n');
     final_text.push_str(&edited_text[insertion_offset..]);
     Ok(final_text)
+}
+
+// Helper to detect if it's "mod imports" or "use imports::*"
+fn is_allowed_imports_item(item: &ast::Item) -> bool {
+    if let Some(module_item) = ast::Module::cast(item.syntax().clone()) {
+        if let Some(name_ident) = module_item.name() {
+            if name_ident.text() == "imports" {
+                // Possibly check for #[macro_use] attribute too
+                return true;
+            }
+        }
+    } else if let Some(use_item) = ast::Use::cast(item.syntax().clone()) {
+        let text = use_item.syntax().text().to_string();
+        if text.contains("imports::*") {
+            return true;
+        }
+    }
+    false
+}
+
+// Grab a short snippet from the item
+fn short_item_description(item: &ast::Item) -> String {
+    let text = item.syntax().text().to_string();
+    let first_line = text.lines().next().unwrap_or("").trim();
+    first_line.to_string()
 }
 
 #[cfg(test)]
