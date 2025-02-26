@@ -1,3 +1,4 @@
+// ---------------- [ File: src/validate_integrity.rs ]
 crate::ix!();
 
 impl<P,H:CrateHandleInterface<P>> ValidateIntegrity for Workspace<P,H> 

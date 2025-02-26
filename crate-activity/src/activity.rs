@@ -4,20 +4,24 @@ pub async fn crate_activity_main(cli: &CrateActivityCli) -> Result<(), CrateActi
 
     tracing_setup::configure_tracing();
 
-    let config_dir = configure_directory().await?;
-    let crate_names = read_crate_list(&config_dir).await;
-    let user_agent = read_user_agent(&config_dir).await;
+    let config_dir   = configure_directory().await?;
+    let crate_names  = read_crate_list(&config_dir).await;
+    let user_agent   = read_user_agent(&config_dir).await;
+    let ignore_cache = *cli.ignore_cache();
 
     let today = Utc::now().date_naive();
-    let one_day_ago = today - chrono::Duration::days(1);
+    let one_day_ago    = today - chrono::Duration::days(1);
     let three_days_ago = today - chrono::Duration::days(3);
+    let seven_days_ago = today - chrono::Duration::days(7);
 
     let activity_data = gather_crate_activity_data(
+        ignore_cache,
         &crate_names,
         &user_agent,
         &config_dir,
         one_day_ago,
         three_days_ago,
+        seven_days_ago,
     )
     .await?;
 
@@ -25,8 +29,10 @@ pub async fn crate_activity_main(cli: &CrateActivityCli) -> Result<(), CrateActi
         activity_data.summaries(),
         activity_data.interval_downloads_1d().clone(),
         activity_data.interval_downloads_3d().clone(),
+        activity_data.interval_downloads_7d().clone(),
         one_day_ago,
         three_days_ago,
+        seven_days_ago,
     );
 
     tracing::info!("{}", activity_summary);

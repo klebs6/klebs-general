@@ -11,23 +11,29 @@ pub struct CrateActivityData {
     
     #[getset(get = "pub")]
     interval_downloads_3d: HashMap<String, i64>,
+
+    #[getset(get = "pub")]
+    interval_downloads_7d: HashMap<String, i64>,
 }
 
 pub async fn gather_crate_activity_data(
+    ignore_cache:   bool,
     crate_names:    &[String],
     user_agent:     &str,
     config_dir:     &Path,
     one_day_ago:    NaiveDate,
     three_days_ago: NaiveDate,
+    seven_days_ago: NaiveDate,
 
 ) -> Result<CrateActivityData, CrateActivityError> {
 
     let mut summaries             = Vec::new();
     let mut interval_downloads_1d = HashMap::new();
     let mut interval_downloads_3d = HashMap::new();
+    let mut interval_downloads_7d = HashMap::new();
 
     for crate_name in crate_names {
-        match fetch_usage(user_agent, config_dir, crate_name).await {
+        match fetch_usage(ignore_cache,user_agent, config_dir, crate_name).await {
             Ok(Some(response)) => {
                 let summary = analyze_usage(crate_name, response.version_downloads().to_vec());
                 summaries.push(summary);
@@ -46,8 +52,17 @@ pub async fn gather_crate_activity_data(
                     .map(|d| d.downloads())
                     .sum();
 
+                let downloads_last_7d: i64 = response
+                    .version_downloads()
+                    .iter()
+                    .filter(|d| *d.date() >= seven_days_ago)
+                    .map(|d| d.downloads())
+                    .sum();
+
+
                 interval_downloads_1d.insert(crate_name.clone(), downloads_last_1d);
                 interval_downloads_3d.insert(crate_name.clone(), downloads_last_3d);
+                interval_downloads_7d.insert(crate_name.clone(), downloads_last_7d);
             }
             Ok(None) => {
                 eprintln!("No data for crate: {}", crate_name);
@@ -62,5 +77,6 @@ pub async fn gather_crate_activity_data(
         summaries,
         interval_downloads_1d,
         interval_downloads_3d,
+        interval_downloads_7d,
     })
 }

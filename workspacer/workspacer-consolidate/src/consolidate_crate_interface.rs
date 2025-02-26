@@ -12,7 +12,11 @@ pub trait ConsolidateCrateInterface {
 #[async_trait]
 impl<T> ConsolidateCrateInterface for T
 where
-    T: CrateHandleInterface<PathBuf> + Sync + Send,
+    T
+    : ReadFileString 
+    + GetSourceFilesWithExclusions 
+    + Sync 
+    + Send,
 {
     async fn consolidate_crate_interface(
         &self,
@@ -53,7 +57,6 @@ where
 }
 
 #[cfg(test)]
-#[disable]
 mod test_consolidate_crate_interface {
     use super::*;
     use std::path::{Path, PathBuf};
@@ -83,7 +86,7 @@ mod test_consolidate_crate_interface {
     // We must implement `CrateHandleInterface<PathBuf>` in order to call
     // `consolidate_crate_interface(...)`, which requires T: CrateHandleInterface<PathBuf>.
     #[async_trait]
-    impl CrateHandleInterface<PathBuf> for MockCrateHandle {
+    impl GetSourceFilesWithExclusions for MockCrateHandle {
         // We only need to implement the methods that `consolidate_crate_interface` calls:
         //   - source_files_excluding(&[]) -> ...
         //   - read_file_string(...) -> ...
@@ -96,6 +99,10 @@ mod test_consolidate_crate_interface {
             // Return all file paths from self.files. In real logic, you might filter out excludes.
             Ok(self.files.iter().map(|(p, _)| p.clone()).collect())
         }
+    }
+
+    #[async_trait]
+    impl ReadFileString for MockCrateHandle {
 
         async fn read_file_string(&self, path: &Path) -> Result<String, CrateError> {
             // Return the snippet if we find a matching path
@@ -107,25 +114,6 @@ mod test_consolidate_crate_interface {
                 })
             }
         }
-
-        // The trait requires many more methods, but they are not called by `consolidate_crate_interface`.
-        // We'll stub them out:
-        fn is_private(&self) -> Result<bool, CrateError> { unimplemented!() }
-        async fn try_publish(&self, _dry_run: bool) -> Result<(), CrateError> { unimplemented!() }
-        async fn ensure_git_clean(&self) -> Result<(), GitError> { unimplemented!() }
-        async fn name_all_files(&self) -> Result<(), CrateError> { unimplemented!() }
-        async fn pin_wildcard_dependencies(&self, _lock_versions: &LockVersionMap) -> Result<(), CrateError> { unimplemented!() }
-        async fn pin_all_wildcard_dependencies(&self) -> Result<(), CrateError> { unimplemented!() }
-        async fn ready_for_cargo_publish(&self) -> Result<(), CrateError> { unimplemented!() }
-        fn check_src_directory_contains_valid_files(&self) -> Result<(), CrateError> { unimplemented!() }
-        fn check_readme_exists(&self) -> Result<(), CrateError> { unimplemented!() }
-        async fn readme_path(&self) -> Result<Option<PathBuf>, CrateError> { unimplemented!() }
-        async fn test_files(&self) -> Result<Vec<PathBuf>, CrateError> { unimplemented!() }
-        fn has_tests_directory(&self) -> bool { unimplemented!() }
-        async fn get_files_in_dir(&self, _dir_name: &str, _extension: &str) -> Result<Vec<PathBuf>, CrateError> { unimplemented!() }
-        async fn get_files_in_dir_with_exclusions(&self, _dn: &str, _ext: &str, _excl: &[&str]) -> Result<Vec<PathBuf>, CrateError> { unimplemented!() }
-        fn cargo_toml<'a>(&'a self) -> &'a dyn CargoTomlInterface { unimplemented!() }
-        // etc...
     }
 
     // Also need to implement `AsyncTryFrom<P>` if your code calls `CrateHandle::new(&P)` for a T
@@ -169,7 +157,7 @@ mod test_consolidate_crate_interface {
         "#;
         handle.add_file("main.rs", snippet);
 
-        let opts = ConsolidationOptions::new().with_fn_bodies().with_docs();
+        let opts = ConsolidationOptions::new().with_private_items().with_fn_bodies().with_docs();
         let cci = handle.consolidate_crate_interface(&opts).await.expect("Should parse one fn");
 
         assert_eq!(cci.fns().len(), 1, "We should find exactly one function");
@@ -196,7 +184,7 @@ mod test_consolidate_crate_interface {
         "#;
         handle.add_file("file2.rs", file2);
 
-        let opts = ConsolidationOptions::new().with_docs(); // no fn bodies
+        let opts = ConsolidationOptions::new().with_docs().with_private_items(); // no fn bodies
         let cci = handle.consolidate_crate_interface(&opts).await.expect("Should parse multiple items");
         // We expect 1 struct (Apple), 1 fn (eat_apple), 1 enum (Fruit), 1 trait (Edible)
         assert_eq!(cci.structs().len(), 1, "We have 1 struct");
@@ -218,7 +206,7 @@ mod test_consolidate_crate_interface {
         "#;
         handle.add_file("file.rs", snippet);
 
-        let opts = ConsolidationOptions::new(); // no .with_test_items()
+        let opts = ConsolidationOptions::new().with_private_items(); // no .with_test_items()
         let cci = handle.consolidate_crate_interface(&opts).await.unwrap();
         // We expect only normal_thing
         assert_eq!(cci.fns().len(), 1, "Only normal_thing, skipping test_thing");
@@ -236,7 +224,7 @@ mod test_consolidate_crate_interface {
         "#;
         handle.add_file("file.rs", snippet);
 
-        let opts = ConsolidationOptions::new().with_test_items();
+        let opts = ConsolidationOptions::new().with_private_items().with_test_items();
         let cci = handle.consolidate_crate_interface(&opts).await.unwrap();
         // We expect 2 fns
         assert_eq!(cci.fns().len(), 2, "We include test_thing now");
@@ -303,7 +291,7 @@ mod test_consolidate_crate_interface {
         "#;
         handle.add_file("file.rs", snippet);
 
-        let opts = ConsolidationOptions::new().with_test_items().with_docs(); 
+        let opts = ConsolidationOptions::new().with_private_items().with_test_items().with_docs(); 
         let cci = handle.consolidate_crate_interface(&opts).await.unwrap();
 
         // We expect 1 module and 1 impl block

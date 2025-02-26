@@ -107,7 +107,6 @@ impl CrateAnalysis {
     }
 }
 
-// ---------------- [ File: src/crate_analysis.rs ]
 #[cfg(test)]
 mod test_crate_analysis {
     use super::*;
@@ -115,20 +114,20 @@ mod test_crate_analysis {
     use std::path::PathBuf;
     use tokio::fs::{File, create_dir_all};
     use tokio::io::AsyncWriteExt;
-    use workspacer_3p::tokio; // or however you import tokio
+    use workspacer_3p::tokio;
     use crate::WorkspaceError;
 
-    // We only implement these 3 traits:
-    //  - HasTestsDirectory
-    //  - GetTestFiles
-    //  - GetSourceFilesWithExclusions
+    // We only implement the 3 traits below:
+    //   - HasTestsDirectory
+    //   - GetTestFiles
+    //   - GetSourceFilesWithExclusions
     //
-    // That’s exactly the minimal interface CrateAnalysis::new requires.
+    // That’s precisely what CrateAnalysis::new requires.
     struct MockCrateHandle {
-        root_dir:      TempDir,
-        has_tests:     bool,
-        src_files:     Vec<PathBuf>,
-        test_files:    Vec<PathBuf>,
+        root_dir:   TempDir,
+        has_tests:  bool,
+        src_files:  Vec<PathBuf>,
+        test_files: Vec<PathBuf>,
     }
 
     impl MockCrateHandle {
@@ -141,25 +140,46 @@ mod test_crate_analysis {
             }
         }
 
-        // a helper to create a file in `src/` and push to src_files
+        // Helper to create a file in `src/` and push to src_files
         async fn add_src_file(&mut self, name: &str, contents: &str) {
             let src_dir = self.root_dir.path().join("src");
             create_dir_all(&src_dir).await.unwrap();
-            
+
             let path = src_dir.join(name);
             let mut file = File::create(&path).await.unwrap();
             file.write_all(contents.as_bytes()).await.unwrap();
+            // Force flush
+            file.sync_all().await.unwrap();
+            drop(file); // ensure the handle is closed
+
+            // Double-check size
+            let meta = tokio::fs::metadata(&path).await.unwrap();
+            assert_eq!(
+                meta.len(),
+                contents.len() as u64,
+                "File size does not match expected!"
+            );
+
             self.src_files.push(path);
         }
 
-        // a helper to create a file in `tests/` and push to test_files
+
+        // Helper to create a file in `tests/` and push to test_files
         async fn add_test_file(&mut self, name: &str, contents: &str) {
             let tests_dir = self.root_dir.path().join("tests");
             create_dir_all(&tests_dir).await.unwrap();
-            
+
             let path = tests_dir.join(name);
             let mut file = File::create(&path).await.unwrap();
             file.write_all(contents.as_bytes()).await.unwrap();
+            // Force flush
+            file.sync_all().await.unwrap();
+            drop(file); // ensure the handle is closed
+
+            // Make sure the file truly has the expected size
+            let meta = tokio::fs::metadata(&path).await.unwrap();
+            assert_eq!(meta.len(), contents.len() as u64, "File size does not match expected!");
+
             self.test_files.push(path);
             self.has_tests = true;
         }
@@ -171,7 +191,7 @@ mod test_crate_analysis {
             &self,
             _exclude_files: &[&str],
         ) -> Result<Vec<PathBuf>, CrateError> {
-            // ignoring excludes for test
+            // For mock purposes, we ignore the exclude list.
             Ok(self.src_files.clone())
         }
     }
@@ -189,7 +209,9 @@ mod test_crate_analysis {
         }
     }
 
-    // Now we can test CrateAnalysis::new with just these minimal traits.
+    // ------------------------------------------------------------------------
+    //  Existing tests
+    // ------------------------------------------------------------------------
 
     #[tokio::test]
     async fn test_no_src_files_no_tests() {
@@ -197,26 +219,228 @@ mod test_crate_analysis {
         let analysis = CrateAnalysis::new(&handle).await.unwrap();
         assert_eq!(analysis.total_source_files(), 0);
         assert_eq!(analysis.total_test_files(), 0);
+        assert_eq!(analysis.total_lines_of_code(), 0);
+        assert_eq!(analysis.total_file_size(), 0);
+        // largest_file_size() and smallest_file_size() are also tested implicitly.
+        // By default, smallest_file_size is u64::MAX if no files exist; but we only
+        // store that if at least one file was found. So:
+        assert_eq!(analysis.largest_file_size(), 0);
+        assert_eq!(analysis.smallest_file_size(), u64::MAX);
     }
 
     #[tokio::test]
     async fn test_single_src_file() {
         let mut handle = MockCrateHandle::new();
-        let contents = "fn main(){\nprintln!(\"hi\");\n}";
+        // Ensure the file truly has 2 lines of code:
+        //   (Line 1) fn main() {
+        //   (Line 2) println!("hi");}
+        let contents = "fn main(){\nprintln!(\"hi\");}";
         handle.add_src_file("main.rs", contents).await;
 
         let analysis = CrateAnalysis::new(&handle).await.unwrap();
         assert_eq!(analysis.total_source_files(), 1);
+        assert_eq!(analysis.total_test_files(), 0);
         assert_eq!(analysis.total_lines_of_code(), 2);
-        // etc...
+        // Check sizes
+        let expected_size = contents.len() as u64;
+        assert_eq!(analysis.total_file_size(), expected_size);
+        assert_eq!(analysis.largest_file_size(), expected_size);
+        assert_eq!(analysis.smallest_file_size(), expected_size);
     }
 
     #[tokio::test]
     async fn test_has_tests() {
         let mut handle = MockCrateHandle::new();
-        handle.add_test_file("test_something.rs", "testline\nanother\n").await;
+        let contents = "testline\nanother\n";
+        handle.add_test_file("test_something.rs", contents).await;
+
+        // Double check from within the test:
+        let test_path = handle.test_files.last().unwrap();
+        let meta = tokio::fs::metadata(&test_path).await.unwrap();
+        assert_eq!(meta.len(), contents.len() as u64, "File not the size we expect!");
+
         let analysis = CrateAnalysis::new(&handle).await.unwrap();
+
+        assert_eq!(analysis.total_source_files(), 0);
         assert_eq!(analysis.total_test_files(), 1);
-        // etc...
+        assert_eq!(analysis.total_lines_of_code(), 2);
+        let expected_size = contents.len() as u64;
+        assert_eq!(analysis.total_file_size(), expected_size);//this is the assertion that failed. 17 is the expected_size in terms of length units in the input string
+        assert_eq!(analysis.largest_file_size(), expected_size);
+        assert_eq!(analysis.smallest_file_size(), expected_size);
+    }
+
+    // ------------------------------------------------------------------------
+    //  Additional tests for thorough coverage
+    // ------------------------------------------------------------------------
+
+    #[tokio::test]
+    async fn test_multiple_source_files() {
+        let mut handle = MockCrateHandle::new();
+        // Add 3 files with different line counts and sizes
+        let contents_a = "let x = 1;";
+        let contents_b = "fn foo() {}\nfn bar() {}";
+        let contents_c = "";
+        handle.add_src_file("file_a.rs", contents_a).await;
+        handle.add_src_file("file_b.rs", contents_b).await;
+        handle.add_src_file("file_c.rs", contents_c).await;
+
+        let analysis = CrateAnalysis::new(&handle).await.unwrap();
+        assert_eq!(analysis.total_source_files(), 3);
+        assert_eq!(analysis.total_test_files(), 0);
+
+        // Lines
+        let lines_a = 1; // "let x = 1;"
+        let lines_b = 2; // 2 lines
+        let lines_c = 0; // empty
+        let total_lines = lines_a + lines_b + lines_c;
+        assert_eq!(analysis.total_lines_of_code(), total_lines);
+
+        // File sizes
+        let size_a = contents_a.len() as u64;
+        let size_b = contents_b.len() as u64;
+        let size_c = contents_c.len() as u64;
+        let total_size = size_a + size_b + size_c;
+        assert_eq!(analysis.total_file_size(), total_size);
+
+        // Largest & smallest
+        let largest = size_a.max(size_b).max(size_c);
+        let smallest = size_a.min(size_b).min(size_c);
+        assert_eq!(analysis.largest_file_size(), largest);
+        assert_eq!(analysis.smallest_file_size(), smallest);
+    }
+
+    #[tokio::test]
+    async fn test_multiple_test_files() {
+        let mut handle = MockCrateHandle::new();
+        // Add 2 test files
+        let test_content_1 = "mod test1 {}\nmod test2 {}";
+        let test_content_2 = "mod test3 {}";
+        handle.add_test_file("test1.rs", test_content_1).await;
+        handle.add_test_file("test2.rs", test_content_2).await;
+
+        let analysis = CrateAnalysis::new(&handle).await.unwrap();
+        assert_eq!(analysis.total_source_files(), 0);
+        assert_eq!(analysis.total_test_files(), 2);
+
+        let lines_1 = 2; // test_content_1 has 2 lines
+        let lines_2 = 1; // test_content_2 has 1 line
+        assert_eq!(analysis.total_lines_of_code(), lines_1 + lines_2);
+
+        let size_1 = test_content_1.len() as u64;
+        let size_2 = test_content_2.len() as u64;
+        let total_size = size_1 + size_2;
+        assert_eq!(analysis.total_file_size(), total_size);
+
+        // Largest & smallest
+        let largest = size_1.max(size_2);
+        let smallest = size_1.min(size_2);
+        assert_eq!(analysis.largest_file_size(), largest);
+        assert_eq!(analysis.smallest_file_size(), smallest);
+    }
+
+    #[tokio::test]
+    async fn test_mixed_source_and_test_files() {
+        let mut handle = MockCrateHandle::new();
+        // 2 source files
+        let src1 = "src1 line1\nsrc1 line2";
+        let src2 = "src2 line1";
+        handle.add_src_file("file1.rs", src1).await;
+        handle.add_src_file("file2.rs", src2).await;
+
+        // 1 test file
+        let test1 = "test line1\ntest line2\ntest line3";
+        handle.add_test_file("test_stuff.rs", test1).await;
+
+        let analysis = CrateAnalysis::new(&handle).await.unwrap();
+
+        // Check counts
+        assert_eq!(analysis.total_source_files(), 2);
+        assert_eq!(analysis.total_test_files(), 1);
+
+        // Lines
+        let lines_src1 = 2;
+        let lines_src2 = 1;
+        let lines_test1 = 3;
+        assert_eq!(
+            analysis.total_lines_of_code(),
+            lines_src1 + lines_src2 + lines_test1
+        );
+
+        // File sizes
+        let size_src1 = src1.len() as u64;
+        let size_src2 = src2.len() as u64;
+        let size_test1 = test1.len() as u64;
+        assert_eq!(
+            analysis.total_file_size(),
+            size_src1 + size_src2 + size_test1
+        );
+
+        // Largest & smallest
+        let largest = size_src1.max(size_src2).max(size_test1);
+        let smallest = size_src1.min(size_src2).min(size_test1);
+        assert_eq!(analysis.largest_file_size(), largest);
+        assert_eq!(analysis.smallest_file_size(), smallest);
+    }
+
+    #[tokio::test]
+    async fn test_tests_dir_exists_but_empty() {
+        // Even if we create an empty `tests/` directory, if there are no files in it,
+        // total_test_files remains 0.
+        let mut handle = MockCrateHandle::new();
+        // Force creation of an empty `tests` directory
+        let tests_dir = handle.root_dir.path().join("tests");
+        create_dir_all(&tests_dir).await.unwrap();
+        // Mark has_tests = true so it sees the directory
+        handle.has_tests = true;
+
+        // Add one src file for good measure
+        let contents = "fn main() {}";
+        handle.add_src_file("main.rs", contents).await;
+
+        let analysis = CrateAnalysis::new(&handle).await.unwrap();
+        assert_eq!(analysis.total_source_files(), 1);
+        assert_eq!(analysis.total_test_files(), 0);
+    }
+
+    #[tokio::test]
+    async fn test_zero_sized_file() {
+        let mut handle = MockCrateHandle::new();
+        // Create an empty src file
+        handle.add_src_file("empty.rs", "").await;
+
+        let analysis = CrateAnalysis::new(&handle).await.unwrap();
+        assert_eq!(analysis.total_source_files(), 1);
+        assert_eq!(analysis.total_test_files(), 0);
+        assert_eq!(analysis.total_lines_of_code(), 0);
+        // File size is 0
+        assert_eq!(analysis.total_file_size(), 0);
+        assert_eq!(analysis.largest_file_size(), 0);
+        assert_eq!(analysis.smallest_file_size(), 0);
+    }
+
+    // This test won't actually show a difference in this mock because
+    // we're ignoring excludes. Provided here for completeness of the
+    // interface usage.
+    #[tokio::test]
+    async fn test_excluded_files_are_ignored() {
+        let mut handle = MockCrateHandle::new();
+        let included = "line1\nline2";
+        let excluded = "some content";
+        handle.add_src_file("included.rs", included).await;
+        handle.add_src_file("excluded.rs", excluded).await;
+
+        // In the real environment, the next call would skip "excluded.rs"
+        // if it is passed in `_exclude_files`.
+        // Our mock simply returns all files, so the result is the same.
+        let files = handle
+            .source_files_excluding(&["excluded.rs"])
+            .await
+            .expect("should get source files");
+        assert_eq!(files.len(), 2, "Mock returns all files, ignoring excludes");
+
+        let analysis = CrateAnalysis::new(&handle).await.unwrap();
+        assert_eq!(analysis.total_source_files(), 2); 
+        assert_eq!(analysis.total_lines_of_code(), 3); // included=2 lines, excluded=1 line
     }
 }

@@ -1,3 +1,4 @@
+// ---------------- [ File: src/generate_function_signature.rs ]
 crate::ix!();
 
 /// Minimal post-processing for spacing around `->` and `where`.

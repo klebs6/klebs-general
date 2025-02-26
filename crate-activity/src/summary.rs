@@ -14,6 +14,7 @@ pub struct CrateActivitySummary {
     crates_analyzed:               usize,
     top_crates_1d:                 Vec<(String, i64)>,
     top_crates_3d:                 Vec<(String, i64)>,
+    top_crates_7d:                 Vec<(String, i64)>,
 }
 
 impl fmt::Display for CrateActivitySummary {
@@ -47,6 +48,14 @@ impl fmt::Display for CrateActivitySummary {
         }
         writeln!(f, "  {:<30} total downloads (Last 3 Days)", total_3d_downloads)?;
 
+        let mut total_7d_downloads = 0;
+        writeln!(f, "\nTop Crates (Last 7 Days):")?;
+        for (crate_name, downloads) in &self.top_crates_7d {
+            total_7d_downloads += downloads;
+            writeln!(f, "  {:<30} {:>10} downloads", crate_name, downloads)?;
+        }
+        writeln!(f, "  {:<30} total downloads (Last 7 Days)", total_7d_downloads)?;
+
         Ok(())
     }
 }
@@ -57,8 +66,10 @@ impl CrateActivitySummary {
         summaries: &[CrateUsageSummary],
         interval_downloads_1d: HashMap<String, i64>,
         interval_downloads_3d: HashMap<String, i64>,
+        interval_downloads_7d: HashMap<String, i64>,
         one_day_ago: NaiveDate,
         three_days_ago: NaiveDate,
+        seven_days_ago: NaiveDate,
     ) -> Self {
 
         // Compute the full date range
@@ -90,9 +101,11 @@ impl CrateActivitySummary {
         // Top crates for the last 1 and 3 days
         let mut top_crates_1d: Vec<_> = interval_downloads_1d.into_iter().collect();
         let mut top_crates_3d: Vec<_> = interval_downloads_3d.into_iter().collect();
+        let mut top_crates_7d: Vec<_> = interval_downloads_7d.into_iter().collect();
 
         top_crates_1d.sort_by_key(|&(_, downloads)| std::cmp::Reverse(downloads));
         top_crates_3d.sort_by_key(|&(_, downloads)| std::cmp::Reverse(downloads));
+        top_crates_7d.sort_by_key(|&(_, downloads)| std::cmp::Reverse(downloads));
 
         CrateActivitySummary {
             date_interval_1d:         one_day_ago,
@@ -106,6 +119,7 @@ impl CrateActivitySummary {
             crates_analyzed: summaries.len(),
             top_crates_1d,
             top_crates_3d,
+            top_crates_7d,
         }
     }
 }

@@ -187,9 +187,6 @@ mod test_cleanup_workspace {
         assert!(lock_meta.is_err(), "Cargo.lock removed");
     }
 
-    /// 5) If removal fails for some reason (e.g. no permission?), we expect an error.
-    ///    This is trickier to simulate in a unit test. We can do a partial scenario on Unix
-    ///    by making the directory read-only or something. We'll show how it *might* be done on Unix.
     #[cfg(unix)]
     #[tokio::test]
     async fn test_cleanup_failure_on_unix() {
@@ -197,15 +194,19 @@ mod test_cleanup_workspace {
 
         let tmp_dir = tempdir().expect("create tempdir");
         let workspace = MockWorkspace::new(tmp_dir.path().to_path_buf());
-        // create cargo.lock
+
+        // 1) Create Cargo.lock
         let lock_path = workspace.as_ref().join("Cargo.lock");
         fs::write(&lock_path, b"some content").await.unwrap();
 
-        // Make the file read-only or the parent dir read-only
-        let perms = std::fs::Permissions::from_mode(0o400);
-        std::fs::set_permissions(&lock_path, perms).expect("set perms");
+        // 2) Remove *directory* write permission so we can't remove files inside it
+        let mut perms = std::fs::metadata(tmp_dir.path()).unwrap().permissions();
+        // Typically, `0o500` => user read & execute, no write
+        // (or you can do 0o555 for read+execute for user/group/other)
+        perms.set_mode(0o500);
+        std::fs::set_permissions(tmp_dir.path(), perms).expect("set perms on directory");
 
-        // Now attempt cleanup; it might fail to remove the file
+        // 3) Now attempt cleanup; removing Cargo.lock should fail due to no write permission
         let result = workspace.cleanup_workspace().await;
         assert!(result.is_err(), "Should fail if we can't remove Cargo.lock");
         match result {

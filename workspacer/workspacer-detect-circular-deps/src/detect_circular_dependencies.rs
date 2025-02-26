@@ -36,7 +36,6 @@ where for<'async_trait> P: From<PathBuf> + AsRef<Path> + Send + Sync + 'async_tr
 }
 
 #[cfg(test)]
-#[disable]
 mod test_detect_circular_dependencies_real {
     use super::*;
 
@@ -53,7 +52,7 @@ mod test_detect_circular_dependencies_real {
             .expect("mock workspace creation should succeed");
 
         // We didn't create a cycle, so detect_circular_dependencies => Ok
-        let ws = Workspace::new(&root).await.expect("create workspace");
+        let ws = Workspace::<PathBuf,CrateHandle>::new(&root).await.expect("create workspace");
         let result = ws.detect_circular_dependencies().await;
         assert!(result.is_ok(), "No cycle => Ok(())");
     }
@@ -95,7 +94,7 @@ cyc_a = {{ path = "../cyc_a" }}
         );
         tokio::fs::write(&cyc_b_toml, b_new).await.unwrap();
 
-        let ws = Workspace::new(&root).await.expect("create workspace ok");
+        let ws = Workspace::<PathBuf,CrateHandle>::new(&root).await.expect("create workspace ok");
 
         let result = ws.detect_circular_dependencies().await;
         match result {
@@ -118,29 +117,58 @@ cyc_a = {{ path = "../cyc_a" }}
         let single = CrateConfig::new("broken_crate").with_src_files();
         let root = create_mock_workspace(vec![single])
             .await
-            .expect("mock ws creation");
+            .expect("mock ws creation should succeed");
 
         // We'll break the manifest by adding nonsense
         let broken_toml = root.join("broken_crate").join("Cargo.toml");
-        let content = tokio::fs::read_to_string(&broken_toml).await.unwrap();
+        let content = tokio::fs::read_to_string(&broken_toml)
+            .await
+            .expect("Failed to read broken crate Cargo.toml");
         let appended = format!("{}\nnot_valid_toml??=??", content);
-        tokio::fs::write(&broken_toml, appended).await.unwrap();
+        tokio::fs::write(&broken_toml, appended)
+            .await
+            .expect("Failed to write broken lines to Cargo.toml");
 
-        let ws = Workspace::new(&root).await.unwrap();
-        let result = ws.detect_circular_dependencies().await;
-        // We expect an error, but not "cyclic package dependency." Possibly a parse error,
-        // or a different cargo metadata error. We'll just confirm it's not the cycle error.
-        match result {
-            Err(WorkspaceError::CargoMetadataError(CargoMetadataError::CyclicPackageDependency)) => {
-                panic!("Should not be a cycle error for a broken toml");
+        // Don't unwrap here; we want to see if creation itself fails or if
+        // creation succeeds but detect_circular_dependencies fails.
+        let ws_result = Workspace::<PathBuf,CrateHandle>::new(&root).await;
+
+        match ws_result {
+            Ok(workspace) => {
+                // If workspace creation succeeded, next we call detect_circular_dependencies().
+                let result = workspace.detect_circular_dependencies().await;
+                match result {
+                    Err(WorkspaceError::CargoMetadataError(
+                            CargoMetadataError::CyclicPackageDependency,
+                    )) => {
+                        panic!("Should not be a cycle error for a broken toml!");
+                    }
+                    Err(e) => {
+                        // This is the “other cargo metadata error” path you wanted to test.
+                        println!("Got a non-cycle cargo-metadata-related error: {e:?}");
+                    }
+                    Ok(_) => {
+                        panic!("We expected an error from detect_circular_dependencies() because the toml is broken!");
+                    }
+                }
             }
-            Err(e) => {
-                // This is the pass-through error from cargo metadata
-                println!("Got a non-cycle cargo metadata error: {:?}", e);
-            }
-            Ok(_) => {
-                panic!("We expected an error for a broken toml");
+            Err(err) => {
+                // If workspace creation itself fails due to the parse error, that’s also an
+                // acceptable “non-cycle” cargo-type error. So we check it's not the cycle variant.
+                match err {
+                    WorkspaceError::CargoMetadataError(
+                        CargoMetadataError::CyclicPackageDependency,
+                    ) => {
+                        panic!("Should not be a cycle error for a broken toml!");
+                    }
+                    _ => {
+                        // Great, we got some other error (like TomlParseError).
+                        // That still counts as “an error that isn't a cycle.”
+                        println!("Got a non-cycle error at workspace creation time: {err:?}");
+                    }
+                }
             }
         }
     }
+
 }

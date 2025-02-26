@@ -13,6 +13,15 @@ impl GetPackageSection for CargoToml {
     }
 }
 
+impl GatherBinTargetNames for CargoToml
+{
+    type Error = CargoTomlError;
+
+    fn gather_bin_target_names(&self) -> Result<Vec<String>, Self::Error> {
+        todo!();
+    }
+}
+
 #[cfg(test)]
 mod test_get_package_section {
     use super::*;

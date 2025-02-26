@@ -1,3 +1,4 @@
+// ---------------- [ File: src/trait_def.rs ]
 crate::ix!();
 
 // A trait for "naming all .rs files" with a comment tag

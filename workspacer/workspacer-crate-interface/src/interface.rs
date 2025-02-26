@@ -1,4 +1,4 @@
-// ---------------- [ File: src/crate_handle_interface.rs ]
+// ---------------- [ File: src/interface.rs ]
 crate::ix!();
 
 pub trait CrateHandleInterface<P>
@@ -19,6 +19,7 @@ pub trait CrateHandleInterface<P>
 + GetFilesInDirectoryWithExclusions
 + HasCargoToml
 + AsRef<Path>
++ GatherBinTargetNames<Error=CrateError>
 + AsyncTryFrom<P,Error=CrateError>
 where
     for<'async_trait> 

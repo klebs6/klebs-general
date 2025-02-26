@@ -1,4 +1,4 @@
-// ---------------- [ File: src/cargo_toml_interface.rs ]
+// ---------------- [ File: src/interface.rs ]
 crate::ix!();
 
 pub trait CargoTomlInterface
@@ -15,8 +15,14 @@ pub trait CargoTomlInterface
 //+ ReadyForCargoPublish<Error=CargoTomlError>
 + IsValidVersion
 + ValidateIntegrity<Error=CargoTomlError>
++ GatherBinTargetNames<Error=CargoTomlError>
 + AsRef<Path>
 {}
+
+pub trait GatherBinTargetNames {
+    type Error;
+    fn gather_bin_target_names(&self) -> Result<Vec<String>, Self::Error>;
+}
 
 pub trait Versioned {
     type Error: std::fmt::Debug;
@@ -75,4 +81,3 @@ pub trait IsValidVersion {
     /// Checks if the version string is a valid SemVer version
     fn is_valid_version(&self, version: &str) -> bool;
 }
-

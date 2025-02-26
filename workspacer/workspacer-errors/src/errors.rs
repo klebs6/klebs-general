@@ -4,6 +4,17 @@ crate::ix!();
 error_tree!{
 
     #[derive(Clone)]
+    pub enum SourceFileRegistrationError {
+        CrateError(CrateError),
+        LibRsSyntaxErrors { parse_errors: Vec<String> },
+        LibRsParseTreeError,
+        FoundAnUnhandlableTopLevelMacroCallWithAttributes,
+        MultipleItemsInXMacroUnsupported { chunk: String },
+        FoundARawModNameWhichWeDontHandlePleaseRemoveOrUnifyWithXMacros { mod_name: String },
+        EncounteredAnXMacroAfterWeAlreadySawANonAttributeItem_NotRewritingSafely,
+    }
+
+    #[derive(Clone)]
     pub enum CargoTomlWriteError {
         WriteWorkspaceHeaderError {
             io: Arc<io::Error>,

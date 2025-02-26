@@ -2,8 +2,12 @@ crate::ix!();
 
 /// Crate Activity Analyzer
 #[derive(Getters,StructOpt, Debug)]
-#[structopt(name = "crate-activity")]
+#[structopt(name = "act")]
 pub struct CrateActivityCli {
+
+    #[structopt(long, short = "i", help = "Ignores crate activity cache, scrapes activity data again")]
+    #[getset(get = "pub")]
+    ignore_cache: bool,
 
     /// Enable all analyses: correlations, PCA, hierarchical clustering, network analysis, etc.
     #[structopt(long, help = "Enable all analyses at once")]

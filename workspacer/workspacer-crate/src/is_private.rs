@@ -259,5 +259,4 @@ mod test_is_private {
         assert!(!handle.is_private()?, "publish = \"string\" => not private");
         Ok(())
     }
-
 }

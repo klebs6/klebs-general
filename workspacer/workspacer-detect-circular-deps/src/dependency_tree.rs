@@ -64,7 +64,6 @@ where for<'async_trait> P: From<PathBuf> + AsRef<Path> + Send + Sync + 'async_tr
 }
 
 #[cfg(test)]
-#[disable]
 mod test_generate_dependency_tree {
     use super::*;
 
@@ -80,7 +79,7 @@ mod test_generate_dependency_tree {
 
         // Convert to a Workspace. 
         // We'll do something like:
-        let workspace = Workspace::new(&root_path)
+        let workspace = Workspace::<PathBuf,CrateHandle>::new(&root_path)
             .await
             .expect("Failed to create Workspace from mock dir");
 
@@ -106,7 +105,7 @@ mod test_generate_dependency_tree {
             .await
             .expect("Failed to create mock workspace with multiple crates");
 
-        let workspace = Workspace::new(&root_path)
+        let workspace = Workspace::<PathBuf,CrateHandle>::new(&root_path)
             .await
             .expect("Failed to create workspace");
 
@@ -167,7 +166,7 @@ crate_b = {{ path = "../crate_b" }}
             .expect("rewrite cargo toml for crate_a with dependency on crate_b");
 
         // Step 3: Construct the workspace & generate dependency graph
-        let workspace = Workspace::new(&root_path).await.expect("create workspace");
+        let workspace = Workspace::<PathBuf,CrateHandle>::new(&root_path).await.expect("create workspace");
         let dep_graph = workspace.generate_dependency_tree().await
             .expect("dep tree should succeed");
 
@@ -238,7 +237,7 @@ crate_c = {{ path = "../crate_c" }}
         }
 
         // Now create workspace & call generate_dependency_tree
-        let workspace = Workspace::new(&root_path).await.unwrap();
+        let workspace = Workspace::<PathBuf,CrateHandle>::new(&root_path).await.unwrap();
         let dep_graph = workspace.generate_dependency_tree().await.unwrap();
 
         // We expect 3 nodes
@@ -288,7 +287,7 @@ crate_b = {{ path = "../crate_b" }}
         tokio::fs::write(&a_toml, new).await.unwrap();
 
         // Build workspace
-        let workspace = Workspace::new(&root_path).await.unwrap();
+        let workspace = Workspace::<PathBuf,CrateHandle>::new(&root_path).await.unwrap();
         // Call generate_dependency_tree_dot
         let dot_str = workspace.generate_dependency_tree_dot().await.unwrap();
 
@@ -314,7 +313,7 @@ crate_b = {{ path = "../crate_b" }}
         let root = create_mock_workspace(vec![crate_x, crate_y])
             .await
             .expect("mock ws creation");
-        let ws = Workspace::new(&root).await.unwrap();
+        let ws = Workspace::<PathBuf,CrateHandle>::new(&root).await.unwrap();
         let dot = ws.generate_dependency_tree_dot().await.unwrap();
         // Should contain crate_x, crate_y, but no "->"
         assert!(dot.contains("crate_x"));
@@ -339,7 +338,7 @@ crate_b = {{ path = "../crate_b" }}
         // add cross dependencies in both cargo tomls...
         // ...
         // Then:
-        let workspace = Workspace::new(&root).await.unwrap();
+        let workspace = Workspace::<PathBuf,CrateHandle>::new(&root).await.unwrap();
         let result = workspace.generate_dependency_tree().await;
         match result {
             Ok(graph) => {

@@ -22,7 +22,7 @@ pub use getset::{self,Getters,Setters};
 pub use cargo_metadata::{MetadataCommand, Package, Dependency, Metadata};
 pub use petgraph::graphmap::DiGraphMap;
 pub use petgraph::dot::{Dot, Config as DotConfig};
-pub use std::collections::{BTreeMap,BTreeSet,HashMap};
+pub use std::collections::{HashSet,BTreeMap,BTreeSet,HashMap};
 pub use tokio::process::Command;
 pub use std::process::Stdio;
 pub use cargo_metadata::PackageId;
@@ -56,11 +56,10 @@ pub use ra_ap_syntax::*;
 pub use ra_ap_syntax::{self,ast};
 
 pub use async_try_from::*;
-pub use ra_ap_syntax::ast::{HasGenericParams, HasName, HasVisibility, HasAttrs, };
+pub use ra_ap_syntax::ast::{HasModuleItem,HasGenericParams, HasName, HasVisibility, HasAttrs, };
 pub use toml;
 pub use toml::Value as TomlValue;
 pub use serde_json;
 pub use derive_builder::{self,Builder};
 
 //pub use scan_crate_for_typedefs::is_node_public;
-

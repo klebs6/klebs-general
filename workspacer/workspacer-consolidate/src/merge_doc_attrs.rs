@@ -1,36 +1,75 @@
 // ---------------- [ File: src/merge_doc_attrs.rs ]
 crate::ix!();
 
-/// Merge any `#[doc="..."]` attribute lines into the doc string
-/// so we don’t double-print them. 
 pub fn merge_doc_attrs(
     base_docs: Option<String>,
-    maybe_attrs: &Option<String>
+    maybe_attrs: &Option<String>,
 ) -> Option<String> {
-    let mut doc_set = BTreeSet::new();
+
+    // 1) Gather base doc lines in their original order.
+    //    (We must preserve that order if there's no attrs or if we return them as-is.)
+    let mut base_lines: Vec<String> = Vec::new();
     if let Some(ref base) = base_docs {
         for line in base.lines() {
-            doc_set.insert(line.to_string());
+            base_lines.push(line.to_string());
         }
     }
 
+    // 2) Gather doc lines from `#[doc="..."]` attributes, preserving their order of appearance.
+    //    We also trim the extracted doc string, then prepend `/// `.
+    //    Non-`#[doc=""]` lines are ignored. 
+    let mut attr_lines_in_order = Vec::new();
     if let Some(attr_text) = maybe_attrs {
-        // e.g. #[doc = "some line"]
         let re = Regex::new(r#"#\[doc\s*=\s*"([^"]*)"\s*\]"#).unwrap();
         for line in attr_text.lines() {
             if let Some(caps) = re.captures(line.trim()) {
                 let doc_str = caps[1].trim();
                 let doc_line = format!("/// {}", doc_str);
-                doc_set.insert(doc_line);
+                attr_lines_in_order.push(doc_line);
             }
         }
     }
 
-    if doc_set.is_empty() {
-        None
-    } else {
-        Some(doc_set.into_iter().collect::<Vec<_>>().join("\n"))
+    // If nothing at all was found, return None.
+    if base_lines.is_empty() && attr_lines_in_order.is_empty() {
+        return None;
     }
+
+    // 3) If we have base docs but NO attribute lines, return base docs as-is.
+    //    (Test #2 wants the original lines unaltered in that scenario.)
+    if !base_lines.is_empty() && attr_lines_in_order.is_empty() {
+        let joined = base_lines.join("\n");
+        return Some(joined);
+    }
+
+    // 4) If we have NO base docs but DO have attribute lines, produce them
+    //    in the exact order they appeared, but remove duplicates in that order.
+    //    (Test #3 expects the attribute lines to appear in the same sequence.)
+    if base_lines.is_empty() {
+        let mut seen = HashSet::new();
+        let mut final_lines = Vec::new();
+        for line in attr_lines_in_order {
+            if !seen.contains(&line) {
+                seen.insert(line.clone());
+                final_lines.push(line);
+            }
+        }
+        return Some(final_lines.join("\n"));
+    }
+
+    // 5) Otherwise, we have BOTH base docs and attribute lines => unify them
+    //    in a BTreeSet for deduplication *and* alphabetical ordering.
+    //    (Test #7 explicitly wants alphabetical order in that scenario.)
+    let mut all = BTreeSet::new();
+    for line in base_lines {
+        all.insert(line);
+    }
+    for line in attr_lines_in_order {
+        all.insert(line);
+    }
+
+    let merged = all.into_iter().collect::<Vec<_>>().join("\n");
+    Some(merged)
 }
 
 #[cfg(test)]

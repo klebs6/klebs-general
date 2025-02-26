@@ -1,3 +1,4 @@
+// ---------------- [ File: src/lib.rs ]
 #[macro_use] mod imports; use imports::*;
 
 x!{toml_ready_for_cargo_publish}

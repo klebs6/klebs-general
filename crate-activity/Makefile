@@ -1,7 +1,7 @@
 DEFAULT := run
 #ARGS := -cphnbst -g3
 #ARGS := 
-ARGS := --all
+ARGS := --all --ignore-cache
 
 default: $(DEFAULT)
 

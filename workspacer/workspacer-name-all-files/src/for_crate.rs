@@ -1,3 +1,4 @@
+// ---------------- [ File: src/for_crate.rs ]
 crate::ix!();
 
 // Implementation for a single crate. Gathers all `.rs` files (src + tests) *recursively*,

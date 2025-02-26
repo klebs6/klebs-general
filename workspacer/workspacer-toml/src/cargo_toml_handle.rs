@@ -13,14 +13,37 @@ pub struct CargoToml {
 impl CargoTomlInterface for CargoToml {}
 
 impl Versioned for CargoToml {
-
     type Error = CargoTomlError;
 
-    fn version(&self) -> Result<semver::Version,Self::Error> {
+    fn version(&self) -> Result<semver::Version, Self::Error> {
+        trace!("CargoToml::version, checking required fields for integrity");
         self.check_required_fields_for_integrity()?;
+        trace!("CargoToml::version, successfully checked required fields for integrity");
+
         let package = self.get_package_section()?;
-        let version_toml = package.get("version").unwrap();
-        Ok(semver::Version::parse(&version_toml.to_string()).map_err(|e| Arc::new(e))?)
+        trace!("CargoToml::version, package section: {:#?}", package);
+
+        let version_toml = package
+            .get("version")
+            .ok_or_else(|| CargoTomlError::MissingRequiredFieldForIntegrity {
+                field: "package.version".to_string(),
+                cargo_toml_file: self.path.clone(),
+            })?;
+
+        // Use `as_str()` to get the actual string content without quotes
+        let version_str = version_toml.as_str().ok_or_else(|| {
+            CargoTomlError::MissingRequiredFieldForIntegrity {
+                field: "package.version (expected a string)".to_string(),
+                cargo_toml_file: self.path.clone(),
+            }
+        })?;
+
+        trace!("CargoToml::version, raw version str: {:#?}", version_str);
+
+        // Parse into a semver::Version
+        Ok(semver::Version::parse(version_str)
+            .map_err(|e| Arc::new(e))
+            .map_err(CargoTomlError::SemverError)?)
     }
 }
 
