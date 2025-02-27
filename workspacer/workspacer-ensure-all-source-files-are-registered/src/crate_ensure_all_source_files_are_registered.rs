@@ -43,9 +43,9 @@ impl EnsureAllSourceFilesAreRegistered for CrateHandle {
         }
 
         // 3) Read lib.rs
-        let lib_rs_path = self.as_ref().join("src").join("lib.rs");
-        debug!("Reading lib.rs from '{}'", lib_rs_path.display());
-        let old_lib_text = match self.read_file_string(&lib_rs_path).await {
+        let librs_path = self.as_ref().join("src").join("lib.rs");
+        debug!("Reading lib.rs from '{}'", librs_path.display());
+        let old_lib_text = match self.read_file_string(&librs_path).await {
             Ok(text) => text,
             Err(_) => {
                 warn!("lib.rs not found => treating as empty");
@@ -82,26 +82,26 @@ impl EnsureAllSourceFilesAreRegistered for CrateHandle {
             let new_top_block = make_top_block_macro_lines(&existing_macro_stems);
 
             debug!("Rebuilding lib.rs with new top block");
-            rebuild_lib_rs_with_new_top_block(&parsed_file, &old_lib_text, &new_top_block)?
+            rebuild_librs_with_new_top_block(&parsed_file, &old_lib_text, &new_top_block)?
         };
 
         // 5) Write out
-        debug!("Writing updated lib.rs to '{}'", lib_rs_path.display());
-        let mut file = tokio::fs::File::create(&lib_rs_path).await.map_err(|e| {
-            error!("Failed to create lib.rs at {}: {}", lib_rs_path.display(), e);
+        debug!("Writing updated lib.rs to '{}'", librs_path.display());
+        let mut file = tokio::fs::File::create(&librs_path).await.map_err(|e| {
+            error!("Failed to create lib.rs at {}: {}", librs_path.display(), e);
             SourceFileRegistrationError::LibRsSyntaxErrors {
                 parse_errors: vec![format!(
                     "Failed to create lib.rs at {}: {e}",
-                    lib_rs_path.display()
+                    librs_path.display()
                 )],
             }
         })?;
         file.write_all(final_text.as_bytes()).await.map_err(|e| {
-            error!("Failed to write final lib.rs at {}: {}", lib_rs_path.display(), e);
+            error!("Failed to write final lib.rs at {}: {}", librs_path.display(), e);
             SourceFileRegistrationError::LibRsSyntaxErrors {
                 parse_errors: vec![format!(
                     "Failed to write final lib.rs at {}: {e}",
-                    lib_rs_path.display()
+                    librs_path.display()
                 )],
             }
         })?;
@@ -130,14 +130,14 @@ mod test_ensure_all_source_files_are_registered_ast {
     }
 
     #[traced_test]
-    async fn test_lib_rs_initially_empty_creates_top_block() {
+    async fn test_librs_initially_empty_creates_top_block() {
         let tmp = tempdir().unwrap();
         let root = tmp.path().to_path_buf();
 
         // minimal cargo toml
         let cargo_toml = r#"
             [package]
-            name = "test_lib_rs_empty"
+            name = "test_librs_empty"
             version = "0.1.0"
         "#;
         write_file(&root.join("Cargo.toml"), cargo_toml).await;
@@ -188,14 +188,14 @@ mod test_ensure_all_source_files_are_registered_ast {
         let src_dir = root.join("src");
         create_dir_all(&src_dir).await.unwrap();
 
-        let initial_lib_rs = r#"
+        let initial_librs = r#"
 #![allow(unused)]
 // Some doc
 fn existing_function() {}
 
 mod something_unrelated;
 "#;
-        write_file(&src_dir.join("lib.rs"), initial_lib_rs).await;
+        write_file(&src_dir.join("lib.rs"), initial_librs).await;
         write_file(&src_dir.join("helpers.rs"), "// helper code").await;
 
         let handle = CrateHandle::new(&root).await.unwrap();

@@ -10,7 +10,7 @@ use std::fmt::Debug;
 #[derive(Debug,NamedItem,Operator)]
 #[operator(
     execute="do_nothing",
-    opcode="OpCode::TestOp",
+    opcode="BasicOpCode::TestOp",
     input0="X" // but we won't store X or do anything with it
 )]
 pub struct UnusedParamOp<X: Send + Sync + Debug> {
@@ -27,3 +27,4 @@ impl<X: Send + Sync + Debug> UnusedParamOp<X> {
 
 fn main() {}
 
+use std::sync::Arc;

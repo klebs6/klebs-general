@@ -15,7 +15,7 @@ use hydro2_3p::*;
 #[derive(Debug, NamedItem, Operator)]
 #[operator(
     execute="execute_inc",
-    opcode="OpCode::IncrementOperator",
+    opcode="BasicOpCode::IncrementOperator",
     input0="i32",
     output0="i32"
 )]
@@ -32,7 +32,7 @@ impl IncOperator {
 #[derive(Debug, NamedItem, Operator)]
 #[operator(
     execute="execute_double",
-    opcode="OpCode::DoubleOp",
+    opcode="BasicOpCode::DoubleOp",
     input0="i32",
     output0="i32"
 )]

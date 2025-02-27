@@ -15,7 +15,7 @@ where NetworkItem: Debug + Send + Sync
 {
     /// Returns the operation code, which can be used to inform
     /// specialized handling or diagnostics.
-    fn opcode(&self) -> OpCode;
+    fn opcode(&self) -> std::sync::Arc<dyn OpCode>;
 
     /// How many actual inputs does this operator need?
     fn input_count(&self) -> usize;

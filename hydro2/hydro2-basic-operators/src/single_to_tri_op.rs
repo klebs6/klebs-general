@@ -7,7 +7,7 @@ crate::ix!();
 #[derive(NamedItem, Operator, Debug)]
 #[operator(
     execute="run_op",
-    opcode="OpCode::SingleToTriOp",
+    opcode="BasicOpCode::SingleToTriOp",
     input0="i32",
     output0="i32",
     output1="i32",

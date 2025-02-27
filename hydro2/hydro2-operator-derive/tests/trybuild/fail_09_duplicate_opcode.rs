@@ -8,8 +8,8 @@ use named_item::*;
 #[derive(Debug,NamedItem,Operator)]
 #[operator(
     execute="example_fn",
-    opcode="OpCode::TestOp",
-    opcode="OpCode::AnotherOp" // should fail
+    opcode="BasicOpCode::TestOp",
+    opcode="BasicOpCode::AnotherOp" // should fail
 )]
 pub struct DuplicateOpcode {
     name: String,

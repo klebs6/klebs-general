@@ -11,7 +11,7 @@ crate::ix!();
     input1="T",
     input2="T",
     input3="T",
-    opcode="OpCode::Sink"
+    opcode="BasicOpCode::Sink"
 )]
 pub struct SinkOperator<T>
 where T: Send + Sync + Debug + Copy

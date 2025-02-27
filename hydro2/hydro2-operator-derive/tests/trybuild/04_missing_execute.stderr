@@ -3,7 +3,7 @@ error: No `execute` function name specified in `#[operator(...)]`.
    |
 7  | / #[operator(
 8  | |     // no "execute=..." → should fail
-9  | |     opcode="OpCode::TestOp"
+9  | |     opcode="BasicOpCode::TestOp"
 10 | | )]
    | |__^
 

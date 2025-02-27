@@ -4,7 +4,7 @@ error: Encountered invalid syntax in `#[operator(...)]` attribute.
 7  | / #[operator(
 8  | |     execute="fn1",
 9  | |     execute="fn2", // should fail
-10 | |     opcode="OpCode::TestOp"
+10 | |     opcode="BasicOpCode::TestOp"
 11 | | )]
    | |__^
 

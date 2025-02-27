@@ -1,5 +1,5 @@
 error: Opcode key was provided more than once in `#[operator(...)]`.
   --> tests/trybuild/fail_09_duplicate_opcode.rs:12:5
    |
-12 |     opcode="OpCode::AnotherOp" // should fail
+12 |     opcode="BasicOpCode::AnotherOp" // should fail
    |     ^^^^^^

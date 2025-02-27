@@ -23,8 +23,9 @@ x!{is_x_macro}
 x!{make_top_block_macro_lines}
 x!{parse_new_macros_with_comments}
 x!{parse_new_top_block_snippet}
-x!{rebuild_lib_rs_with_new_top_block}
 x!{rebuild_librs_with_new_top_block}
 x!{snap_offset_to_newline}
 x!{splice_top_block_into_source}
 x!{workspace_ensure_all_source_files_are_registered}
+x!{extract_stem}
+x!{assemble_snippet_order}

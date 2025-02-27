@@ -58,7 +58,7 @@ impl OperatorSpec {
 
         // 2) Manually parse the token stream inside the (...) of `#[operator(...)]`.
         //    We'll expect zero or more `ident = "string"` pairs, separated by commas.
-        //    Example: execute="foo", opcode="OpCode::Bar", input0="&[X]"
+        //    Example: execute="foo", opcode="BasicOpCode::Bar", input0="&[X]"
         let kv_pairs = match operator_attr.parse_args_with(OperatorKeyValues::parse) {
             Ok(kv) => kv.pairs,
             Err(_syn_err) => {
@@ -168,7 +168,7 @@ mod operator_spec_test {
     #[test]
     fn parse_valid_operator_attribute_single_input_output() {
         let attrs: Vec<Attribute> = vec![parse_quote! {
-            #[operator(execute="foo", opcode="OpCode::Bar", input0="&[MyInput]", output0="Vec<Out>")]
+            #[operator(execute="foo", opcode="BasicOpCode::Bar", input0="&[MyInput]", output0="Vec<Out>")]
         }];
         let spec = OperatorSpec::parse_operator_attrs(&attrs, span()).expect("Expected success");
         assert_eq!(spec.inputs.len(), 1);
@@ -190,7 +190,7 @@ mod operator_spec_test {
             #[operator(
                 execute="foo",
                 execute="bar",
-                opcode="OpCode::Baz"
+                opcode="BasicOpCode::Baz"
             )]
         }];
         let err = OperatorSpec::parse_operator_attrs(&attrs, span()).unwrap_err();
@@ -202,8 +202,8 @@ mod operator_spec_test {
         let attrs: Vec<Attribute> = vec![parse_quote! {
             #[operator(
                 execute="foo",
-                opcode="OpCode::Alpha",
-                opcode="OpCode::Beta"
+                opcode="BasicOpCode::Alpha",
+                opcode="BasicOpCode::Beta"
             )]
         }];
         let err = OperatorSpec::parse_operator_attrs(&attrs, span()).unwrap_err();
@@ -213,7 +213,7 @@ mod operator_spec_test {
     #[test]
     fn parse_missing_execute() {
         let attrs: Vec<Attribute> = vec![parse_quote! {
-            #[operator(opcode="OpCode::Bar")]
+            #[operator(opcode="BasicOpCode::Bar")]
         }];
         let err = OperatorSpec::parse_operator_attrs(&attrs, span()).unwrap_err();
         assert_eq!(*err.kind(), OperatorSpecErrorKind::MissingExecuteFn);
@@ -233,7 +233,7 @@ mod operator_spec_test {
         let attrs: Vec<Attribute> = vec![parse_quote! {
             #[operator(
                 execute="some_fn",
-                opcode="OpCode::Test",
+                opcode="BasicOpCode::Test",
                 input0="Foo",
                 input2="Bar"
             )]
@@ -247,7 +247,7 @@ mod operator_spec_test {
         let attrs: Vec<Attribute> = vec![parse_quote! {
             #[operator(
                 execute="some_fn",
-                opcode="OpCode::Test",
+                opcode="BasicOpCode::Test",
                 output0="Foo",
                 output2="Bar"
             )]
@@ -261,7 +261,7 @@ mod operator_spec_test {
         let attrs: Vec<Attribute> = vec![parse_quote! {
             #[operator(
                 execute="execute_fn",
-                opcode="OpCode::Test",
+                opcode="BasicOpCode::Test",
                 input0="A",
                 input1="B",
                 input2="C",
@@ -278,7 +278,7 @@ mod operator_spec_test {
         let attrs: Vec<Attribute> = vec![parse_quote! {
             #[operator(
                 execute="execute_fn",
-                opcode="OpCode::Test",
+                opcode="BasicOpCode::Test",
                 output0="A",
                 output1="B",
                 output2="C",
@@ -304,7 +304,7 @@ mod operator_spec_test {
         // e.g. `execute="fn("` is invalid syntax for a path
         let attrs: Vec<Attribute> = vec![parse_quote! {
             #[operator(execute="fn(",
-                       opcode="OpCode::Ok")]
+                       opcode="BasicOpCode::Ok")]
         }];
         let err = OperatorSpec::parse_operator_attrs(&attrs, span()).unwrap_err();
         assert_eq!(*err.kind(), OperatorSpecErrorKind::CouldNotParseExecutePath);
@@ -312,10 +312,10 @@ mod operator_spec_test {
 
     #[test]
     fn parse_could_not_parse_opcode_path() {
-        // e.g. `opcode="OpCode(("` is invalid syntax
+        // e.g. `opcode="BasicOpCode(("` is invalid syntax
         let attrs: Vec<Attribute> = vec![parse_quote! {
             #[operator(execute="some_fn",
-                       opcode="OpCode((")]
+                       opcode="BasicOpCode((")]
         }];
         let err = OperatorSpec::parse_operator_attrs(&attrs, span()).unwrap_err();
         assert_eq!(*err.kind(), OperatorSpecErrorKind::CouldNotParseOpcodePath);
@@ -326,7 +326,7 @@ mod operator_spec_test {
         let attrs: Vec<Attribute> = vec![parse_quote! {
             #[operator(
                 execute="foo",
-                opcode="OpCode::Ok",
+                opcode="BasicOpCode::Ok",
                 input0="&["
             )]
         }];
@@ -339,7 +339,7 @@ mod operator_spec_test {
         let attrs: Vec<Attribute> = vec![parse_quote! {
             #[operator(
                 execute="foo",
-                opcode="OpCode::Ok",
+                opcode="BasicOpCode::Ok",
                 output0="Vec<"
             )]
         }];
@@ -352,7 +352,7 @@ mod operator_spec_test {
         let attrs: Vec<Attribute> = vec![parse_quote! {
             #[operator(
                 execute="foo",
-                opcode="OpCode::Bar",
+                opcode="BasicOpCode::Bar",
                 input0="A",
                 input1="B",
                 input2="C",

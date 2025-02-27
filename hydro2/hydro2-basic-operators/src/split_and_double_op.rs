@@ -7,7 +7,7 @@ crate::ix!();
 #[derive(NamedItem, Operator, Debug)]
 #[operator(
     execute="split_and_double",
-    opcode="OpCode::SplitAndDoubleOp",
+    opcode="BasicOpCode::SplitAndDoubleOp",
     input0="i32",
     output0="i32",
     output1="i32"

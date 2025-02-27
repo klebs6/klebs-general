@@ -8,7 +8,7 @@ use named_item::*;
 #[derive(Debug,NamedItem,Operator)]
 #[operator(
     execute="out_of_order",
-    opcode="OpCode::TestOp",
+    opcode="BasicOpCode::TestOp",
     input0="i32",
     input2="i64" // skipping input1 → should fail
 )]

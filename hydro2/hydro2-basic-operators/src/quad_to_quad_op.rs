@@ -7,7 +7,7 @@ crate::ix!();
 #[derive(NamedItem, Operator, Debug)]
 #[operator(
     execute="quad_math",
-    opcode="OpCode::QuadToQuadOp",
+    opcode="BasicOpCode::QuadToQuadOp",
     input0="i32",
     input1="i32",
     input2="i32",

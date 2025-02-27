@@ -2,7 +2,7 @@
 crate::ix!();
 
 /// We parse content like:
-///   execute="foo", opcode="OpCode::Bar", input0="T", ...
+///   execute="foo", opcode="BasicOpCode::Bar", input0="T", ...
 pub struct OperatorKeyValues {
     pub pairs: Vec<(Ident, Lit)>,
 }

@@ -30,8 +30,8 @@ pub fn generate_operator_impl(
         impl #impl_generics Operator<#io_enum_ident #type_generics> for #struct_ident #type_generics
         #where_clause
         {
-            fn opcode(&self) -> OpCode {
-                #opcode_expr
+            fn opcode(&self) -> std::sync::Arc<dyn OpCode> {
+                Arc::new(#opcode_expr)
             }
 
             fn input_count(&self) -> usize {
@@ -96,12 +96,12 @@ mod test_generate_operator_impl {
     //------------------------------------------------------------------
     // 4) Tests for generate_operator_impl
     //------------------------------------------------------------------
-    #[test]
+    #[traced_test]
     fn test_generate_operator_impl_no_in_out() {
         // 0 inputs, 0 outputs
         let spec = OperatorSpecBuilder::default()
             .execute_fn::<syn::Path>(parse_quote!(noop))
-            .opcode_expr::<syn::Path>(parse_quote!(OpCode::Nothing))
+            .opcode_expr::<syn::Path>(parse_quote!(BasicOpCode::Nothing))
             .inputs(vec![])
             .outputs(vec![])
             .build()
@@ -118,6 +118,8 @@ mod test_generate_operator_impl {
 
         let impl_str = normalize_whitespace(&impl_ts.to_string());
 
+        debug!("impl_str: {:#?}", impl_str);
+
         // We expect an impl block containing:
         //   impl <T> Operator<NoIOOperatorIO<T>> for NoIOOperator<T> { ... }
         assert!(impl_str.contains("impl < T > Operator < NoIOOperatorIO < T > > for NoIOOperator < T >"));
@@ -126,19 +128,19 @@ mod test_generate_operator_impl {
         // output_count => 0
         assert!(impl_str.contains("fn output_count (& self) -> usize { 0usize }"));
         // opcode => OpCode::Nothing
-        assert!(impl_str.contains("fn opcode (& self) -> OpCode { OpCode :: Nothing }"));
+        assert!(impl_str.contains("fn opcode (& self) -> std :: sync :: Arc < dyn OpCode > { Arc :: new (BasicOpCode :: Nothing) }"));
 
         // in the `execute` body, we should see no input extraction or output storage,
         // only the call to `self.noop(...).await`.
         assert!(impl_str.contains("let _ = self . noop () . await ? ;"));
     }
 
-    #[test]
+    #[traced_test]
     fn test_generate_operator_impl_multiple_in_out() {
         // 2 inputs, 2 outputs
         let spec = OperatorSpecBuilder::default()
             .execute_fn::<syn::Path>(parse_quote!(some_execute))
-            .opcode_expr::<syn::Path>(parse_quote!(OpCode::Custom))
+            .opcode_expr::<syn::Path>(parse_quote!(BasicOpCode::Custom))
             .inputs(vec![parse_quote! { A }, parse_quote! { B }])
             .outputs(vec![parse_quote! { X }, parse_quote! { Y }])
             .build()
@@ -155,9 +157,11 @@ mod test_generate_operator_impl {
 
         let impl_str = normalize_whitespace(&impl_ts.to_string());
 
+        debug!("impl_str: {:#?}", impl_str);
+
         // We expect:
-        //   fn opcode(...) -> OpCode { OpCode::Custom }
-        assert!(impl_str.contains("-> OpCode { OpCode :: Custom }"));
+        //   fn opcode(...) -> dyn OpCode { BasicOpCode::Custom }
+        assert!(impl_str.contains("-> std :: sync :: Arc < dyn OpCode > { Arc :: new (BasicOpCode :: Custom) }"));
         //   fn input_count(...) -> usize { 2 }
         assert!(impl_str.contains("-> usize { 2usize }"));
         //   fn output_count(...) -> usize { 2 }

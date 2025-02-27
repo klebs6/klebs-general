@@ -4,7 +4,7 @@ crate::ix!();
 #[derive(NamedItem,Operator,Debug)]
 #[operator(
     execute="add", 
-    opcode="OpCode::AddOp", 
+    opcode="BasicOpCode::AddOp", 
     input0="i32", 
     output0="i32"
 )]

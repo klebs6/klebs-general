@@ -46,7 +46,7 @@ DEFAULT := test
 #CEFAULT := test_file_one
 DEFAULT := test_all
 #DEFAULT := run
-DEFAULT := build
+#DEFAULT := build
 
 default: $(DEFAULT)
 

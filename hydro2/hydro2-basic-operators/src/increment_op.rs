@@ -7,7 +7,7 @@ crate::ix!();
 #[derive(Default, NamedItem, Operator, Debug)]
 #[operator(
     execute = "inc_all",
-    opcode  = "OpCode::IncrementOperator",
+    opcode  = "BasicOpCode::IncrementOperator",
     input0  = "i32",
     input1  = "i32",
     input2  = "i32",

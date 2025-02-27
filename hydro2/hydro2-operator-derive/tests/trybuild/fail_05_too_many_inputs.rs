@@ -8,7 +8,7 @@ use named_item::*;
 #[derive(Debug,NamedItem,Operator)]
 #[operator(
     execute="five_in",
-    opcode="OpCode::TestOp",
+    opcode="BasicOpCode::TestOp",
     input0="i32",
     input1="i32",
     input2="i32",

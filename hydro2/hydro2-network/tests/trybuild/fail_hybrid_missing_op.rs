@@ -14,7 +14,7 @@ use hydro2_3p::*;
 #[derive(Debug, NamedItem, Operator)]
 #[operator(
     execute="exec_foo",
-    opcode="OpCode::Foo",
+    opcode="BasicOpCode::Foo",
     input0="i32",
     output0="i32"
 )]

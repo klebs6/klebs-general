@@ -7,7 +7,7 @@ crate::ix!();
 #[derive(NamedItem, Operator, Debug)]
 #[operator(
     execute="produce_val",
-    opcode="OpCode::SingleValueTestOp",
+    opcode="BasicOpCode::SingleValueTestOp",
     output0="i32"
 )]
 pub struct SingleValOp {

@@ -9,7 +9,7 @@ use named_item::*;
 #[operator(
     execute="fn1",
     execute="fn2", // should fail
-    opcode="OpCode::TestOp"
+    opcode="BasicOpCode::TestOp"
 )]
 pub struct DuplicateExecute {
     name: String,

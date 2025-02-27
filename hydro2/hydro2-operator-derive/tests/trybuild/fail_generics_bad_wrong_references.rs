@@ -12,7 +12,7 @@ type SomeType = i32;
 #[derive(Debug,NamedItem,Operator)]
 #[operator(
     execute="some_op",
-    opcode="OpCode::TestOp",
+    opcode="BasicOpCode::TestOp",
     input0="SomeType", output0="SomeType"
 )]
 pub struct MissingGeneric<S: Copy + Debug + Send + Sync> {
@@ -37,3 +37,5 @@ fn main() {
     // The generated code might do something like `impl<S> Operator<MissingGenericIO> for MissingGeneric<S>` 
     // if the macro incorrectly omits <S> in the enum or impl.
 }
+
+use std::sync::Arc;

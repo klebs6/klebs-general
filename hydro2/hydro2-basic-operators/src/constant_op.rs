@@ -5,7 +5,7 @@ crate::ix!();
 // ConstantOp<T>
 // --------------------------------------
 #[derive(NamedItem,Operator,Debug)]
-#[operator(execute="emit",opcode="OpCode::ConstantOp",output0="T")]
+#[operator(execute="emit",opcode="BasicOpCode::ConstantOp",output0="T")]
 pub struct ConstantOp<T> 
 where T: Display + Copy + Debug + Send + Sync + PartialEq,
 {

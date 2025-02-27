@@ -7,7 +7,7 @@ crate::ix!();
 #[derive(NamedItem, Operator, Debug)]
 #[operator(
     execute="pass_through",
-    opcode="OpCode::SingleChannelPassthrough",
+    opcode="BasicOpCode::SingleChannelPassthrough",
     input0="T",
     output0="T"
 )]
@@ -54,7 +54,7 @@ mod single_channel_passthrough_operator_tests {
         // This test was originally called “test_no_op_operator_basic”
         // We'll rename to clarify it's testing pass-through with a certain input
         let nop = SingleChannelPassthroughOperator::<i32>::with_name("test_noop");
-        assert_eq!(nop.opcode(), OpCode::SingleChannelPassthrough);
+        assert_eq!(nop.opcode().val(), BasicOpCode::SingleChannelPassthrough.val());
         assert_eq!(nop.name(), "test_noop");
         assert_eq!(nop.input_count(), 1);
         assert_eq!(nop.output_count(), 1);

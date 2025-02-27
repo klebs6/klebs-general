@@ -3,8 +3,8 @@ error: Encountered invalid syntax in `#[operator(...)]` attribute.
    |
 7  | / #[operator(
 8  | |     execute="example_fn",
-9  | |     opcode="OpCode::TestOp",
-10 | |     opcode="OpCode::AnotherOp" // should fail
+9  | |     opcode="BasicOpCode::TestOp",
+10 | |     opcode="BasicOpCode::AnotherOp" // should fail
 11 | | )]
    | |__^
 

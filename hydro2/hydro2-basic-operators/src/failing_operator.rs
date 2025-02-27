@@ -5,7 +5,7 @@ crate::ix!();
 // FailingOperator<T>
 // --------------------------------------
 #[derive(NamedItem, Operator, Debug)]
-#[operator(execute="fail_now", opcode="OpCode::FailingOp")]
+#[operator(execute="fail_now", opcode="BasicOpCode::FailingOp")]
 pub struct FailingOperator
 {
     name:   String,

@@ -7,7 +7,7 @@ crate::ix!();
 #[derive(NamedItem, Operator, Debug)]
 #[operator(
     execute="merge_op",
-    opcode="OpCode::Merge2Op",
+    opcode="BasicOpCode::Merge2Op",
     input0="i32",
     input1="i32",
     output0="i32"

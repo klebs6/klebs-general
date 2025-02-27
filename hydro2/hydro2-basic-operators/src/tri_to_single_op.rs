@@ -7,7 +7,7 @@ crate::ix!();
 #[derive(NamedItem, Operator, Debug)]
 #[operator(
     execute="tri_sum",
-    opcode="OpCode::TriToSingleOp",
+    opcode="BasicOpCode::TriToSingleOp",
     input0="i32",
     input1="i32",
     input2="i32",

@@ -8,7 +8,7 @@ use named_item::*;
 #[derive(Debug,NamedItem,Operator)]
 #[operator(
     execute="do_something",
-    opcode="OpCode::TestOp",
+    opcode="BasicOpCode::TestOp",
     input0="bool",
     output0="String"
 )]
@@ -24,3 +24,4 @@ impl SingleIO {
 
 fn main() {}
 
+use std::sync::Arc;

@@ -8,7 +8,7 @@ use named_item::*;
 #[derive(Debug,NamedItem,Operator)]
 #[operator(
     // no "execute=..." → should fail
-    opcode="OpCode::TestOp"
+    opcode="BasicOpCode::TestOp"
 )]
 pub struct MissingExecuteOp {
     name: String,

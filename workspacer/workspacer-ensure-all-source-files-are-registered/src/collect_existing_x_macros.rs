@@ -1,26 +1,49 @@
 // ---------------- [ File: src/collect_existing_x_macros.rs ]
 crate::ix!();
 
-/// Attempts to find and gather all `x!{...}` macros at the top level of `parsed_file`.
-/// We also collect any line comments that are immediately above the macro,
-/// so that when we remove or move the macro, we can keep those comments attached.
-///
-/// Returns a sorted list (by the macro’s start offset).
 pub fn collect_existing_x_macros(parsed_file: &SourceFile) -> Vec<ExistingXMacro> {
     trace!("Entering collect_existing_x_macros");
     let mut result = Vec::new();
 
     for item in parsed_file.items() {
+        // 1) Check if this item is recognized by is_x_macro => returns full_text
         if let Some(macro_text) = is_x_macro(&item) {
             let rng = item.syntax().text_range();
             debug!("Found x! macro at range={:?}, text='{}'", rng, macro_text);
 
-            // Gather preceding line comments so we can reattach them
-            let leading_comments = gather_leading_comments(&item);
-            if !leading_comments.is_empty() {
-                debug!("Found leading comments for x! macro: {:?}", leading_comments);
+            // 2) Gather preceding line comments so we can reattach them
+            let mut leading_comments = gather_leading_comments(&item);
+
+            // 3) If leading_comments is empty, but the macro_text itself starts with "//"
+            //    then RA likely merged the comment lines into the same node, e.g. 
+            //    `"// Hello alpha\nx!{alpha}"`. We'll parse them out:
+            if leading_comments.is_empty() && macro_text.trim_start().starts_with("//") {
+                // We'll do a naive approach: take the lines from `macro_text` until the line with `x!{`,
+                // if they look like `// ...`.
+                let mut lines = macro_text.lines().collect::<Vec<_>>();
+                if let Some(idx_x) = lines.iter().position(|ln| ln.contains("x!{")) {
+                    let comment_part = &lines[0..idx_x];
+                    // Filter to keep only lines that truly look like `// ...`.
+                    let comment_lines: Vec<&str> = comment_part
+                        .iter()
+                        .filter(|ln| ln.trim_start().starts_with("//"))
+                        .copied()
+                        .collect();
+
+                    if !comment_lines.is_empty() {
+                        let joined = comment_lines.join("\n");
+                        // Ensure exactly one trailing newline
+                        let final_comment = if joined.ends_with('\n') {
+                            joined
+                        } else {
+                            format!("{joined}\n")
+                        };
+                        leading_comments = final_comment;
+                    }
+                }
             }
 
+            // 4) Build the ExistingXMacro
             let existing_x_macro = ExistingXMacroBuilder::default()
                 .text(macro_text)
                 .range(rng)
@@ -31,10 +54,9 @@ pub fn collect_existing_x_macros(parsed_file: &SourceFile) -> Vec<ExistingXMacro
         }
     }
 
-    // Sort them by ascending start offset
+    // Sort by ascending start offset
     result.sort_by_key(|em| em.range().start());
-    trace!("Final sorted macros: {:?}", result);
-    trace!("Exiting collect_existing_x_macros");
+    trace!("Exiting collect_existing_x_macros with {} macros", result.len());
     result
 }
 

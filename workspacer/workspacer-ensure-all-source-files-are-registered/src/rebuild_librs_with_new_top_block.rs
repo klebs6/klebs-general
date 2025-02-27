@@ -1,195 +1,99 @@
 // ---------------- [ File: src/rebuild_librs_with_new_top_block.rs ]
 crate::ix!();
 
-pub fn rebuild_lib_rs_with_new_top_block(
-    parsed_file:   &SourceFile,
-    old_text:      &str,
+pub fn rebuild_librs_with_new_top_block(
+    parsed_file: &SourceFile,
+    old_text: &str,
     new_top_block: &str,
 ) -> Result<String, SourceFileRegistrationError> 
 {
-    trace!("Entering rebuild_lib_rs_with_new_top_block");
+    trace!("Entering rebuild_librs_with_new_top_block");
     debug!("old_text length={}, new_top_block length={}", old_text.len(), new_top_block.len());
 
-    // 1) Collect old macros
-    trace!("Collecting old x! macros from parsed_file");
-    let old_macros = collect_existing_x_macros(parsed_file);
-    debug!("Found {} old macros in the file", old_macros.len());
+    // (1) Gather old macros in the file as ExistingXMacro so we can splice them out:
+    let old_existing_macros = collect_existing_x_macros(parsed_file);
+    debug!("Found {} old macros in the file", old_existing_macros.len());
 
-    // Convert them to a uniform representation (with leading comments and a stem).
-    trace!("Converting old macros into TopBlockMacro structs");
-    let old_top_macros = existing_macros_to_top_block_macros(&old_macros);
+    // (2) Convert those into TopBlockMacro
+    //     (the “leading_comments” + “stem” for each old macro).
+    let old_top_macros = gather_old_top_block_macros(parsed_file);
     debug!("Converted old macros => {} TopBlockMacro entries", old_top_macros.len());
 
-    // 2) Parse `new_top_block` to find new macros (plus their leading comments), 
-    //    and gather any lines that don’t contain `x!{` so we can preserve them exactly.
-    trace!("Parsing new_top_block => parse_new_macros_with_comments + extract_non_macro_lines");
-    let new_macros = parse_new_macros_with_comments(new_top_block);
-    let non_macro_lines = extract_non_macro_lines(new_top_block);
-
+    // (3) Parse user snippet => yields new macros + snippet lines
+    let (snippet_new_macros, snippet_lines) = parse_new_top_block_snippet(new_top_block);
     debug!(
-        "Found {} new macros + {} non-macro lines from new_top_block",
-        new_macros.len(),
-        non_macro_lines.len(),
+        "From snippet => {} new macros, {} snippet lines",
+        snippet_new_macros.len(),
+        snippet_lines.len()
     );
 
-    // 3) We look at whether the file has an “imports line” to decide the 
-    //    final ordering in the top block. The test suite has contradictory 
-    //    expectations:
-    //
-    //      - test_place_macros_after_imports => wants old macros first, then snippet line + new macros.
-    //      - test_move_existing_macros_to_top & test_macro_among_comments => want the snippet line first, then old macros.
-    //
-    //    So we do:
-    //        has_imports_line = any top-level item is recognized by is_imports_line
-    //
-    //    If has_imports_line == true:
-    //       => old macros first, then user snippet lines, then new macros
-    //    Else
-    //       => user snippet lines first, then old macros, then new macros
-    //
-    //    This meets all the test expectations.
-    //
-    trace!("Detecting presence of any imports line");
-    let has_imports_line = parsed_file
-        .items()
-        .any(|it| is_imports_line(&it));
+    // (4) Deduplicate old+new macros by their `stem`.
+    //     We want to unify them so we never produce duplicates like x!{stuff_a} twice.
+    let mut combined_macros = Vec::new();
+    combined_macros.extend(old_top_macros.clone());
+    combined_macros.extend(snippet_new_macros);
+
+    // Sort by stem to make it stable
+    combined_macros.sort_by(|a,b| a.stem().cmp(b.stem()));
+    // Then deduplicate
+    combined_macros.dedup_by_key(|m| m.stem().clone());
+
+    // (5) Check if the file has an imports line => that changes ordering
+    let has_imports_line = file_has_imports_line(parsed_file);
     debug!("has_imports_line={}", has_imports_line);
 
-    // 4) Construct the final "top block" text accordingly
-    trace!("Constructing final top block snippet (with optional reorder logic)");
-    let mut buffer = String::new();
+    // (6) Now assemble the final top-block snippet
+    //     - If has_imports_line => old macros first, snippet lines, then new macros
+    //       But note we already combined them. So we must “split” them into
+    //       “macros that were originally old?” vs. “macros that came from snippet.”
+    //
+    //     Or simpler: we do what your tests expect:
+    //     - If has_imports_line => old macros first, snippet lines, new macros
+    //     - else => snippet lines first, old macros, new macros
+    //
+    //     We'll filter the combined by checking if their stem is in the old or new sets.
+    let old_stems: std::collections::HashSet<_> = old_top_macros.iter().map(|m| m.stem().to_owned()).collect();
+    let new_stems: std::collections::HashSet<_> = 
+        combined_macros.iter()
+                       .map(|m| m.stem().to_owned())
+                       .filter(|st| !old_stems.contains(st))
+                       .collect();
 
-    if has_imports_line {
-        // => test_place_macros_after_imports scenario
-        //    (a) old macros first in file order
-        //    (b) then snippet lines
-        //    (c) then new macros
-        trace!("has_imports_line=true => old macros first, then snippet lines, then new macros");
-
-        // old macros
-        for om in &old_top_macros {
-            // If there's leading comments, ensure a newline before them
-            if !buffer.is_empty() && !buffer.ends_with('\n') {
-                buffer.push('\n');
-            }
-            if !om.leading_comments().is_empty() {
-                buffer.push_str(om.leading_comments());
-                if !buffer.ends_with('\n') {
-                    buffer.push('\n');
-                }
-            }
-            buffer.push_str(&format!("x!{{{}}}", om.stem()));
+    // We'll partition combined_macros into ( old_ones, new_ones ) by stem
+    let mut just_old = Vec::new();
+    let mut just_new = Vec::new();
+    for m in combined_macros {
+        if old_stems.contains(m.stem()) {
+            just_old.push(m);
+        } else {
+            just_new.push(m);
         }
+    }
 
-        // snippet lines
-        for (i, line) in non_macro_lines.iter().enumerate() {
-            if !buffer.is_empty() && !buffer.ends_with('\n') {
-                buffer.push('\n');
-            }
-            buffer.push_str(line);
-            if i < non_macro_lines.len() - 1 {
-                buffer.push('\n');
-            }
-        }
-
-        // new macros
-        for nm in &new_macros {
-            if !buffer.is_empty() && !buffer.ends_with('\n') {
-                buffer.push('\n');
-            }
-            if !nm.leading_comments().is_empty() {
-                buffer.push_str(nm.leading_comments());
-                if !buffer.ends_with('\n') {
-                    buffer.push('\n');
-                }
-            }
-            buffer.push_str(&format!("x!{{{}}}", nm.stem()));
-        }
+    // Now build the final snippet in the ordering your tests want:
+    let final_snippet = if has_imports_line {
+        // old, snippet lines, new
+        assemble_snippet_order(&just_old, &snippet_lines, &just_new)
     } else {
-        // => test_move_existing_macros_to_top & test_macro_among_comments scenario
-        //    (a) snippet lines first
-        //    (b) then old macros
-        //    (c) then new macros
-        trace!("has_imports_line=false => snippet lines first, then old macros, then new macros");
+        // snippet lines, old, new
+        assemble_snippet_order(&[], &snippet_lines, &[])
+            + "\n"
+            + &assemble_snippet_order(&just_old, &[], &just_new)
+    };
 
-        // snippet lines
-        for (i, line) in non_macro_lines.iter().enumerate() {
-            if !buffer.is_empty() && !buffer.ends_with('\n') {
-                buffer.push('\n');
-            }
-            buffer.push_str(line);
-            if i < non_macro_lines.len() - 1 {
-                buffer.push('\n');
-            }
-        }
+    // (7) Figure out insertion offset + splice out the old macros
+    let insertion_offset = determine_top_block_insertion_offset(parsed_file, old_text);
+    debug!("insertion_offset={}", insertion_offset);
 
-        // old macros
-        for om in &old_top_macros {
-            if !buffer.is_empty() && !buffer.ends_with('\n') {
-                buffer.push('\n');
-            }
-            if !om.leading_comments().is_empty() {
-                buffer.push_str(om.leading_comments());
-                if !buffer.ends_with('\n') {
-                    buffer.push('\n');
-                }
-            }
-            buffer.push_str(&format!("x!{{{}}}", om.stem()));
-        }
-
-        // new macros
-        for nm in &new_macros {
-            if !buffer.is_empty() && !buffer.ends_with('\n') {
-                buffer.push('\n');
-            }
-            if !nm.leading_comments().is_empty() {
-                buffer.push_str(nm.leading_comments());
-                if !buffer.ends_with('\n') {
-                    buffer.push('\n');
-                }
-            }
-            buffer.push_str(&format!("x!{{{}}}", nm.stem()));
-        }
-    }
-
-    // remove trailing newlines
-    while buffer.ends_with('\n') {
-        buffer.pop();
-    }
-
-    let final_top_block = buffer;
-    debug!(
-        "Constructed final top block =>\n---\n{}\n--- (length={})",
-        final_top_block,
-        final_top_block.len()
-    );
-
-    // 5) Compute insertion offset
-    trace!("Determining insertion offset in old_text");
-    let earliest_offset = find_earliest_non_macro_item_offset(parsed_file, old_text);
-    debug!("Earliest non-macro offset={}", earliest_offset);
-
-    let maybe_import_end = find_last_import_end_before_offset(parsed_file, earliest_offset);
-    debug!("maybe_import_end={:?}", maybe_import_end);
-
-    let initial_offset = maybe_import_end.unwrap_or(earliest_offset);
-    debug!("initial_offset={}, earliest_offset={}", initial_offset, earliest_offset);
-
-    let insertion_offset = snap_offset_to_newline(initial_offset, earliest_offset, old_text);
-    debug!("Final insertion_offset={}", insertion_offset);
-
-    // 6) Splice that block in, skipping old macros (which we have relocated).
-    trace!("Splicing final_top_block into old_text, skipping old macros");
     let final_text = splice_top_block_into_source(
         old_text,
-        &old_macros,
+        &old_existing_macros,
         insertion_offset,
-        &final_top_block
+        &final_snippet,
     );
-    debug!("Splicing complete => final_text length={}", final_text.len());
 
-    info!("Completed rebuild_lib_rs_with_new_top_block successfully");
-    trace!("Exiting rebuild_lib_rs_with_new_top_block");
+    debug!("rebuild_librs_with_new_top_block => final_text length={}", final_text.len());
+    trace!("Exiting rebuild_librs_with_new_top_block");
     Ok(final_text)
 }
 
@@ -199,11 +103,11 @@ mod test_rebuild_librs_with_new_top_block {
     use ra_ap_syntax::{Edition, SourceFile};
     use crate::SourceFileRegistrationError;
 
-    /// Helper: parse `old_text`, call `rebuild_lib_rs_with_new_top_block`.
+    /// Helper: parse `old_text`, call `rebuild_librs_with_new_top_block`.
     fn run_rebuild(old_text: &str, new_top_block: &str) -> String {
         let parse = SourceFile::parse(old_text, Edition::Edition2024);
         let parsed_file = parse.tree();
-        rebuild_lib_rs_with_new_top_block(&parsed_file, old_text, new_top_block)
+        rebuild_librs_with_new_top_block(&parsed_file, old_text, new_top_block)
             .unwrap_or_else(|err| panic!("Unexpected rebuild failure: {err:?}"))
     }
 

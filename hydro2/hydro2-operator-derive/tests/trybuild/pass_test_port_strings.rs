@@ -9,7 +9,7 @@ use named_item::*;
 #[derive(NamedItem,Operator,Debug)]
 #[operator(
     execute="my_execute",
-    opcode="OpCode::TestOp",
+    opcode="BasicOpCode::TestOp",
     input0="i32",
     //TODO: should try this with &str and fix it
     input1="String",
@@ -65,3 +65,5 @@ async fn main() {
         other => panic!("Unexpected output[0]: {:?}", other),
     }
 }
+
+use std::sync::Arc;

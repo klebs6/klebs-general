@@ -7,7 +7,7 @@ crate::ix!();
 #[derive(NamedItem, Operator, Debug)]
 #[operator(
     execute="run_stream",
-    opcode="OpCode::StreamTestOp",
+    opcode="BasicOpCode::StreamTestOp",
     output0="T",
     output1="T",
     output2="T",
@@ -49,7 +49,7 @@ mod streamy_operator_tests {
     #[tokio::test]
     async fn test_streamy_operator_default_val() -> Result<(), NetworkError> {
         let s = StreamyOperator::<i32>::new_with("tester",[7,0,0,0]);
-        assert_eq!(s.opcode(), OpCode::StreamTestOp);
+        assert_eq!(s.opcode().val(), BasicOpCode::StreamTestOp.val());
         assert_eq!(s.name(), "tester");
 
         let dummy_input = [None, None, None, None];

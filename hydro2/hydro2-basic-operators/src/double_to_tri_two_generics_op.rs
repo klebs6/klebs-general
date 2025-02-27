@@ -7,7 +7,7 @@ crate::ix!();
 #[derive(NamedItem,Operator,Debug)]
 #[operator(
     execute="double_to_tri",
-    opcode="OpCode::DoubleToTriTwoGenericsOp",
+    opcode="BasicOpCode::DoubleToTriTwoGenericsOp",
     input0="T", 
     input1="U", 
     input2="i32", 

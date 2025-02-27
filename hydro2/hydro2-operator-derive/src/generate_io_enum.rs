@@ -54,7 +54,7 @@ mod test_generate_io_enum {
 
         let spec = OperatorSpecBuilder::default()
             .execute_fn::<syn::Path>(parse_quote!(foo))
-            .opcode_expr::<syn::Path>(parse_quote!(OpCode::Bar))
+            .opcode_expr::<syn::Path>(parse_quote!(BasicOpCode::Bar))
             .inputs(vec![parse_quote! { &[u32] }])
             .outputs(vec![parse_quote! { Vec<String> }])
             .build()
@@ -85,7 +85,7 @@ mod test_generate_io_enum {
         // OperatorSpec with no inputs/outputs
         let spec = OperatorSpecBuilder::default()
             .execute_fn::<syn::Path>(parse_quote!(some_execute_fn))
-            .opcode_expr::<syn::Path>(parse_quote!(OpCode::SomeOp))
+            .opcode_expr::<syn::Path>(parse_quote!(BasicOpCode::SomeOp))
             .inputs(vec![])
             .outputs(vec![])
             .build()
@@ -115,7 +115,7 @@ mod test_generate_io_enum {
         // 2 inputs, 2 outputs, no references => uses_lifetime = false
         let spec = OperatorSpecBuilder::default()
             .execute_fn::<syn::Path>(parse_quote!(foo))
-            .opcode_expr::<syn::Path>(parse_quote!(OpCode::Bar))
+            .opcode_expr::<syn::Path>(parse_quote!(BasicOpCode::Bar))
             .inputs(vec![parse_quote! { Foo }, parse_quote! { i32 }])
             .outputs(vec![parse_quote! { String }, parse_quote! { Vec<u8> }])
             .build()

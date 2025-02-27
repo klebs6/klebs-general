@@ -7,7 +7,7 @@ crate::ix!();
 #[derive(NamedItem, Debug, Operator)]
 #[operator(
     execute="double_out", 
-    opcode="OpCode::DoubleOutOp", 
+    opcode="BasicOpCode::DoubleOutOp", 
     input0="i32", 
     output0="i32", 
     output1="i32"

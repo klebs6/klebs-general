@@ -3,7 +3,7 @@ error: Encountered invalid syntax in `#[operator(...)]` attribute.
    |
 7  | / #[operator(
 8  | |     execute="out_of_order",
-9  | |     opcode="OpCode::TestOp",
+9  | |     opcode="BasicOpCode::TestOp",
 10 | |     input0="i32",
 11 | |     input2="i64" // skipping input1 → should fail
 12 | | )]

@@ -46,14 +46,8 @@ ACTIVE_PACKAGE := workspacer-ensure-all-source-files-are-registered
 #ACTIVE_PACKAGE := workspacer-workspace
 #ACTIVE_PACKAGE := workspacer
 
-INDIVIDUAL_TEST := assemble_final_top_block_snippet
 INDIVIDUAL_TEST := crate_ensure_all_source_files_are_registered
-INDIVIDUAL_TEST := create_top_block_text
-INDIVIDUAL_TEST := gather_leading_comments
-INDIVIDUAL_TEST := gather_old_top_block_macros
-INDIVIDUAL_TEST := parse_new_macros_with_comments
-INDIVIDUAL_TEST := parse_new_top_block_snippet
-#INDIVIDUAL_TEST := rebuild_lib_rs_with_new_top_block
+INDIVIDUAL_TEST := rebuild_librs_with_new_top_block
 
 #FEATURES := --features "enable_stress_test"
 FEATURES := --features ""
@@ -65,7 +59,7 @@ CONSOLIDATE_CRATE := workspacer-toml
 #-----------------------------------------------------[this section lets us choose how we want to test]
 DEFAULT := test
 #DEFAULT := test_file
-DEFAULT := test_one
+#DEFAULT := test_one
 #DEFAULT := test_file_one
 #DEFAULT := test_all
 #DEFAULT := test_individual

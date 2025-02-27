@@ -8,7 +8,7 @@ use named_item::*;
 #[derive(Debug,NamedItem,Operator)]
 #[operator(
     execute="noop", 
-    opcode="OpCode::Nothing"
+    opcode="BasicOpCode::Nothing"
 )]
 pub struct EmptyOperator {
     name: String,
@@ -23,3 +23,4 @@ impl EmptyOperator {
 
 fn main() {}
 
+use std::sync::Arc;

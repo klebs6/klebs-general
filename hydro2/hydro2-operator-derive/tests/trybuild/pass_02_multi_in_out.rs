@@ -8,7 +8,7 @@ use named_item::*;
 #[derive(Debug,NamedItem,Operator)]
 #[operator(
     execute="multi_op",
-    opcode="OpCode::MultiThing",
+    opcode="BasicOpCode::MultiThing",
     input0="u32",
     input1="i64",
     output0="bool",
@@ -31,3 +31,5 @@ impl MultiIOOp {
 }
 
 fn main() {}
+
+use std::sync::Arc;

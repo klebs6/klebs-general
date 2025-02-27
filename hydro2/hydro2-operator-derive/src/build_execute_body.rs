@@ -83,7 +83,7 @@ mod test_build_execute_body {
     fn test_build_execute_body_zero_in_out() {
         let spec = OperatorSpecBuilder::default()
             .execute_fn::<syn::Path>(parse_quote!(do_nothing))
-            .opcode_expr::<syn::Path>(parse_quote!(OpCode::NoOp))
+            .opcode_expr::<syn::Path>(parse_quote!(BasicOpCode::NoOp))
             .inputs(vec![])
             .outputs(vec![])
             .build()
@@ -111,7 +111,7 @@ mod test_build_execute_body {
     fn test_build_execute_body_single_in_out() {
         let spec = OperatorSpecBuilder::default()
             .execute_fn::<syn::Path>(parse_quote!(process_one))
-            .opcode_expr::<syn::Path>(parse_quote!(OpCode::UnaryOp))
+            .opcode_expr::<syn::Path>(parse_quote!(BasicOpCode::UnaryOp))
             .inputs(vec![parse_quote! { i32 }])
             .outputs(vec![parse_quote! { String }])
             .build()
@@ -148,7 +148,7 @@ mod test_build_execute_body {
         // 2 inputs, 3 outputs
         let spec = OperatorSpecBuilder::default()
             .execute_fn::<syn::Path>(parse_quote!(multi_op))
-            .opcode_expr::<syn::Path>(parse_quote!(OpCode::MultiThing))
+            .opcode_expr::<syn::Path>(parse_quote!(BasicOpCode::MultiThing))
             .inputs(vec![parse_quote! { &str }, parse_quote! { bool }])
             .outputs(vec![parse_quote! { i32 }, parse_quote! { String }, parse_quote! { Vec<u8> }])
             .build()

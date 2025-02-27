@@ -7,7 +7,7 @@ crate::ix!();
 #[derive(NamedItem, Operator, Debug)]
 #[operator(
     execute="multiplier",
-    opcode="OpCode::MultiplyOp",
+    opcode="BasicOpCode::MultiplyOp",
     input0="i32",
     output0="i32"
 )]

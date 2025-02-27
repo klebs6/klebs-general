@@ -98,7 +98,7 @@ pub fn build_single_operator_impl(
                     for #base_ident #bridging_args
                         #wc_opt
                     {
-                        fn opcode(&self) -> hydro2_operator::OpCode {
+                        fn opcode(&self) -> std::sync::Arc<dyn hydro2_operator::OpCode> {
                             <Self as hydro2_operator::Operator<#bridging_path>>::opcode(self)
                         }
 

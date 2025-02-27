@@ -7,7 +7,7 @@ crate::ix!();
 #[derive(NamedItem, Operator, Debug)]
 #[operator(
     execute="do_nothing",
-    opcode="OpCode::NoOp"
+    opcode="BasicOpCode::NoOp"
 )]
 pub struct NoOpOperator
 {

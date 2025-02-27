@@ -13,7 +13,7 @@ use std::ops::Add;
 #[derive(Debug, NamedItem, Operator)]
 #[operator(
     execute="exec_add",
-    opcode="OpCode::AddOp",
+    opcode="BasicOpCode::AddOp",
     input0="T",
     output0="T"
 )]
@@ -47,3 +47,4 @@ fn main() {
     // This should compile, generating MyNetworkWireBIO<T> with variant AddOperatorIO<T>.
     // If you define more operators, you can list them too.
 }
+use std::sync::Arc;

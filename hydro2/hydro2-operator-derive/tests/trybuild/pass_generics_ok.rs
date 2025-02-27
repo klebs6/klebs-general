@@ -13,7 +13,7 @@ use named_item_derive::*;
 #[derive(NamedItem,Debug,Operator)]
 #[operator(
     execute="emit",
-    opcode="OpCode::ConstantOp",
+    opcode="BasicOpCode::ConstantOp",
     output0="U"
 )]
 pub struct ConstantOp<U>
@@ -34,7 +34,7 @@ where U: Display + Copy + Send + Sync + Debug
 #[derive(NamedItem,Debug,Operator)]
 #[operator(
     execute="double_to_tri",
-    opcode="OpCode::DoubleToTriOp",
+    opcode="BasicOpCode::DoubleToTriOp",
     input0="T", input1="T",
     output0="T", output1="T", output2="T"
 )]
@@ -62,3 +62,5 @@ fn main() {
         _0: std::marker::PhantomData,
     };
 }
+
+use std::sync::Arc;
