@@ -1,0 +1,46 @@
+#!/usr/bin/env raku
+
+use JSON::Tiny;
+
+my $missing-id   = token { 'trait' | 'type' | 'macro' | 'function' };
+
+my $phrase-regex = rx:s/cannot find $missing-id /;
+
+my @tokens;
+
+my $text = $*IN.slurp;
+
+# Read lines from STDIN and filter them
+for $text.lines.grep($phrase-regex) -> $line {
+
+    #say "Matched line: $line";
+
+    # Extract tokens enclosed within backticks and quote special characters properly
+    my @line-tokens = $line ~~ m:g/'`' (.*?) '`'/;
+
+    @tokens.append: @line-tokens.map(*.Str);
+}
+
+# Output the list of tokens
+my @missing = @tokens.sort.unique;
+
+my %missing-map;
+
+@missing .= map({ .substr(1, .chars - 2) }); # remove backticks
+
+my $missing = @missing.join("\n");
+
+"missing-types.txt".IO.spurt: $missing;
+
+my $json-string = slurp('rust-workspace-typemap.json');
+my $json-data = from-json($json-string);
+my $index = $json-data<index>;
+
+for @missing -> $item {
+    my @places = $index{$item};
+    say "------------------------------------";
+    say $item;
+    say @places;
+}
+
+say $text;

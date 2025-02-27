@@ -1,0 +1,12 @@
+[dependencies]
+async-trait = "*"
+named-item = "0.6.0"
+named-item-derive = "0.2.0"
+paste = "*"
+unsafe-erased = "*"
+[dependencies.hydro2-3p]
+path = "../hydro2-3p"
+[package]
+edition = "2024"
+name = "hydro2-operator"
+version = "0.1.0"

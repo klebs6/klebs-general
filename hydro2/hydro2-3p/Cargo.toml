@@ -1,0 +1,49 @@
+[package]
+name = "hydro2-3p"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+##json-repair             = { version = "*", path = "/Users/kleb/bethesda/work/repo/klebs-general/json-repair" }
+#Inflector                = "*"
+#ai-descriptor            = "0.9.0"
+#bytes                    = "*"
+#crossbeam                = "*"
+#delegate                 = "*"
+#error-tree               = { version = "*", path = "/Users/kleb/bethesda/work/repo/klebs-general/error-tree" }
+#float-ord                = "*"
+#indoc                    = "*"
+#json-repair              = "*"
+#json5                    = "*"
+#once_cell                = "*"
+#rand-construct           = "*"
+#regex                    = "*"
+#strsim                   = "0.10"
+#structured-language-form = "*"
+#strum                    = { version = "0.24", features = ["derive"] }
+#strum_macros             = "0.24"
+#tempfile                 = "*"
+#uuid                     = { version = "*", features = ["v4", "serde"] }
+async-trait               = "*"
+derive_builder            = "*"
+disable_macro             = "*"
+error-tree                = "0.6.0"
+export-magic              = "*"
+futures                   = "0.3"
+getset                    = "*"
+named-item                = "0.6.0"
+named-item-derive         = "0.2.0"
+num-traits                = "*"
+serde                     = { version = "1.0", features = ["derive"] }
+serde_json                = "1.0"
+tokio                     = { version = "1", features = ["full"] }
+traced-test               = "*"
+tracing                   = { version = "0.1.40", features = ["log"] }
+tracing-setup             = "*"
+tracing-subscriber        = { version = "0.3", default-features = false, features = ["fmt", "std", "env-filter"] }
+lazy_static               = "*"
+pbx                       = "*"
+rand                     = "*"
+
+[build-dependencies]
+scan-crate-for-typedefs = "*"

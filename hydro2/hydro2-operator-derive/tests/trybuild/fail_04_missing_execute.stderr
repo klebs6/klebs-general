@@ -1,0 +1,8 @@
+error: No `execute` function name specified in `#[operator(...)]`.
+  --> tests/trybuild/fail_04_missing_execute.rs:9:1
+   |
+9  | / #[operator(
+10 | |     // no "execute=..." → should fail
+11 | |     opcode="OpCode::TestOp"
+12 | | )]
+   | |__^

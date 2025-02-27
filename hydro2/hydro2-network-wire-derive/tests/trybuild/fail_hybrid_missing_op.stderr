@@ -1,0 +1,34 @@
+error[E0432]: unresolved import `my_shared_crate`
+ --> tests/trybuild/fail_hybrid_missing_op.rs:5:5
+  |
+5 | use my_shared_crate::*;
+  |     ^^^^^^^^^^^^^^^ use of undeclared crate or module `my_shared_crate`
+
+error: cannot find derive macro `NamedItem` in this scope
+  --> tests/trybuild/fail_hybrid_missing_op.rs:10:17
+   |
+10 | #[derive(Debug, NamedItem, Operator)]
+   |                 ^^^^^^^^^
+   |
+help: consider importing this derive macro
+   |
+3  + use named_item_derive::NamedItem;
+   |
+
+error: cannot find derive macro `Operator` in this scope
+  --> tests/trybuild/fail_hybrid_missing_op.rs:10:28
+   |
+10 | #[derive(Debug, NamedItem, Operator)]
+   |                            ^^^^^^^^
+
+error: cannot find attribute `operator` in this scope
+  --> tests/trybuild/fail_hybrid_missing_op.rs:11:3
+   |
+11 | #[operator(
+   |   ^^^^^^^^
+
+error: cannot find macro `node` in this scope
+  --> tests/trybuild/fail_hybrid_missing_op.rs:38:17
+   |
+38 |     let node0 = node!(0 => FooOperator);
+   |                 ^^^^

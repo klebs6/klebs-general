@@ -1,0 +1,16 @@
+error: No `opcode` specified in `#[operator(...)]`.
+  --> tests/trybuild/03_missing_opcode.rs:7:1
+   |
+7  | / #[operator(
+8  | |     execute="some_fn"
+9  | |     // opcode is missing → should fail
+10 | | )]
+   | |__^
+
+warning: unused imports: `OpCode` and `Operator`
+ --> tests/trybuild/03_missing_opcode.rs:4:21
+  |
+4 | use hydro2_operator::{OpCode, NetResult, Operator};
+  |                     ^^^^^^             ^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` on by default

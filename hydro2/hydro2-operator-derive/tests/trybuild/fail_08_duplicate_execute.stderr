@@ -1,0 +1,5 @@
+error: Execute key was provided more than once in `#[operator(...)]`.
+  --> tests/trybuild/fail_08_duplicate_execute.rs:11:5
+   |
+11 |     execute="fn2", // should fail
+   |     ^^^^^^^

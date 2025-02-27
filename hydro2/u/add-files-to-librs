@@ -1,0 +1,149 @@
+#!/usr/bin/env raku
+
+my @new-crates = [
+    "aure-appendix-generation",
+    "aure-archival-and-catalog",
+    "aure-author-design",
+    "aure-chapter-structuring",
+    "aure-citation-and-footnote",
+    "aure-colophon-assembly",
+    "aure-cover-design",
+    "aure-distribution-orchestration",
+    "aure-editorial-review",
+    "aure-final-proofread",
+    "aure-illustration-embed",
+    "aure-illustration-provider",
+    "aure-inventory-registration",
+    "aure-isbn-allocation",
+    "aure-lexical-refinement",
+    "aure-manuscript-inception",
+    "aure-pricing-computation",
+    "aure-print-queue-scheduling",
+    "aure-regulatory-compliance",
+    "aure-sales-analytics",
+    "aure-text-pagination",
+    "aiwa-appendix-material",
+    "aiwa-archived-and-catalogued-book",
+    "aiwa-author-block",
+    "aiwa-book-artifact",
+    "aiwa-book-with-cover",
+    "aiwa-book-with-cover-and-illus",
+    "aiwa-book-with-sku",
+    "aiwa-chapter-structure",
+    "aiwa-cover-design-data",
+    "aiwa-distributed-book",
+    "aiwa-doc-with-appendix",
+    "aiwa-editorially-reviewed-text",
+    "aiwa-fully-proofread-book",
+    "aiwa-illustration-set",
+    "aiwa-manuscript-skeleton",
+    "aiwa-manuscript-with-authors",
+    "aiwa-manuscript-with-colophon",
+    "aiwa-manuscript-with-illustrations",
+    "aiwa-manuscript-with-isbn",
+    "aiwa-paginated-book",
+    "aiwa-priced-book",
+    "aiwa-print-scheduled-book",
+    "aiwa-refined-text",
+    "aiwa-regulatory-compliant-book",
+    "aiwa-sales-analysis-output",
+    "aiwa-text-with-citations-and-footnotes",
+    "agni-3p",
+    "agni-batch-client",
+    "agni-batch-executor",
+    "agni-batch-index",
+    "agni-batch-metadata",
+    "agni-batch-reconciliation",
+    "agni-batch-schema",
+    "agni-batch-triple",
+    "agni-buffer",
+    "agni-emit-audio",
+    "agni-emit-image",
+    "agni-json",
+    "agni-language-to-token-stream",
+    "agni-memory",
+    "hydro2-network",
+    "hydro2-network-error",
+    "hydro2-network-performance",
+    "hydro2-operator",
+    "agni-pipeline",
+    "agni-pipeline-executor",
+    "agni-query-performance-estimator",
+    "agni-scheduler",
+    "agni-token",
+    "agni-token-cluster",
+    "agni-token-describe",
+    "agni-token-design-object",
+    "agni-token-enumerate-object-effects",
+    "agni-token-event-sequence-predict",
+    "agni-token-expand",
+    "agni-token-expansion-to-structured-language",
+    "agni-token-filter",
+    "agni-token-fusion",
+    "agni-token-generate-language-dag",
+    "agni-token-instructionize",
+    "agni-token-interpolate",
+    "agni-token-loop",
+    "agni-token-loop-break",
+    "agni-token-mask-select",
+    "agni-token-object-evolve",
+    "agni-token-quad-expand",
+    "agni-token-quad-extract",
+    "agni-token-quad-fuse",
+    "agni-token-quad-order",
+    "agni-token-rank",
+    "agni-token-select-ingredients",
+    "agni-token-shuffle",
+    "agni-token-simulate-object",
+    "agni-token-split",
+    "agni-token-stream-collapse",
+    "agni-token-stream-resequence",
+    "agni-workspace",
+    "agni-workspace-interface",
+    "greenvae-environment",
+    "greenvae-token-expander-axis",
+    "old-agni-token-expander",
+    "save-load-traits",
+    "token-expander-axis",
+    "token-expander-axis-derive",
+    "token-expansion-step",
+    "token-expansion-system-message-builder",
+];
+
+for @new-crates -> $crate {
+    my $srcdir  = $crate ~ "/src";
+    my $libfile = $srcdir ~ "/lib.rs";
+
+    my @others = $srcdir.IO.dir.grep: {
+        $_ !~~ /lib\.rs|imports\.rs/
+    };
+
+    my @import-statements = do for @others {
+
+        my $stem = $_.basename.split(".")[0];
+
+        'x!{' ~ $stem ~ '}'
+    };
+
+    my @libfile-keep-lines = gather for $libfile.IO.slurp.lines {
+
+        if $_ !~~ /'x!{'/ {
+            take $_;
+        }
+    };
+
+    my @already-importing = gather for $libfile.IO.slurp.lines {
+
+        if $_ ~~ /'x!{'/ {
+            take $_;
+        }
+    };
+
+    my $new-text = qq:to/END/;
+    {@libfile-keep-lines.join("\n")}
+    {@import-statements.join("\n")}
+    END
+
+    say "writing: $libfile";
+    $libfile.IO.spurt: $new-text;
+}

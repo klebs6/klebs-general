@@ -1,0 +1,28 @@
+#!/usr/bin/env raku
+use Chomper::CargoWorkspace;
+
+sub MAIN(Str $name, Bool :$write) {
+
+    add-workspace-crate($name, :$write);
+
+    add-workspace-crate-to-neighbor-cargo-toml(
+        workspace-crate => "hydro2-3p", 
+        neighbor        => $name,
+        write => True
+    );
+
+    add-starter-lib-file-for-crate($name);
+
+    glob-import-from-crates($name, [
+        "hydro2_3p", 
+    ]);
+
+=begin comment
+    batch-add-dependencies-to-cargo-toml(
+        [$name], 
+        deps => ["lazy_static", "static_assertions"],
+        ver => "*",
+        write => True,
+    );
+=end comment
+}

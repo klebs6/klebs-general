@@ -1,0 +1,5 @@
+error: Missing `#[available_operators(...)]` on struct with `#[derive(NetworkWire)]`.
+ --> tests/trybuild/fail_missing_attr.rs:9:12
+  |
+9 | pub struct MissingOperators<T> {
+  |            ^^^^^^^^^^^^^^^^

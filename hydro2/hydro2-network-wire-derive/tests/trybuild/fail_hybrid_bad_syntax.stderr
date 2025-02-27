@@ -1,0 +1,5 @@
+error: Could not parse `BadOp(` as a Path.
+ --> tests/trybuild/fail_hybrid_bad_syntax.rs:9:8
+  |
+9 |     op="BadOp("
+  |        ^^^^^^^^

@@ -1,0 +1,5 @@
+error: Could not parse `SomeOp(` as a Path.
+ --> tests/trybuild/fail_unparsable_path.rs:8:7
+  |
+8 |    op="SomeOp("  // This is invalid path syntax
+  |       ^^^^^^^^^

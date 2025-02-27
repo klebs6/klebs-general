@@ -1,0 +1,5 @@
+error: Expected `op`, found `foo`
+ --> tests/trybuild/fail_no_op_keyword.rs:7:23
+  |
+7 | #[available_operators(foo="Bar")]
+  |                       ^^^

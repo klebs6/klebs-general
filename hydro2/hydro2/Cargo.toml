@@ -1,0 +1,18 @@
+[dependencies.hydro2-async-scheduler]
+path = "../hydro2-async-scheduler"
+[dependencies.hydro2-basic-operators]
+path = "../hydro2-basic-operators"
+[dependencies.hydro2-network]
+path = "../hydro2-network"
+[dependencies.hydro2-network-performance]
+path = "../hydro2-network-performance"
+[dependencies.hydro2-network-wire-derive]
+path = "../hydro2-network-wire-derive"
+[dependencies.hydro2-operator]
+path = "../hydro2-operator"
+[dependencies.hydro2-operator-derive]
+path = "../hydro2-operator-derive"
+[package]
+edition = "2024"
+name = "hydro2"
+version = "0.1.0"

@@ -1,0 +1,44 @@
+#!/usr/bin/env raku
+my $base-cmd = "./u/add-workspace-crate-to-neighbor-cargo-toml --write";
+
+my @targets   = [
+    "agni-token-split",
+    "agni-token-expansion-to-structured-language",
+    "agni-token-enumerate-object-effects",
+    "agni-token-quad-expand",
+    "agni-token-simulate-object",
+    "old-agni-token-expander",
+    "agni-token-quad-extract",
+    "agni-token-quad-fuse",
+    "agni-token-quad-order",
+    "agni-token-design-object",
+    "agni-token-loop-break",
+    "agni-token-stream-collapse",
+    "agni-token-instructionize",
+    "agni-token-fusion",
+    "agni-token-mask-select",
+    "agni-token-select-ingredients",
+    "agni-token-expand",
+    "agni-token-event-sequence-predict",
+    "agni-token-rank",
+    "agni-token-interpolate",
+    "agni-token-shuffle",
+    "agni-token-describe",
+    "agni-token-filter",
+    "agni-token-loop",
+    "agni-token-cluster",
+    "agni-token-stream-resequence",
+    "agni-token-generate-language-dag",
+    "agni-token-object-evolve",
+];
+
+my @sources  = [
+    "hydro2-operator",
+];
+
+for @targets -> $target {
+    for @sources -> $src {
+        my $cmd = "$base-cmd $src $target";
+        qqx/$cmd/;
+    }
+}

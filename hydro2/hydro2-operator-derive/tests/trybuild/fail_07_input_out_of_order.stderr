@@ -1,0 +1,5 @@
+error: Input keys must be in strictly increasing order: input0, input1, etc.
+  --> tests/trybuild/fail_07_input_out_of_order.rs:13:5
+   |
+13 |     input2="i64" // skipping input1 → should fail
+   |     ^^^^^^

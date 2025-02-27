@@ -1,0 +1,38 @@
+#!/usr/bin/env raku
+
+my @targets   = [
+    "aure-book-network",
+];
+
+my $base-cmd = "./u/add-workspace-crate-to-neighbor-cargo-toml --write";
+
+for @targets -> $target {
+    my @sources  = [
+        "aure-appendix-generation",
+        "aure-archival-and-catalog",
+        "aure-author-design",
+        "aure-chapter-structuring",
+        "aure-citation-and-footnote",
+        "aure-colophon-assembly",
+        "aure-cover-design",
+        "aure-distribution-orchestration",
+        "aure-editorial-review",
+        "aure-final-proofread",
+        "aure-illustration-embed",
+        "aure-illustration-provider",
+        "aure-inventory-registration",
+        "aure-isbn-allocation",
+        "aure-lexical-refinement",
+        "aure-manuscript-inception",
+        "aure-pricing-computation",
+        "aure-print-queue-scheduling",
+        "aure-regulatory-compliance",
+        "aure-sales-analytics",
+        "aure-text-pagination",
+    ];
+
+    for @sources -> $src {
+        my $cmd = "$base-cmd $src $target";
+        qqx/$cmd/;
+    }
+}

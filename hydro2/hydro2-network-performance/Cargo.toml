@@ -1,0 +1,6 @@
+[dependencies.hydro2-3p]
+path = "../hydro2-3p"
+[package]
+edition = "2024"
+name = "hydro2-network-performance"
+version = "0.1.0"

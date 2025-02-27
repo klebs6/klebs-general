@@ -1,0 +1,16 @@
+error: No `execute` function name specified in `#[operator(...)]`.
+  --> tests/trybuild/04_missing_execute.rs:7:1
+   |
+7  | / #[operator(
+8  | |     // no "execute=..." → should fail
+9  | |     opcode="OpCode::TestOp"
+10 | | )]
+   | |__^
+
+warning: unused imports: `OpCode` and `Operator`
+ --> tests/trybuild/04_missing_execute.rs:4:21
+  |
+4 | use hydro2_operator::{OpCode, NetResult, Operator};
+  |                     ^^^^^^             ^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` on by default

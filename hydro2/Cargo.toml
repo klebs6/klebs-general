@@ -1,0 +1,3 @@
+[workspace]
+members = [ "hydro2-async-scheduler", "hydro2-basic-operators", "hydro2-mock", "hydro2-network", "hydro2-network-performance", "hydro2-network-wire-derive", "hydro2-operator", "hydro2-operator-derive", "hydro2-3p", "hydro2" ]
+resolver = "3"

@@ -1,0 +1,15 @@
+[dependencies]
+async-trait = "*"
+named-item = "0.6.0"
+named-item-derive = "0.2.0"
+unsafe-erased = "*"
+[dependencies.hydro2-3p]
+path = "../hydro2-3p"
+[dependencies.hydro2-operator]
+path = "../hydro2-operator"
+[dependencies.hydro2-operator-derive]
+path = "../hydro2-operator-derive"
+[package]
+edition = "2024"
+name = "hydro2-basic-operators"
+version = "0.1.0"

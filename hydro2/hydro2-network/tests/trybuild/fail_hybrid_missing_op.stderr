@@ -1,0 +1,35 @@
+error[E0412]: cannot find type `BarOperatorIO` in this scope
+  --> tests/trybuild/fail_hybrid_missing_op.rs:32:10
+   |
+32 | #[derive(NetworkWire)]
+   |          ^^^^^^^^^^^ not found in this scope
+   |
+   = note: this error originates in the derive macro `NetworkWire` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0412]: cannot find type `BarOperatorIO` in this scope
+  --> tests/trybuild/fail_hybrid_missing_op.rs:32:10
+   |
+32 | #[derive(NetworkWire)]
+   |          ^^^^^^^^^^^ not found in this scope
+   |
+   = note: this error originates in the derive macro `NetworkWire` (in Nightly builds, run with -Z macro-backtrace for more info)
+help: you might be missing a type parameter
+   |
+38 | pub struct MyNetworkWireC<BarOperatorIO> {
+   |                          +++++++++++++++
+
+error[E0412]: cannot find type `BarOperatorOperatorSignature` in this scope
+  --> tests/trybuild/fail_hybrid_missing_op.rs:32:10
+   |
+32 | #[derive(NetworkWire)]
+   |          ^^^^^^^^^^^ not found in this scope
+   |
+   = note: this error originates in the derive macro `NetworkWire` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0412]: cannot find type `BarOperator` in this scope
+  --> tests/trybuild/fail_hybrid_missing_op.rs:32:10
+   |
+32 | #[derive(NetworkWire)]
+   |          ^^^^^^^^^^^ not found in this scope
+   |
+   = note: this error originates in the derive macro `NetworkWire` (in Nightly builds, run with -Z macro-backtrace for more info)

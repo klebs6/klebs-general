@@ -1,0 +1,7 @@
+error[E0392]: type parameter `X` is never used
+  --> tests/trybuild/fail_generics_bad_unused_param.rs:16:26
+   |
+16 | pub struct UnusedParamOp<X: Send + Sync + Debug> {
+   |                          ^ unused type parameter
+   |
+   = help: consider removing `X`, referring to it in a field, or using a marker such as `PhantomData`

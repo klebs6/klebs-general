@@ -1,0 +1,8 @@
+error: No `opcode` specified in `#[operator(...)]`.
+  --> tests/trybuild/fail_03_missing_opcode.rs:9:1
+   |
+9  | / #[operator(
+10 | |     execute="some_fn"
+11 | |     // opcode is missing → should fail
+12 | | )]
+   | |__^

@@ -1,0 +1,17 @@
+error: Encountered invalid syntax in `#[operator(...)]` attribute.
+  --> tests/trybuild/08_duplicate_execute.rs:7:1
+   |
+7  | / #[operator(
+8  | |     execute="fn1",
+9  | |     execute="fn2", // should fail
+10 | |     opcode="OpCode::TestOp"
+11 | | )]
+   | |__^
+
+warning: unused imports: `OpCode` and `Operator`
+ --> tests/trybuild/08_duplicate_execute.rs:4:21
+  |
+4 | use hydro2_operator::{OpCode, NetResult, Operator};
+  |                     ^^^^^^             ^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` on by default
