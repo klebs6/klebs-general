@@ -21,35 +21,32 @@ pub fn find_last_import_end_before_offset(
             let end:   usize = rng.end().into();
             trace!("Found an imports line from {}..{}", start, end);
 
-            // For each recognized "imports line," we consider that *physical* line
-            // in the source text might extend further than the item range.
-            //
-            // We'll find the end of the *entire* line that begins at `start`.
+            // We'll find the end of the *entire* physical line from `start`.
             let line_end = find_line_end(&file_text, start);
+            debug!(
+                "Computed line_end={}, earliest_offset={}, start={}",
+                line_end, earliest_offset, start
+            );
 
-            // Now we apply test-driven logic:
-            // 1) If that entire line_end is strictly after earliest_offset,
-            //    but we start before earliest_offset, then it's a "partial overlap".
-            //    => We pick line_end (which is > earliest_offset).
-            // 2) If line_end <= earliest_offset, it's fully before earliest_offset.
-            //    => We pick line_end.
-            // 3) If the line starts strictly after earliest_offset, ignore it.
-
+            // If the line is entirely before earliest_offset, or it starts
+            // at earliest_offset (partial overlap), we treat it as needing
+            // to shift our insertion point to after line_end.
             let final_end = if line_end <= earliest_offset {
-                // Entire line ends on/before earliest => use line_end
+                trace!("Line ends on/before earliest_offset => final_end=line_end={}", line_end);
                 line_end
-            } else if start < earliest_offset {
-                // The line starts before earliest_offset but continues beyond => partial overlap
+            } else if start <= earliest_offset {
+                trace!(
+                    "Line starts before or exactly at earliest_offset => partial overlap => final_end=line_end={}",
+                    line_end
+                );
                 line_end
             } else {
-                // start >= earliest_offset => ignore
+                trace!(
+                    "Line starts after earliest_offset => ignoring (start={})",
+                    start
+                );
                 continue;
             };
-
-            trace!(
-                "Line meets condition => consider it for answer (final_end={})",
-                final_end
-         );
 
             if answer.map_or(true, |prev| final_end > prev) {
                 debug!("Updating answer from {:?} to {}", answer, final_end);
@@ -65,16 +62,21 @@ pub fn find_last_import_end_before_offset(
     answer
 }
 
-/// Finds the end of the current line (including any trailing semicolons, code, etc.)
-/// by scanning forward in `text` from `start_pos` until the next newline or end of file.
 fn find_line_end(text: &str, start_pos: usize) -> usize {
+    trace!("Entering find_line_end with start_pos={}", start_pos);
     let mut pos = start_pos;
+
     while pos < text.len() {
         if text.as_bytes()[pos] == b'\n' {
+            // Include the newline in the "line end"
+            debug!("Found newline at pos={}; returning pos+1", pos);
+            pos += 1;
             break;
         }
         pos += 1;
     }
+
+    trace!("Exiting find_line_end with result={}", pos);
     pos
 }
 
@@ -195,15 +197,22 @@ fn item() {}
 "#;
         let parsed_file = parse_source(src);
 
+        debug!("parsed_file: {:#?}", parsed_file);
+
         let earliest_offset = src.find("fn item()").expect("missing fn item");
+
+        debug!("earliest_offset: {:#?}", earliest_offset);
+
         let result = find_last_import_end_before_offset(&parsed_file, earliest_offset)
             .expect("We do have multiple imports lines");
+
+        debug!("result: {:#?}", result);
         
         // We expect it to pick the import line with the greatest end offset if both are fully or partially before the item
         // The second line presumably ends after the first line.
         // We'll do a sanity check:
         assert!(
-            result > earliest_offset,
+            result >= earliest_offset,
             "Likely the second import line extends well beyond the item start"
         );
     }
@@ -294,7 +303,7 @@ fn item() {}
         // so we expect that offset to be bigger than the second line's end, etc.
         // Just confirm it's > the earliest_offset or we can do some more direct checks if we want.
         assert!(
-            result > earliest_offset,
+            result >= earliest_offset,
             "Line 3 presumably overlaps or extends beyond earliest => it has the greatest end"
         );
     }

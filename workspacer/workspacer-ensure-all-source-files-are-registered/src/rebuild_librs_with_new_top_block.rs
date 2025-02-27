@@ -21,6 +21,19 @@ pub fn rebuild_lib_rs_with_new_top_block(
     // (1) Collect existing macros
     trace!("Collecting existing x! macros in parsed_file");
     let old_macros = collect_existing_x_macros(parsed_file);
+    let old_tops   = existing_macros_to_top_block_macros(&old_macros);
+    let new_tops   = parse_new_macros_with_comments(new_top_block);
+
+    let mut combined = Vec::new();
+    combined.extend(old_tops);
+    combined.extend(new_tops);
+
+    // Maybe you sort them or keep them in order. 
+    // If the test requires that newly introduced macros appear 
+    // last, you can do that. Or if you want alphabetical by stem, do so.
+    //
+    // For simplicity, let's just keep them in the order: old first, then new:
+    combined.dedup_by_key(|tb| tb.stem.clone());
 
     // (2) insertion_offset
     debug!("Computing insertion offset");
@@ -65,7 +78,7 @@ mod test_rebuild_librs_with_new_top_block {
 
     /// Helper: parse `old_text`, call `rebuild_lib_rs_with_new_top_block`.
     fn run_rebuild(old_text: &str, new_top_block: &str) -> String {
-        let parse = SourceFile::parse(old_text, Edition::Edition2021);
+        let parse = SourceFile::parse(old_text, Edition::Edition2024);
         let parsed_file = parse.tree();
         rebuild_lib_rs_with_new_top_block(&parsed_file, old_text, new_top_block)
             .unwrap_or_else(|err| panic!("Unexpected rebuild failure: {err:?}"))
@@ -142,10 +155,16 @@ x!{bar}
 "#;
         let new_block = "// top block\nx!{stuff}";
         let final_str = run_rebuild(old_text, new_block);
+        debug!("final_str={}",final_str);
 
         let idx_import = final_str.find("use imports::*;").unwrap();
+        debug!("idx_import={}",idx_import);
+
         let idx_item   = final_str.find("fn item_before()").unwrap();
+        debug!("idx_item={}",idx_item);
+
         let idx_top    = final_str.find("// top block\nx!{stuff}").unwrap();
+        debug!("idx_top={}",idx_top);
 
         // top block is after imports, but before `fn item_before`
         assert!(idx_top > idx_import);

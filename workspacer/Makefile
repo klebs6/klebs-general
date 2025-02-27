@@ -46,12 +46,7 @@ ACTIVE_PACKAGE := workspacer-ensure-all-source-files-are-registered
 #ACTIVE_PACKAGE := workspacer-workspace
 #ACTIVE_PACKAGE := workspacer
 
-INDIVIDUAL_TEST := collect_existing_x_macros
-INDIVIDUAL_TEST := extract_non_macro_lines
-INDIVIDUAL_TEST := find_earliest_non_macro_item_offset
-INDIVIDUAL_TEST := find_last_import_end_before_offset
-#INDIVIDUAL_TEST := rebuild_librs_with_new_top_block
-INDIVIDUAL_TEST := is_imports
+INDIVIDUAL_TEST := rebuild_librs_with_new_top_block
 
 #FEATURES := --features "enable_stress_test"
 FEATURES := --features ""

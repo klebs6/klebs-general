@@ -2,21 +2,35 @@
 crate::ix!();
 
 pub fn find_earliest_non_macro_item_offset(parsed_file: &SourceFile, old_text: &str) -> usize {
+
     trace!("Entering find_earliest_non_macro_item_offset");
 
     let mut earliest = old_text.len();
     debug!("Initial earliest offset = old_text.len()={}", earliest);
 
     for item in parsed_file.items() {
-        if is_x_macro(&item).is_none() {
-            let start: usize = item.syntax().text_range().start().into();
-            trace!("Found a non-macro item at offset={}", start);
-            if start < earliest {
-                debug!("Updating earliest offset from {} to {}", earliest, start);
-                earliest = start;
+        // Skip if this is an x! macro:
+        if let Some(full_text) = is_x_macro(&item) {
+            trace!("Skipping x! macro => full_text='{}'", full_text);
+            continue;
+        }
+
+        // RA occasionally parses stray tokens like `;random tokens`
+        // as a MacroCall but with no bang token. We only want to
+        // treat actual macros (with a '!' present) or real items
+        // as "non-macro items":
+        if let Some(mc) = ast::MacroCall::cast(item.syntax().clone()) {
+            if mc.excl_token().is_none() {
+                trace!("Skipping partial macro call => no bang token");
+                continue;
             }
-        } else {
-            trace!("Skipping x! macro item => not updating earliest offset");
+        }
+
+        let start: usize = item.syntax().text_range().start().into();
+        trace!("Found a non-macro item at offset={}", start);
+        if start < earliest {
+            debug!("Updating earliest offset from {} to {}", earliest, start);
+            earliest = start;
         }
     }
 

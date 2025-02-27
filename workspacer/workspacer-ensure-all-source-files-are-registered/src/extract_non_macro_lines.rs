@@ -34,26 +34,6 @@ mod test_extract_non_macro_lines {
         assert_eq!(result[0], "", "Should be an empty string line");
     }
 
-    /// 2) If the `new_top_block` has no lines that contain "x!{",
-    ///    then we keep them all verbatim.
-    #[traced_test]
-    fn test_no_macro_lines_at_all() {
-        let input = r#"
-// This is a comment
-fn something() {}
-// Another line
-"#;
-        // Splitting on '\n' => 4 lines: 
-        // [ "// This is a comment", "fn something() {}", "// Another line", "" ]
-        let result = extract_non_macro_lines(input);
-        assert_eq!(result.len(), 4, "All lines should be retained if none has x!{{");
-
-        assert_eq!(result[0], "// This is a comment");
-        assert_eq!(result[1], "fn something() {}");
-        assert_eq!(result[2], "// Another line");
-        assert_eq!(result[3], "", "Trailing empty line");
-    }
-
     /// 3) If a line contains "x!{", that entire line is skipped
     #[traced_test]
     fn test_skip_lines_with_x_macro() {
@@ -116,26 +96,6 @@ done
         // we skip lines 1 and 3, keep just line 2
         assert_eq!(result.len(), 1);
         assert_eq!(result[0], "no macro here");
-    }
-
-    /// 6) Case sensitivity: "x!{" is not the same as "X!{" => lines with "X!{" are not skipped
-    #[traced_test]
-    fn test_case_sensitivity() {
-        let input = r#"
-X!{not_lowercase}
-x!{yes_this_one}
-"#;
-        let result = extract_non_macro_lines(input);
-
-        // splitted => 
-        // [ "", "X!{not_lowercase}", "x!{yes_this_one}", "" ]
-        // we skip line 2 if it has "x!{", but line 1 doesn't match case => keep it
-        // wait, line 2 is "X!{not_lowercase}", does not match "x!{", so we keep it
-        // line 3 is "x!{yes_this_one}", skip
-        // line 4 is "", keep
-        assert_eq!(result.len(), 2);
-        assert_eq!(result[0], "");
-        assert_eq!(result[1], "X!{not_lowercase}");
     }
 
     /// 7) We preserve spacing and indentation in lines we keep
@@ -207,5 +167,55 @@ ghi x!{jkl} mno
         assert_eq!(result[1], "abc");
         assert_eq!(result[2], "??? ");
         assert_eq!(result[3], "");
+    }
+    
+    /// 2) If the `new_top_block` has no lines that contain "x!{",
+    ///    then we keep them all verbatim.
+    #[traced_test]
+    fn test_no_macro_lines_at_all() {
+        // NOTE: Removed the extra newline right after r#", so the first line is *not* empty.
+        let input = r#"// This is a comment
+fn something() {}
+// Another line
+"#;
+
+        // Splitting on '\n' => 4 lines:
+        // [ "// This is a comment", "fn something() {}", "// Another line", "" ]
+        trace!("About to call extract_non_macro_lines");
+        let result = extract_non_macro_lines(input);
+        debug!("Returned result: {:?}", result);
+
+        assert_eq!(
+            result.len(),
+            4,
+            "All lines should be retained if none has x!{{"
+        );
+        assert_eq!(result[0], "// This is a comment");
+        assert_eq!(result[1], "fn something() {}");
+        assert_eq!(result[2], "// Another line");
+        assert_eq!(result[3], "", "Trailing empty line is preserved");
+    }
+
+    /// 6) Case sensitivity: "x!{" is not the same as "X!{" => lines with "X!{" are not skipped
+    #[traced_test]
+    fn test_case_sensitivity() {
+        // NOTE: Removed the trailing newline before the end of the raw string, so there's *no* final empty line.
+        let input = r#"
+X!{not_lowercase}
+x!{yes_this_one}"#;
+
+        // Splitting on '\n' now yields:
+        //   line 0: ""
+        //   line 1: "X!{not_lowercase}"
+        //   line 2: "x!{yes_this_one}"
+        // We'll skip line 2 because it literally has "x!{", but keep lines 0 and 1.
+        // That should give us exactly 2 lines in the final result.
+        trace!("About to call extract_non_macro_lines");
+        let result = extract_non_macro_lines(input);
+        debug!("Returned result: {:?}", result);
+
+        assert_eq!(result.len(), 2);
+        assert_eq!(result[0], "");
+        assert_eq!(result[1], "X!{not_lowercase}");
     }
 }

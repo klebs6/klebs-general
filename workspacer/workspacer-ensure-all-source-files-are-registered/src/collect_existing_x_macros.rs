@@ -1,6 +1,11 @@
 // ---------------- [ File: src/collect_existing_x_macros.rs ]
 crate::ix!();
 
+/// Attempts to find and gather all `x!{...}` macros at the top level of `parsed_file`.
+/// We also collect any line comments that are immediately above the macro,
+/// so that when we remove or move the macro, we can keep those comments attached.
+///
+/// Returns a sorted list (by the macro’s start offset).
 pub fn collect_existing_x_macros(parsed_file: &SourceFile) -> Vec<ExistingXMacro> {
     trace!("Entering collect_existing_x_macros");
     let mut result = Vec::new();
@@ -10,15 +15,23 @@ pub fn collect_existing_x_macros(parsed_file: &SourceFile) -> Vec<ExistingXMacro
             let rng = item.syntax().text_range();
             debug!("Found x! macro at range={:?}, text='{}'", rng, macro_text);
 
+            // Gather preceding line comments so we can reattach them
+            let leading_comments = gather_leading_comments(&item);
+            if !leading_comments.is_empty() {
+                debug!("Found leading comments for x! macro: {:?}", leading_comments);
+            }
+
             let existing_x_macro = ExistingXMacroBuilder::default()
                 .text(macro_text)
                 .range(rng)
+                .leading_comments(leading_comments)
                 .build()
                 .unwrap();
             result.push(existing_x_macro);
         }
     }
 
+    // Sort them by ascending start offset
     result.sort_by_key(|em| em.range().start());
     trace!("Final sorted macros: {:?}", result);
     trace!("Exiting collect_existing_x_macros");
