@@ -1,0 +1,31 @@
+[dependencies.batch-mode-3p]
+path = "../batch-mode-3p"
+[dependencies.batch-mode-batch-index]
+path = "../batch-mode-batch-index"
+[dependencies.batch-mode-batch-triple]
+path = "../batch-mode-batch-triple"
+[dependencies.batch-mode-json]
+path = "../batch-mode-json"
+[dependencies.camel-case-token-with-comment]
+path = "../camel-case-token-with-comment"
+[dependencies.batch-mode-batch-workspace-interface]
+path = "../batch-mode-batch-workspace-interface"
+[dependencies.save-load-traits]
+path = "../save-load-traits"
+[dependencies.traced-test]
+version = "*"
+[dependencies.tracing]
+version = "*"
+[dependencies.tracing-setup]
+version = "*"
+[dependencies.tracing-subscriber]
+features = [ "env-filter", "json" ]
+version = "*"
+[package]
+edition = "2024"
+name = "batch-mode-batch-workspace"
+version = "0.1.0"
+description = "Manages batch processing workspaces, handling tasks like locating batch files, validating files, and managing batch indices."
+authors = ["klebs tpk3.mx@gmail.com"]
+license = "MIT"
+repository = "https://github.com/klebs6/klebs-general"

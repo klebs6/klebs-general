@@ -1,0 +1,28 @@
+[dependencies.batch-mode-3p]
+path = "../batch-mode-3p"
+[dependencies.save-load-traits]
+path = "../save-load-traits"
+[dependencies.serde]
+features = [ "derive" ]
+version = "*"
+[dependencies.serde_derive]
+version = "*"
+[dependencies.serde_json]
+version = "*"
+[dependencies.traced-test]
+version = "*"
+[dependencies.tracing]
+version = "*"
+[dependencies.tracing-setup]
+version = "*"
+[dependencies.tracing-subscriber]
+features = [ "env-filter", "json" ]
+version = "*"
+[package]
+edition = "2024"
+name = "batch-mode-batch-metadata"
+version = "0.1.0"
+description = "Provides utilities for managing, serializing, and persisting batch metadata, including input, output, and error file IDs, with support for JSON serialization and file persistence."
+authors = ["klebs tpk3.mx@gmail.com"]
+license = "MIT"
+repository = "https://github.com/klebs6/klebs-general"

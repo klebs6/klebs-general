@@ -1,0 +1,14 @@
+[dependencies.batch-mode-3p]
+path = "../batch-mode-3p"
+[dependencies.batch-mode-batch-index]
+path = "../batch-mode-batch-index"
+[dependencies.camel-case-token-with-comment]
+path = "../camel-case-token-with-comment"
+[package]
+edition = "2024"
+name = "batch-mode-batch-workspace-interface"
+version = "0.1.0"
+description = "Defines traits for interacting with batch workspaces, including file paths and directories."
+authors = ["klebs tpk3.mx@gmail.com"]
+license = "MIT"
+repository = "https://github.com/klebs6/klebs-general"

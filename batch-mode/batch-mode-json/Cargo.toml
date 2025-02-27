@@ -1,0 +1,10 @@
+[dependencies.batch-mode-3p]
+path = "../batch-mode-3p"
+[package]
+edition     = "2024"
+name        = "batch-mode-json"
+version     = "0.1.0"
+description = "Utilities for extracting JSON and writing it to files with error handling."
+authors     = ["klebs tpk3.mx@gmail.com"]
+license     = "MIT"
+repository  = "https://github.com/klebs6/klebs-general"

@@ -1,0 +1,28 @@
+[dependencies.batch-mode-3p]
+path = "../batch-mode-3p"
+[dependencies.batch-mode-batch-client]
+path = "../batch-mode-batch-client"
+[dependencies.batch-mode-batch-index]
+path = "../batch-mode-batch-index"
+[dependencies.batch-mode-batch-metadata]
+path = "../batch-mode-batch-metadata"
+[dependencies.batch-mode-batch-reconciliation]
+path = "../batch-mode-batch-reconciliation"
+[dependencies.batch-mode-batch-schema]
+path = "../batch-mode-batch-schema"
+[dependencies.batch-mode-batch-triple]
+path = "../batch-mode-batch-triple"
+[dependencies.batch-mode-json]
+path = "../batch-mode-json"
+[dependencies.batch-mode-batch-workspace]
+path = "../batch-mode-batch-workspace"
+[dependencies.save-load-traits]
+path = "../save-load-traits"
+[package]
+edition = "2024"
+name = "batch-mode-batch-executor"
+version = "0.1.0"
+description = "Provides functionality for executing and managing batch processing workflows, including file management, status monitoring, error handling, and output reconciliation in OpenAI batch operations."
+authors = ["klebs tpk3.mx@gmail.com"]
+license = "MIT"
+repository = "https://github.com/klebs6/klebs-general"

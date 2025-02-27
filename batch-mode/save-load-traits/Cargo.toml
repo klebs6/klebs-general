@@ -1,0 +1,12 @@
+[dependencies.batch-mode-3p]
+path = "../batch-mode-3p"
+[dependencies.batch-mode-json]
+path = "../batch-mode-json"
+[package]
+edition     = "2024"
+name        = "save-load-traits"
+version     = "0.1.0"
+description = "Provides traits for saving and loading objects asynchronously to and from files and directories."
+authors     = ["klebs tpk3.mx@gmail.com"]
+license     = "MIT"
+repository  = "https://github.com/klebs6/klebs-general"

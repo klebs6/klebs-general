@@ -1,0 +1,3 @@
+[workspace]
+members = [ "save-load-traits", "batch-mode-3p", "batch-mode-batch-client", "batch-mode-batch-executor", "batch-mode-batch-index", "batch-mode-batch-metadata", "batch-mode-batch-reconciliation", "batch-mode-batch-schema", "batch-mode-batch-triple", "batch-mode-batch-workspace", "batch-mode-batch-workspace-interface", "batch-mode-json", "camel-case-token-with-comment", "batch-mode", "batch-mode-process-response" ]
+resolver = "3"

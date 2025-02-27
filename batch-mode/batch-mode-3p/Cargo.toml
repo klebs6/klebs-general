@@ -1,0 +1,53 @@
+[package]
+name = "batch-mode-3p"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+gpt-batch-scribe         = { version = "*", path = "/Users/kleb/bethesda/work/repo/klebs-general/gpt-batch-scribe" }
+#gpt-batch-executor      = { version = "*", path = "/Users/kleb/bethesda/work/repo/klebs-general/gpt-batch-executor" }
+async-openai             = "*"
+export-magic             = "*"
+uuid                     = { version = "*", features = ["v4", "serde"] }
+regex                    = "*"
+bytes                    = "*"
+tempfile                 = "*"
+serde                    = { version = "1.0", features = ["derive"] }
+serde_json               = "1.0"
+tokio                    = { version = "1", features = ["full"] }
+futures                  = "0.3"
+#error-tree              = { version = "*", path = "/Users/kleb/bethesda/work/repo/klebs-general/error-tree" }
+error-tree               = "0.6.0"
+disable_macro            = "*"
+async-trait              = "*"
+indoc                    = "*"
+Inflector                = "*"
+tracing                  = { version = "0.1.40", features = ["log"] }
+tracing-subscriber       = { version = "0.3", default-features = false, features = ["fmt", "std", "env-filter"] }
+delegate                 = "*"
+traced-test              = "*"
+tracing-setup            = "*"
+json5                    = "*"
+crossbeam                = "*"
+float-ord                = "*"
+num-traits               = "*"
+pbx                      = "*"
+#json-repair             = { version = "*", path = "/Users/kleb/bethesda/work/repo/klebs-general/json-repair" }
+json-repair              = "*"
+once_cell                = "*"
+strsim                   = "0.10"
+rand                     = "*"
+rand-construct           = "*"
+structopt                = "*"
+ai-descriptor            = "0.9.0"
+structured-language-form = "*"
+named-item               = "0.6.0"
+named-item-derive        = "0.2.0"
+getset                   = "*"
+derive_builder           = "*"
+strum                    = { version = "0.24", features = ["derive"] }
+strum_macros             = "0.24"
+lazy_static              = "*"
+
+[build-dependencies]
+scan-crate-for-typedefs = "*"

@@ -1,0 +1,21 @@
+[dependencies.batch-mode-3p]
+path = "../batch-mode-3p"
+[dependencies.batch-mode-json]
+path = "../batch-mode-json"
+[dependencies.save-load-traits]
+path = "../save-load-traits"
+[dependencies.serde]
+features = [ "derive" ]
+version = "*"
+[dependencies.serde_derive]
+version = "*"
+[dependencies.serde_json]
+version = "*"
+[package]
+edition = "2024"
+name = "batch-mode-batch-schema"
+version = "0.1.0"
+description = "Defines the schema and structures for batch processing, including batch choices, message roles, error handling, and token management, with support for JSON deserialization and validation."
+authors = ["klebs tpk3.mx@gmail.com"]
+license = "MIT"
+repository = "https://github.com/klebs6/klebs-general"
