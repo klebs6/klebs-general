@@ -6,6 +6,7 @@ paste = "1.0.15"
 unsafe-erased = "0.1.0"
 [dependencies.hydro2-3p]
 path = "../hydro2-3p"
+version = "0.1.0"
 [package]
 edition = "2024"
 name = "hydro2-operator"

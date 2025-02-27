@@ -3,28 +3,31 @@ async-trait = "0.1.86"
 derive_builder = "0.20.2"
 [dependencies.hydro2-3p]
 path = "../hydro2-3p"
+version = "0.1.0"
 [dependencies.hydro2-basic-operators]
 path = "../hydro2-basic-operators"
+version = "0.1.0"
 [dependencies.hydro2-network-wire-derive]
 path = "../hydro2-network-wire-derive"
+version = "0.1.0"
 [dependencies.hydro2-operator]
 path = "../hydro2-operator"
-[dependencies.traced-test]
-version = "*"
-[dependencies.tracing]
-version = "*"
-[dependencies.tracing-setup]
-version = "*"
-[dependencies.tracing-subscriber]
-features = [ "env-filter", "json" ]
-version = "*"
+version = "0.1.0"
+
+[dependencies]
+traced-test = "*"
+tracing = "*"
+tracing-setup = "*"
+tracing-subscriber = { version = "*", features = [ "env-filter", "json" ] }
+
 [dev-dependencies]
 trybuild = "1.0.103"
+tokio = { version = "*", features = [ "full" ] }
+
 [dev-dependencies.hydro2-operator-derive]
 path = "../hydro2-operator-derive"
-[dev-dependencies.tokio]
-features = [ "full" ]
-version = "*"
+version = "0.1.0"
+
 [package]
 edition = "2024"
 name = "hydro2-network"

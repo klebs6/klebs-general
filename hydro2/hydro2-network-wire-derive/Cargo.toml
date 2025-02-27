@@ -12,32 +12,33 @@ syn = "2.0"
 unsafe-erased = "0.1.0"
 [dependencies.hydro2-3p]
 path = "../hydro2-3p"
-[dependencies.traced-test]
-version = "*"
-[dependencies.tracing]
-version = "*"
-[dependencies.tracing-setup]
-version = "*"
-[dependencies.tracing-subscriber]
-features = [ "env-filter", "json" ]
-version = "*"
+version = "0.1.0"
+
+[dependencies]
+traced-test = "*"
+tracing = "*"
+tracing-setup = "*"
+tracing-subscriber = { version = "*", features = [ "env-filter", "json" ] }
+
 [dev-dependencies]
 async-trait = "0.1.86"
 named-item = "0.6.0"
 named-item-derive = "0.2.0"
 trybuild = "1.0.103"
+tokio = { version = "*", features = [ "full" ] }
+
 [dev-dependencies.hydro2-basic-operators]
 path = "../hydro2-basic-operators"
-version = "*"
+version = "0.1.0"
+
 [dev-dependencies.hydro2-operator]
 path = "../hydro2-operator"
-version = "*"
+version = "0.1.0"
+
 [dev-dependencies.hydro2-operator-derive]
 path = "../hydro2-operator-derive"
-version = "*"
-[dev-dependencies.tokio]
-features = [ "full" ]
-version = "*"
+version = "0.1.0"
+
 [lib]
 proc-macro = true
 [package]

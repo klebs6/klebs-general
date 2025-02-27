@@ -2,33 +2,33 @@
 derive_builder = "0.20.2"
 [dependencies.hydro2-3p]
 path = "../hydro2-3p"
+version = "0.1.0"
 [dependencies.hydro2-basic-operators]
 path = "../hydro2-basic-operators"
+version = "0.1.0"
 [dependencies.hydro2-network]
 path = "../hydro2-network"
+version = "0.1.0"
 [dependencies.hydro2-network-performance]
 path = "../hydro2-network-performance"
+version = "0.1.0"
 [dependencies.hydro2-operator]
 path = "../hydro2-operator"
-[dependencies.serde]
-features = [ "derive" ]
-version = "*"
-[dependencies.serde_derive]
-version = "*"
-[dependencies.serde_json]
-version = "*"
-[dependencies.traced-test]
-version = "*"
-[dependencies.tracing]
-version = "*"
-[dependencies.tracing-setup]
-version = "*"
-[dependencies.tracing-subscriber]
-features = [ "env-filter", "json" ]
-version = "*"
+version = "0.1.0"
+
+[dependencies]
+serde = { version = "*", features = [ "derive" ] }
+serde_derive = "*"
+serde_json = "*"
+traced-test = "*"
+tracing = "*"
+tracing-setup = "*"
+tracing-subscriber = { version = "*", features = [ "env-filter", "json" ] }
+
 [dev-dependencies.hydro2-mock]
 path = "../hydro2-mock"
-version = "*"
+version = "0.1.0"
+
 [package]
 edition     = "2024"
 name        = "hydro2-async-scheduler"
