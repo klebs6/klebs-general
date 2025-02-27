@@ -27,7 +27,7 @@ path = "../camel-case-token-with-comment"
 [dependencies.save-load-traits]
 path = "../save-load-traits"
 [dependencies]
-structopt = "*"
+structopt = "0.3.26"
 [package]
 edition = "2024"
 name = "batch-mode"
