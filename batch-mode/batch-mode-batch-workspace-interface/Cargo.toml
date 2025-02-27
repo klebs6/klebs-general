@@ -1,16 +1,16 @@
 [dependencies.batch-mode-3p]
 path = "../batch-mode-3p"
-version = "0.1.0"
+version = "0.2.0"
 [dependencies.batch-mode-batch-index]
 path = "../batch-mode-batch-index"
-version = "0.1.0"
+version = "0.2.0"
 [dependencies.camel-case-token-with-comment]
 path = "../camel-case-token-with-comment"
-version = "0.1.0"
+version = "0.2.0"
 [package]
 edition = "2024"
 name = "batch-mode-batch-workspace-interface"
-version = "0.1.0"
+version = "0.2.0"
 description = "Defines traits for interacting with batch workspaces, including file paths and directories."
 authors = ["klebs tpk3.mx@gmail.com"]
 license = "MIT"

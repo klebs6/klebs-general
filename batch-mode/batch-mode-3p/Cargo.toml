@@ -1,6 +1,6 @@
 [package]
 name        = "batch-mode-3p"
-version     = "0.1.0"
+version     = "0.2.0"
 edition     = "2024"
 description = "This crate contains the third party (3p) interface for the `batch-mode` crate ecosystem"
 authors     = ["klebs tpk3.mx@gmail.com"]

@@ -1,6 +1,6 @@
 [dependencies.batch-mode-3p]
 path = "../batch-mode-3p"
-version = "0.1.0"
+version = "0.2.0"
 [dependencies]
 serde = { version = "1.0.218", features = [ "derive" ] }
 serde_derive = "1.0.218"
@@ -8,7 +8,7 @@ serde_json = "1.0.139"
 [package]
 edition = "2024"
 name = "batch-mode-batch-index"
-version = "0.1.0"
+version = "0.2.0"
 description = "Provides utilities for managing batch indices and generating regex patterns for matching batch file names based on Usize or UUID identifiers."
 authors = ["klebs tpk3.mx@gmail.com"]
 license = "MIT"
