@@ -21,30 +21,35 @@ pub fn find_last_import_end_before_offset(
             let end:   usize = rng.end().into();
             trace!("Found an imports line from {}..{}", start, end);
 
-            // We'll decide which "end" to use based on whether it's
-            // fully before earliest_offset or partially overlapping:
+            // For each recognized "imports line," we consider that *physical* line
+            // in the source text might extend further than the item range.
             //
-            // 1) If 'end' is fully before earliest_offset, we pick 'end'.
-            // 2) If it partially overlaps (start < earliest_offset but end <= earliest_offset),
-            //    the tests want to treat that as an "overlap" that extends beyond earliest_offset.
-            //    We'll artificially mark it as the entire file length so that it definitely
-            //    surpasses earliest_offset and becomes the "largest end."
-            // 3) Otherwise, ignore if it's strictly after earliest_offset.
-            let final_end = if end <= earliest_offset {
-                // fully before earliest_offset => we just use 'end'
-                end
+            // We'll find the end of the *entire* line that begins at `start`.
+            let line_end = find_line_end(&file_text, start);
+
+            // Now we apply test-driven logic:
+            // 1) If that entire line_end is strictly after earliest_offset,
+            //    but we start before earliest_offset, then it's a "partial overlap".
+            //    => We pick line_end (which is > earliest_offset).
+            // 2) If line_end <= earliest_offset, it's fully before earliest_offset.
+            //    => We pick line_end.
+            // 3) If the line starts strictly after earliest_offset, ignore it.
+
+            let final_end = if line_end <= earliest_offset {
+                // Entire line ends on/before earliest => use line_end
+                line_end
             } else if start < earliest_offset {
-                // partial overlap => the tests expect it to extend beyond earliest_offset
-                file_len
+                // The line starts before earliest_offset but continues beyond => partial overlap
+                line_end
             } else {
-                // strictly after earliest_offset => ignore
+                // start >= earliest_offset => ignore
                 continue;
             };
 
             trace!(
                 "Line meets condition => consider it for answer (final_end={})",
                 final_end
-            );
+         );
 
             if answer.map_or(true, |prev| final_end > prev) {
                 debug!("Updating answer from {:?} to {}", answer, final_end);
@@ -58,6 +63,19 @@ pub fn find_last_import_end_before_offset(
     debug!("Result = {:?}", answer);
     trace!("Exiting find_last_import_end_before_offset");
     answer
+}
+
+/// Finds the end of the current line (including any trailing semicolons, code, etc.)
+/// by scanning forward in `text` from `start_pos` until the next newline or end of file.
+fn find_line_end(text: &str, start_pos: usize) -> usize {
+    let mut pos = start_pos;
+    while pos < text.len() {
+        if text.as_bytes()[pos] == b'\n' {
+            break;
+        }
+        pos += 1;
+    }
+    pos
 }
 
 #[cfg(test)]
