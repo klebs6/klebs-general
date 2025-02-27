@@ -21,10 +21,10 @@ path = "../save-load-traits"
 version = "0.1.0"
 
 [dependencies]
-traced-test = "*"
-tracing = "*"
-tracing-setup = "*"
-tracing-subscriber = {version = "*", features = [ "env-filter", "json"] }
+traced-test = "1.0.2"
+tracing = "0.1.41"
+tracing-setup = "1.0.2"
+tracing-subscriber = { version = "0.3.19", features = [ "env-filter", "json"] }
 
 
 [package]
