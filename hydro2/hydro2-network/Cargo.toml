@@ -1,6 +1,3 @@
-[dependencies]
-async-trait = "0.1.86"
-derive_builder = "0.20.2"
 [dependencies.hydro2-3p]
 path = "../hydro2-3p"
 version = "0.1.0"
@@ -15,6 +12,8 @@ path = "../hydro2-operator"
 version = "0.1.0"
 
 [dependencies]
+async-trait = "0.1.86"
+derive_builder = "0.20.2"
 traced-test = "*"
 tracing = "*"
 tracing-setup = "*"
