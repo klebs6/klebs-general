@@ -1,15 +1,6 @@
 // ---------------- [ File: src/rebuild_librs_with_new_top_block.rs ]
 crate::ix!();
 
-/// Orchestrates the entire "move existing x! macros + new macros from `new_top_block`
-/// into a single top-level block" process.
-///
-/// 1) Collect existing x! macros from `parsed_file`.
-/// 2) Determine a suitable `insertion_offset`.
-/// 3) Gather deduplicated macro stems from old + new top block, and gather "non-macro lines"
-///    from `new_top_block`.
-/// 4) Build the "final_top_block" text with those lines plus expansions.
-/// 5) Splice that block into `old_text`, skipping old macros, preserving everything else.
 pub fn rebuild_lib_rs_with_new_top_block(
     parsed_file:   &SourceFile,
     old_text:      &str,
@@ -17,55 +8,73 @@ pub fn rebuild_lib_rs_with_new_top_block(
 ) -> Result<String, SourceFileRegistrationError> 
 {
     trace!("Entering rebuild_lib_rs_with_new_top_block");
+    debug!("old_text length={}, new_top_block length={}", old_text.len(), new_top_block.len());
 
-    // (1) Collect existing macros
-    trace!("Collecting existing x! macros in parsed_file");
+    // 1) Gather existing old macros (with any leading comments).
+    trace!("Collecting old x! macros");
     let old_macros = collect_existing_x_macros(parsed_file);
-    let old_tops   = existing_macros_to_top_block_macros(&old_macros);
-    let new_tops   = parse_new_macros_with_comments(new_top_block);
+    debug!("Found {} old macros in the file", old_macros.len());
 
-    let mut combined = Vec::new();
-    combined.extend(old_tops);
-    combined.extend(new_tops);
+    // Convert old macros into our uniform representation (TopBlockMacro).
+    trace!("Converting old macros into TopBlockMacro structs");
+    let mut old_top_macros = existing_macros_to_top_block_macros(&old_macros);
+    debug!("Converted old macros => {} top-level macro entries", old_top_macros.len());
 
-    // Maybe you sort them or keep them in order. 
-    // If the test requires that newly introduced macros appear 
-    // last, you can do that. Or if you want alphabetical by stem, do so.
-    //
-    // For simplicity, let's just keep them in the order: old first, then new:
-    combined.dedup_by_key(|tb| tb.stem.clone());
+    // 2) Parse new_top_block, extracting any new macros (with their comments).
+    trace!("Parsing new_top_block to find new macros + comments");
+    let mut new_top_macros = parse_new_macros_with_comments(new_top_block);
+    debug!("Found {} new macros in new_top_block", new_top_macros.len());
 
-    // (2) insertion_offset
-    debug!("Computing insertion offset");
-    let earliest_offset  = find_earliest_non_macro_item_offset(parsed_file, old_text);
+    // 3) Combine them (old first, then new).
+    //    We could reorder or sort them if desired; for now we just append new after old.
+    let mut all_top_macros = Vec::with_capacity(old_top_macros.len() + new_top_macros.len());
+    all_top_macros.append(&mut old_top_macros);
+    all_top_macros.append(&mut new_top_macros);
+
+    // Optionally deduplicate by stem if you want to ensure no duplicates.
+    // We assume stems are the single unique piece. Adjust as needed.
+    trace!("Deduplicating combined macros by stem");
+    all_top_macros.sort_by(|a,b| a.stem().cmp(&b.stem()));
+    all_top_macros.dedup_by_key(|tb| tb.stem().clone());
+    debug!("Final macro count after dedup={}", all_top_macros.len());
+
+    // 4) Build the final top block text (includes any leading comments
+    //    plus `x!{stem}` lines).
+    trace!("Building final top block text");
+    let final_top_block = create_top_block_text(&all_top_macros);
+    debug!(
+        "Constructed final top block text of length={}",
+        final_top_block.len()
+    );
+
+    // 5a) Figure out where in old_text to place this top block.
+    //     We look at earliest_non_macro offset, and possibly
+    //     place after the last import line. Then we snap to a newline boundary.
+    trace!("Computing insertion offset");
+    let earliest_offset = find_earliest_non_macro_item_offset(parsed_file, old_text);
+    debug!("Earliest non-macro offset={}", earliest_offset);
+
     let maybe_import_end = find_last_import_end_before_offset(parsed_file, earliest_offset);
-    let initial_offset   = maybe_import_end.unwrap_or(earliest_offset);
+    debug!("maybe_import_end={:?}", maybe_import_end);
 
+    let initial_offset = maybe_import_end.unwrap_or(earliest_offset);
     debug!("initial_offset={}, earliest_offset={}", initial_offset, earliest_offset);
 
     let insertion_offset = snap_offset_to_newline(initial_offset, earliest_offset, old_text);
-    debug!("Final insertion offset = {}", insertion_offset);
+    debug!("Final insertion_offset={}", insertion_offset);
 
-    // (3) deduplicated stems + "non-macro lines" from new_top_block
-    trace!("Gathering deduplicated stems + extracting non-macro lines");
-    let stems = gather_deduplicated_macro_stems(&old_macros, new_top_block);
-    let non_macro_lines = extract_non_macro_lines(new_top_block);
-    debug!("stems={:?}, non_macro_lines={:?}", stems, non_macro_lines);
-
-    // (4) build final top block
-    trace!("Building final top block");
-    let final_top_block = create_top_block_text(&non_macro_lines, &stems);
-
-    // (5) splice it
-    trace!("Splicing final top block into old_text");
+    // 5b) Splice the final top block text into old_text, skipping old macros
+    //     so we unify everything in one place.
+    trace!("Splicing final_top_block into old_text");
     let final_text = splice_top_block_into_source(
         old_text,
-        &old_macros,
+        &old_macros, // This tells the splicer which macros to remove
         insertion_offset,
-        &final_top_block
+        &final_top_block,
     );
+    debug!("Splicing complete => final_text length={}", final_text.len());
 
-    debug!("Completed rebuild_lib_rs_with_new_top_block; returning final text (length={})", final_text.len());
+    info!("Completed rebuild_lib_rs_with_new_top_block successfully");
     trace!("Exiting rebuild_lib_rs_with_new_top_block");
     Ok(final_text)
 }

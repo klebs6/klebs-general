@@ -1,6 +1,6 @@
 [package]
 name = "gpt-batch-scribe"
-version = "0.1.3"
+version = "0.1.4"
 edition = "2021"
 
 description = "contains the GptBatchAPIRequest struct which helps create gpt4 batch requests."
