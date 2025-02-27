@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-network-wire-derive/src/unify_generics_ast.rs ]
+// ---------------- [ File: src/unify_generics_ast.rs ]
 crate::ix!();
 
 /// Merges the `wire_generics` and `op_generics` purely in the AST.

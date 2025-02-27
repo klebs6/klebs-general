@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-async-scheduler/src/compute_freed_children.rs ]
+// ---------------- [ File: src/compute_freed_children.rs ]
 crate::ix!();
 
 pub async fn compute_freed_children<T>(

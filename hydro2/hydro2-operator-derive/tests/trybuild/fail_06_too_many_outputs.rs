@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-operator-derive/tests/trybuild/fail_06_too_many_outputs.rs ]
+// ---------------- [ File: tests/trybuild/fail_06_too_many_outputs.rs ]
 //! Attempting to define output4 → compile_fail.
 use hydro2_operator_derive::*;
 use hydro2_operator::*; 
@@ -27,4 +27,3 @@ impl TooManyOutputs {
 }
 
 fn main() {}
-

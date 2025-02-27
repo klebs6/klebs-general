@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-async-scheduler/src/process_waves.rs ]
+// ---------------- [ File: src/process_waves.rs ]
 crate::ix!();
 
 /// A wave-based scheduling function that:

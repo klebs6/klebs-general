@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-network-wire-derive/src/find_operator_signature_ident.rs ]
+// ---------------- [ File: src/find_operator_signature_ident.rs ]
 crate::ix!();
 
 /// Attempt to find an operator signature ident (e.g. "FooOpOperatorSignature") in `sig_map`.

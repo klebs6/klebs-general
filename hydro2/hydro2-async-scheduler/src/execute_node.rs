@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-async-scheduler/src/execute_node.rs ]
+// ---------------- [ File: src/execute_node.rs ]
 crate::ix!();
 
 /// Executes the specified node (`node_idx`) from `net_guard`, optionally sends 

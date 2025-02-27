@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-operator-derive/tests/trybuild/pass_01_single_in_out.rs ]
+// ---------------- [ File: tests/trybuild/pass_01_single_in_out.rs ]
 //! Single in/out: Should compile successfully.
 use hydro2_operator_derive::*;
 use hydro2_operator::*; 

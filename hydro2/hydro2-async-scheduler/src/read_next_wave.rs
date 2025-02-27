@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-async-scheduler/src/read_next_wave.rs ]
+// ---------------- [ File: src/read_next_wave.rs ]
 crate::ix!();
 
 /// Reads the first node from `ready_nodes_rx`, then drains from `child_nodes_rx` and `ready_nodes_rx`.

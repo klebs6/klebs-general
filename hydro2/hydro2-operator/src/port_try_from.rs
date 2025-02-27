@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-operator/src/port_try_from.rs ]
+// ---------------- [ File: src/port_try_from.rs ]
 crate::ix!();
 
 /// The dual trait: from a source type `Src` into `Self`, given port 0.

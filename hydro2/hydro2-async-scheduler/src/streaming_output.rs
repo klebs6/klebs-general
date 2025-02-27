@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-async-scheduler/src/streaming_output.rs ]
+// ---------------- [ File: src/streaming_output.rs ]
 crate::ix!();
 
 /// Optional streaming outputs from each operator:

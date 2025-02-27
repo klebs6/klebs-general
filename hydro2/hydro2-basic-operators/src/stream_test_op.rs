@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-basic-operators/src/stream_test_op.rs ]
+// ---------------- [ File: src/stream_test_op.rs ]
 crate::ix!();
 
 // --------------------------------------
@@ -93,4 +93,3 @@ mod streamy_operator_tests {
         Ok(())
     }
 }
-

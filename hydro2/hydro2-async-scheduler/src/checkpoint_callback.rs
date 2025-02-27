@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-async-scheduler/src/checkpoint_callback.rs ]
+// ---------------- [ File: src/checkpoint_callback.rs ]
 crate::ix!();
 
 /// A trait invoked periodically to record checkpoint data.

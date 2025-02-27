@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-async-scheduler/src/create_worker_channels.rs ]
+// ---------------- [ File: src/create_worker_channels.rs ]
 crate::ix!();
 
 pub fn create_worker_channels<'threads, T>(num_workers: usize, buffer_size: usize) 

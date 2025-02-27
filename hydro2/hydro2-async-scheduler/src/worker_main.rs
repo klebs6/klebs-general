@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-async-scheduler/src/worker_main.rs ]
+// ---------------- [ File: src/worker_main.rs ]
 crate::ix!();
 
 /// A worker’s main loop: continuously fetch tasks, process them, and send results.

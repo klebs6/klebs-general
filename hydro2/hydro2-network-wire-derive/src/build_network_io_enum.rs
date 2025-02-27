@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-network-wire-derive/src/build_network_io_enum.rs ]
+// ---------------- [ File: src/build_network_io_enum.rs ]
 crate::ix!();
 
 /// This version of `build_network_io_enum` ensures that when the *original* operator type

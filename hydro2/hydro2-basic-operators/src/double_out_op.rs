@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-basic-operators/src/double_out_op.rs ]
+// ---------------- [ File: src/double_out_op.rs ]
 crate::ix!();
 
 // --------------------------------------

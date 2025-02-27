@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-async-scheduler/src/validate_network.rs ]
+// ---------------- [ File: src/validate_network.rs ]
 crate::ix!();
 
 /// Validates the network by locking it and invoking `validate()`.

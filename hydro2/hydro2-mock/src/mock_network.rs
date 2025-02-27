@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-mock/src/mock_network.rs ]
+// ---------------- [ File: src/mock_network.rs ]
 crate::ix!();
 
 pub fn single_noop_operator_i32_network() -> Arc<AsyncMutex<Network::<TestWireIO<i32>>>> 

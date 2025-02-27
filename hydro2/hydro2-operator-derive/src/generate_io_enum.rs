@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-operator-derive/src/generate_io_enum.rs ]
+// ---------------- [ File: src/generate_io_enum.rs ]
 crate::ix!();
 
 pub fn generate_io_enum(

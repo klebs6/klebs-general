@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-basic-operators/src/single_channel_passthrough_op.rs ]
+// ---------------- [ File: src/single_channel_passthrough_op.rs ]
 crate::ix!();
 
 // --------------------------------------
@@ -91,4 +91,3 @@ mod single_channel_passthrough_operator_tests {
         Ok(())
     }
 }
-

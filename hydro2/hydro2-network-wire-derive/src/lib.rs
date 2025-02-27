@@ -1,6 +1,6 @@
+// ---------------- [ File: src/lib.rs ]
 #![allow(unused)]
 
-// ---------------- [ File: hydro2-network-wire-derive/src/lib.rs ]
 //! lib.rs — The `hydro2-network-wire-derive` crate implementing `[derive(NetworkWire)]`.
 #[macro_use] mod imports; use imports::*;
 

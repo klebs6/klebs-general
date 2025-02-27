@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-async-scheduler/src/batching_strategy.rs ]
+// ---------------- [ File: src/batching_strategy.rs ]
 crate::ix!();
 
 /// A simple enum to govern how nodes are scheduled:

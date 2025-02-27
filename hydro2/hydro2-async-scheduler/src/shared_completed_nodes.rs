@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-async-scheduler/src/shared_completed_nodes.rs ]
+// ---------------- [ File: src/shared_completed_nodes.rs ]
 crate::ix!();
 
 //========================================

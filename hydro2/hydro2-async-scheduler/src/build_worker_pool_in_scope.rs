@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-async-scheduler/src/build_worker_pool_in_scope.rs ]
+// ---------------- [ File: src/build_worker_pool_in_scope.rs ]
 crate::ix!();
 
 //========================================================

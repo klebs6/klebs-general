@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-network-wire-derive/src/parse_available_operators_from_attribute.rs ]
+// ---------------- [ File: src/parse_available_operators_from_attribute.rs ]
 //! parse_available_operators_from_attribute.rs
 //! This module extracts `#[available_operators(op="Foo", op="Bar<Z>")]` from a struct.
 crate::ix!();

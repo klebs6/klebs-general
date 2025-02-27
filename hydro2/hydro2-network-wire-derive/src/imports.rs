@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-network-wire-derive/src/imports.rs ]
+// ---------------- [ File: src/imports.rs ]
 /// Collapses all runs of whitespace in `s` into single spaces
 /// and trims leading/trailing whitespace.
 //pub(crate) use disable_macro::disable;

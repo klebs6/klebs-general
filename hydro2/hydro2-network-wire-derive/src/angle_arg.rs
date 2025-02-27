@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-network-wire-derive/src/angle_arg.rs ]
+// ---------------- [ File: src/angle_arg.rs ]
 crate::ix!();
 
 /// We describe each angle-bracketed argument as either

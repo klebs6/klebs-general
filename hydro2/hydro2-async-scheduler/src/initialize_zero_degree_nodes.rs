@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-async-scheduler/src/initialize_zero_degree_nodes.rs ]
+// ---------------- [ File: src/initialize_zero_degree_nodes.rs ]
 crate::ix!();
 
 /// Enqueues all zero in-degree nodes into `ready_nodes_tx` and returns

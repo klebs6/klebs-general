@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-operator-derive/tests/trybuild/fail_07_input_out_of_order.rs ]
+// ---------------- [ File: tests/trybuild/fail_07_input_out_of_order.rs ]
 //! input0, then input2 with no input1 → compile_fail.
 use hydro2_operator_derive::*;
 use hydro2_operator::*; 
@@ -23,4 +23,3 @@ impl InputOutOfOrder {
 }
 
 fn main() {}
-

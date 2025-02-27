@@ -1,3 +1,4 @@
+// ---------------- [ File: src/generate_active_output_port_impl.rs ]
 crate::ix!();
 
 pub fn generate_active_output_port_impl(

@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-async-scheduler/src/mock_failing_operator_task.rs ]
+// ---------------- [ File: src/mock_failing_operator_task.rs ]
 crate::ix!();
 
 /// Creates a `TaskItem` that uses a `FailingOperator` at `node_idx`.

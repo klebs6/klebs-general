@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-operator-derive/tests/trybuild/fail_generics_bad_wrong_references.rs ]
+// ---------------- [ File: tests/trybuild/fail_generics_bad_wrong_references.rs ]
 // tests/trybuild/fail_generics_bad_wrong_references.rs
 
 use hydro2_operator::*;         // wherever you define #[derive(Operator)]

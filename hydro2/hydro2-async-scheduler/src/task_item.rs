@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-async-scheduler/src/task_item.rs ]
+// ---------------- [ File: src/task_item.rs ]
 crate::ix!();
 
 /// Each node execution is one `TaskItem`.

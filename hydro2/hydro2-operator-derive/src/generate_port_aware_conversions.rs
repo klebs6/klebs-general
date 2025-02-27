@@ -1,5 +1,5 @@
+// ---------------- [ File: src/generate_port_aware_conversions.rs ]
 crate::ix!();
-// -----------------------------[File: hydro2-operator-derive/src/generate_port_aware_conversions.rs]
 
 /// A revised version of `generate_port_aware_conversions` that:
 ///

@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-async-scheduler/src/dispatch_scheduling.rs ]
+// ---------------- [ File: src/dispatch_scheduling.rs ]
 crate::ix!();
 
 /// Dispatches the scheduling work depending on the batching strategy.

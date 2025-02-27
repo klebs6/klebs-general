@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-network-wire-derive/src/combine_where_clauses.rs ]
+// ---------------- [ File: src/combine_where_clauses.rs ]
 crate::ix!();
 
 /// Combine two `Option<&WhereClause>` => a new `quote!{ where ... }`

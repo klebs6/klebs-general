@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-async-scheduler/src/spawn_aggregator_thread_and_workers.rs ]
+// ---------------- [ File: src/spawn_aggregator_thread_and_workers.rs ]
 crate::ix!();
 
 /// Spawns an aggregator plus N worker threads, returning a Vec of handles.

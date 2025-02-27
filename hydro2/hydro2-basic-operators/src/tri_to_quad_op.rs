@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-basic-operators/src/tri_to_quad_op.rs ]
+// ---------------- [ File: src/tri_to_quad_op.rs ]
 crate::ix!();
 
 // --------------------------------------
@@ -57,4 +57,3 @@ mod tri_to_quad_op_tests {
         Ok(())
     }
 }
-

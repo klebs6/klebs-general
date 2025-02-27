@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-network/src/node.rs ]
+// ---------------- [ File: src/node.rs ]
 crate::ix!();
 
 /// Represents a single node in the network. Each node has

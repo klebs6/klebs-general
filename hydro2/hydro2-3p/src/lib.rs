@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-3p/src/lib.rs ]
+// ---------------- [ File: src/lib.rs ]
 #![allow(unused_imports)]
 
 pub use rand;

@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-network-wire-derive/tests/trybuild/fail_non_string.rs ]
+// ---------------- [ File: tests/trybuild/fail_non_string.rs ]
 // tests/trybuild/fail_non_string.rs
 
 use hydro2_network_wire_derive::NetworkWire;
@@ -11,4 +11,3 @@ pub struct MyWire<T> {
 }
 
 fn main() {}
-

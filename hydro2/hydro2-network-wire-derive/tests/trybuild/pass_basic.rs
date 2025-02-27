@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-network-wire-derive/tests/trybuild/pass_basic.rs ]
+// ---------------- [ File: tests/trybuild/pass_basic.rs ]
 // tests/trybuild/pass_basic.rs
 
 use hydro2_network_wire_derive::NetworkWire;

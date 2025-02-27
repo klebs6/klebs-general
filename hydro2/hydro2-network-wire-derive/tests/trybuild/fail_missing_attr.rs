@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-network-wire-derive/tests/trybuild/fail_missing_attr.rs ]
+// ---------------- [ File: tests/trybuild/fail_missing_attr.rs ]
 // tests/trybuild/fail_missing_attr.rs
 
 use hydro2_network_wire_derive::NetworkWire;
@@ -11,4 +11,3 @@ pub struct MissingOperators<T> {
 }
 
 fn main() {}
-

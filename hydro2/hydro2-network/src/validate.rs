@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-network/src/validate.rs ]
+// ---------------- [ File: src/validate.rs ]
 crate::ix!();
 
 impl<NetworkItem> Network<NetworkItem> 

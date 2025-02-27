@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-operator-derive/tests/trybuild/fail_05_too_many_inputs.rs ]
+// ---------------- [ File: tests/trybuild/fail_05_too_many_inputs.rs ]
 //! Attempting to define 5 inputs (input0..input4) → compile_fail.
 use hydro2_operator_derive::*;
 use hydro2_operator::*; 
@@ -26,4 +26,3 @@ impl TooManyInputs {
 }
 
 fn main() {}
-

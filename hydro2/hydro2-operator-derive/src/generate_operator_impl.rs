@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-operator-derive/src/generate_operator_impl.rs ]
+// ---------------- [ File: src/generate_operator_impl.rs ]
 crate::ix!();
 
 pub fn generate_operator_impl(

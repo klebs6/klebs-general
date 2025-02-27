@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-operator-derive/src/compute_operator_fallback_for_unit.rs ]
+// ---------------- [ File: src/compute_operator_fallback_for_unit.rs ]
 crate::ix!();
 
 /// A simple convention is:  
@@ -67,4 +67,3 @@ fn is_unit_type(ty: &syn::Type) -> bool {
 //
 // // Combine that with your other expansions...
 // ```
-

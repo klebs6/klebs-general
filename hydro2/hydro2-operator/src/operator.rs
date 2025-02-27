@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-operator/src/operator.rs ]
+// ---------------- [ File: src/operator.rs ]
 crate::ix!();
 
 pub type NetworkNodeIoChannelArray<NetworkItem>              = [Option<Arc<AsyncRwLock<NetworkItem>>>;         4];

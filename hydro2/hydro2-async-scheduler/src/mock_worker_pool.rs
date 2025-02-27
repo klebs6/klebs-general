@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-async-scheduler/src/mock_worker_pool.rs ]
+// ---------------- [ File: src/mock_worker_pool.rs ]
 crate::ix!();
 
 //===========================================================

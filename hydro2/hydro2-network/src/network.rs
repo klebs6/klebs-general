@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-network/src/network.rs ]
+// ---------------- [ File: src/network.rs ]
 crate::ix!();
 
 /// The full network containing nodes, edges, and any relevant metadata.

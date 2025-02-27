@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-async-scheduler/src/async_scheduler_config.rs ]
+// ---------------- [ File: src/async_scheduler_config.rs ]
 crate::ix!();
 
 /// Configuration for our upgraded asynchronous scheduler.

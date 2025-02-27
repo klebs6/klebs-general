@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-network-wire-derive/src/operator_spec_item.rs ]
+// ---------------- [ File: src/operator_spec_item.rs ]
 crate::ix!();
 
 /// A single operator spec item, e.g. `op="ConstantOp<Z>"`.

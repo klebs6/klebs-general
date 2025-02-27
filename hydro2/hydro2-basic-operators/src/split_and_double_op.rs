@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-basic-operators/src/split_and_double_op.rs ]
+// ---------------- [ File: src/split_and_double_op.rs ]
 crate::ix!();
 
 // --------------------------------------
@@ -48,4 +48,3 @@ mod split_and_double_op_tests {
         Ok(())
     }
 }
-

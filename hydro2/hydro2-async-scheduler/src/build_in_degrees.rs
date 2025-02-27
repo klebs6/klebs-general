@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-async-scheduler/src/build_in_degrees.rs ]
+// ---------------- [ File: src/build_in_degrees.rs ]
 crate::ix!();
 
 /// Builds the in-degree vector of length `node_count` from the network edges.

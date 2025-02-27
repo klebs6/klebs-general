@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-async-scheduler/src/block_on_build_in_degrees.rs ]
+// ---------------- [ File: src/block_on_build_in_degrees.rs ]
 crate::ix!();
 
 pub(crate) fn block_on_build_in_degrees(

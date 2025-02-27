@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-async-scheduler/src/execute_network_main_thread.rs ]
+// ---------------- [ File: src/execute_network_main_thread.rs ]
 crate::ix!();
 
 /// Runs the main scheduling logic in a scoped thread.

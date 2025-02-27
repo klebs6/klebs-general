@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-async-scheduler/src/process_immediate.rs ]
+// ---------------- [ File: src/process_immediate.rs ]
 crate::ix!();
 
 #[derive(Debug, PartialEq, Eq)]

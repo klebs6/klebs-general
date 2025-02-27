@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-network-performance/src/stats.rs ]
+// ---------------- [ File: src/stats.rs ]
 crate::ix!();
 
 /// Tracks performance statistics for network execution.
@@ -43,5 +43,4 @@ impl PerformanceStats {
         }
     }
 }
-
 

@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-basic-operators/src/no_op.rs ]
+// ---------------- [ File: src/no_op.rs ]
 crate::ix!();
 
 // --------------------------------------
@@ -62,4 +62,3 @@ mod no_op_operator_tests {
         Ok(())
     }
 }
-

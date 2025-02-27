@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-network-wire-derive/src/operator_items_parser.rs ]
+// ---------------- [ File: src/operator_items_parser.rs ]
 crate::ix!();
 
 /// A small struct that captures all `op="..."`

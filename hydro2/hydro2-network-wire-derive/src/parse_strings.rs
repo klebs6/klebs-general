@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-network-wire-derive/src/parse_strings.rs ]
+// ---------------- [ File: src/parse_strings.rs ]
 crate::ix!();
 
 /// Helper: parse a struct definition and extract its `Generics`.

@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-async-scheduler/src/drain_all_worker_results.rs ]
+// ---------------- [ File: src/drain_all_worker_results.rs ]
 crate::ix!();
 
 pub(crate) async fn drain_all_worker_results_idle_based<T>(

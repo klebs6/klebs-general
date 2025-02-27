@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-async-scheduler/src/drain_channel.rs ]
+// ---------------- [ File: src/drain_channel.rs ]
 crate::ix!();
 
 /// Drains a `Receiver<usize>` until `None`, returning items read.

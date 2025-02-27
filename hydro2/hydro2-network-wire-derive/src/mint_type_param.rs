@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-network-wire-derive/src/mint_type_param.rs ]
+// ---------------- [ File: src/mint_type_param.rs ]
 crate::ix!();
 
 /// Mints a new type param using `OpTy{fresh_index}`.

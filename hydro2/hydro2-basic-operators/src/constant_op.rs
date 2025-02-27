@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-basic-operators/src/constant_op.rs ]
+// ---------------- [ File: src/constant_op.rs ]
 crate::ix!();
 
 // --------------------------------------

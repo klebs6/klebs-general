@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-network-wire-derive/src/build_single_operator_impl.rs ]
+// ---------------- [ File: src/build_single_operator_impl.rs ]
 crate::ix!();
 
 /// Builds bridging code (`impl Operator<WireEnum> for FooOp<...>`) for a single operator item.

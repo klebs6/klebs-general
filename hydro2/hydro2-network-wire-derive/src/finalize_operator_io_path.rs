@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-network-wire-derive/src/finalize_operator_io_path.rs ]
+// ---------------- [ File: src/finalize_operator_io_path.rs ]
 crate::ix!();
 
 /// Renames the final segment of `op_path` => e.g. FooOp => FooOpIO

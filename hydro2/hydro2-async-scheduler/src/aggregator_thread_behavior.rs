@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-async-scheduler/src/aggregator_thread_behavior.rs ]
+// ---------------- [ File: src/aggregator_thread_behavior.rs ]
 crate::ix!();
 
 /// Aggregator thread that reads incoming `TaskItem`s, distributing them to workers.

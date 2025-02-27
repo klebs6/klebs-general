@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-operator/src/errors.rs ]
+// ---------------- [ File: src/errors.rs ]
 #![allow(unused)]
 crate::ix!();
 

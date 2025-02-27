@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-async-scheduler/src/execute_network.rs ]
+// ---------------- [ File: src/execute_network.rs ]
 crate::ix!();
 
 impl AsyncScheduler {

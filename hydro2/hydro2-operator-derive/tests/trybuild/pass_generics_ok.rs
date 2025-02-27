@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-operator-derive/tests/trybuild/pass_generics_ok.rs ]
+// ---------------- [ File: tests/trybuild/pass_generics_ok.rs ]
 // tests/trybuild/pass_generics_ok.rs
 
 #![allow(unused)]

@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-async-scheduler/src/gather_node_count_and_edges.rs ]
+// ---------------- [ File: src/gather_node_count_and_edges.rs ]
 crate::ix!();
 
 pub(crate) fn gather_node_count_and_edges<T>(

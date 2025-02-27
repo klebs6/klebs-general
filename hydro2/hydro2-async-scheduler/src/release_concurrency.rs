@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-async-scheduler/src/release_concurrency.rs ]
+// ---------------- [ File: src/release_concurrency.rs ]
 crate::ix!();
 
 /// Releases any concurrency permit if present. This step is crucial in preventing a hang

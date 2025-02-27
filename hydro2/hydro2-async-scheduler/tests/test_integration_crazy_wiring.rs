@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-async-scheduler/tests/test_integration_crazy_wiring.rs ]
+// ---------------- [ File: tests/test_integration_crazy_wiring.rs ]
 //! tests/test_integration_crazy_wiring.rs
 
 #![allow(clippy::needless_return)]

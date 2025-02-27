@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-network-wire-derive/src/build_operator_type_args.rs ]
+// ---------------- [ File: src/build_operator_type_args.rs ]
 crate::ix!();
 
 /// Utility to rebuild angle brackets `<...>` from `AngleArg` info.

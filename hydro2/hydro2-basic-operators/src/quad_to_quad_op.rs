@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-basic-operators/src/quad_to_quad_op.rs ]
+// ---------------- [ File: src/quad_to_quad_op.rs ]
 crate::ix!();
 
 // --------------------------------------

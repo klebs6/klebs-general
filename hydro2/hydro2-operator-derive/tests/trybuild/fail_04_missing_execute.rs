@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-operator-derive/tests/trybuild/fail_04_missing_execute.rs ]
+// ---------------- [ File: tests/trybuild/fail_04_missing_execute.rs ]
 //! Missing `execute` in the `#[operator(...)]` attribute → compile_fail.
 use hydro2_operator_derive::*;
 use hydro2_operator::*; 
@@ -22,4 +22,3 @@ impl MissingExecuteOp {
 }
 
 fn main() {}
-

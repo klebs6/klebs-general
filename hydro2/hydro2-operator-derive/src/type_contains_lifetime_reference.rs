@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-operator-derive/src/type_contains_lifetime_reference.rs ]
+// ---------------- [ File: src/type_contains_lifetime_reference.rs ]
 crate::ix!();
 
 /// Return true if `ty` contains `&`.

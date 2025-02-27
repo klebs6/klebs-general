@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-network-wire-derive/src/build_operator_signature_map.rs ]
+// ---------------- [ File: src/build_operator_signature_map.rs ]
 crate::ix!();
 
 /// Build a map from operator name => signature ident,

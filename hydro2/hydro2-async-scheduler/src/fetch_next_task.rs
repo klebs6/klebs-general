@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-async-scheduler/src/fetch_next_task.rs ]
+// ---------------- [ File: src/fetch_next_task.rs ]
 crate::ix!();
 
 /// Retrieves the next `TaskItem` from the worker’s channel.

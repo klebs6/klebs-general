@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-network-wire-derive/src/maybe_reuse_lifetime.rs ]
+// ---------------- [ File: src/maybe_reuse_lifetime.rs ]
 crate::ix!();
 
 /// Checks if a `GenericArgument::Lifetime(lt)` is already in `wire_gens`.

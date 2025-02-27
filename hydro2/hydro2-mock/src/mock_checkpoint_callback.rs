@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-mock/src/mock_checkpoint_callback.rs ]
+// ---------------- [ File: src/mock_checkpoint_callback.rs ]
 crate::ix!();
 
 pub type MockCheckpointType = Arc<AsyncMutex<Vec<Vec<usize>>>>;

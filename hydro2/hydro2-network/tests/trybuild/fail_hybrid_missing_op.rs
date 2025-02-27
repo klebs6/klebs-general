@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-network/tests/trybuild/fail_hybrid_missing_op.rs ]
+// ---------------- [ File: tests/trybuild/fail_hybrid_missing_op.rs ]
 // tests/trybuild/fail_hybrid_missing_op.rs
 
 use std::marker::PhantomData;
@@ -45,4 +45,3 @@ fn main() {
     let _node0 = node!(0 => FooOperator { name: "foo".to_string() });
     // ...
 }
-

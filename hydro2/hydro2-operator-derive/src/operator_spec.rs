@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-operator-derive/src/operator_spec.rs ]
+// ---------------- [ File: src/operator_spec.rs ]
 //! spec.rs — `OperatorSpec` definition and parsing logic.
 
 crate::ix!();

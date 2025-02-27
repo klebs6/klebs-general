@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-operator-derive/tests/trybuild/pass_test_port_strings.rs ]
+// ---------------- [ File: tests/trybuild/pass_test_port_strings.rs ]
 use hydro2_operator_derive::*;
 use hydro2_operator::*; 
 use named_item_derive::*;

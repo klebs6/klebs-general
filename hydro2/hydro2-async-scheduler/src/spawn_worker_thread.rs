@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-async-scheduler/src/spawn_worker_thread.rs ]
+// ---------------- [ File: src/spawn_worker_thread.rs ]
 crate::ix!();
 
 /// Spawns one worker OS thread within the given `scope`.

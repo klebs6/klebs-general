@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-operator-derive/src/generate_operator_signature_tokens.rs ]
+// ---------------- [ File: src/generate_operator_signature_tokens.rs ]
 crate::ix!();
 
 /// Generate `impl OperatorSignature` for your hidden type. 

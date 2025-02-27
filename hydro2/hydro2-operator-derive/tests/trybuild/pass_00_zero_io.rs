@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-operator-derive/tests/trybuild/pass_00_zero_io.rs ]
+// ---------------- [ File: tests/trybuild/pass_00_zero_io.rs ]
 //! Zero I/O: Should compile successfully.
 use hydro2_operator_derive::*;
 use hydro2_operator::*; 

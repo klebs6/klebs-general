@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-async-scheduler/src/handle_new_ready_node.rs ]
+// ---------------- [ File: src/handle_new_ready_node.rs ]
 crate::ix!();
 
 /// Called when `select!` yields a new node index from `ready_nodes_rx`.

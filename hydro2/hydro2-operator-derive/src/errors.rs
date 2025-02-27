@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-operator-derive/src/errors.rs ]
+// ---------------- [ File: src/errors.rs ]
 //! errors.rs — Central definitions of all parse-time or generation-time errors.
 crate::ix!();
 

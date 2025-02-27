@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-operator/src/opcode.rs ]
+// ---------------- [ File: src/opcode.rs ]
 crate::ix!();
 
 pub trait OpCode: Send + Sync {

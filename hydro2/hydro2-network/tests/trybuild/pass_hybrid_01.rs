@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-network/tests/trybuild/pass_hybrid_01.rs ]
+// ---------------- [ File: tests/trybuild/pass_hybrid_01.rs ]
 // tests/trybuild/pass_hybrid_01.rs
 
 use std::marker::PhantomData;

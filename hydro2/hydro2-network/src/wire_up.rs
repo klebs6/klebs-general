@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-network/src/wire_up.rs ]
+// ---------------- [ File: src/wire_up.rs ]
 crate::ix!();
 
 /// Wires up all outputs and inputs across the network, checking port‐range, type‐string compatibility,

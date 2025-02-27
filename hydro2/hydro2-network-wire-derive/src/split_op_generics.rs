@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-network-wire-derive/src/split_op_generics.rs ]
+// ---------------- [ File: src/split_op_generics.rs ]
 crate::ix!();
 
 /// Split the operator's generics into (impl_generics, ty_generics, where_clause)

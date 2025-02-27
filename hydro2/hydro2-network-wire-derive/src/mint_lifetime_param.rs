@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-network-wire-derive/src/mint_lifetime_param.rs ]
+// ---------------- [ File: src/mint_lifetime_param.rs ]
 crate::ix!();
 
 /// Mint a new lifetime param using exactly the user’s `'x`.

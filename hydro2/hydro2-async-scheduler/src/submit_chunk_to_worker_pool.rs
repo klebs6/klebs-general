@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-async-scheduler/src/submit_chunk_to_worker_pool.rs ]
+// ---------------- [ File: src/submit_chunk_to_worker_pool.rs ]
 crate::ix!();
 
 /// Submits each node in `chunk` to the worker pool, attempting to acquire a concurrency permit.

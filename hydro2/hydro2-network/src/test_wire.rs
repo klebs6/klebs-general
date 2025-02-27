@@ -1,3 +1,4 @@
+// ---------------- [ File: src/test_wire.rs ]
 crate::ix!();
 
 #[derive(NetworkWire,Default,PartialEq,Eq,Debug,Clone)]

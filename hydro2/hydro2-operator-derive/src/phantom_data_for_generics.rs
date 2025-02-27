@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-operator-derive/src/phantom_data_for_generics.rs ]
+// ---------------- [ File: src/phantom_data_for_generics.rs ]
 crate::ix!();
 
 pub fn phantom_data_for_generics(generics: &syn::Generics) -> TokenStream {

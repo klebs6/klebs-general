@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-async-scheduler/src/mock_permit.rs ]
+// ---------------- [ File: src/mock_permit.rs ]
 crate::ix!();
 
 pub fn mock_permit() -> Option<OwnedSemaphorePermit> {

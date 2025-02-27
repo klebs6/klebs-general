@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-network-wire-derive/src/mint_const_param.rs ]
+// ---------------- [ File: src/mint_const_param.rs ]
 crate::ix!();
 
 /// Mints a new const param using `OPC{fresh_index}`.

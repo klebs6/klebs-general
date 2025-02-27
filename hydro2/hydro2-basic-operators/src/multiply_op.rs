@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-basic-operators/src/multiply_op.rs ]
+// ---------------- [ File: src/multiply_op.rs ]
 crate::ix!();
 
 // --------------------------------------
@@ -67,4 +67,3 @@ mod multiply_op_tests {
         Ok(())
     }
 }
-

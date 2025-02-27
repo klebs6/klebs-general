@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-async-scheduler/src/mock_task_with_checkpoint.rs ]
+// ---------------- [ File: src/mock_task_with_checkpoint.rs ]
 crate::ix!();
 
 /// A global list of node indices that were checkpointed, for test verification.

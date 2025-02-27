@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-async-scheduler/src/process_immediate_ready_node_received.rs ]
+// ---------------- [ File: src/process_immediate_ready_node_received.rs ]
 crate::ix!();
 
 pub async fn process_immediate_ready_node_received<'threads, T>(

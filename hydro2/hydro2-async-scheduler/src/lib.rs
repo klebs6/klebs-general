@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-async-scheduler/src/lib.rs ]
+// ---------------- [ File: src/lib.rs ]
 #[macro_use] mod imports; use imports::*;
 
 x!{aggregator_thread_behavior}

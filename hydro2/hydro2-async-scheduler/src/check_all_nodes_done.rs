@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-async-scheduler/src/check_all_nodes_done.rs ]
+// ---------------- [ File: src/check_all_nodes_done.rs ]
 crate::ix!();
 
 /// Utility function for your scheduling loop, logging the “done_count”.

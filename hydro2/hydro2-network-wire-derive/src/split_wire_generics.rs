@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-network-wire-derive/src/split_wire_generics.rs ]
+// ---------------- [ File: src/split_wire_generics.rs ]
 crate::ix!();
 
 fn ensure_brackets(s: &str) -> String {

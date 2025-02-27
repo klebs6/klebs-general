@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-async-scheduler/src/run_worker_pool_in_scope.rs ]
+// ---------------- [ File: src/run_worker_pool_in_scope.rs ]
 crate::ix!();
 
 /// Creates a worker pool with the specified capacity and runs scheduling

@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-async-scheduler/src/in_flight_counter.rs ]
+// ---------------- [ File: src/in_flight_counter.rs ]
 crate::ix!();
 
 /// Tracks the in-flight tasks: how many nodes are actively being processed by workers.

@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-async-scheduler/src/async_scheduler.rs ]
+// ---------------- [ File: src/async_scheduler.rs ]
 crate::ix!();
 
 #[derive(Getters,Builder,Debug, Clone)]

@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-network/tests/compile_tests.rs ]
+// ---------------- [ File: tests/compile_tests.rs ]
 // tests/compile_tests.rs
 
 #[test]

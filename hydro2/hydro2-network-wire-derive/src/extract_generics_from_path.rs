@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-network-wire-derive/src/extract_generics_from_path.rs ]
+// ---------------- [ File: src/extract_generics_from_path.rs ]
 //! This module demonstrates a refactored version of `extract_generics_from_path` broken
 //! into smaller helper subroutines, plus an “exhaustive” test suite for each part.
 crate::ix!();

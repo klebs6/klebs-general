@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-network/src/edge.rs ]
+// ---------------- [ File: src/edge.rs ]
 crate::ix!();
 
 /// Represents an edge in the DAG, connecting one node's output

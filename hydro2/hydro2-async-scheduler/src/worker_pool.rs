@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-async-scheduler/src/worker_pool.rs ]
+// ---------------- [ File: src/worker_pool.rs ]
 crate::ix!();
 
 /// A pool of OS threads: 

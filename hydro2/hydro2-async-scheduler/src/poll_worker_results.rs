@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-async-scheduler/src/poll_worker_results.rs ]
+// ---------------- [ File: src/poll_worker_results.rs ]
 crate::ix!();
 
 pub async fn poll_worker_results<T>(

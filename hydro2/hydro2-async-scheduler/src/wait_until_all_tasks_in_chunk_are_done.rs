@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-async-scheduler/src/wait_until_all_tasks_in_chunk_are_done.rs ]
+// ---------------- [ File: src/wait_until_all_tasks_in_chunk_are_done.rs ]
 crate::ix!();
 
 /// Wait until all tasks in `chunk` are done.

@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-async-scheduler/src/process_task.rs ]
+// ---------------- [ File: src/process_task.rs ]
 crate::ix!();
 
 /// Processes the `task` by locking the network, executing the node operator,

@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-async-scheduler/src/spawn_aggregator_thread.rs ]
+// ---------------- [ File: src/spawn_aggregator_thread.rs ]
 crate::ix!();
 
 pub fn spawn_aggregator<'threads, T>(

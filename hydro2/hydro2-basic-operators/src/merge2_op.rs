@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-basic-operators/src/merge2_op.rs ]
+// ---------------- [ File: src/merge2_op.rs ]
 crate::ix!();
 
 // --------------------------------------
@@ -59,4 +59,3 @@ mod merge2_op_tests {
         Ok(())
     }
 }
-

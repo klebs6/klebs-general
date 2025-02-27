@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-async-scheduler/src/block_on_dispatch.rs ]
+// ---------------- [ File: src/block_on_dispatch.rs ]
 crate::ix!();
 
 pub(crate) fn block_on_dispatch<'threads, T>(

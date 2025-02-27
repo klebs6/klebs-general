@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-network-wire-derive/tests/trybuild/pass_multiple_operators.rs ]
+// ---------------- [ File: tests/trybuild/pass_multiple_operators.rs ]
 // tests/trybuild/pass_multiple_operators.rs
 
 use hydro2_network_wire_derive::*;

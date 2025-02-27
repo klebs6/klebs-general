@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-network-wire-derive/src/merge_generics.rs ]
+// ---------------- [ File: src/merge_generics.rs ]
 crate::ix!();
 
 /// Merge two generics: wire + op => combine the params + the where clauses

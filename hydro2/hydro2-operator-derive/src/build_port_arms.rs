@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-operator-derive/src/build_port_arms.rs ]
+// ---------------- [ File: src/build_port_arms.rs ]
 crate::ix!();
 
 /// Return a Vec of match arms for `fn input_port_type_str(&self, port: usize) -> Option<&'static str>`.

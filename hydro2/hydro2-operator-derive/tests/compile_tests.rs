@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-operator-derive/tests/compile_tests.rs ]
+// ---------------- [ File: tests/compile_tests.rs ]
 //! This file orchestrates all trybuild tests for `hydro2-operator-derive`.
 
 #[test]

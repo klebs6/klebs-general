@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-async-scheduler/src/handle_freed_children.rs ]
+// ---------------- [ File: src/handle_freed_children.rs ]
 crate::ix!();
 
 /// Sends Freed children to `ready_nodes_tx`. This step can be a source of hangs if

@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-async-scheduler/src/reenqueue_freed_child.rs ]
+// ---------------- [ File: src/reenqueue_freed_child.rs ]
 crate::ix!();
 
 /// Called when we get a freed child index from `child_nodes_rx`.

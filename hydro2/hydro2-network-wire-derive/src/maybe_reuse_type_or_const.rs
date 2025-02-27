@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-network-wire-derive/src/maybe_reuse_type_or_const.rs ]
+// ---------------- [ File: src/maybe_reuse_type_or_const.rs ]
 crate::ix!();
 
 /// Checks if a `GenericArgument` is a single-segment type or const param recognized in `wire_gens`.

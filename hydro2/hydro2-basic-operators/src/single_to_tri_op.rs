@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-basic-operators/src/single_to_tri_op.rs ]
+// ---------------- [ File: src/single_to_tri_op.rs ]
 crate::ix!();
 
 // --------------------------------------
@@ -80,4 +80,3 @@ mod single_to_tri_op_tests {
         Ok(())
     }
 }
-

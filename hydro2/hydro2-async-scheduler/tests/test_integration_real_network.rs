@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-async-scheduler/tests/test_integration_real_network.rs ]
+// ---------------- [ File: tests/test_integration_real_network.rs ]
 //! tests/test_integration_real_network.rs
 
 #![allow(clippy::needless_return)]

@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-network-wire-derive/src/try_reuse_wire_params.rs ]
+// ---------------- [ File: src/try_reuse_wire_params.rs ]
 crate::ix!();
 
 /// If `arg` is a single-segment type path that matches an existing wire param, return Some(ident).

@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-async-scheduler/src/drain_leftover_results.rs ]
+// ---------------- [ File: src/drain_leftover_results.rs ]
 crate::ix!();
 
 /// Drains leftover results from the worker pool after the main loop finishes.

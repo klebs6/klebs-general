@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-async-scheduler/src/force_close_for_single_node.rs ]
+// ---------------- [ File: src/force_close_for_single_node.rs ]
 crate::ix!();
 
 /// Forcefully closes channels + aggregator for the single-node case:

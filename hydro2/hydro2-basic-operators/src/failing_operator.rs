@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-basic-operators/src/failing_operator.rs ]
+// ---------------- [ File: src/failing_operator.rs ]
 crate::ix!();
 
 // --------------------------------------

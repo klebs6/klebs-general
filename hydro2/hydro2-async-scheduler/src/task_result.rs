@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-async-scheduler/src/task_result.rs ]
+// ---------------- [ File: src/task_result.rs ]
 crate::ix!();
 
 /// The result we get back from a worker.

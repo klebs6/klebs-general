@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-network-wire-derive/tests/trybuild/fail_no_op_keyword.rs ]
+// ---------------- [ File: tests/trybuild/fail_no_op_keyword.rs ]
 // tests/trybuild/fail_no_op_keyword.rs
 
 use hydro2_network_wire_derive::NetworkWire;
@@ -8,4 +8,3 @@ use hydro2_network_wire_derive::NetworkWire;
 pub struct MyWire;
 
 fn main() {}
-

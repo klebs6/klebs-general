@@ -1,4 +1,4 @@
-// ---------------- [ File: hydro2-operator-derive/tests/trybuild/fail_08_duplicate_execute.rs ]
+// ---------------- [ File: tests/trybuild/fail_08_duplicate_execute.rs ]
 //! Specifying `execute` twice → compile_fail.
 use hydro2_operator_derive::*;
 use hydro2_operator::*; 
@@ -25,4 +25,3 @@ impl DuplicateExecute {
 }
 
 fn main() {}
-
