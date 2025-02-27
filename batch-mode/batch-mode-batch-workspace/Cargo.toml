@@ -19,15 +19,14 @@ version = "0.1.0"
 [dependencies.save-load-traits]
 path = "../save-load-traits"
 version = "0.1.0"
-[dependencies.traced-test]
-version = "*"
-[dependencies.tracing]
-version = "*"
-[dependencies.tracing-setup]
-version = "*"
-[dependencies.tracing-subscriber]
-features = [ "env-filter", "json" ]
-version = "*"
+
+[dependencies]
+traced-test = "*"
+tracing = "*"
+tracing-setup = "*"
+tracing-subscriber = {version = "*", features = [ "env-filter", "json"] }
+
+
 [package]
 edition = "2024"
 name = "batch-mode-batch-workspace"

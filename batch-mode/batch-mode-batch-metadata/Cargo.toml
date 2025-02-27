@@ -4,22 +4,16 @@ version = "0.1.0"
 [dependencies.save-load-traits]
 path = "../save-load-traits"
 version = "0.1.0"
-[dependencies.serde]
-features = [ "derive" ]
-version = "*"
-[dependencies.serde_derive]
-version = "*"
-[dependencies.serde_json]
-version = "*"
-[dependencies.traced-test]
-version = "*"
-[dependencies.tracing]
-version = "*"
-[dependencies.tracing-setup]
-version = "*"
-[dependencies.tracing-subscriber]
-features = [ "env-filter", "json" ]
-version = "*"
+
+[dependencies]
+serde = { version = "*", features = [ "derive" ] }
+serde_derive = "*"
+serde_json = "*"
+traced-test = "*"
+tracing = "*"
+tracing-setup = "*"
+tracing-subscriber = {version = "*", features = [ "env-filter", "json"] }
+
 [package]
 edition = "2024"
 name = "batch-mode-batch-metadata"
