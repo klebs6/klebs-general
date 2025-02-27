@@ -1,6 +1,6 @@
 [dependencies]
-async-trait = "*"
-derive_builder = "*"
+async-trait = "0.1.86"
+derive_builder = "0.20.2"
 [dependencies.hydro2-3p]
 path = "../hydro2-3p"
 [dependencies.hydro2-basic-operators]
@@ -19,7 +19,7 @@ version = "*"
 features = [ "env-filter", "json" ]
 version = "*"
 [dev-dependencies]
-trybuild = "*"
+trybuild = "1.0.103"
 [dev-dependencies.hydro2-operator-derive]
 path = "../hydro2-operator-derive"
 [dev-dependencies.tokio]

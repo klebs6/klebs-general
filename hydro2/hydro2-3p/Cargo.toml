@@ -24,26 +24,26 @@ edition = "2024"
 #strum_macros             = "0.24"
 #tempfile                 = "*"
 #uuid                     = { version = "*", features = ["v4", "serde"] }
-async-trait               = "*"
-derive_builder            = "*"
-disable_macro             = "*"
+async-trait               = "0.1.86"
+derive_builder            = "0.20.2"
+disable_macro             = "0.3.6"
 error-tree                = "0.6.0"
-export-magic              = "*"
+export-magic              = "0.3.6"
 futures                   = "0.3"
-getset                    = "*"
+getset                    = "0.1.4"
 named-item                = "0.6.0"
 named-item-derive         = "0.2.0"
-num-traits                = "*"
+num-traits                = "0.2.19"
 serde                     = { version = "1.0", features = ["derive"] }
 serde_json                = "1.0"
 tokio                     = { version = "1", features = ["full"] }
-traced-test               = "*"
+traced-test               = "1.0.2"
 tracing                   = { version = "0.1.40", features = ["log"] }
-tracing-setup             = "*"
+tracing-setup             = "1.0.2"
 tracing-subscriber        = { version = "0.3", default-features = false, features = ["fmt", "std", "env-filter"] }
-lazy_static               = "*"
-pbx                       = "*"
-rand                     = "*"
+lazy_static               = "1.5.0"
+pbx                       = "0.1.0"
+rand                     = "0.8.5"
 
 [build-dependencies]
-scan-crate-for-typedefs = "*"
+scan-crate-for-typedefs = "0.8.1"

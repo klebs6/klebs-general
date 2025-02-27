@@ -1,9 +1,9 @@
 [dependencies]
-async-trait = "*"
+async-trait = "0.1.86"
 named-item = "0.6.0"
 named-item-derive = "0.2.0"
-paste = "*"
-unsafe-erased = "*"
+paste = "1.0.15"
+unsafe-erased = "0.1.0"
 [dependencies.hydro2-3p]
 path = "../hydro2-3p"
 [package]

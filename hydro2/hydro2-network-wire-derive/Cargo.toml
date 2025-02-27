@@ -1,15 +1,15 @@
 [dependencies]
-async-trait = "*"
-derive_builder = "*"
-disable_macro = "*"
-erased = "*"
-error-tree = "*"
-export-magic = "*"
-getset = "*"
+async-trait = "0.1.86"
+derive_builder = "0.20.2"
+disable_macro = "0.3.6"
+erased = "0.1.2"
+error-tree = "0.6.0"
+export-magic = "0.3.6"
+getset = "0.1.4"
 proc-macro2 = "1.0"
 quote = "1.0"
 syn = "2.0"
-unsafe-erased = "*"
+unsafe-erased = "0.1.0"
 [dependencies.hydro2-3p]
 path = "../hydro2-3p"
 [dependencies.traced-test]
@@ -22,10 +22,10 @@ version = "*"
 features = [ "env-filter", "json" ]
 version = "*"
 [dev-dependencies]
-async-trait = "*"
+async-trait = "0.1.86"
 named-item = "0.6.0"
 named-item-derive = "0.2.0"
-trybuild = "*"
+trybuild = "1.0.103"
 [dev-dependencies.hydro2-basic-operators]
 path = "../hydro2-basic-operators"
 version = "*"
