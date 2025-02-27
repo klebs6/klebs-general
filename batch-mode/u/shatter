@@ -1,0 +1,165 @@
+#!/usr/bin/env raku
+my %data = %(
+    "array-initializers" => [
+        "array_initializer.rs",
+    ],
+    "float-element" => [
+        "element.rs",
+        "item.rs",
+    ],
+    "float-element-checks" => [
+        "tolerance.rs",
+        "normalize_along_axis.rs",
+        "check_all_finite.rs",
+        "check_all_in_range.rs",
+        "check_all_infinite.rs",
+        "check_all_nan.rs",
+        "check_all_nan_or_infinite.rs",
+        "check_all_uniform.rs",
+        "check_all_zeros.rs",
+        "check_match.rs",
+        "close_enough.rs",
+        "slices.rs",
+    ],
+    "perturb" => [
+        "perturb.rs",
+        "arrays.rs",
+    ],
+    "transformer-cpu-deployment" => [
+        "deployment.rs",
+    ],
+    "transformer-cpu-dot-product-layer" => [
+        "mac.rs",
+        "manual_1d_dot_product.rs",
+        "dot_product_mock.rs",
+    ],
+    "transformer-cpu-fine-tuning" => [
+        "fine_tuning.rs",
+    ],
+    "transformer-cpu-masking" => [
+        "masking.rs",
+    ],
+    "transformer-cpu-model" => [
+        "transformer_layer.rs",
+        "transformer_model.rs",
+    ],
+    "transformer-cpu-traits" => [
+        "errors.rs",
+        "traits.rs",
+    ],
+    "transformer-cpu-compute-gradient" => [
+        "compute_gradient.rs",
+    ],
+    "transformer-cpu-matrix-product" => [
+        "compute_matrix_product.rs",
+    ],
+    "transformer-cpu-concatenation-layer" => [
+        "concatenation_layer.rs",
+    ],
+    "transformer-cpu-multihead-attention-network" => [
+        "multihead_attention_network.rs",
+        "multihead_attention_network_with_normalization.rs",
+    ],
+    "transformer-cpu-optimization" => [
+        "optimization.rs",
+    ],
+    "transformer-cpu-positional-embeddings" => [
+        "positional_embeddings.rs",
+    ],
+    "transformer-cpu-positional-encoding" => [
+        "positional_encoding.rs",
+    ],
+    "transformer-cpu-positionwise-feedforward-network" => [
+        "positionwise_feedforward_network.rs",
+        "positionwise_feedforward_network_with_normalization.rs",
+    ],
+    "transformer-cpu-projection-layer" => [
+        "projection_layer.rs",
+    ],
+    "transformer-cpu-projection-space" => [
+        "delegate_to_projection_space.rs",
+        "projection_space.rs",
+    ],
+    "transformer-cpu-encoder-decoder" => [
+        "encoder_decoder_attention.rs",
+    ],
+    "transformer-cpu-relu-activation-layer" => [
+        "relu_activation_layer.rs",
+    ],
+    "transformer-cpu-softmax-layer" => [
+        "softmax_jacobian.rs",
+    ],
+    "transformer-cpu-stress-test" => [
+        "stress.rs",
+        "stress_test.rs",
+    ],
+    "transformer-cpu-test-hooks" => [
+        "symmetry.rs",
+        "test_checks.rs",
+        "test_data_initializer.rs",
+    ],
+    "transformer-cpu-token-embeddings" => [
+        "token_embeddings.rs",
+    ],
+    "transformer-cpu-training-loop" => [
+        "training_loop.rs",
+    ],
+    "transformer-cpu-verification" => [
+        "verify.rs",
+    ],
+    "transformer-cpu-add-and-normalize-layer" => [
+        "add_and_normalize.rs",
+    ],
+    "transformer-cpu-final-linear-layer" => [
+        "final_linear_layer.rs",
+    ],
+    "transformer-cpu-linear-layer" => [
+        "linear_layer.rs",
+    ],
+    "transformer-cpu-loss-function" => [
+        "loss_function.rs",
+    ],
+    "transformer-cpu-macros" => [
+        "allow_scaling.rs",
+        "implement_fourway.rs",
+        "implement_fourway_index.rs",
+        "implement_fourway_initializers.rs",
+        "implement_fourway_shapes.rs",
+        "implement_layer_inputs.rs",
+        "implement_layer_inputs_partial_eq.rs",
+        "implement_layer_inputs_perturb.rs",
+        "implement_layer_inputs_shapes.rs",
+        "implement_layer_inputs_views.rs",
+        "implement_layer_output_diff.rs",
+        "implement_output_checks.rs",
+        "implement_owned_constructors.rs",
+        "implement_perturbable.rs",
+    ],
+    "transformer-cpu-evaluation" => [
+        "evaluation.rs",
+    ],
+    "transformer-cpu-input" => [
+        "input.rs",
+    ],
+    "transformer-cpu-output-layer" => [
+        "output_layer.rs",
+    ],
+    "transformer-cpu-layer-gradient-update" => [
+        "layer_gradient_update.rs",
+    ],
+    "transformer-cpu-learned-positional-encoding" => [
+        "learned_positional_encoding.rs",
+    ],
+    "panic-hook-guard" => [
+        "panic_hook_guard.rs",
+    ],
+);
+
+for %data.keys -> $crate {
+    my @files = %data{$crate}.List;
+    for @files -> $file {
+        my $cmd = "mv src/$file $crate/src";
+        say $cmd;
+        qqx/$cmd/;
+    }
+}

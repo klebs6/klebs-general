@@ -1,0 +1,149 @@
+#!/usr/bin/env raku
+
+my @new-crates = [
+    "aure-appendix-generation",
+    "aure-archival-and-catalog",
+    "aure-author-design",
+    "aure-chapter-structuring",
+    "aure-citation-and-footnote",
+    "aure-colophon-assembly",
+    "aure-cover-design",
+    "aure-distribution-orchestration",
+    "aure-editorial-review",
+    "aure-final-proofread",
+    "aure-illustration-embed",
+    "aure-illustration-provider",
+    "aure-inventory-registration",
+    "aure-isbn-allocation",
+    "aure-lexical-refinement",
+    "aure-manuscript-inception",
+    "aure-pricing-computation",
+    "aure-print-queue-scheduling",
+    "aure-regulatory-compliance",
+    "aure-sales-analytics",
+    "aure-text-pagination",
+    "aiwa-appendix-material",
+    "aiwa-archived-and-catalogued-book",
+    "aiwa-author-block",
+    "aiwa-book-artifact",
+    "aiwa-book-with-cover",
+    "aiwa-book-with-cover-and-illus",
+    "aiwa-book-with-sku",
+    "aiwa-chapter-structure",
+    "aiwa-cover-design-data",
+    "aiwa-distributed-book",
+    "aiwa-doc-with-appendix",
+    "aiwa-editorially-reviewed-text",
+    "aiwa-fully-proofread-book",
+    "aiwa-illustration-set",
+    "aiwa-manuscript-skeleton",
+    "aiwa-manuscript-with-authors",
+    "aiwa-manuscript-with-colophon",
+    "aiwa-manuscript-with-illustrations",
+    "aiwa-manuscript-with-isbn",
+    "aiwa-paginated-book",
+    "aiwa-priced-book",
+    "aiwa-print-scheduled-book",
+    "aiwa-refined-text",
+    "aiwa-regulatory-compliant-book",
+    "aiwa-sales-analysis-output",
+    "aiwa-text-with-citations-and-footnotes",
+    "batch-mode-3p",
+    "batch-mode-batch-client",
+    "batch-mode-batch-executor",
+    "batch-mode-batch-index",
+    "batch-mode-batch-metadata",
+    "batch-mode-batch-reconciliation",
+    "batch-mode-batch-schema",
+    "batch-mode-batch-triple",
+    "batch-mode-buffer",
+    "batch-mode-emit-audio",
+    "batch-mode-emit-image",
+    "batch-mode-json",
+    "batch-mode-language-to-token-stream",
+    "batch-mode-memory",
+    "hydro-network",
+    "hydro-network-error",
+    "hydro-network-performance",
+    "hydro-operator",
+    "batch-mode-pipeline",
+    "batch-mode-pipeline-executor",
+    "batch-mode-query-performance-estimator",
+    "batch-mode-scheduler",
+    "batch-mode-token",
+    "batch-mode-token-cluster",
+    "batch-mode-token-describe",
+    "batch-mode-token-design-object",
+    "batch-mode-token-enumerate-object-effects",
+    "batch-mode-token-event-sequence-predict",
+    "batch-mode-token-expand",
+    "batch-mode-token-expansion-to-structured-language",
+    "batch-mode-token-filter",
+    "batch-mode-token-fusion",
+    "batch-mode-token-generate-language-dag",
+    "batch-mode-token-instructionize",
+    "batch-mode-token-interpolate",
+    "batch-mode-token-loop",
+    "batch-mode-token-loop-break",
+    "batch-mode-token-mask-select",
+    "batch-mode-token-object-evolve",
+    "batch-mode-token-quad-expand",
+    "batch-mode-token-quad-extract",
+    "batch-mode-token-quad-fuse",
+    "batch-mode-token-quad-order",
+    "batch-mode-token-rank",
+    "batch-mode-token-select-ingredients",
+    "batch-mode-token-shuffle",
+    "batch-mode-token-simulate-object",
+    "batch-mode-token-split",
+    "batch-mode-token-stream-collapse",
+    "batch-mode-token-stream-resequence",
+    "batch-mode-batch-workspace",
+    "batch-mode-batch-workspace-interface",
+    "greenvae-environment",
+    "greenvae-token-expander-axis",
+    "old-batch-mode-token-expander",
+    "save-load-traits",
+    "token-expander-axis",
+    "token-expander-axis-derive",
+    "token-expansion-step",
+    "token-expansion-system-message-builder",
+];
+
+for @new-crates -> $crate {
+    my $srcdir  = $crate ~ "/src";
+    my $libfile = $srcdir ~ "/lib.rs";
+
+    my @others = $srcdir.IO.dir.grep: {
+        $_ !~~ /lib\.rs|imports\.rs/
+    };
+
+    my @import-statements = do for @others {
+
+        my $stem = $_.basename.split(".")[0];
+
+        'x!{' ~ $stem ~ '}'
+    };
+
+    my @libfile-keep-lines = gather for $libfile.IO.slurp.lines {
+
+        if $_ !~~ /'x!{'/ {
+            take $_;
+        }
+    };
+
+    my @already-importing = gather for $libfile.IO.slurp.lines {
+
+        if $_ ~~ /'x!{'/ {
+            take $_;
+        }
+    };
+
+    my $new-text = qq:to/END/;
+    {@libfile-keep-lines.join("\n")}
+    {@import-statements.join("\n")}
+    END
+
+    say "writing: $libfile";
+    $libfile.IO.spurt: $new-text;
+}

@@ -1,0 +1,44 @@
+#!/usr/bin/env raku
+my $base-cmd = "./u/add-workspace-crate-to-neighbor-cargo-toml --write";
+
+my @targets   = [
+    "batch-mode-token-split",
+    "batch-mode-token-expansion-to-structured-language",
+    "batch-mode-token-enumerate-object-effects",
+    "batch-mode-token-quad-expand",
+    "batch-mode-token-simulate-object",
+    "old-batch-mode-token-expander",
+    "batch-mode-token-quad-extract",
+    "batch-mode-token-quad-fuse",
+    "batch-mode-token-quad-order",
+    "batch-mode-token-design-object",
+    "batch-mode-token-loop-break",
+    "batch-mode-token-stream-collapse",
+    "batch-mode-token-instructionize",
+    "batch-mode-token-fusion",
+    "batch-mode-token-mask-select",
+    "batch-mode-token-select-ingredients",
+    "batch-mode-token-expand",
+    "batch-mode-token-event-sequence-predict",
+    "batch-mode-token-rank",
+    "batch-mode-token-interpolate",
+    "batch-mode-token-shuffle",
+    "batch-mode-token-describe",
+    "batch-mode-token-filter",
+    "batch-mode-token-loop",
+    "batch-mode-token-cluster",
+    "batch-mode-token-stream-resequence",
+    "batch-mode-token-generate-language-dag",
+    "batch-mode-token-object-evolve",
+];
+
+my @sources  = [
+    "hydro-operator",
+];
+
+for @targets -> $target {
+    for @sources -> $src {
+        my $cmd = "$base-cmd $src $target";
+        qqx/$cmd/;
+    }
+}

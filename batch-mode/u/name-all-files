@@ -1,0 +1,35 @@
+#!/usr/bin/env raku
+
+use File::Find;
+
+# Root directory to search. You can change this.
+my $root = $*CWD;
+
+# Return a lazy sequence of .rs files
+my @files = find(
+    dir       => $root,
+    type      => 'file',
+    name      => /'.rs'$/,
+    # :exclude can be used if you want to skip certain directories
+    # exclude => 'node_modules',
+    # :recursive => False can limit the search to just one level
+    # keep-going => True can skip errors about unreadable dirs
+);
+
+# Process each file in the lazy sequence
+for @files -> $path {
+    my $file    = $path.IO;
+    my $content = $file.slurp;
+
+    # Create a relative path so you don't display huge absolute paths
+    my $relative = $file.relative($root);
+
+    # Your stylized comment
+    my $comment = "// ---------------- [ File: $relative ]";
+
+    # Only prepend if the file doesn't already contain that line
+    unless $content.lines.any eq $comment {
+        $file.spurt($comment ~ "\n" ~ $content);
+    }
+}
+
