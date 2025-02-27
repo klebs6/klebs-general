@@ -1,3 +1,6 @@
+[dependencies]
+derive_builder = "*"
+
 [dependencies.workspacer-3p]
 path = "../workspacer-3p"
 [dependencies.workspacer-crate]

@@ -23,9 +23,7 @@ error_tree!{
         FoundARawModNameWhichWeDontHandlePleaseRemoveOrUnifyWithXMacros { 
             mod_name:  String 
         },
-        EncounteredAnXMacroAfterWeAlreadySawANonAttributeItem_NotRewritingSafely {
-            file_path: PathBuf,
-        },
+        EncounteredAnXMacroAfterWeAlreadySawANonAttributeItem_NotRewritingSafely,
     }
 
     #[derive(Clone)]

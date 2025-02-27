@@ -42,4 +42,3 @@ async fn main() -> Result<(), WorkspaceError> {
 
     Ok(())
 }
-

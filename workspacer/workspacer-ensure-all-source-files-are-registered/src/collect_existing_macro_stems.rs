@@ -1,39 +1,44 @@
 // ---------------- [ File: src/collect_existing_macro_stems.rs ]
 crate::ix!();
 
-/// Collects any existing `x!{foo}` expansions found among the top-level items,
-/// returning those “foo” stems.  
-/// Bails out if it sees unexpected gating (e.g. `#[cfg] x!{...}`) or multiple x! items at once.
 pub fn collect_existing_mod_macro_stems(
     parsed_file: &SourceFile
 ) -> Result<Vec<String>, SourceFileRegistrationError>
 {
+    trace!("Entering collect_existing_mod_macro_stems");
     let mut stems = vec![];
 
     // Iterate top-level items: these are `ast::Item` in ra_ap_syntax.
     for item in parsed_file.items() {
-        // We want to see if `item.syntax()` is a MacroCall or a Module.
+        trace!("Examining a top-level item: {:?}", item.syntax().text());
+
         if let Some(mac_item) = ast::MacroCall::cast(item.syntax().clone()) {
             // Check for any outer attributes
-            if mac_item.attrs().count() > 0 {
+            let attr_count = mac_item.attrs().count();
+            trace!("Found a MacroCall with {} attributes", attr_count);
+
+            if attr_count > 0 {
+                error!("Found an unhandled top-level macro with attributes => bail");
                 return Err(SourceFileRegistrationError::FoundAnUnhandlableTopLevelMacroCallWithAttributes);
             }
 
             // Make sure it's `x!{ ... }`
             if let Some(path) = mac_item.path() {
                 let path_text = path.syntax().text().to_string();
+                trace!("Macro path text: '{}'", path_text);
+
                 if path_text.trim() == "x" {
                     // Extract what's inside the macro
                     if let Some(tt) = mac_item.token_tree() {
                         let macro_inner = tt.syntax().text().to_string();
+                        debug!("macro_inner = '{}'", macro_inner);
+
                         let chunk = macro_inner.trim_matches([' ', '{', '}', ',']).to_string();
                         if chunk.contains(',') {
-                            return Err(
-                                SourceFileRegistrationError::MultipleItemsInXMacroUnsupported {
-                                    chunk
-                                }
-                            );
+                            error!("Detected multiple items in x! macro => bail. chunk='{}'", chunk);
+                            return Err(SourceFileRegistrationError::MultipleItemsInXMacroUnsupported { chunk });
                         }
+                        trace!("Pushing stem '{}'", chunk);
                         stems.push(chunk);
                     }
                 }
@@ -43,13 +48,19 @@ pub fn collect_existing_mod_macro_stems(
             if let Some(name_ident) = mod_item.name() {
                 let mod_name = name_ident.text().to_string();
                 if !mod_name.is_empty() && mod_name != "imports" {
+                    warn!("Found a raw mod '{}', which we don't handle => error out", mod_name);
                     return Err(SourceFileRegistrationError::FoundARawModNameWhichWeDontHandlePleaseRemoveOrUnifyWithXMacros {
                         mod_name
                     });
                 }
             }
+        } else {
+            trace!("Not a MacroCall nor a recognizable mod => ignoring");
         }
     }
+
+    debug!("Final stems collected: {:?}", stems);
+    trace!("Exiting collect_existing_mod_macro_stems");
     Ok(stems)
 }
 
@@ -69,7 +80,7 @@ mod test_collect_existing_mod_macro_stems {
     }
 
     /// 1) Empty file => returns empty stems, no errors
-    #[test]
+    #[traced_test]
     fn test_empty_file_no_macros() {
         let src = "";
         let file = parse_source(src);
@@ -79,7 +90,7 @@ mod test_collect_existing_mod_macro_stems {
     }
 
     /// 2) Single x! macro with one name => we get that stem in the result
-    #[test]
+    #[traced_test]
     fn test_single_macro() {
         let src = r#"
 x!{hello}
@@ -91,7 +102,7 @@ x!{hello}
     }
 
     /// 3) Single x! macro but it has an attribute => we expect an error
-    #[test]
+    #[traced_test]
     fn test_macro_with_attribute_is_error() {
         let src = r#"
 #[cfg(feature="foo")]
@@ -108,7 +119,7 @@ x!{something}
     }
 
     /// 4) Single x! macro with multiple items => error
-    #[test]
+    #[traced_test]
     fn test_macro_with_multiple_items_is_error() {
         let src = r#"
 x!{foo, bar}
@@ -125,7 +136,7 @@ x!{foo, bar}
 
     /// 5) Single macro but the path is not `x`, e.g. `y!{something}`, => we skip it
     ///    so stems is empty, no error
-    #[test]
+    #[traced_test]
     fn test_macro_with_different_path_skipped() {
         let src = r#"
 y!{not_x}
@@ -137,7 +148,7 @@ y!{not_x}
     }
 
     /// 6) If user wrote `pub mod foo;` => error
-    #[test]
+    #[traced_test]
     fn test_raw_mod_foo_is_error() {
         let src = r#"
 pub mod foo;
@@ -153,7 +164,7 @@ pub mod foo;
     }
 
     /// 7) If user wrote `mod ;` without a name, we consider that zero-len => no error.
-    #[test]
+    #[traced_test]
     fn test_module_no_name_ok() {
         let src = "mod ; // weird but let's see if it passes";
         let file = parse_source(src);
@@ -163,7 +174,7 @@ pub mod foo;
     }
 
     /// 8) Multiple macros => we gather them in the order they appear
-    #[test]
+    #[traced_test]
     fn test_multiple_macros_gather_all() {
         let src = r#"
 x!{alpha}
@@ -176,7 +187,7 @@ x!{gamma}
     }
 
     /// 9) Macros that aren't x! => we ignore them, but if there's also an x! we gather it.
-    #[test]
+    #[traced_test]
     fn test_mixed_macro_paths_only_x_collected() {
         let src = r#"
 foo!{bar}
@@ -189,7 +200,7 @@ zork!{something}
     }
 
     /// 10) We place doc comments or attributes that do NOT belong directly to macros => no effect
-    #[test]
+    #[traced_test]
     fn test_doc_comments_unrelated_attributes_are_ignored() {
         let src = r#"
 // Some doc comment
@@ -204,7 +215,7 @@ x!{stuff}
 
     /// 11) If there's an attribute on the macro call itself => error
     ///     (We covered a similar scenario above, but let's be explicit.)
-    #[test]
+    #[traced_test]
     fn test_attribute_on_macro_call_itself() {
         let src = r#"
 #[cfg(target_os="linux")]
@@ -220,7 +231,7 @@ x!{some_os_stuff}
 
     /// 12) If there's an x! macro, but the token_tree is empty => we gather an empty string
     ///     (this is unusual, but let's confirm it doesn't fail).
-    #[test]
+    #[traced_test]
     fn test_macro_call_with_empty_braces() {
         let src = r#"
 x!{}

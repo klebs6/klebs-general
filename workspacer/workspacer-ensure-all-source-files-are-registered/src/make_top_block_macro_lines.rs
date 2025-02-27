@@ -1,21 +1,20 @@
 // ---------------- [ File: src/make_top_block_macro_lines.rs ]
 crate::ix!();
 
-/// Creates lines for the top block. For example:
-///
-/// ```text
-/// // ---------------- [ File: src/lib.rs ]
-/// x!{crate_handle}
-/// x!{foo}
-/// x!{bar}
-/// ```
 pub fn make_top_block_macro_lines(stems: &[String]) -> String {
+    trace!("Entering make_top_block_macro_lines with stems={:?}", stems);
     let mut lines = vec![];
     lines.push("// ---------------- [ File: src/lib.rs ]".to_string());
+
     for st in stems {
+        debug!("Adding macro line: x!{{{}}}", st);
         lines.push(format!("x!{{{}}}", st));
     }
-    lines.join("\n")
+
+    let joined = lines.join("\n");
+    debug!("Resulting top block lines:\n{}", joined);
+    trace!("Exiting make_top_block_macro_lines");
+    joined
 }
 
 #[cfg(test)]
@@ -23,7 +22,7 @@ mod test_make_top_block_macro_lines {
     use super::*;
 
     /// 1) If stems is empty => we only get the file marker line
-    #[test]
+    #[traced_test]
     fn test_empty_stems() {
         let stems: Vec<String> = vec![];
         let result = make_top_block_macro_lines(&stems);
@@ -32,7 +31,7 @@ mod test_make_top_block_macro_lines {
     }
 
     /// 2) If there's a single stem => we expect two lines
-    #[test]
+    #[traced_test]
     fn test_single_stem() {
         let stems = vec!["my_stem".to_string()];
         let result = make_top_block_macro_lines(&stems);
@@ -45,7 +44,7 @@ mod test_make_top_block_macro_lines {
     }
 
     /// 3) If there are multiple stems => we build a line for each
-    #[test]
+    #[traced_test]
     fn test_multiple_stems() {
         let stems = vec!["one".to_string(), "two".to_string(), "three".to_string()];
         let result = make_top_block_macro_lines(&stems);
@@ -67,7 +66,7 @@ mod test_make_top_block_macro_lines {
     }
 
     /// 4) If stems contain something with special characters, we ensure it's inserted literally.
-    #[test]
+    #[traced_test]
     fn test_special_characters_in_stems() {
         let stems = vec!["foo_bar-baz".to_string(), "stuff123".to_string()];
         let result = make_top_block_macro_lines(&stems);
@@ -83,7 +82,7 @@ mod test_make_top_block_macro_lines {
     }
 
     /// 5) If stems contain an empty string, we produce `x!{}` on a line
-    #[test]
+    #[traced_test]
     fn test_empty_string_stem() {
         let stems = vec!["".to_string(), "normal".to_string()];
         let result = make_top_block_macro_lines(&stems);
@@ -99,7 +98,7 @@ mod test_make_top_block_macro_lines {
 
     /// 6) Verify that the function doesn’t add extra trailing newlines: 
     ///    It's a single string joined by "\n", no trailing newline beyond the last line.
-    #[test]
+    #[traced_test]
     fn test_no_trailing_newline() {
         let stems = vec!["alpha".to_string()];
         let result = make_top_block_macro_lines(&stems);
@@ -108,7 +107,7 @@ mod test_make_top_block_macro_lines {
     }
 
     /// 7) Large number of stems => we just produce that many lines (not a performance test, but just for sanity).
-    #[test]
+    #[traced_test]
     fn test_many_stems() {
         let stems: Vec<String> = (1..=5).map(|i| format!("item_{i}")).collect();
         let result = make_top_block_macro_lines(&stems);
