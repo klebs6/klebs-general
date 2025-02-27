@@ -1,31 +1,45 @@
 [dependencies.batch-mode-3p]
 path = "../batch-mode-3p"
+version = "0.1.0"
 [dependencies.batch-mode-process-response]
 path = "../batch-mode-process-response"
+version = "0.1.0"
 [dependencies.batch-mode-batch-client]
 path = "../batch-mode-batch-client"
+version = "0.1.0"
 [dependencies.batch-mode-batch-executor]
 path = "../batch-mode-batch-executor"
+version = "0.1.0"
 [dependencies.batch-mode-batch-index]
 path = "../batch-mode-batch-index"
+version = "0.1.0"
 [dependencies.batch-mode-batch-metadata]
 path = "../batch-mode-batch-metadata"
+version = "0.1.0"
 [dependencies.batch-mode-batch-reconciliation]
 path = "../batch-mode-batch-reconciliation"
+version = "0.1.0"
 [dependencies.batch-mode-batch-schema]
 path = "../batch-mode-batch-schema"
+version = "0.1.0"
 [dependencies.batch-mode-batch-triple]
 path = "../batch-mode-batch-triple"
+version = "0.1.0"
 [dependencies.batch-mode-batch-workspace]
 path = "../batch-mode-batch-workspace"
+version = "0.1.0"
 [dependencies.batch-mode-batch-workspace-interface]
 path = "../batch-mode-batch-workspace-interface"
+version = "0.1.0"
 [dependencies.batch-mode-json]
 path = "../batch-mode-json"
+version = "0.1.0"
 [dependencies.camel-case-token-with-comment]
 path = "../camel-case-token-with-comment"
+version = "0.1.0"
 [dependencies.save-load-traits]
 path = "../save-load-traits"
+version = "0.1.0"
 [dependencies]
 structopt = "0.3.26"
 [package]
