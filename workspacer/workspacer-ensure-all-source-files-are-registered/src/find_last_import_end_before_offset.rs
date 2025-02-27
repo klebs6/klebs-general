@@ -5,23 +5,31 @@ pub fn find_last_import_end_before_offset(
     parsed_file: &SourceFile,
     earliest_offset: usize,
 ) -> Option<usize> {
-    trace!("Entering find_last_import_end_before_offset with earliest_offset={}", earliest_offset);
+    trace!(
+        "Entering find_last_import_end_before_offset with earliest_offset={}",
+        earliest_offset
+    );
 
+    let file_text = parsed_file.syntax().text().to_string();
     let mut answer = None;
 
     for item in parsed_file.items() {
         if is_imports_line(&item) {
             let rng = item.syntax().text_range();
             let start: usize = rng.start().into();
-            let end:   usize = rng.end().into();
+            let end: usize   = rng.end().into();
             trace!("Found an imports line from {}..{}", start, end);
 
-            // If it ends before earliest_offset, or overlaps it from below
-            if end <= earliest_offset || (start < earliest_offset) {
-                trace!("Line meets condition => consider it for answer");
-                if answer.map_or(true, |prev| end > prev) {
-                    debug!("Updating answer from {:?} to {}", answer, end);
-                    answer = Some(end);
+            // Adjust 'end' to the actual line boundary (in case more code sits on the same line).
+            let line_end = find_line_end(&file_text, end);
+
+            // If line_end is fully before earliest_offset OR it starts before earliest_offset
+            // (thus "partial overlap"), we consider it. 
+            if line_end <= earliest_offset || start < earliest_offset {
+                trace!("Line meets condition => consider it for answer (line_end={})", line_end);
+                if answer.map_or(true, |prev| line_end > prev) {
+                    debug!("Updating answer from {:?} to {}", answer, line_end);
+                    answer = Some(line_end);
                 }
             }
         } else {
@@ -32,6 +40,17 @@ pub fn find_last_import_end_before_offset(
     debug!("Result = {:?}", answer);
     trace!("Exiting find_last_import_end_before_offset");
     answer
+}
+
+fn find_line_end(text: &str, offset: usize) -> usize {
+    let mut pos = offset;
+    while pos < text.len() {
+        if text.as_bytes()[pos] == b'\n' {
+            break;
+        }
+        pos += 1;
+    }
+    pos
 }
 
 #[cfg(test)]
