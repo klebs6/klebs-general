@@ -3,10 +3,9 @@ name        = "hydro2-3p"
 version     = "0.1.0"
 edition     = "2024"
 description = "This crate encapsulates the third party (3p) dependencies for the hydro2 system"
-license     = "OGPv1"
 repository  = "https://github.com/klebs6/klebs-general"
 readme      = "README.md"
-license-file = "LICENSE"
+license-file = "OGPv1"
 
 [dependencies]
 ##json-repair             = { version = "*", path = "/Users/kleb/bethesda/work/repo/klebs-general/json-repair" }
