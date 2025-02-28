@@ -50,3 +50,4 @@ authors     = ["klebs tpk3.mx@gmail.com"]
 license     = "OGPv1"
 repository  = "https://github.com/klebs6/klebs-general"
 readme      = "README.md"
+license-file = "LICENSE"

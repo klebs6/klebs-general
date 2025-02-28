@@ -6,6 +6,7 @@ description = "This crate encapsulates the third party (3p) dependencies for the
 license     = "OGPv1"
 repository  = "https://github.com/klebs6/klebs-general"
 readme      = "README.md"
+license-file = "LICENSE"
 
 [dependencies]
 ##json-repair             = { version = "*", path = "/Users/kleb/bethesda/work/repo/klebs-general/json-repair" }
