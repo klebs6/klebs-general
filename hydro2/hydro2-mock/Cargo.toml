@@ -5,9 +5,6 @@ named-item-derive = "0.2.0"
 [dependencies.hydro2-3p]
 path = "../hydro2-3p"
 version = "0.1.0"
-[dependencies.hydro2-async-scheduler]
-path = "../hydro2-async-scheduler"
-version = "0.1.0"
 [dependencies.hydro2-basic-operators]
 path = "../hydro2-basic-operators"
 version = "0.1.0"
