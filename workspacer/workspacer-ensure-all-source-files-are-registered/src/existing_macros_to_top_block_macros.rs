@@ -1,14 +1,25 @@
 crate::ix!();
 
-/// Gather old macros as `TopBlockMacro`.
 pub fn existing_macros_to_top_block_macros(old_macros: &[ExistingXMacro]) -> Vec<TopBlockMacro> {
     let mut out = vec![];
     for em in old_macros {
         if let Some(stem) = extract_stem(em.text()) {
+            // Transform empty/whitespace-only comments into None
+            let leading = match em.leading_comments() {
+                Some(s) => {
+                    let trimmed = s.trim();
+                    if trimmed.is_empty() {
+                        None
+                    } else {
+                        Some(s.clone())
+                    }
+                }
+                None => None,
+            };
 
             let macr = TopBlockMacroBuilder::default()
                 .stem(stem)
-                .leading_comments(em.leading_comments().to_string())
+                .leading_comments(leading)
                 .build()
                 .unwrap();
 
@@ -33,7 +44,7 @@ mod test_existing_macros_to_top_block_macros {
         ExistingXMacroBuilder::default()
             .text(text)
             .range(TextRange::new(TextSize::from(0), TextSize::from(text.len() as u32)))
-            .leading_comments(comments)
+            .leading_comments(Some(comments.to_string()))
             .build()
             .unwrap()
     }
@@ -57,7 +68,7 @@ mod test_existing_macros_to_top_block_macros {
 
         assert_eq!(result.len(), 1);
         assert_eq!(result[0].stem(), "alpha", "Expected to parse 'alpha'");
-        assert!(result[0].leading_comments().is_empty(), "No leading comments given");
+        assert!(result[0].leading_comments().is_none(), "No leading comments given");
     }
 
     /// 3) Leading comments => carried over
@@ -70,7 +81,7 @@ mod test_existing_macros_to_top_block_macros {
 
         assert_eq!(result.len(), 1);
         assert_eq!(result[0].stem(), "beta");
-        assert!(result[0].leading_comments().contains("doc line"), "Should preserve leading comment");
+        assert!(result[0].leading_comments().as_ref().unwrap().contains("doc line"), "Should preserve leading comment");
     }
 
     /// 4) If we cannot parse the stem => skip that macro

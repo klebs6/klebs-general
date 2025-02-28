@@ -27,7 +27,6 @@ pub fn parse_new_macros_with_comments(new_top_block: &str) -> Vec<TopBlockMacro>
     results
 }
 
-
 #[cfg(test)]
 mod test_parse_new_macros_with_comments {
     use super::*;
@@ -57,7 +56,7 @@ mod test_parse_new_macros_with_comments {
         debug!("result={:?}", result);
         assert_eq!(result.len(), 1);
         assert_eq!(result[0].stem(), "alpha");
-        assert!(result[0].leading_comments().is_empty());
+        assert!(result[0].leading_comments().is_none());
     }
 
     /// 3) Macro with leading comments
@@ -73,7 +72,7 @@ x!{beta}
 
         assert_eq!(result.len(), 1);
         assert_eq!(result[0].stem(), "beta");
-        let c = result[0].leading_comments();
+        let c = result[0].leading_comments().as_ref().unwrap();
         assert!(c.contains("Some doc"), "Should preserve doc line");
     }
 
@@ -91,9 +90,9 @@ x!{bar}
 
         assert_eq!(result.len(), 2);
         assert_eq!(result[0].stem(), "foo");
-        assert!(result[0].leading_comments().is_empty());
+        assert!(result[0].leading_comments().is_none());
         assert_eq!(result[1].stem(), "bar");
-        assert!(result[1].leading_comments().contains("doc line"), "Should attach doc above bar");
+        assert!(result[1].leading_comments().as_ref().unwrap().contains("doc line"), "Should attach doc above bar");
     }
 
     /// 5) Macros with invalid format => skip them

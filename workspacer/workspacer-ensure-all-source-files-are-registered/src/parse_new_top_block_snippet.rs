@@ -19,10 +19,12 @@ pub fn parse_new_top_block_snippet(new_top_block: &str) -> (Vec<TopBlockMacro>, 
     //     Because we want those comment lines to stay "attached" to the macro, not counted
     //     as separate snippet lines.
     for mac in &new_macros {
-        for comment_line in mac.leading_comments().lines() {
-            // We remove exact matches to that line, ignoring only the trailing newline from the macro text itself.
-            let comment_line = comment_line; // direct, no trimming by default
-            candidate_lines.retain(|cl| cl != comment_line);
+        if let Some(comments) = mac.leading_comments() {
+            for comment_line in comments.lines() {
+                // We remove exact matches to that line, ignoring only the trailing newline from the macro text itself.
+                let comment_line = comment_line; // direct, no trimming by default
+                candidate_lines.retain(|cl| cl != comment_line);
+            }
         }
     }
 
@@ -75,9 +77,9 @@ x!{beta}
 
         assert_eq!(macros.len(), 2);
         assert_eq!(macros[0].stem(), "alpha");
-        assert!(macros[0].leading_comments().contains("comment"));
+        assert!(macros[0].leading_comments().as_ref().unwrap().contains("comment"));
         assert_eq!(macros[1].stem(), "beta");
-        assert!(macros[1].leading_comments().is_empty());
+        assert!(macros[1].leading_comments().is_none());
 
         assert_eq!(lines.len(), 2);
         assert_eq!(lines[0], "another line");

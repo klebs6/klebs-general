@@ -2,214 +2,67 @@
 crate::ix!();
 
 pub fn rebuild_librs_with_new_top_block(
-    parsed_file: &SourceFile,
-    old_text: &str,
+    parsed_file:   &SourceFile,
+    old_text:      &str,
     new_top_block: &str,
 ) -> Result<String, SourceFileRegistrationError> 
 {
     trace!("Entering rebuild_librs_with_new_top_block");
     debug!("old_text length={}, new_top_block length={}", old_text.len(), new_top_block.len());
 
-    // (1) Gather old macros so we can splice them out of the file
-    let old_existing_macros = collect_existing_x_macros(parsed_file);
-    debug!("Found {} old macros in the file", old_existing_macros.len());
+    // (1) Gather old macros
+    let old_macros = collect_existing_x_macros(parsed_file);
+    debug!("Found {} old macros in the file", old_macros.len());
 
-    // (2) Convert them into TopBlockMacro
-    let old_top_macros = gather_old_top_block_macros(parsed_file);
+    let old_top_macros = existing_macros_to_top_block_macros(&old_macros);
     debug!("Converted old macros => {} TopBlockMacro entries", old_top_macros.len());
 
-    // (3) Parse user snippet => yields new macros + snippet lines
-    let (snippet_new_macros, snippet_lines) = parse_new_top_block_snippet(new_top_block);
+    // (2) Parse new_top_block => new_macros + non-macro lines
+    let new_macros = parse_new_macros_with_comments(new_top_block);
+    let non_macro_lines = extract_non_macro_lines(new_top_block);
     debug!(
-        "From snippet => {} new macros, {} snippet lines",
-        snippet_new_macros.len(),
-        snippet_lines.len()
+        "Found {} new macros + {} non-macro lines",
+        new_macros.len(),
+        non_macro_lines.len()
     );
 
-    // (4) Combine old + new macros, deduplicate by stem
-    let mut combined = Vec::new();
-    combined.extend(old_top_macros.clone());
-    combined.extend(snippet_new_macros);
-    combined.sort_by(|a,b| a.stem().cmp(b.stem()));
-    combined.dedup_by_key(|m| m.stem().to_string());
-
-    // (5) Check if file has imports => that changes snippet ordering
-    let has_imports_line = file_has_imports_line(parsed_file);
+    // (3) Check for imports => decide snippet order
+    let has_imports_line = parsed_file.items().any(|it| is_imports_line(&it));
     debug!("has_imports_line={}", has_imports_line);
 
-    // Partition combined macros into old vs. new, by checking stems
-    let old_stems: std::collections::HashSet<_> =
-        old_top_macros.iter().map(|m| m.stem().to_owned()).collect();
-    let mut just_old = Vec::new();
-    let mut just_new = Vec::new();
-    for m in combined {
-        if old_stems.contains(m.stem()) {
-            just_old.push(m);
-        } else {
-            just_new.push(m);
-        }
-    }
+    // (3a) **Remove duplicates** so if the old file has x!{stuff_a}, we don’t add it again.
+    let new_macros_filtered = filter_new_macros_for_duplicates(&old_top_macros, &new_macros);
 
-    // (6) Assemble final snippet lines
-    let final_snippet = if has_imports_line {
-        // Old macros first, then snippet lines, then new macros
-        assemble_snippet_order(&just_old, &snippet_lines, &just_new)
-    } else {
-        // Snippet lines first, then old macros, then new macros
-        let snippet_part = assemble_snippet_order(&[], &snippet_lines, &[]);
-        let macros_part  = assemble_snippet_order(&just_old, &[], &just_new);
-
-        if snippet_part.is_empty() {
-            macros_part
-        } else {
-            format!("{}\n{}", snippet_part, macros_part)
-        }
-    };
-
-    // (7) Figure out insertion offset normally:
-    let mut insertion_offset = determine_top_block_insertion_offset(parsed_file, old_text);
-    debug!("determine_top_block_insertion_offset => {}", insertion_offset);
-
-    // If that offset is at EOF (meaning no real items found), we check if there's 
-    // leading doc lines at top that we want to preserve before inserting. This 
-    // is specifically for passing the `test_macro_among_comments` and 
-    // `test_move_existing_macros_to_top`. We want to place the snippet/macros 
-    // after any top-of-file doc comments, but NOT at EOF in these tests.
-    if insertion_offset == old_text.len() {
-        // We'll do a quick scan from start, skipping doc comments or blank lines, 
-        // stopping at the first non-comment line that isn't recognized as part 
-        // of an x! macro. Then we use that offset if it’s bigger than 0.
-        let offset_after_doc = skip_leading_doc_comments(old_text);
-        if offset_after_doc > 0 && offset_after_doc < old_text.len() {
-            debug!("Adjusting insertion_offset from {} to offset_after_doc={}", insertion_offset, offset_after_doc);
-            insertion_offset = offset_after_doc;
-        }
-    }
-
-    // (8) splice out old macros, insert final_snippet at insertion_offset
-    let final_text = splice_no_newline_skip(
-        old_text,
-        &old_existing_macros,
-        insertion_offset,
-        &final_snippet,
+    // (4) Build final snippet
+    let final_top_block = assemble_final_top_block_snippet(
+        has_imports_line,
+        &old_top_macros,
+        &new_macros_filtered,
+        &non_macro_lines,
     );
-
-    debug!("rebuild_librs_with_new_top_block => final_text length={}", final_text.len());
-    trace!("Exiting rebuild_librs_with_new_top_block");
-    Ok(final_text)
-}
-
-/// Helper: scan from the start of `old_text`, skipping blank lines or `//`-style lines.
-/// Return the offset at which we stop. 
-fn skip_leading_doc_comments(old_text: &str) -> usize {
-    let mut offset = 0;
-    while offset < old_text.len() {
-        let line_start = offset;
-        // find next newline or EOF
-        let next_nl = match old_text[offset..].find('\n') {
-            Some(rel) => offset + rel,
-            None => old_text.len(),
-        };
-        let line = &old_text[line_start..next_nl];
-        let trimmed = line.trim_start();
-
-        // if line is blank or starts with `//`, we skip
-        if trimmed.is_empty() || trimmed.starts_with("//") {
-            // skip this line, plus its newline if present
-            offset = if next_nl < old_text.len() { next_nl + 1 } else { next_nl };
-        } else {
-            // found a non-comment line => stop
-            break;
-        }
-    }
-    offset
-}
-
-/// Our custom splice function that does NOT skip the original newline at insertion_offset.
-fn splice_no_newline_skip(
-    old_text: &str,
-    old_macros: &[ExistingXMacro],
-    insertion_offset: usize,
-    final_top_block: &str,
-) -> String {
-    trace!(
-        "Entering splice_no_newline_skip (insertion_offset={}, block_len={})",
-        insertion_offset,
+    debug!(
+        "Constructed final top block =>\n---\n{}\n--- (length={})",
+        final_top_block,
         final_top_block.len()
     );
 
-    use std::cmp::min;
+    // (5) Find insertion offset
+    let earliest_offset = find_earliest_non_macro_item_offset(parsed_file, old_text);
+    let maybe_import_end = find_last_import_end_before_offset(parsed_file, earliest_offset);
+    let initial_offset   = maybe_import_end.unwrap_or(earliest_offset);
+    let insertion_offset = snap_offset_to_newline(initial_offset, earliest_offset, old_text);
+    debug!("insertion_offset={}", insertion_offset);
 
-    let mut out = String::new();
-    let mut pos = 0;
-    let mut inserted_block = false;
-    let mut macros_iter = old_macros.iter().peekable();
-
-    while pos < old_text.len() {
-        // Insert final_top_block if not yet done
-        if !inserted_block && insertion_offset >= pos {
-            let next_macro_start = macros_iter
-                .peek()
-                .map(|em| em.range().start().into())
-                .unwrap_or(old_text.len());
-
-            if insertion_offset <= next_macro_start {
-                // copy up to insertion_offset
-                if insertion_offset > pos {
-                    out.push_str(&old_text[pos..insertion_offset]);
-                    pos = insertion_offset;
-                }
-                // insert final_top_block
-                if !final_top_block.is_empty() {
-                    if !out.ends_with('\n') && !out.is_empty() {
-                        out.push('\n');
-                    }
-                    out.push_str(final_top_block);
-                    if !out.ends_with('\n') {
-                        out.push('\n');
-                    }
-                }
-                inserted_block = true;
-            }
-        }
-
-        // Now skip or copy around macros
-        if let Some(m) = macros_iter.peek() {
-            let m_start: usize = m.range().start().into();
-            let m_end:   usize = m.range().end().into();
-
-            if pos < m_start {
-                let slice_end = min(m_start, old_text.len());
-                out.push_str(&old_text[pos..slice_end]);
-                pos = slice_end;
-            } else if pos < m_end {
-                // skip the macro region
-                pos = m_end;
-                macros_iter.next();
-            } else {
-                macros_iter.next();
-            }
-        } else {
-            // no more macros => copy remainder
-            out.push_str(&old_text[pos..]);
-            pos = old_text.len();
-        }
-    }
-
-    // If we never inserted the block, append at end
-    if !inserted_block && !final_top_block.is_empty() {
-        if !out.ends_with('\n') {
-            out.push('\n');
-        }
-        out.push_str(final_top_block);
-        if !out.ends_with('\n') {
-            out.push('\n');
-        }
-    }
-
-    debug!("splice_no_newline_skip done, final length={}", out.len());
-    trace!("Exiting splice_no_newline_skip");
-    out
+    // (6) Splice out old macros (already found) + put final_top_block in
+    let final_text = splice_top_block_into_source(
+        old_text,
+        &old_macros,
+        insertion_offset,
+        &final_top_block,
+    );
+    debug!("Final text length = {}", final_text.len());
+    trace!("Exiting rebuild_librs_with_new_top_block");
+    Ok(final_text)
 }
 
 #[cfg(test)]

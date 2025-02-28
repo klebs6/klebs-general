@@ -1,6 +1,8 @@
 // ---------------- [ File: src/create_top_block_text.rs ]
 crate::ix!();
 
+/// Builds a string with one line per TopBlockMacro, preserving each macro’s leading comments
+/// and ensuring each macro ends up on its own line (with no trailing newline).
 pub fn create_top_block_text(tops: &[TopBlockMacro]) -> String {
     trace!("Entering create_top_block_text");
     debug!("tops.len()={}", tops.len());
@@ -10,12 +12,15 @@ pub fn create_top_block_text(tops: &[TopBlockMacro]) -> String {
     for top in tops {
         // (1) Insert the macro’s leading comments, but only insert a
         //     separating newline if the buffer is *non-empty*.
-        if !top.leading_comments().is_empty() {
-            // => *only* if buffer is already non-empty do we push a newline:
+        if let Some(comments) = top.leading_comments() {
             if !buffer.is_empty() && !buffer.ends_with('\n') {
                 buffer.push('\n');
             }
-            buffer.push_str(top.leading_comments());
+            buffer.push_str(comments);
+            // Ensure there's exactly one newline after the comment block
+            if !buffer.ends_with('\n') {
+                buffer.push('\n');
+            }
         }
 
         // (2) Then add the macro line, e.g. `x!{stem}`

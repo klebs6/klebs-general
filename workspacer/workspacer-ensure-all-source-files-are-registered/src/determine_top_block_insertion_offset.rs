@@ -137,7 +137,7 @@ mod test_existing_macros_to_top_block_macros {
         ExistingXMacroBuilder::default()
             .text(text)
             .range(TextRange::new(TextSize::from(0), TextSize::from(text.len() as u32)))
-            .leading_comments(comments)
+            .leading_comments(Some(comments.to_string()))
             .build()
             .unwrap()
     }
@@ -161,7 +161,7 @@ mod test_existing_macros_to_top_block_macros {
 
         assert_eq!(result.len(), 1);
         assert_eq!(result[0].stem(), "alpha");
-        assert!(result[0].leading_comments().is_empty());
+        assert!(result[0].leading_comments().is_none());
     }
 
     /// 3) Leading comments from old macro => carried over
@@ -174,7 +174,7 @@ mod test_existing_macros_to_top_block_macros {
 
         assert_eq!(result.len(), 1);
         assert_eq!(result[0].stem(), "beta");
-        assert!(result[0].leading_comments().contains("doc line"), "Should keep leading comment");
+        assert!(result[0].leading_comments().as_ref().unwrap().contains("doc line"), "Should keep leading comment");
     }
 
     /// 4) If we cannot parse the stem => skip it

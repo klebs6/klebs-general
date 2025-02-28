@@ -1,110 +1,41 @@
 crate::ix!();
 
+/// Builds the final top-block snippet by combining:
+///   - old_top_macros (possibly with leading comments),
+///   - user-provided non-macro lines (like snippet lines),
+///   - new_top_macros (possibly with leading comments),
+/// in either "imports line" order or "no imports" order.
+/// 
+/// This is a pure function: it does *not* parse or modify old_text, 
+/// it simply assembles the final snippet into a `String`.
 pub fn assemble_final_top_block_snippet(
     has_imports_line: bool,
     old_top_macros: &[TopBlockMacro],
     new_top_macros: &[TopBlockMacro],
-    new_non_macro_lines: &[String],
+    non_macro_lines: &[String],
 ) -> String {
     trace!("Entering assemble_final_top_block_snippet");
     debug!("has_imports_line={}", has_imports_line);
+    debug!(
+        "old_top_macros.len()={}, new_top_macros.len()={}, non_macro_lines.len()={}",
+        old_top_macros.len(),
+        new_top_macros.len(),
+        non_macro_lines.len()
+    );
 
-    let mut buffer = String::new();
-
-    if has_imports_line {
-        // test_place_macros_after_imports scenario => old macros first, snippet lines, then new macros
+    // We'll produce the snippet in a buffer; then remove trailing newlines.
+    let mut buffer = if has_imports_line {
         trace!("has_imports_line=true => old macros first, snippet lines, then new macros");
-
-        // (1) Old macros
-        for om in old_top_macros {
-            if !buffer.is_empty() && !buffer.ends_with('\n') {
-                buffer.push('\n');
-            }
-            if !om.leading_comments().is_empty() {
-                buffer.push_str(om.leading_comments());
-                if !buffer.ends_with('\n') {
-                    buffer.push('\n');
-                }
-            }
-            buffer.push_str(&format!("x!{{{}}}", om.stem()));
-        }
-
-        // (2) Non-macro lines from the user snippet
-        for (i, line) in new_non_macro_lines.iter().enumerate() {
-            if !buffer.is_empty() && !buffer.ends_with('\n') {
-                buffer.push('\n');
-            }
-            buffer.push_str(line);
-            if i < new_non_macro_lines.len() - 1 {
-                buffer.push('\n');
-            }
-        }
-
-        // (3) New macros
-        for nm in new_top_macros {
-            if !buffer.is_empty() && !buffer.ends_with('\n') {
-                buffer.push('\n');
-            }
-            if !nm.leading_comments().is_empty() {
-                buffer.push_str(nm.leading_comments());
-                if !buffer.ends_with('\n') {
-                    buffer.push('\n');
-                }
-            }
-            buffer.push_str(&format!("x!{{{}}}", nm.stem()));
-        }
+        build_top_block_for_imports_line(old_top_macros, non_macro_lines, new_top_macros)
     } else {
-        // test_move_existing_macros_to_top & test_macro_among_comments => snippet lines first, then old macros, then new macros
-        trace!("has_imports_line=false => snippet lines first, then old macros, then new macros");
+        trace!("has_imports_line=false => snippet lines first, old macros, then new macros");
+        build_top_block_for_no_imports_line(old_top_macros, non_macro_lines, new_top_macros)
+    };
 
-        // (1) Non-macro lines from the user snippet
-        for (i, line) in new_non_macro_lines.iter().enumerate() {
-            if !buffer.is_empty() && !buffer.ends_with('\n') {
-                buffer.push('\n');
-            }
-            buffer.push_str(line);
-            if i < new_non_macro_lines.len() - 1 {
-                buffer.push('\n');
-            }
-        }
-
-        // (2) Old macros
-        for om in old_top_macros {
-            if !buffer.is_empty() && !buffer.ends_with('\n') {
-                buffer.push('\n');
-            }
-            if !om.leading_comments().is_empty() {
-                buffer.push_str(om.leading_comments());
-                if !buffer.ends_with('\n') {
-                    buffer.push('\n');
-                }
-            }
-            buffer.push_str(&format!("x!{{{}}}", om.stem()));
-        }
-
-        // (3) New macros
-        for nm in new_top_macros {
-            if !buffer.is_empty() && !buffer.ends_with('\n') {
-                buffer.push('\n');
-            }
-            if !nm.leading_comments().is_empty() {
-                buffer.push_str(nm.leading_comments());
-                if !buffer.ends_with('\n') {
-                    buffer.push('\n');
-                }
-            }
-            buffer.push_str(&format!("x!{{{}}}", nm.stem()));
-        }
-    }
-
-    // Remove trailing newlines
-    while buffer.ends_with('\n') {
-        buffer.pop();
-    }
+    remove_trailing_newlines(&mut buffer);
 
     debug!(
-        "Final top block snippet =>\n---\n{}\n--- (length={})",
-        buffer,
+        "assemble_final_top_block_snippet => final snippet length={}",
         buffer.len()
     );
     trace!("Exiting assemble_final_top_block_snippet");

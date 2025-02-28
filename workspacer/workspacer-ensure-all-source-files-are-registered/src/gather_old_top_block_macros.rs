@@ -65,10 +65,9 @@ fn main() {}
 
         assert_eq!(result.len(), 1, "Should find exactly one macro");
         assert_eq!(result[0].stem(), "alpha", "Expected macro stem to be 'alpha'");
-        assert!(result[0].leading_comments().is_empty(), "Expected no leading comments");
+        assert!(result[0].leading_comments().is_none(), "Expected no leading comments");
     }
 
-    /// 4) Multiple x! macros, some with leading comments
     #[traced_test]
     fn test_multiple_macros_with_leading_comments() {
         trace!("Starting test_multiple_macros_with_leading_comments for gather_old_top_block_macros");
@@ -91,18 +90,34 @@ x!{gamma}
         // alpha:
         assert_eq!(result[0].stem(), "alpha");
         // leading comment might be: "// Hello alpha\n"
-        assert!(result[0].leading_comments().contains("Hello alpha"), "Should contain alpha doc line");
+        let alpha_comments = result[0].leading_comments().as_ref()
+            .expect("Should have leading comments for alpha");
+        assert!(
+            alpha_comments.contains("Hello alpha"),
+            "Should contain alpha doc line"
+        );
 
-        // beta:
+        // beta: no leading comment => `leading_comments()` should be `None`.
         assert_eq!(result[1].stem(), "beta");
-        assert!(result[1].leading_comments().is_empty(), "beta has no leading comment");
+        assert!(
+            result[1].leading_comments().is_none(),
+            "beta should have no leading comment"
+        );
 
         // gamma:
         assert_eq!(result[2].stem(), "gamma");
-        let gamma_comments = result[2].leading_comments();
-        assert!(gamma_comments.contains("a doc for gamma"), "Expected first doc line");
-        assert!(gamma_comments.contains("second doc line"), "Expected second doc line");
+        let gamma_comments = result[2].leading_comments().as_ref()
+            .expect("Should have leading comments for gamma");
+        assert!(
+            gamma_comments.contains("a doc for gamma"),
+            "Expected first doc line"
+        );
+        assert!(
+            gamma_comments.contains("second doc line"),
+            "Expected second doc line"
+        );
     }
+
 
     /// 5) Macros that have whitespace or blank lines before them
     ///    ensures we stop collecting if there's a blank line
@@ -123,7 +138,7 @@ x!{delta}
         // => leading comments should be empty.
         assert_eq!(result.len(), 1);
         assert_eq!(result[0].stem(), "delta");
-        assert!(result[0].leading_comments().is_empty(), "Blank line => no attached comments");
+        assert!(result[0].leading_comments().is_none(), "Blank line => no attached comments");
     }
 
     /// 6) Comments that appear after the macro => not recognized as leading
@@ -140,7 +155,7 @@ x!{zeta}
 
         assert_eq!(result.len(), 1);
         assert_eq!(result[0].stem(), "zeta");
-        assert!(result[0].leading_comments().is_empty(), "Comments after macro do not count as leading");
+        assert!(result[0].leading_comments().is_none(), "Comments after macro do not count as leading");
     }
 
     /// 7) If a macro has multiple lines, or weird spacing, we can still parse it.
