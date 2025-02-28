@@ -4,39 +4,41 @@ pub fn parse_new_top_block_snippet(new_top_block: &str) -> (Vec<TopBlockMacro>, 
     trace!("Entering parse_new_top_block_snippet");
     debug!("new_top_block length={}", new_top_block.len());
 
-    // (1) Gather macros using parse_new_macros_with_comments,
-    // which *only* attempts normal RA-based gather_leading_comments,
-    // and does NOT forcibly fold lines from `// top block` if there's a blank line.
+    // (1) Gather macros using RA-based parsing so we pick up leading comments:
     let new_macros = parse_new_macros_with_comments(new_top_block);
     debug!("Found {} new macros in new_top_block", new_macros.len());
 
-    // (2) Collect lines that don't contain `x!{...}`
-    let mut all_non_macro_lines = extract_non_macro_lines(new_top_block);
+    // (2) Collect lines that do NOT contain `x!{...}` (so, likely user snippet lines).
+    let mut candidate_lines = extract_non_macro_lines(new_top_block);
     debug!(
         "Initially found {} non-macro lines via extract_non_macro_lines",
-        all_non_macro_lines.len()
+        candidate_lines.len()
     );
 
-    // (3) Optionally remove lines that truly appear as leading-comments for macros,
-    // but typically in your tests you want them separate. 
-    // If you do want to remove them, you can do so by scanning each macro’s leading_comments.
+    // (3) Remove from `candidate_lines` any lines that appear in a macro’s leading_comments.
+    //     Because we want those comment lines to stay "attached" to the macro, not counted
+    //     as separate snippet lines.
+    for mac in &new_macros {
+        for comment_line in mac.leading_comments().lines() {
+            // We remove exact matches to that line, ignoring only the trailing newline from the macro text itself.
+            let comment_line = comment_line; // direct, no trimming by default
+            candidate_lines.retain(|cl| cl != comment_line);
+        }
+    }
 
-    // In many tests, you actually want to keep them. So let's skip removing them entirely.
-    // => That means snippet lines remain in new_non_macro_lines.
-
-    // (4) Filter out empty lines if you want (optional):
-    let filtered_lines: Vec<String> = all_non_macro_lines
+    // (4) Filter out any totally empty lines after that.
+    let snippet_lines: Vec<String> = candidate_lines
         .into_iter()
         .filter(|ln| !ln.trim().is_empty())
         .collect();
 
     debug!(
-        "After final filtering, we have {} snippet lines",
-        filtered_lines.len()
+        "After removing macro-leading lines and filtering empties, we have {} snippet lines",
+        snippet_lines.len()
     );
-
     trace!("Exiting parse_new_top_block_snippet");
-    (new_macros, filtered_lines)
+
+    (new_macros, snippet_lines)
 }
 
 #[cfg(test)]

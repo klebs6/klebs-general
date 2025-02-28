@@ -1,7 +1,13 @@
 [dependencies.hydro2-3p]
-path = "../hydro2-3p"
+path    = "../hydro2-3p"
 version = "0.1.0"
+
 [package]
-edition = "2024"
-name = "hydro2-network-performance"
-version = "0.1.0"
+edition     = "2024"
+name        = "hydro2-network-performance"
+version     = "0.1.0"
+authors     = ["klebs tpk3.mx@gmail.com"]
+license     = "MIT"
+repository  = "https://github.com/klebs6/klebs-general"
+description = "Performance tracking for network execution in the hydro2 ecosystem."
+readme      = "README.md"

@@ -1,0 +1,11 @@
+[package]
+name        = "ogp-license-text"
+version     = "0.1.0"
+edition     = "2024"
+description = "contains the LICENSE_TEXT for the OGP (Open Generative Protection) License"
+authors     = [ "klebs tpk3.mx@gmail.com" ]
+license     = "MIT"
+keywords    = ["license", "open", "source", "protective", "legal"]
+repository  = "https://github.com/klebs6/klebs-general"
+
+[dependencies]

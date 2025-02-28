@@ -1,13 +1,20 @@
 [dependencies]
-async-trait = "0.1.86"
-named-item = "0.6.0"
+async-trait       = "0.1.86"
+named-item        = "0.6.0"
 named-item-derive = "0.2.0"
-paste = "1.0.15"
-unsafe-erased = "0.1.0"
+paste             = "1.0.15"
+unsafe-erased     = "0.1.0"
+
 [dependencies.hydro2-3p]
-path = "../hydro2-3p"
+path    = "../hydro2-3p"
 version = "0.1.0"
+
 [package]
-edition = "2024"
-name = "hydro2-operator"
-version = "0.1.0"
+edition    = "2024"
+name       = "hydro2-operator"
+version    = "0.1.0"
+authors    = ["klebs tpk3.mx@gmail.com"]
+license    = "MIT"
+repository = "https://github.com/klebs6/klebs-general"
+readme     = "README.md"
+description = "Core interfaces, traits, and error handling for creating and running Hydro2 operators, including multi-port type conversion utilities."
