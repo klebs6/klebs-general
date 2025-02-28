@@ -1,37 +1,42 @@
 [dependencies]
-derive_builder = "0.20.2"
-serde = { version = "1.0.217", features = [ "derive" ] }
-serde_derive = "1.0.217"
-serde_json = "1.0.138"
-traced-test = "1.0.2"
-tracing = "0.1.41"
-tracing-setup = "1.0.2"
-tracing-subscriber = { version = "0.3.19", features = [ "env-filter", "json" ] }
+derive_builder     = "0.20.2"
+serde              = { version = "1.0.217", features = [ "derive" ] }
+serde_derive       = "1.0.217"
+serde_json         = "1.0.138"
+traced-test        = "1.0.2"
+tracing            = "0.1.41"
+tracing-setup      = "1.0.2"
+tracing-subscriber = { version = "0.3.19", features  = [ "env-filter", "json" ] }
+
 [dependencies.hydro2-3p]
-path = "../hydro2-3p"
+path    = "../hydro2-3p"
 version = "0.1.0"
+
 [dependencies.hydro2-basic-operators]
-path = "../hydro2-basic-operators"
+path    = "../hydro2-basic-operators"
 version = "0.1.0"
+
 [dependencies.hydro2-network]
-path = "../hydro2-network"
+path    = "../hydro2-network"
 version = "0.1.0"
+
 [dependencies.hydro2-network-performance]
-path = "../hydro2-network-performance"
+path    = "../hydro2-network-performance"
 version = "0.1.0"
+
 [dependencies.hydro2-operator]
-path = "../hydro2-operator"
+path    = "../hydro2-operator"
 version = "0.1.0"
 
 [dev-dependencies.hydro2-mock]
-path = "../hydro2-mock"
+path    = "../hydro2-mock"
 version = "0.1.0"
 
 [package]
 edition     = "2024"
 name        = "hydro2-async-scheduler"
 version     = "0.1.0"
-license     = "MIT"
+license     = "OGP"
 repository  = "https://github.com/klebs6/klebs-general"
 description = "An asynchronous DAG-based scheduling framework for parallel operator execution."
 readme      = "README.md"

@@ -1,18 +1,18 @@
 [dependencies]
-async-trait = "0.1.86"
-derive_builder = "0.20.2"
-disable_macro = "0.3.6"
-erased = "0.1.2"
-error-tree = "0.6.0"
-export-magic = "0.3.6"
-getset = "0.1.4"
-proc-macro2 = "1.0"
-quote = "1.0"
-syn = "2.0"
-unsafe-erased = "0.1.0"
-traced-test = "1.0.2"
-tracing = "0.1.41"
-tracing-setup = "1.0.2"
+async-trait        = "0.1.86"
+derive_builder     = "0.20.2"
+disable_macro      = "0.3.6"
+erased             = "0.1.2"
+error-tree         = "0.6.0"
+export-magic       = "0.3.6"
+getset             = "0.1.4"
+proc-macro2        = "1.0"
+quote              = "1.0"
+syn                = "2.0"
+unsafe-erased      = "0.1.0"
+traced-test        = "1.0.2"
+tracing            = "0.1.41"
+tracing-setup      = "1.0.2"
 tracing-subscriber = { version = "0.3.19", features = [ "env-filter", "json" ] }
 
 [dependencies.hydro2-3p]
@@ -20,11 +20,11 @@ path = "../hydro2-3p"
 version = "0.1.0"
 
 [dev-dependencies]
-async-trait = "0.1.86"
-named-item = "0.6.0"
+async-trait       = "0.1.86"
+named-item        = "0.6.0"
 named-item-derive = "0.2.0"
-trybuild = "1.0.103"
-tokio = { version = "1.43.0", features = [ "full" ] }
+trybuild          = "1.0.103"
+tokio             = { version = "1.43.0", features = [ "full" ] }
 
 [dev-dependencies.hydro2-basic-operators]
 path = "../hydro2-basic-operators"
@@ -47,6 +47,6 @@ name        = "hydro2-network-wire-derive"
 version     = "0.1.0"
 description = "A procedural macro providing #[derive(NetworkWire)] for bridging Hydro2 operator wires and enumerating operator IO variants. It automatically handles generics, type parameters, and attribute parsing to unify wire and operator definitions."
 authors     = ["klebs tpk3.mx@gmail.com"]
-license     = "MIT"
+license     = "OGP"
 repository  = "https://github.com/klebs6/klebs-general"
 readme      = "README.md"

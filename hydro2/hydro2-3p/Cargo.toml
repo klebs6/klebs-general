@@ -3,7 +3,7 @@ name        = "hydro2-3p"
 version     = "0.1.0"
 edition     = "2024"
 description = "This crate encapsulates the third party (3p) dependencies for the hydro2 system"
-license     = "MIT"
+license     = "OGP"
 repository  = "https://github.com/klebs6/klebs-general"
 readme      = "README.md"
 
@@ -47,7 +47,7 @@ tracing-setup             = "1.0.2"
 tracing-subscriber        = { version = "0.3", default-features = false, features = ["fmt", "std", "env-filter"] }
 lazy_static               = "1.5.0"
 pbx                       = "0.1.0"
-rand                     = "0.8.5"
+rand                      = "0.8.5"
 
 [build-dependencies]
 scan-crate-for-typedefs = "0.8.1"
