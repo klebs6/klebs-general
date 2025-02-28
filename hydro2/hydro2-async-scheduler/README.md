@@ -98,7 +98,7 @@ pub async fn should_execute_minimal_network_parallel() -> Result<(), Box<dyn std
 
 ## License
 
-Distributed under the OGP License (see `ogp-license-text` crate for more details).
+Distributed under the OGPv1 License (see `ogp-license-text` crate for more details).
 
 ## Repository
 

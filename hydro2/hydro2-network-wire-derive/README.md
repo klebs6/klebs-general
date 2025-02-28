@@ -44,4 +44,4 @@ Then, import and use the macro in your Rust code as needed.
 
 ## License
 
-Distributed under the OGP License (see `ogp-license-text` crate for more details).
+Distributed under the OGPv1 License (see `ogp-license-text` crate for more details).

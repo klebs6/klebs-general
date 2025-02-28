@@ -66,7 +66,7 @@ These operators are designed to be used in a `hydro2_network` DAG, orchestrated 
 
 ## License
 
-Distributed under the OGP License (see `ogp-license-text` crate for more details).
+Distributed under the OGPv1 License (see `ogp-license-text` crate for more details).
 
 ## Repository
 

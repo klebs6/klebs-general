@@ -3,7 +3,7 @@ name        = "hydro2-3p"
 version     = "0.1.0"
 edition     = "2024"
 description = "This crate encapsulates the third party (3p) dependencies for the hydro2 system"
-license     = "OGP"
+license     = "OGPv1"
 repository  = "https://github.com/klebs6/klebs-general"
 readme      = "README.md"
 

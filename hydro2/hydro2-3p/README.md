@@ -3,4 +3,4 @@ This crate encapsulates the third party (3p) dependencies for the `hydro2` syste
 
 ## License
 
-Distributed under the OGP License (see `ogp-license-text` crate for more details).
+Distributed under the OGPv1 License (see `ogp-license-text` crate for more details).

@@ -47,6 +47,6 @@ name        = "hydro2-network-wire-derive"
 version     = "0.1.0"
 description = "A procedural macro providing #[derive(NetworkWire)] for bridging Hydro2 operator wires and enumerating operator IO variants. It automatically handles generics, type parameters, and attribute parsing to unify wire and operator definitions."
 authors     = ["klebs tpk3.mx@gmail.com"]
-license     = "OGP"
+license     = "OGPv1"
 repository  = "https://github.com/klebs6/klebs-general"
 readme      = "README.md"
