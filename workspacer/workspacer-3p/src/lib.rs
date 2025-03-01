@@ -18,7 +18,7 @@ pub use std::str::FromStr;
 pub use structopt::{self,StructOpt};
 pub use toml_edit;
 pub use cargo_lock;
-pub use getset::{self,Getters,Setters};
+pub use getset::{self,MutGetters,Getters,Setters};
 pub use cargo_metadata::{MetadataCommand, Package, Dependency, Metadata};
 pub use petgraph::graphmap::DiGraphMap;
 pub use petgraph::dot::{Dot, Config as DotConfig};

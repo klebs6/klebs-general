@@ -46,8 +46,9 @@ ACTIVE_PACKAGE := workspacer-format-imports
 #ACTIVE_PACKAGE := workspacer-readme-writer
 #ACTIVE_PACKAGE := workspacer
 
-INDIVIDUAL_TEST := dissect_use_statement
-INDIVIDUAL_TEST := gather_leading_comment_lines
+INDIVIDUAL_TEST := gather_leading_token_comments
+INDIVIDUAL_TEST := gather_sibling_comments_above
+#INDIVIDUAL_TEST := scan_preceding_tokens_for_comments
 #INDIVIDUAL_TEST := sort_and_format_imports
 
 
@@ -61,7 +62,7 @@ CONSOLIDATE_CRATE := workspacer-toml
 #-----------------------------------------------------[this section lets us choose how we want to test]
 DEFAULT := test
 #DEFAULT := test_file
-#DEFAULT := test_one
+DEFAULT := test_one
 #DEFAULT := test_file_one
 #DEFAULT := test_all
 #DEFAULT := test_individual

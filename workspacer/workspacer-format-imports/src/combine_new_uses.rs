@@ -1,20 +1,15 @@
+// ---------------- [ File: src/combine_new_uses.rs ]
 crate::ix!();
 
-// -------------------------------------------------------------------------
-// 6) Combine new uses block with remainder
-// -------------------------------------------------------------------------
 pub fn combine_new_uses_with_remainder(new_uses_block: &str, remainder: &str) -> String {
-    let trimmed_new_uses = new_uses_block.trim();
-    if trimmed_new_uses.is_empty() {
-        // no actual new uses => just return remainder exactly as is
-        return remainder.to_string();
+    // If there's no actual new uses, return remainder as is.
+    // If there *are* some new uses, place them + a newline + the remainder.
+    let trimmed_new = new_uses_block.trim();
+    if trimmed_new.is_empty() {
+        remainder.to_string()
+    } else {
+        format!("{}\n{}", trimmed_new, remainder.trim_start())
     }
-    // otherwise, place the new uses block + a single blank line + remainder
-    format!(
-        "{}\n{}",
-        trimmed_new_uses,
-        remainder.trim_start()
-    )
 }
 
 #[cfg(test)]
@@ -32,13 +27,13 @@ mod test_combine_new_uses_with_remainder {
         assert!(out.contains("fn main() {}"));
     }
 
-    /// 2) If new uses is empty => just remainder
     #[test]
     fn test_empty_new_uses() {
         let new_uses = "";
         let remainder = "hello world";
         let out = combine_new_uses_with_remainder(new_uses, remainder);
-        assert_eq!(out, "\nhello world");
+        // Now we expect no extra newline => "hello world" exactly.
+        assert_eq!(out, "hello world");
     }
 
     // etc...

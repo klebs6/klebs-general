@@ -1,3 +1,4 @@
+// ---------------- [ File: src/split_path_into_prefix_and_final.rs ]
 crate::ix!();
 
 /// Splits "std::collections::{HashMap,HashSet}" or "std::collections::HashMap"

@@ -1,3 +1,4 @@
+// ---------------- [ File: src/fallback_scan_node_text.rs ]
 crate::ix!();
 
 /// If no comments were gathered by climbing siblings/tokens, we fallback
@@ -69,4 +70,3 @@ mod test_fallback_scan_node_text {
         assert_eq!(gathered.len(), 1, "Should stop at 'fn'");
     }
 }
-

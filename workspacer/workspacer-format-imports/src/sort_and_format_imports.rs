@@ -1,6 +1,6 @@
+// ---------------- [ File: src/sort_and_format_imports.rs ]
 crate::ix!();
 
-// ---------------- [ File: src/sort_and_format_imports.rs ]
 
 /// Our trait for sorting and formatting imports in a crate or workspace.
 /// The goal:

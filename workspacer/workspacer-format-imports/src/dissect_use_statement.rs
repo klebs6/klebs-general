@@ -1,10 +1,24 @@
+// ---------------- [ File: src/dissect_use_statement.rs ]
 crate::ix!();
 
 /// Attempt to dissect e.g. "pub(crate) use std::collections::HashMap;"
-pub fn dissect_use_statement(line: &str) -> Option<(String,String,String)> {
-    let trimmed   = line.trim();
-    let use_idx   = trimmed.find("use ")?;
-    let prefix    = &trimmed[..use_idx].trim();
+/// but ensure the substring "use " is either at the start
+/// or preceded by whitespace, so "pubuse foo;" won't match.
+pub fn dissect_use_statement(line: &str) -> Option<(String, String, String)> {
+    let trimmed = line.trim();
+    // First, find the substring "use ":
+    let use_idx = trimmed.find("use ")?;
+    // Next, ensure that the character before "use " is either
+    // the beginning of the line or a whitespace char.
+    if use_idx > 0 {
+        let prev_char = trimmed.chars().nth(use_idx - 1)?;
+        if !prev_char.is_whitespace() {
+            // e.g. "pubuse foo;" => preceding char is 'b', so we bail out
+            return None;
+        }
+    }
+    // If we pass that check, proceed as before:
+    let prefix = &trimmed[..use_idx].trim();
     let after_use = &trimmed[use_idx + 4..];
     let after_use = after_use.trim_end_matches(';').trim();
     Some((prefix.to_string(), "use".to_string(), after_use.to_string()))
@@ -123,10 +137,10 @@ mod test_dissect_use_statement {
     fn test_use_not_followed_by_space() {
         let input = "pubuse foo;";
         let result = dissect_use_statement(input);
-        // We want it to be None, because there's no "use " substring. Let's confirm that:
+        // We want None, because there's no true " use " substring with whitespace or start-of-line before "use".
         assert!(
             result.is_none(),
-            "We look for 'use ' not just 'use' => should be None if 'pubuse' is used"
+            "Expected None if 'pubuse' is used, since there's no whitespace or start boundary before 'use '"
         );
     }
 }

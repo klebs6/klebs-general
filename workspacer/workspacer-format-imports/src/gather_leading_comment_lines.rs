@@ -1,3 +1,4 @@
+// ---------------- [ File: src/gather_leading_comment_lines.rs ]
 crate::ix!();
 
 /// Orchestrates the two-phase approach:
