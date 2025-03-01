@@ -1,6 +1,0 @@
-[dependencies.workspacer-3p]
-path = "../workspacer-3p"
-[package]
-edition = "2024"
-name = "workspacer-sort-and-format-imports"
-version = "0.1.0"

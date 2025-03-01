@@ -48,6 +48,8 @@ disable_macro           = "0.3.6"
 ra_ap_syntax            = "0.0.237"
 scan-crate-for-typedefs = "0.8.1"
 async-try-from          = "0.1.0"
+which                   = "*"
+batch-mode = "*"
 
 [dev-dependencies]
 indoc      = "2.0.5"

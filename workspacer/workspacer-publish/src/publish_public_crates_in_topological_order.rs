@@ -93,7 +93,6 @@ where
 }
 
 #[cfg(test)]
-#[disable]
 mod test_try_publish {
     use super::*;
     use workspacer_3p::tokio;
@@ -267,20 +266,20 @@ mod test_try_publish {
                     .expect("We expect handle to be in the map");
                 let is_private = handle.is_private()?;
                 if is_private {
-                    log::debug!("SKIP private crate {crate_node_name}");
+                    debug!("SKIP private crate {crate_node_name}");
                     continue;
                 }
                 let crate_name = handle.name();
                 let crate_version = handle.version().expect("should have version");
                 // check if published
                 if mock_is_crate_version_published_on_crates_io(crate_name, &crate_version, &self.crates).await? {
-                    log::info!("SKIP: {crate_name}@{crate_version} is already on crates.io");
+                    info!("SKIP: {crate_name}@{crate_version} is already on crates.io");
                 } else {
-                    log::info!("Attempting to publish {crate_name}@{crate_version}...");
+                    info!("Attempting to publish {crate_name}@{crate_version}...");
                     match handle.try_publish(dry_run).await {
                         Ok(_) => { /* success or 'already exists' skip */}
                         Err(e) => {
-                            log::error!("FATAL: Could not publish {crate_name}@{crate_version}");
+                            error!("FATAL: Could not publish {crate_name}@{crate_version}");
                             return Err(e.into()); // map into WorkspaceError
                         }
                     }
@@ -297,7 +296,7 @@ mod test_try_publish {
 
     use crate::{ CrateError, WorkspaceError }; // or your actual paths
 
-    #[tokio::test]
+    #[traced_test]
     async fn test_cycle_in_graph() {
         let ws = MockWorkspace {
             maybe_graph: None, // => force cycle error
@@ -313,7 +312,7 @@ mod test_try_publish {
         }
     }
 
-    #[tokio::test]
+    #[traced_test]
     async fn test_skip_private_crate() {
         // We'll define a simple graph with 1 node: "private_crate"
         let mut graph = DiGraph::new();
@@ -341,7 +340,7 @@ mod test_try_publish {
         assert!(result.is_ok(), "We skip private crate => success overall");
     }
 
-    #[tokio::test]
+    #[traced_test]
     async fn test_skip_already_published_crate() {
         let mut graph = DiGraph::new();
         graph.add_node("crate_a".to_string());
@@ -365,7 +364,7 @@ mod test_try_publish {
         assert!(result.is_ok(), "Already published => skip => no error");
     }
 
-    #[tokio::test]
+    #[traced_test]
     async fn test_publish_succeeds() {
         // We have a single crate, not published, not private, no publish error
         let mut graph = DiGraph::new();
@@ -386,7 +385,7 @@ mod test_try_publish {
         assert!(result.is_ok(), "publish should succeed with no errors");
     }
 
-    #[tokio::test]
+    #[traced_test]
     async fn test_publish_already_exists_treated_as_success() {
         // We'll define a crate that is not published, but `try_publish` will produce "already exists" error => skip
         let mut graph = DiGraph::new();
@@ -409,7 +408,7 @@ mod test_try_publish {
         assert!(result.is_ok(), "already exists => skip => success");
     }
 
-    #[tokio::test]
+    #[traced_test]
     async fn test_publish_fails_other_error() {
         let mut graph = DiGraph::new();
         graph.add_node("crate_a".to_string());
@@ -437,7 +436,7 @@ mod test_try_publish {
         }
     }
 
-    #[tokio::test]
+    #[traced_test]
     async fn test_dry_run_skips_actual_publish() {
         let mut graph = DiGraph::new();
         graph.add_node("crate_a".to_string());

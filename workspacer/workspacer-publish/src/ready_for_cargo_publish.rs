@@ -19,7 +19,9 @@ impl ReadyForCargoPublish for CrateHandle {
     /// Checks if the crate is ready for Cargo publishing
     async fn ready_for_cargo_publish(&self) -> Result<(), Self::Error> {
 
-        self.cargo_toml().ready_for_cargo_publish().await?;
+        let toml = self.cargo_toml();
+
+        toml.ready_for_cargo_publish().await?;
 
         self.check_readme_exists()?;
         self.check_src_directory_contains_valid_files()?;
@@ -53,96 +55,147 @@ where for<'async_trait> P: From<PathBuf> + AsRef<Path> + Send + Sync + 'async_tr
     }
 }
 
-// =============================================
-// Test Module #3: ReadyForCargoPublish
-// =============================================
 #[cfg(test)]
-#[disable]
 mod test_ready_for_cargo_publish {
     use super::*;
-    use workspacer_3p::tokio;
 
-    #[tokio::test]
+    #[traced_test]
     async fn test_all_crates_ready() {
-        let c1 = MockCrateHandle { crate_path: PathBuf::from("crateA"), publish_ready: true };
-        let c2 = MockCrateHandle { crate_path: PathBuf::from("crateB"), publish_ready: true };
-        let ws = MockWorkspace::new(MockPath(PathBuf::from("/all_ready")), vec![c1, c2]);
+        // Create two crates in a mock workspace, both fully configured (license, src, README, etc.)
+        let crate_configs = vec![
+            CrateConfig::new("crateA")
+                .with_readme()
+                .with_src_files()
+                .with_test_files(),
+            CrateConfig::new("crateB")
+                .with_readme()
+                .with_src_files()
+                .with_test_files(),
+        ];
+        let mock_ws_dir = create_mock_workspace(crate_configs)
+            .await
+            .expect("failed to create mock workspace");
 
+        // Build a real Workspace<..., CrateHandle> from the newly created directory
+        let ws = Workspace::<PathBuf, CrateHandle>::new(&mock_ws_dir)
+            .await
+            .expect("failed to parse workspace from mock dir");
+
+        // Now call ready_for_cargo_publish on that workspace
         let result = ws.ready_for_cargo_publish().await;
         assert!(result.is_ok(), "All crates are ready => Ok(())");
     }
 
-    #[tokio::test]
+    #[traced_test]
     async fn test_some_crates_not_ready() {
-        let c1 = MockCrateHandle { crate_path: PathBuf::from("crateA"), publish_ready: false };
-        let c2 = MockCrateHandle { crate_path: PathBuf::from("crateB"), publish_ready: true };
-        let ws = MockWorkspace::new(MockPath(PathBuf::from("/some_not_ready")), vec![c1, c2]);
+        // One crate is missing a README, so it won't be "ready" for publishing.
+        // Another crate is fully ready.
+        let crate_configs = vec![
+            CrateConfig::new("crateA")
+                // No readme => fails
+                .with_src_files()
+                .with_test_files(),
+            CrateConfig::new("crateB")
+                // fully ok
+                .with_readme()
+                .with_src_files()
+                .with_test_files(),
+        ];
+        let mock_ws_dir = create_mock_workspace(crate_configs)
+            .await
+            .expect("failed to create mock workspace");
+
+        let ws = Workspace::<PathBuf, CrateHandle>::new(&mock_ws_dir)
+            .await
+            .expect("failed to parse workspace from mock dir");
 
         let result = ws.ready_for_cargo_publish().await;
         match result {
+            // We expect a MultipleErrors with 1 failing crate
             Err(WorkspaceError::MultipleErrors(errors)) => {
-                assert_eq!(errors.len(), 1, "Only c1 fails => 1 error returned");
+                assert_eq!(errors.len(), 1, "Only one crate fails => 1 error returned");
                 println!("Got expected multiple errors: {:?}", errors);
-            },
+            }
             other => panic!("Expected MultipleErrors, got {:?}", other),
         }
     }
 
-    #[tokio::test]
+    #[traced_test]
     async fn test_no_crates_means_ok() {
-        // Edge case: empty workspace => trivially "ready"?
-        let ws = MockWorkspace::new(MockPath(PathBuf::from("/empty_ws")), vec![]);
+        // An empty workspace => trivially "no crates => no errors"
+        let mock_ws_dir = create_mock_workspace(vec![])
+            .await
+            .expect("failed to create mock workspace");
+
+        let ws = Workspace::<PathBuf, CrateHandle>::new(&mock_ws_dir)
+            .await
+            .expect("failed to parse workspace from empty dir");
+
         let result = ws.ready_for_cargo_publish().await;
         assert!(result.is_ok(), "No crates => no failures => Ok(())");
     }
 
-    /// Test ready_for_cargo_publish => success with a minimal crate that has src/main.rs or lib.rs, plus README, plus required fields in Cargo.toml.
-    #[tokio::test]
+    /// This test checks a single crate that should pass all publishing checks:
+    /// - Has Cargo.toml with required fields,
+    /// - Has README.md,
+    /// - Has src files,
+    /// - Valid version field, etc.
+    #[traced_test]
     async fn test_ready_for_cargo_publish_ok() {
-        let handle = create_crate_handle_in_temp(
-            "publishable_crate",
-            "0.1.0",
-            true,
-            false,
-            true,  // create readme
-            Some("main"),
-        )
-        .await;
+        let crate_configs = vec![
+            CrateConfig::new("publishable_crate")
+                .with_readme()
+                .with_src_files()
+                .with_test_files(),
+        ];
+        let mock_ws_dir = create_mock_workspace(crate_configs)
+            .await
+            .expect("failed to create mock workspace");
 
-        // We have: 
-        //   [package] with name/version/authors/license
-        //   src/main.rs
-        //   README.md
-        // That should pass the checks
-        let result = handle.ready_for_cargo_publish().await;
+        let ws = Workspace::<PathBuf, CrateHandle>::new(&mock_ws_dir)
+            .await
+            .expect("failed to parse workspace");
+
+        // We should pass all checks
+        let result = ws.ready_for_cargo_publish().await;
         assert!(result.is_ok(), "Expected crate to be ready for publish");
     }
 
-    /// Test ready_for_cargo_publish => fails if the required fields in Cargo.toml are missing or if the README is missing, etc.
-    #[tokio::test]
+    /// This test simulates a crate that lacks a README, so `ready_for_cargo_publish` should fail.
+    #[traced_test]
     async fn test_ready_for_cargo_publish_fails_missing_readme() {
-        // We'll create everything except README.md
-        let handle = create_crate_handle_in_temp(
-            "not_publishable_crate",
-            "0.1.0",
-            true,
-            false,
-            false, // missing readme
-            Some("main"),
-        )
-        .await;
+        // We'll create everything except a README for this single crate
+        let crate_configs = vec![
+            CrateConfig::new("not_publishable_crate")
+                .with_src_files()
+                .with_test_files(),
+        ];
+        let mock_ws_dir = create_mock_workspace(crate_configs)
+            .await
+            .expect("failed to create mock workspace");
 
-        let result = handle.ready_for_cargo_publish().await;
-        assert!(result.is_err(), "Expected an error, missing README.md");
+        let ws = Workspace::<PathBuf, CrateHandle>::new(&mock_ws_dir)
+            .await
+            .expect("failed to parse workspace");
+
+        let result = ws.ready_for_cargo_publish().await;
+        assert!(result.is_err(), "Expected an error due to missing README.md");
         match result {
-            Err(CrateError::FileNotFound { missing_file }) => {
-                let missing = missing_file.to_string_lossy();
-                assert!(
-                    missing.contains("README.md"),
-                    "Should mention missing README.md"
-                );
+            Err(WorkspaceError::MultipleErrors(mut errs)) if !errs.is_empty() => {
+                // Typically you'll see CrateError::FileNotFound { missing_file: ... } or similar.
+                let first_err = errs.remove(0);
+                println!("Got expected error: {:?}", first_err);
+                // If you want to specifically check for a missing README, you can match it:
+                if let WorkspaceError::CrateError(CrateError::FileNotFound { missing_file }) = first_err {
+                    assert!(
+                        missing_file.to_string_lossy().contains("README.md"),
+                        "Should mention missing README.md in the error"
+                    );
+                } else {
+                    panic!("Expected FileNotFound for missing README, got: {:?}", first_err);
+                }
             }
-            other => panic!("Expected CrateError::FileNotFound, got {other:?}"),
+            other => panic!("Expected multiple errors for missing readme, got: {:?}", other),
         }
     }
 }

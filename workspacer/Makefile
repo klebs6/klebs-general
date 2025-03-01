@@ -26,28 +26,30 @@ ACTIVE_PACKAGE := workspacer-consolidate
 ACTIVE_PACKAGE := workspacer-crate
 ACTIVE_PACKAGE := workspacer-detect-circular-deps
 ACTIVE_PACKAGE := workspacer-docs
-ACTIVE_PACKAGE := workspacer-ensure-all-source-files-are-registered
-#ACTIVE_PACKAGE := workspacer-errors
-#ACTIVE_PACKAGE := workspacer-git
-#ACTIVE_PACKAGE := workspacer-linting
-#ACTIVE_PACKAGE := workspacer-lock
-#ACTIVE_PACKAGE := workspacer-metadata
-#ACTIVE_PACKAGE := workspacer-mock
-#ACTIVE_PACKAGE := workspacer-name-all-files
-#ACTIVE_PACKAGE := workspacer-pin
-#ACTIVE_PACKAGE := workspacer-publish
-#ACTIVE_PACKAGE := workspacer-readme-writer
-#ACTIVE_PACKAGE := workspacer-rebuild-or-test
-#ACTIVE_PACKAGE := workspacer-sort-and-format-imports
+ACTIVE_PACKAGE := workspacer-register
+ACTIVE_PACKAGE := workspacer-errors
+ACTIVE_PACKAGE := workspacer-git
+ACTIVE_PACKAGE := workspacer-linting
+ACTIVE_PACKAGE := workspacer-lock
+ACTIVE_PACKAGE := workspacer-metadata
+ACTIVE_PACKAGE := workspacer-mock
+ACTIVE_PACKAGE := workspacer-name-all-files
+ACTIVE_PACKAGE := workspacer-pin
+ACTIVE_PACKAGE := workspacer-publish
+ACTIVE_PACKAGE := workspacer-rebuild-or-test
+ACTIVE_PACKAGE := workspacer-format-imports
 #ACTIVE_PACKAGE := workspacer-syntax
 #ACTIVE_PACKAGE := workspacer-test-coverage
 #ACTIVE_PACKAGE := workspacer-toml
 #ACTIVE_PACKAGE := workspacer-watch-and-reload
 #ACTIVE_PACKAGE := workspacer-workspace
+#ACTIVE_PACKAGE := workspacer-readme-writer
 #ACTIVE_PACKAGE := workspacer
 
-INDIVIDUAL_TEST := crate_ensure_all_source_files_are_registered
-INDIVIDUAL_TEST := rebuild_librs_with_new_top_block
+INDIVIDUAL_TEST := dissect_use_statement
+INDIVIDUAL_TEST := gather_leading_comment_lines
+#INDIVIDUAL_TEST := sort_and_format_imports
+
 
 #FEATURES := --features "enable_stress_test"
 FEATURES := --features ""
@@ -87,13 +89,13 @@ publish_public_crates_in_order:
 	RUSTFLAGS=$(RUSTFLAGS) $(CARGO) $(RUN) --bin workspacer-publish-public-crates-in-order $(FEATURES) -- --dry-run
 
 ensure:
-	RUSTFLAGS=$(RUSTFLAGS) $(CARGO) $(RUN) --bin workspacer-ensure-all-source-files-are-registered $(FEATURES)
+	RUSTFLAGS=$(RUSTFLAGS) $(CARGO) $(RUN) --bin workspacer-register $(FEATURES)
 
 consolidate_crate_interface:
 	RUSTFLAGS=$(RUSTFLAGS) $(CARGO) $(RUN) --bin workspacer-show-consolidated-crate-interface $(FEATURES) -- --path $(CONSOLIDATE_CRATE) --no-show-docs --no-show-private-items
 
 name_all_files:
-	RUSTFLAGS=$(RUSTFLAGS) $(CARGO) $(RUN) --bin name-all-files $(FEATURES)
+	RUSTFLAGS=$(RUSTFLAGS) $(CARGO) $(RUN) --bin workspacer-name-all-files $(FEATURES)
 
 build:
 	RUSTFLAGS=$(RUSTFLAGS) $(CARGO) $(BUILD) $(FEATURES)

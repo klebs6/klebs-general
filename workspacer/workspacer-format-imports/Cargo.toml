@@ -1,5 +1,5 @@
-[dependencies.lightweight-command-runner]
-path = "../lightweight-command-runner"
+[dependencies]
+derive_builder = "*"
 [dependencies.workspacer-3p]
 path = "../workspacer-3p"
 [dependencies.workspacer-crate]
@@ -10,11 +10,7 @@ path = "../workspacer-crate-interface"
 path = "../workspacer-errors"
 [dependencies.workspacer-workspace]
 path = "../workspacer-workspace"
-[dependencies.workspacer-workspace-interface]
-path = "../workspacer-workspace-interface"
-[dev-dependencies.workspacer-mock]
-path = "../workspacer-mock"
 [package]
 edition = "2024"
-name = "workspacer-rebuild-or-test"
+name = "workspacer-format-imports"
 version = "0.1.0"

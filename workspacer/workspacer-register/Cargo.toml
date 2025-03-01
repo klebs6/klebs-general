@@ -1,29 +1,24 @@
 [dependencies]
-structopt = "*"
+derive_builder = "*"
+
 [dependencies.workspacer-3p]
 path = "../workspacer-3p"
 [dependencies.workspacer-crate]
 path = "../workspacer-crate"
+[dependencies.workspacer-workspace]
+path = "../workspacer-workspace"
 [dependencies.workspacer-crate-interface]
 path = "../workspacer-crate-interface"
-[dependencies.workspacer-detect-circular-deps]
-path = "../workspacer-detect-circular-deps"
 [dependencies.workspacer-errors]
 path = "../workspacer-errors"
 [dependencies.workspacer-git]
 path = "../workspacer-git"
-[dev-dependencies.workspacer-mock]
-path = "../workspacer-mock"
-[dependencies.workspacer-toml]
-path = "../workspacer-toml"
 [dependencies.workspacer-toml-interface]
 path = "../workspacer-toml-interface"
-[dependencies.workspacer-workspace]
-path = "../workspacer-workspace"
 [package]
 edition = "2024"
-name = "workspacer-publish"
+name = "workspacer-register"
 version = "0.1.0"
 [[bin]]
-name = "workspacer-publish-public-crates-in-order"
-path = "src/bin/publish_public_crates_in_order.rs"
+path = "src/bin/ensure_all_source_files_are_registered.rs"
+name = "workspacer-ensure-all-source-files-are-registered"

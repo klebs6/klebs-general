@@ -9,7 +9,7 @@ pub use std::os::unix::fs::PermissionsExt;
 pub use export_magic::*;
 pub use error_tree::*;
 pub use tokio::fs::{self,File};
-pub use tokio::io::{self,AsyncWriteExt,AsyncBufReadExt,BufReader};
+pub use tokio::io::{self,AsyncReadExt,AsyncWriteExt,AsyncBufReadExt,BufReader};
 pub use std::slice::Iter;
 pub use std::convert::AsRef;
 pub use async_trait::async_trait;
@@ -61,5 +61,7 @@ pub use toml;
 pub use toml::Value as TomlValue;
 pub use serde_json;
 pub use derive_builder::{self,Builder};
+pub use which::{which,Error as WhichError};
+pub use batch_mode::*;
 
 //pub use scan_crate_for_typedefs::is_node_public;

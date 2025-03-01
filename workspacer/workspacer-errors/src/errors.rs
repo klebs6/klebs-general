@@ -4,6 +4,7 @@ crate::ix!();
 error_tree!{
 
     #[derive(Clone)]
+    #[allow(non_camel_case_types)]
     pub enum SourceFileRegistrationError {
         EncounteredAnXMacroAfterWeAlreadySawANonAttributeItem {
             file_path:      PathBuf,
@@ -204,6 +205,14 @@ error_tree!{
 
     #[derive(Clone)]
     pub enum CrateError {
+        SortAndFormatImportsInTextError {
+            message: String,
+        },
+        FailedToRunCargoPublish {
+            crate_name:    String,
+            crate_version: semver::Version,
+            which_err:     Arc<WhichError>,
+        },
         CargoPublishFailedForCrateWithExitCode {
             crate_name:    String,
             crate_version: semver::Version,

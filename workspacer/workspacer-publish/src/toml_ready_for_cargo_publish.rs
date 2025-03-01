@@ -15,15 +15,26 @@ impl ReadyForCargoPublish for dyn CargoTomlInterface {
     }
 }
 
+#[async_trait]
+impl ReadyForCargoPublish for CargoToml {
+    type Error = CargoTomlError;
+
+    async fn ready_for_cargo_publish(&self) -> Result<(), Self::Error> {
+        self.validate_integrity()?;
+        self.check_required_fields_for_publishing()?;
+        self.check_version_validity_for_publishing()?;
+        Ok(())
+    }
+}
+
 #[cfg(test)]
-#[disable]
 mod test_ready_for_cargo_publish {
     use super::*;
     use std::path::PathBuf;
     use tempfile::tempdir;
     use std::fs::File;
 
-    #[tokio::test]
+    #[traced_test]
     async fn ready_for_cargo_publish_succeeds_when_all_checks_pass() {
         // 1) The file must exist
         // 2) Required fields for integrity and publishing must exist
@@ -56,7 +67,7 @@ mod test_ready_for_cargo_publish {
         assert!(result.is_ok(), "Expected success because all checks should pass");
     }
 
-    #[tokio::test]
+    #[traced_test]
     async fn ready_for_cargo_publish_fails_when_file_does_not_exist() {
         // This should fail on check_existence()
         let cargo_toml = CargoTomlBuilder::default()
@@ -76,7 +87,7 @@ mod test_ready_for_cargo_publish {
         }
     }
 
-    #[tokio::test]
+    #[traced_test]
     async fn ready_for_cargo_publish_fails_when_missing_fields_for_integrity() {
         // "name" is present, but "version" is missing => fails on check_required_fields_for_integrity()
         let temp = tempdir().expect("Failed to create temp directory");
@@ -107,7 +118,7 @@ mod test_ready_for_cargo_publish {
         }
     }
 
-    #[tokio::test]
+    #[traced_test]
     async fn ready_for_cargo_publish_fails_when_missing_fields_for_publishing() {
         // We'll have "name" and "version" for integrity, but omit "authors" or "license",
         // which should fail check_required_fields_for_publishing()
@@ -142,7 +153,7 @@ mod test_ready_for_cargo_publish {
         }
     }
 
-    #[tokio::test]
+    #[traced_test]
     async fn ready_for_cargo_publish_fails_when_version_is_invalid() {
         // "validate_integrity()" can pass if there's a valid file with minimal fields,
         // but "check_version_validity_for_publishing()" fails if version is semver-invalid.

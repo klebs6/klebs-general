@@ -33,11 +33,21 @@ impl TryPublish for CrateHandle {
             return Ok(());
         }
 
+        // Resolve full path to 'cargo' to avoid "No such file or directory" errors
+        let cargo_path = which("cargo").map_err(|which_err| {
+            error!("Failed to locate 'cargo' in PATH: {}", which_err);
+            CrateError::FailedToRunCargoPublish {
+                crate_name: crate_name.to_string(),
+                crate_version: crate_version.clone(),
+                which_err: Arc::new(which_err),
+            }
+        })?;
+
         // We want the path to the crate's Cargo.toml
         let cargo_toml = self.cargo_toml();
 
-        let mut cmd = Command::new("cargo");
-
+        // Prepare `cargo publish` command
+        let mut cmd = Command::new(cargo_path);
         cmd.arg("publish")
             .arg("--allow-dirty")
             .arg(&format!("--manifest-path={}", (*cargo_toml).as_ref().display()))
@@ -46,9 +56,10 @@ impl TryPublish for CrateHandle {
         debug!("Running: {:?}", cmd);
 
         let output = cmd.output().await.map_err(|io_err| {
-            CrateError::FailedtoRunCargoPublish { 
-                crate_name:    crate_name.to_string(), 
-                crate_version: crate_version.clone(), 
+            error!("IO error when running cargo publish: {}", io_err);
+            CrateError::FailedtoRunCargoPublish {
+                crate_name:    crate_name.to_string(),
+                crate_version: crate_version.clone(),
                 io_err:        Arc::new(io_err),
             }
         })?;
@@ -88,9 +99,7 @@ mod test_try_publish_crate_handle {
     use std::fs::{File as StdFile, Permissions};
     use std::io::Write;
     use tempfile::{tempdir, TempDir};
-    use tokio::process::Command;
     use tokio::runtime::Runtime;
-    use tokio::fs::{File, create_dir_all};
     #[cfg(unix)]
     use std::os::unix::fs::PermissionsExt;
 
@@ -127,7 +136,7 @@ license = "MIT"
     /// Helper to create a `CrateHandle` in a new temp directory, with minimal Cargo.toml.
     async fn setup_crate_handle(crate_name: &str, crate_version: &str) -> (CrateHandle, TempDir) {
         let tmp = tempdir().expect("Failed to create temp directory");
-        let cargo_toml_path = write_minimal_cargo_toml(tmp.path(), crate_name, crate_version);
+        let _cargo_toml_path = write_minimal_cargo_toml(tmp.path(), crate_name, crate_version);
 
         // Construct the handle
         let mock_path = MockCratePath(tmp.path().to_path_buf());
@@ -137,82 +146,87 @@ license = "MIT"
         (handle, tmp)
     }
 
-    // ------------------------------------------------------------------------
-    // The following tests demonstrate different scenarios for `try_publish`.
-    // Because it spawns a real `cargo publish`, we typically do *not* want to
-    // run it against the real `cargo` in unit tests. Instead, we either:
-    // 1) Provide a mock or fake `cargo` in PATH that simulates different outcomes, or
-    // 2) Use a separate trait-based approach to override `Command::new("cargo")`.
-    //
-    // Below, we show a technique of creating a shell script that simulates cargo
-    // and adjusting PATH so that the real cargo isn't called. This is more
-    // feasible on Unix-based systems. Windows might need `.bat` files or similar.
-    //
-    // If you want truly stable tests, consider adopting a `CommandRunner` trait
-    // so you can inject a mock process. That approach doesn't require PATH hacks.
-    // ------------------------------------------------------------------------
-
-    /// Creates a fake `cargo` script that always exits with a given code
-    /// and prints the given output to stderr or stdout, simulating success/failure.
+    /// Creates a fake `cargo` script named exactly `cargo` so `which("cargo")` will find it.
+    /// We now:
+    /// - Use `#!/bin/sh` instead of `#!/usr/bin/env bash` (for more universal availability).
+    /// - Force permissions unconditionally on all platforms to ensure it's executable.
+    /// - Flush the file before setting permissions to avoid race conditions.
     fn create_fake_cargo_script(
         dir: &Path,
         exit_code: i32,
         stdout_msg: Option<&str>,
         stderr_msg: Option<&str>,
     ) -> PathBuf {
-        let script_path = dir.join("cargo_fake");
+        // Name it literally `cargo` so `which("cargo")` picks it up.
+        let script_path = dir.join("cargo");
+
+        // Use a plain POSIX sh shebang, which should exist on macOS, Linux, etc.
         let script_content = format!(
-            "#!/usr/bin/env bash\n\
-             {}\
-             {}\
-             exit {}",
+            "#!/bin/sh\n\
+            {}\
+            {}\
+            exit {}",
             stdout_msg.map(|m| format!("echo \"{}\"\n", m)).unwrap_or_default(),
             stderr_msg.map(|m| format!("echo \"{}\" 1>&2\n", m)).unwrap_or_default(),
             exit_code
         );
 
-        let mut file = StdFile::create(&script_path).expect("Failed to create cargo_fake script");
-        file.write_all(script_content.as_bytes())
-            .expect("Failed to write cargo_fake script");
-        #[cfg(unix)]
+        // Create and write the file
         {
-            // Make script executable on Unix
-            let mut perms = file.metadata().unwrap().permissions();
-            perms.set_mode(0o755);
+            let mut file = StdFile::create(&script_path)
+                .expect("Failed to create 'cargo' script file");
+            use std::io::Write;
+            file.write_all(script_content.as_bytes())
+                .expect("Failed to write fake cargo script");
+            file.sync_all().expect("Failed to sync file to disk");
+        }
+
+        // Unconditionally set executable permission. On Windows, no-ops if not supported,
+        // but on macOS/Linux it ensures we get mode 755.
+        #[allow(unused_mut)]
+        {
+            let mut perms = std::fs::metadata(&script_path)
+                .expect("Failed to read metadata of cargo script")
+                .permissions();
+            #[cfg(unix)]
+            {
+                use std::os::unix::fs::PermissionsExt;
+                perms.set_mode(0o755);
+            }
             std::fs::set_permissions(&script_path, perms)
-                .expect("Failed to set executable permissions");
+                .expect("Failed to set executable permissions on cargo script");
         }
 
         script_path
     }
 
     /// Helper to adjust PATH so that our fake cargo is found first.
-    /// On Windows, you'd need to produce a .bat file or similar approach.
+    /// On Windows, you'd need a different approach (like a .bat file).
     fn prepend_fake_cargo_to_path(fake_cargo: &Path) -> String {
         let fake_cargo_dir = fake_cargo.parent().unwrap();
         let old_path = std::env::var_os("PATH").unwrap_or_default();
-        let new_path = format!("{}:{}",
+        // Put *our* directory first in PATH
+        format!("{}:{}",
             fake_cargo_dir.display(),
             old_path.to_string_lossy()
-        );
-        new_path
+        )
     }
 
     /// 1) Dry run => we skip the actual cargo publish.
-    #[test]
+    #[traced_test]
     fn test_try_publish_dry_run() {
         let rt = Runtime::new().unwrap();
         rt.block_on(async {
             let (handle, _tmp) = setup_crate_handle("dry_run_crate", "0.1.0").await;
 
-            // If dry_run is true, we do nothing, no external command is invoked
+            // If dry_run is true, we do nothing
             let result = handle.try_publish(true).await;
             assert!(result.is_ok(), "Expected success for dry_run");
         });
     }
 
     /// 2) A successful publish scenario => exit code 0 => we return Ok(()).
-    #[test]
+    #[traced_test]
     fn test_try_publish_success() {
         let rt = Runtime::new().unwrap();
         rt.block_on(async {
@@ -236,13 +250,13 @@ license = "MIT"
     }
 
     /// 3) "already exists" scenario => cargo prints "already exists" => we treat as success.
-    #[test]
+    #[traced_test]
     fn test_try_publish_already_exists() {
         let rt = Runtime::new().unwrap();
         rt.block_on(async {
             let (handle, tmp) = setup_crate_handle("already_exists_crate", "0.1.0").await;
 
-            // Fake cargo that prints "already exists" in stderr or stdout, with exit code 101 or similar
+            // Fake cargo that prints "already exists" in stderr, exits 101
             let fake_cargo_path = create_fake_cargo_script(
                 tmp.path(),
                 101,
@@ -258,20 +272,20 @@ license = "MIT"
 
             unsafe { std::env::set_var("PATH", old_path); }
 
-            // Should interpret "already exists" in output => Ok(())
+            // Should interpret "already exists" => Ok(())
             assert!(result.is_ok(), "Expected success if cargo says 'already exists'");
         });
     }
 
     /// 4) Another failing scenario => cargo prints an error & exit code != 0, but does NOT mention "already exists."
     ///    => we treat as a fatal error.
-    #[test]
+    #[traced_test]
     fn test_try_publish_fails_with_exit_code() {
         let rt = Runtime::new().unwrap();
         rt.block_on(async {
             let (handle, tmp) = setup_crate_handle("fail_crate", "0.1.0").await;
 
-            // Fake cargo that prints something else and exits 101 or 1
+            // Fake cargo that prints "some other error" and exits 101
             let fake_cargo_path = create_fake_cargo_script(
                 tmp.path(),
                 101,
@@ -287,7 +301,7 @@ license = "MIT"
 
             unsafe { std::env::set_var("PATH", old_path); }
 
-            assert!(result.is_err(), "Expected error when cargo fails with non-zero code and not 'already exists'");
+            assert!(result.is_err(), "Expected error (non-zero exit, no 'already exists')");
             match result {
                 Err(CrateError::CargoPublishFailedForCrateWithExitCode {
                     crate_name,
@@ -296,21 +310,21 @@ license = "MIT"
                 }) => {
                     assert_eq!(crate_name, "fail_crate");
                     assert_eq!(crate_version.to_string(), "0.1.0");
-                    assert_eq!(exit_code, Some(101), "Should match the script's exit code");
+                    assert_eq!(exit_code, Some(101));
                 }
                 other => panic!("Expected CargoPublishFailedForCrateWithExitCode, got: {other:?}"),
             }
         });
     }
 
-    /// 5) If the command fails to spawn at all (e.g., no cargo found), we get `FailedtoRunCargoPublish`.
-    #[test]
+    /// 5) If the command fails to spawn at all (e.g., no cargo found), we get `FailedToRunCargoPublish`.
+    #[traced_test]
     fn test_try_publish_no_cargo_found() {
         let rt = Runtime::new().unwrap();
         rt.block_on(async {
             let (handle, _tmp) = setup_crate_handle("missing_cargo_crate", "0.1.0").await;
 
-            // Overwrite PATH with something that doesn't contain cargo_fake or real cargo
+            // Overwrite PATH so we can't find "cargo"
             unsafe { std::env::set_var("PATH", ""); }
 
             let result = handle.try_publish(false).await;
@@ -320,10 +334,10 @@ license = "MIT"
 
             assert!(result.is_err(), "Expected error if we can't run cargo at all");
             match result {
-                Err(CrateError::FailedtoRunCargoPublish { crate_name, .. }) => {
+                Err(CrateError::FailedToRunCargoPublish { crate_name, .. }) => {
                     assert_eq!(crate_name, "missing_cargo_crate");
                 }
-                other => panic!("Expected CrateError::FailedtoRunCargoPublish, got: {other:?}"),
+                other => panic!("Expected CrateError::FailedToRunCargoPublish, got: {other:?}"),
             }
         });
     }
