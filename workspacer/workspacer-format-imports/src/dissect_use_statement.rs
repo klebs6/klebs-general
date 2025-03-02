@@ -1,26 +1,42 @@
 // ---------------- [ File: src/dissect_use_statement.rs ]
 crate::ix!();
 
-/// Attempt to dissect e.g. "pub(crate) use std::collections::HashMap;"
-/// but ensure the substring "use " is either at the start
-/// or preceded by whitespace, so "pubuse foo;" won't match.
 pub fn dissect_use_statement(line: &str) -> Option<(String, String, String)> {
+    info!("dissect_use_statement => start");
     let trimmed = line.trim();
-    // First, find the substring "use ":
-    let use_idx = trimmed.find("use ")?;
-    // Next, ensure that the character before "use " is either
-    // the beginning of the line or a whitespace char.
+    trace!("trimmed input={:?}", trimmed);
+
+    let use_idx = match trimmed.find("use ") {
+        Some(idx) => idx,
+        None => {
+            debug!("No 'use ' substring found => returning None");
+            info!("dissect_use_statement => done => None");
+            return None;
+        }
+    };
+
+    // Ensure the character before "use " is start-of-line or whitespace
     if use_idx > 0 {
         let prev_char = trimmed.chars().nth(use_idx - 1)?;
         if !prev_char.is_whitespace() {
-            // e.g. "pubuse foo;" => preceding char is 'b', so we bail out
+            debug!(
+                "Character before 'use ' is {:?}, not whitespace => returning None",
+                prev_char
+            );
+            info!("dissect_use_statement => done => None");
             return None;
         }
     }
-    // If we pass that check, proceed as before:
+
     let prefix = &trimmed[..use_idx].trim();
     let after_use = &trimmed[use_idx + 4..];
     let after_use = after_use.trim_end_matches(';').trim();
+    debug!(
+        "Parsed => prefix={:?}, 'use', path_list={:?}",
+        prefix, after_use
+    );
+
+    info!("dissect_use_statement => done => returning Some");
     Some((prefix.to_string(), "use".to_string(), after_use.to_string()))
 }
 
@@ -31,9 +47,11 @@ mod test_dissect_use_statement {
     /// 1) If the line does not contain "use " at all => return None.
     #[traced_test]
     fn test_no_use_substring_returns_none() {
+        info!("test_no_use_substring_returns_none => start");
         let input = "some random line pub(crate) x std::foo;";
         let result = dissect_use_statement(input);
         assert!(result.is_none(), "Expected None if 'use ' is absent");
+        info!("test_no_use_substring_returns_none => success");
     }
 
     /// 2) A basic use line with a prefix (e.g. "pub(crate)").

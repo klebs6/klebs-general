@@ -1,15 +1,14 @@
-// ---------------- [ File: src/fallback_scan_node_text.rs ]
 crate::ix!();
 
-/// If no comments were gathered by climbing siblings/tokens, we fallback
-/// to scanning the node's *own text* from the top, collecting consecutive
-/// lines that start with `//` (trimmed of leading spaces).
-/// Stops on blank or non-comment line.
 pub fn fallback_scan_node_text(node: &SyntaxNode) -> Vec<String> {
-    trace!("fallback_scan_node_text => node.kind()={:?}", node.kind());
+    info!(
+        "fallback_scan_node_text => start; node.kind()={:?}",
+        node.kind()
+    );
     let node_text = node.text().to_string();
-    let mut results = Vec::new();
+    trace!("node_text length={}", node_text.len());
 
+    let mut results = Vec::new();
     for line in node_text.lines() {
         let trimmed = line.trim_start();
         if trimmed.starts_with("//") {
@@ -18,15 +17,19 @@ pub fn fallback_scan_node_text(node: &SyntaxNode) -> Vec<String> {
             } else {
                 format!("{}\n", trimmed)
             };
+            trace!("Found line-comment => {:?}", line);
             results.push(line);
         } else if trimmed.is_empty() {
-            trace!("fallback_scan_node_text => blank line => stop");
+            warn!("Blank line => stopping fallback scan");
             break;
         } else {
-            trace!("fallback_scan_node_text => non-comment => stop");
+            debug!("Non-comment line => stopping fallback scan");
             break;
         }
     }
+
+    debug!("fallback_scan_node_text => returning {} lines", results.len());
+    info!("fallback_scan_node_text => done");
     results
 }
 

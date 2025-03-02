@@ -1,33 +1,31 @@
 // ---------------- [ File: src/gather_leading_comment_lines.rs ]
 crate::ix!();
 
-/// Orchestrates the two-phase approach:
-/// (A) Attempt to gather comment lines by climbing preceding tokens/nodes
-/// (B) If none found, fallback to scanning the node's text top-down
 pub fn gather_leading_comment_lines(node: &SyntaxNode, _full_text: &str) -> Vec<String> {
-    trace!(
-        "gather_leading_comment_lines => node.kind()={:?}",
-        node.kind()
-    );
+    info!("gather_leading_comment_lines => start");
+    trace!("node.kind()={:?}", node.kind());
 
     // Phase A: attempt to gather from preceding tokens
+    debug!("Phase A => scan_preceding_tokens_for_comments");
     let from_preceding = scan_preceding_tokens_for_comments(node);
     if !from_preceding.is_empty() {
-        trace!(
-            "gather_leading_comment_lines => found {} lines from preceding tokens",
+        debug!(
+            "Found {} lines from preceding tokens => returning those",
             from_preceding.len()
         );
+        info!("gather_leading_comment_lines => done");
         return from_preceding;
     }
 
     // Phase B: fallback
+    debug!("No preceding => fallback => fallback_scan_node_text");
     let fallback = fallback_scan_node_text(node);
     if !fallback.is_empty() {
-        trace!(
-            "gather_leading_comment_lines => found {} lines from fallback",
-            fallback.len()
-        );
+        debug!("Found {} lines from fallback", fallback.len());
+    } else {
+        debug!("No lines found in fallback either");
     }
+    info!("gather_leading_comment_lines => done => returning fallback");
     fallback
 }
 
@@ -112,9 +110,12 @@ fn my_function() {}
 fn main(){}
 
 "#;
+        debug!("src={}",src);
         // There's only 1 newline between comment B and 'fn', so we keep collecting
         let node = parse_and_find_node_of_kind(src, SyntaxKind::FN).expect("Expected fn node");
+        debug!("node={:#?}",node);
         let comments = gather_leading_comment_lines(&node, src);
+        debug!("comments={:#?}",comments);
         assert_eq!(comments.len(), 2);
         assert_eq!(comments[0], "// Comment A\n");
         assert_eq!(comments[1], "// Comment B\n");
@@ -218,8 +219,11 @@ fn main() {} // trailing comment
 // Second line
 fn my_function() {}
 "#;
+        debug!("src={}",src);
         let node = parse_and_find_node_of_kind(src, SyntaxKind::FN).expect("Expected fn node");
+        debug!("node={:#?}",node);
         let comments = gather_leading_comment_lines(&node, src);
+        debug!("comments={:#?}",comments);
         assert_eq!(comments.len(), 2, "We have two comment lines");
         assert_eq!(comments[0], "// First line\n");
         assert_eq!(comments[1], "// Second line\n");

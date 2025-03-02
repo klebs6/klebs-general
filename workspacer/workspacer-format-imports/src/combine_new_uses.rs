@@ -2,39 +2,48 @@
 crate::ix!();
 
 pub fn combine_new_uses_with_remainder(new_uses_block: &str, remainder: &str) -> String {
-    // If there's no actual new uses, return remainder as is.
-    // If there *are* some new uses, place them + a newline + the remainder.
+    info!("combine_new_uses_with_remainder => start");
+    debug!(
+        "new_uses_block.len()={}, remainder.len()={}",
+        new_uses_block.len(),
+        remainder.len()
+    );
+
     let trimmed_new = new_uses_block.trim();
     if trimmed_new.is_empty() {
-        remainder.to_string()
+        debug!("No new uses => returning remainder as is");
+        info!("combine_new_uses_with_remainder => done => returning remainder");
+        return remainder.to_string();
     } else {
-        format!("{}\n{}", trimmed_new, remainder.trim_start())
+        debug!("Some new uses => combining with remainder");
+        let combined = format!("{}\n{}", trimmed_new, remainder.trim_start());
+        info!("combine_new_uses_with_remainder => done => returning combined");
+        return combined;
     }
 }
 
 #[cfg(test)]
 mod test_combine_new_uses_with_remainder {
-    use super::combine_new_uses_with_remainder;
+    use super::*;
 
-    /// 1) Both strings are non-empty => new uses on top, remainder after
     #[test]
     fn test_both_non_empty() {
+        info!("test_both_non_empty => start");
         let new_uses = "some lines\nsome lines\n";
         let remainder = "fn main() {}";
         let out = combine_new_uses_with_remainder(new_uses, remainder);
-        // Should be `some lines\nsome lines\n\nfn main() {}`
         assert!(out.starts_with("some lines\nsome lines\n"));
         assert!(out.contains("fn main() {}"));
+        info!("test_both_non_empty => success");
     }
 
     #[test]
     fn test_empty_new_uses() {
+        info!("test_empty_new_uses => start");
         let new_uses = "";
         let remainder = "hello world";
         let out = combine_new_uses_with_remainder(new_uses, remainder);
-        // Now we expect no extra newline => "hello world" exactly.
         assert_eq!(out, "hello world");
+        info!("test_empty_new_uses => success");
     }
-
-    // etc...
 }

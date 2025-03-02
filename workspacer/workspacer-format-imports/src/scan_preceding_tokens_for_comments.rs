@@ -1,33 +1,62 @@
 // ---------------- [ File: src/scan_preceding_tokens_for_comments.rs ]
 crate::ix!();
 
-/// 3) **Public**: tries `gather_sibling_comments_above` first. If that yields nothing,
-///    it tries `gather_token_comments_above`.
-///
-/// This covers both parse scenarios—whether the comment is a sibling,
-/// or is stored with the node’s first token in the syntax tree.
 pub fn scan_preceding_tokens_for_comments(start_node: &SyntaxNode) -> Vec<String> {
-    trace!(
+    info!(
         "scan_preceding_tokens_for_comments => node.kind()={:?}",
         start_node.kind()
     );
 
-    // 1) Try sibling approach
+    trace!("Trying gather_sibling_comments_above first");
     let sibling_comments = gather_sibling_comments_above(start_node);
     if !sibling_comments.is_empty() {
+        debug!(
+            "Found {} sibling comment lines => returning early",
+            sibling_comments.len()
+        );
         return sibling_comments;
     }
 
-    // 2) If empty, try token-based approach
-    gather_token_comments_above(start_node)
+    trace!("No sibling comments => calling gather_token_comments_above");
+    let token_comments = gather_token_comments_above(start_node);
+    debug!("Found {} token-based comment lines", token_comments.len());
+    token_comments
 }
+
 
 #[cfg(test)]
 mod test_scan_preceding_tokens_for_comments {
     use super::*;
-    use ra_ap_syntax::{SourceFile, SyntaxKind};
+
+    #[traced_test]
+    fn test_no_comments_above() {
+        info!("test_no_comments_above => start");
+        let src = r#"fn main(){}"#;
+        let fn_node = parse_and_find_fn(src);
+        let gathered = scan_preceding_tokens_for_comments(&fn_node);
+        debug!("Result => {:?}", gathered);
+        assert!(gathered.is_empty());
+        info!("test_no_comments_above => success");
+    }
+
+    #[traced_test]
+    fn test_blank_line_then_comment_is_blocked() {
+        info!("test_blank_line_then_comment_is_blocked => start");
+        let src = r#"
+// Some comment
+// Another comment
+
+fn main() {}
+"#;
+        let fn_node = parse_and_find_fn(src);
+        let gathered = scan_preceding_tokens_for_comments(&fn_node);
+        debug!("Result => {:?}", gathered);
+        assert!(gathered.is_empty());
+        info!("test_blank_line_then_comment_is_blocked => success");
+    }
 
     fn parse_and_find_fn(src: &str) -> SyntaxNode {
+        trace!("parse_and_find_fn => parsing src:\n{src}");
         let parse = SourceFile::parse(src, ra_ap_syntax::Edition::Edition2021);
         let file = parse.tree();
         file.syntax()
@@ -37,40 +66,21 @@ mod test_scan_preceding_tokens_for_comments {
     }
 
     #[traced_test]
-    fn test_no_comments_above() {
-        let src = r#"fn main(){}"#;
-        let fn_node = parse_and_find_fn(src);
-        let gathered = scan_preceding_tokens_for_comments(&fn_node);
-        assert!(gathered.is_empty());
-    }
-
-    #[traced_test]
-    fn test_blank_line_then_comment_is_blocked() {
-        let src = r#"
-// Some comment
-// Another comment
-
-fn main() {}
-"#;
-        // The blank line is right above fn => that means these comments are "blocked"
-        let fn_node = parse_and_find_fn(src);
-        let gathered = scan_preceding_tokens_for_comments(&fn_node);
-        assert!(gathered.is_empty());
-    }
-
-    #[traced_test]
     fn test_comment_directly_above() {
+        info!("test_comment_directly_above => start");
         let src = r#"
 // My comment
 fn main() {}
 "#;
         let fn_node = parse_and_find_fn(src);
         let gathered = scan_preceding_tokens_for_comments(&fn_node);
+        debug!("Result => {:?}", gathered);
         assert_eq!(
             gathered.len(),
             1,
             "We want exactly one comment directly above"
         );
         assert_eq!(gathered[0], "// My comment\n");
+        info!("test_comment_directly_above => success");
     }
 }
