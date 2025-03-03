@@ -1,47 +1,32 @@
 // ---------------- [ File: src/extract_docs_from_ast_node.rs ]
 crate::ix!();
 
-/// Extracts doc lines from `///` or `/** ... */`. We do NOT gather `#[doc="..."]` attributes here.
-/// Those can be handled separately by gather_doc_attrs if you want to unify them.
+/// Extract doc lines from `///` or `/** ... */`. We do NOT gather `#[doc="..."]` attributes here.
+/// Those can be handled separately if you want to unify them.
 pub fn extract_docs(node: &SyntaxNode) -> Option<String> {
-    let doc_comments = node
-        .children_with_tokens()
-        .filter_map(|child| {
-            let token = child.into_token()?;
+    let mut doc_lines = Vec::new();
+
+    for child in node.children_with_tokens() {
+        if let Some(token) = child.into_token() {
             if token.kind() == SyntaxKind::COMMENT {
-                let text = token.text().to_string();
+                let text = token.text();
+                // We only consider `///` and `/**...*/` doc comments
                 if text.starts_with("///") || text.starts_with("/**") {
-                    Some(text)
-                } else {
-                    None
+                    debug!(?text, "Found doc-comment token");
+                    // Keep lines as-is, so block docs remain `/** ... */`
+                    for line in text.lines() {
+                        // Trim leading indentation if you like:
+                        doc_lines.push(line.trim_start().to_string());
+                    }
                 }
-            } else {
-                None
-            }
-        })
-        .collect::<Vec<_>>();
-
-    if doc_comments.is_empty() {
-        return None;
-    }
-
-    let mut lines = Vec::new();
-    for c in doc_comments {
-        if c.starts_with("///") {
-            let stripped = c.trim_start_matches('/').trim();
-            lines.push(format!("/// {}", stripped.trim()));
-        } else if c.starts_with("/**") {
-            let trimmed = c.trim_start_matches("/**").trim_end_matches("*/").trim();
-            for line in trimmed.lines() {
-                lines.push(format!("/// {}", line.trim()));
             }
         }
     }
 
-    if lines.is_empty() {
+    if doc_lines.is_empty() {
         None
     } else {
-        Some(lines.join("\n"))
+        Some(doc_lines.join("\n"))
     }
 }
 
@@ -50,8 +35,7 @@ mod test_extract_docs_exhaustive {
     use super::*;
 
     /// Helper to parse code and return the first top-level item node.
-    /// For doc comments, we generally attach them to items (e.g. structs, fns).
-    fn parse_first_item_node(code: &str) -> ra_ap_syntax::SyntaxNode {
+    fn parse_first_item_node(code: &str) -> SyntaxNode {
         let file = SourceFile::parse(code, Edition::Edition2021);
         let syntax = file.syntax_node();
         syntax
@@ -65,6 +49,7 @@ mod test_extract_docs_exhaustive {
 
     #[traced_test]
     fn test_extract_docs_none_when_no_doc_comments() {
+        info!("Testing no doc comments exist.");
         let code = r#"
             fn example() {}
         "#;
@@ -75,6 +60,7 @@ mod test_extract_docs_exhaustive {
 
     #[traced_test]
     fn test_extract_docs_none_with_only_normal_comment() {
+        info!("Testing only normal comments appear, no doc comment style recognized.");
         let code = r#"
             // This is a regular comment, not a doc comment.
             fn example() {}
@@ -86,19 +72,21 @@ mod test_extract_docs_exhaustive {
 
     #[traced_test]
     fn test_extract_docs_single_line_doc_comment() {
+        info!("Testing single line triple-slash doc comment recognized.");
         let code = r#"
             /// This is a doc comment
             fn example() {}
         "#;
         let node = parse_first_item_node(code);
         let docs = extract_docs(&node);
-        assert!(docs.is_some(), "Expected Some(doc) for a triple-slash doc comment.");
+        assert!(docs.is_some(), "Expected Some(doc) for triple-slash comment.");
         let doc_text = docs.unwrap();
         assert_eq!(doc_text.trim(), "/// This is a doc comment");
     }
 
     #[traced_test]
     fn test_extract_docs_multiple_line_doc_comments() {
+        info!("Testing multiple triple-slash doc comments recognized.");
         let code = r#"
             /// Line one
             /// Line two
@@ -114,6 +102,7 @@ mod test_extract_docs_exhaustive {
 
     #[traced_test]
     fn test_extract_docs_block_doc_comment() {
+        info!("Testing block doc comment recognized as multiple lines if needed.");
         let code = r#"
             /** 
              * This is a block doc comment
@@ -126,12 +115,13 @@ mod test_extract_docs_exhaustive {
         let doc_text = docs.unwrap();
         assert!(
             doc_text.contains("/**"),
-            "Should contain block doc syntax in the collected lines"
+            "Should contain block doc syntax in the collected lines:\n{doc_text}"
         );
     }
 
     #[traced_test]
     fn test_extract_docs_combination_block_and_line() {
+        info!("Testing combination of block doc and triple-slash doc.");
         let code = r#"
             /** Block doc */
             /// Line doc
@@ -139,16 +129,16 @@ mod test_extract_docs_exhaustive {
         "#;
         let node = parse_first_item_node(code);
         let docs = extract_docs(&node)
-            .expect("Expected Some(doc) since there are doc comments present.");
-        // Expect two lines: one block doc, one line doc.
+            .expect("Expected doc lines since doc comments are present.");
         let lines: Vec<&str> = docs.lines().collect();
-        assert_eq!(lines.len(), 2);
+        assert_eq!(lines.len(), 2, "Should have two doc lines total.");
         assert!(lines[0].starts_with("/** Block doc"));
         assert!(lines[1].starts_with("/// Line doc"));
     }
 
     #[traced_test]
     fn test_extract_docs_with_mixed_normal_comments_ignored() {
+        info!("Testing normal // comments are ignored, doc comments extracted.");
         let code = r#"
             // normal comment
             /// doc comment
@@ -159,12 +149,12 @@ mod test_extract_docs_exhaustive {
         let docs = extract_docs(&node)
             .expect("Expected doc comment to be extracted despite normal comments.");
         let doc_text = docs.trim();
-        // Should only see the triple slash line, not normal // lines
         assert_eq!(doc_text, "/// doc comment");
     }
 
     #[traced_test]
     fn test_extract_docs_returns_all_doc_comments_in_joined_string() {
+        info!("Testing we join all doc lines in order.");
         let code = r#"
             /// first line
             /** second line */
@@ -182,6 +172,7 @@ mod test_extract_docs_exhaustive {
 
     #[traced_test]
     fn test_extract_docs_on_struct_with_no_docs() {
+        info!("Testing no doc lines on a doc-less struct.");
         let code = r#"
             struct MyStruct {
                 field: i32
@@ -194,6 +185,7 @@ mod test_extract_docs_exhaustive {
 
     #[traced_test]
     fn test_extract_docs_on_struct_with_doc_comment() {
+        info!("Testing triple-slash doc lines on a struct.");
         let code = r#"
             /// A structure for demonstration
             struct MyStruct {

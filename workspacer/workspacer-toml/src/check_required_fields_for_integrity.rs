@@ -1,6 +1,16 @@
 // ---------------- [ File: src/check_required_fields_for_integrity.rs ]
 crate::ix!();
 
+///removeme
+pub trait Test {
+    fn some_test_fn(&self) -> Result<(),CargoTomlError>;
+    ///some docs
+    fn some_test_fn2(&self) -> Result<i32,CargoTomlError>;
+}
+
+///removeme
+pub type Alias = i32;
+
 impl CheckRequiredFieldsForIntegrity for CargoToml {
 
     type Error = CargoTomlError;

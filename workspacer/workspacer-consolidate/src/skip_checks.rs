@@ -33,7 +33,7 @@ pub fn should_skip_item(node: &SyntaxNode, options: &ConsolidationOptions) -> bo
 }
 
 /// Returns true if `node` is anywhere inside `impl SomeTrait for SomeType { ... }`.
-fn is_in_trait_impl_block(node: &SyntaxNode) -> bool {
+pub fn is_in_trait_impl_block(node: &SyntaxNode) -> bool {
     for ancestor in node.ancestors() {
         if let Some(impl_block) = ast::Impl::cast(ancestor) {
             // `impl_block.trait_()` is Some(...) if it’s `impl SomeTrait for T`.
@@ -66,7 +66,7 @@ pub fn should_skip_impl(impl_ast: &ast::Impl, options: &ConsolidationOptions) ->
 }
 
 /// Simple helper to return a short snippet from a node’s text for logging
-fn snippet_for_logging(node: &SyntaxNode) -> String {
+pub fn snippet_for_logging(node: &SyntaxNode) -> String {
     let ts_zero: TextSize = 0.into();
     node.text()
         .slice(ts_zero..node.text().len().min(60.into()))

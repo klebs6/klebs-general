@@ -5,11 +5,11 @@ pub fn generate_impl_signature(impl_ast: &ast::Impl, docs: Option<&String>) -> S
     // ----------------------------------------------------------------------
     // 1) LOGGING HEADER
     // ----------------------------------------------------------------------
-    eprintln!("=== generate_impl_signature START ===");
+    debug!("=== generate_impl_signature START ===");
 
     // We'll also dump the raw syntax text for final fallback checks
     let node_text = impl_ast.syntax().text().to_string();
-    eprintln!("node_text = {:?}", node_text);
+    debug!("node_text = {:?}", node_text);
 
     // ----------------------------------------------------------------------
     // 2) Handle doc lines
@@ -17,7 +17,7 @@ pub fn generate_impl_signature(impl_ast: &ast::Impl, docs: Option<&String>) -> S
     let mut output = String::new();
     if let Some(d) = docs {
         let trimmed_docs = d.trim();
-        eprintln!("docs (trimmed): {:?}", trimmed_docs);
+        debug!("docs (trimmed): {:?}", trimmed_docs);
         if !trimmed_docs.is_empty() {
             output.push_str(trimmed_docs);
             output.push('\n');
@@ -44,10 +44,10 @@ pub fn generate_impl_signature(impl_ast: &ast::Impl, docs: Option<&String>) -> S
         .map(|ty| ty.syntax().text().to_string())
         .unwrap_or_default();
 
-    eprintln!("raw_generics = {:?}", raw_generics);
-    eprintln!("raw_trait    = {:?}", raw_trait);
-    eprintln!("raw_self_ty  = {:?}", raw_self_ty);
-    eprintln!("raw_where    = {:?}", raw_where);
+    debug!("raw_generics = {:?}", raw_generics);
+    debug!("raw_trait    = {:?}", raw_trait);
+    debug!("raw_self_ty  = {:?}", raw_self_ty);
+    debug!("raw_where    = {:?}", raw_where);
 
     // ----------------------------------------------------------------------
     // 4) Flatten whitespace in each piece
@@ -62,16 +62,16 @@ pub fn generate_impl_signature(impl_ast: &ast::Impl, docs: Option<&String>) -> S
         flatten_whitespace(&raw_self_ty)
     };
 
-    eprintln!("flattened generics = {:?}", generics);
-    eprintln!("flattened trait    = {:?}", trait_part);
-    eprintln!("flattened self_ty  = {:?}", self_ty);
-    eprintln!("flattened where    = {:?}", where_clause);
+    debug!("flattened generics = {:?}", generics);
+    debug!("flattened trait    = {:?}", trait_part);
+    debug!("flattened self_ty  = {:?}", self_ty);
+    debug!("flattened where    = {:?}", where_clause);
 
     // ----------------------------------------------------------------------
     // 5) Clean up the where clause (remove trailing commas, skip if it's just "where")
     // ----------------------------------------------------------------------
     let where_clause = clean_where_clause(&where_clause);
-    eprintln!("cleaned where_clause = {:?}", where_clause);
+    debug!("cleaned where_clause = {:?}", where_clause);
 
     // ----------------------------------------------------------------------
     // 6) Check if the snippet is obviously incomplete, e.g. it literally ends with "for"
@@ -80,7 +80,7 @@ pub fn generate_impl_signature(impl_ast: &ast::Impl, docs: Option<&String>) -> S
     // ----------------------------------------------------------------------
     let trimmed_node = node_text.trim_end();
     if trimmed_node.ends_with("for") {
-        eprintln!("Detected snippet ending in 'for'. Overriding self_ty to '???'");
+        debug!("Detected snippet ending in 'for'. Overriding self_ty to '???'");
         self_ty = "???".to_owned();
         trait_part = flatten_whitespace(""); // i.e. we ignore the originally empty trait
     }
@@ -97,7 +97,7 @@ pub fn generate_impl_signature(impl_ast: &ast::Impl, docs: Option<&String>) -> S
 
     // If self_ty is ???, we skip any leftover "for" in trait_part if present
     if self_ty == "???" {
-        eprintln!("self_ty=??? => trait_part was {:?}", trait_part);
+        debug!("self_ty=??? => trait_part was {:?}", trait_part);
         let trait_part_stripped = trait_part.trim_end_matches("for").trim();
         if trait_part_stripped.is_empty() {
             signature.push_str("???");
@@ -121,7 +121,7 @@ pub fn generate_impl_signature(impl_ast: &ast::Impl, docs: Option<&String>) -> S
 
     // Trim any trailing space
     let signature = signature.trim_end().to_owned();
-    eprintln!("signature before doc merge = {:?}", signature);
+    debug!("signature before doc merge = {:?}", signature);
 
     // 8) If doc lines exist, they already have a newline => combine them
     let final_output = if output.is_empty() {
@@ -130,8 +130,8 @@ pub fn generate_impl_signature(impl_ast: &ast::Impl, docs: Option<&String>) -> S
         format!("{output}{signature}")
     };
 
-    eprintln!("FINAL OUTPUT = {:?}", final_output);
-    eprintln!("=== generate_impl_signature END ===");
+    debug!("FINAL OUTPUT = {:?}", final_output);
+    debug!("=== generate_impl_signature END ===");
     final_output
 }
 

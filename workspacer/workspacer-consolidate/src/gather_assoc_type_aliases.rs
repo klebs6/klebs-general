@@ -23,7 +23,8 @@ pub fn gather_assoc_type_aliases(
                         ty_alias,
                         docs,
                         attrs,
-                        None
+                        None,
+                        Some(options.clone())
                     ));
                 } else {
                     info!("Skipping type_alias in impl: either test item or private item was disallowed");

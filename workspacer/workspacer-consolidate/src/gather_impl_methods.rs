@@ -17,7 +17,7 @@ pub fn gather_impl_methods(
                 if !should_skip_item_fn(&fn_ast, options) {
                     out.push(gather_fn_item(&fn_ast, options));
                 } else {
-                    info!(
+                    debug!(
                         "Skipping fn in impl: private/test/other => {:?}",
                         fn_ast.syntax().text().to_string()
                     );
@@ -29,60 +29,54 @@ pub fn gather_impl_methods(
     out
 }
 
-/// Specialized skip-check for `ast::Fn` in older RA:
-/// we use `fn_ast.attrs()` to read attributes, and `fn_ast.visibility()` to detect `pub`.
+#[tracing::instrument(level="trace", skip_all)]
 fn should_skip_item_fn(fn_ast: &ast::Fn, options: &ConsolidationOptions) -> bool {
-    // 1) Check each attribute. If we see `#[cfg(test)]` but .include_test_items is false => skip
-    //    or if we see `#[some_other_attr]`, skip. We'll do naive text checks, or parse the path+token_tree.
+    let node = fn_ast.syntax().clone();
+    let snippet = snippet_for_logging(&node);
+    trace!("Entering should_skip_item_fn; snippet = {:?}", snippet);
 
+    // 1) If we're only collecting test items, skip any non-test function.
+    //    Or if it *is* a test fn but `include_test_items` is false, skip it.
+    let is_test_item = is_in_test_module(node.clone()) || has_cfg_test_attr(&node);
+    if *options.only_test_items() && !is_test_item {
+        trace!("Skipping fn because only_test_items=true but this fn isn't a test item: {:?}", snippet);
+        return true;
+    }
+    if is_test_item && !options.include_test_items() {
+        trace!("Skipping fn because it's a test item but include_test_items=false: {:?}", snippet);
+        return true;
+    }
+
+    // 2) Skip if it has an explicit `#[some_other_attr]` that we don't want.
     for attr in fn_ast.attrs() {
-        // e.g. if it's `#[cfg(test)]` => skip if !include_test_items
-        if let Some(path) = attr.path() {
-            let path_txt = path.syntax().text().to_string();
-            // if the path is `cfg`, we can see if token_tree has "test"
-            if path_txt == "cfg" {
-                let ttree = attr.token_tree().map(|tt| tt.to_string()).unwrap_or_default();
-                if ttree.contains("test") && !options.include_test_items() {
-                    return true;
-                }
-            }
-        }
-        // also skip if "#[some_other_attr]"
         let raw = attr.syntax().text().to_string();
         if raw.contains("#[some_other_attr]") {
+            trace!("Skipping fn because it has #[some_other_attr]: {:?}", snippet);
             return true;
         }
     }
 
-    // 2) If it's private and we haven't turned on .with_private_items() => skip
+    // 3) If it’s private (no `pub`) and not inside a trait impl, we skip it
+    //    unless `.with_private_items()` is set.
     if !options.include_private() {
-        // ast::Fn implements `visibility()`, which is None if not pub
-        if fn_ast.visibility().is_none() {
-            return true;
+        if !is_in_trait_impl_block(&node) {
+            // In a normal (inherent) impl or free function scenario,
+            // we require `pub` unless user asked for private items.
+            if fn_ast.visibility().is_none() {
+                trace!("Skipping fn because it's private and user didn't ask for private items: {:?}", snippet);
+                return true;
+            }
         }
     }
 
-    // Otherwise, do not skip
+    trace!("Not skipping fn: {:?}", snippet);
     false
-}
-
-// In your real code, you likely have gather_fn_item:
-fn gather_fn_item(fn_ast: &ast::Fn, _options: &ConsolidationOptions) -> CrateInterfaceItem<ast::Fn> {
-    // Example placeholder logic:
-    let docs = None;    // or extract docs if .with_docs
-    let attrs = None;   // or parse raw attributes if you want
-    let body_source = None;
-    CrateInterfaceItem::new(fn_ast.clone(), docs, attrs, body_source)
 }
 
 // The rest of your import boilerplate & test suite below...
 #[cfg(test)]
 mod test_gather_impl_methods {
     use super::*;
-    use ra_ap_syntax::{
-        ast::{self, AstNode},
-        SourceFile, SyntaxNode, Edition,
-    };
 
     // Minimally define or import ConsolidationOptions, CrateInterfaceItem, etc.
     // e.g.:

@@ -54,7 +54,7 @@ impl ConsolidateCrateInterfaceCli {
             .await
             .map_err(WorkspaceError::CrateError)?;
 
-        debug!("single_crate: {:#?}", single_crate);
+        info!("single_crate: {:#?}", single_crate);
 
         let mut consolidation_opts = ConsolidationOptions::new();
 
@@ -80,7 +80,7 @@ impl ConsolidateCrateInterfaceCli {
         // Optionally logs helpful warnings
         consolidation_opts.validate();
 
-        debug!("consolidation_options: {:#?}", consolidation_opts);
+        info!("consolidation_options: {:#?}", consolidation_opts);
 
         let consolidated = single_crate
             .consolidate_crate_interface(&consolidation_opts)

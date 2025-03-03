@@ -14,28 +14,28 @@ pub async fn notify_rebuild_result(
 }
 
 #[cfg(test)]
-#[disable]
 mod test_notify_rebuild_result {
     use super::*;
     use tokio::sync::mpsc;
 
-    #[tokio::test]
+    // Re-enable by removing #[disable].
+    // Switch to traced_test, add logging.
+
+    #[traced_test]
     async fn test_notify_rebuild_result_some() {
+        info!("Starting test_notify_rebuild_result_some");
         let (tx, mut rx) = mpsc::channel::<Result<(), WorkspaceError>>(1);
         let res: Result<(), WorkspaceError> = Ok(());
-
         notify_rebuild_result(Some(&tx), res.clone()).await;
-
-        // check the channel
-        let received = rx.try_recv();
-        assert_eq!(received.ok(), Some(res));
+        let received = rx.try_recv().ok();
+        assert_eq!(received, Some(res));
     }
 
-    #[tokio::test]
+    #[traced_test]
     async fn test_notify_rebuild_result_none() {
+        info!("Starting test_notify_rebuild_result_none");
         let res: Result<(), WorkspaceError> = Err(WorkspaceError::FileWatchError);
-        // If tx is None => does nothing
         notify_rebuild_result(None, res.clone()).await;
-        // No test to do, just confirm it doesn't panic
+        // no channel => no panic
     }
 }

@@ -38,7 +38,7 @@ pub fn gather_fn_item(
         }
     };
 
-    CrateInterfaceItem::new(fn_ast.clone(), docs, attributes, body_source)
+    CrateInterfaceItem::new(fn_ast.clone(), docs, attributes, body_source, Some(options.clone()))
 }
 
 #[cfg(test)]

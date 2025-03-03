@@ -3,7 +3,7 @@ use workspacer_3p::*;
 use workspacer_errors::*;
 use workspacer_crate::*;
 use workspacer_workspace::*;
-use workspacer_ensure_all_source_files_are_registered::*;
+use workspacer_register::*;
 use workspacer_git::*;
 
 #[tokio::main]

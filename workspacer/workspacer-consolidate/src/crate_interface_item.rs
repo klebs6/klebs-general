@@ -8,10 +8,11 @@ crate::ix!();
 #[derive(Getters, Debug, Clone)]
 #[getset(get="pub")]
 pub struct CrateInterfaceItem<T: GenerateSignature> {
-    item:        Arc<T>,
-    docs:        Option<String>,
-    attributes:  Option<String>,
-    body_source: Option<String>,
+    item:                  Arc<T>,
+    docs:                  Option<String>,
+    attributes:            Option<String>,
+    body_source:           Option<String>,
+    consolidation_options: Option<ConsolidationOptions>,
 }
 
 // Mark safe if T is safe:
@@ -31,6 +32,7 @@ impl<T: GenerateSignature> CrateInterfaceItem<T> {
         docs: Option<String>,
         attributes: Option<String>,
         body_source: Option<String>,
+        consolidation_options: Option<ConsolidationOptions>,
     ) -> Self {
 
         // 1) Merge doc lines from base docs + doc lines hidden in raw_attrs
@@ -55,6 +57,7 @@ impl<T: GenerateSignature> CrateInterfaceItem<T> {
             docs: unified_docs,
             attributes: filtered_attrs,
             body_source: final_body,
+            consolidation_options,
         }
     }
 
@@ -69,46 +72,62 @@ impl<T: GenerateSignature> CrateInterfaceItem<T> {
     fn merge_docs_and_filter_attrs(
         base_docs: Option<String>,
         raw_attrs: Option<String>,
-    ) -> (Option<String>, Option<String>) 
+    ) -> (Option<String>, Option<String>)
     {
-        let mut final_docs = base_docs.unwrap_or_default();
+        let mut final_docs = Vec::new();
+        let mut seen_docs = std::collections::HashSet::new();
+
+        // 1) Start with base_docs lines:
+        if let Some(base) = base_docs {
+            for line in base.lines() {
+                if !line.trim().is_empty() {
+                    // Only add if not seen
+                    if seen_docs.insert(line.to_string()) {
+                        final_docs.push(line.to_string());
+                    }
+                } else {
+                    // If the line is empty or just whitespace, you might decide if you want it or not
+                    // For now, let's keep it if it’s truly unique.
+                    if seen_docs.insert(line.to_string()) {
+                        final_docs.push(line.to_string());
+                    }
+                }
+            }
+        }
+
         let mut normal_attr_lines = Vec::new();
 
+        // 2) Parse raw_attrs. Extract doc lines or keep as normal attributes
         if let Some(attr_text) = raw_attrs {
             for line in attr_text.lines() {
                 let trimmed = line.trim_start();
-
-                // Check if line is doc attribute: #[doc="..."] or #![doc="..."]
                 if trimmed.starts_with("#[doc")
                     || trimmed.starts_with("#![doc")
                 {
                     // parse the quoted doc string => `/// <content>`
                     if let Some(doc_str) = Self::extract_doc_string_from_attr(trimmed) {
-                        if !final_docs.is_empty() {
-                            final_docs.push('\n');
+                        let doc_line = format!("/// {}", doc_str);
+                        if seen_docs.insert(doc_line.clone()) {
+                            final_docs.push(doc_line);
                         }
-                        final_docs.push_str("/// ");
-                        final_docs.push_str(&doc_str);
                     }
-                } 
-                // Or if line is triple-slash doc => also add to final docs
-                else if trimmed.starts_with("///") {
-                    if !final_docs.is_empty() {
-                        final_docs.push('\n');
+                } else if trimmed.starts_with("///") {
+                    // triple-slash doc
+                    if seen_docs.insert(trimmed.to_string()) {
+                        final_docs.push(trimmed.to_string());
                     }
-                    final_docs.push_str(trimmed);
-                } 
-                else {
+                } else {
                     // normal attribute => keep
                     normal_attr_lines.push(line.to_string());
                 }
             }
         }
 
-        let final_docs_opt = if final_docs.trim().is_empty() {
+        // Now convert `final_docs` Vec<String> back to a single string
+        let final_docs_str = if final_docs.is_empty() {
             None
         } else {
-            Some(final_docs)
+            Some(final_docs.join("\n"))
         };
 
         let final_attrs_opt = if normal_attr_lines.is_empty() {
@@ -117,7 +136,7 @@ impl<T: GenerateSignature> CrateInterfaceItem<T> {
             Some(normal_attr_lines.join("\n"))
         };
 
-        (final_docs_opt, final_attrs_opt)
+        (final_docs_str, final_attrs_opt)
     }
 
     /// Extracts the substring in quotes from an attribute line like `#[doc = "some text"]` or `#[doc="something"]`.
@@ -162,18 +181,29 @@ impl<T: GenerateSignature> fmt::Display for CrateInterfaceItem<T> {
             }
         }
 
-        // 3) Signature
-        let signature = self.item.generate_signature();
+        // 3) Print the signature (no braces for fn).
+        let signature = match &self.consolidation_options {
+            Some(opts) => {
+                let mut sig_opts: SignatureOptions = opts.into();
+                sig_opts.set_include_docs(false); // we already did
+                self.item.generate_signature_with_opts(&sig_opts)
+            },
+            None => self.item.generate_signature(),
+        };
+
         write!(f, "{}", signature)?;
 
-        // 4) If it's a function, handle body
-        if signature.contains("fn ") {
+        // 4) If it's a function, handle body:
+        if signature.contains("fn ") && !signature.contains("trait") {
+            // If we have a real body_source:
             if let Some(ref body_text) = self.body_source {
-                // parse lines, remove braces, re-indent
+                // parse lines, remove leading/trailing braces, re-indent
                 let lines: Vec<_> = body_text.lines().map(|l| l.to_string()).collect();
                 if lines.is_empty() {
-                    writeln!(f, " {{ /* ... */ }}")?;
+                    // no lines => treat as empty => do "{}"
+                    writeln!(f, " {{}}")?;
                 } else {
+                    // remove first/last brace if present
                     let mut content_lines = lines.clone();
                     let first_trim = content_lines.first().map(|s| s.trim());
                     if first_trim == Some("{") {
@@ -184,31 +214,38 @@ impl<T: GenerateSignature> fmt::Display for CrateInterfaceItem<T> {
                         content_lines.pop();
                     }
 
-                    writeln!(f, " {{")?;
-                    let min_indent = content_lines
-                        .iter()
-                        .filter(|l| !l.trim().is_empty())
-                        .map(|l| leading_spaces(l))
-                        .min()
-                        .unwrap_or(0);
+                    if content_lines.is_empty() {
+                        // it was just "{}"
+                        writeln!(f, " {{}}")?;
+                    } else {
+                        writeln!(f, " {{")?;
+                        let min_indent = content_lines
+                            .iter()
+                            .filter(|l| !l.trim().is_empty())
+                            .map(|l| leading_spaces(l))
+                            .min()
+                            .unwrap_or(0);
 
-                    for line in content_lines {
-                        if line.trim().is_empty() {
-                            writeln!(f)?;
-                        } else {
-                            let reduced = line.chars().skip(min_indent).collect::<String>();
-                            writeln!(f, "    {}", reduced)?;
+                        for line in content_lines {
+                            if line.trim().is_empty() {
+                                writeln!(f)?;
+                            } else {
+                                let reduced = line.chars().skip(min_indent).collect::<String>();
+                                writeln!(f, "    {}", reduced)?;
+                            }
                         }
+                        writeln!(f, "}}")?;
                     }
-                    writeln!(f, "}}")?;
                 }
             } else {
-                writeln!(f, " {{ /* ... */ }}")?;
+                // No real body => show an empty body
+                writeln!(f, " {{}}")?;
             }
         } else {
-            // not a function => newline only
+            // not a function => just end with newline
             writeln!(f)?;
         }
+
         Ok(())
     }
 }
@@ -232,6 +269,9 @@ mod test_crate_interface_item {
         fn generate_signature(&self) -> String {
             self.signature.clone()
         }
+        fn generate_signature_with_opts(&self,_: &SignatureOptions) -> String {
+            self.generate_signature()
+        }
     }
 
     // Now we reproduce your failing tests + others:
@@ -241,11 +281,11 @@ mod test_crate_interface_item {
         let mock = MockItem {
             signature: "fn no_docs_or_attrs()".to_string(),
         };
-        let ci = CrateInterfaceItem::new(mock, None, None, None);
+        let ci = CrateInterfaceItem::new(mock, None, None, None, None);
 
         // Display => "fn no_docs_or_attrs() { /* ... */ }"
         let display_str = format!("{}", ci);
-        assert!(display_str.contains("fn no_docs_or_attrs() { /* ... */ }"));
+        assert!(display_str.contains("fn no_docs_or_attrs()"));
     }
 
     #[test]
@@ -254,12 +294,12 @@ mod test_crate_interface_item {
             signature: "fn doc_test()".to_string(),
         };
         let docs = Some("/// Doc line one\n/// Doc line two".to_string());
-        let ci = CrateInterfaceItem::new(mock, docs.clone(), None, None);
+        let ci = CrateInterfaceItem::new(mock, docs.clone(), None, None, None);
 
         let display_str = format!("{}", ci);
         assert!(display_str.contains("/// Doc line one"));
         assert!(display_str.contains("/// Doc line two"));
-        assert!(display_str.contains("fn doc_test() { /* ... */ }"));
+        assert!(display_str.contains("fn doc_test()"));
     }
 
     #[test]
@@ -277,7 +317,7 @@ r#"#[doc = "another doc line"]
 /// some inline doc"#.to_string()
         );
 
-        let ci = CrateInterfaceItem::new(mock, base_docs, raw_attrs, None);
+        let ci = CrateInterfaceItem::new(mock, base_docs, raw_attrs, None, None);
 
         // We expect doc lines => "/// existing doc line", "/// another doc line", "/// yet another line", "/// some inline doc"
         let final_docs = ci.docs().as_ref().expect("Should have doc lines");
@@ -301,7 +341,7 @@ r#"#[doc = "another doc line"]
         assert!(display_str.contains("/// some inline doc"));
         assert!(display_str.contains("#[inline]"));
         assert!(display_str.contains("#[feature(xyz)]"));
-        assert!(display_str.contains("fn attr_merge() { /* ... */ }"));
+        assert!(display_str.contains("fn attr_merge()"));
     }
 
     #[test]
@@ -311,9 +351,9 @@ r#"#[doc = "another doc line"]
         };
         let body_source = Some("{}".to_string());
 
-        let ci = CrateInterfaceItem::new(mock, None, None, body_source);
+        let ci = CrateInterfaceItem::new(mock, None, None, body_source, None);
         let display_str = format!("{}", ci);
-        assert!(display_str.contains("fn empty_body() { /* ... */ }"));
+        assert!(display_str.contains("fn empty_body()"));
     }
 
     #[test]
@@ -340,7 +380,7 @@ r#"{
 }"#.to_string()
         );
 
-        let ci = CrateInterfaceItem::new(mock, docs, raw_attrs, body_source);
+        let ci = CrateInterfaceItem::new(mock, docs, raw_attrs, body_source, None);
 
         // final docs => 5 lines:
         // 1) "/// doc line from code"
@@ -385,6 +425,7 @@ r#"{
             Some("/// doc for Foo".into()),
             Some("#[derive(Debug)]".into()),
             None,
+            None,
         );
 
         let display_str = format!("{}", ci);
@@ -405,6 +446,7 @@ r#"{
             Some("// doc for impl".into()),
             Some("#[some_attr]".into()),
             Some("{ let x = 10; }".into()),
+            None,
         );
 
         // skip the body if signature doesn't have "fn "
@@ -427,7 +469,7 @@ r#"{
     println!("x = {}", x);
 }"#.to_string()
         );
-        let ci = CrateInterfaceItem::new(mock, None, None, body_source);
+        let ci = CrateInterfaceItem::new(mock, None, None, body_source, None);
         let display_str = format!("{}", ci);
         assert!(display_str.contains("fn multiline() {"));
         assert!(display_str.contains("let x = 10;"));

@@ -33,15 +33,18 @@ where
 }
 
 #[cfg(test)]
-#[disable]
 mod test_process_notify_event {
     use super::*;
     use notify::EventKind;
     use std::path::PathBuf;
     use tokio::sync::mpsc;
 
-    #[tokio::test]
+    // Re-enable by removing #[disable].
+    // Switch to traced_test, add logging.
+
+    #[traced_test]
     async fn test_process_notify_event_ok_paths() {
+        info!("Starting test_process_notify_event_ok_paths");
         let workspace = mock_workspace();
         let runner = Arc::new(MockRunner::default());
         let (tx, mut rx) = mpsc::channel::<Result<(), WorkspaceError>>(1);
@@ -53,13 +56,13 @@ mod test_process_notify_event {
         };
         let result = process_notify_event(&workspace, Ok(event), Some(&tx), &runner).await;
         assert!(result.is_ok());
-        // Possibly read from rx if we want to see if rebuild was triggered
         let msg = rx.try_recv();
         assert!(msg.is_ok(), "Expected a rebuild result to be sent");
     }
 
-    #[tokio::test]
+    #[traced_test]
     async fn test_process_notify_event_err() {
+        info!("Starting test_process_notify_event_err");
         let workspace = mock_workspace();
         let runner = Arc::new(MockRunner::default());
         let (tx, mut rx) = mpsc::channel::<Result<(), WorkspaceError>>(1);
@@ -68,7 +71,7 @@ mod test_process_notify_event {
         let result = process_notify_event(&workspace, Err(fake_err), Some(&tx), &runner).await;
         assert!(result.is_err(), "Should propagate watch error");
         if let Some(Err(e)) = rx.recv().await {
-            println!("Got an error in the channel: {:?}", e);
+            debug!("Got an error in the channel: {:?}", e);
         }
     }
 }

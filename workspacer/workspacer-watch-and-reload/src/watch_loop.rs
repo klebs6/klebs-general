@@ -42,29 +42,27 @@ where
 }
 
 #[cfg(test)]
-#[disable]
 mod test_watch_loop {
     use super::*;
-    use workspacer_3p::tokio;
     use async_channel::bounded;
     use tokio::sync::mpsc;
-    use tokio_util::sync::CancellationToken; // or your usage
+    use tokio::sync::CancellationToken;
     use std::sync::Arc;
     use std::path::PathBuf;
-    // Also define a mock runner
 
-    #[tokio::test]
+    // Re-enable by removing #[disable].
+    // Switch to traced_test, add logging.
+
+    #[traced_test]
     async fn test_watch_loop_exits_on_channel_close() {
-        // We'll create a mock notify channel
+        info!("Starting test_watch_loop_exits_on_channel_close");
         let (notify_tx, notify_rx) = async_channel::unbounded::<notify::Result<notify::Event>>();
-
-        // Immediately drop the sender or close it => watch_loop sees 'Err(_closed)' => breaks
         drop(notify_tx);
 
         let workspace = mock_workspace();
         let runner = Arc::new(MockRunner::default());
         let cancel_token = CancellationToken::new();
-        let mut watcher = create_dummy_watcher(); // We'll define a function or do an Option
+        let mut watcher = create_dummy_watcher();
         let path = PathBuf::from("/some/workspace");
 
         let result = watch_loop(
@@ -79,16 +77,16 @@ mod test_watch_loop {
         assert!(result.is_ok(), "If channel closed, watch_loop breaks with Ok(())");
     }
 
-    #[tokio::test]
+    #[traced_test]
     async fn test_watch_loop_exits_on_cancel() {
-        let (notify_tx, notify_rx) = async_channel::unbounded();
+        info!("Starting test_watch_loop_exits_on_cancel");
+        let (notify_tx, notify_rx) = async_channel::unbounded::<notify::Result<notify::Event>>();
         let workspace = mock_workspace();
         let runner = Arc::new(MockRunner::default());
         let cancel_token = CancellationToken::new();
         let mut watcher = create_dummy_watcher();
         let path = PathBuf::from("/some/path");
 
-        // spawn the watch_loop
         let join_handle = tokio::spawn(async move {
             watch_loop(
                 &workspace,
@@ -101,12 +99,8 @@ mod test_watch_loop {
             ).await
         });
 
-        // request cancellation
         cancel_token.cancel();
         let result = join_handle.await.unwrap();
         assert!(result.is_ok(), "Should break on cancellation with Ok(())");
     }
-
-    // You could also test feeding real or mock file events into notify_tx 
-    // to see if the code calls `process_notify_event`.
 }

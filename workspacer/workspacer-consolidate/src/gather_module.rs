@@ -38,7 +38,7 @@ pub fn gather_module(
                             let docs = None;       // or `extract_docs(...)`
                             let attributes = None; // or `gather_all_attrs(...)`
                             let body_source = None;
-                            let item = CrateInterfaceItem::new(fn_ast, docs, attributes, body_source);
+                            let item = CrateInterfaceItem::new(fn_ast, docs, attributes, body_source, Some(options.clone()));
                             mod_interface.add_item(ConsolidatedItem::Fn(item));
                         }
                     }
@@ -52,7 +52,7 @@ pub fn gather_module(
                             let docs = None;
                             let attributes = None;
                             let body_source = None;
-                            let item = CrateInterfaceItem::new(st_ast, docs, attributes, body_source);
+                            let item = CrateInterfaceItem::new(st_ast, docs, attributes, body_source, Some(options.clone()));
                             mod_interface.add_item(ConsolidatedItem::Struct(item));
                         }
                     }

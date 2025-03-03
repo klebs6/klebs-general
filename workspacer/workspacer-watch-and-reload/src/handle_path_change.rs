@@ -24,37 +24,37 @@ where
 }
 
 #[cfg(test)]
-#[disable]
 mod test_handle_path_change {
     use super::*;
-    #[tokio::test]
+    use tokio::sync::mpsc;
+
+    // Re-enable by removing #[disable].
+    // Switch to traced_test, add logging.
+
+    #[traced_test]
     async fn test_relevant_path_triggers_rebuild() {
+        info!("Starting test_relevant_path_triggers_rebuild");
         let workspace = mock_workspace_relevant_path();
         let runner = Arc::new(MockRunner::default());
         let (tx, mut rx) = mpsc::channel::<Result<(), WorkspaceError>>(1);
 
-        // Suppose `workspace.is_relevant_change` returns true for "Cargo.toml"
         let path = Path::new("Cargo.toml");
         let result = handle_path_change(&workspace, path, Some(&tx), &runner).await;
         assert!(result.is_ok(), "No immediate error");
-
-        // Check if a rebuild result was sent
         let msg = rx.recv().await;
         assert!(msg.is_some(), "Expected a rebuild result in the channel");
     }
 
-    #[tokio::test]
+    #[traced_test]
     async fn test_irrelevant_path_no_rebuild() {
+        info!("Starting test_irrelevant_path_no_rebuild");
         let workspace = mock_workspace_irrelevant_path();
         let runner = Arc::new(MockRunner::default());
         let (tx, mut rx) = mpsc::channel::<Result<(), WorkspaceError>>(1);
 
-        // Suppose workspace.is_relevant_change returns false
         let path = Path::new("random_file.txt");
         let result = handle_path_change(&workspace, path, Some(&tx), &runner).await;
         assert!(result.is_ok());
-
-        // expect no message in channel
         let msg = rx.try_recv();
         assert!(msg.is_err(), "No message was sent if path is irrelevant");
     }

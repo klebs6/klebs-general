@@ -19,7 +19,7 @@ where for<'async_trait> P: From<PathBuf> + AsRef<Path> + Send + Sync + 'async_tr
 #[disable]
 mod test_into_iterator {
     use super::*;
-    #[test]
+    #[traced_test]
     fn test_empty_workspace_iter() {
         let ws = MockWorkspace::new(
             MockPath(PathBuf::from("/some/where")),
@@ -29,7 +29,7 @@ mod test_into_iterator {
         assert_eq!(iter.next(), None, "No crates => iteration is empty");
     }
 
-    #[test]
+    #[traced_test]
     fn test_single_crate_iter() {
         let c1 = MockCrateHandle { crate_path: PathBuf::from("crateA"), publish_ready: true };
         let ws = MockWorkspace::new(MockPath(PathBuf::from("/single")), vec![c1]);
@@ -41,7 +41,7 @@ mod test_into_iterator {
         assert_eq!(iter.next(), None, "No more crates after the first");
     }
 
-    #[test]
+    #[traced_test]
     fn test_multiple_crates_iter() {
         let c1 = MockCrateHandle { crate_path: PathBuf::from("crateA"), publish_ready: true };
         let c2 = MockCrateHandle { crate_path: PathBuf::from("crateB"), publish_ready: true };

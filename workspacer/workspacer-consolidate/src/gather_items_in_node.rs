@@ -16,17 +16,17 @@ pub fn gather_items_in_node(
     } else {
         node_text.clone()
     };
-    eprintln!("=== gather_items_in_node: Node preview = {:?} ===", preview);
+    debug!("=== gather_items_in_node: Node preview = {:?} ===", preview);
 
     // 1) Attempt to parse as `SourceFile`
     if let Some(sf) = ast::SourceFile::cast(parent_node.clone()) {
         let items_iter = sf.items();
         // We'll collect them in a vector just to debug their count:
         let all_items: Vec<_> = items_iter.collect();
-        eprintln!(">>> recognized SourceFile => found {} top-level items", all_items.len());
+        debug!(">>> recognized SourceFile => found {} top-level items", all_items.len());
         for (i, it) in all_items.iter().enumerate() {
             let k = it.syntax().kind();
-            eprintln!("    item #{}: kind={:?}, text={:?}",
+            debug!("    item #{}: kind={:?}, text={:?}",
                 i, k,
                 trim_to_60(it.syntax().text().to_string())
             );
@@ -39,10 +39,10 @@ pub fn gather_items_in_node(
     if let Some(item_list) = ast::ItemList::cast(parent_node.clone()) {
         let items_iter = item_list.items();
         let all_items: Vec<_> = items_iter.collect();
-        eprintln!(">>> recognized ItemList => found {} items", all_items.len());
+        debug!(">>> recognized ItemList => found {} items", all_items.len());
         for (i, it) in all_items.iter().enumerate() {
             let k = it.syntax().kind();
-            eprintln!("    item #{}: kind={:?}, text={:?}",
+            debug!("    item #{}: kind={:?}, text={:?}",
                 i, k,
                 trim_to_60(it.syntax().text().to_string())
             );
@@ -53,20 +53,20 @@ pub fn gather_items_in_node(
     // 3) Fallback: direct iteration over `parent_node.children()`.
     //    This is rarely needed for top-level items if the snippet is well-formed,
     //    but it might matter for nested scopes or partial code.
-    eprintln!(">>> fallback: direct children => checking .kind() of each child");
+    debug!(">>> fallback: direct children => checking .kind() of each child");
     let mut items = Vec::new();
     let mut count_children = 0;
     for child in parent_node.children() {
         count_children += 1;
         let k = child.kind();
         let short_txt = trim_to_60(child.text().to_string());
-        eprintln!("   - fallback child #{} => kind={:?}, text={:?}", count_children, k, short_txt);
+        debug!("   - fallback child #{} => kind={:?}, text={:?}", count_children, k, short_txt);
 
         // Attempt the same item logic:
         if let Some(mod_ast) = ast::Module::cast(child.clone()) {
-            eprintln!("       => recognized ast::Module");
+            debug!("       => recognized ast::Module");
             if should_skip_item(&child, options) {
-                eprintln!("         [skipped by should_skip_item]");
+                debug!("         [skipped by should_skip_item]");
                 continue;
             }
             let docs = if *options.include_docs() {
@@ -92,9 +92,9 @@ pub fn gather_items_in_node(
             items.push(ConsolidatedItem::Module(mod_iface));
 
         } else if let Some(impl_ast) = ast::Impl::cast(child.clone()) {
-            eprintln!("       => recognized ast::Impl");
+            debug!("       => recognized ast::Impl");
             if should_skip_impl(&impl_ast, options) {
-                eprintln!("         [skipped by should_skip_impl]");
+                debug!("         [skipped by should_skip_impl]");
                 continue;
             }
             let docs  = None; // or extract_docs
@@ -107,16 +107,16 @@ pub fn gather_items_in_node(
             items.push(ConsolidatedItem::ImplBlock(ib));
 
         } else if let Some(fn_ast) = ast::Fn::cast(child.clone()) {
-            eprintln!("       => recognized ast::Fn");
+            debug!("       => recognized ast::Fn");
             if should_skip_item(&child, options) {
-                eprintln!("         [skipped by should_skip_item]");
+                debug!("         [skipped by should_skip_item]");
                 continue;
             }
             let ci = gather_fn_item(&fn_ast, options);
             items.push(ConsolidatedItem::Fn(ci));
 
         } else if let Some(st_ast) = ast::Struct::cast(child.clone()) {
-            eprintln!("       => recognized ast::Struct");
+            debug!("       => recognized ast::Struct");
             if should_skip_item(&child, options) {
                 continue;
             }
@@ -127,11 +127,11 @@ pub fn gather_items_in_node(
             };
             let attrs = gather_all_attrs(&child);
             items.push(ConsolidatedItem::Struct(
-                CrateInterfaceItem::new(st_ast, docs, attrs, None),
+                CrateInterfaceItem::new(st_ast, docs, attrs, None, Some(options.clone())),
             ));
 
         } else if let Some(en_ast) = ast::Enum::cast(child.clone()) {
-            eprintln!("       => recognized ast::Enum");
+            debug!("       => recognized ast::Enum");
             if should_skip_item(&child, options) {
                 continue;
             }
@@ -142,11 +142,11 @@ pub fn gather_items_in_node(
             };
             let attrs = gather_all_attrs(&child);
             items.push(ConsolidatedItem::Enum(
-                CrateInterfaceItem::new(en_ast, docs, attrs, None),
+                CrateInterfaceItem::new(en_ast, docs, attrs, None, Some(options.clone())),
             ));
 
         } else if let Some(tr_ast) = ast::Trait::cast(child.clone()) {
-            eprintln!("       => recognized ast::Trait");
+            debug!("       => recognized ast::Trait");
             if should_skip_item(&child, options) {
                 continue;
             }
@@ -157,11 +157,11 @@ pub fn gather_items_in_node(
             };
             let attrs = gather_all_attrs(&child);
             items.push(ConsolidatedItem::Trait(
-                CrateInterfaceItem::new(tr_ast, docs, attrs, None),
+                CrateInterfaceItem::new(tr_ast, docs, attrs, None, Some(options.clone())),
             ));
 
         } else if let Some(ty_ast) = ast::TypeAlias::cast(child.clone()) {
-            eprintln!("       => recognized ast::TypeAlias");
+            debug!("       => recognized ast::TypeAlias");
             if should_skip_item(&child, options) {
                 continue;
             }
@@ -172,11 +172,11 @@ pub fn gather_items_in_node(
             };
             let attrs = gather_all_attrs(&child);
             items.push(ConsolidatedItem::TypeAlias(
-                CrateInterfaceItem::new(ty_ast, docs, attrs, None),
+                CrateInterfaceItem::new(ty_ast, docs, attrs, None, Some(options.clone())),
             ));
 
         } else if let Some(mac_ast) = ast::MacroRules::cast(child.clone()) {
-            eprintln!("       => recognized ast::MacroRules");
+            debug!("       => recognized ast::MacroRules");
             if should_skip_item(&child, options) {
                 continue;
             }
@@ -187,15 +187,15 @@ pub fn gather_items_in_node(
             };
             let attrs = gather_all_attrs(&child);
             items.push(ConsolidatedItem::Macro(
-                CrateInterfaceItem::new(mac_ast, docs, attrs, None),
+                CrateInterfaceItem::new(mac_ast, docs, attrs, None, Some(options.clone())),
             ));
 
         } else {
-            eprintln!("       => no recognized item cast");
+            debug!("       => no recognized item cast");
         }
     }
 
-    eprintln!(
+    debug!(
         ">>> fallback complete, recognized {} item(s) from {} children.\n",
         items.len(),
         count_children
@@ -209,18 +209,18 @@ fn gather_items_from_iter(
     items_iter: impl Iterator<Item = ast::Item>,
     options: &ConsolidationOptions,
 ) -> Vec<ConsolidatedItem> {
-    eprintln!("+++ gather_items_from_iter: scanning RA items +++");
+    debug!("+++ gather_items_from_iter: scanning RA items +++");
     let mut out = Vec::new();
 
     for (idx, item) in items_iter.enumerate() {
         let syn = item.syntax().clone();
         let short_txt = trim_to_60(syn.text().to_string());
-        eprintln!("   item #{} => kind={:?}, text={:?}", idx, syn.kind(), short_txt);
+        debug!("   item #{} => kind={:?}, text={:?}", idx, syn.kind(), short_txt);
 
         if let Some(mod_ast) = ast::Module::cast(syn.clone()) {
-            eprintln!("       => recognized ast::Module");
+            debug!("       => recognized ast::Module");
             if should_skip_item(&syn, options) {
-                eprintln!("         [skipped by should_skip_item]");
+                debug!("         [skipped by should_skip_item]");
                 continue;
             }
             let docs = if *options.include_docs() {
@@ -243,9 +243,9 @@ fn gather_items_from_iter(
             out.push(ConsolidatedItem::Module(mod_iface));
 
         } else if let Some(impl_ast) = ast::Impl::cast(syn.clone()) {
-            eprintln!("       => recognized ast::Impl");
+            debug!("       => recognized ast::Impl");
             if should_skip_impl(&impl_ast, options) {
-                eprintln!("         [skipped by should_skip_impl]");
+                debug!("         [skipped by should_skip_impl]");
                 continue;
             }
             let docs = None;
@@ -257,16 +257,16 @@ fn gather_items_from_iter(
             out.push(ConsolidatedItem::ImplBlock(ib));
 
         } else if let Some(fn_ast) = ast::Fn::cast(syn.clone()) {
-            eprintln!("       => recognized ast::Fn");
+            debug!("       => recognized ast::Fn");
             if should_skip_item(&syn, options) {
-                eprintln!("         [skipped by should_skip_item]");
+                debug!("         [skipped by should_skip_item]");
                 continue;
             }
             let ci = gather_fn_item(&fn_ast, options);
             out.push(ConsolidatedItem::Fn(ci));
 
         } else if let Some(st_ast) = ast::Struct::cast(syn.clone()) {
-            eprintln!("       => recognized ast::Struct");
+            debug!("       => recognized ast::Struct");
             if should_skip_item(&syn, options) {
                 continue;
             }
@@ -277,11 +277,11 @@ fn gather_items_from_iter(
             };
             let attrs = gather_all_attrs(&syn);
             out.push(ConsolidatedItem::Struct(
-                CrateInterfaceItem::new(st_ast, docs, attrs, None),
+                CrateInterfaceItem::new(st_ast, docs, attrs, None, Some(options.clone())),
             ));
 
         } else if let Some(en_ast) = ast::Enum::cast(syn.clone()) {
-            eprintln!("       => recognized ast::Enum");
+            debug!("       => recognized ast::Enum");
             if should_skip_item(&syn, options) {
                 continue;
             }
@@ -292,11 +292,11 @@ fn gather_items_from_iter(
             };
             let attrs = gather_all_attrs(&syn);
             out.push(ConsolidatedItem::Enum(
-                CrateInterfaceItem::new(en_ast, docs, attrs, None),
+                CrateInterfaceItem::new(en_ast, docs, attrs, None, Some(options.clone())),
             ));
 
         } else if let Some(tr_ast) = ast::Trait::cast(syn.clone()) {
-            eprintln!("       => recognized ast::Trait");
+            debug!("       => recognized ast::Trait");
             if should_skip_item(&syn, options) {
                 continue;
             }
@@ -307,11 +307,11 @@ fn gather_items_from_iter(
             };
             let attrs = gather_all_attrs(&syn);
             out.push(ConsolidatedItem::Trait(
-                CrateInterfaceItem::new(tr_ast, docs, attrs, None),
+                CrateInterfaceItem::new(tr_ast, docs, attrs, None, Some(options.clone())),
             ));
 
         } else if let Some(ty_ast) = ast::TypeAlias::cast(syn.clone()) {
-            eprintln!("       => recognized ast::TypeAlias");
+            debug!("       => recognized ast::TypeAlias");
             if should_skip_item(&syn, options) {
                 continue;
             }
@@ -322,11 +322,11 @@ fn gather_items_from_iter(
             };
             let attrs = gather_all_attrs(&syn);
             out.push(ConsolidatedItem::TypeAlias(
-                CrateInterfaceItem::new(ty_ast, docs, attrs, None),
+                CrateInterfaceItem::new(ty_ast, docs, attrs, None, Some(options.clone())),
             ));
 
         } else if let Some(mac_ast) = ast::MacroRules::cast(syn.clone()) {
-            eprintln!("       => recognized ast::MacroRules");
+            debug!("       => recognized ast::MacroRules");
             if should_skip_item(&syn, options) {
                 continue;
             }
@@ -337,15 +337,15 @@ fn gather_items_from_iter(
             };
             let attrs = gather_all_attrs(&syn);
             out.push(ConsolidatedItem::Macro(
-                CrateInterfaceItem::new(mac_ast, docs, attrs, None),
+                CrateInterfaceItem::new(mac_ast, docs, attrs, None, Some(options.clone())),
             ));
 
         } else {
-            eprintln!("       => no recognized item cast for this item");
+            debug!("       => no recognized item cast for this item");
         }
     }
 
-    eprintln!("+++ gather_items_from_iter => total recognized items: {} +++\n", out.len());
+    debug!("+++ gather_items_from_iter => total recognized items: {} +++\n", out.len());
     out
 }
 

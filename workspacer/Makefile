@@ -22,7 +22,6 @@ ACTIVE_PACKAGE := workspacer-workspace-interface
 ACTIVE_PACKAGE := workspacer-3p
 ACTIVE_PACKAGE := workspacer-add-and-initialize-crate
 ACTIVE_PACKAGE := workspacer-cleanup
-ACTIVE_PACKAGE := workspacer-consolidate
 ACTIVE_PACKAGE := workspacer-crate
 ACTIVE_PACKAGE := workspacer-detect-circular-deps
 ACTIVE_PACKAGE := workspacer-docs
@@ -38,11 +37,12 @@ ACTIVE_PACKAGE := workspacer-pin
 ACTIVE_PACKAGE := workspacer-publish
 ACTIVE_PACKAGE := workspacer-rebuild-or-test
 ACTIVE_PACKAGE := workspacer-format-imports
-
 ACTIVE_PACKAGE := workspacer-syntax
-#ACTIVE_PACKAGE := workspacer-test-coverage
-#ACTIVE_PACKAGE := workspacer-toml
-#ACTIVE_PACKAGE := workspacer-watch-and-reload
+ACTIVE_PACKAGE := workspacer-consolidate
+
+ACTIVE_PACKAGE := workspacer-test-coverage
+ACTIVE_PACKAGE := workspacer-toml
+ACTIVE_PACKAGE := workspacer-watch-and-reload
 #ACTIVE_PACKAGE := workspacer-workspace
 #ACTIVE_PACKAGE := workspacer-readme-writer
 #ACTIVE_PACKAGE := workspacer
@@ -93,7 +93,7 @@ ensure:
 	RUSTFLAGS=$(RUSTFLAGS) $(CARGO) $(RUN) --bin workspacer-register $(FEATURES)
 
 consolidate_crate_interface:
-	RUSTFLAGS=$(RUSTFLAGS) $(CARGO) $(RUN) --bin workspacer-show-consolidated-crate-interface $(FEATURES) -- --path $(CONSOLIDATE_CRATE) --no-show-docs --no-show-private-items
+	RUSTFLAGS=$(RUSTFLAGS) $(CARGO) $(RUN) --bin workspacer-show-consolidated-crate-interface $(FEATURES) -- --path $(CONSOLIDATE_CRATE) --no-show-private-items #--show-test-items #--show-fn-bodies-in-tests --no-show-docs --only-show-test-items
 
 name_all_files:
 	RUSTFLAGS=$(RUSTFLAGS) $(CARGO) $(RUN) --bin workspacer-name-all-files $(FEATURES)

@@ -1,55 +1,60 @@
 // ---------------- [ File: src/generate_function_signature.rs ]
 crate::ix!();
 
-/// Minimal post-processing for spacing around `->` and `where`.
-/// For example, it ensures `) ->` has a space, and `> where` has a space.
+/// Minimal post-processing to ensure correct spacing around arrows, where clauses, etc.
 pub fn post_process_spacing(signature: &str) -> String {
     signature
         .replace(")->", ") ->")
         .replace(">where", "> where")
 }
 
-impl GenerateSignature for ast::Fn {
-    fn generate_signature(&self) -> String {
-        // For clarity, we omit doc lines, etc. The key is the parameter logic below.
+#[derive(Debug, Clone)]
+pub struct FnSignatureGenerator(ast::Fn);
 
-        // 1) Gather visibility and async tokens (unchanged from your code)
+impl GenerateSignature for ast::Fn {
+    fn generate_signature_with_opts(&self, opts: &SignatureOptions) -> String {
+        use tracing::{debug, trace};
+
+        trace!("Generating signature for ast::Fn with opts: {:?}", opts);
+
+        // 1) Possibly gather doc lines
+        let doc_text = if *opts.include_docs() {
+            extract_docs(&self.syntax())
+                .map(|d| format!("{}\n", d))
+                .unwrap_or_default()
+        } else {
+            "".to_string()
+        };
+
+        // 2) Gather visibility, async, etc.
         let vis_str = self
             .visibility()
             .map(|v| format!("{} ", v.syntax().text()))
             .unwrap_or_default();
+
         let async_str = if let Some(token) = self.async_token() {
             format!("{} ", token.text())
         } else {
             "".to_string()
         };
 
-        // 2) The function name
         let fn_keyword = "fn";
         let name_str = self
             .name()
             .map(|n| n.text().to_string())
             .unwrap_or_else(|| "<anon>".to_string());
 
-        // 3) Generic params, e.g. "<T>"
+        // 3) Generic params
         let generic_params = self
             .generic_param_list()
             .map(|gp| gp.syntax().text().to_string())
             .unwrap_or_default();
 
-        // 4) Build a vector of parameter texts
+        // 4) Parameter list
         let mut param_texts = Vec::new();
-
-        // (A) If we have a param_list node, check for self_param, then normal params:
         if let Some(plist) = self.param_list() {
-            // For debugging if you like:
-            debug!("DEBUG: param_list = {}", plist.syntax().text());
-
-            // ---- STEP A1: Check for a "self_param"
+            debug!(?plist, "Found param_list for fn");
             if let Some(sp) = plist.self_param() {
-                // This is where `&self` or `&mut self` or just `self` is stored
-                debug!("DEBUG: found self param syntax = '{}'", sp.syntax().text());
-
                 let has_amp = sp.amp_token().is_some();  
                 let has_mut = sp.mut_token().is_some();
                 let lifetime_str = sp
@@ -57,7 +62,6 @@ impl GenerateSignature for ast::Fn {
                     .map(|lt| lt.syntax().text().to_string())
                     .unwrap_or_default();
 
-                // build e.g. "&'a mut self"
                 let mut pieces = String::new();
                 if has_amp {
                     pieces.push('&');
@@ -73,13 +77,8 @@ impl GenerateSignature for ast::Fn {
                 param_texts.push(pieces.trim_end().to_string());
             }
 
-            // ---- STEP A2: For the rest of the parameters
-            // (These do NOT include self_param())
             for param in plist.params() {
-                debug!("DEBUG: normal param syntax = '{}'", param.syntax().text());
-
                 if let Some(normal) = ast::Param::cast(param.syntax().clone()) {
-                    // parse pattern + type
                     let pat_str = normal
                         .pat()
                         .map(|p| p.syntax().text().to_string())
@@ -88,7 +87,6 @@ impl GenerateSignature for ast::Fn {
                         .ty()
                         .map(|t| t.syntax().text().to_string())
                         .unwrap_or_default();
-
                     if !pat_str.is_empty() && !ty_str.is_empty() {
                         param_texts.push(format!("{}: {}", pat_str, ty_str));
                     } else if !ty_str.is_empty() {
@@ -99,16 +97,13 @@ impl GenerateSignature for ast::Fn {
                         param_texts.push("<unknown_param>".to_string());
                     }
                 } else {
-                    // In practice, we rarely hit this, but just in case:
                     param_texts.push("<unrecognized_param>".to_string());
                 }
             }
         }
-
-        // 5) Join the param texts
         let params_str = param_texts.join(", ");
 
-        // 6) Return type
+        // 5) Return type
         let ret_str = if let Some(ret_type) = self.ret_type() {
             if let Some(ty_node) = ret_type.ty() {
                 format!(" -> {}", ty_node.syntax().text())
@@ -119,17 +114,24 @@ impl GenerateSignature for ast::Fn {
             "".to_string()
         };
 
-        // 7) Where clause
+        // 6) Where clause
         let where_str = if let Some(wc) = self.where_clause() {
             format!(" {}", wc.syntax().text())
         } else {
             "".to_string()
         };
 
-        // Build final
+        // 7) Build signature line ***WITHOUT*** appending braces.
+        //    (We let CrateInterfaceItem<T> decide how to handle the body.)
         let raw_sig = format!(
             "{vis_str}{async_str}{fn_keyword} {name_str}{generic_params}({params_str}){ret_str}{where_str}"
         );
-        post_process_spacing(&raw_sig)
+
+        let combined = match opts.add_semicolon() {
+            true  => format!("{doc_text}{raw_sig};"),
+            false => format!("{doc_text}{raw_sig}"),
+        };
+
+        post_process_spacing(&combined)
     }
 }

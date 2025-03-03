@@ -48,20 +48,32 @@ impl fmt::Display for ImplBlockInterface {
         // 3) Trim any trailing spaces from the signature to avoid double-spaces.
         //    Then print "impl Something for T {" on one line
         let sig = self.signature_text.trim_end();
+
+        // If no items, use one-line form:
+        if self.methods.is_empty() && self.type_aliases.is_empty() {
+            write!(f, "{} {{}}", sig)?;
+            return Ok(());
+        }
+
+        // multi-line form:
+        writeln!(f, "{} {{", sig)?;
         // If no items, use one-line form: "impl X for Y {}"
         if self.methods.is_empty() && self.type_aliases.is_empty() {
             write!(f, "{} {{}}", sig)?;
             return Ok(());
         }
 
-        // Otherwise, a multi-line block:
-        writeln!(f, "{} {{", sig)?;
-
         // 4) Per test `test_impl_block_interface_real_code`, the order must be
         //    (a) methods first, then (b) type aliases. Also remove any trailing newline from item lines,
         //    and do not add extra newlines between them.
 
-        // a) Methods first:
+        for ta in &self.type_aliases {
+            let item_str = format!("{}", ta);
+            for line in item_str.lines() {
+                writeln!(f, "    {}", line)?;
+            }
+        }
+
         for m in &self.methods {
             let item_str = format!("{}", m);
             for line in item_str.lines() {
@@ -69,14 +81,6 @@ impl fmt::Display for ImplBlockInterface {
                 // (If not needed, remove this replacement step.)
                 let cleaned = line.replace("{ /* ... */ }", "{}");
                 writeln!(f, "    {}", cleaned)?;
-            }
-        }
-
-        // b) Then type aliases:
-        for ta in &self.type_aliases {
-            let item_str = format!("{}", ta);
-            for line in item_str.lines() {
-                writeln!(f, "    {}", line)?;
             }
         }
 
@@ -135,7 +139,8 @@ mod test_impl_block_interface_real {
                             fn_ast,
                             docs,
                             attrs,
-                            None
+                            None,
+                            Some(options.clone())
                         );
                         result.push(fn_item);
                     }
@@ -167,6 +172,7 @@ mod test_impl_block_interface_real {
                             docs,
                             attrs,
                             None,
+                            Some(options.clone())
                         );
                         result.push(alias_item);
                     }
@@ -231,8 +237,8 @@ mod test_impl_block_interface_real {
         // Format and compare with expected
         let output = format!("{}", ib);
         let expected = r#"impl MyTrait for MyType {
-    fn do_stuff(&self) {}
     type AliasA = i32;
+    fn do_stuff(&self) {}
 }"#;
 
         assert_eq!(output, expected);

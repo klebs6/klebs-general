@@ -2,9 +2,7 @@
 crate::ix!();
 
 /// A collection of user-defined toggles controlling how items are gathered and displayed.
-/// In older versions of your code, you may have used `log` or `ctor`. This version removes
-/// those external dependencies, using simple `eprintln!` calls for warnings instead.
-#[derive(Debug, Getters)]
+#[derive(Debug,Getters,Clone)]
 #[getset(get = "pub")]
 pub struct ConsolidationOptions {
     include_docs:               bool,
@@ -13,6 +11,20 @@ pub struct ConsolidationOptions {
     include_fn_bodies:          bool,
     include_fn_bodies_in_tests: bool,
     only_test_items:            bool,
+}
+
+impl Into<SignatureOptions> for &ConsolidationOptions {
+    fn into(self) -> SignatureOptions {
+        // 1) `include_docs` => whether we show doc lines
+        // 2) `fully_expand` => do we show fields, variants, trait items, etc.
+        //    Let’s pick a rule that if .include_fn_bodies() is true, we do fully_expand
+        //    (or if you want more nuance, do something different).
+        SignatureOptionsBuilder::default()
+            .include_docs(*self.include_docs())
+            .fully_expand(*self.include_fn_bodies())
+            .build()
+            .unwrap()
+    }
 }
 
 impl ConsolidationOptions {
@@ -65,25 +77,25 @@ impl ConsolidationOptions {
     /// Automatically sets `include_test_items = true` if not already set.
     pub fn with_only_test_items(mut self) -> Self {
         if !self.include_test_items {
-            eprintln!("[WARN] `only_test_items=true` requires `include_test_items=true`. Forcing it on.");
+            warn!("[WARN] `only_test_items=true` requires `include_test_items=true`. Forcing it on.");
             self.include_test_items = true;
         }
         self.only_test_items = true;
         self
     }
 
-    /// A small validation method that logs warnings via `eprintln!` if 
+    /// A small validation method that logs warnings via `warn!` if 
     /// certain combinations of flags are contradictory or possibly confusing.
     pub fn validate(&self) {
         // Example: if you want to warn that `only_test_items` + `include_private` is mostly redundant:
         if self.only_test_items && self.include_private {
-            eprintln!("[WARN] You set `only_test_items=true` and `include_private=true`. \
+            warn!("[WARN] You set `only_test_items=true` and `include_private=true`. \
                        Private non-test items won't appear anyway (they're not test items), so this might be redundant.");
         }
 
         // Another example: if `only_test_items` + `include_fn_bodies` might not do anything for non-test items:
         if self.only_test_items && self.include_fn_bodies && !self.include_fn_bodies_in_tests {
-            eprintln!("[WARN] `only_test_items=true` and `include_fn_bodies=true`, but no `include_fn_bodies_in_tests`. \
+            warn!("[WARN] `only_test_items=true` and `include_fn_bodies=true`, but no `include_fn_bodies_in_tests`. \
                        You won't see non-test bodies. Possibly you meant `.with_fn_bodies_in_tests()`?");
         }
         // etc. Expand for any combos you want to warn about.

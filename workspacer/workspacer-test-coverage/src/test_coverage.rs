@@ -71,16 +71,13 @@ mod test_run_tests_with_coverage_real {
         }
     }
 
-    // We'll define a trivial coverage command or rely on your real TestCoverageCommand 
-    // that spawns coverage tool.
-
-    #[tokio::test]
+    #[traced_test]
     async fn test_run_tests_with_coverage_succeeds() {
-        // 1) Create a minimal cargo project with a test
-        let tmp_dir = tempdir().expect("failed to create temp dir");
+        trace!("Beginning test_run_tests_with_coverage_succeeds...");
+
+        let tmp_dir = tempdir().expect("Failed to create temp directory");
         let path = tmp_dir.path();
 
-        // cargo init
         let init_status = Command::new("cargo")
             .arg("init")
             .arg("--bin")
@@ -89,42 +86,42 @@ mod test_run_tests_with_coverage_real {
             .current_dir(path)
             .output()
             .await
-            .expect("cargo init");
-        assert!(init_status.status.success(), "cargo init must succeed");
+            .expect("Failed to spawn `cargo init`");
 
-        // Insert a test
+        if !init_status.status.success() {
+            warn!("Skipping test because `cargo init` failed with status: {:?}", init_status.status);
+            return;
+        }
+
+        // Insert a small passing test
         let main_rs = path.join("src").join("main.rs");
         let code = r#"
             fn main() {}
-            #[test]
-            fn test_ok(){ assert_eq!(2+2,4); }
+        #[test]
+        fn test_ok() { assert_eq!(2+2,4); }
         "#;
         tokio::fs::write(&main_rs, code)
             .await
-            .expect("write main.rs");
+            .expect("Failed to write test code to main.rs");
 
-        // 2) Construct your workspace
         let ws = MockWorkspace { path: path.to_path_buf() };
 
-        // 3) run coverage
-        let result = ws.run_tests_with_coverage().await;
-
-        // 4) If the coverage tool is installed and everything passes, we get Ok(report).
-        // We can do partial checks on coverage % or lines if your `TestCoverageReport` has them.
-        match result {
+        // Running tests with coverage should succeed
+        match ws.run_tests_with_coverage().await {
             Ok(report) => {
-                // e.g., check if report.total_coverage() is >= some threshold
-                println!("Coverage report: {:?}", report);
+                info!("Coverage succeeded: {:?}", report);
+                assert!(report.covered_lines() > 0, "Expected at least one covered line");
+                assert!(report.total_coverage() > 0.0, "Expected non-zero coverage");
             }
-            Err(e) => panic!("Coverage run failed: {:?}", e),
+            Err(e) => panic!("Expected coverage to succeed, but got error: {:?}", e),
         }
     }
 
-    /// If the coverage tool or tests fail, we expect an error.
-    #[tokio::test]
+    #[traced_test]
     async fn test_run_tests_with_coverage_fails() {
-        // Possibly break the code so tests fail or coverage tool fails
-        let tmp_dir = tempdir().expect("tempdir");
+        trace!("Beginning test_run_tests_with_coverage_fails...");
+
+        let tmp_dir = tempdir().expect("Failed to create temp directory");
         let path = tmp_dir.path();
 
         let init_status = Command::new("cargo")
@@ -135,27 +132,32 @@ mod test_run_tests_with_coverage_real {
             .current_dir(path)
             .output()
             .await
-            .expect("init");
-        assert!(init_status.status.success());
+            .expect("Failed to spawn `cargo init`");
+
+        if !init_status.status.success() {
+            warn!("Skipping test because `cargo init` failed with status: {:?}", init_status.status);
+            return;
+        }
 
         // Insert a failing test
         let main_rs = path.join("src").join("main.rs");
         let code = r#"
             fn main(){}
-            #[test]
-            fn test_fail(){ assert_eq!(1+1,3); }
+        #[test]
+        fn test_fail(){ assert_eq!(1+1,3); }
         "#;
-        tokio::fs::write(&main_rs, code).await.expect("write code");
+        tokio::fs::write(&main_rs, code)
+            .await
+            .expect("Failed to write test code to main.rs");
 
         let ws = MockWorkspace { path: path.to_path_buf() };
 
-        let result = ws.run_tests_with_coverage().await;
-        // Expect some coverage or test error
-        match result {
+        // We expect coverage or test to fail
+        match ws.run_tests_with_coverage().await {
+            Ok(report) => panic!("Expected coverage to fail, got success: {:?}", report),
             Err(e) => {
-                println!("Coverage or test fail as expected: {:?}", e);
+                info!("Coverage or test failure as expected: {:?}", e);
             }
-            Ok(r) => panic!("Expected coverage to fail, got success: {:?}", r),
         }
     }
 }

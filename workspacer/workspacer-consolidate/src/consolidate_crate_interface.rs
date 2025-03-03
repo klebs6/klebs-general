@@ -366,7 +366,7 @@ mod test_consolidate_crate_interface {
             }
             Err(e) => {
                 // Or your code might produce CrateError for parse error
-                eprintln!("Got error: {:?}", e);
+                error!("Got error: {:?}", e);
             }
         }
     }
