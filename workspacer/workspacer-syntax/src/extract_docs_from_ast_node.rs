@@ -63,7 +63,7 @@ mod test_extract_docs_exhaustive {
             .unwrap_or_else(|| panic!("No top-level item node found in snippet:\n{}", code))
     }
 
-    #[test]
+    #[traced_test]
     fn test_extract_docs_none_when_no_doc_comments() {
         let code = r#"
             fn example() {}
@@ -73,7 +73,7 @@ mod test_extract_docs_exhaustive {
         assert!(docs.is_none(), "Expected no doc comments, got: {:?}", docs);
     }
 
-    #[test]
+    #[traced_test]
     fn test_extract_docs_none_with_only_normal_comment() {
         let code = r#"
             // This is a regular comment, not a doc comment.
@@ -84,7 +84,7 @@ mod test_extract_docs_exhaustive {
         assert!(docs.is_none(), "Expected None because only normal // comment was present.");
     }
 
-    #[test]
+    #[traced_test]
     fn test_extract_docs_single_line_doc_comment() {
         let code = r#"
             /// This is a doc comment
@@ -97,7 +97,7 @@ mod test_extract_docs_exhaustive {
         assert_eq!(doc_text.trim(), "/// This is a doc comment");
     }
 
-    #[test]
+    #[traced_test]
     fn test_extract_docs_multiple_line_doc_comments() {
         let code = r#"
             /// Line one
@@ -112,7 +112,7 @@ mod test_extract_docs_exhaustive {
         assert_eq!(lines[1].trim(), "/// Line two");
     }
 
-    #[test]
+    #[traced_test]
     fn test_extract_docs_block_doc_comment() {
         let code = r#"
             /** 
@@ -130,7 +130,7 @@ mod test_extract_docs_exhaustive {
         );
     }
 
-    #[test]
+    #[traced_test]
     fn test_extract_docs_combination_block_and_line() {
         let code = r#"
             /** Block doc */
@@ -147,7 +147,7 @@ mod test_extract_docs_exhaustive {
         assert!(lines[1].starts_with("/// Line doc"));
     }
 
-    #[test]
+    #[traced_test]
     fn test_extract_docs_with_mixed_normal_comments_ignored() {
         let code = r#"
             // normal comment
@@ -163,7 +163,7 @@ mod test_extract_docs_exhaustive {
         assert_eq!(doc_text, "/// doc comment");
     }
 
-    #[test]
+    #[traced_test]
     fn test_extract_docs_returns_all_doc_comments_in_joined_string() {
         let code = r#"
             /// first line
@@ -180,7 +180,7 @@ mod test_extract_docs_exhaustive {
         assert!(parts[2].starts_with("/// third line"));
     }
 
-    #[test]
+    #[traced_test]
     fn test_extract_docs_on_struct_with_no_docs() {
         let code = r#"
             struct MyStruct {
@@ -192,7 +192,7 @@ mod test_extract_docs_exhaustive {
         assert!(docs.is_none(), "Should return None for a struct with no doc comments.");
     }
 
-    #[test]
+    #[traced_test]
     fn test_extract_docs_on_struct_with_doc_comment() {
         let code = r#"
             /// A structure for demonstration

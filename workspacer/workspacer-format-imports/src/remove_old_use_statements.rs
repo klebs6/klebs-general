@@ -62,6 +62,7 @@ pub(crate) use std::io;
             .range_end(40_usize)
             .visibility("pub(crate)".to_string())
             .path_list("std::io".to_string())
+            .trailing_comment(None)
             .build()
             .unwrap();
 

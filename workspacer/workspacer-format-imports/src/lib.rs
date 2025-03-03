@@ -29,3 +29,4 @@ x!{sort_and_format_imports_for_workspace}
 x!{sort_and_format_imports}
 x!{split_path_into_prefix_and_final}
 x!{use_item_info}
+x!{detect_trailing_comment_same_line}

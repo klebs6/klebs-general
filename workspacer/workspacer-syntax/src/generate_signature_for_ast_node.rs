@@ -31,7 +31,7 @@ mod test_generate_signature_robustness {
 
     // -------------------------------- Fn Tests --------------------------------
 
-    #[test]
+    #[traced_test]
     fn test_fn_signature_no_params_no_return() {
         let code = r#"
             pub fn simple_fn() {}
@@ -43,7 +43,7 @@ mod test_generate_signature_robustness {
         assert!(signature.contains("{ /* ... */ }"), "Should have curly placeholder body");
     }
 
-    #[test]
+    #[traced_test]
     fn test_fn_signature_with_params_and_return() {
         let code = r#"
             pub fn add(a: i32, b: i32) -> i32 { a + b }
@@ -54,7 +54,7 @@ mod test_generate_signature_robustness {
         assert!(signature.contains("pub fn add(a: i32, b: i32) -> i32"), "Signature: {signature}");
     }
 
-    #[test]
+    #[traced_test]
     fn test_fn_signature_with_generics_where_clause() {
         let code = r#"
             pub fn generic_fn<T: Clone>(x: T) -> T where T: std::fmt::Debug {
@@ -70,7 +70,7 @@ mod test_generate_signature_robustness {
         );
     }
 
-    #[test]
+    #[traced_test]
     fn test_fn_signature_with_docs() {
         let code = r#"
             /// This function does something.
@@ -91,7 +91,7 @@ mod test_generate_signature_robustness {
 
     // -------------------------------- Struct Tests --------------------------------
 
-    #[test]
+    #[traced_test]
     fn test_struct_signature_no_generics() {
         let code = r#"
             pub struct MyStruct { x: i32 }
@@ -103,7 +103,7 @@ mod test_generate_signature_robustness {
         assert!(signature.contains("{ /* fields omitted */ }"), "Signature: {signature}");
     }
 
-    #[test]
+    #[traced_test]
     fn test_struct_signature_with_generics_and_docs() {
         let code = r#"
             /// A generic struct
@@ -121,7 +121,7 @@ mod test_generate_signature_robustness {
 
     // -------------------------------- Enum Tests --------------------------------
 
-    #[test]
+    #[traced_test]
     fn test_enum_signature_with_generics_where_clause() {
         let code = r#"
             pub enum MyEnum<T> where T: Copy {
@@ -137,7 +137,7 @@ mod test_generate_signature_robustness {
 
     // -------------------------------- Trait Tests --------------------------------
 
-    #[test]
+    #[traced_test]
     fn test_trait_signature() {
         let code = r#"
             pub trait MyTrait {
@@ -151,7 +151,7 @@ mod test_generate_signature_robustness {
         assert!(signature.contains("{ /* items omitted */ }"));
     }
 
-    #[test]
+    #[traced_test]
     fn test_trait_signature_with_generics_where_clause_and_docs() {
         let code = r#"
             /// This trait does stuff
@@ -169,7 +169,7 @@ mod test_generate_signature_robustness {
 
     // -------------------------------- TypeAlias Tests --------------------------------
 
-    #[test]
+    #[traced_test]
     fn test_type_alias_signature() {
         let code = r#"
             pub type MyAlias = i32;
@@ -181,7 +181,7 @@ mod test_generate_signature_robustness {
         assert!(signature.contains("= /* aliased type omitted */;"));
     }
 
-    #[test]
+    #[traced_test]
     fn test_type_alias_signature_with_generics_where() {
         let code = r#"
             pub type MyGenericAlias<T> where T: Default = Vec<T>;
@@ -197,7 +197,7 @@ mod test_generate_signature_robustness {
 
     // -------------------------------- MacroRules Tests --------------------------------
 
-    #[test]
+    #[traced_test]
     fn test_macro_rules_signature() {
         let code = r#"
             #[macro_export]
@@ -212,7 +212,7 @@ mod test_generate_signature_robustness {
         assert!(signature.contains("{ /* macro body omitted */ }"));
     }
 
-    #[test]
+    #[traced_test]
     fn test_macro_rules_signature_with_docs() {
         let code = r#"
             /// A fancy macro

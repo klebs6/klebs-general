@@ -78,7 +78,7 @@ mod test_is_node_public_exhaustive {
             .unwrap_or_else(|| panic!("Did not find a node of kind {:?} in snippet:\n{}", kind, code))
     }
 
-    #[test]
+    #[traced_test]
     fn test_public_fn_is_node_public() {
         let code = r#"
             pub fn do_something() {}
@@ -88,7 +88,7 @@ mod test_is_node_public_exhaustive {
         assert!(is_node_public(&node), "Expected pub fn to be public.");
     }
 
-    #[test]
+    #[traced_test]
     fn test_crate_visibility_fn_is_node_public() {
         let code = r#"
             pub(crate) fn do_something() {}
@@ -98,7 +98,7 @@ mod test_is_node_public_exhaustive {
         assert!(is_node_public(&node), "Expected pub(crate) fn to be public by the function's logic.");
     }
 
-    #[test]
+    #[traced_test]
     fn test_fn_pub_super_is_node_public() {
         let code = r#"
             pub(super) fn do_something() {}
@@ -108,7 +108,7 @@ mod test_is_node_public_exhaustive {
         assert!(is_node_public(&node), "Expected pub(super) fn to be recognized as public.");
     }
 
-    #[test]
+    #[traced_test]
     fn test_fn_pub_self_is_node_public() {
         let code = r#"
             pub(self) fn do_something() {}
@@ -118,7 +118,7 @@ mod test_is_node_public_exhaustive {
         assert!(is_node_public(&node), "Expected pub(self) fn to be recognized as public.");
     }
 
-    #[test]
+    #[traced_test]
     fn test_private_fn_is_node_public() {
         let code = r#"
             fn do_something() {}
@@ -128,7 +128,7 @@ mod test_is_node_public_exhaustive {
         assert!(!is_node_public(&node), "Expected non-pub fn to be private.");
     }
 
-    #[test]
+    #[traced_test]
     fn test_pub_struct_is_node_public() {
         let code = r#"
             pub struct MyStruct {
@@ -140,7 +140,7 @@ mod test_is_node_public_exhaustive {
         assert!(is_node_public(&node), "Expected pub struct to be public.");
     }
 
-    #[test]
+    #[traced_test]
     fn test_struct_pub_crate_is_node_public() {
         let code = r#"
             pub(crate) struct MyStruct {
@@ -152,7 +152,7 @@ mod test_is_node_public_exhaustive {
         assert!(is_node_public(&node), "Expected pub(crate) struct to be recognized as public.");
     }
 
-    #[test]
+    #[traced_test]
     fn test_private_struct_is_node_public() {
         let code = r#"
             struct MyStruct {
@@ -164,7 +164,7 @@ mod test_is_node_public_exhaustive {
         assert!(!is_node_public(&node), "Expected private struct (no pub) to be private.");
     }
 
-    #[test]
+    #[traced_test]
     fn test_pub_enum_is_node_public() {
         let code = r#"
             pub enum MyEnum {
@@ -177,7 +177,7 @@ mod test_is_node_public_exhaustive {
         assert!(is_node_public(&node), "Expected pub enum to be public.");
     }
 
-    #[test]
+    #[traced_test]
     fn test_private_enum_is_node_public() {
         let code = r#"
             enum MyEnum {
@@ -190,7 +190,7 @@ mod test_is_node_public_exhaustive {
         assert!(!is_node_public(&node), "Expected private enum to be private.");
     }
 
-    #[test]
+    #[traced_test]
     fn test_pub_trait_is_node_public() {
         let code = r#"
             pub trait MyTrait {
@@ -202,7 +202,7 @@ mod test_is_node_public_exhaustive {
         assert!(is_node_public(&node), "Expected pub trait to be public.");
     }
 
-    #[test]
+    #[traced_test]
     fn test_private_trait_is_node_public() {
         let code = r#"
             trait MyTrait {
@@ -214,7 +214,7 @@ mod test_is_node_public_exhaustive {
         assert!(!is_node_public(&node), "Expected trait with no visibility to be private.");
     }
 
-    #[test]
+    #[traced_test]
     fn test_pub_type_alias_is_node_public() {
         let code = r#"
             pub type MyAlias = i32;
@@ -224,7 +224,7 @@ mod test_is_node_public_exhaustive {
         assert!(is_node_public(&node), "Expected pub type alias to be public.");
     }
 
-    #[test]
+    #[traced_test]
     fn test_private_type_alias_is_node_public() {
         let code = r#"
             type MyAlias = i32;
@@ -234,7 +234,7 @@ mod test_is_node_public_exhaustive {
         assert!(!is_node_public(&node), "Expected private type alias to be private.");
     }
 
-    #[test]
+    #[traced_test]
     fn test_macro_rules_with_macro_export_is_node_public() {
         let code = r#"
             #[macro_export]
@@ -248,7 +248,7 @@ mod test_is_node_public_exhaustive {
         assert!(is_node_public(&node), "Expected macro_rules! with #[macro_export] to be public.");
     }
 
-    #[test]
+    #[traced_test]
     fn test_macro_rules_without_macro_export_is_node_public() {
         let code = r#"
             // no macro_export
@@ -261,7 +261,7 @@ mod test_is_node_public_exhaustive {
         assert!(!is_node_public(&node), "Expected macro_rules! without #[macro_export] to be private.");
     }
 
-    #[test]
+    #[traced_test]
     fn test_unrelated_code_snippet_is_node_public() {
         let code = r#"
             let x = 123; // just a random statement
@@ -273,7 +273,7 @@ mod test_is_node_public_exhaustive {
         assert!(!is_node_public(&node), "Local variable declarations should be treated as private/unrelated.");
     }
 
-    #[test]
+    #[traced_test]
     fn test_all_visibility_kinds_fn_are_public() {
         // Test pub, pub(crate), pub(super), pub(self)
         let code = r#"

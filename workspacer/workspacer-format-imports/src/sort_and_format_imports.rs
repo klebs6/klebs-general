@@ -26,7 +26,7 @@ pub fn sort_and_format_imports_in_text(old_text: &str) -> Result<String, SortAnd
     info!("Entering sort_and_format_imports_in_text");
     debug!("Input text length is {}", old_text.len());
 
-    // 1) Parse & validate
+    // 1) Parse
     trace!("About to parse/validate syntax");
     let file = match parse_and_validate_syntax(old_text) {
         Ok(f) => {
@@ -39,26 +39,27 @@ pub fn sort_and_format_imports_in_text(old_text: &str) -> Result<String, SortAnd
         }
     };
 
-    // 2) Gather use items (leading comments, path, etc.)
+    // 2) Gather use items
     debug!("Gathering use items from file & old_text");
     let uses_data = gather_use_items(&file, old_text);
     trace!("Collected {} use items", uses_data.len());
 
-    // 3) Group them by (vis, prefix) => produce a map + comment map
+    // 3) Group them => now returns (grouped_map, comment_map, trailing_comments)
     debug!("Grouping and sorting use items now");
-    let (grouped_map, comment_map) = group_and_sort_uses(&uses_data);
+    let (grouped_map, comment_map, trailing_comments) = group_and_sort_uses(&uses_data);
     trace!(
-        "grouped_map.len()={}, comment_map.len()={}",
+        "grouped_map.len()={}, comment_map.len()={}, trailing_comments.len()={}",
         grouped_map.len(),
-        comment_map.len()
+        comment_map.len(),
+        trailing_comments.len()
     );
 
-    // 4) Build new use lines from those groups
+    // 4) Build new use lines
     debug!("Building new use lines...");
-    let new_uses_block = build_new_use_lines(&grouped_map, &comment_map);
+    let new_uses_block = build_new_use_lines(&grouped_map, &comment_map, &trailing_comments);
     trace!("New uses block:\n{}", new_uses_block);
 
-    // 5) Remove old use statements
+    // 5) Remove old uses
     debug!("Removing old use statements from the original text");
     let remainder = remove_old_use_statements(&uses_data, old_text);
 

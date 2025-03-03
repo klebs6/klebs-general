@@ -7,17 +7,25 @@ pub fn split_path_into_prefix_and_final(full_path: &str) -> (String, Vec<String>
         full_path
     );
 
+    // If we detect something like "crate::foo::bar::{ ... }"
     if let Some(idx) = full_path.find("::{") {
         debug!("Detected braced path usage at index {}", idx);
         let prefix = &full_path[..idx];
-        let inside = &full_path[idx + 3..full_path.len() - 1]; // skip "::{...}"
-        let segments: Vec<_> = inside
-            .split(',')
-            .map(|s| s.trim().to_string())
-            .collect();
-        debug!("Returning prefix={:?} with {} finals from braces", prefix, segments.len());
+        // The inside portion is whatever is between the '{' and the final '}' 
+        // (assuming no trailing characters).
+        let inside = &full_path[idx + 3..full_path.len() - 1];
+        // Instead of a naive `.split(',')`, we do a shallow parse, 
+        // respecting nested braces so that commas inside nested braces don't break us.
+        let segments = split_braced_imports_top_level(inside);
+
+        debug!(
+            "Returning prefix={:?} with {} finals from braces",
+            prefix,
+            segments.len()
+        );
         return (prefix.trim().to_string(), segments);
     } else {
+        // No braced usage => fallback
         if let Some(idx2) = full_path.rfind("::") {
             debug!("Found last '::' at index {}", idx2);
             let prefix = &full_path[..idx2];
@@ -31,6 +39,53 @@ pub fn split_path_into_prefix_and_final(full_path: &str) -> (String, Vec<String>
             ("".to_string(), vec![full_path.trim().to_string()])
         }
     }
+}
+
+fn split_braced_imports_top_level(inside: &str) -> Vec<String> {
+    // If inside is empty or just spaces, return vec![""] so that the final
+    // is a single empty string, matching your test expectations.
+    if inside.trim().is_empty() {
+        return vec!["".to_string()];
+    }
+
+    let mut segments = Vec::new();
+    let mut current = String::new();
+    let mut depth = 0;
+
+    for ch in inside.chars() {
+        match ch {
+            '{' => {
+                depth += 1;
+                current.push(ch);
+            }
+            '}' => {
+                depth -= 1;
+                current.push(ch);
+            }
+            ',' => {
+                // Only split if depth == 0 => top-level comma
+                if depth == 0 {
+                    let trimmed = current.trim();
+                    if !trimmed.is_empty() {
+                        segments.push(trimmed.to_string());
+                    }
+                    current.clear();
+                } else {
+                    current.push(ch);
+                }
+            }
+            _ => {
+                current.push(ch);
+            }
+        }
+    }
+
+    let trimmed = current.trim();
+    if !trimmed.is_empty() {
+        segments.push(trimmed.to_string());
+    }
+
+    segments
 }
 
 #[cfg(test)]

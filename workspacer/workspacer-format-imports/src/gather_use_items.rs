@@ -2,7 +2,7 @@
 crate::ix!();
 
 pub fn gather_use_items(file: &SourceFile, old_text: &str) -> Vec<UseItemInfo> {
-    debug!("Entering gather_use_items => file has {} items", file.items().count());
+    info!("Entering gather_use_items => file has {} items", file.items().count());
     let mut uses_data = Vec::new();
 
     for item in file.items() {
@@ -12,16 +12,32 @@ pub fn gather_use_items(file: &SourceFile, old_text: &str) -> Vec<UseItemInfo> {
             let start: usize = rng.start().into();
             let end:   usize = rng.end().into();
 
-            // The raw AST node text (including any comment lines if RA didn't split them into separate tokens).
             let entire_range_text = &old_text[start..end];
             debug!("Found a `use` item at range {}..{}, raw_text:\n{}", start, end, entire_range_text);
 
-            // Collect the leading comments (whether from previous tokens or fallback in the node).
+            // Gather leading comments
             let leading_comments = gather_leading_comment_lines(u.syntax(), old_text);
             debug!("Leading comments => {:#?}", leading_comments);
 
-            // Some AST fragments include leading comments in the same raw node text, so we remove
-            // exactly those leading comment bytes from `entire_range_text` before dissecting.
+            // We may detect a trailing same-line comment after the semicolon
+            // (or after the block if there is no semicolon for some reason).
+            let mut trailing_comment = None;
+            if let Some((tc_text, tc_len)) = detect_trailing_comment_same_line(old_text, end) {
+                debug!("Found trailing comment => {:?}, length={}", tc_text, tc_len);
+
+                // Expand the range_end to cover the trailing comment
+                // so we remove it from the old file in remove_old_use_statements
+                let new_end = (end + tc_len).min(old_text.len());
+                debug!("Expanded range_end from {} to {}", end, new_end);
+
+                // We'll store that comment text in the struct
+                trailing_comment = Some(tc_text);
+                // Then we actually set `end` to the new_end for the final UseItemInfo
+                // so that we don't leave the trailing comment behind in the old file
+            }
+
+            // Some AST fragments include leading comments in the same node text,
+            // so remove exactly those leading comment bytes from `entire_range_text`.
             let leading_comment_bytes: usize = leading_comments.iter().map(|c| c.len()).sum();
             debug!("Truncating {} bytes of leading comment text from raw_text", leading_comment_bytes);
 
@@ -33,26 +49,29 @@ pub fn gather_use_items(file: &SourceFile, old_text: &str) -> Vec<UseItemInfo> {
             let truncated_text = truncated_text.trim_start();
             debug!("Truncated text for dissect:\n{}", truncated_text);
 
-            // Attempt to dissect the actual `use` line (minus the leading comments).
+            // Attempt to dissect
             if let Some((vis, _use_kw, path_list)) = dissect_use_statement(truncated_text) {
                 debug!("Dissect => visibility='{}', path_list='{}'", vis, path_list);
 
                 let info = UseItemInfoBuilder::default()
                     .leading_comments(leading_comments)
-                    .raw_text(entire_range_text.to_string()) // store the full raw node text for removal
+                    .raw_text(entire_range_text.to_string())
                     .range_start(start)
-                    .range_end(end)
+                    // IMPORTANT: if we found a trailing comment, use that expanded new_end
+                    .range_end(trailing_comment
+                               .as_ref()
+                               .map(|tc| end + tc.len())
+                               .unwrap_or(end)
+                               .min(old_text.len()))
                     .visibility(vis)
                     .path_list(path_list)
+                    .trailing_comment(trailing_comment)
                     .build()
                     .unwrap();
 
                 uses_data.push(info);
             } else {
-                warn!(
-                    "Failed to dissect => not recognized as a 'use' statement (after trunc) for raw_text:\n{}",
-                    truncated_text
-                );
+                warn!("Failed to dissect => not recognized as a 'use' statement after truncation:\n{}", truncated_text);
             }
         } else {
             trace!("Item is not a `use` => ignoring");

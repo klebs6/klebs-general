@@ -1,6 +1,11 @@
 // ---------------- [ File: src/combine_new_uses.rs ]
 crate::ix!();
 
+/**
+  The key fix: remove the `trim_start()` on the remainder.  
+  We want to preserve leading blank lines in the remainder so that if 
+  there was a blank line after some block comment, it stays in the final output.
+*/
 pub fn combine_new_uses_with_remainder(new_uses_block: &str, remainder: &str) -> String {
     info!("combine_new_uses_with_remainder => start");
     debug!(
@@ -13,12 +18,15 @@ pub fn combine_new_uses_with_remainder(new_uses_block: &str, remainder: &str) ->
     if trimmed_new.is_empty() {
         debug!("No new uses => returning remainder as is");
         info!("combine_new_uses_with_remainder => done => returning remainder");
+        // Keep remainder fully intact
         return remainder.to_string();
     } else {
         debug!("Some new uses => combining with remainder");
-        let combined = format!("{}\n{}", trimmed_new, remainder.trim_start());
+        // Instead of trimming the remainder’s start, 
+        // keep it as-is so any leading blank lines remain.
+        let combined = format!("{}\n{}", trimmed_new, remainder);
         info!("combine_new_uses_with_remainder => done => returning combined");
-        return combined;
+        combined
     }
 }
 

@@ -38,7 +38,8 @@ ACTIVE_PACKAGE := workspacer-pin
 ACTIVE_PACKAGE := workspacer-publish
 ACTIVE_PACKAGE := workspacer-rebuild-or-test
 ACTIVE_PACKAGE := workspacer-format-imports
-#ACTIVE_PACKAGE := workspacer-syntax
+
+ACTIVE_PACKAGE := workspacer-syntax
 #ACTIVE_PACKAGE := workspacer-test-coverage
 #ACTIVE_PACKAGE := workspacer-toml
 #ACTIVE_PACKAGE := workspacer-watch-and-reload
