@@ -1,8 +1,8 @@
 // ---------------- [ File: src/workspace.rs ]
 crate::ix!();
 
-#[derive(Getters,Debug)]
-#[getset(get="pub")]
+#[derive(MutGetters,Getters,Debug)]
+#[getset(get="pub",get_mut="pub")]
 pub struct Workspace<P,H:CrateHandleInterface<P>> 
 where for<'async_trait> P: From<PathBuf> + AsRef<Path> + Send + Sync + 'async_trait 
 {
@@ -13,15 +13,6 @@ where for<'async_trait> P: From<PathBuf> + AsRef<Path> + Send + Sync + 'async_tr
 impl<P,H:CrateHandleInterface<P>> WorkspaceInterface<P,H> for Workspace<P,H> 
 where for<'async_trait> P: From<PathBuf> + AsRef<Path> + Clone + Send + Sync + 'async_trait 
 { }
-
-#[disable]
-impl<P,H:CrateHandleInterface<P>> Into<P> for Workspace<P,H> 
-where for<'async_trait> P: From<PathBuf> + AsRef<Path> + Send + Sync + 'async_trait
-{
-    fn into(self) -> P {
-        self.path
-    }
-}
 
 impl<P,H:CrateHandleInterface<P>> AsRef<Path> for Workspace<P,H> 
 where for<'async_trait> P: From<PathBuf> + AsRef<Path> + Send + Sync + 'async_trait

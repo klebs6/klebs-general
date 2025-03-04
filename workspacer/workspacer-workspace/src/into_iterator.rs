@@ -12,44 +12,25 @@ where for<'async_trait> P: From<PathBuf> + AsRef<Path> + Send + Sync + 'async_tr
     }
 }
 
-// =============================================
-// Test Module #1: IntoIterator for &Workspace
-// =============================================
 #[cfg(test)]
-#[disable]
 mod test_into_iterator {
     use super::*;
-    #[traced_test]
-    fn test_empty_workspace_iter() {
-        let ws = MockWorkspace::new(
-            MockPath(PathBuf::from("/some/where")),
-            vec![] as Vec<MockCrateHandle>
-        );
-        let mut iter = ws.into_iter();
-        assert_eq!(iter.next(), None, "No crates => iteration is empty");
-    }
 
     #[traced_test]
-    fn test_single_crate_iter() {
-        let c1 = MockCrateHandle { crate_path: PathBuf::from("crateA"), publish_ready: true };
-        let ws = MockWorkspace::new(MockPath(PathBuf::from("/single")), vec![c1]);
+    async fn test_real_workspace_into_iterator() {
+        // 1) Create a mock workspace on disk with 2 crates
+        let path = create_mock_workspace(vec![
+            CrateConfig::new("crateA").with_src_files(),
+            CrateConfig::new("crateB").with_src_files(),
+        ]).await.expect("Failed to create mock workspace");
 
-        let mut iter = ws.into_iter();
-        let first = iter.next();
-        assert!(first.is_some(), "Should have 1 crate");
-        assert_eq!(first.unwrap().crate_path, PathBuf::from("crateA"));
-        assert_eq!(iter.next(), None, "No more crates after the first");
-    }
+        // 2) Convert path -> Workspace<PathBuf, CrateHandle>
+        let ws = Workspace::<PathBuf, CrateHandle>::new(&path)
+            .await
+            .expect("Should create workspace from path");
 
-    #[traced_test]
-    fn test_multiple_crates_iter() {
-        let c1 = MockCrateHandle { crate_path: PathBuf::from("crateA"), publish_ready: true };
-        let c2 = MockCrateHandle { crate_path: PathBuf::from("crateB"), publish_ready: true };
-        let ws = MockWorkspace::new(MockPath(PathBuf::from("/multi")), vec![c1.clone(), c2.clone()]);
-
+        // 3) Now test the into_iterator for &ws
         let crates_vec: Vec<_> = ws.into_iter().collect();
-        assert_eq!(crates_vec.len(), 2, "Should iterate over 2 crates");
-        assert_eq!(crates_vec[0].crate_path, c1.crate_path);
-        assert_eq!(crates_vec[1].crate_path, c2.crate_path);
+        assert_eq!(crates_vec.len(), 2, "Should have 2 crates in iteration");
     }
 }

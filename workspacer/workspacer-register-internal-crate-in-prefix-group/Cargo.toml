@@ -2,5 +2,5 @@
 path = "../workspacer-3p"
 [package]
 edition = "2024"
-name = "workspacer-add-and-initialize-crate"
+name = "workspacer-register-internal-crate-in-prefix-group"
 version = "0.1.0"

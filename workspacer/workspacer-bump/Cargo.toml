@@ -1,5 +1,3 @@
-[dependencies.lightweight-command-runner]
-path = "../lightweight-command-runner"
 [dependencies.workspacer-3p]
 path = "../workspacer-3p"
 [dependencies.workspacer-crate]
@@ -8,13 +6,13 @@ path = "../workspacer-crate"
 path = "../workspacer-crate-interface"
 [dependencies.workspacer-errors]
 path = "../workspacer-errors"
-[dependencies.workspacer-rebuild-or-test]
-path = "../workspacer-rebuild-or-test"
-[dependencies.workspacer-workspace]
-path = "../workspacer-workspace"
 [dev-dependencies.workspacer-mock]
 path = "../workspacer-mock"
+[dependencies.workspacer-toml-interface]
+path = "../workspacer-toml-interface"
+[dependencies.workspacer-workspace]
+path = "../workspacer-workspace"
 [package]
 edition = "2024"
-name = "workspacer-watch-and-reload"
+name = "workspacer-bump"
 version = "0.1.0"

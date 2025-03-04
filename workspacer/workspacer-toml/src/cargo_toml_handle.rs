@@ -15,35 +15,67 @@ impl CargoTomlInterface for CargoToml {}
 impl Versioned for CargoToml {
     type Error = CargoTomlError;
 
+    /// Always re-reads the Cargo.toml file from disk (rather than using any
+    /// cached or in-memory TOML data) so that, if a `bump()` call changed
+    /// the version on disk, calling `.version()` immediately afterwards
+    /// will see the newly updated version.
     fn version(&self) -> Result<semver::Version, Self::Error> {
-        trace!("CargoToml::version, checking required fields for integrity");
-        self.check_required_fields_for_integrity()?;
-        trace!("CargoToml::version, successfully checked required fields for integrity");
-
-        let package = self.get_package_section()?;
-        trace!("CargoToml::version, package section: {:#?}", package);
-
-        let version_toml = package
-            .get("version")
-            .ok_or_else(|| CargoTomlError::MissingRequiredFieldForIntegrity {
-                field: "package.version".to_string(),
-                cargo_toml_file: self.path.clone(),
-            })?;
-
-        // Use `as_str()` to get the actual string content without quotes
-        let version_str = version_toml.as_str().ok_or_else(|| {
-            CargoTomlError::MissingRequiredFieldForIntegrity {
-                field: "package.version (expected a string)".to_string(),
-                cargo_toml_file: self.path.clone(),
+        trace!("CargoToml::version: forcing a fresh read from disk");
+        let contents = std::fs::read_to_string(&self.path).map_err(|io_err| {
+            error!("I/O error re-reading cargo toml at {:?}", self.path);
+            CargoTomlError::ReadError {
+                io: Arc::new(io_err),
             }
         })?;
 
-        trace!("CargoToml::version, raw version str: {:#?}", version_str);
+        let doc = contents.parse::<toml_edit::Document>().map_err(|toml_err| {
+            error!("Could not parse cargo toml at {:?}: {:?}", self.path, toml_err);
+            CargoTomlError::TomlEditError {
+                cargo_toml_file: self.path.clone(),
+                toml_parse_error: toml_err,
+            }
+        })?;
 
-        // Parse into a semver::Version
-        Ok(semver::Version::parse(version_str)
-            .map_err(|e| Arc::new(e))
-            .map_err(CargoTomlError::SemverError)?)
+        // Now we effectively do the same integrity checks that were in `check_required_fields_for_integrity()`
+        // but inline, because we must do them on this new parse.
+        let pkg_table = doc.get("package")
+            .and_then(|it| it.as_table())
+            .ok_or_else(|| {
+                error!("Missing [package] table in {:?}", self.path);
+                CargoTomlError::MissingRequiredFieldForIntegrity {
+                    cargo_toml_file: self.path.clone(),
+                    field: "package".to_string(),
+                }
+            })?;
+
+        let ver_item = pkg_table.get("version").ok_or_else(|| {
+            error!("Missing 'version' in [package] for {:?}", self.path);
+            CargoTomlError::MissingRequiredFieldForIntegrity {
+                cargo_toml_file: self.path.clone(),
+                field: "package.version".to_string(),
+            }
+        })?;
+
+        let ver_str = ver_item.as_str().ok_or_else(|| {
+            error!("package.version not a valid string in {:?}", self.path);
+            CargoTomlError::MissingRequiredFieldForIntegrity {
+                cargo_toml_file: self.path.clone(),
+                field: "package.version (expected a string)".to_string(),
+            }
+        })?;
+
+        trace!("CargoToml::version - read version_str='{}' from disk for {:?}", ver_str, self.path);
+
+        let parsed = semver::Version::parse(ver_str).map_err(|err| {
+            error!("Invalid semver='{}' in {:?}: {:?}", ver_str, self.path, err);
+            CargoTomlError::InvalidVersionFormat {
+                cargo_toml_file: self.path.clone(),
+                version: ver_str.to_owned(),
+            }
+        })?;
+
+        info!("CargoToml::version => parsed version={} for {:?}", parsed, self.path);
+        Ok(parsed)
     }
 }
 

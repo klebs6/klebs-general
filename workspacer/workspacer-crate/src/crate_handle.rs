@@ -25,13 +25,22 @@ impl Versioned for CrateHandle {
     type Error = CrateError;
 
     fn version(&self) -> Result<semver::Version, Self::Error> {
+        trace!("CrateHandle::version() - retrieving version via cargo_toml_handle");
         let mut version_str = self.cargo_toml_handle.version()?.to_string();
-        eprintln!("version_str: {:#?}", version_str);
+        debug!("Raw version_str from CargoTomlHandle: {:?}", version_str);
+
+        // Clean/trim quotes if present
         version_str = version_str.trim().replace('"', "");
-        eprintln!("version_str2: {:#?}", version_str);
+        debug!("Cleaned version_str: {:?}", version_str);
+
+        // Parse as semver
         let parsed = semver::Version::parse(&version_str)
-            .map_err(|e| CrateError::CargoTomlError(CargoTomlError::SemverError(e.into())))?;
-        eprintln!("version_str_parsed: {:#?}", parsed);
+            .map_err(|e| {
+                error!("Failed to parse semver from string='{}': {:?}", version_str, e);
+                CrateError::CargoTomlError(CargoTomlError::SemverError(Arc::new(e)))
+            })?;
+
+        info!("CrateHandle::version() - final parsed version for {:?} => {}", self.as_ref(), parsed);
         Ok(parsed)
     }
 }

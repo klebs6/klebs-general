@@ -10,139 +10,55 @@ where for<'async_trait> P: From<PathBuf> + AsRef<Path> + Send + Sync + 'async_tr
 }
 
 #[cfg(test)]
-#[disable]
 mod test_num_crates_and_get_crates {
     use super::*;
-    use std::path::{Path, PathBuf};
-    use std::sync::Arc;
 
-    // ----------------------------------------------------------------------
-    // 1) Define a minimal mock or real `CrateHandleInterface` for H
-    // ----------------------------------------------------------------------
-    #[derive(Debug, Clone)]
-    struct MockCrateHandle {
-        path: PathBuf,
-    }
-
-    impl MockCrateHandle {
-        fn new(path: PathBuf) -> Self {
-            Self { path }
-        }
-    }
-
-    // A trivial implementation to satisfy the trait bounds
-    impl<P> CrateHandleInterface<P> for MockCrateHandle
-    where
-        // In real usage, you'd fill in details or rely on your existing code
-        for<'async_trait> P: AsRef<Path> + Send + Sync + 'async_trait,
-    {
-        // implement or stub out the required trait methods if needed
-    }
-
-    // ----------------------------------------------------------------------
-    // 2) Define a minimal `Workspace<P, H>` mock that we can construct easily
-    // ----------------------------------------------------------------------
-    #[derive(Debug)]
-    struct MockWorkspace<P,H> {
-        path: P,
-        crates: Vec<H>,
-    }
-
-    impl<P,H> MockWorkspace<P,H> {
-        fn new(path: P, crates: Vec<H>) -> Self {
-            Self { path, crates }
-        }
-    }
-
-    // If `MockWorkspace` needs to implement your `WorkspaceInterface<P,H>` or `NumCrates`/`GetCrates`,
-    // we can do so. For demonstration, let's do it directly:
-    impl<P,H: CrateHandleInterface<P>> NumCrates for MockWorkspace<P,H> 
-    where 
-        for<'async_trait> P: From<PathBuf> + AsRef<Path> + Send + Sync + 'async_trait
-    {
-        fn n_crates(&self) -> usize {
-            self.crates.len()
-        }
-    }
-
-    impl<P,H: CrateHandleInterface<P>> GetCrates<P,H> for MockWorkspace<P,H> 
-    where
-        for<'async_trait> P: From<PathBuf> + AsRef<Path> + Send + Sync + 'async_trait
-    {
-        fn crates(&self) -> &[H] {
-            &self.crates
-        }
-    }
-
-    // ----------------------------------------------------------------------
-    // 3) Tests for n_crates() and crates()
-    // ----------------------------------------------------------------------
-
-    /// Scenario: Empty workspace (no crates).
-    #[test]
-    fn test_empty_workspace() {
-        let path = PathBuf::from("/fake/workspace");
-        let crates = vec![];  // no crates
-        let ws = MockWorkspace::new(path, crates);
-
-        assert_eq!(ws.n_crates(), 0, "No crates => n_crates should be 0");
+    #[traced_test]
+    async fn test_empty_workspace_has_zero_crates() {
+        // 1) Create an entirely empty workspace with no crates
+        let path = create_mock_workspace(vec![]).await.expect("Failed to create empty workspace");
+        // By default, create_mock_workspace writes a workspace Cargo.toml with no members if `crate_configs` is empty.
+        
+        // 2) Convert path -> a real Workspace
+        let ws = Workspace::<PathBuf, CrateHandle>::new(&path).await
+            .expect("Should build an empty workspace object");
+        
+        // 3) Check n_crates() and crates()
+        assert_eq!(ws.n_crates(), 0, "No crates => n_crates==0");
         assert!(ws.crates().is_empty(), "crates() slice should be empty");
     }
 
-    /// Scenario: Workspace with a single crate.
-    #[test]
-    fn test_single_crate_workspace() {
-        let path = PathBuf::from("/workspace/single");
-        let crate_handle = MockCrateHandle::new(PathBuf::from("/workspace/single/crateA"));
-        let ws = MockWorkspace::new(path, vec![crate_handle.clone()]);
+    #[traced_test]
+    async fn test_workspace_with_single_crate() {
+        // 1) Create a mock workspace with 1 crate
+        let path = create_mock_workspace(vec![
+            CrateConfig::new("single_crate").with_src_files()
+        ]).await.expect("Failed to create single-crate workspace");
 
-        assert_eq!(ws.n_crates(), 1, "One crate => n_crates should be 1");
-        let slice = ws.crates();
-        assert_eq!(slice.len(), 1, "crates() slice should have length 1");
-        // Check that the data matches
-        assert_eq!(slice[0].path, crate_handle.path);
+        // 2) Build the workspace
+        let ws = Workspace::<PathBuf,CrateHandle>::new(&path).await
+            .expect("Should parse workspace with 1 crate");
+
+        assert_eq!(ws.n_crates(), 1, "Expected exactly 1 crate");
+        assert_eq!(ws.crates().len(), 1, "crates() slice should have length 1");
+        // We can check the name or path if we want
+        let the_crate = &ws.crates()[0];
+        let crate_path = the_crate.as_ref();
+        println!("Single crate path = {}", crate_path.display());
     }
 
-    /// Scenario: Workspace with multiple crates.
-    #[test]
-    fn test_multiple_crates_workspace() {
-        let path = PathBuf::from("/workspace/multi");
-        let crateA = MockCrateHandle::new(PathBuf::from("/workspace/multi/crateA"));
-        let crateB = MockCrateHandle::new(PathBuf::from("/workspace/multi/crateB"));
-        let ws = MockWorkspace::new(path, vec![crateA.clone(), crateB.clone()]);
+    #[traced_test]
+    async fn test_workspace_with_multiple_crates() {
+        let path = create_mock_workspace(vec![
+            CrateConfig::new("crateAlpha").with_src_files(),
+            CrateConfig::new("crateBeta").with_test_files(),
+        ]).await.expect("Failed to create multi-crate workspace");
 
-        assert_eq!(ws.n_crates(), 2, "Two crates => n_crates should be 2");
+        let ws = Workspace::<PathBuf,CrateHandle>::new(&path).await
+            .expect("Should parse multi-crate workspace");
+
+        assert_eq!(ws.n_crates(), 2, "Two crates => n_crates()==2");
         let slice = ws.crates();
-        assert_eq!(slice.len(), 2, "crates() slice should have length 2");
-
-        // Check that the items match the ones we inserted
-        assert_eq!(slice[0].path, crateA.path);
-        assert_eq!(slice[1].path, crateB.path);
-    }
-
-    /// Scenario: n_crates and crates remain consistent if we add or remove crates
-    /// (if your code allows mutation). Demonstrates that the slice points to the same data.
-    #[test]
-    fn test_consistency_after_modification() {
-        let path = PathBuf::from("/workspace/mutable");
-        let mut crates = vec![
-            MockCrateHandle::new(PathBuf::from("/workspace/mutable/crate1")),
-        ];
-        let mut ws = MockWorkspace::new(path, crates);
-
-        // Initially 1 crate
-        assert_eq!(ws.n_crates(), 1);
-        assert_eq!(ws.crates().len(), 1);
-
-        // Simulate adding another crate
-        // In real code, you might have a method for that, or you might just mutate ws.crates
-        ws.crates.push(MockCrateHandle::new(PathBuf::from("/workspace/mutable/crate2")));
-        assert_eq!(ws.n_crates(), 2);
-        assert_eq!(ws.crates().len(), 2);
-
-        // Remove one crate
-        ws.crates.pop();
-        assert_eq!(ws.n_crates(), 1);
-        assert_eq!(ws.crates().len(), 1);
+        assert_eq!(slice.len(), 2, "crates() slice length=2");
     }
 }

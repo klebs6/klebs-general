@@ -71,6 +71,9 @@ error_tree!{
         MissingPackageSection {
             cargo_toml_file: PathBuf,
         },
+        MissingVersionKey {
+            cargo_toml_file: PathBuf,
+        },
         TomlParseError {
             cargo_toml_file: PathBuf,
             toml_parse_error: toml::de::Error,
@@ -253,6 +256,20 @@ error_tree!{
             io_error: Arc<io::Error>,
             context: String,
         },
+        TokioJoinError {
+            join_error: Arc<tokio::task::JoinError>,
+        },
+        BuildError(BuildError),
+        TestFailure(TestFailure),
+        WatchError(WatchError),
+    }
+}
+
+impl From<tokio::task::JoinError> for CrateError {
+    fn from(join_error: tokio::task::JoinError) -> Self {
+        CrateError::TokioJoinError {
+            join_error: Arc::new(join_error),
+        }
     }
 }
 
@@ -355,6 +372,13 @@ error_tree!{
         WorkspaceNotReadyForCargoPublish,
         FileWatchError,
         TestTimeout,
+        MockBuildTestFailedWithStatus {
+            status: std::process::ExitStatus,
+        },
+        BumpError {
+            crate_path: PathBuf,
+            source: Box<CrateError>,
+        },
     }
 }
 

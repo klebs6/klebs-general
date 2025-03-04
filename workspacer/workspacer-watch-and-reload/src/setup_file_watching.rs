@@ -33,8 +33,6 @@ pub fn setup_file_watching(
 #[cfg(test)]
 mod test_setup_file_watching {
     use super::*;
-    use std::path::Path;
-    use tempfile::tempdir;
 
     // Already enabled, but we switch to traced_test and add logging:
 

@@ -43,9 +43,10 @@ ACTIVE_PACKAGE := workspacer-consolidate
 ACTIVE_PACKAGE := workspacer-test-coverage
 ACTIVE_PACKAGE := workspacer-toml
 ACTIVE_PACKAGE := workspacer-watch-and-reload
-#ACTIVE_PACKAGE := workspacer-workspace
-#ACTIVE_PACKAGE := workspacer-readme-writer
+ACTIVE_PACKAGE := workspacer-workspace
 #ACTIVE_PACKAGE := workspacer
+ACTIVE_PACKAGE := workspacer-readme-writer
+ACTIVE_PACKAGE := workspacer-bump
 
 INDIVIDUAL_TEST := gather_leading_token_comments
 INDIVIDUAL_TEST := gather_leading_comment_lines

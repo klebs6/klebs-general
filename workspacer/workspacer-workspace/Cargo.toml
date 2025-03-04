@@ -4,6 +4,8 @@ path = "../generate-report-trait"
 path = "../lightweight-command-runner"
 [dependencies.workspacer-3p]
 path = "../workspacer-3p"
+[dev-dependencies.workspacer-mock]
+path = "../workspacer-mock"
 [dependencies.workspacer-crate]
 path = "../workspacer-crate"
 [dependencies.workspacer-crate-interface]

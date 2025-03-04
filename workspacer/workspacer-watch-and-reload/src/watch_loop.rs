@@ -4,26 +4,27 @@ crate::ix!();
 // ------------------------------------------------------------------------
 // Subroutine #2: The watch loop
 // ------------------------------------------------------------------------
-pub async fn watch_loop<P,H>(
-    workspace:     &Workspace<P,H>,
+pub async fn watch_loop<X,E>(
+    watched:       &X,
     _watcher:      &mut RecommendedWatcher,
     _workspace_path: &PathBuf,
     notify_rx:     async_channel::Receiver<notify::Result<notify::Event>>,
-    tx:            Option<mpsc::Sender<Result<(), WorkspaceError>>>,
+    tx:            Option<mpsc::Sender<Result<(), E>>>,
     runner:        Arc<dyn CommandRunner + Send + Sync + 'static>,
     cancel_token:  CancellationToken,
-) -> Result<(), WorkspaceError>
+) -> Result<(), E>
 where
-    for<'async_trait> P: From<PathBuf> + AsRef<Path> + Send + Sync + 'async_trait,
-    H: WatchAndReload<Error=CrateError> + RebuildOrTest<Error=CrateError> + CrateHandleInterface<P> + Send + Sync,
+    X: WatchAndReload<Error=E> + RebuildOrTest<Error=E>,
+    E: From<WatchError>,
 {
     loop {
+        let cancel_clone = cancel_token.clone();
         tokio::select! {
             // 2a) If we get a file event
             event_res = notify_rx.recv() => {
                 match event_res {
                     Ok(res) => {
-                        process_notify_event(workspace, res, tx.as_ref(), &runner).await?;
+                        process_notify_event(watched, res, tx.as_ref(), &runner).await?;
                     },
                     Err(_closed) => {
                         // channel closed
@@ -33,7 +34,7 @@ where
             },
 
             // 2b) If we get a cancellation
-            _ = cancel_token.cancelled() => {
+            _ = cancel_clone.cancelled() => {
                 break;
             }
         }
@@ -44,23 +45,41 @@ where
 #[cfg(test)]
 mod test_watch_loop {
     use super::*;
-    use async_channel::bounded;
-    use tokio::sync::mpsc;
-    use tokio::sync::CancellationToken;
-    use std::sync::Arc;
-    use std::path::PathBuf;
 
-    // Re-enable by removing #[disable].
-    // Switch to traced_test, add logging.
+    // We'll define a local "create_dummy_watcher"
+    fn create_dummy_watcher() -> RecommendedWatcher {
+        use notify::Config;
+        RecommendedWatcher::new(
+            |_res| {},
+            Config::default(),
+        ).expect("dummy watcher init")
+    }
+
+    #[derive(Default)]
+    struct MockCommandRunner;
+    impl CommandRunner for MockCommandRunner {
+        fn run_command(&self, _cmd: tokio::process::Command)
+            -> tokio::task::JoinHandle<Result<std::process::Output, std::io::Error>>
+        {
+            tokio::spawn(async {
+                Ok(std::process::Output {
+                    status: std::process::ExitStatus::from_raw(0),
+                    stdout: b"mock build/test success".to_vec(),
+                    stderr: vec![],
+                })
+            })
+        }
+    }
 
     #[traced_test]
     async fn test_watch_loop_exits_on_channel_close() {
         info!("Starting test_watch_loop_exits_on_channel_close");
         let (notify_tx, notify_rx) = async_channel::unbounded::<notify::Result<notify::Event>>();
-        drop(notify_tx);
+        drop(notify_tx); // channel closed immediately
 
-        let workspace = mock_workspace();
-        let runner = Arc::new(MockRunner::default());
+        let workspace_path = create_mock_workspace(vec![]).await.unwrap();
+        let workspace = Workspace::<PathBuf,CrateHandle>::new(&workspace_path).await.unwrap();
+        let runner = Arc::new(MockCommandRunner::default());
         let cancel_token = CancellationToken::new();
         let mut watcher = create_dummy_watcher();
         let path = PathBuf::from("/some/workspace");
@@ -81,9 +100,11 @@ mod test_watch_loop {
     async fn test_watch_loop_exits_on_cancel() {
         info!("Starting test_watch_loop_exits_on_cancel");
         let (notify_tx, notify_rx) = async_channel::unbounded::<notify::Result<notify::Event>>();
-        let workspace = mock_workspace();
-        let runner = Arc::new(MockRunner::default());
+        let workspace_path = create_mock_workspace(vec![]).await.unwrap();
+        let workspace = Workspace::<PathBuf,CrateHandle>::new(&workspace_path).await.unwrap();
+        let runner = Arc::new(MockCommandRunner::default());
         let cancel_token = CancellationToken::new();
+        let cancel_clone = cancel_token.clone();
         let mut watcher = create_dummy_watcher();
         let path = PathBuf::from("/some/path");
 
@@ -95,7 +116,7 @@ mod test_watch_loop {
                 notify_rx,
                 None,
                 runner,
-                cancel_token.clone()
+                cancel_clone
             ).await
         });
 

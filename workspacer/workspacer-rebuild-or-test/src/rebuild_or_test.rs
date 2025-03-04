@@ -10,6 +10,52 @@ pub trait RebuildOrTest {
 }
 
 #[async_trait]
+impl RebuildOrTest for CrateHandle {
+    type Error = CrateError;
+
+    ///
+    /// Runs `cargo build` and then `cargo test` in this crate's directory.
+    /// Logs success or error details; returns `Ok(())` if both succeed.
+    ///
+    async fn rebuild_or_test(&self, runner: &dyn CommandRunner) -> Result<(), Self::Error> {
+
+        info!("Running cargo build for crate at: {}", self.as_ref().display());
+
+        let crate_path = self.as_ref();
+
+        let mut build_cmd = Command::new("cargo");
+        build_cmd.arg("build").current_dir(&crate_path);
+
+        let output = runner.run_command(build_cmd).await??;
+
+        if !output.status.success() {
+            error!("Build failed: {}", String::from_utf8_lossy(&output.stderr));
+            return Err(CrateError::from(BuildError::BuildFailed {
+                stderr: String::from_utf8_lossy(&output.stderr).to_string(),
+            }));
+        }
+
+        info!("Rebuild succeeded, running tests...");
+
+        let mut test_cmd = Command::new("cargo");
+        test_cmd.arg("test").current_dir(&crate_path);
+
+        let test_output = runner.run_command(test_cmd).await??;
+
+        if !test_output.status.success() {
+            let stdout = Some(String::from_utf8_lossy(&test_output.stdout).to_string());
+            let stderr = Some(String::from_utf8_lossy(&test_output.stderr).to_string());
+
+            error!("Tests failed: {:#?}", stderr);
+            return Err(CrateError::from(TestFailure::UnknownError { stdout, stderr }));
+        }
+
+        info!("All tests passed successfully for crate at {}.", self.as_ref().display());
+        Ok(())
+    }
+}
+
+#[async_trait]
 impl<P,H:CrateHandleInterface<P>> RebuildOrTest for Workspace<P,H> 
 where for<'async_trait> P: From<PathBuf> + AsRef<Path> + Send + Sync + 'async_trait
 {
