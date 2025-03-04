@@ -1,4 +1,5 @@
 // ---------------- [ File: tests/coverage_no_tests.rs ]
+// ---------------- [ File: tests/coverage_no_tests.rs ]
 // tests/coverage_no_tests.rs
 
 use crate::mock::{create_mock_workspace, CrateConfig};

@@ -1,3 +1,4 @@
+// ---------------- [ File: src/bump.rs ]
 crate::ix!();
 
 // ---------------------- [ File: workspace-bump/src/lib.rs ] ----------------------

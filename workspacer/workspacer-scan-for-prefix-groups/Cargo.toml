@@ -1,5 +1,17 @@
+[dependencies]
+derive_builder = "*"
 [dependencies.workspacer-3p]
 path = "../workspacer-3p"
+[dependencies.workspacer-crate]
+path = "../workspacer-crate"
+[dependencies.workspacer-crate-interface]
+path = "../workspacer-crate-interface"
+[dependencies.workspacer-errors]
+path = "../workspacer-errors"
+[dependencies.workspacer-mock]
+path = "../workspacer-mock"
+[dependencies.workspacer-workspace]
+path = "../workspacer-workspace"
 [package]
 edition = "2024"
 name = "workspacer-scan-for-prefix-groups"

@@ -79,4 +79,3 @@ mod test_process_other_token {
         info!("test_other_token_no_comment_stop => success");
     }
 }
-

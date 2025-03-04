@@ -1,6 +1,4 @@
-
 // ---------------- [ File: tests/integration_format_imports.rs ]
-
 use workspacer_format_imports::{
     sort_and_format_imports_in_text, 
     SortAndFormatImportsError

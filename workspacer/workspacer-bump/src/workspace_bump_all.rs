@@ -1,3 +1,4 @@
+// ---------------- [ File: src/workspace_bump_all.rs ]
 crate::ix!();
 
 #[async_trait]

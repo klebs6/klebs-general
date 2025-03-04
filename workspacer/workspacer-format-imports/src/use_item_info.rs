@@ -1,7 +1,6 @@
 // ---------------- [ File: src/use_item_info.rs ]
 crate::ix!();
 
-// ---------------- [ File: src/use_item_info.rs ]
 /// Private struct => changed to public to avoid E0616
 #[derive(Getters,Debug,Builder,Clone)]
 #[builder(setter(into))]
@@ -17,5 +16,3 @@ pub struct UseItemInfo {
     // ADDED: store any trailing comment on the same line, e.g. "// trailing comment"
     trailing_comment: Option<String>,
 }
-
-

@@ -40,4 +40,3 @@ mod test_async_path_validator {
         assert!(!valid, "No Cargo.toml => is_valid=false");
     }
 }
-

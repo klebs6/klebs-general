@@ -1,3 +1,4 @@
+// ---------------- [ File: src/register_internal_crate_in_prefix_group.rs ]
 crate::ix!();
 
 // ---------------------- [ File: workspacer-register-internal-crate-in-prefix-group/src/lib.rs ] ----------------------

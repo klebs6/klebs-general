@@ -1,3 +1,4 @@
+// ---------------- [ File: src/detect_trailing_comment_same_line.rs ]
 crate::ix!();
 
 /// Detects a same-line trailing `// comment` starting just after offset `pos`

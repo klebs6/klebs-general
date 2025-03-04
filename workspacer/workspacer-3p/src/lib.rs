@@ -26,6 +26,8 @@ pub use petgraph::dot::{Dot, Config as DotConfig};
 pub use std::collections::{HashSet,BTreeMap,BTreeSet,HashMap};
 pub use tokio::process::Command;
 pub use tokio::runtime::Runtime;
+pub use pathdiff;
+pub use std::fmt::Debug;
 pub use std::process::Stdio;
 pub use cargo_metadata::PackageId;
 pub use petgraph::{self,graph::{DiGraph, NodeIndex}};

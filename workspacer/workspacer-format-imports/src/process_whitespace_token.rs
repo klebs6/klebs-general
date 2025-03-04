@@ -95,4 +95,3 @@ mod test_process_whitespace_token {
         info!("test_whitespace_before_comment_blocking => success");
     }
 }
-

@@ -1,3 +1,4 @@
+// ---------------- [ File: src/fallback_scan_node_text.rs ]
 crate::ix!();
 
 pub fn fallback_scan_node_text(node: &SyntaxNode) -> Vec<String> {

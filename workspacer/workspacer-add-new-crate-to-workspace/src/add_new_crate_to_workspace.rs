@@ -1,3 +1,4 @@
+// ---------------- [ File: src/add_new_crate_to_workspace.rs ]
 crate::ix!();
 
 // ---------------------- [ File: workspacer-add-new-crate-to-workspace/src/lib.rs ] ----------------------

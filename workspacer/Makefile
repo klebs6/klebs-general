@@ -47,6 +47,8 @@ ACTIVE_PACKAGE := workspacer-workspace
 #ACTIVE_PACKAGE := workspacer
 ACTIVE_PACKAGE := workspacer-readme-writer
 ACTIVE_PACKAGE := workspacer-bump
+ACTIVE_PACKAGE := workspacer-add-internal-dep
+ACTIVE_PACKAGE := workspacer-scan-for-prefix-groups
 
 INDIVIDUAL_TEST := gather_leading_token_comments
 INDIVIDUAL_TEST := gather_leading_comment_lines
