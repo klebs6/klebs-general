@@ -49,6 +49,8 @@ ACTIVE_PACKAGE := workspacer-readme-writer
 ACTIVE_PACKAGE := workspacer-bump
 ACTIVE_PACKAGE := workspacer-add-internal-dep
 ACTIVE_PACKAGE := workspacer-scan-for-prefix-groups
+ACTIVE_PACKAGE := workspacer-register-internal-crate-in-prefix-group
+ACTIVE_PACKAGE := workspacer-add-new-crate-to-workspace
 
 INDIVIDUAL_TEST := gather_leading_token_comments
 INDIVIDUAL_TEST := gather_leading_comment_lines

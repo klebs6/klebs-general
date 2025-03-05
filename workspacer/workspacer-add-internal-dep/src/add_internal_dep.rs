@@ -5,29 +5,34 @@ crate::ix!();
 /// A trait for adding an internal dep from one crate to another.
 ///
 #[async_trait]
-pub trait AddInternalDependency {
+pub trait AddInternalDependency<P,H> 
+where
+    for<'async_trait> P: Debug + Clone + From<PathBuf> + AsRef<Path> + Send + Sync + 'async_trait,
+    H: CrateHandleInterface<P> + Debug + Send + Sync,
+{
     type Error;
     /// Attempt to add a dependency on `dep_crate` to the `target_crate`.
     /// - Edits the target crate’s Cargo.toml to add `[dependencies] dep_name = { path=... }`
     /// - Updates `src/imports.rs` with a `pub(crate) use target_crate::*;` statement
     async fn add_internal_dependency(
         &self,
-        target_crate: &CrateHandle,
-        dep_crate:    &CrateHandle,
+        target_crate: &H,
+        dep_crate:    &H,
     ) -> Result<(), Self::Error>;
 }
 
 #[async_trait]
-impl<P,H:CrateHandleInterface<P>> AddInternalDependency for Workspace<P,H> 
-where 
-    for<'async_trait> P: From<PathBuf> + AsRef<Path> + Send + Sync + 'async_trait
+impl<P,H> AddInternalDependency<P,H> for Workspace<P,H> 
+where
+    for<'async_trait> P: Debug + Clone + From<PathBuf> + AsRef<Path> + Send + Sync + 'async_trait,
+    H: CrateHandleInterface<P> + Debug + Send + Sync,
 {
     type Error = WorkspaceError;
 
     async fn add_internal_dependency(
         &self,
-        target_crate: &CrateHandle,
-        dep_crate:    &CrateHandle,
+        target_crate: &H,
+        dep_crate:    &H,
     ) -> Result<(), WorkspaceError> {
         use std::io::Write as _;
         use toml_edit::Document;
