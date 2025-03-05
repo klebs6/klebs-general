@@ -1,0 +1,20 @@
+- make sure the crate is organized properly, with each file having the proper
+  name based on the single public function contained inside, and each file
+  having a well named exhaustive #[traced_test] test suite testing that single
+  function.
+
+- make sure that each crate has robust ai generated logging with trace! info!
+  warn! debug! error!
+
+- function that uses ra_ap_syntax to strip out all tracing calls (this would be
+  a function we could apply to the final artifact before a binary release to
+  remove strings from the binary)
+
+- consolidate should also be able to consolidate a crate and all of its internal
+  dependencies in a *tree*. 
+
+- We should also be able to consolidate trees of vendored crates with separate
+  config settings from the main consolidation
+
+- intelligent git commit with an ai generated git log comment based on the
+  commit patch.

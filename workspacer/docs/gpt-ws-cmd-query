@@ -1,0 +1,132 @@
+we would like to write an outer layer command line tool which invokes the various functionalities. in the end, here are the commands we want to support:
+
+workspacer command-line "ws"
+ws add [new-crate-name]
+ws analyze
+ws analyze --crate [crate-name]
+ws bump
+ws bump --crate [crate-name]
+ws check-publish-ready
+ws check-publish-ready --crate [crate-name]
+ws cleanup
+ws cleanup --crate [crate-name]
+ws coverage
+ws coverage --crate [crate-name]
+ws describe
+ws describe --crate [crate-name]
+ws detect-cycles
+ws document
+ws document --crate [crate-name]
+ws format-imports
+ws format-imports --crate [crate-name]
+ws get lock-versions
+ws get toml --section [section]
+ws get toml --section [section] --crate [crate-name]
+ws git commit
+ws info
+ws info --crate [crate-name]
+ws lint
+ws metadata
+ws name
+ws name --crate [crate-name]
+ws organize
+ws organize --crate [crate-name]
+ws pin
+ws pin --crate [crate-name]
+ws publish
+ws publish --crate [crate-name]
+ws register-crate-files
+ws register-crate-files --crate [crate-name]
+ws tree
+ws upgrade-function-tracing
+ws upgrade-function-tracing --crate [crate-name]
+ws upgrade-function-tracing --crate [crate-name] --file [file-name]
+ws upgrade-function-tracing --crate [crate-name] --fn [function-name]
+ws upgrade-test --crate [crate-name] --test-name [test-name]
+ws upgrade-test-suites
+ws upgrade-test-suites --crate [crate-name]
+ws upgrade-test-suites --crate [crate-name] --file [file-name] 
+ws upgrade-test-suites --crate [crate-name] --fn [function-name]
+ws upgrade-test-suites --crate [crate-name] --suite-name [test-suite-name]
+ws upgrade-test-suite-tracing
+ws upgrade-test-suite-tracing --crate [crate-name] --suite-name [test-suite-name]
+ws upgrade-test-suite-tracing --file [file-name] --crate [crate-name]
+ws upgrade-test-tracing --crate [crate-name] --test-name [test-name]
+ws upgrade-tracing
+ws validate
+ws validate --crate [crate-name]
+ws watch
+ws watch --crate [crate-name]
+ws write-readmes
+ws write-readmes --crate [crate-name]
+ws show
+    --include-private
+    --include-docs
+    --include-tests
+    --include-fn-bodies
+    --include-test-bodies
+    --just-tests
+    --just-fns
+    --just-impls
+    --just-traits
+    --just-enums
+    --just-structs
+    --just-aliases
+    --just-adts
+    --just-macros
+
+
+the difference, for example, between ws analyze and ws analyze --crate [crate-name] is that the former analyzes whatever we happen to currently be inside of. if we are inside of a workspace, we will get a full workspace analysis. if we are inside of a crate, we will get a full crate analysis. the latter we can only run from inside a workspace and when we run it, its effect is to hone in on the given crate. a good example would be like this, for pin:
+
+pin (old binary)
+// ---------------- [ File: workspacer-pin/src/bin/pin_wildcard_deps.rs ]
+//! src/bin/pin_wildcards.rs
+use workspacer_3p::*;
+use workspacer_errors::*;
+use workspacer_crate::*;
+use workspacer_workspace::*;
+use workspacer_pin::*;
+use workspacer_git::*;
+
+#[tokio::main]
+async fn main() -> Result<(), WorkspaceError> {
+    configure_tracing();
+
+    let path = PathBuf::from(".");
+
+    match Workspace::<PathBuf, CrateHandle>::new(&path).await {
+        Ok(workspace) => {
+            // If we successfully built a workspace, proceed.
+            workspace.ensure_git_clean().await?;
+            workspace.pin_all_wildcard_dependencies().await?;
+            println!("Successfully pinned wildcard dependencies in the workspace!");
+        }
+        Err(WorkspaceError::ActuallyInSingleCrate { path: _ }) => {
+            // Fallback to single crate if `[workspace]` was not found
+            println!("No [workspace] found; using single-crate logic...");
+
+            // Build a single CrateHandle
+            let single_crate = CrateHandle::new(&path).await
+                .map_err(|e| WorkspaceError::CrateError(e))?;
+
+            single_crate.ensure_git_clean().await
+                .map_err(|git_err| WorkspaceError::GitError(git_err))?;
+
+            single_crate.pin_all_wildcard_dependencies().await
+                .map_err(|e| WorkspaceError::CrateError(e))?;
+
+            println!("Successfully pinned wildcard dependencies in single crate!");
+        }
+        Err(e) => {
+            // Some other workspace error
+            eprintln!("Workspace creation failed with error: {:?}", e);
+            std::process::exit(1);
+        }
+    }
+
+    Ok(())
+}
+
+many of these commands will require git to be clean before they execute. we want to give the user a chance to check what the command did after it runs.
+
+can you help us write a *full* structopt cli (without skipping any commands) which handles and dispatches the full set of ws commands i showed you above?

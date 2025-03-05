@@ -1,0 +1,73 @@
+ws add [new-crate-name]
+ws analyze
+ws analyze --crate [crate-name]
+ws bump
+ws bump --crate [crate-name]
+ws check-publish-ready
+ws check-publish-ready --crate [crate-name]
+ws cleanup
+ws cleanup --crate [crate-name]
+ws coverage
+ws coverage --crate [crate-name]
+ws describe
+ws describe --crate [crate-name]
+ws detect-cycles
+ws document
+ws document --crate [crate-name]
+ws format-imports
+ws format-imports --crate [crate-name]
+ws get lock-versions
+ws get toml --section [section]
+ws get toml --section [section] --crate [crate-name]
+ws git commit
+ws info
+ws info --crate [crate-name]
+ws lint
+ws metadata
+ws name
+ws name --crate [crate-name]
+ws organize
+ws organize --crate [crate-name]
+ws pin
+ws pin --crate [crate-name]
+ws publish
+ws publish --crate [crate-name]
+ws register-crate-files
+ws register-crate-files --crate [crate-name]
+ws tree
+ws upgrade-function-tracing
+ws upgrade-function-tracing --crate [crate-name]
+ws upgrade-function-tracing --crate [crate-name] --file [file-name]
+ws upgrade-function-tracing --crate [crate-name] --fn [function-name]
+ws upgrade-test --crate [crate-name] --test-name [test-name]
+ws upgrade-test-suites
+ws upgrade-test-suites --crate [crate-name]
+ws upgrade-test-suites --crate [crate-name] --file [file-name] 
+ws upgrade-test-suites --crate [crate-name] --fn [function-name]
+ws upgrade-test-suites --crate [crate-name] --suite-name [test-suite-name]
+ws upgrade-test-suite-tracing
+ws upgrade-test-suite-tracing --crate [crate-name] --suite-name [test-suite-name]
+ws upgrade-test-suite-tracing --file [file-name] --crate [crate-name]
+ws upgrade-test-tracing --crate [crate-name] --test-name [test-name]
+ws upgrade-tracing
+ws validate
+ws validate --crate [crate-name]
+ws watch
+ws watch --crate [crate-name]
+ws write-readmes
+ws write-readmes --crate [crate-name]
+ws show
+    --include-private
+    --include-docs
+    --include-tests
+    --include-fn-bodies
+    --include-test-bodies
+    --just-tests
+    --just-fns
+    --just-impls
+    --just-traits
+    --just-enums
+    --just-structs
+    --just-aliases
+    --just-adts
+    --just-macros

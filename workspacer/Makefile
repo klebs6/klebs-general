@@ -45,12 +45,13 @@ ACTIVE_PACKAGE := workspacer-toml
 ACTIVE_PACKAGE := workspacer-watch-and-reload
 ACTIVE_PACKAGE := workspacer-workspace
 #ACTIVE_PACKAGE := workspacer
-ACTIVE_PACKAGE := workspacer-readme-writer
 ACTIVE_PACKAGE := workspacer-bump
 ACTIVE_PACKAGE := workspacer-add-internal-dep
 ACTIVE_PACKAGE := workspacer-scan-for-prefix-groups
 ACTIVE_PACKAGE := workspacer-register-internal-crate-in-prefix-group
 ACTIVE_PACKAGE := workspacer-add-new-crate-to-workspace
+ACTIVE_PACKAGE := workspacer-readme-writer
+ACTIVE_PACKAGE := workspacer
 
 INDIVIDUAL_TEST := gather_leading_token_comments
 INDIVIDUAL_TEST := gather_leading_comment_lines
@@ -75,7 +76,8 @@ DEFAULT := test
 #DEFAULT := consolidate_crate_interface
 #DEFAULT := ensure
 #DEFAULT := publish_public_crates_in_order
-DEFAULT := name_all_files
+DEFAULT := run_workspacer
+#DEFAULT := name_all_files
 #DEFAULT := run
 
 default: $(DEFAULT)
@@ -90,6 +92,9 @@ run:
 
 pin_wildcard_dep:
 	RUSTFLAGS=$(RUSTFLAGS) $(CARGO) $(RUN) --bin workspacer-pin-wildcard-deps $(FEATURES)
+
+run_workspacer:
+	RUSTFLAGS=$(RUSTFLAGS) $(CARGO) $(RUN) --bin ws $(FEATURES)
 
 publish_public_crates_in_order:
 	RUSTFLAGS=$(RUSTFLAGS) $(CARGO) $(RUN) --bin workspacer-publish-public-crates-in-order $(FEATURES) -- --dry-run

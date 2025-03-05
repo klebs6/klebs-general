@@ -1,0 +1,12 @@
+
+we would like to refine this system into four crates. see below:
+
+workspacer-add-internal-dep -- this will let us add one of our workspace crates to another as a dependency. it will take care of registering the new dependency in the proper Cargo.toml, adding the path, the version, etc, as well as registering the import as a pub(crate) use my_neighbor::*; statement in the src/imports.rs file of the target crate.
+
+workspacer-register-internal-crate-in-prefix-group -- this will let us register a crate within a prefix group's outer facade crate. for example, if we added a batch-mode-batch-schema crate, we would also want to call this functionality to add it to the batch-mode outer facade crate in the Cargo.toml and as a public reexport.
+
+workspacer-scan-for-prefix-groups -- this will let us scan our workspace for our prefix groups. we basically want a way to figure out which prefix groups exist in our workspace and how they are structured, which have outer facade crates properly installed and which have *-3p dependency crates. we will want to know whether all crates in this group properly link to their *-3p dependency crate and whether all crates in this group are properly registered in the outer prefix group facade crate.
+
+workspacer-add-new-crate-to-workspace -- putting it all together, this will let us add a new crate to our workspace. if we are adding into an existing prefix group, we will handle that here. if not, that's okay and we will still handle what we need to handle. at the end of this procedure, we will have a new, usable crate which is ready to go and 100% hooked in to the proper places.
+
+can you help us set all of this up? are there any other crates we should add while we are here working on this functionality?

@@ -1,5 +1,24 @@
+[dependencies]
+derive_builder = "*"
+[dependencies.serde]
+features = [ "derive" ]
+version = "*"
+[dependencies.serde_derive]
+version = "*"
+[dependencies.serde_json]
+version = "*"
 [dependencies.workspacer-3p]
 path = "../workspacer-3p"
+[dependencies.workspacer-consolidate]
+path = "../workspacer-consolidate"
+[dependencies.workspacer-crate]
+path = "../workspacer-crate"
+[dependencies.workspacer-crate-interface]
+path = "../workspacer-crate-interface"
+[dependencies.workspacer-errors]
+path = "../workspacer-errors"
+[dependencies.workspacer-workspace]
+path = "../workspacer-workspace"
 [package]
 edition = "2024"
 name = "workspacer-readme-writer"
