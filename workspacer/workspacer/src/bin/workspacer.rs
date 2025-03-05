@@ -307,5 +307,11 @@ pub struct ShowOpts {
 
 #[tokio::main]
 async fn main() {
-    todo!();
+    let cli = WsCli::from_args();
+    match cli {
+        WsCli::Add { crate_name } => {
+
+        },
+        _ => {}
+    }
 }

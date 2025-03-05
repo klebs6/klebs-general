@@ -1,0 +1,6 @@
+[dependencies.workspacer-3p]
+path = "../workspacer-3p"
+[package]
+edition = "2024"
+name = "workspacer-ensure-git-clean"
+version = "0.1.0"
