@@ -1,4 +1,4 @@
-// ---------------- [ File: src/is_imports_line.rs ]
+// ---------------- [ File: workspacer-register/src/is_imports_line.rs ]
 crate::ix!();
 
 pub fn is_imports_line(item: &ast::Item) -> bool {

@@ -1,4 +1,4 @@
-// ---------------- [ File: src/process_other_token.rs ]
+// ---------------- [ File: workspacer-format-imports/src/process_other_token.rs ]
 crate::ix!();
 
 pub fn process_other_token(

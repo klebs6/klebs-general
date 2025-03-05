@@ -1,4 +1,4 @@
-// ---------------- [ File: src/lib.rs ]
+// ---------------- [ File: workspacer-interface/src/lib.rs ]
 pub use workspacer_crate_interface::*;
 pub use workspacer_errors::*;
 pub use workspacer_toml_interface::*;

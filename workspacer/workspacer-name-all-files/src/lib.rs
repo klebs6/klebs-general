@@ -1,4 +1,4 @@
-// ---------------- [ File: src/lib.rs ]
+// ---------------- [ File: workspacer-name-all-files/src/lib.rs ]
 #[macro_use] mod imports; use imports::*;
 
 x!{trait_def}

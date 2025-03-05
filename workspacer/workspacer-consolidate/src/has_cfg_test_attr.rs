@@ -1,4 +1,4 @@
-// ---------------- [ File: src/has_cfg_test_attr.rs ]
+// ---------------- [ File: workspacer-consolidate/src/has_cfg_test_attr.rs ]
 crate::ix!();
 
 pub fn has_cfg_test_attr(node: &SyntaxNode) -> bool {

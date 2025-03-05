@@ -1,4 +1,4 @@
-// ---------------- [ File: src/handle_path_change.rs ]
+// ---------------- [ File: workspacer-watch-and-reload/src/handle_path_change.rs ]
 crate::ix!();
 
 // ------------------------------------------------------------------------

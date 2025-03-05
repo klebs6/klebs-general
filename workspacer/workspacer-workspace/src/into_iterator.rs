@@ -1,4 +1,4 @@
-// ---------------- [ File: src/into_iterator.rs ]
+// ---------------- [ File: workspacer-workspace/src/into_iterator.rs ]
 crate::ix!();
 
 impl<'a,P,H:CrateHandleInterface<P>> IntoIterator for &'a Workspace<P,H> 

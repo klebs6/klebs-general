@@ -1,4 +1,4 @@
-// ---------------- [ File: src/extract_non_macro_lines.rs ]
+// ---------------- [ File: workspacer-register/src/extract_non_macro_lines.rs ]
 crate::ix!();
 
 pub fn extract_non_macro_lines(new_top_block: &str) -> Vec<String> {

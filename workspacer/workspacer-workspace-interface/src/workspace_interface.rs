@@ -1,4 +1,4 @@
-// ---------------- [ File: src/workspace_interface.rs ]
+// ---------------- [ File: workspacer-workspace-interface/src/workspace_interface.rs ]
 crate::ix!();
 
 pub trait WorkspaceInterface<P,T>
@@ -22,6 +22,7 @@ where
     T: CrateHandleInterface<P> 
 {
     fn crates(&self) -> &[T];
+    fn crates_mut(&mut self) -> &mut Vec<T>;
 }
 
 pub trait NumCrates {

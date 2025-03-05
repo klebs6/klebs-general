@@ -1,4 +1,4 @@
-// ---------------- [ File: src/bin/workspacer.rs ]
+// ---------------- [ File: workspacer/src/bin/workspacer.rs ]
 use workspacer_3p::*;
 use workspacer::*;
 

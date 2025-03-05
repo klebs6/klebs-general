@@ -1,4 +1,4 @@
-// ---------------- [ File: src/gather_rs_files_recursively.rs ]
+// ---------------- [ File: workspacer-name-all-files/src/gather_rs_files_recursively.rs ]
 crate::ix!();
 
 /// Recursively scans the directory `root_dir` for `.rs` files.

@@ -1,4 +1,4 @@
-// ---------------- [ File: src/imports.rs ]
+// ---------------- [ File: workspacer-scan-for-prefix-groups/src/imports.rs ]
 pub(crate) use workspacer_3p::*;
 pub(crate) use workspacer_crate::*;
 pub(crate) use workspacer_crate_interface::*;

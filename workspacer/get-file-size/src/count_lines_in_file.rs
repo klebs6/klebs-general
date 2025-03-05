@@ -1,4 +1,4 @@
-// ---------------- [ File: src/count_lines_in_file.rs ]
+// ---------------- [ File: get-file-size/src/count_lines_in_file.rs ]
 crate::ix!();
 
 /// Asynchronously counts the number of lines in a file

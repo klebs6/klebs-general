@@ -1,4 +1,4 @@
-// ---------------- [ File: src/gather_deduplicated_macro_stems.rs ]
+// ---------------- [ File: workspacer-register/src/gather_deduplicated_macro_stems.rs ]
 crate::ix!();
 
 pub fn gather_deduplicated_macro_stems(

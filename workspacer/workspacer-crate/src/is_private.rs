@@ -1,4 +1,4 @@
-// ---------------- [ File: src/is_private.rs ]
+// ---------------- [ File: workspacer-crate/src/is_private.rs ]
 crate::ix!();
 
 impl IsPrivate for CrateHandle

@@ -1,4 +1,4 @@
-// ---------------- [ File: src/generate_function_signature.rs ]
+// ---------------- [ File: workspacer-syntax/src/generate_function_signature.rs ]
 crate::ix!();
 
 /// Minimal post-processing to ensure correct spacing around arrows, where clauses, etc.

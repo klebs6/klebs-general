@@ -1,4 +1,4 @@
-// ---------------- [ File: src/lib.rs ]
+// ---------------- [ File: workspacer-pin/src/lib.rs ]
 #[macro_use] mod imports; use imports::*;
 
 x!{pin_wildcard_deps}

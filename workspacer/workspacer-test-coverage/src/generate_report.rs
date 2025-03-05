@@ -1,4 +1,4 @@
-// ---------------- [ File: src/generate_report.rs ]
+// ---------------- [ File: workspacer-test-coverage/src/generate_report.rs ]
 crate::ix!();
 
 impl GenerateReport for TestCoverageCommand {

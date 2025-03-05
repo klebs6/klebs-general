@@ -1,4 +1,4 @@
-// ---------------- [ File: src/lib.rs ]
+// ---------------- [ File: lightweight-command-runner/src/lib.rs ]
 #[macro_use] mod imports; use imports::*;
 
 #[cfg(test)]

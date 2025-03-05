@@ -1,4 +1,4 @@
-// ---------------- [ File: src/notify_rebuild_result.rs ]
+// ---------------- [ File: workspacer-watch-and-reload/src/notify_rebuild_result.rs ]
 crate::ix!();
 
 // ------------------------------------------------------------------------

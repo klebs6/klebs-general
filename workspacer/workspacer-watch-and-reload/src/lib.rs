@@ -1,4 +1,4 @@
-// ---------------- [ File: src/lib.rs ]
+// ---------------- [ File: workspacer-watch-and-reload/src/lib.rs ]
 #[macro_use] mod imports; use imports::*;
 
 x!{handle_path_change}

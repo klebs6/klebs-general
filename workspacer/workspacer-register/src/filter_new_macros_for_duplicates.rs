@@ -1,4 +1,4 @@
-// ---------------- [ File: src/filter_new_macros_for_duplicates.rs ]
+// ---------------- [ File: workspacer-register/src/filter_new_macros_for_duplicates.rs ]
 crate::ix!();
 
 /// Removes from `new_macros` any macro whose stem is already in `old_macros`.

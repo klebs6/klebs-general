@@ -1,4 +1,4 @@
-// ---------------- [ File: src/skip_node_plus_trailing_whitespace.rs ]
+// ---------------- [ File: workspacer-format-imports/src/skip_node_plus_trailing_whitespace.rs ]
 crate::ix!();
 
 /// Skip exactly one node plus any *preceding* whitespace tokens, returning

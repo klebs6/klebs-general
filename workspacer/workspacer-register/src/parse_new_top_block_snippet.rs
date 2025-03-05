@@ -1,4 +1,4 @@
-// ---------------- [ File: src/parse_new_top_block_snippet.rs ]
+// ---------------- [ File: workspacer-register/src/parse_new_top_block_snippet.rs ]
 crate::ix!();
 
 pub fn parse_new_top_block_snippet(new_top_block: &str) -> (Vec<TopBlockMacro>, Vec<String>) {

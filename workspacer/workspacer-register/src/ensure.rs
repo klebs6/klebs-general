@@ -1,4 +1,4 @@
-// ---------------- [ File: src/ensure.rs ]
+// ---------------- [ File: workspacer-register/src/ensure.rs ]
 crate::ix!();
 
 #[async_trait]

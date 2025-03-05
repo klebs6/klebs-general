@@ -1,4 +1,4 @@
-// ---------------- [ File: src/lib.rs ]
+// ---------------- [ File: workspacer-register/src/lib.rs ]
 #[macro_use] mod imports; use imports::*;
 
 x!{assemble_final_top_block_snippet}

@@ -1,4 +1,4 @@
-// ---------------- [ File: src/crate_interface_item.rs ]
+// ---------------- [ File: workspacer-consolidate/src/crate_interface_item.rs ]
 crate::ix!();
 
 /// A single top-level item (fn, struct, etc.), with docs, attributes, and an optional body.

@@ -1,4 +1,4 @@
-// ---------------- [ File: src/split_path_into_prefix_and_final.rs ]
+// ---------------- [ File: workspacer-format-imports/src/split_path_into_prefix_and_final.rs ]
 crate::ix!();
 
 pub fn split_path_into_prefix_and_final(full_path: &str) -> (String, Vec<String>) {

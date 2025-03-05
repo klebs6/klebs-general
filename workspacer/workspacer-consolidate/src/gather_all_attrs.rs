@@ -1,4 +1,4 @@
-// ---------------- [ File: src/gather_all_attrs.rs ]
+// ---------------- [ File: workspacer-consolidate/src/gather_all_attrs.rs ]
 crate::ix!();
 
 /// Gather all the raw attributes from a node (e.g. `#[derive(Debug)]`, `#[cfg(feature="xyz")]`,

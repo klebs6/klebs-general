@@ -1,4 +1,4 @@
-// ---------------- [ File: src/ensure_git_clean.rs ]
+// ---------------- [ File: workspacer-git/src/ensure_git_clean.rs ]
 crate::ix!();
 
 #[async_trait]

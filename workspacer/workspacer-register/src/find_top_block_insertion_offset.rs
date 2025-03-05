@@ -1,4 +1,4 @@
-// ---------------- [ File: src/find_top_block_insertion_offset.rs ]
+// ---------------- [ File: workspacer-register/src/find_top_block_insertion_offset.rs ]
 crate::ix!();
 
 pub fn find_top_block_insertion_offset(

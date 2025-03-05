@@ -1,4 +1,4 @@
-// ---------------- [ File: src/for_workspace.rs ]
+// ---------------- [ File: workspacer-name-all-files/src/for_workspace.rs ]
 crate::ix!();
 
 // Implementation for an entire workspace. Iterates over all crates, calling `name_all_files`

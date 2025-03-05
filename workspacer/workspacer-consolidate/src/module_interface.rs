@@ -1,4 +1,4 @@
-// ---------------- [ File: src/module_interface.rs ]
+// ---------------- [ File: workspacer-consolidate/src/module_interface.rs ]
 crate::ix!();
 // ---------------------------------------------------------------------------
 // Representation of a mod block

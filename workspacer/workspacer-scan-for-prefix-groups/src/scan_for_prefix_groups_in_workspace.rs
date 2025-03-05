@@ -1,4 +1,4 @@
-// ---------------- [ File: src/scan_for_prefix_groups_in_workspace.rs ]
+// ---------------- [ File: workspacer-scan-for-prefix-groups/src/scan_for_prefix_groups_in_workspace.rs ]
 crate::ix!();
 
 // -----------------------------------------------------------------------------

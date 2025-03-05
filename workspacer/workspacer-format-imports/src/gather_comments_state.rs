@@ -1,4 +1,4 @@
-// ---------------- [ File: src/gather_comments_state.rs ]
+// ---------------- [ File: workspacer-format-imports/src/gather_comments_state.rs ]
 crate::ix!();
 
 /// Tracks what we've collected and where we are in the scanning process.

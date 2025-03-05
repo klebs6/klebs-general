@@ -1,4 +1,4 @@
-// ---------------- [ File: src/rebuild_librs_with_new_top_block.rs ]
+// ---------------- [ File: workspacer-register/src/rebuild_librs_with_new_top_block.rs ]
 crate::ix!();
 
 pub fn rebuild_librs_with_new_top_block(

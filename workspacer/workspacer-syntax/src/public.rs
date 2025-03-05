@@ -1,4 +1,4 @@
-// ---------------- [ File: src/public.rs ]
+// ---------------- [ File: workspacer-syntax/src/public.rs ]
 crate::ix!();
 
 /// Check if a node is “public,” e.g. `pub fn`, `pub struct`, or `#[macro_export]`.

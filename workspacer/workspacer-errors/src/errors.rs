@@ -1,4 +1,4 @@
-// ---------------- [ File: src/errors.rs ]
+// ---------------- [ File: workspacer-errors/src/errors.rs ]
 crate::ix!();
 
 error_tree!{

@@ -1,4 +1,4 @@
-// ---------------- [ File: src/signature_options.rs ]
+// ---------------- [ File: workspacer-syntax/src/signature_options.rs ]
 crate::ix!();
 
 /// Control how we generate a signature string.

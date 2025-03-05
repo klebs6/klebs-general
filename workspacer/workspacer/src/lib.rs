@@ -1,4 +1,4 @@
-// ---------------- [ File: src/lib.rs ]
+// ---------------- [ File: workspacer/src/lib.rs ]
 pub use workspacer_add::*;
 pub use workspacer_analysis::*;
 pub use workspacer_cleanup::*;

@@ -1,4 +1,4 @@
-// ---------------- [ File: src/merge_doc_attrs.rs ]
+// ---------------- [ File: workspacer-consolidate/src/merge_doc_attrs.rs ]
 crate::ix!();
 
 pub fn merge_doc_attrs(

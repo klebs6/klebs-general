@@ -1,4 +1,4 @@
-// ---------------- [ File: src/build_top_block_for_imports_line.rs ]
+// ---------------- [ File: workspacer-register/src/build_top_block_for_imports_line.rs ]
 crate::ix!();
 
 /// Builds the final snippet for the "has_imports_line=true" scenario:

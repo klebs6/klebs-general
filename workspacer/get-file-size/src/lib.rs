@@ -1,4 +1,4 @@
-// ---------------- [ File: src/lib.rs ]
+// ---------------- [ File: get-file-size/src/lib.rs ]
 #[macro_use] mod imports; use imports::*;
 
 x!{errors}

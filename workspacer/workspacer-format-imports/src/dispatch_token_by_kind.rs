@@ -1,4 +1,4 @@
-// ---------------- [ File: src/dispatch_token_by_kind.rs ]
+// ---------------- [ File: workspacer-format-imports/src/dispatch_token_by_kind.rs ]
 crate::ix!();
 
 pub fn dispatch_token_by_kind(

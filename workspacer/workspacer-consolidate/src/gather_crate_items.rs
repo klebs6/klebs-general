@@ -1,4 +1,4 @@
-// ---------------- [ File: src/gather_crate_items.rs ]
+// ---------------- [ File: workspacer-consolidate/src/gather_crate_items.rs ]
 crate::ix!();
 
 pub fn gather_crate_items(

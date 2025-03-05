@@ -1,4 +1,4 @@
-// ---------------- [ File: src/gather_assoc_type_aliases.rs ]
+// ---------------- [ File: workspacer-consolidate/src/gather_assoc_type_aliases.rs ]
 crate::ix!();
 
 /// Gathers all associated type aliases in an impl block, respecting skip logic and collecting docs/attrs.

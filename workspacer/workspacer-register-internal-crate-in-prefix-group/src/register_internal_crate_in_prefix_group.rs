@@ -1,4 +1,4 @@
-// ---------------- [ File: src/register_internal_crate_in_prefix_group.rs ]
+// ---------------- [ File: workspacer-register-internal-crate-in-prefix-group/src/register_internal_crate_in_prefix_group.rs ]
 crate::ix!();
 
 /// This trait says: "Given a prefix group’s facade crate, register a new internal crate in it."

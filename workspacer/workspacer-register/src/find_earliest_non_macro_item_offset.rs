@@ -1,4 +1,4 @@
-// ---------------- [ File: src/find_earliest_non_macro_item_offset.rs ]
+// ---------------- [ File: workspacer-register/src/find_earliest_non_macro_item_offset.rs ]
 crate::ix!();
 
 pub fn find_earliest_non_macro_item_offset(parsed_file: &SourceFile, old_text: &str) -> usize {

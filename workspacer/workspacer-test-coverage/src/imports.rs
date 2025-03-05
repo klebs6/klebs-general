@@ -1,4 +1,4 @@
-// ---------------- [ File: src/imports.rs ]
+// ---------------- [ File: workspacer-test-coverage/src/imports.rs ]
 pub(crate) use generate_report_trait::*;
 pub(crate) use workspacer_3p::*;
 pub(crate) use workspacer_crate_interface::*;

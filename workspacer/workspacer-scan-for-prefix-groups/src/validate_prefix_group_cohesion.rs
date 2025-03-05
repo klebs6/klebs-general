@@ -1,4 +1,4 @@
-// ---------------- [ File: src/validate_prefix_group_cohesion.rs ]
+// ---------------- [ File: workspacer-scan-for-prefix-groups/src/validate_prefix_group_cohesion.rs ]
 crate::ix!();
 
 // -----------------------------------------------------------------------------

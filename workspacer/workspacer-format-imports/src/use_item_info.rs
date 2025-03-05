@@ -1,4 +1,4 @@
-// ---------------- [ File: src/use_item_info.rs ]
+// ---------------- [ File: workspacer-format-imports/src/use_item_info.rs ]
 crate::ix!();
 
 /// Private struct => changed to public to avoid E0616

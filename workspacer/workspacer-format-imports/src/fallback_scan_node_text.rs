@@ -1,4 +1,4 @@
-// ---------------- [ File: src/fallback_scan_node_text.rs ]
+// ---------------- [ File: workspacer-format-imports/src/fallback_scan_node_text.rs ]
 crate::ix!();
 
 pub fn fallback_scan_node_text(node: &SyntaxNode) -> Vec<String> {

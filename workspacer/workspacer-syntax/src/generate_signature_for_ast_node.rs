@@ -1,4 +1,4 @@
-// ---------------- [ File: src/generate_signature_for_ast_node.rs ]
+// ---------------- [ File: workspacer-syntax/src/generate_signature_for_ast_node.rs ]
 crate::ix!();
 
 /// A trait to generate a textual “signature” (or declaration line(s))

@@ -1,3 +1,5 @@
+[dependencies]
+derive_builder = "*"
 [dependencies.generate-report-trait]
 path = "../generate-report-trait"
 [dependencies.lightweight-command-runner]

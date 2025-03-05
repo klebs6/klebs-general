@@ -1,4 +1,4 @@
-// ---------------- [ File: src/dissect_use_statement.rs ]
+// ---------------- [ File: workspacer-format-imports/src/dissect_use_statement.rs ]
 crate::ix!();
 
 pub fn dissect_use_statement(line: &str) -> Option<(String, String, String)> {

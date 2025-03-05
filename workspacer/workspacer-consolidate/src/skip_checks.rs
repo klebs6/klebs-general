@@ -1,4 +1,4 @@
-// ---------------- [ File: src/skip_checks.rs ]
+// ---------------- [ File: workspacer-consolidate/src/skip_checks.rs ]
 crate::ix!();
 
 pub fn should_skip_item(node: &SyntaxNode, options: &ConsolidationOptions) -> bool {

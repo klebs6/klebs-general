@@ -1,4 +1,4 @@
-// ---------------- [ File: src/dash_to_snake_case.rs ]
+// ---------------- [ File: workspacer-add-new-crate-to-workspace/src/dash_to_snake_case.rs ]
 crate::ix!();
 
 /// Helper to transform dashes => underscores for snake-case usage

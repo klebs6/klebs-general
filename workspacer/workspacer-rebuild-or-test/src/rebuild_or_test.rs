@@ -1,4 +1,4 @@
-// ---------------- [ File: src/rebuild_or_test.rs ]
+// ---------------- [ File: workspacer-rebuild-or-test/src/rebuild_or_test.rs ]
 crate::ix!();
 
 #[async_trait]

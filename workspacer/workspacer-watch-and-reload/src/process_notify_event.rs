@@ -1,4 +1,4 @@
-// ---------------- [ File: src/process_notify_event.rs ]
+// ---------------- [ File: workspacer-watch-and-reload/src/process_notify_event.rs ]
 crate::ix!();
 
 // ------------------------------------------------------------------------

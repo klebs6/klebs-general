@@ -1,4 +1,4 @@
-// ---------------- [ File: src/imports.rs ]
+// ---------------- [ File: workspacer-watch-and-reload/src/imports.rs ]
 #[cfg(test)] pub(crate) use workspacer_mock::*;
 pub(crate) use lightweight_command_runner::*;
 pub(crate) use workspacer_3p::*;

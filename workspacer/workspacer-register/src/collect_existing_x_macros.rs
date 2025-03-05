@@ -1,4 +1,4 @@
-// ---------------- [ File: src/collect_existing_x_macros.rs ]
+// ---------------- [ File: workspacer-register/src/collect_existing_x_macros.rs ]
 crate::ix!();
 
 pub fn collect_existing_x_macros(parsed_file: &SourceFile) -> Vec<ExistingXMacro> {

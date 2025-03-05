@@ -1,4 +1,4 @@
-// ---------------- [ File: src/bump_crate_and_downstreams.rs ]
+// ---------------- [ File: workspacer-bump/src/bump_crate_and_downstreams.rs ]
 crate::ix!();
 
 #[async_trait]

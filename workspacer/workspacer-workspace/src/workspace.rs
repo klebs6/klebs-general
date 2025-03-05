@@ -1,8 +1,9 @@
-// ---------------- [ File: src/workspace.rs ]
+// ---------------- [ File: workspacer-workspace/src/workspace.rs ]
 crate::ix!();
 
-#[derive(MutGetters,Getters,Debug)]
+#[derive(Builder,MutGetters,Getters,Debug)]
 #[getset(get="pub",get_mut="pub")]
+#[builder(setter(into))]
 pub struct Workspace<P,H:CrateHandleInterface<P>> 
 where for<'async_trait> P: From<PathBuf> + AsRef<Path> + Send + Sync + 'async_trait 
 {
@@ -26,9 +27,12 @@ where for<'async_trait> P: From<PathBuf> + AsRef<Path> + Send + Sync + 'async_tr
 impl<P,H:CrateHandleInterface<P>> GetCrates<P,H> for Workspace<P,H> 
 where for<'async_trait> P: From<PathBuf> + AsRef<Path> + Send + Sync + 'async_trait
 {
-
     fn crates(&self) -> &[H] {
         &self.crates
+    }
+
+    fn crates_mut(&mut self) -> &mut Vec<H> {
+        &mut self.crates
     }
 }
 

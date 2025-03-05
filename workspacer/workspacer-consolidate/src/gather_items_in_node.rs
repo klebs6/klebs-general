@@ -1,4 +1,4 @@
-// ---------------- [ File: src/gather_items_in_node.rs ]
+// ---------------- [ File: workspacer-consolidate/src/gather_items_in_node.rs ]
 crate::ix!();
 
 /// Gathers Rust items (fn, struct, enum, mod, trait, etc.) from `parent_node`.

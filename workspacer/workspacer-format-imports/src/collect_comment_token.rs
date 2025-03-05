@@ -1,4 +1,4 @@
-// ---------------- [ File: src/collect_comment_token.rs ]
+// ---------------- [ File: workspacer-format-imports/src/collect_comment_token.rs ]
 crate::ix!();
 
 pub fn collect_comment_token(

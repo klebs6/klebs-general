@@ -1,4 +1,4 @@
-// ---------------- [ File: src/skip_upward_node_with_whitespace.rs ]
+// ---------------- [ File: workspacer-format-imports/src/skip_upward_node_with_whitespace.rs ]
 crate::ix!();
 
 pub fn skip_upward_node_with_whitespace(

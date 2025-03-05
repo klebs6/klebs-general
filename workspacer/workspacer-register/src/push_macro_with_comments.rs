@@ -1,4 +1,4 @@
-// ---------------- [ File: src/push_macro_with_comments.rs ]
+// ---------------- [ File: workspacer-register/src/push_macro_with_comments.rs ]
 crate::ix!();
 
 /// A small helper for pushing a `TopBlockMacro` (leading comments + `x!{stem}`),

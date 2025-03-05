@@ -1,4 +1,4 @@
-// ---------------- [ File: src/mock_crate_config.rs ]
+// ---------------- [ File: workspacer-crate/src/mock_crate_config.rs ]
 crate::ix!();
 
 /// Configuration for creating a mock crate in the workspace.

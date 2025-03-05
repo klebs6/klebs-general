@@ -1,4 +1,4 @@
-// ---------------- [ File: src/bin/name_all_files.rs ]
+// ---------------- [ File: workspacer-name-all-files/src/bin/name_all_files.rs ]
 //
 // A binary entrypoint that attempts to name all files in either a Rust workspace
 // or a single crate, depending on the current directory’s Cargo.toml.

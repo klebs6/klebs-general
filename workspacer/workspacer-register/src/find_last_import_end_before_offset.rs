@@ -1,4 +1,4 @@
-// ---------------- [ File: src/find_last_import_end_before_offset.rs ]
+// ---------------- [ File: workspacer-register/src/find_last_import_end_before_offset.rs ]
 crate::ix!();
 
 pub fn find_last_import_end_before_offset(

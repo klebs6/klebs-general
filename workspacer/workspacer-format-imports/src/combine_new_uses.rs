@@ -1,4 +1,4 @@
-// ---------------- [ File: src/combine_new_uses.rs ]
+// ---------------- [ File: workspacer-format-imports/src/combine_new_uses.rs ]
 crate::ix!();
 
 /**

@@ -1,4 +1,4 @@
-// ---------------- [ File: src/make_top_block_macro_lines.rs ]
+// ---------------- [ File: workspacer-register/src/make_top_block_macro_lines.rs ]
 crate::ix!();
 
 pub fn make_top_block_macro_lines(stems: &[String]) -> String {

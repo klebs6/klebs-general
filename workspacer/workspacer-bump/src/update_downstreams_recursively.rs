@@ -1,4 +1,4 @@
-// ---------------- [ File: src/update_downstreams_recursively.rs ]
+// ---------------- [ File: workspacer-bump/src/update_downstreams_recursively.rs ]
 crate::ix!();
 
 #[async_trait]

@@ -1,4 +1,4 @@
-// ---------------- [ File: src/bin/show_consolidated_crate_interface.rs ]
+// ---------------- [ File: workspacer-consolidate/src/bin/show_consolidated_crate_interface.rs ]
 use workspacer_3p::*;
 use structopt::*;
 use workspacer_errors::*;

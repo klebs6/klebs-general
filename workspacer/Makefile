@@ -75,7 +75,7 @@ DEFAULT := test
 #DEFAULT := consolidate_crate_interface
 #DEFAULT := ensure
 #DEFAULT := publish_public_crates_in_order
-#DEFAULT := name_all_files
+DEFAULT := name_all_files
 #DEFAULT := run
 
 default: $(DEFAULT)

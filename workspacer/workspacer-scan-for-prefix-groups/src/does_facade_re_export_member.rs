@@ -1,4 +1,4 @@
-// ---------------- [ File: src/does_facade_re_export_member.rs ]
+// ---------------- [ File: workspacer-scan-for-prefix-groups/src/does_facade_re_export_member.rs ]
 crate::ix!();
 
 // -----------------------------------------------------------------------------

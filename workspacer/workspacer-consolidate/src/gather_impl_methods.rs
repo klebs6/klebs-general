@@ -1,4 +1,4 @@
-// ---------------- [ File: src/gather_impl_methods.rs ]
+// ---------------- [ File: workspacer-consolidate/src/gather_impl_methods.rs ]
 crate::ix!();
 
 /// Gathers all `fn` items from within an `impl` block, excluding any that

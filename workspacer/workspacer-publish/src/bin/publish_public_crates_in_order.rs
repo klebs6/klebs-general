@@ -1,4 +1,4 @@
-// ---------------- [ File: src/bin/publish_public_crates_in_order.rs ]
+// ---------------- [ File: workspacer-publish/src/bin/publish_public_crates_in_order.rs ]
 //! This binary replicates (in Rust) the logic of a shell script that
 //! publishes all public crates in a workspace to crates.io, in
 //! topological order, skipping crates that are already published.

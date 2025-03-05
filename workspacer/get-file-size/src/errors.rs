@@ -1,4 +1,4 @@
-// ---------------- [ File: src/errors.rs ]
+// ---------------- [ File: get-file-size/src/errors.rs ]
 crate::ix!();
 
 error_tree!{

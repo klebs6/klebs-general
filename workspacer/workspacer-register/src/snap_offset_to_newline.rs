@@ -1,4 +1,4 @@
-// ---------------- [ File: src/snap_offset_to_newline.rs ]
+// ---------------- [ File: workspacer-register/src/snap_offset_to_newline.rs ]
 crate::ix!();
 
 /// Rounds an offset up to the next newline if it's in the middle of a line,

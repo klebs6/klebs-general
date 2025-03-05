@@ -1,4 +1,4 @@
-// ---------------- [ File: src/read_file_string.rs ]
+// ---------------- [ File: workspacer-crate/src/read_file_string.rs ]
 crate::ix!();
 
 #[async_trait]

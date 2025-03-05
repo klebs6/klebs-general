@@ -1,4 +1,4 @@
-// ---------------- [ File: src/consolidation_options.rs ]
+// ---------------- [ File: workspacer-consolidate/src/consolidation_options.rs ]
 crate::ix!();
 
 /// A collection of user-defined toggles controlling how items are gathered and displayed.

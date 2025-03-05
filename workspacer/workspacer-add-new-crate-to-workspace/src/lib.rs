@@ -1,4 +1,4 @@
-// ---------------- [ File: src/lib.rs ]
+// ---------------- [ File: workspacer-add-new-crate-to-workspace/src/lib.rs ]
 #[macro_use] mod imports; use imports::*;
 
 x!{add_new_crate_to_workspace}

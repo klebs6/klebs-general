@@ -1,4 +1,4 @@
-// ---------------- [ File: src/generate_struct_signature.rs ]
+// ---------------- [ File: workspacer-syntax/src/generate_struct_signature.rs ]
 crate::ix!();
 
 #[derive(Debug, Clone)]

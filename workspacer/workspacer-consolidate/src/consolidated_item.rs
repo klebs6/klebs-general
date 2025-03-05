@@ -1,4 +1,4 @@
-// ---------------- [ File: src/consolidated_item.rs ]
+// ---------------- [ File: workspacer-consolidate/src/consolidated_item.rs ]
 crate::ix!();
 
 /// An enum representing any consolidated item that can live in a module.

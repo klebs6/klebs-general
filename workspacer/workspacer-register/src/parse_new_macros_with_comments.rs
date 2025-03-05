@@ -1,4 +1,4 @@
-// ---------------- [ File: src/parse_new_macros_with_comments.rs ]
+// ---------------- [ File: workspacer-register/src/parse_new_macros_with_comments.rs ]
 crate::ix!();
 
 /// A version of `parse_new_macros_with_comments` that does NOT do fallback

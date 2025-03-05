@@ -1,4 +1,4 @@
-// ---------------- [ File: src/watch_loop.rs ]
+// ---------------- [ File: workspacer-watch-and-reload/src/watch_loop.rs ]
 crate::ix!();
 
 // ------------------------------------------------------------------------

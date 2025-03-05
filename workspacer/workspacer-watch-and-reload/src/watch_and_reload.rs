@@ -1,4 +1,4 @@
-// ---------------- [ File: src/watch_and_reload.rs ]
+// ---------------- [ File: workspacer-watch-and-reload/src/watch_and_reload.rs ]
 crate::ix!();
 
 #[async_trait]

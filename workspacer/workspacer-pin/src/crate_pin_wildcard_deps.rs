@@ -1,4 +1,4 @@
-// ---------------- [ File: src/crate_pin_wildcard_deps.rs ]
+// ---------------- [ File: workspacer-pin/src/crate_pin_wildcard_deps.rs ]
 crate::ix!();
 
 #[async_trait]

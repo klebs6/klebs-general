@@ -1,4 +1,4 @@
-// ---------------- [ File: src/workspace_ensure_all_source_files_are_registered.rs ]
+// ---------------- [ File: workspacer-register/src/workspace_ensure_all_source_files_are_registered.rs ]
 crate::ix!();
 
 #[async_trait]

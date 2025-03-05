@@ -1,4 +1,4 @@
-// ---------------- [ File: src/gather_module.rs ]
+// ---------------- [ File: workspacer-consolidate/src/gather_module.rs ]
 crate::ix!();
 
 pub fn gather_module(

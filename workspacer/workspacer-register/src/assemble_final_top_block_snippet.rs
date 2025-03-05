@@ -1,4 +1,4 @@
-// ---------------- [ File: src/assemble_final_top_block_snippet.rs ]
+// ---------------- [ File: workspacer-register/src/assemble_final_top_block_snippet.rs ]
 crate::ix!();
 
 /// Builds the final top-block snippet by combining:

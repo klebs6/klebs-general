@@ -1,4 +1,4 @@
-// ---------------- [ File: src/gather_old_top_block_macros.rs ]
+// ---------------- [ File: workspacer-register/src/gather_old_top_block_macros.rs ]
 crate::ix!();
 
 pub fn gather_old_top_block_macros(parsed_file: &SourceFile) -> Vec<TopBlockMacro> {

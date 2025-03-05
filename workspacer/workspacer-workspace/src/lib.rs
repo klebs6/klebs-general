@@ -1,4 +1,4 @@
-// ---------------- [ File: src/lib.rs ]
+// ---------------- [ File: workspacer-workspace/src/lib.rs ]
 #[macro_use] mod imports; use imports::*;
 
 x!{find_items}

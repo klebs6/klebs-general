@@ -1,4 +1,4 @@
-// ---------------- [ File: src/lib.rs ]
+// ---------------- [ File: workspacer-bump/src/lib.rs ]
 #[macro_use] mod imports; use imports::*;
 
 x!{bump}

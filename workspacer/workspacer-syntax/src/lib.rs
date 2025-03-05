@@ -1,4 +1,4 @@
-// ---------------- [ File: src/lib.rs ]
+// ---------------- [ File: workspacer-syntax/src/lib.rs ]
 #[macro_use] mod imports; use imports::*;
 
 x!{generate_enum_signature}

@@ -1,4 +1,4 @@
-// ---------------- [ File: src/lib.rs ]
+// ---------------- [ File: workspacer-test-coverage/src/lib.rs ]
 #[macro_use] mod imports; use imports::*;
 
 x!{test_coverage_report}

@@ -1,4 +1,4 @@
-// ---------------- [ File: src/remove_trailing_newlines.rs ]
+// ---------------- [ File: workspacer-register/src/remove_trailing_newlines.rs ]
 crate::ix!();
 
 /// Removes trailing newlines from the provided buffer string (in-place).

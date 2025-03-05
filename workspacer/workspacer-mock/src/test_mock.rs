@@ -1,4 +1,4 @@
-// ---------------- [ File: src/test_mock.rs ]
+// ---------------- [ File: workspacer-mock/src/test_mock.rs ]
 crate::ix!();
 
 // -----------------------------------------------------

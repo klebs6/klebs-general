@@ -1,4 +1,4 @@
-// ---------------- [ File: src/impl_block_interface.rs ]
+// ---------------- [ File: workspacer-consolidate/src/impl_block_interface.rs ]
 crate::ix!();
 
 #[derive(Getters,Debug)]

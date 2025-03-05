@@ -1,4 +1,4 @@
-// ---------------- [ File: src/splice_top_block_into_source.rs ]
+// ---------------- [ File: workspacer-register/src/splice_top_block_into_source.rs ]
 crate::ix!();
 
 /// Rebuilds the final text by copying `old_text` except for old macros,

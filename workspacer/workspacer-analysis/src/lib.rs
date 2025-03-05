@@ -1,4 +1,4 @@
-// ---------------- [ File: src/lib.rs ]
+// ---------------- [ File: workspacer-analysis/src/lib.rs ]
 #[macro_use] mod imports; use imports::*;
 
 x!{workspace_analysis}

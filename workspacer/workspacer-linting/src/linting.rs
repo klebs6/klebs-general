@@ -1,4 +1,4 @@
-// ---------------- [ File: src/linting.rs ]
+// ---------------- [ File: workspacer-linting/src/linting.rs ]
 crate::ix!();
 
 #[async_trait]

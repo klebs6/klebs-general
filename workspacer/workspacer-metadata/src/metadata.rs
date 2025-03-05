@@ -1,4 +1,4 @@
-// ---------------- [ File: src/metadata.rs ]
+// ---------------- [ File: workspacer-metadata/src/metadata.rs ]
 crate::ix!();
 
 #[async_trait]

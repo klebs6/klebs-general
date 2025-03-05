@@ -1,4 +1,4 @@
-// ---------------- [ File: src/is_x_macro.rs ]
+// ---------------- [ File: workspacer-register/src/is_x_macro.rs ]
 crate::ix!();
 
 pub fn is_x_macro(item: &ast::Item) -> Option<String> {

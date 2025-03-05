@@ -1,4 +1,4 @@
-// ---------------- [ File: src/lib.rs ]
+// ---------------- [ File: workspacer-scan-for-prefix-groups/src/lib.rs ]
 #[macro_use] mod imports; use imports::*;
 
 x!{does_crate_have_dependency}

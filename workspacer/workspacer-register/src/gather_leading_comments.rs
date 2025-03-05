@@ -1,4 +1,4 @@
-// ---------------- [ File: src/gather_leading_comments.rs ]
+// ---------------- [ File: workspacer-register/src/gather_leading_comments.rs ]
 crate::ix!();
 
 /// A helper that walks backward from `item.syntax()` to pick up line-comments,

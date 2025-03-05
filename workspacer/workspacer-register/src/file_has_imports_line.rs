@@ -1,4 +1,4 @@
-// ---------------- [ File: src/file_has_imports_line.rs ]
+// ---------------- [ File: workspacer-register/src/file_has_imports_line.rs ]
 crate::ix!();
 
 pub fn file_has_imports_line(parsed_file: &SourceFile) -> bool {

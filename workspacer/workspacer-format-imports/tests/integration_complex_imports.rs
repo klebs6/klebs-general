@@ -1,4 +1,4 @@
-// ---------------- [ File: tests/integration_complex_imports.rs ]
+// ---------------- [ File: workspacer-format-imports/tests/integration_complex_imports.rs ]
 use workspacer_format_imports::*;
 use workspacer_3p::*;
 

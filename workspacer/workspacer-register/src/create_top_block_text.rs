@@ -1,4 +1,4 @@
-// ---------------- [ File: src/create_top_block_text.rs ]
+// ---------------- [ File: workspacer-register/src/create_top_block_text.rs ]
 crate::ix!();
 
 /// Builds a string with one line per TopBlockMacro, preserving each macro’s leading comments

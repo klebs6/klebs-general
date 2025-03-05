@@ -1,10 +1,11 @@
-// ---------------- [ File: src/for_crate.rs ]
+// ---------------- [ File: workspacer-name-all-files/src/for_crate.rs ]
 crate::ix!();
 
 // Implementation for a single crate. Gathers all `.rs` files (src + tests) *recursively*,
 // strips any existing markers, and prepends a new marker line at the top of each file.
 #[async_trait]
 impl NameAllFiles for CrateHandle {
+
     type Error = CrateError;
 
     /// Removes old marker lines in `.rs` files of this crate, then inserts one new marker line.
@@ -85,7 +86,7 @@ impl NameAllFiles for CrateHandle {
                 Err(_) => path.display().to_string(),
             };
 
-            let new_marker = format!("// ---------------- [ File: {} ]", relative_path);
+            let new_marker = format!("// ---------------- [ File: {}/{} ]", self.name(), relative_path);
 
             // Build the new file content:
             //

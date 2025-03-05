@@ -1,4 +1,4 @@
-// ---------------- [ File: src/trait_def.rs ]
+// ---------------- [ File: workspacer-name-all-files/src/trait_def.rs ]
 crate::ix!();
 
 // A trait for "naming all .rs files" with a comment tag

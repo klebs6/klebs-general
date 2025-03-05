@@ -1,4 +1,4 @@
-// ---------------- [ File: src/generate_docs.rs ]
+// ---------------- [ File: workspacer-docs/src/generate_docs.rs ]
 crate::ix!();
 
 #[async_trait]

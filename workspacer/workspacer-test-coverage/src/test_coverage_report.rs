@@ -1,4 +1,4 @@
-// ---------------- [ File: src/test_coverage_report.rs ]
+// ---------------- [ File: workspacer-test-coverage/src/test_coverage_report.rs ]
 crate::ix!();
 
 #[derive(Debug)]

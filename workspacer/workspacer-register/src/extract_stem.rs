@@ -1,4 +1,4 @@
-// ---------------- [ File: src/extract_stem.rs ]
+// ---------------- [ File: workspacer-register/src/extract_stem.rs ]
 crate::ix!();
 
 // Simple helper for extracting "stuff" from x!{stuff}

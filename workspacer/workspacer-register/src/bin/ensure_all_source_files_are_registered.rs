@@ -1,4 +1,4 @@
-// ---------------- [ File: src/bin/ensure_all_source_files_are_registered.rs ]
+// ---------------- [ File: workspacer-register/src/bin/ensure_all_source_files_are_registered.rs ]
 use workspacer_3p::*;
 use workspacer_errors::*;
 use workspacer_crate::*;

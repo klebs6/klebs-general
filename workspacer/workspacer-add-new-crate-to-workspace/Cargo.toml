@@ -2,6 +2,8 @@
 path = "../workspacer-3p"
 [dependencies.workspacer-add-internal-dep]
 path = "../workspacer-add-internal-dep"
+[dependencies.workspacer-crate]
+path = "../workspacer-crate"
 [dependencies.workspacer-crate-interface]
 path = "../workspacer-crate-interface"
 [dependencies.workspacer-errors]

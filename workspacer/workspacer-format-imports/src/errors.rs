@@ -1,4 +1,4 @@
-// ---------------- [ File: src/errors.rs ]
+// ---------------- [ File: workspacer-format-imports/src/errors.rs ]
 crate::ix!();
 
 /// A convenience error type for problems encountered while sorting/formatting imports.

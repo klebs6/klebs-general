@@ -1,4 +1,4 @@
-// ---------------- [ File: src/lib.rs ]
+// ---------------- [ File: workspacer-toml/src/lib.rs ]
 #[macro_use] mod imports; use imports::*;
 
 x!{is_valid_version}

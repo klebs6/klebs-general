@@ -1,4 +1,4 @@
-// ---------------- [ File: src/does_crate_have_dependency.rs ]
+// ---------------- [ File: workspacer-scan-for-prefix-groups/src/does_crate_have_dependency.rs ]
 crate::ix!();
 
 // -----------------------------------------------------------------------------

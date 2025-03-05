@@ -1,4 +1,4 @@
-// ---------------- [ File: src/lib.rs ]
+// ---------------- [ File: workspacer-git/src/lib.rs ]
 #[macro_use] mod imports; use imports::*;
 
 x!{ensure_git_clean}

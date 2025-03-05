@@ -1,4 +1,4 @@
-// ---------------- [ File: src/maybe_push_newline.rs ]
+// ---------------- [ File: workspacer-register/src/maybe_push_newline.rs ]
 crate::ix!();
 
 /// A small helper that ensures if the `buffer` is non-empty and doesn’t

@@ -1,4 +1,4 @@
-// ---------------- [ File: src/release_type.rs ]
+// ---------------- [ File: workspacer-bump/src/release_type.rs ]
 crate::ix!();
 
 use semver::{Version, Prerelease};

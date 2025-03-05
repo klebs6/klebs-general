@@ -1,4 +1,4 @@
-// ---------------- [ File: src/ready_for_cargo_publish.rs ]
+// ---------------- [ File: workspacer-publish/src/ready_for_cargo_publish.rs ]
 crate::ix!();
 
 /// Trait for checking if a component is ready for Cargo publishing

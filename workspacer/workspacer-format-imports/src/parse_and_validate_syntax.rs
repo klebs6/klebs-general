@@ -1,4 +1,4 @@
-// ---------------- [ File: src/parse_and_validate_syntax.rs ]
+// ---------------- [ File: workspacer-format-imports/src/parse_and_validate_syntax.rs ]
 crate::ix!();
 
 pub fn parse_and_validate_syntax(old_text: &str) -> Result<SourceFile, SortAndFormatImportsError> {

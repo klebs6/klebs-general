@@ -1,4 +1,4 @@
-// ---------------- [ File: src/process_upward_node.rs ]
+// ---------------- [ File: workspacer-format-imports/src/process_upward_node.rs ]
 crate::ix!();
 
 pub fn process_upward_node(

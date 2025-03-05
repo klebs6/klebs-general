@@ -1,4 +1,4 @@
-// ---------------- [ File: src/remove_old_use_statements.rs ]
+// ---------------- [ File: workspacer-format-imports/src/remove_old_use_statements.rs ]
 crate::ix!();
 
 pub fn remove_old_use_statements(uses_data: &[UseItemInfo], old_text: &str) -> String {

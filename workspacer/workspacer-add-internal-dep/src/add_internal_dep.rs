@@ -1,4 +1,4 @@
-// ---------------- [ File: src/add_internal_dep.rs ]
+// ---------------- [ File: workspacer-add-internal-dep/src/add_internal_dep.rs ]
 crate::ix!();
 
 // ---------------------- [ File: workspacer-add-internal-dep/src/lib.rs ] ----------------------

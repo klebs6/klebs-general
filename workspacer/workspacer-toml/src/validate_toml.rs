@@ -1,4 +1,4 @@
-// ---------------- [ File: src/validate_toml.rs ]
+// ---------------- [ File: workspacer-toml/src/validate_toml.rs ]
 crate::ix!();
 
 /// Validates the provided TOML data, ensuring that a `[package]` section

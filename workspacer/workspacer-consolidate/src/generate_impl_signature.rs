@@ -1,4 +1,4 @@
-// ---------------- [ File: src/generate_impl_signature.rs ]
+// ---------------- [ File: workspacer-consolidate/src/generate_impl_signature.rs ]
 crate::ix!();
 
 pub fn generate_impl_signature(impl_ast: &ast::Impl, docs: Option<&String>) -> String {

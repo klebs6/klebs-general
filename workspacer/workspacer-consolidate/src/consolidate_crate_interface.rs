@@ -1,4 +1,4 @@
-// ---------------- [ File: src/consolidate_crate_interface.rs ]
+// ---------------- [ File: workspacer-consolidate/src/consolidate_crate_interface.rs ]
 crate::ix!();
 
 #[async_trait]

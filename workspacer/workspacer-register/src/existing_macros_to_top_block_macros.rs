@@ -1,4 +1,4 @@
-// ---------------- [ File: src/existing_macros_to_top_block_macros.rs ]
+// ---------------- [ File: workspacer-register/src/existing_macros_to_top_block_macros.rs ]
 crate::ix!();
 
 pub fn existing_macros_to_top_block_macros(old_macros: &[ExistingXMacro]) -> Vec<TopBlockMacro> {

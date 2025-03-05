@@ -1,4 +1,4 @@
-// ---------------- [ File: src/collect_existing_macro_stems.rs ]
+// ---------------- [ File: workspacer-register/src/collect_existing_macro_stems.rs ]
 crate::ix!();
 
 pub fn collect_existing_mod_macro_stems(

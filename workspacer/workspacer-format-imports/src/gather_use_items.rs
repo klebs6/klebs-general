@@ -1,4 +1,4 @@
-// ---------------- [ File: src/gather_use_items.rs ]
+// ---------------- [ File: workspacer-format-imports/src/gather_use_items.rs ]
 crate::ix!();
 
 pub fn gather_use_items(file: &SourceFile, old_text: &str) -> Vec<UseItemInfo> {

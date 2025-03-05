@@ -1,4 +1,4 @@
-// ---------------- [ File: src/group_and_sort_uses.rs ]
+// ---------------- [ File: workspacer-format-imports/src/group_and_sort_uses.rs ]
 crate::ix!();
 
 /**

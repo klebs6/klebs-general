@@ -1,4 +1,4 @@
-// ---------------- [ File: src/maybe_ensure_newline.rs ]
+// ---------------- [ File: workspacer-register/src/maybe_ensure_newline.rs ]
 crate::ix!();
 
 /// If there is content in `buffer` and it does not end with a newline,

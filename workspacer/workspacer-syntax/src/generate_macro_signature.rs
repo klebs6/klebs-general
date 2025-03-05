@@ -1,4 +1,4 @@
-// ---------------- [ File: src/generate_macro_signature.rs ]
+// ---------------- [ File: workspacer-syntax/src/generate_macro_signature.rs ]
 crate::ix!();
 
 #[derive(Debug, Clone)]
