@@ -8,8 +8,6 @@ license     = "MIT"
 repository  = "https://github.com/klebs6/klebs-general"
 
 [dependencies]
-gpt-batch-scribe         = { version = "0.1.4", path = "/Users/kleb/bethesda/work/repo/klebs-general/gpt-batch-scribe" }
-#gpt-batch-executor      = { version = "*", path = "/Users/kleb/bethesda/work/repo/klebs-general/gpt-batch-executor" }
 async-openai             = "0.27.2"
 export-magic             = "0.3.6"
 uuid                     = { version = "1.14.0", features = ["v4", "serde"] }

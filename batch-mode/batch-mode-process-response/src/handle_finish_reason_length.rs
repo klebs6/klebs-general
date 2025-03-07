@@ -11,7 +11,7 @@ pub async fn handle_finish_reason_length(
     let adjusted_prompt = adjust_prompt_for_retry(&original_request.messages[0].content);
 
     // Create a new request with adjusted prompt
-    let retry_request = GptBatchAPIRequest {
+    let retry_request = LanguageModelBatchAPIRequest {
         messages: vec![ChatCompletionRequestMessage {
             role: "user".to_string(),
             content: adjusted_prompt,

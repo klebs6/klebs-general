@@ -52,6 +52,9 @@ ACTIVE_PACKAGE := workspacer-register-internal-crate-in-prefix-group
 ACTIVE_PACKAGE := workspacer-add-new-crate-to-workspace
 ACTIVE_PACKAGE := workspacer-readme-writer
 ACTIVE_PACKAGE := workspacer
+ACTIVE_PACKAGE := workspacer-check-publish-ready
+#ACTIVE_PACKAGE := workspacer-check-crates-io
+#ACTIVE_PACKAGE := workspacer-check-private
 
 INDIVIDUAL_TEST := gather_leading_token_comments
 INDIVIDUAL_TEST := gather_leading_comment_lines
@@ -76,7 +79,7 @@ DEFAULT := test
 #DEFAULT := consolidate_crate_interface
 #DEFAULT := ensure
 #DEFAULT := publish_public_crates_in_order
-DEFAULT := run_workspacer
+#DEFAULT := run_workspacer
 #DEFAULT := name_all_files
 #DEFAULT := run
 

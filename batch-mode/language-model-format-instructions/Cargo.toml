@@ -1,0 +1,10 @@
+[dependencies]
+derive_builder = "*"
+[dependencies.agent-coordinate]
+path = "../agent-coordinate"
+[dependencies.batch-mode-3p]
+path = "../batch-mode-3p"
+[package]
+edition = "2024"
+name = "language-model-format-instructions"
+version = "0.1.0"

@@ -1,5 +1,25 @@
 [dependencies.workspacer-3p]
 path = "../workspacer-3p"
+[dependencies.workspacer-check-crates-io]
+path = "../workspacer-check-crates-io"
+[dependencies.workspacer-check-private]
+path = "../workspacer-check-private"
+[dependencies.workspacer-crate]
+path = "../workspacer-crate"
+[dependencies.workspacer-crate-interface]
+path = "../workspacer-crate-interface"
+[dependencies.workspacer-errors]
+path = "../workspacer-errors"
+[dependencies.workspacer-toml]
+path = "../workspacer-toml"
+[dependencies.workspacer-toml-interface]
+path = "../workspacer-toml-interface"
+[dependencies.workspacer-workspace]
+path = "../workspacer-workspace"
+[dependencies.workspacer-workspace-interface]
+path = "../workspacer-workspace-interface"
+[dev-dependencies.workspacer-mock]
+path = "../workspacer-mock"
 [package]
 edition = "2024"
 name = "workspacer-check-publish-ready"

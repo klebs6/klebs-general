@@ -1,0 +1,20 @@
+[dependencies.batch-mode-3p]
+path = "../batch-mode-3p"
+[package]
+edition = "2024"
+name = "batch-mode-token-expansion-axis-derive"
+version = "0.1.0"
+
+[dependencies]
+syn = { version = "2.0", features = ["derive", "parsing"] }
+quote = "1.0"
+proc-macro2 = "1.0"
+
+[dev-dependencies.batch-mode-token-expansion-axis]
+path = "../batch-mode-token-expansion-axis"
+
+[features]
+default = []
+
+[lib]
+proc-macro = true

@@ -97,7 +97,7 @@ impl BatchFileTriple {
     }
 
     //--------------------------------------------
-    pub fn new_with_requests(requests: &[GptBatchAPIRequest], workspace: Arc<dyn BatchWorkspaceInterface>) 
+    pub fn new_with_requests(requests: &[LanguageModelBatchAPIRequest], workspace: Arc<dyn BatchWorkspaceInterface>) 
         -> Result<Self,BatchInputCreationError> 
     {
         let index = BatchIndex::new();
@@ -110,7 +110,7 @@ impl BatchFileTriple {
         info!("creating new batch at {:?} with {} requests", batch_input_filename, requests.len());
 
         // Create input file
-        gpt_batch_scribe::create_batch_input_file(&requests,&batch_input_filename)?;
+        batch_mode_batch_scribe::create_batch_input_file(&requests,&batch_input_filename)?;
 
         //we do these dev-only checks here just to be sure
         assert!(batch_input_filename.exists());

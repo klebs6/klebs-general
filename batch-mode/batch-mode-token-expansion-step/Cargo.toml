@@ -1,0 +1,8 @@
+[dependencies.batch-mode-3p]
+path = "../batch-mode-3p"
+[dependencies.batch-mode-token-expansion-axis]
+path = "../batch-mode-token-expansion-axis"
+[package]
+edition = "2024"
+name = "batch-mode-token-expansion-step"
+version = "0.1.0"

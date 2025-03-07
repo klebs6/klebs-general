@@ -1,0 +1,43 @@
+[dependencies]
+derive_builder = "*"
+[dependencies.batch-mode-3p]
+path = "../batch-mode-3p"
+[dependencies.batch-mode-batch-client]
+path = "../batch-mode-batch-client"
+[dependencies.batch-mode-batch-executor]
+path = "../batch-mode-batch-executor"
+[dependencies.batch-mode-batch-index]
+path = "../batch-mode-batch-index"
+[dependencies.batch-mode-batch-metadata]
+path = "../batch-mode-batch-metadata"
+[dependencies.batch-mode-batch-reconciliation]
+path = "../batch-mode-batch-reconciliation"
+[dependencies.batch-mode-batch-scribe]
+path = "../batch-mode-batch-scribe"
+[dependencies.batch-mode-batch-triple]
+path = "../batch-mode-batch-triple"
+[dependencies.batch-mode-batch-workspace]
+path = "../batch-mode-batch-workspace"
+[dependencies.batch-mode-process-response]
+path = "../batch-mode-process-response"
+[dependencies.batch-mode-token-expander]
+path = "../batch-mode-token-expander"
+[dependencies.camel-case-token-with-comment]
+path = "../camel-case-token-with-comment"
+[dependencies.language-model-type]
+path = "../language-model-type"
+[dependencies.save-load-traits]
+path = "../save-load-traits"
+[dependencies.traced-test]
+version = "*"
+[dependencies.tracing]
+version = "*"
+[dependencies.tracing-setup]
+version = "*"
+[dependencies.tracing-subscriber]
+features = [ "env-filter", "json" ]
+version = "*"
+[package]
+edition = "2024"
+name = "batch-mode-batch-workflow"
+version = "0.1.0"

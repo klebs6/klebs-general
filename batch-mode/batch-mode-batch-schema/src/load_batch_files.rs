@@ -13,7 +13,7 @@ pub async fn load_input_file(path: impl AsRef<Path>)
     let mut requests = Vec::new();
 
     while let Some(line) = lines.next_line().await? {
-        let request: GptBatchAPIRequest = serde_json::from_str(&line)?;
+        let request: LanguageModelBatchAPIRequest = serde_json::from_str(&line)?;
         requests.push(request);
     }
 

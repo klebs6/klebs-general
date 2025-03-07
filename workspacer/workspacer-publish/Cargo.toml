@@ -2,6 +2,8 @@
 structopt = "*"
 [dependencies.workspacer-3p]
 path = "../workspacer-3p"
+[dependencies.workspacer-check-publish-ready]
+path = "../workspacer-check-publish-ready"
 [dependencies.workspacer-crate]
 path = "../workspacer-crate"
 [dependencies.workspacer-crate-interface]
@@ -12,14 +14,14 @@ path = "../workspacer-detect-circular-deps"
 path = "../workspacer-errors"
 [dependencies.workspacer-git]
 path = "../workspacer-git"
-[dev-dependencies.workspacer-mock]
-path = "../workspacer-mock"
 [dependencies.workspacer-toml]
 path = "../workspacer-toml"
 [dependencies.workspacer-toml-interface]
 path = "../workspacer-toml-interface"
 [dependencies.workspacer-workspace]
 path = "../workspacer-workspace"
+[dev-dependencies.workspacer-mock]
+path = "../workspacer-mock"
 [package]
 edition = "2024"
 name = "workspacer-publish"

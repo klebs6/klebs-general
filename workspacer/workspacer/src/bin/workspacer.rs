@@ -286,25 +286,6 @@ pub struct ShowOpts {
     just_macros: bool,
 }
 
-//
-// In your main.rs (or bin file), you can do:
-//
-// fn main() {
-//     let cli = WsCli::from_args();
-//     match cli {
-//         WsCli::Add { crate_name } => { ... }
-//         WsCli::Analyze { crate_name } => { ... }
-//         ...
-//         WsCli::Show(opts) => { ... }
-//         ...
-//     }
-// }
-// 
-// and implement the logic accordingly.
-//
-// This structopt-based CLI supports parsing all the subcommands and flags you listed.
-//
-
 #[tokio::main]
 async fn main() {
     let cli = WsCli::from_args();

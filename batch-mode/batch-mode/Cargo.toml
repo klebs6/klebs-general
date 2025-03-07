@@ -1,8 +1,7 @@
+[dependencies]
+structopt = "0.3.26"
 [dependencies.batch-mode-3p]
 path = "../batch-mode-3p"
-version = "0.2.0"
-[dependencies.batch-mode-process-response]
-path = "../batch-mode-process-response"
 version = "0.2.0"
 [dependencies.batch-mode-batch-client]
 path = "../batch-mode-batch-client"
@@ -22,6 +21,8 @@ version = "0.2.0"
 [dependencies.batch-mode-batch-schema]
 path = "../batch-mode-batch-schema"
 version = "0.2.0"
+[dependencies.batch-mode-batch-scribe]
+path = "../batch-mode-batch-scribe"
 [dependencies.batch-mode-batch-triple]
 path = "../batch-mode-batch-triple"
 version = "0.2.0"
@@ -34,28 +35,26 @@ version = "0.2.0"
 [dependencies.batch-mode-json]
 path = "../batch-mode-json"
 version = "0.2.0"
+[dependencies.batch-mode-process-response]
+path = "../batch-mode-process-response"
+version = "0.2.0"
 [dependencies.camel-case-token-with-comment]
 path = "../camel-case-token-with-comment"
 version = "0.2.0"
 [dependencies.save-load-traits]
 path = "../save-load-traits"
 version = "0.2.0"
-[dependencies]
-structopt = "0.3.26"
 [package]
-edition = "2024"
-name = "batch-mode"
-version = "0.2.0"
+authors = [ "klebs tpk3.mx@gmail.com" ]
 description = "This crate is a top level entrypoint for the `batch-mode` crate ecosystem"
-authors     = ["klebs tpk3.mx@gmail.com"]
-license     = "MIT"
-repository  = "https://github.com/klebs6/klebs-general"
-
-
+edition = "2024"
+license = "MIT"
+name = "batch-mode"
+repository = "https://github.com/klebs6/klebs-general"
+version = "0.2.0"
 [[bin]]
-path = "src/bin/batch-mode-parse-raw-batch-file-dir.rs"
 name = "batch-mode-parse-raw-batch-file-dir"
-
+path = "src/bin/batch-mode-parse-raw-batch-file-dir.rs"
 [[bin]]
-path = "src/bin/camel_case_token_file_difference.rs"
 name = "camel-case-token-file-difference"
+path = "src/bin/camel_case_token_file_difference.rs"

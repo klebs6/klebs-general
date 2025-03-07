@@ -208,6 +208,12 @@ error_tree!{
 
     #[derive(Clone)]
     pub enum CrateError {
+
+        // Indicates that the crate's `is_private()` check returned `true`, so
+        // the crate is not publishable.
+        CrateIsPrivate {
+            crate_path: PathBuf,
+        },
         SortAndFormatImportsInTextError {
             message: String,
         },
@@ -225,6 +231,10 @@ error_tree!{
             crate_name:    String,
             crate_version: semver::Version,
             io_err:        Arc<io::Error>,
+        },
+        CrateAlreadyPublishedOnCratesIo {
+            crate_name:    String,
+            crate_version: semver::Version,
         },
         FailedCratesIoCheck {
             crate_name:    String,

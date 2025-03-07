@@ -7,17 +7,19 @@ version = "0.2.0"
 [dependencies.batch-mode-batch-schema]
 path = "../batch-mode-batch-schema"
 version = "0.2.0"
-[dependencies.batch-mode-json]
-path = "../batch-mode-json"
-version = "0.2.0"
+[dependencies.batch-mode-batch-scribe]
+path = "../batch-mode-batch-scribe"
 [dependencies.batch-mode-batch-workspace-interface]
 path = "../batch-mode-batch-workspace-interface"
 version = "0.2.0"
-[package]
-edition = "2024"
-name = "batch-mode-batch-triple"
+[dependencies.batch-mode-json]
+path = "../batch-mode-json"
 version = "0.2.0"
+[package]
+authors = [ "klebs tpk3.mx@gmail.com" ]
 description = "Manages batch file triples (input, output, error, metadata) in batch processing systems, including file validation, error handling, and file movement."
-authors = ["klebs tpk3.mx@gmail.com"]
+edition = "2024"
 license = "MIT"
+name = "batch-mode-batch-triple"
 repository = "https://github.com/klebs6/klebs-general"
+version = "0.2.0"

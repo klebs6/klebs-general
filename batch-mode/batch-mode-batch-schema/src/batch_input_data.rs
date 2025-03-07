@@ -3,16 +3,16 @@ crate::ix!();
 
 #[derive(Debug)]
 pub struct BatchInputData {
-    requests: Vec<GptBatchAPIRequest>,
+    requests: Vec<LanguageModelBatchAPIRequest>,
 }
 
 impl BatchInputData {
 
-    pub fn new(requests: Vec<GptBatchAPIRequest>) -> Self {
+    pub fn new(requests: Vec<LanguageModelBatchAPIRequest>) -> Self {
         Self { requests }
     }
 
-    pub fn requests(&self) -> &Vec<GptBatchAPIRequest> {
+    pub fn requests(&self) -> &Vec<LanguageModelBatchAPIRequest> {
         &self.requests
     }
 
