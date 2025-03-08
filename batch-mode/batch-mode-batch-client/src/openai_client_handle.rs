@@ -8,7 +8,7 @@ pub struct OpenAIClientHandle {
 }
 
 #[async_trait]
-impl LanguageModelClientInterface for OpenAIClientHandle { }
+impl LanguageModelClientInterface<OpenAIClientError> for OpenAIClientHandle { }
 
 impl OpenAIClientHandle {
 
@@ -65,17 +65,17 @@ impl GetBatchFileContent for OpenAIClientHandle {
 }
 
 #[async_trait]
-impl UploadBatchFile for OpenAIClientHandle {
+impl UploadBatchFileCore for OpenAIClientHandle {
 
     type Error = OpenAIClientError;
 
-    async fn upload_batch_file(
+    async fn upload_batch_file_path(
         &self,
-        file_path: impl AsRef<Path> + Send + Sync,
+        file_path: &Path,
 
     ) -> Result<OpenAIFile, Self::Error> {
 
-        info!("uploading batch file at path={:?} to online", file_path.as_ref());
+        info!("uploading batch file at path={:?} to online", file_path);
 
         let create_file_request = CreateFileRequest {
             file:    file_path.into(),
@@ -86,6 +86,9 @@ impl UploadBatchFile for OpenAIClientHandle {
         Ok(file)
     }
 }
+
+#[async_trait]
+impl UploadBatchFileExt for OpenAIClientHandle {}
 
 #[async_trait]
 impl CreateBatch for OpenAIClientHandle {

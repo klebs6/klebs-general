@@ -1,7 +1,7 @@
+// ---------------- [ File: src/errors.rs ]
 crate::ix!();
 
 error_tree!{
-
     pub enum TokenExpanderError {
         BatchError(BatchError),
         BatchWorkspaceError(BatchWorkspaceError),

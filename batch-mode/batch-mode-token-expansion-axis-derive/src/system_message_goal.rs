@@ -1,4 +1,4 @@
-// ---------------- [ File: token-expander-axis-derive/src/system_message_goal.rs ]
+// ---------------- [ File: src/system_message_goal.rs ]
 crate::ix!();
 
 /// Attempts to parse `#[system_message_goal = "some text"]` or
@@ -29,4 +29,3 @@ pub fn parse_system_message_goal(attrs: &[Attribute]) -> SynResult<Option<LitStr
 
     Ok(None) // No system_message_goal attribute found at all
 }
-

@@ -1,3 +1,4 @@
+// ---------------- [ File: src/batch_request_id.rs ]
 crate::ix!();
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -43,4 +44,3 @@ mod tests {
         assert_eq!(id.as_str(), "batch_789");
     }
 }
-

@@ -1,9 +1,8 @@
+// ---------------- [ File: src/language_model_batch_workflow.rs ]
 crate::ix!();
 
 #[async_trait]
-pub trait FinishProcessingUncompletedBatches {
-
-    type Error;
+pub trait FinishProcessingUncompletedBatches<E> {
 
     /// Possibly complete or discard partial data from prior
     /// runs.
@@ -11,12 +10,13 @@ pub trait FinishProcessingUncompletedBatches {
     async fn finish_processing_uncompleted_batches(
         &self,
         expected_content_type: &ExpectedContentType
-    ) -> Result<(), Self::Error>;
+    ) -> Result<(), E>;
 }
 
 pub trait ComputeLanguageModelRequests {
 
-    type Seed;
+    type Seed: Send + Sync;
+    type Error;
 
     /// Identify which new items need to be processed and
     /// build the requests.
@@ -24,6 +24,7 @@ pub trait ComputeLanguageModelRequests {
     fn compute_language_model_requests(
         &mut self,
         model:        &LanguageModelType,
+        agent_coordinate: &AgentCoordinate,
         input_tokens: &[Self::Seed]
     ) -> Vec<LanguageModelBatchAPIRequest>;
 }
@@ -53,26 +54,27 @@ pub trait ProcessBatchRequests {
 /// - Sending them to a remote server,
 /// - Handling the results.
 #[async_trait]
-pub trait LanguageModelBatchWorkflow
-: FinishProcessingUncompletedBatches 
-+ ComputeLanguageModelRequests
-+ ProcessBatchRequests
+pub trait LanguageModelBatchWorkflow<E>
+: FinishProcessingUncompletedBatches<E> 
++ ComputeLanguageModelRequests<Error=E>
++ ProcessBatchRequests<Error=E>
 {
     const REQUESTS_PER_BATCH: usize = 80;
 
     /// High-level method that ties it all together:
     async fn execute(
         &mut self,
-        expected_content_type: &ExpectedContentType,
         model:                 &LanguageModelType,
-        input_tokens:          &[W::Seed]
-    ) -> Result<(),W::Error>
+        agent_coordinate:      &AgentCoordinate,
+        expected_content_type: &ExpectedContentType,
+        input_tokens:          &[<Self as ComputeLanguageModelRequests>::Seed]
+    ) -> Result<(),E>
     {
         info!("Beginning full batch workflow execution");
 
         self.finish_processing_uncompleted_batches(&expected_content_type).await?;
 
-        let requests = self.compute_language_model_requests(model, input_tokens);
+        let requests = self.compute_language_model_requests(model, agent_coordinate, input_tokens);
 
         let batches = construct_batches(&requests, Self::REQUESTS_PER_BATCH);
 

@@ -1,3 +1,4 @@
+// ---------------- [ File: src/batch_error.rs ]
 crate::ix!();
 
 error_tree!{

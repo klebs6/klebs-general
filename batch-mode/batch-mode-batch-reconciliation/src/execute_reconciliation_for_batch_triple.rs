@@ -1,16 +1,19 @@
+// ---------------- [ File: src/execute_reconciliation_for_batch_triple.rs ]
 crate::ix!();
 
-impl<OutputF,ErrorF,OFut,EFut> ExecuteReconciliationOperation<OutputF,ErrorF,OFut,EFut>
+impl<OutputF,ErrorF,OFut,EFut,E,C> ExecuteReconciliationOperation<OutputF,ErrorF,OFut,EFut,E,C>
 for BatchFileTriple 
 where
-    OutputF: Fn(&BatchFileTriple, &dyn BatchWorkspaceInterface, &ExpectedContentType) -> OFut + Send + Sync,
-    ErrorF:  Fn(&BatchFileTriple, &[BatchErrorFileProcessingOperation]) -> EFut + Send + Sync,
-    OFut:    Future<Output = Result<(), BatchOutputProcessingError>> + Send,
-    EFut:    Future<Output = Result<(), BatchErrorProcessingError>> + Send,
+    OutputF:            Fn(&BatchFileTriple, &dyn BatchWorkspaceInterface, &ExpectedContentType) -> OFut + Send + Sync,
+    ErrorF:             Fn(&BatchFileTriple, &[BatchErrorFileProcessingOperation]) -> EFut + Send + Sync,
+    OFut:               Future<Output = Result<(), BatchOutputProcessingError>> + Send,
+    EFut:               Future<Output = Result<(), BatchErrorProcessingError>> + Send,
+    C:                  LanguageModelClientInterface<E>,
+    BatchDownloadError: From<E>
 {
     async fn execute_reconciliation_operation(
         &mut self,
-        client:                 &OpenAIClientHandle,
+        client:                 &C,
         operation:              &BatchFileTripleReconciliationOperation,
         expected_content_type:  &ExpectedContentType,
         process_output_file_fn: &OutputF,

@@ -1,3 +1,4 @@
+// ---------------- [ File: src/agent_coordinate.rs ]
 crate::ix!();
 
 #[derive(Clone,Getters,Debug)]
@@ -23,7 +24,7 @@ impl AgentCoordinate {
         }
     }
 
-    pub fn nowhere_without_a_goal() -> Self {
+    pub fn nowhere_with_no_goal() -> Self {
         Self {
             location: None,
             goal:     None,

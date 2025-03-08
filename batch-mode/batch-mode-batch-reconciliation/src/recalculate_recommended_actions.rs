@@ -14,4 +14,3 @@ impl RecalculateRecommendedActions for BatchFileTriple {
         BatchFileReconciliationRecommendedCourseOfAction::try_from(self)
     }
 }
-

@@ -1,4 +1,4 @@
-// ---------------- [ File: token-expander-axis-derive/src/axis_attribute.rs ]
+// ---------------- [ File: src/axis_attribute.rs ]
 crate::ix!();
 
 /// Parse out `#[axis("axis_name => axis_description")]`.
@@ -24,4 +24,3 @@ pub fn parse_axis_attribute(attr: &Attribute) -> Result<Option<(String, String)>
     let axis_description = parts[1].trim_matches('"').to_string();
     Ok(Some((axis_name, axis_description)))
 }
-

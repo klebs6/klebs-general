@@ -1,3 +1,4 @@
+// ---------------- [ File: src/language_model_token_expander.rs ]
 crate::ix!();
 
 /// The improved LanguageModelTokenExpander, now with no `pub` fields. Instead, we rely on
@@ -11,8 +12,8 @@ pub struct LanguageModelTokenExpander<T: CreateLanguageModelRequestsAtAgentCoord
     workspace:                      Arc<BatchWorkspace>,
     model:                          LanguageModelType,
     language_model_request_creator: Arc<T>,
-    inputs:                         Vec<<Self as LanguageModelBatchWorkflow>::Seed>,
-    unseen_inputs:                  Vec<<Self as LanguageModelBatchWorkflow>::Seed>,
+    inputs:                         Vec<<Self as ComputeLanguageModelRequests>::Seed>,
+    unseen_inputs:                  Vec<<Self as ComputeLanguageModelRequests>::Seed>,
     language_model_requests:        Vec<LanguageModelBatchAPIRequest>,
 }
 
@@ -47,41 +48,140 @@ impl<T:CreateLanguageModelRequestsAtAgentCoordinate> LanguageModelTokenExpander<
             pub fn batch_expansion_error_log_filename(&self, batch_idx: &BatchIndex) -> PathBuf;
             pub fn output_filename(&self, batch_idx: &BatchIndex) -> PathBuf;
             pub fn error_filename(&self, batch_idx: &BatchIndex) -> PathBuf;
-            pub fn token_expansion_path(&self,token_name: &<Self as LanguageModelBatchWorkflow>::Seed) -> PathBuf;
+            pub fn token_expansion_path(&self,token_name: &<Self as ComputeLanguageModelRequests>::Seed) -> PathBuf;
         }
     }
 
     /// Internal helper from your original code. Identifies newly seen tokens.
-    #[tracing::instrument(level="info", skip_all)]
     pub fn calculate_unseen_inputs(&mut self, inputs: &[CamelCaseTokenWithComment]) {
-        self.unseen_inputs = calculate_unseen_input_tokens(&self.workspace, inputs);
+
+        let mut unseen = Vec::new();
+
+        for tok in inputs {
+
+            let target_path = tok.target_path_for_ai_json_expansion(&self.workspace.target_dir());
+
+            if !target_path.exists() {
+                if let Some(similar_path) = find_similar_target_path(&self.workspace,&target_path) {
+                    warn!(
+                        "Skipping token '{}': target path '{}' is similar to existing '{}'.",
+                        tok.data(),
+                        target_path.display(),
+                        similar_path.display()
+                    );
+                    continue; // Skip this token
+                }
+                unseen.push(tok.clone());
+            }
+        }
+
+        self.unseen_inputs = unseen;
+
         info!("Unseen input tokens calculated:");
+
         for token in &self.unseen_inputs {
             info!("{}", token);
         }
     }
 }
 
-impl<T: CreateLanguageModelRequestsAtAgentCoordinate> GetBatchWorkspace for LanguageModelTokenExpander<T> {
-    fn workspace(&self) -> Arc<dyn BatchWorkspaceInterface> {
-        self.workspace().clone()
+impl<T> GetBatchWorkspace<BatchWorkspaceError> for LanguageModelTokenExpander<T>
+where T: CreateLanguageModelRequestsAtAgentCoordinate
+{
+    fn workspace(&self) -> Arc<dyn FullBatchWorkspaceInterface<BatchWorkspaceError>> {
+        self.workspace.clone()
     }
 }
 
-impl<T: CreateLanguageModelRequestsAtAgentCoordinate> GetLanguageModelClient for LanguageModelTokenExpander<T> {
-    fn language_model_client(&self) -> Arc<dyn LanguageModelClientInterface> {
-        self.client().clone()
+impl<T, E> GetLanguageModelClient<E> for LanguageModelTokenExpander<T>
+where
+    T: CreateLanguageModelRequestsAtAgentCoordinate,
+    OpenAIClientHandle: LanguageModelClientInterface<E>,
+{
+    fn language_model_client(&self) -> Arc<dyn LanguageModelClientInterface<E>> {
+        self.client.clone()
     }
 }
 
-impl<T:GetBatchWorkspace+GetLanguageModelClient,E> FinishProcessingUncompletedBatches for T {
+pub fn find_similar_target_path(workspace: &BatchWorkspace, target_path: &Path) -> Option<PathBuf> {
 
-    type Error = E;
+    use strsim::levenshtein;
 
+    let existing_paths = workspace.get_target_directory_files();
+    let target_str     = target_path.to_string_lossy();
+
+    existing_paths
+        .iter()
+        .find(|&existing| levenshtein(&target_str, &existing.to_string_lossy()) <= 2)
+        .cloned()
+}
+
+#[async_trait]
+impl<T> ProcessBatchRequests for LanguageModelTokenExpander<T> 
+where T: CreateLanguageModelRequestsAtAgentCoordinate
+{
+    type Error = TokenExpanderError;
+
+    async fn process_batch_requests(
+        &self,
+        batch_requests:        &[LanguageModelBatchAPIRequest],
+        expected_content_type: &ExpectedContentType,
+    ) -> Result<(), Self::Error> {
+
+        info!("Processing {} batch request(s)", batch_requests.len());
+
+        let mut triple = BatchFileTriple::new_with_requests(batch_requests, self.workspace().clone())?;
+
+        let execution_result = triple.fresh_execute(&self.client()).await?;
+
+        let workspace = self.workspace();
+
+        process_batch_output_and_errors(&**workspace, &execution_result,&expected_content_type).await?;
+
+        triple.move_all_to_done().await?;
+
+        Ok(())
+    }
+}
+
+/// Here we implement the trait that organizes all batch-processing stages.
+#[async_trait]
+impl<T> ComputeLanguageModelRequests for LanguageModelTokenExpander<T> 
+where T: CreateLanguageModelRequestsAtAgentCoordinate
+{
+    type Seed  = CamelCaseTokenWithComment;
+    type Error = TokenExpanderError;
+
+    fn compute_language_model_requests(
+        &mut self,
+        model:            &LanguageModelType,
+        agent_coordinate: &AgentCoordinate,
+        inputs:           &[Self::Seed]
+
+    ) -> Vec<LanguageModelBatchAPIRequest> {
+
+        trace!("Computing GPT requests from newly provided tokens...");
+        self.calculate_unseen_inputs(inputs);
+        self.language_model_request_creator().create_language_model_requests_at_agent_coordinate(
+            model,
+            agent_coordinate,
+            &self.unseen_inputs()
+        )
+    }
+}
+
+#[async_trait]
+impl<T,E> FinishProcessingUncompletedBatches<E> for T
+where
+    T:                  GetBatchWorkspace<E> + GetLanguageModelClient<E>,
+    E:                  From<BatchReconciliationError>,
+    BatchDownloadError: From<E>,
+{
     async fn finish_processing_uncompleted_batches(
         &self,
         expected_content_type: &ExpectedContentType
-    ) -> Result<(), Self::Error> {
+    ) -> Result<(), E> {
+
         info!("Finishing uncompleted batches if any remain.");
 
         let workspace             = self.workspace();
@@ -91,43 +191,13 @@ impl<T:GetBatchWorkspace+GetLanguageModelClient,E> FinishProcessingUncompletedBa
 
         info!("Reconciling unprocessed batch files in the work directory");
         for triple in &mut batch_triples {
-            triple.reconcile_unprocessed(&language_model_client, expected_content_type).await?;
+            triple.reconcile_unprocessed(
+                &*language_model_client, 
+                expected_content_type,
+                &process_output_file,
+                &process_error_file,
+            ).await?;
         }
-        Ok(())
-    }
-}
-
-/// Here we implement the trait that organizes all batch-processing stages.
-#[async_trait]
-impl<T: CreateLanguageModelRequestsAtAgentCoordinate> LanguageModelBatchWorkflow for LanguageModelTokenExpander<T> {
-
-    type Seed  = CamelCaseTokenWithComment;
-    type Error = TokenExpanderError;
-
-    fn compute_language_model_requests(
-        &mut self,
-        model:  &LanguageModelType,
-        inputs: &[Self::Seed]
-    ) -> Vec<LanguageModelBatchAPIRequest> {
-        trace!("Computing GPT requests from newly provided tokens...");
-        self.calculate_unseen_inputs(inputs);
-        self.language_model_request_creator.create_language_model_requests_at_agent_coordinate(
-            "YOU_ARE_HERE",
-            model.clone(),
-            &self.unseen_inputs
-        )
-    }
-
-    async fn process_batch_requests(
-        &self,
-        batch_requests:        &[LanguageModelBatchAPIRequest],
-        expected_content_type: &ExpectedContentType,
-    ) -> Result<(), Self::Error> {
-        info!("Processing {} batch request(s)", batch_requests.len());
-        let mut triple = BatchFileTriple::new_with_requests(batch_requests, self.workspace.clone())?;
-        let execution_result = triple.fresh_execute(&self.client).await?;
-        process_batch_output_and_errors(&*self.workspace, &execution_result,&expected_content_type).await?;
-        triple.move_all_to_done().await?;
         Ok(())
     }
 }

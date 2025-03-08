@@ -1,4 +1,4 @@
-// ---------------- [ File: token-expansion-step/src/token_expansion_step.rs ]
+// ---------------- [ File: src/token_expansion_step.rs ]
 crate::ix!();
 
 pub enum TokenExpansionStep {

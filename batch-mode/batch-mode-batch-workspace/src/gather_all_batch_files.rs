@@ -2,20 +2,16 @@
 crate::ix!();
 
 #[async_trait]
-pub trait GatherAllBatchTriples: Send + Sync {
-    async fn gather_all_batch_triples(
-        self: Arc<Self>,
-    ) -> Result<Vec<BatchFileTriple>, BatchWorkspaceError>;
-}
-
-#[async_trait]
 impl<T> GatherAllBatchTriples for T
 where
     for<'async_trait> T: LocateBatchFiles + FindExistingBatchFileIndices + Send + Sync + 'async_trait,
+    BatchWorkspaceError: From<<T as LocateBatchFiles>::Error>,
+    BatchWorkspaceError: From<<T as FindExistingBatchFileIndices>::Error>,
 {
+    type Error = BatchWorkspaceError;
     async fn gather_all_batch_triples(
         self: Arc<Self>,
-    ) -> Result<Vec<BatchFileTriple>, BatchWorkspaceError>
+    ) -> Result<Vec<BatchFileTriple>, Self::Error>
     {
         trace!("gathering all batch triples across known indices");
 

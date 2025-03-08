@@ -1,3 +1,4 @@
+// ---------------- [ File: src/token_expansion_axis.rs ]
 crate::ix!();
 
 /// A trait that describes the name of an axis. Implementations usually

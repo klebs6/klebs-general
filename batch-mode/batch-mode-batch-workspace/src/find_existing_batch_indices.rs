@@ -2,20 +2,14 @@
 crate::ix!();
 
 #[async_trait]
-pub trait FindExistingBatchFileIndices: Send + Sync {
-    async fn find_existing_batch_file_indices(
-        self: Arc<Self>,
-    ) -> Result<HashSet<BatchIndex>, BatchWorkspaceError>;
-}
-
-#[async_trait]
 impl<T> FindExistingBatchFileIndices for T
 where
     for<'async_trait> T: BatchWorkspaceInterface + Send + Sync + 'async_trait,
 {
+    type Error = BatchWorkspaceError;
     async fn find_existing_batch_file_indices(
         self: Arc<Self>,
-    ) -> Result<HashSet<BatchIndex>, BatchWorkspaceError>
+    ) -> Result<HashSet<BatchIndex>, Self::Error>
     {
         trace!("scanning directory to find existing batch file indices");
 

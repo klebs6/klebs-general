@@ -1,3 +1,4 @@
+// ---------------- [ File: src/http_method.rs ]
 crate::ix!();
 
 /// Enumeration of possible HTTP methods.

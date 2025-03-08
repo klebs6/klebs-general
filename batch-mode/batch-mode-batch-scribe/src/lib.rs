@@ -1,3 +1,4 @@
+// ---------------- [ File: src/lib.rs ]
 #![allow(unused_imports)]
 
 #[macro_use] mod imports; use imports::*;
@@ -13,3 +14,4 @@ x!{http_method}
 x!{errors}
 x!{batch_request_id}
 x!{custom_request_id}
+x!{construct_batches}

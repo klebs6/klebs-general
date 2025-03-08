@@ -1,12 +1,14 @@
+// ---------------- [ File: src/download_error_file.rs ]
 crate::ix!();
 
 #[async_trait]
-impl DownloadErrorFile for BatchFileTriple {
-
+impl<C,E> DownloadErrorFile<C,E> for BatchFileTriple 
+where C: LanguageModelClientInterface<E>,
+      BatchDownloadError: From<E>
+{
     async fn download_error_file(
         &mut self,
-        client: &OpenAIClientHandle,
-
+        client: &C,
     ) -> Result<(), BatchDownloadError> {
 
         info!("downloading batch error file");

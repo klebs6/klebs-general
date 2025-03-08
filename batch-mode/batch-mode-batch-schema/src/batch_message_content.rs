@@ -9,6 +9,9 @@ pub struct BatchMessageContent {
     sanitized_json_str: OnceCell<String>,
 }
 
+unsafe impl Send for BatchMessageContent {}
+unsafe impl Sync for BatchMessageContent {}
+
 impl PartialEq<str> for BatchMessageContent {
 
     fn eq(&self, other: &str) -> bool{

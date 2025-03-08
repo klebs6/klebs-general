@@ -1,11 +1,14 @@
+// ---------------- [ File: src/check_batch_status_online.rs ]
 crate::ix!();
 
 #[async_trait]
-impl CheckBatchStatusOnline for BatchFileTriple {
+impl<C,E> CheckBatchStatusOnline<C,E> for BatchFileTriple 
+where C: LanguageModelClientInterface<E>,
+      BatchDownloadError: From<E>
+{
     async fn check_batch_status_online(
         &self,
-        client: &OpenAIClientHandle,
-
+        client: &C,
     ) -> Result<BatchOnlineStatus, BatchDownloadError> {
 
         info!("checking batch status online");

@@ -1,11 +1,14 @@
+// ---------------- [ File: src/check_and_download_output_and_error_online.rs ]
 crate::ix!();
 
 #[async_trait]
-impl CheckForAndDownloadOutputAndErrorOnline for BatchFileTriple {
-
+impl<C,E> CheckForAndDownloadOutputAndErrorOnline<C,E> for BatchFileTriple 
+where C: LanguageModelClientInterface<E>,
+      BatchDownloadError: From<E>
+{
     async fn check_for_and_download_output_and_error_online(
         &mut self,
-        client: &OpenAIClientHandle,
+        client: &C,
 
     ) -> Result<(), BatchDownloadError> {
 
@@ -36,5 +39,3 @@ impl CheckForAndDownloadOutputAndErrorOnline for BatchFileTriple {
         }
     }
 }
-
-

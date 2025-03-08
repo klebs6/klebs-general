@@ -7,3 +7,4 @@ x!{find_existing_batch_indices}
 x!{workspace}
 x!{errors}
 x!{gather_all_batch_files}
+x!{full_batch_workspace_interface}

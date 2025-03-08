@@ -1,3 +1,4 @@
+// ---------------- [ File: src/language_model_message_role.rs ]
 crate::ix!();
 
 /// Enumeration of roles in a message.

@@ -2,22 +2,15 @@
 crate::ix!();
 
 #[async_trait]
-pub trait LocateBatchFiles: Send + Sync {
-    async fn locate_batch_files(
-        self: Arc<Self>,
-        index: &BatchIndex
-    ) -> Result<Option<BatchFileTriple>, BatchWorkspaceError>;
-}
-
-#[async_trait]
 impl<T> LocateBatchFiles for T
 where
     for<'async_trait> T: BatchWorkspaceInterface + Send + Sync + 'async_trait,
 {
+    type Error = BatchWorkspaceError;
     async fn locate_batch_files(
         self:  Arc<Self>,
         index: &BatchIndex
-    ) -> Result<Option<BatchFileTriple>, BatchWorkspaceError> {
+    ) -> Result<Option<BatchFileTriple>, Self::Error> {
         trace!("attempting to locate batch files for index: {:?}", index);
 
         // Get the regex pattern for the specified index to match filenames

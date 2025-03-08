@@ -1,4 +1,4 @@
-// ---------------- [ File: token-expander-axis-derive/src/strip_surrounding_quotes.rs ]
+// ---------------- [ File: src/strip_surrounding_quotes.rs ]
 crate::ix!();
 
 /// Naively strips leading/trailing quotes if present. 

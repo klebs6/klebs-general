@@ -1,3 +1,4 @@
+// ---------------- [ File: src/into_language_model_query_string.rs ]
 crate::ix!();
 
 pub trait IntoLanguageModelQueryString {

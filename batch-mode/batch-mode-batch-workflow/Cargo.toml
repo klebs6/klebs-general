@@ -1,5 +1,7 @@
 [dependencies]
 derive_builder = "*"
+[dependencies.agent-coordinate]
+path = "../agent-coordinate"
 [dependencies.batch-mode-3p]
 path = "../batch-mode-3p"
 [dependencies.batch-mode-batch-client]
