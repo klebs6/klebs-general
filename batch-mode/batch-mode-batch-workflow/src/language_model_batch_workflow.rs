@@ -1,16 +1,28 @@
 // ---------------- [ File: src/language_model_batch_workflow.rs ]
 crate::ix!();
 
+#[async_trait]
+pub trait FinishProcessingUncompletedBatches {
+    type Error;
+
+    /// Possibly complete or discard partial data from prior
+    /// runs.
+    ///
+    async fn finish_processing_uncompleted_batches(
+        &self,
+        expected_content_type: &ExpectedContentType
+    ) -> Result<(), Self::Error>;
+}
+
 pub trait ComputeLanguageModelRequests {
 
     type Seed: Send + Sync;
-    type Error;
 
     /// Identify which new items need to be processed and
     /// build the requests.
     ///
     fn compute_language_model_requests(
-        &mut self,
+        &self,
         model:            &LanguageModelType,
         agent_coordinate: &AgentCoordinate,
         input_tokens:     &[Self::Seed]
@@ -43,14 +55,14 @@ pub trait ProcessBatchRequests {
 /// - Handling the results.
 #[async_trait]
 pub trait LanguageModelBatchWorkflow<E>
-: FinishProcessingUncompletedBatches<E> 
-+ ComputeLanguageModelRequests<Error=E>
+: FinishProcessingUncompletedBatches<Error=E> 
++ ComputeLanguageModelRequests
 + ProcessBatchRequests<Error=E>
 {
     const REQUESTS_PER_BATCH: usize = 80;
 
     /// High-level method that ties it all together:
-    async fn execute(
+    async fn execute_language_model_batch_workflow(
         &mut self,
         model:                 &LanguageModelType,
         agent_coordinate:      &AgentCoordinate,

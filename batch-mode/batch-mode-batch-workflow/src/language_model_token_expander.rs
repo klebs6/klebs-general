@@ -1,3 +1,10 @@
+// That Yogin who is freed from attachment and pride, who transcends all pairs of opposites such
+// as pleasure and pain, who never gives way to wrath or hate, who never speaks an untruth, who
+// though slandered or struck still shows friendship for the slanderer or the striker, who never
+// thinks of doing ill to others, who restrains these three, viz. speech, acts and mind, and who
+// behaves uniformly towards all creatures, succeeds in approaching Brahman (true self).
+// 
+// — The Mahabharata, Shanti Parva, Chapter CCXXXVI, 
 // ---------------- [ File: src/language_model_token_expander.rs ]
 crate::ix!();
 
@@ -5,19 +12,19 @@ crate::ix!();
 /// `getset` to provide getters (and optionally setters) and `derive_builder` for
 /// constructing robustly. This struct implements `LanguageModelBatchWorkflow` to unify
 /// your batch processing logic under a trait-based approach.
+//#[derive(Getters,LanguageModelBatchWorkflow)]
 #[derive(Getters)]
 #[getset(get = "pub")]
 pub struct LanguageModelTokenExpander<T: CreateLanguageModelRequestsAtAgentCoordinate> {
-    client:                         Arc<OpenAIClientHandle>,
-    workspace:                      Arc<BatchWorkspace>,
-    language_model_request_creator: Arc<T>,
-    inputs:                         Vec<<Self as ComputeLanguageModelRequests>::Seed>,
-    unseen_inputs:                  Vec<<Self as ComputeLanguageModelRequests>::Seed>,
-    language_model_requests:        Vec<LanguageModelBatchAPIRequest>,
-}
 
-unsafe impl<T:CreateLanguageModelRequestsAtAgentCoordinate> Send for LanguageModelTokenExpander<T> {}
-unsafe impl<T:CreateLanguageModelRequestsAtAgentCoordinate> Sync for LanguageModelTokenExpander<T> {}
+    language_model_request_creator: Arc<T>,
+
+    //#[batch_client]       
+    client:    Arc<OpenAIClientHandle>,
+
+    //#[batch_workspace] 
+    workspace: Arc<BatchWorkspace>,
+}
 
 impl<T:CreateLanguageModelRequestsAtAgentCoordinate> LanguageModelTokenExpander<T> {
 
@@ -26,77 +33,51 @@ impl<T:CreateLanguageModelRequestsAtAgentCoordinate> LanguageModelTokenExpander<
         language_model_request_creator: Arc<T>
 
     ) -> Result<Self,TokenExpanderError> {
-
         info!("creating LanguageModelTokenExpander");
-
         Ok(Self {
-            client:    OpenAIClientHandle::new(),
-            workspace: BatchWorkspace::new_in(product_root).await?,
             language_model_request_creator,
-            inputs:                  vec![],
-            unseen_inputs:           vec![],
-            language_model_requests: vec![],
+            client:        OpenAIClientHandle::new(),
+            workspace:     BatchWorkspace::new_in(product_root).await?,
         })
     }
-
-    delegate!{
-        to self.workspace {
-            pub fn input_filename(&self, batch_idx: &BatchIndex) -> PathBuf;
-            pub fn batch_expansion_error_log_filename(&self, batch_idx: &BatchIndex) -> PathBuf;
-            pub fn output_filename(&self, batch_idx: &BatchIndex) -> PathBuf;
-            pub fn error_filename(&self, batch_idx: &BatchIndex) -> PathBuf;
-            pub fn token_expansion_path(&self,token_name: &<Self as ComputeLanguageModelRequests>::Seed) -> PathBuf;
-        }
-    }
-
-    /// Internal helper from your original code. Identifies newly seen tokens.
-    pub fn calculate_unseen_inputs(&mut self, inputs: &[CamelCaseTokenWithComment]) {
-
-        let mut unseen = Vec::new();
-
-        for tok in inputs {
-
-            let target_path = tok.target_path_for_ai_json_expansion(&self.workspace.target_dir());
-
-            if !target_path.exists() {
-                if let Some(similar_path) = find_similar_target_path(&self.workspace,&target_path) {
-                    warn!(
-                        "Skipping token '{}': target path '{}' is similar to existing '{}'.",
-                        tok.data(),
-                        target_path.display(),
-                        similar_path.display()
-                    );
-                    continue; // Skip this token
-                }
-                unseen.push(tok.clone());
-            }
-        }
-
-        self.unseen_inputs = unseen;
-
-        info!("Unseen input tokens calculated:");
-
-        for token in &self.unseen_inputs {
-            info!("{}", token);
-        }
-    }
 }
 
-impl<T> GetBatchWorkspace<BatchWorkspaceError> for LanguageModelTokenExpander<T>
+#[async_trait]
+impl<T> FinishProcessingUncompletedBatches for LanguageModelTokenExpander<T>
 where T: CreateLanguageModelRequestsAtAgentCoordinate
 {
-    fn workspace(&self) -> Arc<dyn FullBatchWorkspaceInterface<BatchWorkspaceError>> {
-        self.workspace.clone()
-    }
-}
+    type Error = TokenExpanderError;
 
-impl<T, E> GetLanguageModelClient<E> for LanguageModelTokenExpander<T>
-where
-    T: CreateLanguageModelRequestsAtAgentCoordinate,
-    OpenAIClientHandle: LanguageModelClientInterface<E>,
-{
-    fn language_model_client(&self) -> Arc<dyn LanguageModelClientInterface<E>> {
-        self.client.clone()
+    async fn finish_processing_uncompleted_batches(
+        &self,
+        expected_content_type: &ExpectedContentType
+    ) -> Result<(), Self::Error> 
+    {
+        info!("Finishing uncompleted batches if any remain.");
+
+        let workspace             = self.workspace();
+        let language_model_client = self.language_model_client();
+
+        let mut batch_triples = workspace.clone().gather_all_batch_triples().await?;
+        info!("Reconciling unprocessed batch files in the work directory");
+
+        // NOTICE: We pass the constants as function pointers:
+        //   &PROCESS_OUTPUT_FILE_BRIDGE
+        //   &PROCESS_ERROR_FILE_BRIDGE
+        // 
+        // Both have the needed signature. 
+        // The compiler then sees them as 
+        // `&for<'a> fn(...) -> Pin<Box<...+'a>>`.
+        // 
+        for triple in &mut batch_triples {
+            triple.reconcile_unprocessed(
+                    &*language_model_client,
+                    expected_content_type,
+                    &PROCESS_OUTPUT_FILE_BRIDGE,
+                    &PROCESS_ERROR_FILE_BRIDGE,
+                ).await?;
+        }
+        Ok(())
     }
 }
 
@@ -120,7 +101,7 @@ where T: CreateLanguageModelRequestsAtAgentCoordinate
 
         let execution_result = triple.fresh_execute(&self.client()).await?;
 
-        process_batch_output_and_errors(&**workspace, &execution_result,&expected_content_type).await?;
+        process_batch_output_and_errors(&**workspace, &execution_result, &expected_content_type).await?;
 
         triple.move_all_to_done().await?;
 
@@ -134,10 +115,9 @@ impl<T> ComputeLanguageModelRequests for LanguageModelTokenExpander<T>
 where T: CreateLanguageModelRequestsAtAgentCoordinate
 {
     type Seed  = CamelCaseTokenWithComment;
-    type Error = TokenExpanderError;
 
     fn compute_language_model_requests(
-        &mut self,
+        &self,
         model:            &LanguageModelType,
         agent_coordinate: &AgentCoordinate,
         inputs:           &[Self::Seed]
@@ -146,12 +126,42 @@ where T: CreateLanguageModelRequestsAtAgentCoordinate
 
         trace!("Computing GPT requests from newly provided tokens...");
 
-        self.calculate_unseen_inputs(inputs);
+        let workspace = self.workspace();
+
+        let unseen = workspace.calculate_unseen_inputs(inputs);
 
         self.language_model_request_creator().create_language_model_requests_at_agent_coordinate(
             model,
             agent_coordinate,
-            &self.unseen_inputs()
+            &unseen
         )
     }
 }
+
+//-------------------------------------------[everything-below-here]
+// we want this to be done by LanguageModelBatchWorkflow derive macro, as well as the //actual
+// derivation of LanguageModelBatchWorkflow trait
+
+#[async_trait]
+impl<T:CreateLanguageModelRequestsAtAgentCoordinate> 
+LanguageModelBatchWorkflow<TokenExpanderError> for LanguageModelTokenExpander<T> {}
+
+unsafe impl<T:CreateLanguageModelRequestsAtAgentCoordinate> Send for LanguageModelTokenExpander<T> {}
+unsafe impl<T:CreateLanguageModelRequestsAtAgentCoordinate> Sync for LanguageModelTokenExpander<T> {}
+
+impl<T> GetBatchWorkspace<BatchWorkspaceError> for LanguageModelTokenExpander<T>
+where T: CreateLanguageModelRequestsAtAgentCoordinate
+{
+    fn workspace(&self) -> Arc<dyn FullBatchWorkspaceInterface<BatchWorkspaceError>> {
+        self.workspace.clone()
+    }
+}
+
+impl<T> GetLanguageModelClient<OpenAIClientError> for LanguageModelTokenExpander<T>
+where T: CreateLanguageModelRequestsAtAgentCoordinate,
+{
+    fn language_model_client(&self) -> Arc<dyn LanguageModelClientInterface<OpenAIClientError>> {
+        self.client.clone()
+    }
+}
+
