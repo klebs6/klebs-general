@@ -35,8 +35,9 @@ impl<T:CreateLanguageModelRequestsAtAgentCoordinate> LanguageModelTokenExpander<
             workspace: BatchWorkspace::new_in(product_root).await?,
             model,
             language_model_request_creator,
-            unseen_inputs: vec![],
-            language_model_requests:        vec![],
+            inputs:                  vec![],
+            unseen_inputs:           vec![],
+            language_model_requests: vec![],
         })
     }
 
@@ -61,6 +62,41 @@ impl<T:CreateLanguageModelRequestsAtAgentCoordinate> LanguageModelTokenExpander<
     }
 }
 
+impl<T: CreateLanguageModelRequestsAtAgentCoordinate> GetBatchWorkspace for LanguageModelTokenExpander<T> {
+    fn workspace(&self) -> Arc<dyn BatchWorkspaceInterface> {
+        self.workspace().clone()
+    }
+}
+
+impl<T: CreateLanguageModelRequestsAtAgentCoordinate> GetLanguageModelClient for LanguageModelTokenExpander<T> {
+    fn language_model_client(&self) -> Arc<dyn LanguageModelClientInterface> {
+        self.client().clone()
+    }
+}
+
+impl<T:GetBatchWorkspace+GetLanguageModelClient,E> FinishProcessingUncompletedBatches for T {
+
+    type Error = E;
+
+    async fn finish_processing_uncompleted_batches(
+        &self,
+        expected_content_type: &ExpectedContentType
+    ) -> Result<(), Self::Error> {
+        info!("Finishing uncompleted batches if any remain.");
+
+        let workspace             = self.workspace();
+        let language_model_client = self.language_model_client();
+
+        let mut batch_triples = workspace.gather_all_batch_triples().await?;
+
+        info!("Reconciling unprocessed batch files in the work directory");
+        for triple in &mut batch_triples {
+            triple.reconcile_unprocessed(&language_model_client, expected_content_type).await?;
+        }
+        Ok(())
+    }
+}
+
 /// Here we implement the trait that organizes all batch-processing stages.
 #[async_trait]
 impl<T: CreateLanguageModelRequestsAtAgentCoordinate> LanguageModelBatchWorkflow for LanguageModelTokenExpander<T> {
@@ -68,90 +104,30 @@ impl<T: CreateLanguageModelRequestsAtAgentCoordinate> LanguageModelBatchWorkflow
     type Seed  = CamelCaseTokenWithComment;
     type Error = TokenExpanderError;
 
-    async fn maybe_finish_processing_uncompleted_batches(
-        &self,
-        expected_content_type: ExpectedContentType
-    ) -> Result<(), Self::Error> {
-        info!("Finishing uncompleted batches if any remain.");
-
-        let mut batch_triples = self.workspace().gather_all_batch_triples().await?;
-
-        info!("Reconciling unprocessed batch files in the work directory");
-        for triple in &mut batch_triples {
-            reconcile_unprocessed_batch_triple(triple, &self.client, expected_content_type).await?;
-        }
-        Ok(())
-    }
-
     fn compute_language_model_requests(
         &mut self,
         model:  &LanguageModelType,
         inputs: &[Self::Seed]
-    ) {
+    ) -> Vec<LanguageModelBatchAPIRequest> {
         trace!("Computing GPT requests from newly provided tokens...");
         self.calculate_unseen_inputs(inputs);
-        self.language_model_requests = self.language_model_request_creator.create_language_model_requests(
+        self.language_model_request_creator.create_language_model_requests_at_agent_coordinate(
             "YOU_ARE_HERE",
             model.clone(),
             &self.unseen_inputs
-        );
-    }
-
-    fn construct_batches(
-        &self
-    ) -> Enumerate<Chunks<'_, LanguageModelBatchAPIRequest>> {
-        const GPT_REQUESTS_PER_BATCH: usize = 80;
-        let mut batches = self.language_model_requests.chunks(GPT_REQUESTS_PER_BATCH).enumerate();
-
-        // If there's exactly 1 chunk, and it's under 32, panic:
-        if batches.len() == 1 {
-            let only_batch_len = batches.nth(0).unwrap().1.len();
-            if only_batch_len < 32 {
-                panic!(
-                    "attempting to construct a trivially small batch of size {}. \
-                     are you sure you want to do this?",
-                    only_batch_len
-                );
-            }
-        }
-        info!(
-            "Constructing {} batch(es), each with max {} items",
-            batches.len(),
-            GPT_REQUESTS_PER_BATCH
-        );
-
-        // Rebuild the enumerator, because we consumed it with nth(0).
-        self.language_model_requests.chunks(GPT_REQUESTS_PER_BATCH).enumerate()
+        )
     }
 
     async fn process_batch_requests(
         &self,
-        batch_requests: &[LanguageModelBatchAPIRequest]
+        batch_requests:        &[LanguageModelBatchAPIRequest],
+        expected_content_type: &ExpectedContentType,
     ) -> Result<(), Self::Error> {
         info!("Processing {} batch request(s)", batch_requests.len());
         let mut triple = BatchFileTriple::new_with_requests(batch_requests, self.workspace.clone())?;
-        let execution_result = fresh_execute_batch_processing(&mut triple, &self.client).await?;
-        process_batch_output_and_errors(&*self.workspace, &execution_result).await?;
+        let execution_result = triple.fresh_execute(&self.client).await?;
+        process_batch_output_and_errors(&*self.workspace, &execution_result,&expected_content_type).await?;
         triple.move_all_to_done().await?;
-        Ok(())
-    }
-
-    async fn execute_workflow(
-        &mut self,
-        model: &LanguageModelType,
-        inputs: &[Self::Seed]
-    ) -> Result<(), Self::Error> {
-        info!("Beginning full GPT batch workflow execution");
-        let expected_content_type = ExpectedContentType::Json;
-
-        self.maybe_finish_processing_uncompleted_batches(expected_content_type).await?;
-        self.compute_language_model_requests(model, inputs);
-
-        let batches = self.construct_batches();
-        for (batch_idx, batch_requests) in batches {
-            info!("Processing batch #{}", batch_idx);
-            self.process_batch_requests(batch_requests).await?;
-        }
         Ok(())
     }
 }

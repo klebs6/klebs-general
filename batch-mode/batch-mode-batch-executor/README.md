@@ -18,7 +18,7 @@ use batch_mode_batch_executor::{fresh_execute_batch_processing, BatchFileTriple,
 
 let client = OpenAIClientHandle::new();
 let mut triple = BatchFileTriple::new(input_file, output_file, error_file);
-let result = fresh_execute_batch_processing(&mut triple, &client).await?;
+let result = triple.fresh_execute(&mut triple, &client).await?;
 ```
 
 ### Error Handling

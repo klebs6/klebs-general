@@ -1,30 +1,39 @@
 // ---------------- [ File: src/gather_all_batch_files.rs ]
 crate::ix!();
 
-impl BatchWorkspace {
+#[async_trait]
+pub trait GatherAllBatchTriples: Send + Sync {
+    async fn gather_all_batch_triples(
+        self: Arc<Self>,
+    ) -> Result<Vec<BatchFileTriple>, BatchWorkspaceError>;
+}
 
-    pub async fn gather_all_batch_triples(self: &Arc<Self>) 
-        -> Result<Vec<BatchFileTriple>,BatchWorkspaceError> 
+#[async_trait]
+impl<T> GatherAllBatchTriples for T
+where
+    for<'async_trait> T: LocateBatchFiles + FindExistingBatchFileIndices + Send + Sync + 'async_trait,
+{
+    async fn gather_all_batch_triples(
+        self: Arc<Self>,
+    ) -> Result<Vec<BatchFileTriple>, BatchWorkspaceError>
     {
-        info!("gathering all batch triples in workspace {:#?}", self);
+        trace!("gathering all batch triples across known indices");
 
         // First, obtain the set of all existing batch indices in the given directory.
-        let indices = self.find_existing_batch_file_indices().await?;
-
-        info!("found batch indices: {:#?}", indices);
+        let indices = self.clone().find_existing_batch_file_indices().await?;
+        debug!("found batch indices: {:?}", indices);
 
         let mut batch_files = Vec::new();
 
         for index in indices {
-            // Locate the batch files for each index.
-            if let Some(batch) = self.locate_batch_files(&index).await? {
+            if let Some(batch) = self.clone().locate_batch_files(&index).await? {
+                trace!("found a triple for index {:?}", index);
                 batch_files.push(batch);
             }
         }
 
         batch_files.sort();
-
-        info!("found batch files: {:#?}", batch_files);
+        info!("final list of batch file triples: {:?}", batch_files);
 
         Ok(batch_files)
     }

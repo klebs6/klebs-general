@@ -1,20 +1,29 @@
 // ---------------- [ File: src/find_existing_batch_indices.rs ]
 crate::ix!();
 
-impl BatchWorkspace {
+#[async_trait]
+pub trait FindExistingBatchFileIndices: Send + Sync {
+    async fn find_existing_batch_file_indices(
+        self: Arc<Self>,
+    ) -> Result<HashSet<BatchIndex>, BatchWorkspaceError>;
+}
 
-    /// Scans the directory and extracts indices from filenames matching the pattern.
-    pub async fn find_existing_batch_file_indices(self: &Arc<Self>) 
-        -> Result<HashSet<BatchIndex>,BatchWorkspaceError> 
+#[async_trait]
+impl<T> FindExistingBatchFileIndices for T
+where
+    for<'async_trait> T: BatchWorkspaceInterface + Send + Sync + 'async_trait,
+{
+    async fn find_existing_batch_file_indices(
+        self: Arc<Self>,
+    ) -> Result<HashSet<BatchIndex>, BatchWorkspaceError>
     {
-        let workdir = self.workdir();
+        trace!("scanning directory to find existing batch file indices");
 
-        // Regex to match filenames of the form batch_{input,output,error}_N.jsonl
+        let workdir = self.workdir();
         let file_pattern = Regex::new(r"batch_(input|output|error)_(\d+|[a-f0-9\-]{36})\.jsonl$")
-            .expect("Invalid regex pattern");
+            .expect("invalid regex pattern in find_existing_batch_file_indices");
 
         let mut indices = HashSet::new();
-
         let mut dir_entries = fs::read_dir(workdir).await?;
 
         while let Some(entry) = dir_entries.next_entry().await? {
@@ -29,27 +38,31 @@ impl BatchWorkspace {
                         } else {
                             BatchIndex::from_uuid_str(index_str)?
                         };
+                        trace!("found matching batch index: {:?}", index);
                         indices.insert(index);
                     }
                 }
             }
         }
 
+        debug!("collected batch indices: {:?}", indices);
         Ok(indices)
     }
 }
 
 #[cfg(test)]
-mod tests {
+mod test_find_existing_batch_indices {
     use super::*;
     use tokio::fs;
     use std::path::PathBuf;
 
-    #[tokio::test]
+    #[traced_test]
     async fn test_find_indices() -> Result<(),BatchWorkspaceError> {
+        debug!("creating a mock workspace for test_find_indices");
         let workspace = BatchWorkspace::new_mock().await?;
-
         let indices = workspace.find_existing_batch_file_indices().await?;
+        debug!("found indices in test: {:?}", indices);
+
         let mut expected_indices = HashSet::new();
         expected_indices.insert(BatchIndex::Usize(0));
         expected_indices.insert(BatchIndex::Usize(1));

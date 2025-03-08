@@ -97,9 +97,12 @@ impl BatchFileTriple {
     }
 
     //--------------------------------------------
-    pub fn new_with_requests(requests: &[LanguageModelBatchAPIRequest], workspace: Arc<dyn BatchWorkspaceInterface>) 
-        -> Result<Self,BatchInputCreationError> 
-    {
+    pub fn new_with_requests(
+        requests:  &[LanguageModelBatchAPIRequest], 
+        workspace: Arc<dyn BatchWorkspaceInterface>
+
+    ) -> Result<Self,BatchInputCreationError> {
+
         let index = BatchIndex::new();
 
         let batch_input_filename    = workspace.input_filename(&index);

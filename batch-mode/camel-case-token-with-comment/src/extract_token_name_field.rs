@@ -7,7 +7,7 @@ crate::ix!();
 /// * `json` - A reference to a `serde_json::Value` object.
 ///
 /// # Returns
-/// * `Result<&str, TokenExpanderError>` - The token name as a string slice,
+/// * `Result<&str, TokenParseError>` - The token name as a string slice,
 ///   or an error if the field is missing or invalid.
 pub fn extract_token_name_field(json: &serde_json::Value) -> Result<&str, TokenParseError> {
     json.get("token_name")

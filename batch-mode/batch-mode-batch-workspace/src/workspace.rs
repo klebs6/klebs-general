@@ -34,13 +34,24 @@ unsafe impl Sync for BatchWorkspace {}
 
 impl BatchWorkspace {
 
-    pub async fn find_existing_triple_with_given_index(self: Arc<BatchWorkspace>, index: &BatchIndex) 
-        -> Result<BatchFileTriple,BatchWorkspaceError> 
+    pub async fn find_existing_triple_with_given_index(
+        self: Arc<BatchWorkspace>, 
+        index: &BatchIndex
+    ) -> Result<BatchFileTriple,BatchWorkspaceError> 
     {
+        trace!("attempting to find existing triple with index: {:?}", index);
         let maybe_triple = self.locate_batch_files(index).await?;
         match maybe_triple {
-            Some(triple) => Ok(triple),
-            None         => Err(BatchWorkspaceError::NoBatchFileTripleAtIndex { index: index.clone() }),
+            Some(triple) => {
+                debug!("found existing triple for index {:?}", index);
+                Ok(triple)
+            },
+            None => {
+                warn!("no existing triple found for index {:?}", index);
+                Err(BatchWorkspaceError::NoBatchFileTripleAtIndex {
+                    index: index.clone()
+                })
+            },
         }
     }
 

@@ -1,6 +1,10 @@
 // ---------------- [ File: src/workspace_interface.rs ]
 crate::ix!();
 
+pub trait GetBatchWorkspace {
+    fn workspace(&self) -> Arc<dyn BatchWorkspaceInterface>;
+}
+
 pub trait BatchWorkspaceInterface
 : GetInputFilenameAtIndex
 + GetOutputFilenameAtIndex
@@ -11,6 +15,7 @@ pub trait BatchWorkspaceInterface
 + GetFailedJsonRepairsDir
 + GetFailedItemsDir
 + GetTextStoragePath
++ GetWorkdir
 {}
 
 pub trait GetInputFilenameAtIndex {
@@ -47,4 +52,8 @@ pub trait GetFailedItemsDir {
 
 pub trait GetTextStoragePath {
     fn text_storage_path(&self, batch_idx: &BatchIndex) -> PathBuf;
+}
+
+pub trait GetWorkdir {
+    fn workdir(&self) -> PathBuf;
 }

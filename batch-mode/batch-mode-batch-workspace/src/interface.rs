@@ -64,3 +64,10 @@ impl GetTextStoragePath for BatchWorkspace {
         self.text_storage_path(batch_idx).to_path_buf()
     }
 }
+
+impl GetWorkdir for BatchWorkspace {
+
+    fn workdir(&self) -> PathBuf {
+        self.workdir().clone()
+    }
+}

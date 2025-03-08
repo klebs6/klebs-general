@@ -7,6 +7,9 @@ pub struct OpenAIClientHandle {
     client: async_openai::Client<OpenAIConfig>,
 }
 
+#[async_trait]
+impl LanguageModelClientInterface for OpenAIClientHandle { }
+
 impl OpenAIClientHandle {
 
     pub fn new() -> Arc<Self> {
@@ -31,28 +34,46 @@ impl OpenAIClientHandle {
             fn files(&self) -> async_openai::Files<OpenAIConfig>;
         }
     }
+}
 
-    pub async fn retrieve_batch(&self, batch_id: &str) 
-        -> Result<Batch,OpenAIClientError> 
+#[async_trait]
+impl RetrieveBatchById for OpenAIClientHandle {
+
+    type Error = OpenAIClientError;
+
+    async fn retrieve_batch(&self, batch_id: &str) 
+        -> Result<Batch,Self::Error> 
     {
         info!("retrieving batch {} from online", batch_id);
 
         Ok(self.batches().retrieve(batch_id).await?)
     }
+}
 
-    pub async fn file_content(&self, file_id: &str) -> Result<Bytes,OpenAIClientError> {
+#[async_trait]
+impl GetBatchFileContent for OpenAIClientHandle {
+
+    type Error = OpenAIClientError;
+
+    async fn file_content(&self, file_id: &str) -> Result<Bytes,Self::Error> {
 
         info!("retrieving file {} content from online", file_id);
 
         let file_content = self.files().content(file_id).await?;
         Ok(file_content)
     }
+}
 
-    pub async fn upload_batch_file(
+#[async_trait]
+impl UploadBatchFile for OpenAIClientHandle {
+
+    type Error = OpenAIClientError;
+
+    async fn upload_batch_file(
         &self,
-        file_path: impl AsRef<Path>,
+        file_path: impl AsRef<Path> + Send + Sync,
 
-    ) -> Result<OpenAIFile, OpenAIClientError> {
+    ) -> Result<OpenAIFile, Self::Error> {
 
         info!("uploading batch file at path={:?} to online", file_path.as_ref());
 
@@ -64,8 +85,14 @@ impl OpenAIClientHandle {
         let file = self.files().create(create_file_request).await?;
         Ok(file)
     }
+}
 
-    pub async fn create_batch(
+#[async_trait]
+impl CreateBatch for OpenAIClientHandle {
+
+    type Error = OpenAIClientError;
+
+    async fn create_batch(
         &self,
         input_file_id: &str,
     ) -> Result<Batch, OpenAIClientError> {
@@ -83,11 +110,17 @@ impl OpenAIClientHandle {
 
         Ok(batch)
     }
+}
 
-    pub async fn wait_for_batch_completion(
+#[async_trait]
+impl WaitForBatchCompletion for OpenAIClientHandle {
+
+    type Error = OpenAIClientError;
+
+    async fn wait_for_batch_completion(
         &self,
         batch_id: &str,
-    ) -> Result<Batch, OpenAIClientError> {
+    ) -> Result<Batch, Self::Error> {
 
         info!("waiting for batch completion");
 

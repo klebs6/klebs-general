@@ -1,15 +1,24 @@
 // ---------------- [ File: src/locate_batch_files.rs ]
 crate::ix!();
 
-impl BatchWorkspace {
-
-    /// Finds and verifies the batch files associated with the given `BatchIndex` in the base directory.
-    /// Ensures that at most one file of each type exists.
-    pub async fn locate_batch_files(
-        self:  &Arc<Self>,
+#[async_trait]
+pub trait LocateBatchFiles: Send + Sync {
+    async fn locate_batch_files(
+        self: Arc<Self>,
         index: &BatchIndex
+    ) -> Result<Option<BatchFileTriple>, BatchWorkspaceError>;
+}
 
-    ) -> Result<Option<BatchFileTriple>,BatchWorkspaceError> {
+#[async_trait]
+impl<T> LocateBatchFiles for T
+where
+    for<'async_trait> T: BatchWorkspaceInterface + Send + Sync + 'async_trait,
+{
+    async fn locate_batch_files(
+        self:  Arc<Self>,
+        index: &BatchIndex
+    ) -> Result<Option<BatchFileTriple>, BatchWorkspaceError> {
+        trace!("attempting to locate batch files for index: {:?}", index);
 
         // Get the regex pattern for the specified index to match filenames
         let file_pattern = index.file_pattern();
@@ -22,14 +31,14 @@ impl BatchWorkspace {
         let mut entries = fs::read_dir(self.workdir()).await?;
 
         while let Some(entry) = entries.next_entry().await? {
-
             let path = entry.path();
 
             // Get filename as a &str
             let filename = match path.file_name().and_then(|name| name.to_str()) {
                 Some(name) => name,
                 None => {
-                    continue; // Skip if filename is not valid UTF-8
+                    trace!("skipping a file with non-UTF8 name: {:?}", path);
+                    continue;
                 }
             };
 
@@ -37,8 +46,8 @@ impl BatchWorkspace {
             let captures = match file_pattern.captures(filename) {
                 Some(captures) => captures,
                 None => {
-                    //debug!("Filename does not match the expected pattern: {:?}", filename);
-                    continue; // Skip files that do not match the pattern
+                    debug!("filename does not match the expected pattern: {:?}", filename);
+                    continue;
                 }
             };
 
@@ -48,48 +57,67 @@ impl BatchWorkspace {
             match file_type {
                 Some("input") => {
                     if input.is_some() {
-                        return Err(io::Error::new(io::ErrorKind::InvalidData, "Multiple input files found").into());
+                        return Err(std::io::Error::new(
+                            std::io::ErrorKind::InvalidData,
+                            "Multiple input files found"
+                        ).into());
                     }
-                    debug!("Found input file: {:?}", path);
+                    debug!("found input file: {:?}", path);
                     input = Some(path);
                 }
                 Some("output") => {
                     if output.is_some() {
-                        return Err(io::Error::new(io::ErrorKind::InvalidData, "Multiple output files found").into());
+                        return Err(std::io::Error::new(
+                            std::io::ErrorKind::InvalidData,
+                            "Multiple output files found"
+                        ).into());
                     }
-                    debug!("Found output file: {:?}", path);
+                    debug!("found output file: {:?}", path);
                     output = Some(path);
                 }
                 Some("error") => {
                     if error.is_some() {
-                        return Err(io::Error::new(io::ErrorKind::InvalidData, "Multiple error files found").into());
+                        return Err(std::io::Error::new(
+                            std::io::ErrorKind::InvalidData,
+                            "Multiple error files found"
+                        ).into());
                     }
-                    debug!("Found error file: {:?}", path);
+                    debug!("found error file: {:?}", path);
                     error = Some(path);
                 }
                 Some("metadata") => {
                     if associated_metadata.is_some() {
-                        return Err(io::Error::new(io::ErrorKind::InvalidData, "Multiple associated_metadata files found").into());
+                        return Err(std::io::Error::new(
+                            std::io::ErrorKind::InvalidData,
+                            "Multiple associated_metadata files found"
+                        ).into());
                     }
-                    debug!("Found associated_metadata file: {:?}", path);
+                    debug!("found associated_metadata file: {:?}", path);
                     associated_metadata = Some(path);
                 }
-
                 _ => {
-                    continue; 
+                    trace!("skipping unrecognized file type: {:?}", filename);
+                    continue;
                 }
             }
         }
 
         if input.is_none() && output.is_none() && error.is_none() && associated_metadata.is_none() {
-            debug!("No batch files were found in directory: {:?}", &self.workdir());
+            debug!("no batch files found in directory for index {:?}: {:?}", index, self.workdir());
             Ok(None)
         } else {
             debug!(
-                "Batch files located - Input: {:?}, Output: {:?}, Error: {:?}, AssociatedMetadata: {:?}",
-                input, output, error, associated_metadata
+                "batch files located for index {:?} - input: {:?}, output: {:?}, error: {:?}, metadata: {:?}",
+                index, input, output, error, associated_metadata
             );
-            Ok(Some(BatchFileTriple::new_direct(index, input, output, error, associated_metadata, self.clone())))
+            Ok(Some(BatchFileTriple::new_direct(
+                        index, 
+                        input, 
+                        output, 
+                        error, 
+                        associated_metadata, 
+                        self.clone()
+            )))
         }
     }
 }
