@@ -10,7 +10,6 @@ crate::ix!();
 pub struct LanguageModelTokenExpander<T: CreateLanguageModelRequestsAtAgentCoordinate> {
     client:                         Arc<OpenAIClientHandle>,
     workspace:                      Arc<BatchWorkspace>,
-    model:                          LanguageModelType,
     language_model_request_creator: Arc<T>,
     inputs:                         Vec<<Self as ComputeLanguageModelRequests>::Seed>,
     unseen_inputs:                  Vec<<Self as ComputeLanguageModelRequests>::Seed>,
@@ -23,18 +22,16 @@ unsafe impl<T:CreateLanguageModelRequestsAtAgentCoordinate> Sync for LanguageMod
 impl<T:CreateLanguageModelRequestsAtAgentCoordinate> LanguageModelTokenExpander<T> {
 
     pub async fn new(
-        product_root:        impl AsRef<Path>,
-        model:               LanguageModelType, 
+        product_root:                   impl AsRef<Path>,
         language_model_request_creator: Arc<T>
 
     ) -> Result<Self,TokenExpanderError> {
 
-        info!("creating LanguageModelTokenExpander with model: {:#?}", model);
+        info!("creating LanguageModelTokenExpander");
 
         Ok(Self {
             client:    OpenAIClientHandle::new(),
             workspace: BatchWorkspace::new_in(product_root).await?,
-            model,
             language_model_request_creator,
             inputs:                  vec![],
             unseen_inputs:           vec![],
@@ -117,11 +114,11 @@ where T: CreateLanguageModelRequestsAtAgentCoordinate
 
         info!("Processing {} batch request(s)", batch_requests.len());
 
-        let mut triple = BatchFileTriple::new_with_requests(batch_requests, self.workspace().clone())?;
+        let workspace = self.workspace();
+
+        let mut triple = BatchFileTriple::new_with_requests(batch_requests, workspace.clone())?;
 
         let execution_result = triple.fresh_execute(&self.client()).await?;
-
-        let workspace = self.workspace();
 
         process_batch_output_and_errors(&**workspace, &execution_result,&expected_content_type).await?;
 
@@ -148,7 +145,9 @@ where T: CreateLanguageModelRequestsAtAgentCoordinate
     ) -> Vec<LanguageModelBatchAPIRequest> {
 
         trace!("Computing GPT requests from newly provided tokens...");
+
         self.calculate_unseen_inputs(inputs);
+
         self.language_model_request_creator().create_language_model_requests_at_agent_coordinate(
             model,
             agent_coordinate,

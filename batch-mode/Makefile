@@ -20,7 +20,7 @@ ACTIVE_PACKAGE := batch-mode
 #ACTIVE_PACKAGE := batch-mode-batch-index
 #ACTIVE_PACKAGE := batch-mode-batch-metadata
 #ACTIVE_PACKAGE := batch-mode-batch-schema
-#ACTIVE_PACKAGE := batch-mode-batch-workflow
+ACTIVE_PACKAGE := batch-mode-batch-workflow
 #ACTIVE_PACKAGE := batch-mode-batch-client
 #ACTIVE_PACKAGE := batch-mode-batch-reconciliation
 #ACTIVE_PACKAGE := batch-mode-batch-triple
@@ -37,7 +37,7 @@ DEFAULT := test
 #DEFAULT := test_file
 #DEFAULT := test_one
 #DEFAULT := test_file_one
-DEFAULT := test_all
+#DEFAULT := test_all
 #DEFAULT := run
 #DEFAULT := build
 
