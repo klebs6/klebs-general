@@ -2,13 +2,12 @@
 crate::ix!();
 
 #[async_trait]
-impl<C,E> CheckForAndDownloadOutputAndErrorOnline<C,E> for BatchFileTriple 
-where C: LanguageModelClientInterface<E>,
-      BatchDownloadError: From<E>
+impl<E> CheckForAndDownloadOutputAndErrorOnline<E> for BatchFileTriple 
+where BatchDownloadError: From<E>
 {
     async fn check_for_and_download_output_and_error_online(
         &mut self,
-        client: &C,
+        client: &dyn LanguageModelClientInterface<E>,
 
     ) -> Result<(), BatchDownloadError> {
 

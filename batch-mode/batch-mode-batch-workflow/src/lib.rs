@@ -4,3 +4,4 @@
 x!{errors}
 x!{language_model_batch_workflow}
 x!{language_model_token_expander}
+x!{finish_processing_uncompleted_batches}

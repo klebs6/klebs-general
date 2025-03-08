@@ -111,3 +111,4 @@ pub use std::sync::Mutex as StdMutex;
 pub use std::panic::{AssertUnwindSafe,catch_unwind};
 pub use float_ord::FloatOrd;
 pub use num_traits::Zero;
+pub use std::pin::Pin;

@@ -32,6 +32,19 @@ impl Eq for BatchWorkspace {}
 unsafe impl Send for BatchWorkspace {}
 unsafe impl Sync for BatchWorkspace {}
 
+pub fn find_similar_target_path(workspace: &BatchWorkspace, target_path: &Path) -> Option<PathBuf> {
+
+    use strsim::levenshtein;
+
+    let existing_paths = workspace.get_target_directory_files();
+    let target_str     = target_path.to_string_lossy();
+
+    existing_paths
+        .iter()
+        .find(|&existing| levenshtein(&target_str, &existing.to_string_lossy()) <= 2)
+        .cloned()
+}
+
 impl BatchWorkspace {
 
     pub async fn find_existing_triple_with_given_index(

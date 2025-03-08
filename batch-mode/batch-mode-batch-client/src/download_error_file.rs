@@ -2,13 +2,12 @@
 crate::ix!();
 
 #[async_trait]
-impl<C,E> DownloadErrorFile<C,E> for BatchFileTriple 
-where C: LanguageModelClientInterface<E>,
-      BatchDownloadError: From<E>
+impl<E> DownloadErrorFile<E> for BatchFileTriple 
+where BatchDownloadError: From<E>
 {
     async fn download_error_file(
         &mut self,
-        client: &C,
+        client: &dyn LanguageModelClientInterface<E>,
     ) -> Result<(), BatchDownloadError> {
 
         info!("downloading batch error file");

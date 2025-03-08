@@ -54,7 +54,7 @@ mod test_find_existing_batch_indices {
     async fn test_find_indices() -> Result<(),BatchWorkspaceError> {
         debug!("creating a mock workspace for test_find_indices");
         let workspace = BatchWorkspace::new_mock().await?;
-        let indices = workspace.find_existing_batch_file_indices().await?;
+        let indices = workspace.clone().find_existing_batch_file_indices().await?;
         debug!("found indices in test: {:?}", indices);
 
         let mut expected_indices = HashSet::new();

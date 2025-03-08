@@ -1,32 +1,25 @@
 // ---------------- [ File: src/execute_reconciliation_for_batch_triple.rs ]
 crate::ix!();
 
-impl<OutputF,ErrorF,OFut,EFut,E,C> ExecuteReconciliationOperation<OutputF,ErrorF,OFut,EFut,E,C>
-for BatchFileTriple 
-where
-    OutputF:            Fn(&BatchFileTriple, &dyn BatchWorkspaceInterface, &ExpectedContentType) -> OFut + Send + Sync,
-    ErrorF:             Fn(&BatchFileTriple, &[BatchErrorFileProcessingOperation]) -> EFut + Send + Sync,
-    OFut:               Future<Output = Result<(), BatchOutputProcessingError>> + Send,
-    EFut:               Future<Output = Result<(), BatchErrorProcessingError>> + Send,
-    C:                  LanguageModelClientInterface<E>,
-    BatchDownloadError: From<E>
+impl<E> ExecuteReconciliationOperation<E>
+for BatchFileTriple where BatchDownloadError: From<E>,
 {
     async fn execute_reconciliation_operation(
         &mut self,
-        client:                 &C,
+        client:                 &dyn LanguageModelClientInterface<E>,
         operation:              &BatchFileTripleReconciliationOperation,
         expected_content_type:  &ExpectedContentType,
-        process_output_file_fn: &OutputF,
-        process_error_file_fn:  &ErrorF,
+        process_output_file_fn: &OutputFileFn,
+        process_error_file_fn:  &ErrorFileFn,
     ) -> Result<Option<BatchFileReconciliationRecommendedCourseOfAction>, BatchReconciliationError>
     {
-        let workspace = self.workspace();
-
         info!(
-            "executing reconciliation operation {:?} for batch {:#?}",
-            operation, self
+            "Preparing to execute reconciliation operation {:?} for batch {:?}",
+            operation,
+            self.index()
         );
 
+        let workspace = self.workspace();
         let mut new_recommended_actions = None;
 
         use BatchFileTripleReconciliationOperation::*;
@@ -46,10 +39,10 @@ where
                     BatchErrorFileProcessingOperation::LogErrors,
                     BatchErrorFileProcessingOperation::RetryFailedRequests,
                 ];
-                process_error_file_fn(self,&operations).await?;
+                process_error_file_fn(self, &operations).await?;
             }
             ProcessBatchOutputFile => {
-                process_output_file_fn(self,&**workspace, expected_content_type).await?;
+                process_output_file_fn(self, &**workspace, expected_content_type).await?;
             }
             MoveBatchInputAndErrorToTheDoneDirectory => {
                 self.move_input_and_error_to_done().await?;
@@ -73,6 +66,12 @@ where
                 });
             }
         }
+
+        info!(
+            "Reconciliation operation {:?} for batch {:?} completed successfully",
+            operation,
+            self.index()
+        );
 
         Ok(new_recommended_actions)
     }

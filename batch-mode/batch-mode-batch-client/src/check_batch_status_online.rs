@@ -2,13 +2,12 @@
 crate::ix!();
 
 #[async_trait]
-impl<C,E> CheckBatchStatusOnline<C,E> for BatchFileTriple 
-where C: LanguageModelClientInterface<E>,
-      BatchDownloadError: From<E>
+impl<E> CheckBatchStatusOnline<E> for BatchFileTriple 
+where BatchDownloadError: From<E>
 {
     async fn check_batch_status_online(
         &self,
-        client: &C,
+        client: &dyn LanguageModelClientInterface<E>,
     ) -> Result<BatchOnlineStatus, BatchDownloadError> {
 
         info!("checking batch status online");

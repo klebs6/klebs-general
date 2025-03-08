@@ -1,18 +1,6 @@
 // ---------------- [ File: src/language_model_batch_workflow.rs ]
 crate::ix!();
 
-#[async_trait]
-pub trait FinishProcessingUncompletedBatches<E> {
-
-    /// Possibly complete or discard partial data from prior
-    /// runs.
-    ///
-    async fn finish_processing_uncompleted_batches(
-        &self,
-        expected_content_type: &ExpectedContentType
-    ) -> Result<(), E>;
-}
-
 pub trait ComputeLanguageModelRequests {
 
     type Seed: Send + Sync;
@@ -23,9 +11,9 @@ pub trait ComputeLanguageModelRequests {
     ///
     fn compute_language_model_requests(
         &mut self,
-        model:        &LanguageModelType,
+        model:            &LanguageModelType,
         agent_coordinate: &AgentCoordinate,
-        input_tokens: &[Self::Seed]
+        input_tokens:     &[Self::Seed]
     ) -> Vec<LanguageModelBatchAPIRequest>;
 }
 

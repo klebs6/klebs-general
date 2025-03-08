@@ -204,9 +204,9 @@ mod tests {
 
         // Launch multiple async calls concurrently
         let futures = vec![
-            workspace.gather_all_batch_triples(),
-            workspace.gather_all_batch_triples(),
-            workspace.gather_all_batch_triples(),
+            workspace.clone().gather_all_batch_triples(),
+            workspace.clone().gather_all_batch_triples(),
+            workspace.clone().gather_all_batch_triples(),
         ];
 
         let results = futures::future::join_all(futures).await;

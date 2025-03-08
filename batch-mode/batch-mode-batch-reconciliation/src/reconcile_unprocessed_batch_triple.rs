@@ -2,45 +2,40 @@
 crate::ix!();
 
 #[async_trait]
-impl<OutputF,ErrorF,OFut,EFut,E,C> ReconcileUnprocessed<OutputF,ErrorF,OFut,EFut,E,C> 
-for BatchFileTriple 
-where
-    OutputF:            Fn(&BatchFileTriple, &dyn BatchWorkspaceInterface, &ExpectedContentType) -> OFut + Send + Sync,
-    ErrorF:             Fn(&BatchFileTriple, &[BatchErrorFileProcessingOperation]) -> EFut + Send + Sync,
-    OFut:               Future<Output = Result<(), BatchOutputProcessingError>> + Send,
-    EFut:               Future<Output = Result<(), BatchErrorProcessingError>> + Send,
-    C:                  LanguageModelClientInterface<E>,
-    BatchDownloadError: From<E>,
+impl<E> ReconcileUnprocessed<E> for BatchFileTriple
+where BatchDownloadError: From<E>
 {
     async fn reconcile_unprocessed(
         &mut self,
-        client:                 &C,
-        expected_content_type:  &ExpectedContentType,
-        process_output_file_fn: &OutputF,
-        process_error_file_fn:  &ErrorF,
-
-    ) -> Result<(), BatchReconciliationError> 
+        client:                &dyn LanguageModelClientInterface<E>,
+        expected_content_type: &ExpectedContentType,
+        process_output_file_fn: &OutputFileFn,   // our new type alias
+        process_error_file_fn:  &ErrorFileFn,
+    ) -> Result<(), BatchReconciliationError>
     {
-        let actions = BatchFileReconciliationRecommendedCourseOfAction::try_from(&*self);
+        info!("Attempting to reconcile unprocessed batch triple {:?}", self.index());
 
+        let actions = BatchFileReconciliationRecommendedCourseOfAction::try_from(&*self);
         if let Err(e) = actions {
             error!("Error determining actions for batch {:?}: {:?}", self.index(), e);
-            // We just want to log and return
             return Ok(());
         }
 
         let mut actions = actions.unwrap();
-
-        info!("reconciling unprocessed batch triple {:#?} with actions {:#?}", self, actions);
+        info!(
+            "Reconciliation actions for batch triple {:?}: {:#?}",
+            self.index(),
+            actions
+        );
 
         loop {
             let steps = actions.steps();
-
             let mut hit_error       = false;
             let mut errors          = vec![];
             let mut updated_actions = false;
 
             'steps: for action in steps {
+                debug!("Performing reconciliation step: {:?}", action);
 
                 match self.execute_reconciliation_operation(
                     client,
@@ -53,43 +48,43 @@ where
                         if actions != new_actions {
                             actions = new_actions;
                             updated_actions = true;
+                            debug!("Actions changed; recalculating steps");
                             break 'steps;
                         }
                     },
-                    Ok(None) => { /* No action needed */ },
+                    Ok(None) => {
+                        trace!("No follow-up actions from step {:?}", action);
+                    },
                     Err(e) => {
                         hit_error = true;
                         error!(
-                            "Error applying batch action {:?} to reconcile the batch {:?}: {:?}",
-                            action, 
-                            self.index(), 
+                            "Error applying batch action {:?} to reconcile batch {:?}: {:?}",
+                            action,
+                            self.index(),
                             e
                         );
-                        errors.push((action.clone(),e));
+                        errors.push((action.clone(), e));
                     }
                 }
             }
 
             if updated_actions {
+                // If new actions got returned, we handle them in the next iteration.
                 continue;
             }
 
             if !hit_error {
                 info!(
-                    "Reconciled batch with actions. batch={:?}: actions={:?}",
+                    "Successfully reconciled batch triple {:?} with final actions {:#?}",
                     self.index(),
                     actions
                 );
                 return Ok(());
             } else {
-                // Exit the loop if we can't make progress due to errors
-                error!(
-                    "Failed to reconcile batch {:?} due to errors.",
-                    self.index()
-                );
+                error!("Failed to reconcile batch triple {:?} due to errors.", self.index());
                 return Err(BatchReconciliationError::ReconciliationFailed {
-                    index: self.index().clone(),
-                    errors
+                    index:  self.index().clone(),
+                    errors,
                 });
             }
         }

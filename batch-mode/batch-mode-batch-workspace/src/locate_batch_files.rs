@@ -129,7 +129,7 @@ mod tests {
         fs::write(workdir.join("batch_output_4.jsonl"), b"test").await?;
         fs::write(workdir.join("batch_error_4.jsonl"), b"test").await?;
 
-        let batch_files = workspace.locate_batch_files(&BatchIndex::Usize(4)).await?.unwrap();
+        let batch_files = workspace.clone().locate_batch_files(&BatchIndex::Usize(4)).await?.unwrap();
         assert_eq!(*batch_files.input(), Some(workdir.join("batch_input_4.jsonl")));
         assert_eq!(*batch_files.output(), Some(workdir.join("batch_output_4.jsonl")));
         assert_eq!(*batch_files.error(), Some(workdir.join("batch_error_4.jsonl")));
@@ -146,7 +146,7 @@ mod tests {
         fs::write(workdir.join(format!("batch_input_{}.jsonl", uuid)), b"test").await?;
         fs::write(workdir.join(format!("batch_output_{}.jsonl", uuid)), b"test").await?;
 
-        let batch_files = workspace.locate_batch_files(&BatchIndex::from_uuid_str(uuid)?).await?.unwrap();
+        let batch_files = workspace.clone().locate_batch_files(&BatchIndex::from_uuid_str(uuid)?).await?.unwrap();
         assert_eq!(*batch_files.input(), Some(workdir.join(format!("batch_input_{}.jsonl", uuid))));
         assert_eq!(*batch_files.output(), Some(workdir.join(format!("batch_output_{}.jsonl", uuid))));
         assert_eq!(*batch_files.error(), None);
@@ -174,7 +174,7 @@ mod tests {
         // Write one file that doesn't match the pattern
         fs::write(workdir.join("batch_input_4_duplicate.jsonl"), b"test").await?;
 
-        let result = workspace.locate_batch_files(&BatchIndex::Usize(4)).await?;
+        let result = workspace.clone().locate_batch_files(&BatchIndex::Usize(4)).await?;
         assert!(result.is_some(), "Expected to find the valid batch input file");
 
         let batch_files = result.unwrap();

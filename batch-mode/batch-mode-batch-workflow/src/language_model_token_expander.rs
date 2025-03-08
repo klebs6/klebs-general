@@ -103,19 +103,6 @@ where
     }
 }
 
-pub fn find_similar_target_path(workspace: &BatchWorkspace, target_path: &Path) -> Option<PathBuf> {
-
-    use strsim::levenshtein;
-
-    let existing_paths = workspace.get_target_directory_files();
-    let target_str     = target_path.to_string_lossy();
-
-    existing_paths
-        .iter()
-        .find(|&existing| levenshtein(&target_str, &existing.to_string_lossy()) <= 2)
-        .cloned()
-}
-
 #[async_trait]
 impl<T> ProcessBatchRequests for LanguageModelTokenExpander<T> 
 where T: CreateLanguageModelRequestsAtAgentCoordinate
@@ -167,37 +154,5 @@ where T: CreateLanguageModelRequestsAtAgentCoordinate
             agent_coordinate,
             &self.unseen_inputs()
         )
-    }
-}
-
-#[async_trait]
-impl<T,E> FinishProcessingUncompletedBatches<E> for T
-where
-    T:                  GetBatchWorkspace<E> + GetLanguageModelClient<E>,
-    E:                  From<BatchReconciliationError>,
-    BatchDownloadError: From<E>,
-{
-    async fn finish_processing_uncompleted_batches(
-        &self,
-        expected_content_type: &ExpectedContentType
-    ) -> Result<(), E> {
-
-        info!("Finishing uncompleted batches if any remain.");
-
-        let workspace             = self.workspace();
-        let language_model_client = self.language_model_client();
-
-        let mut batch_triples = workspace.gather_all_batch_triples().await?;
-
-        info!("Reconciling unprocessed batch files in the work directory");
-        for triple in &mut batch_triples {
-            triple.reconcile_unprocessed(
-                &*language_model_client, 
-                expected_content_type,
-                &process_output_file,
-                &process_error_file,
-            ).await?;
-        }
-        Ok(())
     }
 }
