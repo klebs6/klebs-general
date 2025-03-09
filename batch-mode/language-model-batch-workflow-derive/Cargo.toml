@@ -1,0 +1,28 @@
+[dependencies]
+derive_builder = "*"
+getset = "*"
+export-magic = "0.3.6"
+proc-macro2 = "1.0"
+quote = "1.0"
+[dependencies.batch-mode-3p]
+path = "../batch-mode-3p"
+[dependencies.syn]
+features = [ "full" ]
+version = "1.0"
+[dependencies.traced-test]
+version = "*"
+[dependencies.tracing]
+version = "*"
+[dependencies.tracing-setup]
+version = "*"
+[dependencies.tracing-subscriber]
+features = [ "env-filter", "json" ]
+version = "*"
+[dev-dependencies]
+trybuild = "1.0"
+[lib]
+proc-macro = true
+[package]
+edition = "2024"
+name = "language-model-batch-workflow-derive"
+version = "0.1.0"

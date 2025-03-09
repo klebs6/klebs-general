@@ -21,6 +21,7 @@ ACTIVE_PACKAGE := batch-mode
 #ACTIVE_PACKAGE := batch-mode-batch-metadata
 #ACTIVE_PACKAGE := batch-mode-batch-schema
 ACTIVE_PACKAGE := batch-mode-batch-workflow
+ACTIVE_PACKAGE := language-model-batch-workflow-derive
 #ACTIVE_PACKAGE := batch-mode-batch-client
 #ACTIVE_PACKAGE := batch-mode-batch-reconciliation
 #ACTIVE_PACKAGE := batch-mode-batch-triple
@@ -43,7 +44,7 @@ DEFAULT := test
 
 default: $(DEFAULT)
 
-NOCAPTURE := --nocapture
+#NOCAPTURE := --nocapture
 #NOCAPTURE := 
 
 #----------------------------------------------[here are our rules]

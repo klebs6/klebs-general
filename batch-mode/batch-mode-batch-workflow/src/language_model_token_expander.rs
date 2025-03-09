@@ -1,10 +1,3 @@
-// That Yogin who is freed from attachment and pride, who transcends all pairs of opposites such
-// as pleasure and pain, who never gives way to wrath or hate, who never speaks an untruth, who
-// though slandered or struck still shows friendship for the slanderer or the striker, who never
-// thinks of doing ill to others, who restrains these three, viz. speech, acts and mind, and who
-// behaves uniformly towards all creatures, succeeds in approaching Brahman (true self).
-// 
-// — The Mahabharata, Shanti Parva, Chapter CCXXXVI, 
 // ---------------- [ File: src/language_model_token_expander.rs ]
 crate::ix!();
 
@@ -12,24 +5,30 @@ crate::ix!();
 /// `getset` to provide getters (and optionally setters) and `derive_builder` for
 /// constructing robustly. This struct implements `LanguageModelBatchWorkflow` to unify
 /// your batch processing logic under a trait-based approach.
-//#[derive(Getters,LanguageModelBatchWorkflow)]
-#[derive(Getters)]
+#[derive(Getters,LanguageModelBatchWorkflow)]
 #[getset(get = "pub")]
 pub struct LanguageModelTokenExpander<T: CreateLanguageModelRequestsAtAgentCoordinate> {
 
     language_model_request_creator: Arc<T>,
     agent_coordinate:               AgentCoordinate,
 
-    //#[batch_client]       
+    #[batch_client]       
     client:    Arc<OpenAIClientHandle>,
 
-    //#[batch_workspace] 
+    #[batch_workspace] 
     workspace: Arc<BatchWorkspace>,
 
-    //#[custom_process_batch_output_fn]
-    //#[custom_process_batch_error_fn]
-    //#[expected_content_type]
-    //#[model_type]
+    #[custom_process_batch_output_fn]
+    process_batch_output_fn: ProcessBatchOutputFn,
+
+    #[custom_process_batch_error_fn]
+    process_batch_error_fn: ProcessBatchErrorFn,
+
+    #[expected_content_type]
+    expected_content_type: ExpectedContentType,
+
+    #[model_type]
+    language_model_type: LanguageModelType,
 }
 
 impl<T> LanguageModelTokenExpander<T> 

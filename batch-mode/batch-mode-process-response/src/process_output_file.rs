@@ -43,4 +43,3 @@ fn process_output_file_bridge_fn<'a>(
  * recognized by the compiler.
  */
 pub const PROCESS_OUTPUT_FILE_BRIDGE: OutputFileFn = process_output_file_bridge_fn;
-

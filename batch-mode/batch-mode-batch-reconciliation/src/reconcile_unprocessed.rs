@@ -30,4 +30,3 @@ pub type ErrorFileFn = for<'a> fn(
     &'a BatchFileTriple,
     &'a [BatchErrorFileProcessingOperation],
 ) -> Pin<Box<dyn Future<Output = Result<(), BatchErrorProcessingError>> + Send + 'a>>;
-

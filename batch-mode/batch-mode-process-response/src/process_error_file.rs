@@ -53,4 +53,3 @@ fn process_error_file_bridge_fn<'a>(
  * exactly matches the trait's needed function pointer type.
  */
 pub const PROCESS_ERROR_FILE_BRIDGE: ErrorFileFn = process_error_file_bridge_fn;
-

@@ -28,7 +28,9 @@ pub fn handle_typed_entry<I: StorageInterface>(
         }
     };
 
-    // 1) Check if typed matches a known city in the region
+    // -------------------------------------------------------------
+    // 1) If typed is recognized as a known city
+    // -------------------------------------------------------------
     if reg_data.cities().iter().any(|c| c.eq_ignore_ascii_case(&typed_lc)) {
         let city_obj = match CityName::new(&typed_lc) {
             Ok(c) => c,
@@ -51,7 +53,7 @@ pub fn handle_typed_entry<I: StorageInterface>(
             st.current_region().abbreviation()
         ));
 
-        // Show postal codes
+        // Show postal codes for this city
         let c2z_k = c2z_key(st.current_region(), &city_obj);
         if let Some(postals) = st.db_access().get_postal_code_set(&c2z_k) {
             display_data.push(format!("Postal codes for city '{}':", typed_lc));
@@ -87,44 +89,65 @@ pub fn handle_typed_entry<I: StorageInterface>(
         }
 
         // ----------------------------------------
-        // (B) For each ZIP in city_zips => gather s_key => streets => difference from official
+        // (B) For each ZIP in city_zips => see if that ZIP is uniquely
+        // associated with exactly this city => if so, we do "inferred"
         // ----------------------------------------
         let city_zips = st
             .db_access()
             .postal_codes_for_city_in_region(st.current_region(), &city_obj)
             .unwrap_or_default();
 
-        // We'll iterate each zip in sorted order so it’s not random
+        // We'll iterate each zip in sorted order
         let mut city_zips_vec: Vec<_> = city_zips.into_iter().collect();
         city_zips_vec.sort_by(|a, b| a.code().cmp(b.code()));
 
         for zip in &city_zips_vec {
             let s_k = s_key(st.current_region(), zip);
-            let zip_streets = st
+
+            // (b1) Check if that ZIP is unique to city_obj
+            //    i.e. z2c_key => get city-set => see if it's size=1 & the city is ours
+            let z2c_k = z2c_key(st.current_region(), zip);
+            let multi_cities_for_zip = st
                 .db_access()
-                .get_street_set(&s_k)
+                .get_city_set(&z2c_k)
                 .unwrap_or_default();
 
-            // “inferred” means streets that are NOT already in the official set
-            let inferred: BTreeSet<_> = zip_streets
-                .difference(&official_sorted.iter().cloned().collect())
-                .cloned()
-                .collect();
+            // If it's exactly one city and that city is city_obj => "unique"
+            let is_unique_zip_for_city =
+                multi_cities_for_zip.len() == 1 && multi_cities_for_zip.contains(&city_obj);
 
-            // If there's nothing in the inferred, skip or show (none)
+            // Now gather streets from that zip
+            let zip_streets = st.db_access().get_street_set(&s_k).unwrap_or_default();
+
+            // We'll show them only if "is_unique_zip_for_city=true"; otherwise skip
             display_data.push(format!(
                 "Streets in city '{}' (inferred from ZIP={}):",
-                typed_lc, zip.code()
+                typed_lc,
+                zip.code()
             ));
-            if inferred.is_empty() {
-                display_data.push(format!("  (none)"));
+            if !is_unique_zip_for_city {
+                // skip or show "(not unique to city => none)"
+                display_data.push(format!("  (skipped: zip not unique to '{}')", typed_lc));
             } else {
-                // Sort them
-                let mut inferred_vec: Vec<_> = inferred.into_iter().collect();
-                inferred_vec.sort_by(|a, b| a.name().cmp(b.name()));
+                // if unique => we subtract out official
+                let official_set: BTreeSet<_> =
+                    official_sorted.iter().cloned().collect();
 
-                for sname in &inferred_vec {
-                    display_data.push(format!("  {}", sname.name()));
+                let inferred: BTreeSet<_> = zip_streets
+                    .difference(&official_set)
+                    .cloned()
+                    .collect();
+
+                if inferred.is_empty() {
+                    display_data.push(format!("  (none)"));
+                } else {
+                    // sort them
+                    let mut inferred_vec: Vec<_> = inferred.into_iter().collect();
+                    inferred_vec.sort_by(|a, b| a.name().cmp(b.name()));
+
+                    for sname in &inferred_vec {
+                        display_data.push(format!("  {}", sname.name()));
+                    }
                 }
             }
         }
@@ -132,7 +155,9 @@ pub fn handle_typed_entry<I: StorageInterface>(
         return display_data;
     }
 
-    // 2) Check if typed matches a known street in the region
+    // -------------------------------------------------------------
+    // 2) If typed is recognized as a known street in the region
+    // -------------------------------------------------------------
     if reg_data.streets().iter().any(|s| s.eq_ignore_ascii_case(&typed_lc)) {
         let street_obj = match StreetName::new(&typed_lc) {
             Ok(s) => s,
@@ -191,7 +216,9 @@ pub fn handle_typed_entry<I: StorageInterface>(
         return display_data;
     }
 
+    // -------------------------------------------------------------
     // 3) If neither city nor street matched => show fuzzy suggestions
+    // -------------------------------------------------------------
     display_data.push(format!(
         "You typed: '{}', which doesn't match any known city or street in region {}.",
         typed,
