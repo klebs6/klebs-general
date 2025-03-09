@@ -24,7 +24,6 @@ pub trait ComputeLanguageModelRequests {
     fn compute_language_model_requests(
         &self,
         model:            &LanguageModelType,
-        agent_coordinate: &AgentCoordinate,
         input_tokens:     &[Self::Seed]
     ) -> Vec<LanguageModelBatchAPIRequest>;
 }
@@ -65,7 +64,6 @@ pub trait LanguageModelBatchWorkflow<E>
     async fn execute_language_model_batch_workflow(
         &mut self,
         model:                 &LanguageModelType,
-        agent_coordinate:      &AgentCoordinate,
         expected_content_type: &ExpectedContentType,
         input_tokens:          &[<Self as ComputeLanguageModelRequests>::Seed]
     ) -> Result<(),E>
@@ -74,7 +72,7 @@ pub trait LanguageModelBatchWorkflow<E>
 
         self.finish_processing_uncompleted_batches(&expected_content_type).await?;
 
-        let requests = self.compute_language_model_requests(model, agent_coordinate, input_tokens);
+        let requests = self.compute_language_model_requests(model, input_tokens);
 
         let batches = construct_batches(&requests, Self::REQUESTS_PER_BATCH);
 

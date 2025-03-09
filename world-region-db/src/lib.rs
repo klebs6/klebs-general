@@ -91,6 +91,7 @@ x!{parse_housenumber_value}
 x!{parse_integer}
 x!{parse_osm_pbf_and_build_house_number_ranges}
 x!{postal_codes_for_city_in_region}
+x!{postal_codes_for_street_in_region}
 x!{prefix_transform}
 x!{prepare_osm_header_block}
 x!{prepare_single_node_primitive_block}
@@ -150,3 +151,4 @@ x!{house_number_aggregator}
 x!{pbf_creation}
 x!{get_iterator}
 x!{try_construct_multiple_postal_codes}
+x!{load_extra_streets_from_zip_prefix}

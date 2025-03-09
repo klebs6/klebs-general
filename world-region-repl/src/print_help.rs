@@ -15,4 +15,3 @@ pub fn print_help() {
 
     print_or_page(&lines);
 }
-

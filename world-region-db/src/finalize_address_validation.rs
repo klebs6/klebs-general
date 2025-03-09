@@ -1,5 +1,4 @@
 // ---------------- [ File: src/finalize_address_validation.rs ]
-// ---------------- [ File: src/finalize_address_validation.rs ]
 crate::ix!();
 
 /// Inspects whether all addresses were valid, returning a success or a

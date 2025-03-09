@@ -1,5 +1,4 @@
 // ---------------- [ File: src/gather_all_zips_in_region.rs ]
-// ---------------- [ File: src/gather_all_zips_in_region.rs ]
 crate::ix!();
 
 pub trait GatherAllZipsInRegion {

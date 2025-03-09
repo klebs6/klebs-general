@@ -1,11 +1,16 @@
 // ---------------- [ File: src/build_all_region_data.rs ]
 crate::ix!();
 
+/// Builds (or updates) a map of `WorldRegion => RegionData` for each “done” region.
+/// Each `RegionData` includes:
+///   - all known cities in that region,
+///   - all known streets in that region,
+///     including those discovered via city→street **and** zip→street.
 #[tracing::instrument(level = "trace", skip(db))]
 pub fn build_all_region_data<I: StorageInterface>(
     db: &I,
     done_regions: &[WorldRegion]
-) -> std::collections::HashMap<WorldRegion, RegionData> {
+) -> HashMap<WorldRegion, RegionData> {
     use std::collections::HashMap;
     trace!(
         "build_all_region_data: invoked with {} done_regions: {:?}",
@@ -17,42 +22,46 @@ pub fn build_all_region_data<I: StorageInterface>(
     for region in done_regions {
         trace!("build_all_region_data: processing region={:?}", region);
 
-        // 1) Load cities (prefix C2Z:)
+        // 1) Load **city** names (prefix = C2Z:REGION_ABBR:)
         let mut city_vec = load_all_cities_for_region(db, region);
-        // 2) Load streets (prefix S2C:)
+
+        // 2) Also load **streets** from city→street: S2C or C2S. We had a function
+        //    `load_all_streets_for_region`, but it might have been city-based only.
+        //    We’ll call that as “base.” 
         let mut street_vec = load_all_streets_for_region(db, region);
 
-        trace!(
-            "build_all_region_data: region={:?} => raw city_vec={:?}, raw street_vec={:?}",
-            region,
-            city_vec,
-            street_vec
-        );
+        // 3) Next, gather any additional streets from region_postal_code_streets:
+        //    This ensures “zip‐only” or “street+zip” partial addresses also appear.
+        {
+            let prefix = format!("S2Z:{}:", region.abbreviation());
+            let zip_st_prefix = format!("S:{}:", region.abbreviation());
+            // or we can do a direct iteration over region_postal_code_streets if you have a direct query function
+            // e.g. gather_streets_via_zip(db, region).
+            let more_streets = load_extra_streets_from_zip_prefix(db, region);
+            // merge them
+            trace!("Adding {} zip-based streets to street_vec", more_streets.len());
+            street_vec.extend(more_streets);
+        }
 
-        // Sort them
-        city_vec.sort();
-        street_vec.sort();
-
-        trace!(
-            "build_all_region_data: region={:?} => after sort => city_vec={:?}, street_vec={:?}",
-            region,
-            city_vec,
-            street_vec
-        );
-
-        // 3) Build the RegionData
-        let rd = RegionDataBuilder::default()
-            .cities(city_vec.clone())
-            .streets(street_vec.clone())
-            .build()
-            .expect("RegionData builder should never fail");
+        // De-duplicate
+        city_vec.sort_unstable();
+        city_vec.dedup();
+        street_vec.sort_unstable();
+        street_vec.dedup();
 
         trace!(
             "build_all_region_data: region={:?} => final city_count={}, street_count={}",
             region,
-            rd.cities().len(),
-            rd.streets().len()
+            city_vec.len(),
+            street_vec.len()
         );
+
+        // 4) Build the RegionData
+        let rd = RegionDataBuilder::default()
+            .cities(city_vec)
+            .streets(street_vec)
+            .build()
+            .expect("RegionData builder should never fail");
 
         // Insert into the map
         map.insert(*region, rd);

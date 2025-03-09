@@ -1,5 +1,4 @@
 // ---------------- [ File: tests/integration_region_build.rs ]
-// ---------------- [ File: tests/integration_region_build.rs ]
 use world_region_db::*;
 use world_region::*;
 use usa::*;
@@ -39,4 +38,3 @@ async fn integration_test_region_build() {
     // e.g., check that a city from DC can be found, etc.
     // but for brevity, we just confirm no panic.
 }
-

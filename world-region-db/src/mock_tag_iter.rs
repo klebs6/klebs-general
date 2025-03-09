@@ -1,3 +1,4 @@
+// ---------------- [ File: src/mock_tag_iter.rs ]
 crate::ix!();
 
 // A quick helper for mocking an iterator over (&str, &str).

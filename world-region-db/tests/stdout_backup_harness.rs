@@ -1,3 +1,4 @@
+// ---------------- [ File: tests/stdout_backup_harness.rs ]
 #![allow(unused)]
 //! A custom test harness that spawns a child process for each stdout_backup test,
 //! thereby avoiding cargo/coverage hooking on our stdout FD. Cargo.toml must set:

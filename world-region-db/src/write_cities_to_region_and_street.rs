@@ -1,5 +1,4 @@
 // ---------------- [ File: src/write_cities_to_region_and_street.rs ]
-// ---------------- [ File: src/write_cities_to_region_and_street.rs ]
 crate::ix!();
 
 pub trait WriteCitiesToRegionAndStreet {

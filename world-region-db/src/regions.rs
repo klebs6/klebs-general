@@ -10,6 +10,12 @@ pub fn dmv_regions() -> Vec<WorldRegion> {
     ]
 }
 
+pub fn va_regions() -> Vec<WorldRegion> {
+    vec![
+        USRegion::UnitedState(UnitedState::Virginia).into(),
+    ]
+}
+
 pub fn world_regions() -> Vec<WorldRegion> {
     WorldRegion::iter().collect()
 }

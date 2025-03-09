@@ -1,45 +1,121 @@
 // ---------------- [ File: src/validate_street_for_city.rs ]
 crate::ix!();
 
-/// Validates that the `[StreetName]` is present in the set of streets
-/// associated with the `[CityName]` (i.e., `c_key(region, city)`).
-pub fn validate_street_for_city<V:GetStreetSetForKey>(
-    addr:      &WorldAddress,
+pub fn validate_street_for_city<V>(
+    addr: &WorldAddress,
     validator: &V,
-) -> Result<(), InvalidWorldAddress> {
+) -> Result<(), InvalidWorldAddress>
+where
+    V: GetStreetSetForKey
+    + CityNamesForPostalCodeInRegion 
+    + StreetNamesForPostalCodeInRegion
+    + PostalCodesForCityInRegion
+    + PostalCodesForStreetInRegion,
+{
+    let region = addr.region();
+    let city_key = c_key(region, addr.city());
+    trace!(
+        "validate_street_for_city: region={:?}, city={}, street={}, zip={}",
+        region,
+        addr.city().name(),
+        addr.street().name(),
+        addr.postal_code().code()
+    );
 
-    let c_k = c_key(addr.region(), addr.city());
-    trace!("validate_street_for_city: using key='{}'", c_k);
-
-    match validator.get_street_set(&c_k) {
-        Some(streets) => {
-            if !streets.contains(addr.street()) {
-                warn!(
-                    "validate_street_for_city: street='{:?}' not found for city='{}' in region={:?}",
-                    addr.street(),
-                    addr.city(),
-                    addr.region()
+    // 1) Direct check: see if city->streets includes this street
+    match validator.get_street_set(&city_key) {
+        Some(street_set) => {
+            if street_set.contains(addr.street()) {
+                info!(
+                    "validate_street_for_city: direct match found: street='{}' is in city='{}'",
+                    addr.street().name(),
+                    addr.city().name()
                 );
-                return Err(InvalidWorldAddress::StreetNotFoundForCityInRegion {
-                    street: addr.street().clone(),
-                    city:   addr.city().clone(),
-                    region: *addr.region(),
-                });
+                return Ok(());
+            } else {
+                warn!(
+                    "validate_street_for_city: street='{}' not found in city='{}' => attempting fallback check",
+                    addr.street().name(),
+                    addr.city().name(),
+                );
+
+                // 2) Fallback: city->zips, street->zips => if they share address’s zip => success
+                if let Some(city_zips) = validator.postal_codes_for_city_in_region(region, addr.city()) {
+                    info!("fallback: city='{}' => city_zips={:#?}", addr.city().name(), city_zips);
+
+                    if !city_zips.contains(addr.postal_code()) {
+                        warn!(
+                            "fallback: city='{}' does NOT contain zip='{}'; cannot validate street='{}'",
+                            addr.city().name(),
+                            addr.postal_code().code(),
+                            addr.street().name()
+                        );
+                        return Err(InvalidWorldAddress::StreetNotFoundForCityInRegion {
+                            street: addr.street().clone(),
+                            city: addr.city().clone(),
+                            region: *region,
+                        });
+                    }
+                } else {
+                    warn!(
+                        "fallback: no city_zips found for city='{}' => fallback fails",
+                        addr.city().name()
+                    );
+                    return Err(InvalidWorldAddress::StreetNotFoundForCityInRegion {
+                        street: addr.street().clone(),
+                        city: addr.city().clone(),
+                        region: *region,
+                    });
+                }
+
+                if let Some(street_zips) = validator.postal_codes_for_street_in_region(region, addr.street()) {
+                    info!("fallback: street='{}' => street_zips={:#?}", addr.street().name(), street_zips);
+
+                    if street_zips.contains(addr.postal_code()) {
+                        info!(
+                            "fallback: city='{}' and street='{}' share zip='{}' => fallback success",
+                            addr.city().name(),
+                            addr.street().name(),
+                            addr.postal_code().code()
+                        );
+                        return Ok(());
+                    } else {
+                        warn!(
+                            "fallback: street='{}' does NOT contain zip='{}'; cannot validate",
+                            addr.street().name(),
+                            addr.postal_code().code()
+                        );
+                        return Err(InvalidWorldAddress::StreetNotFoundForCityInRegion {
+                            street: addr.street().clone(),
+                            city: addr.city().clone(),
+                            region: *region,
+                        });
+                    }
+                } else {
+                    warn!(
+                        "fallback: no street_zips found for street='{}' => fallback fails",
+                        addr.street().name()
+                    );
+                    return Err(InvalidWorldAddress::StreetNotFoundForCityInRegion {
+                        street: addr.street().clone(),
+                        city: addr.city().clone(),
+                        region: *region,
+                    });
+                }
             }
         }
         None => {
             warn!(
-                "validate_street_for_city: no street set found for key='{}'",
-                c_k
+                "validate_street_for_city: no city->streets data for city='{}' => error",
+                addr.city().name()
             );
             return Err(InvalidWorldAddress::CityToStreetsKeyNotFoundForCityInRegion {
-                c_key: c_k,
-                region: *addr.region(),
+                c_key: city_key,
+                region: *region,
                 city: addr.city().clone(),
             });
         }
     }
-    Ok(())
 }
 
 #[cfg(test)]

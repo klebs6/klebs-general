@@ -1,5 +1,4 @@
 // ---------------- [ File: tests/integration_data_access.rs ]
-// ---------------- [ File: tests/integration_data_access.rs ]
 use world_region_db::*;
 use usa::*;
 use world_region::*;

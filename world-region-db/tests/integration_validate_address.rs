@@ -1,5 +1,4 @@
 // ---------------- [ File: tests/integration_validate_address.rs ]
-// ---------------- [ File: tests/integration_validate_address.rs ]
 use world_region_db::*;
 use usa::*;
 use world_region::*;

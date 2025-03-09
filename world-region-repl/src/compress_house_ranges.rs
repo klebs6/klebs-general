@@ -106,4 +106,3 @@ mod house_number_range_grouping_tests {
         // each line ends with a trailing comma
     }
 }
-

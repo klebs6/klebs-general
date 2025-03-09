@@ -1,5 +1,4 @@
 // ---------------- [ File: src/get_cbor_set_typed.rs ]
-// ---------------- [ File: src/get_cbor_set_typed.rs ]
 crate::ix!();
 
 pub trait GetCborSetTyped {

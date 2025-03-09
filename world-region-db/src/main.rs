@@ -1,7 +1,6 @@
 // ---------------- [ File: src/main.rs ]
 use world_region_db::*;
 
-// ---------------- [ File: src/main.rs ]
 use tracing_setup::*;
 use structopt::*;
 

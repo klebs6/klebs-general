@@ -18,7 +18,7 @@ pub fn gather_city_key_value_pairs<I:StorageInterface>(db: &I, prefix: &str)
         match item_result {
             Ok((key_bytes, val_bytes)) => {
                 let key_str = String::from_utf8_lossy(&key_bytes).to_string();
-                debug!(
+                trace!(
                     "gather_city_key_value_pairs: found key='{}' (value: {} bytes)",
                     key_str,
                     val_bytes.len()

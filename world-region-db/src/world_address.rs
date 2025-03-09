@@ -1,5 +1,4 @@
 // ---------------- [ File: src/world_address.rs ]
-// ---------------- [ File: src/world_address.rs ]
 crate::ix!();
 
 #[derive(Builder,Setters,Getters,Debug,Clone,PartialEq,Eq,PartialOrd,Ord)]
@@ -15,7 +14,15 @@ pub struct WorldAddress {
 /// Implements a validation process that checks whether the
 /// `[WorldAddress]` is consistent with the underlying data structures
 /// in the provided `[DataAccess]`.
-impl<V:GetCitySetForKey + GetStreetSetForKey> ValidateWith<V> for WorldAddress {
+impl<V> ValidateWith<V> for WorldAddress 
+where V
+: CityNamesForPostalCodeInRegion 
++ GetCitySetForKey 
++ GetStreetSetForKey
++ PostalCodesForCityInRegion
++ PostalCodesForStreetInRegion
++ StreetNamesForPostalCodeInRegion 
+{
     type Error     = InvalidWorldAddress;
 
     fn validate_with(&self, validator: &V) -> Result<(), Self::Error> {
@@ -30,7 +37,6 @@ impl<V:GetCitySetForKey + GetStreetSetForKey> ValidateWith<V> for WorldAddress {
     }
 }
 
-// ---------------- [ File: tests/world_address_tests.rs ]
 // or you can keep them inline with a `#[cfg(test)] mod world_address_validation_tests;`
 
 #[cfg(test)]

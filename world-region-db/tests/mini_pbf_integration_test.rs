@@ -63,4 +63,3 @@ async fn test_parse_tiny_osm_pbf_fixture() {
         "Expected to find a known fixture address, but not found in parsed results!"
     );
 }
-

@@ -1,5 +1,4 @@
 // ---------------- [ File: src/write_cities_to_region_and_postal_code.rs ]
-// ---------------- [ File: src/write_cities_to_region_and_postal_code.rs ]
 crate::ix!();
 
 pub trait WriteCitiesToRegionAndPostalCode {

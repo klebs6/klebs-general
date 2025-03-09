@@ -1,3 +1,4 @@
+// ---------------- [ File: src/mock_data_access.rs ]
 // We'll create minimal scaffolding to simulate valid/invalid addresses 
 // and parse errors, as well as a mock DataAccess that can validate them.
 //

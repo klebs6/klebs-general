@@ -1,5 +1,4 @@
 // ---------------- [ File: src/filenames_match.rs ]
-// ---------------- [ File: src/filenames_match.rs ]
 crate::ix!();
 
 /// Returns `true` if `actual` matches the `expected` ignoring ASCII case,

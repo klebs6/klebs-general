@@ -19,7 +19,7 @@ pub fn load_all_cities_for_region<I:StorageInterface>(db: &I, region: &WorldRegi
     trace!("load_all_cities_for_region: start for region={:?}", region);
 
     let prefix = build_city_search_prefix(region);
-    debug!(
+    trace!(
         "load_all_cities_for_region: searching DB with prefix='{}'",
         prefix
     );

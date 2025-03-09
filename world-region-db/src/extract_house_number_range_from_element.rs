@@ -1,5 +1,4 @@
 // ---------------- [ File: src/extract_house_number_range_from_element.rs ]
-// ---------------- [ File: src/extract_house_number_range_from_element.rs ]
 crate::ix!();
 
 /// A macro that generates specialized extraction functions for each OSM element variant

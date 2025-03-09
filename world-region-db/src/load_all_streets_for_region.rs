@@ -19,7 +19,7 @@ pub fn load_all_streets_for_region<I: StorageInterface>(
         match item_result {
             Ok((key_bytes, val_bytes)) => {
                 let key_str = String::from_utf8_lossy(&key_bytes).to_string();
-                debug!("found key='{}' ({} bytes of value)", key_str, val_bytes.len());
+                trace!("found key='{}' ({} bytes of value)", key_str, val_bytes.len());
 
                 // e.g. "S2C:MD:main street"
                 let parts: Vec<&str> = key_str.splitn(3, ':').collect();

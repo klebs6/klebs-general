@@ -1,3 +1,4 @@
+// ---------------- [ File: src/mock_address.rs ]
 crate::ix!();
 
 /// Creates a minimal `WorldAddress` fixture for testing.
@@ -31,4 +32,3 @@ pub fn make_address_record_with_street(street_name: &str) -> AddressRecord {
 pub fn example_region() -> WorldRegion {
     USRegion::UnitedState(UnitedState::Maryland).into()
 }
-

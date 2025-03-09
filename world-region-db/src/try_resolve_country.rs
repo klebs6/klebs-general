@@ -1,5 +1,4 @@
 // ---------------- [ File: src/try_resolve_country.rs ]
-// ---------------- [ File: src/try_resolve_country.rs ]
 crate::ix!();
 
 /// Tries to convert the provided [`WorldRegion`] into a [`Country`].

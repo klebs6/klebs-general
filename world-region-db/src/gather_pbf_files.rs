@@ -1,5 +1,4 @@
 // ---------------- [ File: src/gather_pbf_files.rs ]
-// ---------------- [ File: src/gather_pbf_files.rs ]
 crate::ix!();
 
 /// Reads the specified directory, returning a `Vec<PathBuf>` of all `.pbf` files found.

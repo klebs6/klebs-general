@@ -1,5 +1,4 @@
 // ---------------- [ File: src/validate_address.rs ]
-// ---------------- [ File: src/validate_address.rs ]
 crate::ix!();
 
 pub trait ValidateAddress {
@@ -12,4 +11,3 @@ pub trait ValidateAddress {
         street:      &StreetName
     ) -> bool;
 }
-

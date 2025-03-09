@@ -1,3 +1,4 @@
+// ---------------- [ File: src/mock_failing_db.rs ]
 crate::ix!();
 
 // If put fails => returns DatabaseConstructionError::RocksDB

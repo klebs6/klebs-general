@@ -1,5 +1,4 @@
 // ---------------- [ File: src/write_postal_codes_to_region_and_street.rs ]
-// ---------------- [ File: src/write_postal_codes_to_region_and_street.rs ]
 crate::ix!();
 
 pub trait WritePostalCodesToRegionAndStreet {

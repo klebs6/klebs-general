@@ -1,6 +1,6 @@
+// ---------------- [ File: src/db_decoder.rs ]
 crate::ix!();
 
-// ---------------- [ File: src/db_decoder.rs ]
 
 /// A trait that encapsulates value-decoding logic based on key prefixes.
 /// It provides a helper to decode CBOR-encoded sets into known types.

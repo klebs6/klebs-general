@@ -1,3 +1,4 @@
+// ---------------- [ File: src/print_or_page.rs ]
 crate::ix!();
 
 /// Print lines normally if they're short, otherwise invoke scrolling_pager.

@@ -7,14 +7,14 @@ crate::ix!();
 pub fn try_decode_postal_codes(val_bytes: &[u8]) -> Result<(), String> {
     trace!("try_decode_postal_codes: attempting decode of {} bytes", val_bytes.len());
     if val_bytes.is_empty() {
-        debug!("try_decode_postal_codes: empty value => ignoring");
+        trace!("try_decode_postal_codes: empty value => ignoring");
         return Ok(());
     }
 
     // Example: We'll pretend to decode, ignoring the actual type for demonstration.
     match serde_cbor::from_slice::<serde_cbor::Value>(val_bytes) {
         Ok(_) => {
-            debug!("try_decode_postal_codes: successfully decoded CBOR data");
+            trace!("try_decode_postal_codes: successfully decoded CBOR data");
             Ok(())
         }
         Err(e) => {

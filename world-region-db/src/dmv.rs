@@ -1,5 +1,4 @@
 // ---------------- [ File: src/dmv.rs ]
-// ---------------- [ File: src/dmv.rs ]
 crate::ix!();
 
 /// Builds (or updates) a RocksDB database with DC/MD/VA data, downloading
@@ -34,6 +33,40 @@ pub async fn build_dmv_database<I:StorageInterface>(
 
     Ok(db)
 }
+
+/// Builds (or updates) a RocksDB database with DC/MD/VA data, downloading
+/// each region’s OSM PBF into `pbf_dir` if necessary.
+///
+/// Returns the opened database handle upon success.
+pub async fn build_va_database<I:StorageInterface>(
+    db_path: impl AsRef<Path> + Send + Sync,
+    pbf_dir: impl AsRef<Path> + Send + Sync,
+) -> Result<Arc<Mutex<I>>, WorldCityAndStreetDbBuilderError> 
+{
+    // 1) Open (or create) the DB
+    let db = I::open(db_path)?;
+
+    // 2) For each DMV region, try to parse if not already done
+    {
+        let mut db_guard = match db.lock() {
+            Ok(g) => g,
+            Err(_) => {
+                // Lock is poisoned
+                return Err(WorldCityAndStreetDbBuilderError::DbLockError);
+            }
+        };
+
+        // All DC/MD/VA
+        let regions = va_regions();
+        for region in regions {
+            // This checks if region_done(...) first, so we can just always call it:
+            download_and_parse_region(&region, &pbf_dir, &mut *db_guard, true).await?;
+        }
+    }
+
+    Ok(db)
+}
+
 
 #[cfg(test)]
 mod dmv_database_tests {

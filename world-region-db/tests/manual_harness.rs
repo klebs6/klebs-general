@@ -1,3 +1,4 @@
+// ---------------- [ File: tests/manual_harness.rs ]
 //! tests/manual_harness.rs
 //!
 //! A custom test harness that runs the “capture_stdout” tests manually,

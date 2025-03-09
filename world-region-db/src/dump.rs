@@ -1,5 +1,4 @@
 // ---------------- [ File: src/dump.rs ]
-// ---------------- [ File: src/dump.rs ]
 crate::ix!();
 
 /// A trait defining methods for dumping and inspecting the contents
