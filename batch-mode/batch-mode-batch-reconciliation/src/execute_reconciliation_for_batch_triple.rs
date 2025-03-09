@@ -1,6 +1,7 @@
 // ---------------- [ File: src/execute_reconciliation_for_batch_triple.rs ]
 crate::ix!();
 
+#[async_trait]
 impl<E> ExecuteReconciliationOperation<E>
 for BatchFileTriple where BatchDownloadError: From<E>,
 {
@@ -9,8 +10,8 @@ for BatchFileTriple where BatchDownloadError: From<E>,
         client:                 &dyn LanguageModelClientInterface<E>,
         operation:              &BatchFileTripleReconciliationOperation,
         expected_content_type:  &ExpectedContentType,
-        process_output_file_fn: &OutputFileFn,
-        process_error_file_fn:  &ErrorFileFn,
+        process_output_file_fn: &BatchWorkflowProcessOutputFileFn,
+        process_error_file_fn:  &BatchWorkflowProcessErrorFileFn,
     ) -> Result<Option<BatchFileReconciliationRecommendedCourseOfAction>, BatchReconciliationError>
     {
         info!(

@@ -8,8 +8,8 @@ pub trait ReconcileUnprocessed<E> {
         &mut self,
         client:                &dyn LanguageModelClientInterface<E>,
         expected_content_type: &ExpectedContentType,
-        process_output_file_fn: &OutputFileFn,
-        process_error_file_fn:  &ErrorFileFn,
+        process_output_file_fn: &BatchWorkflowProcessOutputFileFn,
+        process_error_file_fn:  &BatchWorkflowProcessErrorFileFn,
     ) -> Result<(), BatchReconciliationError>;
 }
 
@@ -20,13 +20,13 @@ pub trait ReconcileUnprocessed<E> {
    `&'a (dyn BatchWorkspaceInterface + 'a)`, not just `&'a dyn BatchWorkspaceInterface`.
 */
 
-pub type OutputFileFn = for<'a> fn(
+pub type BatchWorkflowProcessOutputFileFn = for<'a> fn(
     &'a BatchFileTriple,
     &'a (dyn BatchWorkspaceInterface + 'a),
     &'a ExpectedContentType,
 ) -> Pin<Box<dyn Future<Output = Result<(), BatchOutputProcessingError>> + Send + 'a>>;
 
-pub type ErrorFileFn = for<'a> fn(
+pub type BatchWorkflowProcessErrorFileFn = for<'a> fn(
     &'a BatchFileTriple,
     &'a [BatchErrorFileProcessingOperation],
 ) -> Pin<Box<dyn Future<Output = Result<(), BatchErrorProcessingError>> + Send + 'a>>;

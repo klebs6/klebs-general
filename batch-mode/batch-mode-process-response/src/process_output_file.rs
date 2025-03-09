@@ -15,7 +15,7 @@ pub async fn process_output_file(
 }
 
 /**
- * This bridging function EXACTLY matches the `OutputFileFn` type:
+ * This bridging function EXACTLY matches the `BatchWorkflowProcessOutputFileFn` type:
  * 
  *  for<'a> fn(
  *      &'a BatchFileTriple,
@@ -38,8 +38,8 @@ fn process_output_file_bridge_fn<'a>(
 }
 
 /**
- * We expose a CONST of type `OutputFileFn`, so that 
+ * We expose a CONST of type `BatchWorkflowProcessOutputFileFn`, so that 
  * passing `&PROCESS_OUTPUT_FILE_BRIDGE` has the correct signature 
  * recognized by the compiler.
  */
-pub const PROCESS_OUTPUT_FILE_BRIDGE: OutputFileFn = process_output_file_bridge_fn;
+pub const PROCESS_OUTPUT_FILE_BRIDGE: BatchWorkflowProcessOutputFileFn = process_output_file_bridge_fn;

@@ -10,7 +10,7 @@ pub fn generate_impl_finish_processing_uncompleted_batches(parsed: &LmbwParsedIn
 
     let error_type = match &parsed.custom_error_type() {
         Some(t) => quote!{ #t },
-        None => quote!{ TokenExpanderError },
+        None    => quote!{ TokenExpanderError },
     };
 
     //todo: this one needs to be required, and if we don't have it, we should provide the user with
@@ -40,18 +40,19 @@ pub fn generate_impl_finish_processing_uncompleted_batches(parsed: &LmbwParsedIn
     };
 
     quote! {
-        impl ::async_trait::async_trait #impl_generics FinishProcessingUncompletedBatches for #struct_ident #ty_generics #where_clause {
+        #[::async_trait::async_trait]
+        impl #impl_generics FinishProcessingUncompletedBatches for #struct_ident #ty_generics #where_clause {
             type Error = #error_type;
 
             async fn finish_processing_uncompleted_batches(&self, expected_content_type: &ExpectedContentType)
                 -> Result<(), Self::Error>
             {
-                info!("Finishing uncompleted batches if any remain.");
+                tracing::info!("Finishing uncompleted batches if any remain.");
                 let workspace = #workspace_expr;
                 let language_model_client = #client_expr;
 
                 let mut batch_triples = workspace.clone().gather_all_batch_triples().await?;
-                info!("Reconciling unprocessed batch files in the work directory");
+                tracing::info!("Reconciling unprocessed batch files in the work directory");
 
                 for triple in &mut batch_triples {
                     triple.reconcile_unprocessed(
@@ -96,7 +97,7 @@ mod test_generate_impl_finish_processing_uncompleted_batches {
         let code   = tokens.to_string();
         info!("Generated code: {}", code);
 
-        assert!(code.contains("impl :: async_trait :: async_trait FinishProcessingUncompletedBatches for Dummy"),
+        assert!(code.contains("impl FinishProcessingUncompletedBatches for Dummy"),
                 "Should impl trait for struct 'Dummy'.");
         assert!(code.contains("self . some_workspace . clone ()"),
                 "Should reference the workspace field we found.");
@@ -139,4 +140,3 @@ mod test_generate_impl_finish_processing_uncompleted_batches {
                 "Should fallback to PROCESS_ERROR_FILE_BRIDGE.");
     }
 }
-

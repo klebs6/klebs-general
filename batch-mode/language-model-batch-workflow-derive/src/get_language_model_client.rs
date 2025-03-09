@@ -38,16 +38,16 @@ mod test_generate_impl_get_language_model_client {
             #[batch_error_type(MyErr)]
             struct Dummy {
                 #[batch_client]
-                some_client: (),
-
+                some_client: std::sync::Arc<OpenAIClientHandle>,
                 #[batch_workspace]
-                some_workspace: (),
+                some_workspace: std::sync::Arc<BatchWorkspace>,
 
                 #[expected_content_type]
-                ect: (),
+                ect: ExpectedContentType,
                 #[model_type]
-                mt: (),
+                mt: LanguageModelType,
             }
+
         };
 
         let parsed = match parse_derive_input_for_lmbw(&ast) {
@@ -97,4 +97,3 @@ mod test_generate_impl_get_language_model_client {
         }
     }
 }
-

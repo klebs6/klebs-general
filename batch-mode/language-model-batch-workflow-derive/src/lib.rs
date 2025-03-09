@@ -18,6 +18,7 @@ xp!{process_batch_requests}
 xp!{send_sync}
 xp!{lmbw_parsed_input}
 xp!{parse_derive_input_for_lmbw}
+xp!{type_checks}
 
 /// Primary entry point for the derive macro.  This is the only public function
 /// you need to export from your `proc-macro` crate in order for users to write:
@@ -44,6 +45,7 @@ xp!{parse_derive_input_for_lmbw}
 // We now handle the fact that `parse_derive_input_for_lmbw` returns
 // `Result<LmbwParsedInput, syn::Error>`. If it fails, we return the error
 // immediately to the compiler. If it succeeds, we proceed to generate code.
+// src/lib.rs
 #[proc_macro_derive(
     LanguageModelBatchWorkflow,
     attributes(
@@ -61,13 +63,13 @@ pub fn language_model_batch_workflow_derive(input: TokenStream) -> TokenStream {
 
     let ast: DeriveInput = syn::parse_macro_input!(input as DeriveInput);
 
-    // Now parse the struct + attributes. If it fails, we produce the error.
+    // parse the struct + attributes
     let parse_result = match parse_derive_input_for_lmbw(&ast) {
         Ok(x) => x,
         Err(e) => return e.to_compile_error().into(),
     };
 
-    // If we get here, all required fields are present, so we can safely generate.
+    // generate the various impl blocks
     let finish_processing_impl      = generate_impl_finish_processing_uncompleted_batches(&parse_result);
     let process_batch_requests_impl = generate_impl_process_batch_requests(&parse_result);
     let workflow_impl               = generate_impl_language_model_batch_workflow(&parse_result);
@@ -75,7 +77,7 @@ pub fn language_model_batch_workflow_derive(input: TokenStream) -> TokenStream {
     let get_workspace_impl          = generate_impl_get_batch_workspace(&parse_result);
     let get_client_impl             = generate_impl_get_language_model_client(&parse_result);
 
-    // Combine it all
+    // combine them
     let expanded = combine_impls_into_final_macro(vec![
         finish_processing_impl,
         process_batch_requests_impl,

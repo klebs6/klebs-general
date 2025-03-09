@@ -31,7 +31,7 @@ pub async fn process_error_file(
 }
 
 /**
- * The bridging function matching `ErrorFileFn`: 
+ * The bridging function matching `BatchWorkflowProcessErrorFileFn`: 
  * 
  *  for<'a> fn(
  *      &'a BatchFileTriple,
@@ -49,7 +49,7 @@ fn process_error_file_bridge_fn<'a>(
 }
 
 /**
- * We expose a CONST of type `ErrorFileFn`, so passing `&PROCESS_ERROR_FILE_BRIDGE` 
+ * We expose a CONST of type `BatchWorkflowProcessErrorFileFn`, so passing `&PROCESS_ERROR_FILE_BRIDGE` 
  * exactly matches the trait's needed function pointer type.
  */
-pub const PROCESS_ERROR_FILE_BRIDGE: ErrorFileFn = process_error_file_bridge_fn;
+pub const PROCESS_ERROR_FILE_BRIDGE: BatchWorkflowProcessErrorFileFn = process_error_file_bridge_fn;

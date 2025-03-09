@@ -14,6 +14,7 @@ pub trait FinishProcessingUncompletedBatches {
     ) -> Result<(), Self::Error>;
 }
 
+/// This is the trait we will typically need to implement manually
 pub trait ComputeLanguageModelRequests {
 
     type Seed: Send + Sync;
@@ -59,6 +60,11 @@ pub trait LanguageModelBatchWorkflow<E>
 + ProcessBatchRequests<Error=E>
 {
     const REQUESTS_PER_BATCH: usize = 80;
+
+    async fn plant_seed_and_wait(
+        &mut self,
+        input_tokens:          &[<Self as ComputeLanguageModelRequests>::Seed]
+    ) -> Result<(),E>;
 
     /// High-level method that ties it all together:
     async fn execute_language_model_batch_workflow(

@@ -7,10 +7,10 @@ where BatchDownloadError: From<E>
 {
     async fn reconcile_unprocessed(
         &mut self,
-        client:                &dyn LanguageModelClientInterface<E>,
-        expected_content_type: &ExpectedContentType,
-        process_output_file_fn: &OutputFileFn,   // our new type alias
-        process_error_file_fn:  &ErrorFileFn,
+        client:                 &dyn LanguageModelClientInterface<E>,
+        expected_content_type:  &ExpectedContentType,
+        process_output_file_fn: &BatchWorkflowProcessOutputFileFn,   // our new type alias
+        process_error_file_fn:  &BatchWorkflowProcessErrorFileFn,
     ) -> Result<(), BatchReconciliationError>
     {
         info!("Attempting to reconcile unprocessed batch triple {:?}", self.index());

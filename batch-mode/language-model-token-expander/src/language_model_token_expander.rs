@@ -1,34 +1,40 @@
 // ---------------- [ File: src/language_model_token_expander.rs ]
 crate::ix!();
 
+error_tree!{
+    pub enum TokenExpanderError {
+        BatchError(BatchError),
+        BatchWorkspaceError(BatchWorkspaceError),
+        BatchSuccessResponseHandlingError(BatchSuccessResponseHandlingError),
+        TokenParseError(TokenParseError),
+        SaveLoadError(SaveLoadError),
+        OpenAIError(OpenAIError),
+        FileMoveError(FileMoveError),
+        BatchProcessingError(BatchProcessingError),
+        BatchInputCreationError(BatchInputCreationError),
+        BatchReconciliationError(BatchReconciliationError),
+        UuidError(uuid::Error),
+    }
+}
+
 /// The improved LanguageModelTokenExpander, now with no `pub` fields. Instead, we rely on
 /// `getset` to provide getters (and optionally setters) and `derive_builder` for
 /// constructing robustly. This struct implements `LanguageModelBatchWorkflow` to unify
 /// your batch processing logic under a trait-based approach.
 #[derive(Getters,LanguageModelBatchWorkflow)]
 #[getset(get = "pub")]
+#[batch_error_type(TokenExpanderError)]
 pub struct LanguageModelTokenExpander<T: CreateLanguageModelRequestsAtAgentCoordinate> {
 
     language_model_request_creator: Arc<T>,
     agent_coordinate:               AgentCoordinate,
 
-    #[batch_client]       
-    client:    Arc<OpenAIClientHandle>,
-
-    #[batch_workspace] 
-    workspace: Arc<BatchWorkspace>,
-
-    #[custom_process_batch_output_fn]
-    process_batch_output_fn: ProcessBatchOutputFn,
-
-    #[custom_process_batch_error_fn]
-    process_batch_error_fn: ProcessBatchErrorFn,
-
-    #[expected_content_type]
-    expected_content_type: ExpectedContentType,
-
-    #[model_type]
-    language_model_type: LanguageModelType,
+    #[batch_client]                   client:                  Arc<OpenAIClientHandle>,
+    #[batch_workspace]                workspace:               Arc<BatchWorkspace>,
+    #[custom_process_batch_output_fn] process_batch_output_fn: BatchWorkflowProcessOutputFileFn,
+    #[custom_process_batch_error_fn]  process_batch_error_fn:  BatchWorkflowProcessErrorFileFn,
+    #[expected_content_type]          expected_content_type:   ExpectedContentType,
+    #[model_type]                     language_model_type:     LanguageModelType,
 }
 
 impl<T> LanguageModelTokenExpander<T> 
@@ -51,7 +57,6 @@ where T: CreateLanguageModelRequestsAtAgentCoordinate
 }
 
 /// Here we implement the trait that organizes all batch-processing stages.
-#[async_trait]
 impl<T> ComputeLanguageModelRequests for LanguageModelTokenExpander<T> 
 where T: CreateLanguageModelRequestsAtAgentCoordinate
 {

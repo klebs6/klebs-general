@@ -2,12 +2,19 @@
 crate::ix!();
 
 #[async_trait]
-impl FreshExecute<OpenAIClientHandle> for BatchFileTriple {
-    type Success = BatchExecutionResult;
-    type Error   = BatchProcessingError;
+impl<C,E> FreshExecute<C,E> for BatchFileTriple 
+where C: LanguageModelClientInterface<E>,
+      BatchProcessingError: From<E>,
+      BatchDownloadError:   From<E>,
 
-    async fn fresh_execute(&mut self, client: &OpenAIClientHandle) 
-        -> Result<BatchExecutionResult, BatchProcessingError> 
+      E: From<JsonParseError> 
+      + From<BatchMetadataError> 
+      + From<BatchDownloadError>,
+{
+    type Success = BatchExecutionResult;
+
+    async fn fresh_execute(&mut self, client: &C) 
+        -> Result<BatchExecutionResult, E> 
     {
         assert!(self.input().is_some());
         assert!(self.output().is_none());
@@ -32,7 +39,7 @@ impl FreshExecute<OpenAIClientHandle> for BatchFileTriple {
         assert!(!metadata_filename.exists());
 
         // Upload file
-        let input_file = client.upload_batch_file(&input_filename).await?;
+        let input_file = client.upload_batch_file_path(&input_filename).await?;
 
         let input_file_id = input_file.id;
 

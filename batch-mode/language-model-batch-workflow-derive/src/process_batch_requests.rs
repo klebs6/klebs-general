@@ -32,13 +32,17 @@ pub fn generate_impl_process_batch_requests(parsed: &LmbwParsedInput) -> TokenSt
     };
 
     quote! {
-        impl ::async_trait::async_trait #impl_generics ProcessBatchRequests for #struct_ident #ty_generics #where_clause {
+        #[::async_trait::async_trait]
+        impl #impl_generics ProcessBatchRequests for #struct_ident #ty_generics #where_clause {
             type Error = #error_type;
 
-            async fn process_batch_requests(&self, batch_requests: &[LanguageModelBatchAPIRequest], expected_content_type: &ExpectedContentType)
+            async fn process_batch_requests(
+                &self, 
+                batch_requests:        &[LanguageModelBatchAPIRequest], 
+                expected_content_type: &ExpectedContentType)
                 -> Result<(), Self::Error>
             {
-                info!("Processing {} batch request(s)", batch_requests.len());
+                tracing::info!("Processing {} batch request(s)", batch_requests.len());
                 let workspace = #workspace_expr;
                 let mut triple = BatchFileTriple::new_with_requests(batch_requests, workspace.clone())?;
 
@@ -80,7 +84,7 @@ mod test_generate_impl_process_batch_requests {
         let code = tokens.to_string();
         info!("Generated code: {}", code);
 
-        assert!(code.contains("impl :: async_trait :: async_trait ProcessBatchRequests for Dummy"), 
+        assert!(code.contains("impl ProcessBatchRequests for Dummy"), 
                 "Should impl trait for Dummy.");
         assert!(code.contains("Ok (())"), 
                 "Should return Ok(()) at the end.");

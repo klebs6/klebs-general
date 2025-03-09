@@ -1,0 +1,37 @@
+[dependencies.batch-mode-3p]
+path = "../batch-mode-3p"
+[dependencies.agent-coordinate]
+path = "../agent-coordinate"
+[dependencies.batch-mode-batch-client]
+path = "../batch-mode-batch-client"
+[dependencies.batch-mode-batch-error]
+path = "../batch-mode-batch-error"
+[dependencies.batch-mode-batch-executor]
+path = "../batch-mode-batch-executor"
+[dependencies.batch-mode-batch-index]
+path = "../batch-mode-batch-index"
+[dependencies.batch-mode-batch-metadata]
+path = "../batch-mode-batch-metadata"
+[dependencies.batch-mode-batch-triple]
+path = "../batch-mode-batch-triple"
+[dependencies.batch-mode-batch-workspace]
+path = "../batch-mode-batch-workspace"
+[dependencies.batch-mode-batch-workspace-interface]
+path = "../batch-mode-batch-workspace-interface"
+[dependencies.batch-mode-process-response]
+path = "../batch-mode-process-response"
+[dependencies.batch-mode-token-expander]
+path = "../batch-mode-token-expander"
+[dependencies.camel-case-token-with-comment]
+path = "../camel-case-token-with-comment"
+[dependencies.language-model-batch-workflow-derive]
+path = "../language-model-batch-workflow-derive"
+[dependencies.language-model-type]
+path = "../language-model-type"
+[dependencies.save-load-traits]
+path = "../save-load-traits"
+
+[package]
+edition = "2024"
+name = "language-model-token-expander"
+version = "0.1.0"

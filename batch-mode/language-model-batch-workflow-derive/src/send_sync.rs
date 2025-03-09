@@ -53,4 +53,3 @@ mod test_generate_impl_send_sync {
         assert!(code.contains("unsafe impl Sync for Dummy"), "Should declare unsafe impl Sync for Dummy.");
     }
 }
-

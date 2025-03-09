@@ -48,14 +48,13 @@ mod test_generate_impl_get_batch_workspace {
             #[batch_error_type(MyErr)]
             struct Dummy {
                 #[batch_client]
-                some_client: (),
+                some_client: std::sync::Arc<OpenAIClientHandle>,
                 #[batch_workspace]
-                some_workspace: (),
-
+                some_workspace: std::sync::Arc<BatchWorkspace>,
                 #[expected_content_type]
-                ect: (),
+                ect: ExpectedContentType,
                 #[model_type]
-                mt: (),
+                mt: LanguageModelType,
             }
         };
 
@@ -107,5 +106,3 @@ mod test_generate_impl_get_batch_workspace {
         }
     }
 }
-
-

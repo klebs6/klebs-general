@@ -14,8 +14,31 @@ pub fn generate_impl_language_model_batch_workflow(parsed: &LmbwParsedInput) -> 
         None => quote!{ TokenExpanderError },
     };
 
+    let model_type_field = match &parsed.model_type_field() {
+        Some(t) => quote!{ #t },
+        None => panic!("model_type_field is mandatory"),
+    };
+
+    let expected_content_type_field = match &parsed.expected_content_type_field() {
+        Some(t) => quote!{ #t },
+        None => panic!("expected_content_type_field is mandatory"),
+    };
+
     quote! {
-        impl ::async_trait::async_trait #impl_generics LanguageModelBatchWorkflow<#error_type> for #struct_ident #ty_generics #where_clause {}
+        #[::async_trait::async_trait]
+        impl #impl_generics LanguageModelBatchWorkflow<#error_type> for #struct_ident #ty_generics #where_clause {
+
+            async fn plant_seed_and_wait(
+                &mut self,
+                input_tokens:          &[<Self as ComputeLanguageModelRequests>::Seed]
+            ) -> Result<(),#error_type> {
+                self.execute_language_model_batch_workflow(
+                    &self.#model_type_field,
+                    &self.#expected_content_type_field,
+                    input_tokens
+                )
+            }
+        }
     }
 }
 
@@ -49,9 +72,8 @@ mod test_generate_impl_language_model_batch_workflow {
         info!("Generated code: {}", code);
 
         assert!(
-            code.contains("impl :: async_trait :: async_trait LanguageModelBatchWorkflow < MyErr > for Dummy"),
+            code.contains("impl LanguageModelBatchWorkflow < MyErr > for Dummy"),
             "Should create an empty LanguageModelBatchWorkflow impl with the provided custom error type."
         );
     }
 }
-
