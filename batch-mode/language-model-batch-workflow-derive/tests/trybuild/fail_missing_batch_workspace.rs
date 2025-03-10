@@ -8,7 +8,7 @@ use batch_mode_batch_workflow::*;
 // "fail_missing_batch_workspace.rs"
 struct MissingWorkspace {
     #[batch_client]
-    client: std::sync::Arc<OpenAIClientHandle>,
+    client: std::sync::Arc<OpenAIClientHandle<OpenAIClientError>>,
 
     #[expected_content_type]
     ect: ExpectedContentType,

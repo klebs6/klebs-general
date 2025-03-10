@@ -69,18 +69,22 @@ impl ComputeLanguageModelRequests for MyValidStruct {
 }
 
 // Our user-defined error => must implement `From<…>` for all relevant error types.
+#[derive(Debug)]
 pub struct MyErr;
 
 // We already convert from sub-errors *into* MyErr:
-impl From<BatchDownloadError>       for MyErr { fn from(_: BatchDownloadError)       -> Self { MyErr } }
-impl From<BatchInputCreationError>  for MyErr { fn from(_: BatchInputCreationError)  -> Self { MyErr } }
-impl From<BatchMetadataError>       for MyErr { fn from(_: BatchMetadataError)       -> Self { MyErr } }
-impl From<BatchProcessingError>     for MyErr { fn from(_: BatchProcessingError)     -> Self { MyErr } }
-impl From<BatchReconciliationError> for MyErr { fn from(_: BatchReconciliationError) -> Self { MyErr } }
-impl From<BatchWorkspaceError>      for MyErr { fn from(_: BatchWorkspaceError)      -> Self { MyErr } }
-impl From<FileMoveError>            for MyErr { fn from(_: FileMoveError)            -> Self { MyErr } }
-impl From<OpenAIClientError>        for MyErr { fn from(_: OpenAIClientError)        -> Self { MyErr } }
-impl From<std::io::Error>           for MyErr { fn from(_: std::io::Error)           -> Self { MyErr } }
+impl From<BatchDownloadError>         for MyErr { fn from(_: BatchDownloadError)       -> Self { MyErr } }
+impl From<BatchInputCreationError>    for MyErr { fn from(_: BatchInputCreationError)  -> Self { MyErr } }
+impl From<BatchMetadataError>         for MyErr { fn from(_: BatchMetadataError)       -> Self { MyErr } }
+impl From<BatchProcessingError>       for MyErr { fn from(_: BatchProcessingError)     -> Self { MyErr } }
+impl From<BatchReconciliationError>   for MyErr { fn from(_: BatchReconciliationError) -> Self { MyErr } }
+impl From<BatchErrorProcessingError>  for MyErr { fn from(_: BatchErrorProcessingError) -> Self { MyErr } }
+impl From<BatchValidationError>       for MyErr { fn from(_: BatchValidationError) -> Self { MyErr } }
+impl From<BatchOutputProcessingError> for MyErr { fn from(_: BatchOutputProcessingError) -> Self { MyErr } }
+impl From<BatchWorkspaceError>        for MyErr { fn from(_: BatchWorkspaceError)      -> Self { MyErr } }
+impl From<FileMoveError>              for MyErr { fn from(_: FileMoveError)            -> Self { MyErr } }
+impl From<OpenAIClientError>          for MyErr { fn from(_: OpenAIClientError)        -> Self { MyErr } }
+impl From<std::io::Error>             for MyErr { fn from(_: std::io::Error)           -> Self { MyErr } }
 
 // Also handle JSON parse failures => MyErr:
 impl From<JsonParseError> for MyErr {
