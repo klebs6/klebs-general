@@ -3,7 +3,7 @@ crate::ix!();
 
 pub async fn handle_finish_reason_length(
     failed_id:       &str,
-    message_content: &BatchMessageContent,
+    _message_content: &BatchMessageContent,
 ) -> Result<(), BatchSuccessResponseHandlingError> {
 
     /*

@@ -60,8 +60,9 @@ impl GetFailedItemsDir for BatchWorkspace {
 
 impl GetTextStoragePath for BatchWorkspace {
 
-    fn text_storage_path(&self, batch_idx: &BatchIndex) -> PathBuf {
-        self.text_storage_path(batch_idx).to_path_buf()
+    fn text_storage_path(&self, _batch_idx: &BatchIndex) -> PathBuf {
+        todo!();
+        //self.text_storage_path(batch_idx).to_path_buf()
     }
 }
 

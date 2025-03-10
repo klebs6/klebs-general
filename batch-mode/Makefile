@@ -2,6 +2,7 @@
 
 #RUSTFLAGS := "-Awarnings -Z time-passes"
 RUSTFLAGS  := -Awarnings RUST_BACKTRACE=1
+RUSTFLAGS  := 
 #CARGO     := env CARGO_MSG_LIMIT=15 CARGO_BUILD_JOBS=12 NUM_JOBS=12 cargo 
 CARGO      := MAKEFLAGS= env CARGO_BUILD_JOBS=12 NUM_JOBS=12 cargo 
 BUILD      := build --verbose
@@ -24,11 +25,12 @@ ACTIVE_PACKAGE := language-model-batch-workflow-derive
 #ACTIVE_PACKAGE := batch-mode-batch-workflow
 #ACTIVE_PACKAGE := batch-mode-batch-client
 #ACTIVE_PACKAGE := batch-mode-batch-reconciliation
-#ACTIVE_PACKAGE := batch-mode-batch-triple
 #ACTIVE_PACKAGE := batch-mode-batch-workspace
 #ACTIVE_PACKAGE := batch-mode-batch-workspace-interface
 #ACTIVE_PACKAGE := batch-mode-json
 #ACTIVE_PACKAGE := camel-case-token-with-comment
+ACTIVE_PACKAGE := save-load-traits
+ACTIVE_PACKAGE := batch-mode-batch-triple
 
 #-----------------------------------------------------[]
 #INDIVIDUAL_TEST := test_build_network_io_enum

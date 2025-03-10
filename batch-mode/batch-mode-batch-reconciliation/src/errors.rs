@@ -25,13 +25,19 @@ error_tree!{
         BatchErrorProcessingError(BatchErrorProcessingError),
         BatchOutputProcessingError(BatchOutputProcessingError),
         FileMoveError(FileMoveError),
+
+        #[display("BatchReconciliationError: operation not implemented. operation={operation:?}")]
         OperationNotImplemented {
             operation: BatchFileTripleReconciliationOperation,
         },
+
+        #[display("BatchReconciliationError: reconciliation failed. index={index:?}")]
         ReconciliationFailed {
             index:  BatchIndex,
             //errors: Vec<(BatchFileTripleReconciliationOperation,BatchReconciliationError)>,
         },
+
+        #[display("BatchReconciliationError: missing input file. index={index:?}, output={output:?}, error={error:?}")]
         MissingBatchInputFileButOthersExist {
             index:  BatchIndex,
             output: Option<PathBuf>,

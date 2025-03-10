@@ -3,16 +3,16 @@ crate::ix!();
 
 /// A small helper struct for `#[system_message_goal = "some text"]`.
 pub struct SystemMessageGoalNameValue {
-    eq: Token![=],
+    _eq: Token![=],
     msg: LitStr,
 }
 
 impl Parse for SystemMessageGoalNameValue {
     fn parse(input: ParseStream) -> SynResult<Self> {
         // Expect `=` then a string literal
-        let eq: Token![=] = input.parse()?;
+        let _eq: Token![=] = input.parse()?;
         let msg: LitStr = input.parse()?;
-        Ok(Self { eq, msg })
+        Ok(Self { _eq, msg })
     }
 }
 

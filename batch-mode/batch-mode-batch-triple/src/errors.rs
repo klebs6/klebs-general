@@ -13,6 +13,8 @@ error_tree!{
 
     pub enum BatchValidationError {
         JsonParseError(JsonParseError),
+
+        #[display("BatchValidationError: Request IDs mismatch. {index:#?} {input_ids:#?} {output_ids:#?} {error_ids:#?}")]
         RequestIdsMismatch {
             index:      BatchIndex,
             input_ids:  Option<HashSet<CustomRequestId>>,

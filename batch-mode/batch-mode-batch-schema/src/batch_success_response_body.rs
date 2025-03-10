@@ -47,7 +47,6 @@ impl BatchSuccessResponseBody {
 mod tests {
     use super::*;
     use serde_json::json;
-    use crate::BatchChoice;
 
     #[test]
     fn test_success_body_full_deserialization() {

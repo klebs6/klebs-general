@@ -27,7 +27,6 @@ impl BatchResponseRecord {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use serde_json::json;
 
     // Additional test to deserialize the provided batch line
     #[test]

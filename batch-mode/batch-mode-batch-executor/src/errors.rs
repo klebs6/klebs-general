@@ -10,7 +10,11 @@ error_tree!{
         BatchMetadataError(BatchMetadataError),
         BatchDownloadError(BatchDownloadError),
         JsonParseError(JsonParseError),
+
+        #[display("BatchProcessingError: reconciliation failed. index={index:?}")]
         ReconciliationFailed { index: BatchIndex },
+
+        #[display("BatchProcessingError: empty batch triple. index={index:?}")]
         EmptyBatchTriple { index: BatchIndex },
     }
 }

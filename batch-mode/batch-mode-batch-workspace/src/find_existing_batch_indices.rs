@@ -47,8 +47,6 @@ where
 #[cfg(test)]
 mod test_find_existing_batch_indices {
     use super::*;
-    use tokio::fs;
-    use std::path::PathBuf;
 
     #[traced_test]
     async fn test_find_indices() -> Result<(),BatchWorkspaceError> {

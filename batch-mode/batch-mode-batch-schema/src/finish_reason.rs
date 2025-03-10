@@ -43,7 +43,6 @@ impl Serialize for FinishReason {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use serde_json::json;
 
     // Test suite for FinishReason
     #[test]

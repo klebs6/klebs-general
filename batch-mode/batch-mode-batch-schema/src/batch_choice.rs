@@ -59,7 +59,6 @@ impl BatchChoice {
 #[cfg(test)]
 mod batch_choice_tests {
     use super::*;
-    use serde_json::json;
 
     #[test]
     fn test_invalid_index_type() {

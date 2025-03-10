@@ -49,7 +49,7 @@ pub fn is_arc_dyn_language_model_client_e(ty: &syn::Type) -> bool {
                                                     if ab2.args.len() == 1 {
                                                         if let Some(GAType(err_ty)) = ab2.args.first() {
                                                             if let TypePath(e_path) = err_ty {
-                                                                if let Some(e_seg) = e_path.path.segments.last() {
+                                                                if let Some(_e_seg) = e_path.path.segments.last() {
 
                                                                     //we allow any type here. the
                                                                     //compiler will catch it if it

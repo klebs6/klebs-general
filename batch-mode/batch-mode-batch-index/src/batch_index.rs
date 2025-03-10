@@ -31,7 +31,6 @@ impl Display for BatchIndex {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use regex::Regex;
 
     #[test]
     fn test_generate_batch_file_regex_usize() {

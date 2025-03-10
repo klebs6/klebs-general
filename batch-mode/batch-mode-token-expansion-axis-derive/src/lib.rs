@@ -15,7 +15,6 @@ extern crate proc_macro;
 
 xp!{system_message_goal}
 xp!{axis_attribute}
-xp!{strip_surrounding_quotes}
 xp!{try_parse_name_value}
 xp!{try_parse_parenthesized}
 

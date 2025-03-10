@@ -23,7 +23,7 @@ impl BatchFileTriple {
         -> Result<(), BatchErrorProcessingError> 
     {
         // Collect failed requests
-        let failed_requests = error_data.responses().iter().collect::<Vec<_>>();
+        let _failed_requests = error_data.responses().iter().collect::<Vec<_>>();
         // Implement retry logic here
         //todo!("Implement retry logic for failed requests");
         Ok(())
