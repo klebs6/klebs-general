@@ -69,8 +69,8 @@ pub trait LanguageModelBatchWorkflow<E>
     /// High-level method that ties it all together:
     async fn execute_language_model_batch_workflow(
         &mut self,
-        model:                 &LanguageModelType,
-        expected_content_type: &ExpectedContentType,
+        model:                 LanguageModelType,
+        expected_content_type: ExpectedContentType,
         input_tokens:          &[<Self as ComputeLanguageModelRequests>::Seed]
     ) -> Result<(),E>
     {
@@ -78,13 +78,13 @@ pub trait LanguageModelBatchWorkflow<E>
 
         self.finish_processing_uncompleted_batches(&expected_content_type).await?;
 
-        let requests = self.compute_language_model_requests(model, input_tokens);
+        let requests = self.compute_language_model_requests(&model, input_tokens);
 
         let batches = construct_batches(&requests, Self::REQUESTS_PER_BATCH);
 
         for (batch_idx, batch_requests) in batches {
             info!("Processing batch #{}", batch_idx);
-            self.process_batch_requests(batch_requests,expected_content_type).await?;
+            self.process_batch_requests(batch_requests,&expected_content_type).await?;
         }
 
         Ok(())
