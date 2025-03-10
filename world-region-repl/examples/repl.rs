@@ -37,7 +37,7 @@ async fn main() -> Result<(),WorldCityAndStreetDbBuilderError> {
     let pbf_path = PathBuf::from("./pbf");
 
     // 1) Build/Load DB (async):
-    let db_arc = build_va_database::<Database>(db_path, pbf_path).await?;
+    let db_arc = build_dmv_database::<Database>(db_path, pbf_path).await?;
 
     // 2) Run interactive REPL (sync):
     if let Err(e) = run_interactive_repl(db_arc) {

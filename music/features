@@ -1,0 +1,49 @@
+
+hmm. i suppose it wouldn't be that bad to implement a basic tui which covers our functionality in pure rust without neovim. do you think you could help us with that? how much work is it? here are some things we *definitely* want:
+
+- tab pages, ability to move tabs around, create and destroy them
+
+- the notion of a buffer. when we are working with music, we will have a lot of
+  "scratch work" -- ie, creating playlists, sections of playlists, and creating
+  custom filters/views into our music library. there will be some amount of
+  editing work here, so it should behave approximately like neovim.
+
+- the ability to create and resize splits within a window, both horizontally and
+  vertically. we should be able to create them and resize them with commands,
+  and resize them also with our mouse by clicking and dragging on the borders.
+
+- we should have access to a "command mode" by pressing the "colon key"
+
+- our default UI should be something like a shell where we can send commands
+  into a REPL. so, at the bottom, we should always be able to activate and
+  deactivate a REPL where we can interactively interact with our music. we
+  should be able to search, filter buffers, and change settings here. we should
+  also be able to do these things from command mode. we should be able to script
+  the system if we want, with a set of actions which can be easily be extended
+
+- the notion of "leader mode" as well as "local leader". the notion of vim
+  editing modes are powerful and we want to retain much of this power within our
+  UI
+
+- vim keys throughout. these should be easy to customize and extend. we
+  essentially (at minimum) want to be able to go left/down/up/right with hjkl,
+  page up and page down with u/d, and enter other modes as we see fit by typing
+  normal mode controls directly into a buffer. we should be able to access
+  a form of insert mode to edit the content inside of our song metadata
+  fields. it should be very easy to search/filter with the "slash" and we should
+  have access to regex filtering, sorting by whichever attribute we want,
+  etc. there should be a notion of "cursor position" that we can use to access
+  the currently selected item,attribue,field or whatever. we should be easily
+  able to flip through our various panes/tabs/windows and move around to where
+  we want just like in vim.  we should be able to open or close an explorer on
+  the left hand side which helps us access an alternate mode (such as playlists,
+  albums, artists, etc) when we select an item here in the left explorer pane,
+  it should open in one of our buffers, just like in vim. for example, if we
+  navigate with hjkl to a playlist on the left side and open it (with enter, or
+  whatever other key we configure to do this), that playlist should open in one
+  of our currently open panes. then, we can navigate to it and interact with
+  it. if we want to jump cycle back through wherever we were before, that should
+  also work like it does in vim. this means we should be able to cycle back
+  through our positions in whichever buffers we were working on.
+
+what do you think? is all of this doable?
