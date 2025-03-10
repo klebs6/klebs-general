@@ -1,5 +1,5 @@
 [dependencies]
-derive_builder = "*"
+derive_builder = "0.20.2"
 [dependencies.batch-mode-3p]
 path = "../batch-mode-3p"
 [dependencies.batch-mode-batch-reconciliation]

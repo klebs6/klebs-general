@@ -1,6 +1,6 @@
 [dependencies]
-derive_builder = "*"
-getset = "*"
+derive_builder = "0.20.2"
+getset = "0.1.4"
 export-magic = "0.3.6"
 proc-macro2 = "1.0"
 quote = "1.0"
@@ -20,7 +20,7 @@ features = [ "env-filter", "json" ]
 version = "*"
 [dev-dependencies]
 trybuild = "1.0"
-async-trait = "*"
+async-trait = "0.1.86"
 [lib]
 proc-macro = true
 [package]
