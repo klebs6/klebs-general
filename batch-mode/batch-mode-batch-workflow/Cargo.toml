@@ -9,11 +9,11 @@ path = "../language-model-type"
 
 [dependencies]
 derive_builder = "0.20.2"
-traced-test        = { version = "*" }
-tracing            = { version = "*" }
-async-trait        = { version = "*" }
-tracing-setup      = { version = "*" }
-tracing-subscriber = { version = "*", features = [ "env-filter", "json" ] }
+traced-test        = { version = "1.0.2" }
+tracing            = { version = "0.1.41" }
+async-trait        = { version = "0.1.86" }
+tracing-setup      = { version = "1.0.2" }
+tracing-subscriber = { version = "0.3.19", features = [ "env-filter", "json" ] }
 
 [package]
 edition = "2024"

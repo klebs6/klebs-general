@@ -4,10 +4,10 @@ getset = "0.1.4"
 export-magic = "0.3.6"
 proc-macro2 = "1.0"
 quote = "1.0"
-traced-test = { version = "*" }
-tracing = { version = "*" }
-tracing-setup = { version = "*" }
-tracing-subscriber = { version = "*" , features = [ "env-filter", "json" ] }
+traced-test = { version = "1.0.2" }
+tracing = { version = "0.1.41" }
+tracing-setup = { version = "1.0.2" }
+tracing-subscriber = { version = "0.3.19", features = [ "env-filter", "json" ] }
 
 [dependencies.batch-mode-3p]
 path = "../batch-mode-3p"
