@@ -1,7 +1,5 @@
 [dependencies.agent-coordinate]
 path = "../agent-coordinate"
-[dependencies.async-trait]
-version = "*"
 [dependencies.batch-mode-3p]
 path = "../batch-mode-3p"
 [dependencies.batch-mode-batch-client]
@@ -38,13 +36,11 @@ path = "../language-model-batch-workflow-derive"
 path = "../language-model-type"
 [dependencies.save-load-traits]
 path = "../save-load-traits"
-[dependencies.tracing]
-version = "*"
-[dependencies.tracing-setup]
-version = "*"
-[dependencies.tracing-subscriber]
-features = [ "env-filter", "json" ]
-version = "*"
+[dependencies]
+async-trait = { version = "*" }
+tracing = { version = "*" }
+tracing-setup = { version = "*" }
+tracing-subscriber = { features = [ "env-filter", "json" ], version = "*" }
 [package]
 edition = "2024"
 name = "language-model-token-expander"
