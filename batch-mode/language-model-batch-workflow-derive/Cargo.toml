@@ -4,17 +4,17 @@ getset = "0.1.4"
 export-magic = "0.3.6"
 proc-macro2 = "1.0"
 quote = "1.0"
-[dependencies.batch-mode-3p]
-path = "../batch-mode-3p"
-[dependencies.syn]
-features = [ "full" ]
-version = "1.0"
-
-[dependencies]
 traced-test = { version = "*" }
 tracing = { version = "*" }
 tracing-setup = { version = "*" }
 tracing-subscriber = { version = "*" , features = [ "env-filter", "json" ] }
+
+[dependencies.batch-mode-3p]
+path = "../batch-mode-3p"
+
+[dependencies.syn]
+features = [ "full" ]
+version = "1.0"
 
 [dev-dependencies]
 trybuild = "1.0"

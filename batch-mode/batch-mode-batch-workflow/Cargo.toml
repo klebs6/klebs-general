@@ -1,5 +1,3 @@
-[dependencies]
-derive_builder = "0.20.2"
 [dependencies.batch-mode-3p]
 path = "../batch-mode-3p"
 [dependencies.batch-mode-batch-reconciliation]
@@ -10,10 +8,11 @@ path = "../batch-mode-batch-scribe"
 path = "../language-model-type"
 
 [dependencies]
-traced-test = { version = "*" }
-tracing = { version = "*" }
-async-trait = { version = "*" }
-tracing-setup = { version = "*" }
+derive_builder = "0.20.2"
+traced-test        = { version = "*" }
+tracing            = { version = "*" }
+async-trait        = { version = "*" }
+tracing-setup      = { version = "*" }
 tracing-subscriber = { version = "*", features = [ "env-filter", "json" ] }
 
 [package]
