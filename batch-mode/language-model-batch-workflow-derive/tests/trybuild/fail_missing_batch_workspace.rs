@@ -1,6 +1,4 @@
 // ---------------- [ File: tests/trybuild/fail_missing_batch_workspace.rs ]
-// -------------------------------------------------------------------------------------------
-// [ File: tests/trybuild/fail_missing_batch_workspace.rs ]
 //
 // Similarly, no `#[batch_workspace]` => compile-fail.
 

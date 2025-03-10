@@ -11,5 +11,7 @@ pub use batch_mode_batch_triple::*;
 pub use batch_mode_batch_client::*;
 pub use batch_mode_batch_executor::*;
 pub use batch_mode_process_response::*;
+pub use batch_mode_batch_metadata::*;
+pub use batch_mode_json::*;
 pub use language_model_type::*;
 pub use async_trait::async_trait;

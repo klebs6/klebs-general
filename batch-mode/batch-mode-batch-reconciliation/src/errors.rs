@@ -17,6 +17,9 @@ error_tree!{
 
     pub enum BatchReconciliationError {
         BatchWorkspaceError(BatchWorkspaceError),
+        OpenAIClientError(OpenAIClientError),
+        BatchMetadataError(BatchMetadataError),
+        IOError(std::io::Error),
         BatchDownloadError(BatchDownloadError),
         BatchValidationError(BatchValidationError),
         BatchErrorProcessingError(BatchErrorProcessingError),

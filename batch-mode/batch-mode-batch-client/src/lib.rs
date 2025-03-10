@@ -12,3 +12,4 @@ x!{download_output_file}
 x!{errors}
 x!{openai_client_handle}
 x!{language_model_client_interface}
+x!{impl_language_model_client_interface_for_arc_dyn}

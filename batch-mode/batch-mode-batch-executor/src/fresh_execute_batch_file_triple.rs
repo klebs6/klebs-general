@@ -1,21 +1,27 @@
 // ---------------- [ File: src/fresh_execute_batch_file_triple.rs ]
 crate::ix!();
 
+// ---------------------------------[REPLACEMENT for src/fresh_execute_batch_file_triple.rs]--------------------------
 #[async_trait]
-impl<C,E> FreshExecute<C,E> for BatchFileTriple 
-where C: LanguageModelClientInterface<E>,
-      BatchProcessingError: From<E>,
-      BatchDownloadError:   From<E>,
+impl<C,E> FreshExecute<C,E> for BatchFileTriple
+where 
+    C: LanguageModelClientInterface<E>,
 
-      E: From<JsonParseError> 
-      + From<BatchMetadataError> 
-      + From<BatchDownloadError>,
+    // We no longer require “BatchDownloadError: From<E>” or “BatchProcessingError: From<E>”.
+    // Instead, we do the normal “E: From<…>” for each error type that might bubble up:
+    E: From<BatchProcessingError>
+      + From<BatchDownloadError>
+      + From<JsonParseError>
+      + From<std::io::Error>
+      + From<OpenAIClientError>
+      + From<BatchMetadataError>,
 {
     type Success = BatchExecutionResult;
 
-    async fn fresh_execute(&mut self, client: &C) 
-        -> Result<BatchExecutionResult, E> 
+    async fn fresh_execute(&mut self, client: &C) -> Result<BatchExecutionResult, E> 
     {
+        trace!("Inside fresh_execute for triple: {:?}", self);
+
         assert!(self.input().is_some());
         assert!(self.output().is_none());
         assert!(self.error().is_none());
@@ -40,11 +46,10 @@ where C: LanguageModelClientInterface<E>,
 
         // Upload file
         let input_file = client.upload_batch_file_path(&input_filename).await?;
-
         let input_file_id = input_file.id;
 
         // Create batch
-        let batch    = client.create_batch(&input_file_id).await?;
+        let batch = client.create_batch(&input_file_id).await?;
         let batch_id = batch.id.clone();
 
         // ** Save batch_id to metadata file **
@@ -76,6 +81,6 @@ where C: LanguageModelClientInterface<E>,
             None
         };
 
-        Ok(BatchExecutionResult::new(outputs,errors))
+        Ok(BatchExecutionResult::new(outputs, errors))
     }
 }

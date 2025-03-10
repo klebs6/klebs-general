@@ -3,7 +3,9 @@ crate::ix!();
 
 #[async_trait]
 impl<E> ExecuteReconciliationOperation<E>
-for BatchFileTriple where BatchDownloadError: From<E>,
+for BatchFileTriple 
+where BatchReconciliationError: From<E>, 
+      E: From<BatchDownloadError> + From<OpenAIClientError> + From<BatchMetadataError> + From<std::io::Error>
 {
     async fn execute_reconciliation_operation(
         &mut self,

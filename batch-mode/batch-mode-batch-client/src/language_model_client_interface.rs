@@ -93,6 +93,7 @@ pub trait WaitForBatchCompletion: Send + Sync {
    pull in the generic method into the aggregator, keeping
    it object-safe.
 */
+#[async_trait]
 pub trait LanguageModelClientInterface<E>:
     RetrieveBatchById<Error = E>
     + GetBatchFileContent<Error = E>

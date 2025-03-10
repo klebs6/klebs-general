@@ -26,8 +26,12 @@ version = "0.1.0"
 
 [dependencies.batch-mode-batch-workspace]
 path = "../batch-mode-batch-workspace"
+[dependencies.batch-mode-batch-metadata]
+path = "../batch-mode-batch-metadata"
 [dependencies.batch-mode-batch-triple]
 path = "../batch-mode-batch-triple"
+[dependencies.batch-mode-json]
+path = "../batch-mode-json"
 [dependencies.batch-mode-batch-client]
 path = "../batch-mode-batch-client"
 [dependencies.batch-mode-batch-executor]

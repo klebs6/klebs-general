@@ -50,9 +50,16 @@ pub fn is_arc_dyn_language_model_client_e(ty: &syn::Type) -> bool {
                                                         if let Some(GAType(err_ty)) = ab2.args.first() {
                                                             if let TypePath(e_path) = err_ty {
                                                                 if let Some(e_seg) = e_path.path.segments.last() {
-                                                                    if e_seg.ident == "OpenAIClientError" {
+
+                                                                    //we allow any type here. the
+                                                                    //compiler will catch it if it
+                                                                    //is wrong
+                                                                    return true;
+                                                                    /*
+                                                                    if e_seg.ident == "OpenAIClientError"  || e_seg.ident == "BatchProcessingError" {
                                                                         return true;
                                                                     }
+                                                                    */
                                                                 }
                                                             }
                                                         }

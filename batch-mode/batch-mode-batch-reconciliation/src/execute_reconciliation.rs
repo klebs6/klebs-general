@@ -9,7 +9,10 @@ pub enum BatchErrorFileProcessingOperation {
 }
 
 #[async_trait]
-pub trait ExecuteReconciliationOperation<E> where BatchDownloadError: From<E> {
+pub trait ExecuteReconciliationOperation<E> 
+where BatchReconciliationError: From<E>, 
+      E: From<BatchDownloadError> 
+{
     async fn execute_reconciliation_operation(
         &mut self,
         client:                 &dyn LanguageModelClientInterface<E>,

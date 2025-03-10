@@ -3,7 +3,9 @@ crate::ix!();
 
 #[async_trait]
 impl<E> ReconcileUnprocessed<E> for BatchFileTriple
-where BatchDownloadError: From<E>
+where BatchDownloadError: From<E>,
+      BatchReconciliationError: From<E>,
+      E: From<BatchDownloadError> + From<OpenAIClientError> + From<BatchMetadataError> + From<std::io::Error>
 {
     async fn reconcile_unprocessed(
         &mut self,
