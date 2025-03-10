@@ -69,7 +69,7 @@ impl ComputeLanguageModelRequests for MyValidStruct {
 }
 
 // Our user-defined error => must implement `From<…>` for all relevant error types.
-struct MyErr;
+pub struct MyErr;
 
 // We already convert from sub-errors *into* MyErr:
 impl From<BatchDownloadError>       for MyErr { fn from(_: BatchDownloadError)       -> Self { MyErr } }
