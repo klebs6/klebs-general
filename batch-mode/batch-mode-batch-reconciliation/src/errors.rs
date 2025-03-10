@@ -30,7 +30,7 @@ error_tree!{
         },
         ReconciliationFailed {
             index:  BatchIndex,
-            errors: Vec<(BatchFileTripleReconciliationOperation,BatchReconciliationError)>,
+            //errors: Vec<(BatchFileTripleReconciliationOperation,BatchReconciliationError)>,
         },
         MissingBatchInputFileButOthersExist {
             index:  BatchIndex,

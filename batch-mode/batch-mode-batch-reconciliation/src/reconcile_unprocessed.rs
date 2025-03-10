@@ -6,11 +6,11 @@ crate::ix!();
 pub trait ReconcileUnprocessed<E> {
     async fn reconcile_unprocessed(
         &mut self,
-        client:                &dyn LanguageModelClientInterface<E>,
-        expected_content_type: &ExpectedContentType,
+        client:                 &dyn LanguageModelClientInterface<E>,
+        expected_content_type:  &ExpectedContentType,
         process_output_file_fn: &BatchWorkflowProcessOutputFileFn,
         process_error_file_fn:  &BatchWorkflowProcessErrorFileFn,
-    ) -> Result<(), BatchReconciliationError>;
+    ) -> Result<(), E>;
 }
 
 /* 

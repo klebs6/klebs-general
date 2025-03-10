@@ -1,7 +1,6 @@
 // ---------------- [ File: src/fresh_execute_batch_file_triple.rs ]
 crate::ix!();
 
-// ---------------------------------[REPLACEMENT for src/fresh_execute_batch_file_triple.rs]--------------------------
 #[async_trait]
 impl<C,E> FreshExecute<C,E> for BatchFileTriple
 where 

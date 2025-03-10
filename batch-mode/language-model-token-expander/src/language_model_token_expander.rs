@@ -1,22 +1,6 @@
 // ---------------- [ File: src/language_model_token_expander.rs ]
 crate::ix!();
 
-error_tree!{
-    pub enum TokenExpanderError {
-        BatchError(BatchError),
-        BatchWorkspaceError(BatchWorkspaceError),
-        BatchSuccessResponseHandlingError(BatchSuccessResponseHandlingError),
-        TokenParseError(TokenParseError),
-        SaveLoadError(SaveLoadError),
-        OpenAIError(OpenAIError),
-        FileMoveError(FileMoveError),
-        BatchProcessingError(BatchProcessingError),
-        BatchInputCreationError(BatchInputCreationError),
-        BatchReconciliationError(BatchReconciliationError),
-        UuidError(uuid::Error),
-    }
-}
-
 /// The improved LanguageModelTokenExpander, now with no `pub` fields. Instead, we rely on
 /// `getset` to provide getters (and optionally setters) and `derive_builder` for
 /// constructing robustly. This struct implements `LanguageModelBatchWorkflow` to unify
@@ -29,10 +13,8 @@ pub struct LanguageModelTokenExpander<T: CreateLanguageModelRequestsAtAgentCoord
     language_model_request_creator: Arc<T>,
     agent_coordinate:               AgentCoordinate,
 
-    #[batch_client]                   client:                  Arc<OpenAIClientHandle>,
+    #[batch_client]                   client:                  Arc<dyn LanguageModelClientInterface<TokenExpanderError>>,
     #[batch_workspace]                workspace:               Arc<BatchWorkspace>,
-    #[custom_process_batch_output_fn] process_batch_output_fn: BatchWorkflowProcessOutputFileFn,
-    #[custom_process_batch_error_fn]  process_batch_error_fn:  BatchWorkflowProcessErrorFileFn,
     #[expected_content_type]          expected_content_type:   ExpectedContentType,
     #[model_type]                     language_model_type:     LanguageModelType,
 }
@@ -44,14 +26,22 @@ where T: CreateLanguageModelRequestsAtAgentCoordinate
         product_root:                   impl AsRef<Path>,
         language_model_request_creator: Arc<T>,
         agent_coordinate:               AgentCoordinate,
+        language_model_type:            LanguageModelType,
+        expected_content_type:          ExpectedContentType,
 
     ) -> Result<Self,TokenExpanderError> {
+
         info!("creating LanguageModelTokenExpander");
+
+        let client: Arc<dyn LanguageModelClientInterface<TokenExpanderError>> = OpenAIClientHandle::new();
+
         Ok(Self {
             language_model_request_creator,
             agent_coordinate,
-            client:        OpenAIClientHandle::new(),
+            client,
             workspace:     BatchWorkspace::new_in(product_root).await?,
+            expected_content_type,
+            language_model_type,
         })
     }
 }

@@ -38,7 +38,7 @@ DEFAULT := test
 #DEFAULT := test_file
 #DEFAULT := test_one
 #DEFAULT := test_file_one
-#DEFAULT := test_all
+DEFAULT := test_all
 #DEFAULT := run
 #DEFAULT := build
 

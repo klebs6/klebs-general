@@ -3,9 +3,19 @@ crate::ix!();
 
 #[async_trait]
 impl<E> ReconcileUnprocessed<E> for BatchFileTriple
-where BatchDownloadError: From<E>,
-      BatchReconciliationError: From<E>,
-      E: From<BatchDownloadError> + From<OpenAIClientError> + From<BatchMetadataError> + From<std::io::Error>
+where E
+: From<BatchReconciliationError> 
++ From<BatchDownloadError> 
++ From<BatchErrorProcessingError>
++ From<BatchMetadataError> 
++ From<BatchOutputProcessingError>
++ From<BatchValidationError>
++ From<FileMoveError>
++ From<OpenAIClientError> 
++ From<std::io::Error>
++ Debug
++ Send
++ Sync
 {
     async fn reconcile_unprocessed(
         &mut self,
@@ -13,7 +23,7 @@ where BatchDownloadError: From<E>,
         expected_content_type:  &ExpectedContentType,
         process_output_file_fn: &BatchWorkflowProcessOutputFileFn,   // our new type alias
         process_error_file_fn:  &BatchWorkflowProcessErrorFileFn,
-    ) -> Result<(), BatchReconciliationError>
+    ) -> Result<(), E>
     {
         info!("Attempting to reconcile unprocessed batch triple {:?}", self.index());
 
@@ -84,10 +94,12 @@ where BatchDownloadError: From<E>,
                 return Ok(());
             } else {
                 error!("Failed to reconcile batch triple {:?} due to errors.", self.index());
+                for error in errors {
+                    error!("{:#?}",error);
+                }
                 return Err(BatchReconciliationError::ReconciliationFailed {
                     index:  self.index().clone(),
-                    errors,
-                });
+                }.into());
             }
         }
     }

@@ -1,10 +1,6 @@
 // ---------------- [ File: src/check_and_download_interface.rs ]
 crate::ix!();
 
-use crate::ix;
-
-crate::ix!();
-
 #[async_trait]
 pub trait CheckAndDownloadInterface<E>:
     CheckForAndDownloadOutputAndErrorOnline<E>

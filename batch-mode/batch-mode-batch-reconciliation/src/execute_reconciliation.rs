@@ -10,8 +10,7 @@ pub enum BatchErrorFileProcessingOperation {
 
 #[async_trait]
 pub trait ExecuteReconciliationOperation<E> 
-where BatchReconciliationError: From<E>, 
-      E: From<BatchDownloadError> 
+where E: From<BatchReconciliationError> + From<BatchDownloadError> 
 {
     async fn execute_reconciliation_operation(
         &mut self,
@@ -20,5 +19,5 @@ where BatchReconciliationError: From<E>,
         expected_content_type:  &ExpectedContentType,
         process_output_file_fn: &BatchWorkflowProcessOutputFileFn,
         process_error_file_fn:  &BatchWorkflowProcessErrorFileFn,
-    ) -> Result<Option<BatchFileReconciliationRecommendedCourseOfAction>, BatchReconciliationError>;
+    ) -> Result<Option<BatchFileReconciliationRecommendedCourseOfAction>, E>;
 }
