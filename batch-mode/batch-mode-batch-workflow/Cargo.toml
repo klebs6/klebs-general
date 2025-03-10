@@ -8,17 +8,14 @@ path = "../batch-mode-batch-reconciliation"
 path = "../batch-mode-batch-scribe"
 [dependencies.language-model-type]
 path = "../language-model-type"
-[dependencies.traced-test]
-version = "*"
-[dependencies.tracing]
-version = "*"
-[dependencies.async-trait]
-version = "*"
-[dependencies.tracing-setup]
-version = "*"
-[dependencies.tracing-subscriber]
-features = [ "env-filter", "json" ]
-version = "*"
+
+[dependencies]
+traced-test = { version = "*" }
+tracing = { version = "*" }
+async-trait = { version = "*" }
+tracing-setup = { version = "*" }
+tracing-subscriber = { version = "*", features = [ "env-filter", "json" ] }
+
 [package]
 edition = "2024"
 name = "batch-mode-batch-workflow"

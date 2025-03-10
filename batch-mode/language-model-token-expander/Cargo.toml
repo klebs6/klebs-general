@@ -37,10 +37,10 @@ path = "../language-model-type"
 [dependencies.save-load-traits]
 path = "../save-load-traits"
 [dependencies]
-async-trait = { version = "*" }
-tracing = { version = "*" }
-tracing-setup = { version = "*" }
-tracing-subscriber = { features = [ "env-filter", "json" ], version = "*" }
+async-trait = { version = "0.1.86" }
+tracing = { version = "0.1.41" }
+tracing-setup = { version = "1.0.2" }
+tracing-subscriber = { features = [ "env-filter", "json" ], version = "0.3.19" }
 [package]
 edition = "2024"
 name = "language-model-token-expander"

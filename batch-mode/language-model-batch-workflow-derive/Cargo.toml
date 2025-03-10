@@ -9,15 +9,13 @@ path = "../batch-mode-3p"
 [dependencies.syn]
 features = [ "full" ]
 version = "1.0"
-[dependencies.traced-test]
-version = "*"
-[dependencies.tracing]
-version = "*"
-[dependencies.tracing-setup]
-version = "*"
-[dependencies.tracing-subscriber]
-features = [ "env-filter", "json" ]
-version = "*"
+
+[dependencies]
+traced-test = { version = "*" }
+tracing = { version = "*" }
+tracing-setup = { version = "*" }
+tracing-subscriber = { version = "*" , features = [ "env-filter", "json" ] }
+
 [dev-dependencies]
 trybuild = "1.0"
 async-trait = "0.1.86"
