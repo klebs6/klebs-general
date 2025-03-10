@@ -1,36 +1,42 @@
-[dependencies.batch-mode-3p]
-path = "../batch-mode-3p"
-[dependencies.batch-mode-batch-reconciliation]
-path = "../batch-mode-batch-reconciliation"
-[dependencies.batch-mode-batch-scribe]
-path = "../batch-mode-batch-scribe"
-[dependencies.language-model-type]
-path = "../language-model-type"
-
 [dependencies]
 derive_builder = "0.20.2"
-traced-test        = { version = "1.0.2" }
-tracing            = { version = "0.1.41" }
-async-trait        = { version = "0.1.86" }
-tracing-setup      = { version = "1.0.2" }
-tracing-subscriber = { version = "0.3.19", features = [ "env-filter", "json" ] }
-
-[package]
-edition = "2024"
-name = "batch-mode-batch-workflow"
-version = "0.1.0"
-
-[dependencies.batch-mode-batch-workspace]
-path = "../batch-mode-batch-workspace"
-[dependencies.batch-mode-batch-metadata]
-path = "../batch-mode-batch-metadata"
-[dependencies.batch-mode-batch-triple]
-path = "../batch-mode-batch-triple"
-[dependencies.batch-mode-json]
-path = "../batch-mode-json"
+[dependencies.async-trait]
+version = "0.1.86"
+[dependencies.batch-mode-3p]
+path = "../batch-mode-3p"
 [dependencies.batch-mode-batch-client]
 path = "../batch-mode-batch-client"
 [dependencies.batch-mode-batch-executor]
 path = "../batch-mode-batch-executor"
+[dependencies.batch-mode-batch-metadata]
+path = "../batch-mode-batch-metadata"
+[dependencies.batch-mode-batch-reconciliation]
+path = "../batch-mode-batch-reconciliation"
+[dependencies.batch-mode-batch-scribe]
+path = "../batch-mode-batch-scribe"
+[dependencies.batch-mode-batch-triple]
+path = "../batch-mode-batch-triple"
+[dependencies.batch-mode-batch-workspace]
+path = "../batch-mode-batch-workspace"
+[dependencies.batch-mode-batch-workspace-interface]
+path = "../batch-mode-batch-workspace-interface"
+[dependencies.batch-mode-json]
+path = "../batch-mode-json"
 [dependencies.batch-mode-process-response]
 path = "../batch-mode-process-response"
+[dependencies.language-model-type]
+path = "../language-model-type"
+[dependencies.traced-test]
+version = "1.0.2"
+[dependencies.tracing]
+version = "0.1.41"
+[dependencies.tracing-setup]
+version = "1.0.2"
+[dependencies.tracing-subscriber]
+features = [ "env-filter", "json" ]
+version = "0.3.19"
+[package]
+description = "This crate provides a specialized approach to batch-based langauge model expansions and reconciling partial or incomplete batch states."
+edition = "2024"
+name = "batch-mode-batch-workflow"
+version = "0.1.0"

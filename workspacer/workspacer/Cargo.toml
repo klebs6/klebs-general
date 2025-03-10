@@ -59,13 +59,13 @@ path = "../workspacer-workspace-interface"
 [dependencies.workspacer-add-new-crate-to-workspace]
 path = "../workspacer-add-new-crate-to-workspace"
 [package]
-authors = [ "klebs tpk3.mx@gmail.com" ]
+authors     = [ "klebs tpk3.mx@gmail.com" ]
 description = "An asynchronous workspace management library for Rust projects, providing utilities for automation, analysis, and maintenance of multi-crate workspaces."
-edition = "2024"
-license = "MIT OR Apache-2.0"
-name = "workspacer"
-repository = "https://github.com/klebs6/klebs-general"
-version = "0.6.0"
+edition     = "2024"
+license     = "MIT OR Apache-2.0"
+name        = "workspacer"
+repository  = "https://github.com/klebs6/klebs-general"
+version     = "0.6.0"
 
 [[bin]]
 name = "ws"

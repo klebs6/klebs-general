@@ -3,7 +3,7 @@ crate::ix!();
 
 /// An enum representing any consolidated item that can live in a module.
 /// You could also store them separately if you like, but an enum is convenient.
-#[derive(Debug)]
+#[derive(Clone,Debug)]
 pub enum ConsolidatedItem {
     Fn(CrateInterfaceItem<ast::Fn>),
     Struct(CrateInterfaceItem<ast::Struct>),

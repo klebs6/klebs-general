@@ -1,5 +1,16 @@
+[dependencies.async-trait]
+version = "*"
+[dependencies.serde]
+features = [ "derive" ]
+version = "*"
+[dependencies.serde_derive]
+version = "*"
+[dependencies.serde_json]
+version = "*"
 [dependencies.workspacer-3p]
 path = "../workspacer-3p"
+[dependencies.workspacer-consolidate]
+path = "../workspacer-consolidate"
 [package]
 edition = "2024"
 name = "workspacer-ai-toml-write"

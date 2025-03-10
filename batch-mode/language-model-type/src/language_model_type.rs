@@ -10,6 +10,7 @@ pub enum LanguageModelType {
     Gpt4Turbo,
     O1Preview,
     O1Mini,
+    O1,
 }
 
 impl std::fmt::Display for LanguageModelType {
@@ -21,6 +22,7 @@ impl std::fmt::Display for LanguageModelType {
             LanguageModelType::Gpt4Turbo => write!(f, "gpt-4-turbo"),
             LanguageModelType::O1Preview => write!(f, "o1-preview"),
             LanguageModelType::O1Mini    => write!(f, "o1-mini"),
+            LanguageModelType::O1        => write!(f, "o1"),
         }
     }
 }
@@ -47,6 +49,7 @@ pub mod model_type {
             "gpt-4-turbo" => Ok(LanguageModelType::Gpt4Turbo),
             "o1-preview"  => Ok(LanguageModelType::O1Preview),
             "o1-mini"     => Ok(LanguageModelType::O1Mini),
+            "o1"          => Ok(LanguageModelType::O1),
             _             => Err(serde::de::Error::custom("unknown model type")),
         }
     }

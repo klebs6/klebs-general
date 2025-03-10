@@ -2,6 +2,8 @@
 structopt = "*"
 [dependencies.workspacer-3p]
 path = "../workspacer-3p"
+[dependencies.workspacer-check-crates-io]
+path = "../workspacer-check-crates-io"
 [dependencies.workspacer-check-publish-ready]
 path = "../workspacer-check-publish-ready"
 [dependencies.workspacer-crate]

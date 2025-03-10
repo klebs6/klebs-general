@@ -9,4 +9,3 @@ x!{execute_reconciliation_for_batch_triple}
 x!{recalculate_recommended_actions}
 x!{reconcile_unprocessed_batch_triple}
 x!{reconcile_unprocessed}
-x!{expected_content_type}

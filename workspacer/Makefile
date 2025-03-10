@@ -53,6 +53,7 @@ ACTIVE_PACKAGE := workspacer-add-new-crate-to-workspace
 ACTIVE_PACKAGE := workspacer-readme-writer
 ACTIVE_PACKAGE := workspacer
 ACTIVE_PACKAGE := workspacer-check-publish-ready
+ACTIVE_PACKAGE := workspacer-ai-toml-write
 #ACTIVE_PACKAGE := workspacer-check-crates-io
 #ACTIVE_PACKAGE := workspacer-check-private
 
@@ -73,7 +74,7 @@ DEFAULT := test
 #DEFAULT := test_file
 #DEFAULT := test_one
 #DEFAULT := test_file_one
-DEFAULT := test_all
+#DEFAULT := test_all
 #DEFAULT := test_individual
 #DEFAULT := pin_wildcard_deps
 #DEFAULT := consolidate_crate_interface

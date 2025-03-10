@@ -37,7 +37,11 @@ pub trait GetDoneDirectory {
 }
 
 pub trait GetTokenExpansionPath {
-    fn token_expansion_path(&self,token_name: &CamelCaseTokenWithComment) -> PathBuf;
+    fn token_expansion_path(
+        &self,
+        token_name:            &CamelCaseTokenWithComment, 
+        expected_content_type: &ExpectedContentType
+    ) -> PathBuf;
 }
 
 pub trait GetFailedJsonRepairsDir {

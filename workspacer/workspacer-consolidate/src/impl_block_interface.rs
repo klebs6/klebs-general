@@ -1,7 +1,7 @@
 // ---------------- [ File: workspacer-consolidate/src/impl_block_interface.rs ]
 crate::ix!();
 
-#[derive(Getters,Debug)]
+#[derive(Clone,Getters,Debug)]
 #[getset(get="pub")]
 pub struct ImplBlockInterface {
     docs:           Option<String>,

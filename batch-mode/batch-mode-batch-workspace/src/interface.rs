@@ -39,8 +39,12 @@ impl GetMetadataFilenameAtIndex for BatchWorkspace {
 }
 
 impl GetTokenExpansionPath for BatchWorkspace {
-    fn token_expansion_path(&self,token_name: &CamelCaseTokenWithComment) -> PathBuf {
-        token_name.target_path_for_ai_json_expansion(&self.target_dir())
+    fn token_expansion_path(
+        &self,
+        token_name:            &CamelCaseTokenWithComment, 
+        expected_content_type: &ExpectedContentType
+    ) -> PathBuf {
+        token_name.target_path_for_ai_json_expansion(&self.target_dir(),expected_content_type)
     }
 }
 

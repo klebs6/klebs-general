@@ -29,6 +29,14 @@ version = "0.2.0"
 [dependencies.batch-mode-batch-workspace]
 path = "../batch-mode-batch-workspace"
 version = "0.2.0"
+[dependencies.batch-mode-batch-workflow]
+path = "../batch-mode-batch-workflow"
+version = "0.1.0"
+
+[dependencies.language-model-batch-workflow-derive]
+path = "../language-model-batch-workflow-derive"
+version = "0.1.0"
+
 [dependencies.batch-mode-batch-workspace-interface]
 path = "../batch-mode-batch-workspace-interface"
 version = "0.2.0"

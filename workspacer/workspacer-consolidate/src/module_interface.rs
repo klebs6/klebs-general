@@ -3,7 +3,7 @@ crate::ix!();
 // ---------------------------------------------------------------------------
 // Representation of a mod block
 // ---------------------------------------------------------------------------
-#[derive(Getters,Debug)]
+#[derive(Clone,Getters,Debug)]
 #[getset(get="pub")]
 pub struct ModuleInterface {
     docs:     Option<String>,

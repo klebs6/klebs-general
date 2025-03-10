@@ -9,10 +9,10 @@ pub struct CamelCaseTokenWithComment {
     comment: Option<String>,
 }
 
-impl CamelCaseTokenWithComment {
+impl Named for CamelCaseTokenWithComment {
 
-    pub fn data(&self) -> &str {
-        &self.data
+    fn name(&self) -> Cow<'_,str> {
+        Cow::Borrowed(&self.data)
     }
 }
 
@@ -22,21 +22,6 @@ impl Display for CamelCaseTokenWithComment {
             Some(comment) => write!(f, "{} -- {}", self.data, comment),
             None => write!(f, "{}", self.data),
         }
-    }
-}
-
-impl CamelCaseTokenWithComment {
-
-    pub fn target_path_for_ai_json_expansion(&self, target_dir: impl AsRef<Path>) -> PathBuf {
-
-        // Convert 'token_name' to snake_case
-        let snake_token_name = to_snake_case(&self.data);
-
-        // Determine the output filename based on custom_id
-        // You can customize this as needed, e.g., using token names
-        let filename = format!("{}.json", snake_token_name);
-
-        target_dir.as_ref().to_path_buf().join(filename)
     }
 }
 

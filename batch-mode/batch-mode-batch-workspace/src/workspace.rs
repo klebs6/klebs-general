@@ -34,46 +34,6 @@ unsafe impl Sync for BatchWorkspace {}
 
 impl BatchWorkspace {
 
-    /// Internal helper. Identifies newly seen tokens.
-    pub fn calculate_unseen_inputs(&self, inputs: &[CamelCaseTokenWithComment]) 
-        -> Vec<CamelCaseTokenWithComment> 
-    {
-        let target_dir = self.target_dir();
-
-        let mut unseen = Vec::new();
-
-        for tok in inputs {
-
-            let target_path = tok.target_path_for_ai_json_expansion(&target_dir);
-
-            if !target_path.exists() {
-
-                if let Some(similar_path) = self.find_similar_target_path(&target_path) {
-
-                    warn!(
-                        "Skipping token '{}': target path '{}' is similar to existing '{}'.",
-                        tok.data(),
-                        target_path.display(),
-                        similar_path.display()
-                    );
-
-                    // Skip this token
-                    continue;
-                }
-
-                unseen.push(tok.clone());
-            }
-        }
-
-        info!("Unseen input tokens calculated:");
-
-        for token in &unseen {
-            info!("{}", token);
-        }
-
-        unseen
-    }
-
     pub fn find_similar_target_path(&self, target_path: &Path) -> Option<PathBuf> {
 
         use strsim::levenshtein;

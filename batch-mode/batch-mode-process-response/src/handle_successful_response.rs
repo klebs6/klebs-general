@@ -23,7 +23,7 @@ pub async fn handle_successful_response(
                 Ok(json_content) => {
                     let token_name_field = extract_token_name_field(&json_content)?;
                     let token_name       = CamelCaseTokenWithComment::from_str(&token_name_field)?;
-                    let target_path      = workspace.token_expansion_path(&token_name);
+                    let target_path      = workspace.token_expansion_path(&token_name,expected_content_type);
 
                     // Pretty-print the JSON
                     let serialized_json = serde_json::to_string_pretty(&json_content)
