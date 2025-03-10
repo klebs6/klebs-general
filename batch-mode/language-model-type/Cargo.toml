@@ -1,12 +1,11 @@
 [dependencies.batch-mode-3p]
 path = "../batch-mode-3p"
-[dependencies.serde]
-features = [ "derive" ]
-version = "*"
-[dependencies.serde_derive]
-version = "*"
-[dependencies.serde_json]
-version = "*"
+
+[dependencies]
+serde = { version = "*", features = ["derive"] }
+serde_derive = "*"
+serde_json = "*"
+
 [package]
 edition = "2024"
 name = "language-model-type"
