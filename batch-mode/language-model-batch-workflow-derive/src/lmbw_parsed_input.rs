@@ -13,10 +13,6 @@ pub struct LmbwParsedInput {
     /// Also always supplied, so no default is needed.
     generics: Generics,
 
-    /// Optional `where_clause`.
-    #[builder(default)]
-    where_clause: Option<WhereClause>,
-
     // =========== Required Fields (No `#[builder(default)]`) ===========
     // If missing, we give a compile error.
     batch_client_field:          Option<Ident>,

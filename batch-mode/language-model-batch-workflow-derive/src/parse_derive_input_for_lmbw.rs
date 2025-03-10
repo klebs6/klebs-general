@@ -11,7 +11,6 @@ pub fn parse_derive_input_for_lmbw(ast: &DeriveInput) -> Result<LmbwParsedInput,
 
     let struct_ident  = ast.ident.clone();
     let generics      = ast.generics.clone();
-    let where_clause  = ast.generics.where_clause.clone();
 
     // ----------- Placeholders for attributes -------------
     let mut batch_client_field:            Option<Ident> = None;
@@ -267,7 +266,6 @@ pub fn parse_derive_input_for_lmbw(ast: &DeriveInput) -> Result<LmbwParsedInput,
     let built = LmbwParsedInputBuilder::default()
         .struct_ident(struct_ident)
         .generics(generics)
-        .where_clause(where_clause)
         .batch_client_field(batch_client_field)
         .batch_workspace_field(batch_workspace_field)
         .expected_content_type_field(expected_content_type_field)

@@ -10,7 +10,6 @@ pub(crate) use syn::{
     Meta,
     Ident,
     Generics,
-    WhereClause,
     Type,
     Type::Path as TypePath,
     GenericArgument::Type as GAType,

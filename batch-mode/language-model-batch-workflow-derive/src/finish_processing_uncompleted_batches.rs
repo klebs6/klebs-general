@@ -82,7 +82,6 @@ mod test_generate_impl_finish_processing_uncompleted_batches {
         let parsed = LmbwParsedInputBuilder::default()
             .struct_ident::<syn::Ident>(parse_quote! { Dummy })
             .generics(syn::Generics::default())
-            .where_clause(None)
             .batch_client_field(Some(parse_quote! { some_client }))
             .batch_workspace_field(Some(parse_quote! { some_workspace }))
             .process_batch_output_fn_field(Some(parse_quote! { pbo }))
@@ -119,7 +118,6 @@ mod test_generate_impl_finish_processing_uncompleted_batches {
         let parsed = LmbwParsedInputBuilder::default()
             .struct_ident::<syn::Ident>(parse_quote! { Dummy })
             .generics(syn::Generics::default())
-            .where_clause(None)
             .batch_client_field(Some(parse_quote! { some_client }))
             .batch_workspace_field(Some(parse_quote! { some_workspace }))
             // skip process_batch_output_fn_field => None

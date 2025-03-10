@@ -36,7 +36,6 @@ mod test_generate_impl_send_sync {
         let parsed = LmbwParsedInputBuilder::default()
             .struct_ident::<syn::Ident>(parse_quote! { Dummy })
             .generics(syn::Generics::default())
-            .where_clause(None)
             .batch_client_field(Some(parse_quote! { some_client }))
             .batch_workspace_field(Some(parse_quote! { some_workspace }))
             .expected_content_type_field(Some(parse_quote! { ect }))

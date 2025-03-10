@@ -61,7 +61,6 @@ mod test_generate_impl_language_model_batch_workflow {
         let parsed = LmbwParsedInputBuilder::default()
             .struct_ident::<syn::Ident>(parse_quote! { Dummy })
             .generics(syn::Generics::default())
-            .where_clause(None)
             .batch_client_field(Some(parse_quote! { my_client }))
             .batch_workspace_field(Some(parse_quote! { my_workspace }))
             .expected_content_type_field(Some(parse_quote! { ect }))
