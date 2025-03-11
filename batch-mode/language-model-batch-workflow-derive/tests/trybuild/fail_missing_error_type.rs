@@ -14,9 +14,6 @@ struct MissingErrorType {
     #[batch_workspace]
     workspace: (),
 
-    #[expected_content_type]
-    ect: (),
-
     #[model_type]
     mt: (),
 }

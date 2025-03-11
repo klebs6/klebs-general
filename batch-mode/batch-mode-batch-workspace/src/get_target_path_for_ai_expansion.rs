@@ -1,3 +1,4 @@
+// ---------------- [ File: src/get_target_path_for_ai_expansion.rs ]
 crate::ix!();
 
 pub trait GetTargetPathForAIExpansion {
@@ -10,7 +11,7 @@ pub trait GetTargetPathForAIExpansion {
     ) -> PathBuf;
 }
 
-impl GetTargetPathForAIExpansion for CamelCaseTokenWithComment {
+impl<T:Named> GetTargetPathForAIExpansion for T {
 
     fn target_path_for_ai_json_expansion(
         &self, 

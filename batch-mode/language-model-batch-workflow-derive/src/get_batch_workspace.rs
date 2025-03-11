@@ -36,7 +36,6 @@ mod test_generate_impl_get_batch_workspace {
         //
         //   - #[batch_client]
         //   - #[batch_workspace]
-        //   - #[expected_content_type]
         //   - #[model_type]
         //   - #[batch_error_type(MyErr)]
         //
@@ -51,8 +50,8 @@ mod test_generate_impl_get_batch_workspace {
                 some_client: std::sync::Arc<OpenAIClientHandle>,
                 #[batch_workspace]
                 some_workspace: std::sync::Arc<BatchWorkspace>,
-                #[expected_content_type]
-                ect: ExpectedContentType,
+                #[system_message]
+                ect: String,
                 #[model_type]
                 mt: LanguageModelType,
             }
@@ -87,8 +86,9 @@ mod test_generate_impl_get_batch_workspace {
                 #[batch_client]
                 some_client: (),
 
-                #[expected_content_type]
-                ect: (),
+                #[system_message]
+                ect: String,
+
                 #[model_type]
                 mt: (),
             }

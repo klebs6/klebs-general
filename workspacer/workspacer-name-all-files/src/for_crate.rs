@@ -203,7 +203,7 @@ fn example() {
 
         // The first line is the new marker
         assert!(
-            lines[0].contains("// ---------------- [ File: src/lib.rs ]"),
+            lines[0].contains("// ---------------- [ File: dummy/src/lib.rs ]"),
             "Expected new marker line at top"
         );
         // Next line should contain original function
@@ -234,7 +234,7 @@ fn main() {
 
         // The new marker line
         assert!(
-            lines[0].contains("// ---------------- [ File: src/main.rs ]"),
+            lines[0].contains("// ---------------- [ File: dummy/src/main.rs ]"),
             "Should have inserted new marker at top"
         );
         // The next line is the original code (after we strip leading blank lines)
@@ -284,7 +284,7 @@ fn main() {
             "Should remove old alpha bracket marker"
         );
         assert!(
-            updated_alpha.contains("// ---------------- [ File: src/alpha.rs ]"),
+            updated_alpha.contains("// ---------------- [ File: dummy/src/alpha.rs ]"),
             "Should insert new alpha marker"
         );
 
@@ -294,7 +294,7 @@ fn main() {
             "Should remove the plain 'old marker' line"
         );
         assert!(
-            updated_beta.contains("// ---------------- [ File: src/beta.rs ]"),
+            updated_beta.contains("// ---------------- [ File: dummy/src/beta.rs ]"),
             "Should insert new beta marker"
         );
 
@@ -304,7 +304,7 @@ fn main() {
             "Should remove old gamma bracket marker"
         );
         assert!(
-            updated_gamma.contains("// ---------------- [ File: tests/gamma_test.rs ]"),
+            updated_gamma.contains("// ---------------- [ File: dummy/tests/gamma_test.rs ]"),
             "Should insert new gamma marker"
         );
     }
@@ -330,7 +330,7 @@ fn do_something() {}
 
         // The newly inserted marker
         assert!(
-            lines[0].contains("// ---------------- [ File: src/lib.rs ]"),
+            lines[0].contains("// ---------------- [ File: dummy/src/lib.rs ]"),
             "Should have inserted the new marker"
         );
         // The rest remain the same (assuming no leading blank lines to strip)
@@ -363,7 +363,7 @@ fn main() {}
         // The new marker
         let top_line = updated.lines().next().unwrap();
         assert!(
-            top_line.contains("// ---------------- [ File: src/main.rs ]"),
+            top_line.contains("// ---------------- [ File: dummy/src/main.rs ]"),
             "Should prepend the new marker line"
         );
     }
@@ -390,7 +390,7 @@ fn deep() {}
         );
         let first_line = updated.lines().next().unwrap();
         assert!(
-            first_line.contains("// ---------------- [ File: src/nested/deep.rs ]"),
+            first_line.contains("// ---------------- [ File: dummy/src/nested/deep.rs ]"),
             "Should prepend correct marker referencing subdir path"
         );
     }

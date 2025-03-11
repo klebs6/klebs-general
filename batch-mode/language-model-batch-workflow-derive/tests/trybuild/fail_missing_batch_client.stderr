@@ -4,16 +4,10 @@ error: cannot find attribute `batch_workspace` in this scope
 14 |     #[batch_workspace]
    |       ^^^^^^^^^^^^^^^
 
-error: cannot find attribute `expected_content_type` in this scope
+error: cannot find attribute `model_type` in this scope
   --> tests/trybuild/fail_missing_batch_client.rs:16:7
    |
-16 |     #[expected_content_type]
-   |       ^^^^^^^^^^^^^^^^^^^^^
-
-error: cannot find attribute `model_type` in this scope
-  --> tests/trybuild/fail_missing_batch_client.rs:18:7
-   |
-18 |     #[model_type]
+16 |     #[model_type]
    |       ^^^^^^^^^^
    |
 note: `model_type` is imported here, but it is a module, not an attribute

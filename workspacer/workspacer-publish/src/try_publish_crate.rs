@@ -263,12 +263,21 @@ license = "MIT"
                 Some("some stdout text"),
                 Some("crate `already_exists_crate@0.1.0` already exists"),
             );
+
+            info!("fake_cargo_path={:?}", fake_cargo_path);
+
             let new_path = prepend_fake_cargo_to_path(&fake_cargo_path);
+
+            info!("new_path={}", new_path);
 
             let old_path = std::env::var("PATH").unwrap_or_default();
             unsafe { std::env::set_var("PATH", &new_path); }
 
+            info!("old_path={}", old_path);
+
             let result = handle.try_publish(false).await;
+
+            info!("result={:?}", result);
 
             unsafe { std::env::set_var("PATH", old_path); }
 
@@ -292,14 +301,23 @@ license = "MIT"
                 Some("some stdout text"),
                 Some("some other error: invalid crate credentials"),
             );
+
+            info!("fake_cargo_path={:#?}", fake_cargo_path);
+
             let new_path = prepend_fake_cargo_to_path(&fake_cargo_path);
+
+            info!("new_path={:#?}", new_path);
 
             let old_path = std::env::var("PATH").unwrap_or_default();
             unsafe { std::env::set_var("PATH", &new_path); }
 
+            info!("old_path={:#?}", old_path);
+
             let result = handle.try_publish(false).await;
 
             unsafe { std::env::set_var("PATH", old_path); }
+
+            info!("result={:#?}", result);
 
             assert!(result.is_err(), "Expected error (non-zero exit, no 'already exists')");
             match result {

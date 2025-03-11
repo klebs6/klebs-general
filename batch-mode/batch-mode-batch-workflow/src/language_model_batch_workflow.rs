@@ -1,6 +1,8 @@
 // ---------------- [ File: src/language_model_batch_workflow.rs ]
 crate::ix!();
 
+pub type LanguageModelClientArc = Arc<dyn LanguageModelClientInterface<LanguageModelBatchWorkflowError>>;
+
 error_tree!{
     pub enum LanguageModelBatchWorkflowError {
         BatchWorkspaceError(BatchWorkspaceError),
@@ -17,6 +19,44 @@ error_tree!{
         JsonParseError(JsonParseError),
         IOError(std::io::Error),
     }
+}
+
+/// The trait you’ll use at runtime.
+/// The derived code implements `AiJsonTemplate` for each struct, letting you
+/// call `MyStruct::to_template()` to get a JSON “schema” describing how the
+/// AI should produce data that matches this layout.
+///
+/// Typically, you’d put this trait in a separate crate or in the same crate
+/// if you want. For demonstration, we’re including it here in the proc-macro
+/// crate for brevity.
+pub trait AiJsonTemplate {
+    /// Return a JSON template describing how the AI’s output should be structured.
+    /// This might include doc comments or other instructions for each field.
+    fn to_template() -> serde_json::Value;
+}
+
+/// Two new traits that users must implement:
+/// 1) `ComputeSystemMessage` to provide a static or dynamic system message.
+/// 2) `ComputeLanguageModelCoreQuery` to build requests for each seed item.
+///
+/// These traits are now required components of the overall workflow.
+/// We define them in the same `batch_mode_batch_workflow` (or relevant) crate
+/// so that the derive macro can reference them.
+pub trait ComputeSystemMessage {
+    /// Returns the system message to be applied to all requests.
+    fn system_message() -> String;
+}
+
+pub trait ComputeLanguageModelCoreQuery {
+    /// The seed item type (e.g., AiTomlWriterRequest).
+    type Seed: Named + serde::Serialize + for<'de> serde::de::Deserialize<'de>;
+
+    /// Builds a single language model API request for a given seed item.
+    /// The macro will call this once per seed item inside `compute_language_model_requests()`.
+    fn compute_language_model_core_query(
+        &self,
+        input: &Self::Seed
+    ) -> String;
 }
 
 #[async_trait]

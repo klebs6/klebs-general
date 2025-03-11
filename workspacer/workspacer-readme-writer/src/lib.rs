@@ -8,5 +8,6 @@ x!{perform_readme_updates_for_crate}
 x!{perform_readme_updates_for_workspace}
 x!{perform_readme_updates}
 x!{readme_writer}
+x!{readme_writer_io}
 x!{update_crate_readmes_example}
 x!{update_workspace_readmes_example}

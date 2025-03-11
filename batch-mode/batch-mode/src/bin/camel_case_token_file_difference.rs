@@ -38,7 +38,7 @@ impl FileDifferenceArgs {
         // We'll gather the `data` fields from fileB into a set for quick membership checks.
         let data_in_b: HashSet<String> = tokens_b
             .into_iter()
-            .map(|token| token.data().to_string())
+            .map(|token| token.name().to_string())
             .collect();
 
         info!("data_in_b, len={}", data_in_b.len());
@@ -46,7 +46,7 @@ impl FileDifferenceArgs {
         // Filter out those tokens from fileA whose `data` fields appear in fileB.
         let filtered_tokens: Vec<CamelCaseTokenWithComment> = tokens_a
             .into_iter()
-            .filter(|token| !data_in_b.contains(token.data()))
+            .filter(|token| !data_in_b.contains(&token.name().to_string()))
             .collect();
 
         info!("filtered_tokens, len={}", filtered_tokens.len());

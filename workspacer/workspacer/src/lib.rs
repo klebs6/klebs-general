@@ -22,6 +22,7 @@ pub use workspacer_workspace::*;
 pub use workspacer_errors::*;
 pub use workspacer_workspace_interface::*;
 pub use workspacer_crate_interface::*;
+pub use workspacer_check_publish_ready::*;
 
 use std::path::{Path,PathBuf};
 

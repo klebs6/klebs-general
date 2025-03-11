@@ -21,7 +21,8 @@ ACTIVE_PACKAGE := batch-mode
 #ACTIVE_PACKAGE := batch-mode-batch-index
 #ACTIVE_PACKAGE := batch-mode-batch-metadata
 #ACTIVE_PACKAGE := batch-mode-batch-schema
-#ACTIVE_PACKAGE := language-model-batch-workflow-derive
+ACTIVE_PACKAGE := language-model-batch-workflow-derive
+ACTIVE_PACKAGE := language-model-batch-workflow-json-output-derive
 #ACTIVE_PACKAGE := batch-mode-batch-workflow
 #ACTIVE_PACKAGE := batch-mode-batch-client
 #ACTIVE_PACKAGE := batch-mode-batch-reconciliation
@@ -42,6 +43,7 @@ DEFAULT := test
 #DEFAULT := test_file_one
 #DEFAULT := test_all
 #DEFAULT := run
+#DEFAULT := file_diff
 #DEFAULT := build
 
 default: $(DEFAULT)
@@ -50,9 +52,11 @@ default: $(DEFAULT)
 #NOCAPTURE := 
 
 #----------------------------------------------[here are our rules]
-
 run:
 	RUSTFLAGS=$(RUSTFLAGS) $(CARGO) $(RUN) -p $(ACTIVE_PACKAGE) $(FEATURES)
+
+file_diff:
+	RUSTFLAGS=$(RUSTFLAGS) $(CARGO) $(RUN) --bin camel-case-token-file-difference -- --file-a $(FILE_A) --file-b $(FILE_B) --file-c $(FILE_C)
 
 build:
 	RUSTFLAGS=$(RUSTFLAGS) $(CARGO) $(BUILD) $(FEATURES)

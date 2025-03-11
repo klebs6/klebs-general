@@ -13,18 +13,31 @@ tracing-subscriber = { version = "0.3.19", features = [ "env-filter", "json" ] }
 path = "../batch-mode-3p"
 
 [dependencies.syn]
-features = [ "full" ]
+features = [ "parsing", "full" ]
 version = "1.0"
 
 [dev-dependencies]
 trybuild = "1.0"
 async-trait = "0.1.86"
+serde = "1.0"
+serde_json = "1.0"
+
 [lib]
 proc-macro = true
+
 [package]
-edition = "2024"
-name = "language-model-batch-workflow-derive"
-version = "0.1.0"
+authors     = ["klebs tpk3.mx@gmail.com"]
+categories  = ["development-tools", "code-generation"]
+description = "A procedural macro for deriving batch-oriented language model workflows using annotated client and workspace fields."
+edition     = "2024"
+keywords    = ["batch", "workflow", "proc-macro", "language-model"]
+license     = "MIT"
+name        = "language-model-batch-workflow-derive"
+readme      = "README.md"
+repository  = "https://github.com/klebs6/klebs-general"
+version     = "0.1.0"
 
 [dev-dependencies.batch-mode-batch-workflow]
 path = "../batch-mode-batch-workflow"
+[dev-dependencies.batch-mode-batch-workspace-interface]
+path = "../batch-mode-batch-workspace-interface"

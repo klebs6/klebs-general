@@ -1,3 +1,4 @@
+// ---------------- [ File: tests/trybuild/pass_valid_struct.rs ]
 // ===========================[ CHANGED ITEM #1 ]===========================
 //
 // In your "pass_valid_struct.rs" file, import the correct `JsonParseError` type
@@ -27,44 +28,43 @@ use language_model_batch_workflow_derive::LanguageModelBatchWorkflow;
 use batch_mode_batch_workflow::*;
 use batch_mode_3p::*;
 use std::sync::Arc;
+use serde::{Serialize, Deserialize};
 
-// Our valid struct => should compile with no error if all needed traits are satisfied.
 #[derive(LanguageModelBatchWorkflow)]
 #[batch_error_type(MyErr)]
 pub struct MyValidStruct {
-    // Must be Arc<dyn LanguageModelClientInterface<MyErr>> if we're using a custom MyErr.
     #[batch_client]
     client: Arc<dyn LanguageModelClientInterface<MyErr>>,
 
-    // Use Arc<BatchWorkspace>
     #[batch_workspace]
     workspace: Arc<BatchWorkspace>,
 
-    #[expected_content_type]
-    ect: ExpectedContentType,
+    #[system_message]
+    system_msg: String,
 
     #[model_type]
-    mt: LanguageModelType,
-
-    // optional process batch functions => must be BatchWorkflowProcessOutputFileFn / BatchWorkflowProcessErrorFileFn
-    #[custom_process_batch_output_fn]
-    pbo: BatchWorkflowProcessOutputFileFn,
-
-    #[custom_process_batch_error_fn]
-    pbe: BatchWorkflowProcessErrorFileFn,
+    lm_type: LanguageModelType,
 }
 
-// We implement the needed “ComputeLanguageModelRequests” trait in the normal codebase
-impl ComputeLanguageModelRequests for MyValidStruct {
-    type Seed = ();
+impl ComputeSystemMessage for MyValidStruct {
+    fn system_message() -> String {
+        "My system message".to_string()
+    }
+}
 
-    fn compute_language_model_requests(
+#[derive(NamedItem,Debug,Serialize,Deserialize)]
+pub struct TestSeed {
+    name: String,
+}
+
+impl ComputeLanguageModelCoreQuery for MyValidStruct {
+    type Seed = TestSeed;
+
+    fn compute_language_model_core_query(
         &self,
-        _model: &LanguageModelType,
-        _input_tokens: &[Self::Seed]
-    ) -> Vec<LanguageModelBatchAPIRequest> {
-        trace!("MyValidStruct::compute_language_model_requests called, returning empty vector for test.");
-        vec![]
+        _input: &Self::Seed
+    ) -> String {
+        unimplemented!();
     }
 }
 

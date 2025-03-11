@@ -7,6 +7,13 @@ serde_derive = "1.0.218"
 serde_json = "1.0.139"
 
 [package]
-edition = "2024"
-name = "language-model-type"
-version = "0.1.0"
+authors     = ["klebs tpk3.mx@gmail.com"]
+categories  = ["text-processing", "api-bindings"]
+description = "Provides an enumeration of supported language model types, including serialization logic."
+edition     = "2024"
+keywords    = ["language-model", "enum", "serialization"]
+license     = "MIT"
+name        = "language-model-type"
+readme      = "README.md"
+repository  = "https://github.com/klebs6/klebs-general"
+version     = "0.1.0"

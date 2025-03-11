@@ -39,7 +39,7 @@ pub fn generate_impl_process_batch_requests(parsed: &LmbwParsedInput) -> TokenSt
             async fn process_batch_requests(
                 &self, 
                 batch_requests:        &[LanguageModelBatchAPIRequest], 
-                expected_content_type: &ExpectedContentType)
+                expected_content_type: &batch_mode_batch_workspace_interface::ExpectedContentType)
                 -> Result<(), Self::Error>
             {
                 tracing::info!("Processing {} batch request(s)", batch_requests.len());
@@ -73,9 +73,9 @@ mod test_generate_impl_process_batch_requests {
             .batch_client_field(Some(parse_quote! { some_client }))
             .batch_workspace_field(Some(parse_quote! { some_workspace }))
             // skip optional pbo/pbe
-            .expected_content_type_field(Some(parse_quote! { ect }))
             .model_type_field(Some(parse_quote! { mt }))
             .custom_error_type(Some(parse_quote! { MyErr }))
+            .system_message_field(Some(parse_quote! { sm }))
             .build()
             .unwrap();
 

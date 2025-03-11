@@ -3,6 +3,13 @@ path = "../batch-mode-3p"
 [dependencies.batch-mode-token-expansion-axis]
 path = "../batch-mode-token-expansion-axis"
 [package]
-edition = "2024"
-name = "batch-mode-token-expansion-step"
-version = "0.1.0"
+authors     = ["klebs tpk3.mx@gmail.com"]
+categories  = ["text-processing", "api-bindings"]
+description = "Enumerates the stepwise stages of token expansion, providing instructions and structure for batch-oriented expansions."
+edition     = "2024"
+keywords    = ["token", "expansion", "batch", "pipeline"]
+license     = "MIT"
+name        = "batch-mode-token-expansion-step"
+readme      = "README.md"
+repository  = "https://github.com/klebs6/klebs-general"
+version     = "0.1.0"

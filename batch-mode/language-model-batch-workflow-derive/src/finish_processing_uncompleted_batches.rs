@@ -44,7 +44,7 @@ pub fn generate_impl_finish_processing_uncompleted_batches(parsed: &LmbwParsedIn
         impl #impl_generics FinishProcessingUncompletedBatches for #struct_ident #ty_generics #where_clause {
             type Error = #error_type;
 
-            async fn finish_processing_uncompleted_batches(&self, expected_content_type: &ExpectedContentType)
+            async fn finish_processing_uncompleted_batches(&self, expected_content_type: &batch_mode_batch_workspace_interface::ExpectedContentType)
                 -> Result<(), Self::Error>
             {
                 tracing::info!("Finishing uncompleted batches if any remain.");
@@ -86,8 +86,8 @@ mod test_generate_impl_finish_processing_uncompleted_batches {
             .batch_workspace_field(Some(parse_quote! { some_workspace }))
             .process_batch_output_fn_field(Some(parse_quote! { pbo }))
             .process_batch_error_fn_field(Some(parse_quote! { pbe }))
-            .expected_content_type_field(Some(parse_quote! { ect }))
             .model_type_field(Some(parse_quote! { mt }))
+            .system_message_field(Some(parse_quote! { sm }))
             .custom_error_type(Some(parse_quote! { MyErr }))
             .build()
             .unwrap();
@@ -122,9 +122,9 @@ mod test_generate_impl_finish_processing_uncompleted_batches {
             .batch_workspace_field(Some(parse_quote! { some_workspace }))
             // skip process_batch_output_fn_field => None
             // skip process_batch_error_fn_field => None
-            .expected_content_type_field(Some(parse_quote! { ect }))
             .model_type_field(Some(parse_quote! { mt }))
             .custom_error_type(Some(parse_quote! { MyErr }))
+            .system_message_field(Some(parse_quote! { sm }))
             .build()
             .unwrap();
 

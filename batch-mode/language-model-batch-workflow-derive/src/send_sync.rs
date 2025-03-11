@@ -29,7 +29,6 @@ mod test_generate_impl_send_sync {
         //
         //   batch_client_field => Some dummy ident
         //   batch_workspace_field => Some dummy ident
-        //   expected_content_type_field => Some dummy ident
         //   model_type_field => Some dummy ident
         //   custom_error_type => Some dummy type
 
@@ -38,9 +37,9 @@ mod test_generate_impl_send_sync {
             .generics(syn::Generics::default())
             .batch_client_field(Some(parse_quote! { some_client }))
             .batch_workspace_field(Some(parse_quote! { some_workspace }))
-            .expected_content_type_field(Some(parse_quote! { ect }))
             .model_type_field(Some(parse_quote! { mt }))
             .custom_error_type(Some(parse_quote! { MyCustomError }))
+            .system_message_field(Some(parse_quote! { sm }))
             .build()
             .unwrap();
 

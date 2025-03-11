@@ -1,10 +1,20 @@
 [dependencies]
 derive_builder = "0.20.2"
+
 [dependencies.agent-coordinate]
 path = "../agent-coordinate"
+
 [dependencies.batch-mode-3p]
 path = "../batch-mode-3p"
+
 [package]
-edition = "2024"
-name = "language-model-format-instructions"
-version = "0.1.0"
+authors     = ["klebs tpk3.mx@gmail.com"]
+categories  = ["text-processing", "api-bindings"]
+description = "Provides structured instructions for ensuring language model outputs remain precise and valid JSON."
+edition     = "2024"
+keywords    = ["language-model", "instructions", "formatting"]
+license     = "MIT"
+name        = "language-model-format-instructions"
+readme      = "README.md"
+repository  = "https://github.com/klebs6/klebs-general"
+version     = "0.1.0"

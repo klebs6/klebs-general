@@ -55,6 +55,7 @@ xp!{type_checks}
         custom_process_batch_error_fn,
         expected_content_type,
         model_type,
+        system_message,
         batch_error_type // for custom error
     )
 )]

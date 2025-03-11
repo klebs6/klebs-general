@@ -16,7 +16,15 @@ path = "../language-model-format-instructions"
 path = "../language-model-type"
 [dependencies.save-load-traits]
 path = "../save-load-traits"
+
 [package]
-edition = "2024"
-name = "batch-mode-token-expander"
-version = "0.1.0"
+edition     = "2024"
+name        = "batch-mode-token-expander"
+version     = "0.1.0"
+authors     = ["klebs tpk3.mx@gmail.com"]
+categories  = ["text-processing", "api-bindings"]
+description = "A crate for expanding tokens in a batch, suitable for orchestrating language model requests."
+keywords    = ["token", "expansion", "batch", "language-model"]
+license     = "MIT"
+readme      = "README.md"
+repository  = "https://github.com/klebs6/klebs-general"

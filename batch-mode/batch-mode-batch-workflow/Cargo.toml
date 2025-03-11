@@ -26,6 +26,13 @@ path = "../batch-mode-json"
 path = "../batch-mode-process-response"
 [dependencies.language-model-type]
 path = "../language-model-type"
+[dependencies.serde]
+features = [ "derive" ]
+version = "*"
+[dependencies.serde_derive]
+version = "*"
+[dependencies.serde_json]
+version = "*"
 [dependencies.traced-test]
 version = "1.0.2"
 [dependencies.tracing]

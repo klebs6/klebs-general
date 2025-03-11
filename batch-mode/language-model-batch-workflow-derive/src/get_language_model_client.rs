@@ -47,8 +47,8 @@ mod test_generate_impl_get_language_model_client {
                 #[batch_workspace]
                 some_workspace: (),
 
-                #[expected_content_type]
-                ect: (),
+                #[system_message]
+                ect: String,
                 #[model_type]
                 mt: (),
             }
@@ -82,8 +82,8 @@ mod test_generate_impl_get_language_model_client {
                 #[batch_workspace]
                 some_workspace: std::sync::Arc<BatchWorkspace>,
 
-                #[expected_content_type]
-                ect: ExpectedContentType,
+                #[system_message]
+                ect: String,
 
                 #[model_type]
                 mt: LanguageModelType,
@@ -127,8 +127,8 @@ mod test_generate_impl_get_language_model_client {
                 some_client: std::sync::Arc<dyn LanguageModelClientInterface<MyErr>>,
                 #[batch_workspace]
                 some_workspace: std::sync::Arc<BatchWorkspace>,
-                #[expected_content_type]
-                ect: ExpectedContentType,
+                #[system_message]
+                ect: String,
                 #[model_type]
                 mt: LanguageModelType,
             }

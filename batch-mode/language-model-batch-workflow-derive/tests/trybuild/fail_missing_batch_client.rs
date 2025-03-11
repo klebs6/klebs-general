@@ -13,8 +13,6 @@ use batch_mode_batch_workflow::*;
 struct MissingClient {
     #[batch_workspace]
     ws: std::sync::Arc<BatchWorkspace>, // <-- now meets the new type requirement
-    #[expected_content_type]
-    ect: ExpectedContentType,
     #[model_type]
     mt: LanguageModelType,
 }
