@@ -50,8 +50,6 @@ mod test_generate_impl_get_batch_workspace {
                 some_client: std::sync::Arc<OpenAIClientHandle>,
                 #[batch_workspace]
                 some_workspace: std::sync::Arc<BatchWorkspace>,
-                #[system_message]
-                ect: String,
                 #[model_type]
                 mt: LanguageModelType,
             }
@@ -85,9 +83,6 @@ mod test_generate_impl_get_batch_workspace {
             struct Dummy {
                 #[batch_client]
                 some_client: (),
-
-                #[system_message]
-                ect: String,
 
                 #[model_type]
                 mt: (),

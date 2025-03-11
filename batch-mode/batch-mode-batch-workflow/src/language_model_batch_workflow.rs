@@ -21,20 +21,6 @@ error_tree!{
     }
 }
 
-/// The trait you’ll use at runtime.
-/// The derived code implements `AiJsonTemplate` for each struct, letting you
-/// call `MyStruct::to_template()` to get a JSON “schema” describing how the
-/// AI should produce data that matches this layout.
-///
-/// Typically, you’d put this trait in a separate crate or in the same crate
-/// if you want. For demonstration, we’re including it here in the proc-macro
-/// crate for brevity.
-pub trait AiJsonTemplate {
-    /// Return a JSON template describing how the AI’s output should be structured.
-    /// This might include doc comments or other instructions for each field.
-    fn to_template() -> serde_json::Value;
-}
-
 /// Two new traits that users must implement:
 /// 1) `ComputeSystemMessage` to provide a static or dynamic system message.
 /// 2) `ComputeLanguageModelCoreQuery` to build requests for each seed item.
@@ -49,7 +35,7 @@ pub trait ComputeSystemMessage {
 
 pub trait ComputeLanguageModelCoreQuery {
     /// The seed item type (e.g., AiTomlWriterRequest).
-    type Seed: Named + serde::Serialize + for<'de> serde::de::Deserialize<'de>;
+    type Seed: Named;
 
     /// Builds a single language model API request for a given seed item.
     /// The macro will call this once per seed item inside `compute_language_model_requests()`.

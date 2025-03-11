@@ -1,4 +1,4 @@
-# language-model-batch-workflow-json-output-derive
+# ai-json-template-derive
 
 A **proc-macro crate** that allows you to derive a trait, `AiJsonTemplate`, on any plain-old Rust struct to produce a **JSON “schema”** or “template” describing that struct’s fields, doc comments, and nested structures. This crate enforces certain field types—such as `String`, `Option<String>`, `Vec<String>`, or a recursively nested type also deriving `AiJsonTemplate`—making it useful for guiding AI models (like GPT) to output data matching a specific format.
 
@@ -23,7 +23,7 @@ A **proc-macro crate** that allows you to derive a trait, `AiJsonTemplate`, on a
 ## Example
 
 ```rust
-use language_model_batch_workflow_json_output_derive::AiJsonTemplate;
+use ai_json_template_derive::AiJsonTemplate;
 use serde::{Serialize, Deserialize};
 
 #[derive(AiJsonTemplate, Serialize, Deserialize)]
@@ -67,17 +67,17 @@ fn main() {
   "fields": {
     "title": {
       "type": "string",
-      "docs": "Plain string field, always required",
+      "generation_instructions": "Plain string field, always required",
       "required": true
     },
     "notes": {
       "type": "string",
-      "docs": "Optional field for additional notes",
+      "generation_instructions": "Optional field for additional notes",
       "required": false
     },
     "nested": {
       "type": "nested_struct",
-      "docs": "Another struct, nested",
+      "generation_instructions": "Another struct, nested",
       "required": true,
       "nested_template": {
         "struct_name": "SubConfig",
@@ -85,12 +85,12 @@ fn main() {
         "fields": {
           "summary": {
             "type": "string",
-            "docs": "A short summary",
+            "generation_instructions": "A short summary",
             "required": true
           },
           "tags": {
             "type": "array_of_strings",
-            "docs": "Multiple tags",
+            "generation_instructions": "Multiple tags",
             "required": true
           }
         }
@@ -106,7 +106,7 @@ In your `Cargo.toml`, add:
 
 ```toml
 [dependencies]
-language-model-batch-workflow-json-output-derive = "0.1"
+ai-json-template-derive = "0.1"
 serde                                            = "1.0"
 serde_json                                       = "1.0"
 ```
@@ -117,7 +117,7 @@ serde_json                                       = "1.0"
 
 1. **Import the macro**: 
    ```rust
-   use language_model_batch_workflow_json_output_derive::AiJsonTemplate;
+   use ai_json_template_derive::AiJsonTemplate;
    ```
 2. **Annotate structs** with `#[derive(AiJsonTemplate, Serialize, Deserialize)]`.
 3. **Generate JSON**: call `YourStruct::to_template()` to retrieve a structured schema of doc comments and types.  

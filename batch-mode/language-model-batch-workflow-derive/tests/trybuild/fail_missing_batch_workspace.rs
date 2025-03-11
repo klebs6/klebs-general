@@ -6,6 +6,7 @@ use language_model_batch_workflow_derive::LanguageModelBatchWorkflow;
 use batch_mode_batch_workflow::*;
 
 // "fail_missing_batch_workspace.rs"
+#[derive(LanguageModelBatchWorkflow)]
 struct MissingWorkspace {
     #[batch_client]
     client: std::sync::Arc<OpenAIClientHandle<OpenAIClientError>>,

@@ -87,7 +87,6 @@ mod test_generate_impl_finish_processing_uncompleted_batches {
             .process_batch_output_fn_field(Some(parse_quote! { pbo }))
             .process_batch_error_fn_field(Some(parse_quote! { pbe }))
             .model_type_field(Some(parse_quote! { mt }))
-            .system_message_field(Some(parse_quote! { sm }))
             .custom_error_type(Some(parse_quote! { MyErr }))
             .build()
             .unwrap();
@@ -124,7 +123,6 @@ mod test_generate_impl_finish_processing_uncompleted_batches {
             // skip process_batch_error_fn_field => None
             .model_type_field(Some(parse_quote! { mt }))
             .custom_error_type(Some(parse_quote! { MyErr }))
-            .system_message_field(Some(parse_quote! { sm }))
             .build()
             .unwrap();
 

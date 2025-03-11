@@ -1,25 +1,5 @@
-error: cannot find attribute `batch_client` in this scope
-  --> tests/trybuild/fail_missing_batch_workspace.rs:10:7
+error: Missing required `#[batch_workspace]` field.
+  --> tests/trybuild/fail_missing_batch_workspace.rs:10:8
    |
-10 |     #[batch_client]
-   |       ^^^^^^^^^^^^
-
-error: cannot find attribute `model_type` in this scope
-  --> tests/trybuild/fail_missing_batch_workspace.rs:13:7
-   |
-13 |     #[model_type]
-   |       ^^^^^^^^^^
-   |
-note: `model_type` is imported here, but it is a module, not an attribute
-  --> tests/trybuild/fail_missing_batch_workspace.rs:6:5
-   |
-6  | use batch_mode_batch_workflow::*;
-   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-warning: unused import: `language_model_batch_workflow_derive::LanguageModelBatchWorkflow`
- --> tests/trybuild/fail_missing_batch_workspace.rs:5:5
-  |
-5 | use language_model_batch_workflow_derive::LanguageModelBatchWorkflow;
-  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  |
-  = note: `#[warn(unused_imports)]` on by default
+10 | struct MissingWorkspace {
+   |        ^^^^^^^^^^^^^^^^

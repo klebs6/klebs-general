@@ -13,7 +13,7 @@ fn parse_doc_expr(expr: &Expr, lines: &mut Vec<String>) {
         }
 
         // e.g. foo("some doc") => a function call
-        Expr::Call(ExprCall { func, args, .. }) => {
+        Expr::Call(ExprCall { func: _, args, .. }) => {
             trace!("Found a call expression, will parse function + args");
             // The function might be an ident like `three(...)`
             // We'll collect any string-literal arguments it has.

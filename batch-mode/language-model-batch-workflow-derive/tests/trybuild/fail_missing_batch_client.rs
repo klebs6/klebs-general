@@ -10,6 +10,7 @@ use batch_mode_batch_workflow::*;
 // “Missing required `#[batch_client]`.”
 
 // "fail_missing_batch_client.rs"
+#[derive(LanguageModelBatchWorkflow)]
 struct MissingClient {
     #[batch_workspace]
     ws: std::sync::Arc<BatchWorkspace>, // <-- now meets the new type requirement

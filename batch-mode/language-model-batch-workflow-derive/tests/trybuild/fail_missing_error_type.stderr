@@ -1,13 +1,5 @@
-error: Missing required `#[system_message]` field.
-  --> tests/trybuild/fail_missing_error_type.rs:10:8
-   |
-10 | struct MissingErrorType {
-   |        ^^^^^^^^^^^^^^^^
-
-warning: unused import: `batch_mode_batch_workflow::*`
- --> tests/trybuild/fail_missing_error_type.rs:6:5
+error: Missing required `#[batch_error_type(...)]` attribute on the struct.
+ --> tests/trybuild/fail_missing_error_type.rs:9:8
   |
-6 | use batch_mode_batch_workflow::*;
-  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  |
-  = note: `#[warn(unused_imports)]` on by default
+9 | struct MissingErrorType {
+  |        ^^^^^^^^^^^^^^^^

@@ -1,74 +1,75 @@
 // ---------------- [ File: tests/integration.rs ]
-use language_model_batch_workflow_json_output_derive::*; // so we can call `.to_template()`
-use batch_mode_batch_workflow::*; // so we can call `.to_template()`
-use batch_mode_3p::*; // so we can call `.to_template()`
+use ai_json_template_derive::*;
+use ai_json_template::*;
+use batch_mode_3p::*;
 use serde::{Serialize, Deserialize};
 
 #[derive(Getters,AiJsonTemplate, Debug, Clone, Serialize, Deserialize)]
 #[getset(get="pub")]
 pub struct MySimpleConfig {
     /// doc for name
-    pub name: String,
+    name: String,
     /// doc for optional description
-    pub description: Option<String>,
+    description: Option<String>,
 }
 
 #[derive(Getters,AiJsonTemplate, Debug, Clone, Serialize, Deserialize)]
 #[getset(get="pub")]
 pub struct MyNested {
     /// doc for nested text
-    pub sub_text: String,
+    sub_text: String,
     /// doc for nested tags
-    pub sub_tags: Vec<String>,
+    sub_tags: Vec<String>,
 }
 
 #[derive(Getters,AiJsonTemplate, Debug, Clone, Serialize, Deserialize)]
 #[getset(get="pub")]
 pub struct Outer {
     /// doc for outer text
-    pub outer_text: String,
+    outer_text: String,
     /// doc for the nested struct
-    pub nested: MyNested,
+    nested: MyNested,
 }
 
 #[derive(Getters,AiJsonTemplate, Debug, Clone, Serialize, Deserialize)]
 #[getset(get="pub")]
 pub struct ThirdLevel {
     /// doc for third-level data
-    pub data: String,
+    data: String,
 }
 
 #[derive(Getters,AiJsonTemplate, Debug, Clone, Serialize, Deserialize)]
 #[getset(get="pub")]
 pub struct SecondLevel {
     /// doc for second-level note
-    pub note: String,
+    note: String,
 
     /// doc for further nesting
-    pub third: ThirdLevel,
+    third: ThirdLevel,
 }
 
 #[derive(Getters,AiJsonTemplate, Debug, Clone, Serialize, Deserialize)]
 #[getset(get="pub")]
+/// doc for top-level message
 pub struct FirstLevel {
     /// doc for top-level message
-    pub message: String,
+    message: String,
 
     /// doc for second-level nesting
-    pub second: SecondLevel,
+    second: SecondLevel,
 }
 
 #[derive(Getters,AiJsonTemplate, Debug, Clone, Serialize, Deserialize)]
 #[getset(get="pub")]
 pub struct Complex {
     /// doc for title
-    pub title: String,
+    title: String,
 
     /// doc for multiple tags
-    pub tags: Vec<String>,
+    tags: Vec<String>,
 
     /// doc for optional remark
-    pub remark: Option<String>,
+    remark: Option<String>,
 }
 
 #[derive(Getters,AiJsonTemplate, Debug, Clone, Serialize, Deserialize)]
@@ -76,10 +77,10 @@ pub struct Complex {
 /// doc comment for MyDocCommented
 pub struct MyDocCommented {
     /// doc for alpha
-    pub alpha: String,
+    alpha: String,
 
     /// doc for beta
-    pub beta: String,
+    beta: String,
 }
 
 #[traced_test]

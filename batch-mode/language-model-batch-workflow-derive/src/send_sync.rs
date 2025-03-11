@@ -39,7 +39,6 @@ mod test_generate_impl_send_sync {
             .batch_workspace_field(Some(parse_quote! { some_workspace }))
             .model_type_field(Some(parse_quote! { mt }))
             .custom_error_type(Some(parse_quote! { MyCustomError }))
-            .system_message_field(Some(parse_quote! { sm }))
             .build()
             .unwrap();
 

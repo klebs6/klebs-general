@@ -39,9 +39,6 @@ pub struct MyValidStruct {
     #[batch_workspace]
     workspace: Arc<BatchWorkspace>,
 
-    #[system_message]
-    system_msg: String,
-
     #[model_type]
     lm_type: LanguageModelType,
 }

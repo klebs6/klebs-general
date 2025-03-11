@@ -68,7 +68,6 @@ pub fn parse_derive_input_for_lmbw(ast: &syn::DeriveInput) -> Result<LmbwParsedI
     // We'll gather known attributes from fields.
     let mut batch_client_field:    Option<syn::Ident> = None;
     let mut batch_workspace_field: Option<syn::Ident> = None;
-    let mut system_message_field:  Option<syn::Ident> = None;
     let mut model_type_field:      Option<syn::Ident> = None;
 
     let mut process_batch_output_fn_field: Option<syn::Ident> = None;
@@ -90,8 +89,6 @@ pub fn parse_derive_input_for_lmbw(ast: &syn::DeriveInput) -> Result<LmbwParsedI
                     process_batch_output_fn_field = Some(field_ident.clone());
                 } else if path.is_ident("custom_process_batch_error_fn") {
                     process_batch_error_fn_field = Some(field_ident.clone());
-                } else if path.is_ident("system_message") {
-                    system_message_field = Some(field_ident.clone());
                 } else if path.is_ident("model_type") {
                     model_type_field = Some(field_ident.clone());
                 }
@@ -110,12 +107,6 @@ pub fn parse_derive_input_for_lmbw(ast: &syn::DeriveInput) -> Result<LmbwParsedI
         return Err(syn::Error::new_spanned(
             &ast.ident,
             "Missing required `#[batch_workspace]` field.",
-        ));
-    }
-    if system_message_field.is_none() {
-        return Err(syn::Error::new_spanned(
-            &ast.ident,
-            "Missing required `#[system_message]` field.",
         ));
     }
     if model_type_field.is_none() {
@@ -139,7 +130,6 @@ pub fn parse_derive_input_for_lmbw(ast: &syn::DeriveInput) -> Result<LmbwParsedI
         .batch_workspace_field(batch_workspace_field)
         .custom_error_type(custom_error_type)
         .json_output_format_type(json_output_format_type)
-        .system_message_field(system_message_field)
         .model_type_field(model_type_field)
         .process_batch_output_fn_field(process_batch_output_fn_field)
         .process_batch_error_fn_field(process_batch_error_fn_field)
@@ -191,9 +181,6 @@ mod test_parse_derive_input_for_lmbw {
 
                 #[model_type]
                 mt: LanguageModelType,
-
-                #[system_message]
-                sm: String,
             }
         };
 

@@ -3,7 +3,6 @@
 // If the user does not provide `#[batch_error_type(...)]`, parse logic also fails.
 
 use language_model_batch_workflow_derive::LanguageModelBatchWorkflow;
-use batch_mode_batch_workflow::*;
 
 // No `#[batch_error_type(MyErr)]` => fails parse.
 #[derive(LanguageModelBatchWorkflow)]

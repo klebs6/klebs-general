@@ -20,9 +20,6 @@ pub struct LmbwParsedInput {
     #[builder(default)]
     json_output_format_type: Option<syn::Type>,
 
-    // Required system message field:
-    system_message_field: Option<syn::Ident>,
-
     // ---------- NEW: a required model_type field -----------
     model_type_field: Option<syn::Ident>,
 

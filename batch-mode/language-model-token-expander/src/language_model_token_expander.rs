@@ -46,20 +46,30 @@ where T: CreateLanguageModelRequestsAtAgentCoordinate
     }
 }
 
+impl<T> ComputeSystemMessage for LanguageModelTokenExpander<T> 
+where T: CreateLanguageModelRequestsAtAgentCoordinate
+{
+    fn system_message() -> String {
+        todo!();
+    }
+}
+
 /// Here we implement the trait that organizes all batch-processing stages.
-impl<T> ComputeLanguageModelRequests for LanguageModelTokenExpander<T> 
+impl<T> ComputeLanguageModelCoreQuery for LanguageModelTokenExpander<T> 
 where T: CreateLanguageModelRequestsAtAgentCoordinate
 {
     type Seed  = CamelCaseTokenWithComment;
 
-    fn compute_language_model_requests(
+    fn compute_language_model_core_query(
         &self,
-        model:            &LanguageModelType,
-        inputs:           &[Self::Seed]
+        input: &Self::Seed
 
-    ) -> Vec<LanguageModelBatchAPIRequest> {
+    ) -> String {
 
-        trace!("Computing GPT requests from newly provided tokens...");
+        trace!("Computing query core from seed...");
+
+        todo!();
+        /*
 
         let workspace = self.workspace();
 
@@ -70,5 +80,6 @@ where T: CreateLanguageModelRequestsAtAgentCoordinate
             &self.agent_coordinate,
             &unseen
         )
+        */
     }
 }

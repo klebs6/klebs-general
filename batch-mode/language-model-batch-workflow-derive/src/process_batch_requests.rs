@@ -75,7 +75,6 @@ mod test_generate_impl_process_batch_requests {
             // skip optional pbo/pbe
             .model_type_field(Some(parse_quote! { mt }))
             .custom_error_type(Some(parse_quote! { MyErr }))
-            .system_message_field(Some(parse_quote! { sm }))
             .build()
             .unwrap();
 

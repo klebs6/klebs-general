@@ -19,8 +19,8 @@ features = [ "env-filter", "json" ]
 version = "*"
 [dev-dependencies]
 trybuild = "*"
-[dev-dependencies.batch-mode-batch-workflow]
-path = "../batch-mode-batch-workflow"
+[dev-dependencies.ai-json-template]
+path = "../ai-json-template"
 [lib]
 proc-macro = true
 [package]
@@ -30,7 +30,7 @@ description = "A proc-macro crate for deriving AI-oriented JSON templates from R
 edition = "2024"
 keywords = [ "AI", "json-schema", "template", "doc-comments" ]
 license = "MIT"
-name = "language-model-batch-workflow-json-output-derive"
+name = "ai-json-template-derive"
 readme = "README.md"
 repository = "https://github.com/klebs6/klebs-general"
 version = "0.1.0"

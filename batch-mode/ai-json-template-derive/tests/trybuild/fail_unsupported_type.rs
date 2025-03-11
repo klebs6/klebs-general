@@ -1,6 +1,6 @@
 // ---------------- [ File: tests/trybuild/fail_unsupported_type.rs ]
-use language_model_batch_workflow_json_output_derive::*;
-use batch_mode_batch_workflow::*;
+use ai_json_template_derive::*;
+use ai_json_template::*;
 use serde::{Serialize, Deserialize};
 
 #[derive(AiJsonTemplate, Serialize, Deserialize)]
