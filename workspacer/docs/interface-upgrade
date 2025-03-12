@@ -1,0 +1,38 @@
+// note that ComputeLanguageModelRequests will need to be generated
+// automatically in our language-model-batch-workflow-derive macro crate.
+//
+// In this implementation, after we create it, we will probably want to *modify* the
+// LanguageModelBatchAPIRequest instance by appending some instructions. 
+//
+// Specifically, we need to *explicitly instruct* the AI to generate JSON *in
+// the format specified by the `batch_json_output_format`* (in this case
+// AiTomlWriterDesiredOutput)
+//
+// we can use something like token-expansion-step in order to do this.
+//
+// note that expected_content_type (in this case) is now *fixed* to JSON since
+// we specify a batch_json_output_format macro.
+//
+// what do you think? what do we need to do to make these interface changes?
+//
+// we need to add `batch_json_output_format` (optional) to the derive macro, as well as
+// `system_message` (required)
+//
+// in the case that we *don't* specify batch_json_output_format, we set the
+// expected_content_type to `Text`
+//
+// in the case that we *do* specify batch_json_output_format, we set
+// `expected_content_type` to `Json`
+//
+// we will want to ComputeLanguageModelRequests automatically *in terms of*
+// ComputeLanguageModelRequestForSeedItem. 
+//
+// ComputeSystemMessage and ComputeLanguageModelRequestForSeedItem will now
+// *also* be required components of the LanguageModelBatchWorkflow trait
+// interface.
+//
+// thats all i can think of, at the moment. LanguageModelBatchAPIRequest will
+// need a new method `request_from_query_string` and we will *possibly* need to
+// make it (or an alternative) generic over the batch_json_output_format so that
+// we can automatically include instructions on exactly how we want the language
+// model to format the output.

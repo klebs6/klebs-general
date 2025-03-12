@@ -7,4 +7,3 @@ pub trait AiJsonTemplate: serde::Serialize + for<'a> serde::Deserialize<'a> {
     /// This might include doc comments or other instructions for each field.
     fn to_template() -> serde_json::Value;
 }
-

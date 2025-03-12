@@ -9,3 +9,9 @@ version = "*"
 edition = "2024"
 name = "ai-json-template"
 version = "0.1.0"
+
+description = "Contains code we use for ai-assisted struct generation. Please also see the ai-json-template-derive crate for more information."
+authors     = ["klebs tpk3.mx@gmail.com"]
+license     = "MIT"
+repository  = "https://github.com/klebs6/klebs-general"
+
