@@ -28,6 +28,8 @@ impl GenerateReadmeQueries for CrateHandle {
 
         let interface_str = format!("{}", interface);
 
+        todo!();
+        /*
         // For a single crate, we might produce exactly one query that includes the entire interface.
         let single_query = AiReadmeQueryBuilder::default()
             .query_text(interface_str)
@@ -36,5 +38,6 @@ impl GenerateReadmeQueries for CrateHandle {
             .unwrap();
 
         Ok(vec![single_query])
+        */
     }
 }

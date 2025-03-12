@@ -23,9 +23,9 @@ pub fn generate_impl_language_model_batch_workflow(parsed: &LmbwParsedInput) -> 
 
     // The content type used for `execute_language_model_batch_workflow`.
     let content_type_expr = if user_wants_json {
-        quote! { ::batch_mode_batch_workspace_interface::ExpectedContentType::Json }
+        quote! { ExpectedContentType::Json }
     } else {
-        quote! { ::batch_mode_batch_workspace_interface::ExpectedContentType::PlainText }
+        quote! { ExpectedContentType::PlainText }
     };
 
     // The field the user labeled `#[model_type]` (e.g. `lm_type`).
@@ -84,7 +84,7 @@ pub fn generate_impl_language_model_batch_workflow(parsed: &LmbwParsedInput) -> 
     // This block’s `plant_seed_and_wait` method calls `execute_language_model_batch_workflow`
     // with the struct’s own `#[model_type]` field (e.g. `self.lm_type`).
     let workflow_impl = quote! {
-        #[::async_trait::async_trait]
+        #[async_trait]
         impl #impl_generics LanguageModelBatchWorkflow<#error_type> for #struct_ident #ty_generics #where_clause {
 
             async fn plant_seed_and_wait(

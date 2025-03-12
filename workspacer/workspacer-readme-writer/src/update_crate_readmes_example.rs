@@ -26,6 +26,8 @@ impl UpdateReadmes for CrateHandle {
         assert!(queries.len() == 1);
         info!("Got {} query(ies) for AI from this crate.", queries.len());
 
+        todo!();
+        /*
         let responses = send_readme_queries_to_ai(&queries).await?;
         assert!(responses.len() == 1);
         debug!("Received {} response(s) from AI stub for this crate's readme update", responses.len());
@@ -36,6 +38,7 @@ impl UpdateReadmes for CrateHandle {
         } else {
             warn!("No response from AI for crate. Nothing to update in README.");
         }
+        */
 
         info!("Exiting CrateHandle::update_readmes with success");
         Ok(())

@@ -32,6 +32,9 @@ ACTIVE_PACKAGE := language-model-batch-workflow-derive
 #ACTIVE_PACKAGE := camel-case-token-with-comment
 #ACTIVE_PACKAGE := save-load-traits
 #ACTIVE_PACKAGE := batch-mode-batch-triple
+ACTIVE_PACKAGE := ai-json-template
+ACTIVE_PACKAGE := ai-json-template-derive
+#ACTIVE_PACKAGE := save-load-traits
 
 #-----------------------------------------------------[]
 #INDIVIDUAL_TEST := test_build_network_io_enum
@@ -41,7 +44,7 @@ DEFAULT := test
 #DEFAULT := test_file
 #DEFAULT := test_one
 #DEFAULT := test_file_one
-DEFAULT := test_all
+#DEFAULT := test_all
 #DEFAULT := run
 #DEFAULT := file_diff
 #DEFAULT := build

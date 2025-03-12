@@ -52,7 +52,7 @@ ra_ap_syntax            = "0.0.237"
 scan-crate-for-typedefs = "0.8.1"
 async-try-from          = "0.1.0"
 which                   = "*"
-batch-mode              = { version = "*", path               = "../../batch-mode/batch-mode" }
+batch-mode              = { version = "*", path = "../../batch-mode/batch-mode" }
 
 [dev-dependencies]
 indoc      = "2.0.5"

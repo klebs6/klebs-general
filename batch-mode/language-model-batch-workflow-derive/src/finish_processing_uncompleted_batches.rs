@@ -40,11 +40,11 @@ pub fn generate_impl_finish_processing_uncompleted_batches(parsed: &LmbwParsedIn
     };
 
     quote! {
-        #[::async_trait::async_trait]
+        #[async_trait]
         impl #impl_generics FinishProcessingUncompletedBatches for #struct_ident #ty_generics #where_clause {
             type Error = #error_type;
 
-            async fn finish_processing_uncompleted_batches(&self, expected_content_type: &batch_mode_batch_workspace_interface::ExpectedContentType)
+            async fn finish_processing_uncompleted_batches(&self, expected_content_type: &ExpectedContentType)
                 -> Result<(), Self::Error>
             {
                 tracing::info!("Finishing uncompleted batches if any remain.");

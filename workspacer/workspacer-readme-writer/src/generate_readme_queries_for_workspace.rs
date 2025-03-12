@@ -63,6 +63,8 @@ where
             summary
         );
 
+        todo!();
+        /*
         let query = AiReadmeQueryBuilder::default()
             .query_text(query_text)
             .instructions(instructions)
@@ -71,5 +73,6 @@ where
 
         // Return a single query in a Vec
         Ok(vec![query])
+        */
     }
 }

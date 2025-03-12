@@ -1,42 +1,39 @@
-// ---------------- [ File: src/rigorous_json.rs ]
 crate::ix!();
 
-pub enum RigorousJson {
+pub enum RigorousJsonCommandBuilderStage {
     ExtractAndCleanData,
-    GenerateResponseViaTheSchema {
-        schema: serde_json::Value,
-    },
+    GenerateResponseViaTheSchema,
     EnrichAndRephraseContent,
     ApplySpecificAdjustments,
     OutputTheJsonStructure,
 }
 
-impl RigorousJson {
+impl RigorousJsonCommandBuilderStage {
 
-    pub fn new(schema: &serde_json::Value) -> Vec<Self> {
+    pub fn new() -> Vec<Self> {
         vec![
-            RigorousJson::ExtractAndCleanData,
-            RigorousJson::GenerateResponseViaTheSchema { schema: schema.clone() },
-            RigorousJson::EnrichAndRephraseContent,
-            RigorousJson::ApplySpecificAdjustments,
-            RigorousJson::OutputTheJsonStructure,
+            RigorousJsonCommandBuilderStage::ExtractAndCleanData,
+            RigorousJsonCommandBuilderStage::GenerateResponseViaTheSchema,
+            RigorousJsonCommandBuilderStage::EnrichAndRephraseContent,
+            RigorousJsonCommandBuilderStage::ApplySpecificAdjustments,
+            RigorousJsonCommandBuilderStage::OutputTheJsonStructure,
         ]
     }
 
     pub fn name(&self) -> &'static str {
         match self {
-            RigorousJson::ExtractAndCleanData                 => "Extract and Clean Data",
-            RigorousJson::GenerateResponseViaTheSchema { .. } => "Generate Your Response via the Schema We Sent You",
-            RigorousJson::EnrichAndRephraseContent            => "Enrich and Rephrase Content",
-            RigorousJson::ApplySpecificAdjustments            => "Apply Specific Adjustments",
-            RigorousJson::OutputTheJsonStructure              => "Output the JSON Structure",
+            RigorousJsonCommandBuilderStage::ExtractAndCleanData                 => "Extract and Clean Data",
+            RigorousJsonCommandBuilderStage::GenerateResponseViaTheSchema { .. } => "Generate Your Response via the Schema We Sent You",
+            RigorousJsonCommandBuilderStage::EnrichAndRephraseContent            => "Enrich and Rephrase Content",
+            RigorousJsonCommandBuilderStage::ApplySpecificAdjustments            => "Apply Specific Adjustments",
+            RigorousJsonCommandBuilderStage::OutputTheJsonStructure              => "Output the JSON Structure",
         }
     }
 
-    pub fn ai_instructions(&self) -> String {
+    pub fn ai_instructions<T:AiJsonTemplate>(&self) -> String {
         match self {
-            RigorousJson::ExtractAndCleanData => "Carefully read and parse the information we sent you.".to_string(),
-            RigorousJson::GenerateResponseViaTheSchema { schema } => {
+            RigorousJsonCommandBuilderStage::ExtractAndCleanData => "Carefully read and parse the information we sent you.".to_string(),
+            RigorousJsonCommandBuilderStage::GenerateResponseViaTheSchema => {
 
                 formatdoc!{
                     "
@@ -49,10 +46,10 @@ impl RigorousJson {
                         Schema to Use:
 
                         {}",
-                        schema
+                        T::to_template()
                 }
             },
-            RigorousJson::EnrichAndRephraseContent => formatdoc!{
+            RigorousJsonCommandBuilderStage::EnrichAndRephraseContent => formatdoc!{
                 "
                     Rephrase Entries:
 
@@ -71,7 +68,7 @@ impl RigorousJson {
                     - You may include and interweave latin, sanskrit, and ancient greek vocabulary as you please.
                     - Ensure that the content is comprehensive and meets all requirements."
             },
-            RigorousJson::ApplySpecificAdjustments => formatdoc!{
+            RigorousJsonCommandBuilderStage::ApplySpecificAdjustments => formatdoc!{
                 "
                     Focus Language:
 
@@ -80,7 +77,7 @@ impl RigorousJson {
                     - Do not use modern cultural references or generically reference ideas which do not fit the overall aura of our setting.
                     "
             },
-            RigorousJson::OutputTheJsonStructure => formatdoc!{
+            RigorousJsonCommandBuilderStage::OutputTheJsonStructure => formatdoc!{
                 "
                     Present the Final JSON:
 

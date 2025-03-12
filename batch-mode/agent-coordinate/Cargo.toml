@@ -1,5 +1,17 @@
+[dependencies]
+derive_builder = "*"
+getset = "*"
 [dependencies.batch-mode-3p]
 path = "../batch-mode-3p"
+[dependencies.traced-test]
+version = "*"
+[dependencies.tracing]
+version = "*"
+[dependencies.tracing-setup]
+version = "*"
+[dependencies.tracing-subscriber]
+features = [ "env-filter", "json" ]
+version = "*"
 [package]
 edition = "2024"
 name = "agent-coordinate"

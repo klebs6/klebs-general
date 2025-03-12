@@ -49,6 +49,7 @@ xp!{type_checks}
 #[proc_macro_derive(
     LanguageModelBatchWorkflow,
     attributes(
+        batch_json_output_format,
         batch_client,
         batch_workspace,
         custom_process_batch_output_fn,

@@ -1,3 +1,8 @@
+[dependencies]
+indoc = "*"
+export-magic = "*"
+[dependencies.save-load-traits]
+path = "../save-load-traits"
 [dependencies.serde]
 features = [ "derive" ]
 version = "1.0.218"
@@ -6,12 +11,10 @@ version = "1.0.218"
 [dependencies.serde_json]
 version = "1.0.139"
 [package]
-edition = "2024"
-name = "ai-json-template"
-version = "0.1.0"
-
+authors = [ "klebs tpk3.mx@gmail.com" ]
 description = "Contains code we use for ai-assisted struct generation. Please also see the ai-json-template-derive crate for more information."
-authors     = ["klebs tpk3.mx@gmail.com"]
-license     = "MIT"
-repository  = "https://github.com/klebs6/klebs-general"
-
+edition = "2024"
+license = "MIT"
+name = "ai-json-template"
+repository = "https://github.com/klebs6/klebs-general"
+version = "0.1.0"

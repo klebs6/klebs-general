@@ -27,6 +27,10 @@ where
             let queries = crate_handle.generate_readme_queries(&interface)
                 .await
                 .map_err(WorkspaceError::CrateError)?;
+
+            todo!();
+
+            /*
             let responses = send_readme_queries_to_ai(&queries)
                 .await
                 .map_err(WorkspaceError::CrateError)?;
@@ -38,12 +42,18 @@ where
                 } else {
                     warn!("No AI response for crate #{} => skipping README update", idx);
             }
+            */
         }
 
         // Optionally, also update a top-level workspace README:
         debug!("Now generating the top-level workspace readme query");
+
         let workspace_interface = ConsolidatedCrateInterface::new();
-        let workspace_queries = self.generate_readme_queries(&workspace_interface).await?;
+        let workspace_queries   = self.generate_readme_queries(&workspace_interface).await?;
+
+        todo!();
+
+        /*
         let workspace_responses = send_readme_queries_to_ai(&workspace_queries).await
             .map_err(WorkspaceError::CrateError)?;
 
@@ -52,6 +62,7 @@ where
         } else {
             warn!("No AI response for workspace-level README => skipping top-level README update");
         }
+        */
 
         info!("Exiting update_workspace_readmes_example with success");
         Ok(())

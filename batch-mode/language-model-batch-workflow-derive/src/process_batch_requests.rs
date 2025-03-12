@@ -32,14 +32,14 @@ pub fn generate_impl_process_batch_requests(parsed: &LmbwParsedInput) -> TokenSt
     };
 
     quote! {
-        #[::async_trait::async_trait]
+        #[async_trait]
         impl #impl_generics ProcessBatchRequests for #struct_ident #ty_generics #where_clause {
             type Error = #error_type;
 
             async fn process_batch_requests(
                 &self, 
                 batch_requests:        &[LanguageModelBatchAPIRequest], 
-                expected_content_type: &batch_mode_batch_workspace_interface::ExpectedContentType)
+                expected_content_type: &ExpectedContentType)
                 -> Result<(), Self::Error>
             {
                 tracing::info!("Processing {} batch request(s)", batch_requests.len());
