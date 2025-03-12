@@ -1,3 +1,4 @@
+// ---------------- [ File: src/rigorous_json_command_builder_stage.rs ]
 crate::ix!();
 
 pub enum RigorousJsonCommandBuilderStage {
@@ -10,7 +11,17 @@ pub enum RigorousJsonCommandBuilderStage {
 
 impl RigorousJsonCommandBuilderStage {
 
-    pub fn new() -> Vec<Self> {
+    pub fn get_all<T:AiJsonTemplate>() -> String {
+        let stages = Self::all();
+        let mut x = String::new();
+        for stage in stages {
+            x.push_str(&stage.ai_instructions::<T>());
+            x.push_str("\n");
+        }
+        x
+    }
+
+    pub fn all() -> Vec<Self> {
         vec![
             RigorousJsonCommandBuilderStage::ExtractAndCleanData,
             RigorousJsonCommandBuilderStage::GenerateResponseViaTheSchema,

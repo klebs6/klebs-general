@@ -1,3 +1,4 @@
+// ---------------- [ File: src/ai_json_template.rs ]
 crate::ix!();
 
 /// The derived code implements `AiJsonTemplate` for each struct, letting you
@@ -16,4 +17,3 @@ pub trait AiJsonTemplate
     /// This might include doc comments or other instructions for each field.
     fn to_template() -> serde_json::Value;
 }
-

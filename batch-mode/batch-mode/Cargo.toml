@@ -37,6 +37,10 @@ version = "0.1.0"
 path = "../language-model-batch-workflow-derive"
 version = "0.1.0"
 
+[dependencies.language-model-type]
+path = "../language-model-type"
+version = "0.1.0"
+
 [dependencies.batch-mode-batch-workspace-interface]
 path = "../batch-mode-batch-workspace-interface"
 version = "0.2.0"
@@ -52,6 +56,11 @@ version = "0.2.0"
 [dependencies.save-load-traits]
 path = "../save-load-traits"
 version = "0.2.0"
+
+[dependencies.save-load-derive]
+path = "../save-load-derive"
+version = "0.1.0"
+
 [package]
 authors = [ "klebs tpk3.mx@gmail.com" ]
 description = "This crate is a top level entrypoint for the `batch-mode` crate ecosystem"

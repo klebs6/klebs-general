@@ -21,6 +21,13 @@ pub fn generate_impl_language_model_batch_workflow(parsed: &LmbwParsedInput) -> 
     // Then our macro advises the AI to return well-formed JSON.
     let user_wants_json = parsed.json_output_format_type().is_some();
 
+    let appended_instruction = if user_wants_json {
+        let json_output_format_type = parsed.json_output_format_type().as_ref().unwrap();
+        quote!{ RigorousJsonCommandBuilderStage::get_all::<#json_output_format_type>() }
+    } else {
+        quote!{ }
+    };
+
     // The content type used for `execute_language_model_batch_workflow`.
     let content_type_expr = if user_wants_json {
         quote! { ExpectedContentType::Json }
@@ -55,8 +62,7 @@ pub fn generate_impl_language_model_batch_workflow(parsed: &LmbwParsedInput) -> 
                 debug!("Base system message is {} chars long.", base_msg.len());
 
                 let final_msg = if #user_wants_json {
-                    let appended_instruction = "IMPORTANT: Return valid JSON. Do not include extraneous text.";
-                    format!("{}\n\n{}", base_msg, appended_instruction)
+                    format!("{}\n\n{}", base_msg, #appended_instruction)
                 } else {
                     base_msg
                 };

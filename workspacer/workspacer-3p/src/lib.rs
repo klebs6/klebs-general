@@ -1,6 +1,8 @@
 // ---------------- [ File: workspacer-3p/src/lib.rs ]
 pub use std::path::{Path, PathBuf};
+pub use dirs;
 pub use tempfile::{self,tempdir,TempDir,NamedTempFile};
+pub use std::io::ErrorKind;
 pub use std::fs::create_dir_all;
 pub use named_item::*;
 pub use reqwest::{self};

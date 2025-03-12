@@ -6,11 +6,6 @@ pub(crate) use quote::{quote};
 
 pub(crate) use syn::{
     DeriveInput,
-    Fields,
-    Meta,
-    Ident,
-    Generics,
-    Type,
     Type::Path as TypePath,
     GenericArgument::Type as GAType,
     PathArguments::AngleBracketed,

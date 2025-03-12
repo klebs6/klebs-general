@@ -2,6 +2,8 @@
 path = "../get-file-size"
 [dependencies.workspacer-3p]
 path = "../workspacer-3p"
+[dependencies.workspacer-config]
+path = "../workspacer-config"
 [package]
 edition = "2024"
 name = "workspacer-errors"

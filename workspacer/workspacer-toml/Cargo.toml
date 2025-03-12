@@ -3,6 +3,8 @@ derive_builder = "0.20.2"
 [dependencies.workspacer-3p]
 path = "../workspacer-3p"
 version = "0.5.0"
+[dependencies.workspacer-config]
+path = "../workspacer-config"
 [dependencies.workspacer-errors]
 path = "../workspacer-errors"
 [dependencies.workspacer-interface]

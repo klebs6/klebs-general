@@ -17,6 +17,7 @@ version = "1.0.2"
 [dependencies.tracing-subscriber]
 features = [ "env-filter", "json" ]
 version = "0.3.19"
+
 [dev-dependencies]
 trybuild = "1.0.104"
 [dev-dependencies.ai-json-template]
@@ -24,6 +25,9 @@ path = "../ai-json-template"
 
 [dev-dependencies.save-load-traits]
 path = "../save-load-traits"
+
+[dev-dependencies.save-load-derive]
+path = "../save-load-derive"
 
 [lib]
 proc-macro = true

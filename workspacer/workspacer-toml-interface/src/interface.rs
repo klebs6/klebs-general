@@ -17,6 +17,14 @@ pub trait CargoTomlInterface
 + ValidateIntegrity<Error=CargoTomlError>
 + GatherBinTargetNames<Error=CargoTomlError>
 + AsRef<Path>
++ GetPackageAuthors<Error=CargoTomlError>
++ GetPackageAuthorsOrFallback<Error=CargoTomlError>
++ GetRustEdition<Error=CargoTomlError>
++ GetRustEditionOrFallback<Error=CargoTomlError>
++ GetLicenseType<Error=CargoTomlError>
++ GetLicenseTypeOrFallback<Error=CargoTomlError>
++ GetCrateRepositoryLocation<Error=CargoTomlError>
++ GetCrateRepositoryLocationOrFallback<Error=CargoTomlError>
 {}
 
 pub trait GatherBinTargetNames {
@@ -80,4 +88,48 @@ pub trait IsValidVersion {
 
     /// Checks if the version string is a valid SemVer version
     fn is_valid_version(&self, version: &str) -> bool;
+}
+
+pub trait GetPackageAuthors {
+    type Error;
+    fn get_package_authors(&self) -> Result<Option<Vec<String>>, Self::Error>;
+}
+
+#[async_trait]
+pub trait GetPackageAuthorsOrFallback {
+    type Error;
+    async fn get_package_authors_or_fallback(&self) -> Result<Option<Vec<String>>, Self::Error>;
+}
+
+pub trait GetRustEdition {
+    type Error;
+    fn get_rust_edition(&self) -> Result<Option<String>, Self::Error>;
+}
+
+#[async_trait]
+pub trait GetRustEditionOrFallback {
+    type Error;
+    async fn get_rust_edition_or_fallback(&self) -> Result<Option<String>, Self::Error>;
+}
+
+pub trait GetLicenseType {
+    type Error;
+    fn get_license_type(&self) -> Result<Option<String>, Self::Error>;
+}
+
+#[async_trait]
+pub trait GetLicenseTypeOrFallback {
+    type Error;
+    async fn get_license_type_or_fallback(&self) -> Result<Option<String>, Self::Error>;
+}
+
+pub trait GetCrateRepositoryLocation {
+    type Error;
+    fn get_crate_repository_location(&self) -> Result<Option<String>, Self::Error>;
+}
+
+#[async_trait]
+pub trait GetCrateRepositoryLocationOrFallback {
+    type Error;
+    async fn get_crate_repository_location_or_fallback(&self) -> Result<Option<String>, Self::Error>;
 }

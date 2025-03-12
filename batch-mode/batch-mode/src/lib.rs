@@ -15,3 +15,5 @@ pub use batch_mode_process_response::*;
 pub use batch_mode_batch_scribe::*;
 pub use camel_case_token_with_comment::*;
 pub use save_load_traits::*;
+pub use save_load_derive::*;
+pub use language_model_type::*;

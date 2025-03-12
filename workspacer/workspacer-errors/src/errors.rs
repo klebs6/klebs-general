@@ -52,6 +52,7 @@ error_tree!{
 
     #[derive(Clone)]
     pub enum CargoTomlError {
+        WorkspacerFallbackError(WorkspacerFallbackError),
         ReadError {
             io: Arc<io::Error>,
         },
@@ -124,6 +125,7 @@ error_tree!{
 
     #[derive(Clone)]
     pub enum ReadmeWriteError {
+        AiReadmeWriterError,
         WriteBlankReadmeError {
             io: Arc<io::Error>,
         },
@@ -208,6 +210,8 @@ error_tree!{
 
     #[derive(Clone)]
     pub enum CrateError {
+
+        ReadmeWriteError(ReadmeWriteError),
 
         // Indicates that the crate's `is_private()` check returned `true`, so
         // the crate is not publishable.
@@ -409,21 +413,9 @@ impl From<io::Error> for WorkspaceError {
     }
 }
 
-impl fmt::Display for WorkspaceError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{:#?}", self)
-    }
-}
-
 impl CargoMetadataError {
 
     pub fn is_cyclic_package_dependency_error(&self) -> bool {
         self.to_string().contains("cyclic package dependency")
-    }
-}
-
-impl fmt::Display for CargoMetadataError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{:#?}", self)
     }
 }

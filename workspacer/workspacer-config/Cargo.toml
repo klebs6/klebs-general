@@ -1,0 +1,15 @@
+[dependencies]
+derive_builder = "*"
+[dependencies.serde]
+features = [ "derive" ]
+version = "*"
+[dependencies.serde_derive]
+version = "*"
+[dependencies.serde_json]
+version = "*"
+[dependencies.workspacer-3p]
+path = "../workspacer-3p"
+[package]
+edition = "2024"
+name = "workspacer-config"
+version = "0.1.0"

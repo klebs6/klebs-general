@@ -18,7 +18,6 @@ xp!{process_batch_requests}
 xp!{send_sync}
 xp!{lmbw_parsed_input}
 xp!{parse_derive_input_for_lmbw}
-xp!{type_checks}
 
 /// Primary entry point for the derive macro.  This is the only public function
 /// you need to export from your `proc-macro` crate in order for users to write:

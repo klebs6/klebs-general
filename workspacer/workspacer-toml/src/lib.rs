@@ -11,3 +11,5 @@ x!{check_version_validity_for_integrity}
 x!{cargo_toml_handle}
 x!{check_version_validity_for_publishing}
 x!{validate_integrity}
+x!{get_package_section_fields}
+x!{get_package_section_fields_with_fallback}

@@ -2,10 +2,11 @@
 use ai_json_template_derive::*;
 use ai_json_template::*;
 use save_load_traits::*;
+use save_load_derive::*;
 use batch_mode_3p::*;
 use serde::{Serialize, Deserialize};
 
-#[derive(Getters,AiJsonTemplate, Debug, Clone, Serialize, Deserialize)]
+#[derive(SaveLoad,Getters,AiJsonTemplate, Debug, Clone, Serialize, Deserialize)]
 #[getset(get="pub")]
 pub struct MySimpleConfig {
     /// doc for name
@@ -14,9 +15,7 @@ pub struct MySimpleConfig {
     description: Option<String>,
 }
 
-impl_default_save_to_file_traits!{MySimpleConfig}
-
-#[derive(Getters,AiJsonTemplate, Debug, Clone, Serialize, Deserialize)]
+#[derive(SaveLoad,Getters,AiJsonTemplate, Debug, Clone, Serialize, Deserialize)]
 #[getset(get="pub")]
 pub struct MyNested {
     /// doc for nested text
@@ -25,9 +24,7 @@ pub struct MyNested {
     sub_tags: Vec<String>,
 }
 
-impl_default_save_to_file_traits!{MyNested}
-
-#[derive(Getters,AiJsonTemplate, Debug, Clone, Serialize, Deserialize)]
+#[derive(SaveLoad,Getters,AiJsonTemplate, Debug, Clone, Serialize, Deserialize)]
 #[getset(get="pub")]
 pub struct Outer {
     /// doc for outer text
@@ -36,18 +33,14 @@ pub struct Outer {
     nested: MyNested,
 }
 
-impl_default_save_to_file_traits!{Outer}
-
-#[derive(Getters,AiJsonTemplate, Debug, Clone, Serialize, Deserialize)]
+#[derive(SaveLoad,Getters,AiJsonTemplate, Debug, Clone, Serialize, Deserialize)]
 #[getset(get="pub")]
 pub struct ThirdLevel {
     /// doc for third-level data
     data: String,
 }
 
-impl_default_save_to_file_traits!{ThirdLevel}
-
-#[derive(Getters,AiJsonTemplate, Debug, Clone, Serialize, Deserialize)]
+#[derive(SaveLoad,Getters,AiJsonTemplate, Debug, Clone, Serialize, Deserialize)]
 #[getset(get="pub")]
 pub struct SecondLevel {
     /// doc for second-level note
@@ -57,9 +50,7 @@ pub struct SecondLevel {
     third: ThirdLevel,
 }
 
-impl_default_save_to_file_traits!{SecondLevel}
-
-#[derive(Getters,AiJsonTemplate, Debug, Clone, Serialize, Deserialize)]
+#[derive(SaveLoad,Getters,AiJsonTemplate, Debug, Clone, Serialize, Deserialize)]
 #[getset(get="pub")]
 /// doc for top-level message
 pub struct FirstLevel {
@@ -70,9 +61,7 @@ pub struct FirstLevel {
     second: SecondLevel,
 }
 
-impl_default_save_to_file_traits!{FirstLevel}
-
-#[derive(Getters,AiJsonTemplate, Debug, Clone, Serialize, Deserialize)]
+#[derive(SaveLoad,Getters,AiJsonTemplate, Debug, Clone, Serialize, Deserialize)]
 #[getset(get="pub")]
 pub struct Complex {
     /// doc for title
@@ -85,9 +74,7 @@ pub struct Complex {
     remark: Option<String>,
 }
 
-impl_default_save_to_file_traits!{Complex}
-
-#[derive(Getters,AiJsonTemplate, Debug, Clone, Serialize, Deserialize)]
+#[derive(SaveLoad,Getters,AiJsonTemplate, Debug, Clone, Serialize, Deserialize)]
 #[getset(get="pub")]
 /// doc comment for MyDocCommented
 pub struct MyDocCommented {
@@ -97,8 +84,6 @@ pub struct MyDocCommented {
     /// doc for beta
     beta: String,
 }
-
-impl_default_save_to_file_traits!{MyDocCommented}
 
 #[traced_test]
 fn test_simple_struct_template() {
