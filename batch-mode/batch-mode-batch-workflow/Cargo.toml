@@ -28,11 +28,11 @@ path = "../batch-mode-process-response"
 path = "../language-model-type"
 [dependencies.serde]
 features = [ "derive" ]
-version = "*"
+version = "1.0.218"
 [dependencies.serde_derive]
-version = "*"
+version = "1.0.218"
 [dependencies.serde_json]
-version = "*"
+version = "1.0.139"
 [dependencies.traced-test]
 version = "1.0.2"
 [dependencies.tracing]

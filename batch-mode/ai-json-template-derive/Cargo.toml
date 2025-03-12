@@ -9,30 +9,33 @@ syn = "2.0"
 [dependencies.batch-mode-3p]
 path = "../batch-mode-3p"
 [dependencies.traced-test]
-version = "*"
+version = "1.0.2"
 [dependencies.tracing]
-version = "*"
+version = "0.1.41"
 [dependencies.tracing-setup]
-version = "*"
+version = "1.0.2"
 [dependencies.tracing-subscriber]
 features = [ "env-filter", "json" ]
-version = "*"
+version = "0.3.19"
 [dev-dependencies]
 trybuild = "1.0.104"
 [dev-dependencies.ai-json-template]
 path = "../ai-json-template"
+
 [lib]
 proc-macro = true
+
 [package]
-authors = [ "klebs tpk3.mx@gmail.com" ]
-categories = [ "development-tools", "code-generation" ]
+authors     = [ "klebs tpk3.mx@gmail.com" ]
+categories  = [ "development-tools", "code-generation" ]
 description = "A proc-macro crate for deriving AI-oriented JSON templates from Rust structs, capturing doc comments as instructions."
-edition = "2024"
-keywords = [ "AI", "json-schema", "template", "doc-comments" ]
-license = "MIT"
-name = "ai-json-template-derive"
-readme = "README.md"
-repository = "https://github.com/klebs6/klebs-general"
-version = "0.1.0"
+edition     = "2024"
+keywords    = [ "AI", "json-schema", "template", "doc-comments" ]
+license     = "MIT"
+name        = "ai-json-template-derive"
+readme      = "README.md"
+repository  = "https://github.com/klebs6/klebs-general"
+version     = "0.1.0"
+
 [profile.test]
 strip = "none"
