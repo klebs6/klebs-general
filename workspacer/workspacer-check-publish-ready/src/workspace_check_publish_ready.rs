@@ -1,3 +1,4 @@
+// ---------------- [ File: workspacer-check-publish-ready/src/workspace_check_publish_ready.rs ]
 crate::ix!();
 
 #[async_trait]

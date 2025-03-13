@@ -8,7 +8,7 @@ where
     for<'async_trait> P: From<PathBuf> + AsRef<Path> + Send + Sync + 'async_trait,
     H: CrateHandleInterface<P> + Send + Sync,
 {
-    type Item = H;
+    type Item = Arc<H>;
     type Error = WorkspaceError;
 
     /// Asynchronously finds all the crates in the workspace
@@ -33,7 +33,7 @@ where
             {
                 // Convert crate_path (PathBuf) into your generic P:
                 let converted: P = crate_path.into();
-                crates.push(H::new(&converted).await?);
+                crates.push(Arc::new(H::new(&converted).await?));
             }
         }
 

@@ -13,6 +13,21 @@ impl GetPackageSection for CargoToml {
     }
 }
 
+impl GetPackageSectionMut for CargoToml {
+
+    type Error = CargoTomlError;
+
+    /// Helper to retrieve the `package` section from `Cargo.toml`
+    fn get_package_section_mut(&mut self) -> Result<&mut toml::Value, Self::Error> {
+
+        let possible_error = CargoTomlError::MissingPackageSection {
+            cargo_toml_file: self.path().clone(),
+        };
+
+        self.content_mut().get_mut("package").ok_or_else(|| possible_error)
+    }
+}
+
 impl GatherBinTargetNames for CargoToml {
     type Error = CargoTomlError;
 

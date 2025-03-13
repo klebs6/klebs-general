@@ -1,12 +1,13 @@
 // ---------------- [ File: workspacer-readme-writer/src/readme_writer.rs ]
 crate::ix!();
 
-#[derive(Getters,LanguageModelBatchWorkflow)]
+#[derive(Builder,Getters,LanguageModelBatchWorkflow)]
+#[builder(setter(into))]
 #[getset(get = "pub")]
 #[batch_error_type(LanguageModelBatchWorkflowError)]
 #[batch_json_output_format(AiReadmeWriterDesiredOutput)]
-pub struct AiReadmeWriter {
-
+pub struct AiReadmeWriter
+{
     #[batch_client] 
     language_model_client: LanguageModelClientArc,
 
@@ -17,7 +18,7 @@ pub struct AiReadmeWriter {
     batch_workspace:       Arc<BatchWorkspace>,
 }
 
-impl ComputeSystemMessage for AiReadmeWriter 
+impl ComputeSystemMessage for AiReadmeWriter
 {
     fn system_message() -> String {
         formatdoc!{r#"
@@ -34,7 +35,7 @@ impl ComputeSystemMessage for AiReadmeWriter
     }
 }
 
-impl ComputeLanguageModelCoreQuery for AiReadmeWriter 
+impl ComputeLanguageModelCoreQuery for AiReadmeWriter
 {
     type Seed  = AiReadmeWriterRequest;
 
@@ -106,7 +107,7 @@ impl ComputeLanguageModelCoreQuery for AiReadmeWriter
     }
 }
 
-impl AiReadmeWriter 
+impl AiReadmeWriter
 {
     pub async fn new(
         workspace_root:      impl AsRef<Path>,

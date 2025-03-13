@@ -21,8 +21,8 @@ where
     for<'async_trait> P: From<PathBuf> + AsRef<Path> + Send + Sync + 'async_trait,
     T: CrateHandleInterface<P> 
 {
-    fn crates(&self) -> &[T];
-    fn crates_mut(&mut self) -> &mut Vec<T>;
+    fn crates(&self) -> &[Arc<T>];
+    fn crates_mut(&mut self) -> &mut Vec<Arc<T>>;
 }
 
 pub trait NumCrates {

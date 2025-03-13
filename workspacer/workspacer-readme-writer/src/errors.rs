@@ -1,3 +1,4 @@
+// ---------------- [ File: workspacer-readme-writer/src/errors.rs ]
 crate::ix!();
 
 error_tree!{

@@ -6,13 +6,13 @@ crate::ix!();
 #[builder(setter(into))]
 pub struct CrateHandle {
     crate_path:        PathBuf,
-    cargo_toml_handle: Arc<CargoToml>,
+    cargo_toml_handle: Arc<Mutex<CargoToml>>,
 }
 
 impl Named for CrateHandle {
     fn name(&self) -> Cow<'_, str> {
         Cow::Owned(
-            self.cargo_toml_handle
+            self.cargo_toml_handle.lock().unwrap()
                 .package_name()
                 .expect("expect that our crate has a package name")
                 .trim_matches('"')
@@ -26,7 +26,7 @@ impl Versioned for CrateHandle {
 
     fn version(&self) -> Result<semver::Version, Self::Error> {
         trace!("CrateHandle::version() - retrieving version via cargo_toml_handle");
-        let mut version_str = self.cargo_toml_handle.version()?.to_string();
+        let mut version_str = self.cargo_toml_handle.lock().unwrap().version()?.to_string();
         debug!("Raw version_str from CargoTomlHandle: {:?}", version_str);
 
         // Clean/trim quotes if present
@@ -78,7 +78,7 @@ where
 
         let cargo_toml_path = crate_path.cargo_toml_path_buf().await?;
 
-        let cargo_toml_handle = Arc::new(CargoToml::new(cargo_toml_path).await?);
+        let cargo_toml_handle = Arc::new(Mutex::new(CargoToml::new(cargo_toml_path).await?));
 
         Ok(Self {
             cargo_toml_handle,
@@ -96,7 +96,7 @@ impl ValidateIntegrity for CrateHandle {
 
         let cargo_toml = self.cargo_toml();
 
-        cargo_toml.validate_integrity()?;
+        cargo_toml.lock().unwrap().validate_integrity()?;
 
         self.check_src_directory_contains_valid_files()?;
         self.check_readme_exists()?;
@@ -234,7 +234,7 @@ impl GetFilesInDirectoryWithExclusions for CrateHandle {
 
 impl HasCargoToml for CrateHandle {
 
-    fn cargo_toml(&self) -> Arc<dyn CargoTomlInterface> {
+    fn cargo_toml(&self) -> Arc<Mutex<dyn CargoTomlInterface>> {
         self.cargo_toml_handle.clone()
     }
 }

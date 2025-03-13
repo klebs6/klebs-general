@@ -6,7 +6,7 @@ pub trait CrateHandleInterface<P>
 + Send
 + Sync
 + Named
-+ Versioned
++ Versioned<Error=CrateError>
 + IsPrivate<Error=CrateError>
 + ReadFileString
 + CheckIfSrcDirectoryContainsValidFiles
@@ -35,7 +35,7 @@ where
 
 pub trait HasCargoToml {
 
-    fn cargo_toml(&self) -> Arc<dyn CargoTomlInterface>;
+    fn cargo_toml(&self) -> Arc<Mutex<dyn CargoTomlInterface>>;
 }
 
 pub trait IsPrivate {

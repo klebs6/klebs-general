@@ -1,3 +1,4 @@
+// ---------------- [ File: workspacer-config/src/fallback_error.rs ]
 crate::ix!();
 
 /// A generic error type for fallback reading—adjust or merge into your own

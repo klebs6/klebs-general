@@ -11,7 +11,9 @@ impl IsPrivate for CrateHandle
     {
         let cargo_toml = self.cargo_toml();
 
-        let pkg_section = cargo_toml.get_package_section()?;
+        let cargo_toml_guard = cargo_toml.lock().unwrap();
+
+        let pkg_section = cargo_toml_guard.get_package_section()?;
 
         // The crate might specify "publish = false", or an array of allowed registries.
         // We'll say "private" if there's an explicit false or if "publish" is missing altogether

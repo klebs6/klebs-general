@@ -1,5 +1,4 @@
 ensure-git-clean
-ai-toml-write
 ai-git-commit
 info
 organize

@@ -8,7 +8,7 @@ pub struct Workspace<P,H:CrateHandleInterface<P>>
 where for<'async_trait> P: From<PathBuf> + AsRef<Path> + Send + Sync + 'async_trait 
 {
     path:   P,
-    crates: Vec<H>,
+    crates: Vec<Arc<H>>,
 }
 
 impl<P,H:CrateHandleInterface<P>> WorkspaceInterface<P,H> for Workspace<P,H> 
@@ -27,11 +27,11 @@ where for<'async_trait> P: From<PathBuf> + AsRef<Path> + Send + Sync + 'async_tr
 impl<P,H:CrateHandleInterface<P>> GetCrates<P,H> for Workspace<P,H> 
 where for<'async_trait> P: From<PathBuf> + AsRef<Path> + Send + Sync + 'async_trait
 {
-    fn crates(&self) -> &[H] {
+    fn crates(&self) -> &[Arc<H>] {
         &self.crates
     }
 
-    fn crates_mut(&mut self) -> &mut Vec<H> {
+    fn crates_mut(&mut self) -> &mut Vec<Arc<H>> {
         &mut self.crates
     }
 }

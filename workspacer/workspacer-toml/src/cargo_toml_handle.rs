@@ -2,9 +2,9 @@
 crate::ix!();
 
 /// Handle to manipulate and verify the `Cargo.toml` file
-#[derive(Builder,Getters,Debug,Clone)]
+#[derive(Builder,MutGetters,Getters,Debug,Clone)]
 #[builder(setter(into))]
-#[getset(get="pub")]
+#[getset(get="pub",get_mut="pub")]
 pub struct CargoToml {
     path:    PathBuf,
     content: toml::Value,  // Parsed TOML content

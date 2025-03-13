@@ -1,3 +1,4 @@
+// ---------------- [ File: workspacer-toml/src/get_package_section_fields_with_fallback.rs ]
 // We use the helper function `field_with_fallback` to remove repetition
 // in each fallback trait implementation.
 crate::ix!();

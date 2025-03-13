@@ -7,3 +7,5 @@ x!{readme_writer_request}
 x!{update_readmes}
 x!{errors}
 x!{execute}
+x!{apply}
+x!{supertrait}

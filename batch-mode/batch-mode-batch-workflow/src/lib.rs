@@ -2,6 +2,7 @@
 #[macro_use] mod imports; use imports::*;
 
 x!{language_model_batch_workflow}
+x!{error}
 
 // re-exports so that the user can see them
 pub use batch_mode_batch_reconciliation::*;

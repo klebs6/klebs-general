@@ -9,6 +9,8 @@ features = [ "derive" ]
 version = "*"
 [dependencies.serde_derive]
 version = "*"
+[dependencies.async-trait]
+version = "*"
 [dependencies.serde_json]
 version = "*"
 [dependencies.traced-test]

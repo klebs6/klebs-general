@@ -1,3 +1,4 @@
+// ---------------- [ File: workspacer-config/src/config.rs ]
 crate::ix!();
 
 /// Represents the data we store in `.ws/workspacer-config` files, whether local or global.

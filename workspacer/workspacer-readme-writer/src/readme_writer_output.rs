@@ -1,3 +1,4 @@
+// ---------------- [ File: workspacer-readme-writer/src/readme_writer_output.rs ]
 //NOTE: these doc comments are ultimately placed in our schema, which typically goes to an AI.
 //
 crate::ix!();
@@ -5,8 +6,9 @@ crate::ix!();
 /// This structure is a schema and a directive indicating what we need you to provide for us in
 /// your response to our query.
 ///
-#[derive(AiJsonTemplate,SaveLoad,Getters,Debug,Clone,Serialize,Deserialize)]
+#[derive(AiJsonTemplate,SaveLoad,Builder,Getters,Debug,Clone,Serialize,Deserialize)]
 #[getset(get="pub")]
+#[builder(setter(into))]
 pub struct AiReadmeWriterDesiredOutput {
 
     /// This string should be valid markdown representing the readme for this crate.

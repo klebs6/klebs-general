@@ -7,6 +7,6 @@ impl GatherBinTargetNames for CrateHandle
     type Error = CrateError;
 
     fn gather_bin_target_names(&self) -> Result<Vec<String>, Self::Error> {
-        Ok(self.cargo_toml().gather_bin_target_names()?)
+        Ok(self.cargo_toml().lock().unwrap().gather_bin_target_names()?)
     }
 }

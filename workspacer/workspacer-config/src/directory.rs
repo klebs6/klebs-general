@@ -1,3 +1,4 @@
+// ---------------- [ File: workspacer-config/src/directory.rs ]
 crate::ix!();
 
 /// Represents the path to a `.ws` directory (local or global), along with

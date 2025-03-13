@@ -1,4 +1,4 @@
-// ---------------- [ File: workspacer-crate/src/is_version_published_on_crates_io.rs ]
+// ---------------- [ File: workspacer-check-crates-io/src/is_version_published_on_crates_io.rs ]
 crate::ix!();
 
 /// Checks crates.io to see if `<crate_name>@<crate_version>` is published.

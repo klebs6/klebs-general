@@ -3,24 +3,6 @@ crate::ix!();
 
 pub type LanguageModelClientArc = Arc<dyn LanguageModelClientInterface<LanguageModelBatchWorkflowError>>;
 
-error_tree!{
-    pub enum LanguageModelBatchWorkflowError {
-        BatchWorkspaceError(BatchWorkspaceError),
-        BatchReconciliationError(BatchReconciliationError),
-        BatchDownloadError(BatchDownloadError),
-        BatchErrorProcessingError(BatchErrorProcessingError),
-        BatchMetadataError(BatchMetadataError),
-        BatchOutputProcessingError(BatchOutputProcessingError),
-        BatchValidationError(BatchValidationError),
-        FileMoveError(FileMoveError),
-        OpenAIClientError(OpenAIClientError),
-        BatchInputCreationError(BatchInputCreationError),
-        BatchProcessingError(BatchProcessingError),
-        JsonParseError(JsonParseError),
-        IOError(std::io::Error),
-    }
-}
-
 /// Two new traits that users must implement:
 /// 1) `ComputeSystemMessage` to provide a static or dynamic system message.
 /// 2) `ComputeLanguageModelCoreQuery` to build requests for each seed item.
@@ -133,4 +115,20 @@ pub trait LanguageModelBatchWorkflow<E>
 
         Ok(())
     }
+}
+
+/// This new trait is used to gather the final AI expansions from disk, 
+/// matching each seed item to its parsed output JSON.
+#[async_trait]
+pub trait LanguageModelBatchWorkflowGatherResults {
+    type Error;
+    type Seed: Clone + Named;
+    type Output: LoadFromFile<Error = SaveLoadError>;
+
+    /// Gathers AI-generated JSON outputs for the given seeds in the same order, 
+    /// returning `(Seed, Output)` pairs.
+    async fn gather_results(
+        &self,
+        seeds: &[Self::Seed]
+    ) -> Result<Vec<(Self::Seed, Self::Output)>, Self::Error>;
 }

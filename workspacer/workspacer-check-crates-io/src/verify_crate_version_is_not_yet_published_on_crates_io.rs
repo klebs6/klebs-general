@@ -1,3 +1,4 @@
+// ---------------- [ File: workspacer-check-crates-io/src/verify_crate_version_is_not_yet_published_on_crates_io.rs ]
 crate::ix!();
 
 /// Additional trait used by `ReadyForCargoPublish` to check if the crate version

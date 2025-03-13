@@ -1,13 +1,13 @@
 [dependencies]
 derive_builder = "0.20.2"
-[dependencies.async-trait]
-version = "0.1.86"
-[dependencies.batch-mode-3p]
-path = "../batch-mode-3p"
 [dependencies.ai-json-template]
 path = "../ai-json-template"
 [dependencies.ai-json-template-derive]
 path = "../ai-json-template-derive"
+[dependencies.async-trait]
+version = "0.1.86"
+[dependencies.batch-mode-3p]
+path = "../batch-mode-3p"
 [dependencies.batch-mode-batch-client]
 path = "../batch-mode-batch-client"
 [dependencies.batch-mode-batch-executor]
@@ -30,6 +30,8 @@ path = "../batch-mode-json"
 path = "../batch-mode-process-response"
 [dependencies.language-model-type]
 path = "../language-model-type"
+[dependencies.save-load-traits]
+path = "../save-load-traits"
 [dependencies.serde]
 features = [ "derive" ]
 version = "1.0.218"

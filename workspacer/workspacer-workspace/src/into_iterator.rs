@@ -4,8 +4,8 @@ crate::ix!();
 impl<'a,P,H:CrateHandleInterface<P>> IntoIterator for &'a Workspace<P,H> 
 where for<'async_trait> P: From<PathBuf> + AsRef<Path> + Send + Sync + 'async_trait
 {
-    type Item     = &'a H;
-    type IntoIter = Iter<'a, H>;
+    type Item     = &'a Arc<H>;
+    type IntoIter = Iter<'a, Arc<H>>;
 
     fn into_iter(self) -> Self::IntoIter {
         self.crates().iter()

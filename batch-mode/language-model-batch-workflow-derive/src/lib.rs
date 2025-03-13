@@ -18,33 +18,8 @@ xp!{process_batch_requests}
 xp!{send_sync}
 xp!{lmbw_parsed_input}
 xp!{parse_derive_input_for_lmbw}
+xp!{gather_results}
 
-/// Primary entry point for the derive macro.  This is the only public function
-/// you need to export from your `proc-macro` crate in order for users to write:
-///
-/// ```ignore
-/// #[derive(LanguageModelBatchWorkflow)]
-/// #[getset(get = "pub")]
-/// pub struct LanguageModelTokenExpander { /* ... */ }
-/// ```
-///
-/// *Internally*, this function calls various private subroutines to parse the struct,
-/// gather relevant attributes, then generate `impl`s for:
-///
-/// 1. `FinishProcessingUncompletedBatches`
-/// 2. `ProcessBatchRequests`
-/// 3. `LanguageModelBatchWorkflow<Error>`
-/// 4. `Send` / `Sync`
-/// 5. `GetBatchWorkspace<BatchWorkspaceError>`
-/// 6. `GetLanguageModelClient<OpenAIClientError>`
-///
-/// Each of these subroutines is tested in its own test module.
-// ===========================[ CHANGED ITEM #2 ]===========================
-// The entire `language_model_batch_workflow_derive` function in `lib.rs`.
-// We now handle the fact that `parse_derive_input_for_lmbw` returns
-// `Result<LmbwParsedInput, syn::Error>`. If it fails, we return the error
-// immediately to the compiler. If it succeeds, we proceed to generate code.
-// src/lib.rs
 #[proc_macro_derive(
     LanguageModelBatchWorkflow,
     attributes(
@@ -55,21 +30,20 @@ xp!{parse_derive_input_for_lmbw}
         custom_process_batch_error_fn,
         expected_content_type,
         model_type,
-        batch_error_type // for custom error
+        batch_error_type
     )
 )]
 pub fn language_model_batch_workflow_derive(input: TokenStream) -> TokenStream {
-    trace!("Entering language_model_batch_workflow_derive proc macro.");
+    tracing::trace!("Entering language_model_batch_workflow_derive proc macro.");
 
     let ast: DeriveInput = syn::parse_macro_input!(input as DeriveInput);
 
-    // parse the struct + attributes
     let parse_result = match parse_derive_input_for_lmbw(&ast) {
         Ok(x) => x,
         Err(e) => return e.to_compile_error().into(),
     };
 
-    // generate the various impl blocks
+    // existing sub-impls
     let finish_processing_impl      = generate_impl_finish_processing_uncompleted_batches(&parse_result);
     let process_batch_requests_impl = generate_impl_process_batch_requests(&parse_result);
     let workflow_impl               = generate_impl_language_model_batch_workflow(&parse_result);
@@ -77,7 +51,9 @@ pub fn language_model_batch_workflow_derive(input: TokenStream) -> TokenStream {
     let get_workspace_impl          = generate_impl_get_batch_workspace(&parse_result);
     let get_client_impl             = generate_impl_get_language_model_client(&parse_result);
 
-    // combine them
+    // new gather results trait impl
+    let gather_results_trait_impl   = generate_impl_gather_results_trait(&parse_result);
+
     let expanded = combine_impls_into_final_macro(vec![
         finish_processing_impl,
         process_batch_requests_impl,
@@ -85,8 +61,10 @@ pub fn language_model_batch_workflow_derive(input: TokenStream) -> TokenStream {
         send_sync_impl,
         get_workspace_impl,
         get_client_impl,
+        gather_results_trait_impl,
     ]);
 
-    trace!("Exiting language_model_batch_workflow_derive proc macro.");
+    tracing::trace!("Exiting language_model_batch_workflow_derive proc macro.");
     expanded.into()
 }
+

@@ -1,3 +1,4 @@
+// ---------------- [ File: workspacer-check-private/src/verify_crate_is_not_private.rs ]
 crate::ix!();
 
 /// Additional trait used by `ReadyForCargoPublish` to check if the crate is private.

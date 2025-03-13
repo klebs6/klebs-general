@@ -12,6 +12,7 @@ pub trait CargoTomlInterface
 + CheckRequiredFieldsForIntegrity<Error=CargoTomlError>
 + CheckVersionValidityForIntegrity<Error=CargoTomlError>
 + GetPackageSection<Error=CargoTomlError>
++ GetPackageSectionMut<Error=CargoTomlError>
 //+ ReadyForCargoPublish<Error=CargoTomlError>
 + IsValidVersion
 + ValidateIntegrity<Error=CargoTomlError>
@@ -82,6 +83,14 @@ pub trait GetPackageSection {
 
     /// Helper to retrieve the `package` section from `Cargo.toml`
     fn get_package_section(&self) -> Result<&toml::Value, Self::Error>;
+}
+
+pub trait GetPackageSectionMut {
+
+    type Error;
+
+    /// Helper to retrieve the `package` section from `Cargo.toml`
+    fn get_package_section_mut(&mut self) -> Result<&mut toml::Value, Self::Error>;
 }
 
 pub trait IsValidVersion {
