@@ -37,7 +37,7 @@ impl ComputeSystemMessage for AiReadmeWriter
 
 impl ComputeLanguageModelCoreQuery for AiReadmeWriter
 {
-    type Seed  = AiReadmeWriterRequest;
+    type Seed  = AiReadmeWriterRequest<PathBuf>;
 
     fn compute_language_model_core_query(
         &self,

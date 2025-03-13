@@ -29,6 +29,7 @@ use batch_mode_batch_workflow::*;
 use batch_mode_3p::*;
 use std::sync::Arc;
 use serde::{Serialize, Deserialize};
+use camel_case_token_with_comment::CamelCaseTokenWithComment;
 
 #[derive(LanguageModelBatchWorkflow)]
 #[batch_error_type(MyErr)]
@@ -62,6 +63,15 @@ impl ComputeLanguageModelCoreQuery for MyValidStruct {
         _input: &Self::Seed
     ) -> String {
         unimplemented!();
+    }
+}
+
+// Add a simple FromStr implementation:
+impl std::str::FromStr for TestSeed {
+    type Err = MyErr;
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        // Here, we just store `s` as the name. Real code might parse JSON, etc.
+        Ok(TestSeed { name: s.to_string() })
     }
 }
 
@@ -103,6 +113,12 @@ impl From<MyErr> for BatchDownloadError {
 }
 
 impl From<MyErr> for BatchReconciliationError {
+    fn from(_err: MyErr) -> Self {
+        todo!();
+    }
+}
+
+impl From<MyErr> for BatchSuccessResponseHandlingError {
     fn from(_err: MyErr) -> Self {
         todo!();
     }

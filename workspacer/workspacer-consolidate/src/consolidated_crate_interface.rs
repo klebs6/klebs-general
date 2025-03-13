@@ -1,7 +1,7 @@
 // ---------------- [ File: workspacer-consolidate/src/consolidated_crate_interface.rs ]
 crate::ix!();
 
-#[derive(Clone,Getters,Debug)]
+#[derive(Serialize,Deserialize,Clone,Getters,Debug)]
 #[getset(get="pub")]
 pub struct ConsolidatedCrateInterface {
     fns:          Vec<CrateInterfaceItem<ast::Fn>>,

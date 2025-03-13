@@ -6,6 +6,7 @@ error_tree!{
         LanguageModelBatchWorkflowError(LanguageModelBatchWorkflowError),
         WorkspacerFallbackError(WorkspacerFallbackError),
         CrateError(CrateError),
+        WorkspaceError(WorkspaceError),
         CargoTomlError(CargoTomlError),
         #[display("ReadmeWriteError: {0}")]
         ReadmeWriteError(ReadmeWriteError),

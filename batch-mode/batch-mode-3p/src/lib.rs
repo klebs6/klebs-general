@@ -26,7 +26,7 @@ pub use async_openai::{
     config::OpenAIConfig,
     error::{OpenAIError, ApiError as OpenAIApiError},
 };
-pub use serde::{de,Deserializer,Deserialize,Serialize,Serializer};
+pub use serde::{de,de::DeserializeOwned,Deserializer,Deserialize,Serialize,Serializer};
 pub use bytes::Bytes;
 
 pub use export_magic::*;
@@ -58,7 +58,7 @@ pub use regex::{self,Regex,Captures};
 pub use std::collections::{VecDeque,HashSet};
 pub use traced_test::traced_test;
 pub use tracing_setup::*;
-pub use tracing::{trace,info,debug,error,warn};
+pub use tracing::{self,instrument,trace,info,debug,error,warn};
 pub use std::cell::RefCell;
 pub use std::rc::Rc;
 pub use tempfile::{self,tempdir,TempDir};

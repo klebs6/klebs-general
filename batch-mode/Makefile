@@ -26,6 +26,7 @@ ACTIVE_PACKAGE := language-model-batch-workflow-derive
 #ACTIVE_PACKAGE := batch-mode-batch-workflow
 #ACTIVE_PACKAGE := batch-mode-batch-client
 #ACTIVE_PACKAGE := batch-mode-batch-reconciliation
+#ACTIVE_PACKAGE := batch-mode-process-response
 #ACTIVE_PACKAGE := batch-mode-batch-workspace
 #ACTIVE_PACKAGE := batch-mode-batch-workspace-interface
 #ACTIVE_PACKAGE := batch-mode-json
@@ -35,7 +36,7 @@ ACTIVE_PACKAGE := language-model-batch-workflow-derive
 #ACTIVE_PACKAGE := ai-json-template
 #ACTIVE_PACKAGE := ai-json-template-derive
 #ACTIVE_PACKAGE := save-load-traits
-ACTIVE_PACKAGE := save-load-derive
+#ACTIVE_PACKAGE := save-load-derive
 
 #-----------------------------------------------------[]
 #INDIVIDUAL_TEST := test_build_network_io_enum
@@ -45,7 +46,7 @@ DEFAULT := test
 #DEFAULT := test_file
 #DEFAULT := test_one
 #DEFAULT := test_file_one
-#DEFAULT := test_all
+DEFAULT := test_all
 #DEFAULT := run
 #DEFAULT := file_diff
 #DEFAULT := build

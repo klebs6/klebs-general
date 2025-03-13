@@ -1,11 +1,8 @@
 // ---------------- [ File: src/language_model_batch_workflow.rs ]
 crate::ix!();
 
-/// This function has been updated so that the generated code correctly:
-/// - Implements `ComputeLanguageModelRequests` without referencing non-existent fields like `self.model` or `self.system_message`.
-/// - Uses the `model` parameter (passed to `compute_language_model_requests`) rather than ignoring it.
-/// - Passes a locally constructed `final_msg` (enhanced system message) instead of referencing `self.system_message`.
-/// - Avoids `#[async_trait]` on `ComputeLanguageModelRequests` (since that trait has no async methods).
+/// This function has been updated so that the generated code correctly handles
+/// the optional appended instructions without triggering format-string errors.
 pub fn generate_impl_language_model_batch_workflow(parsed: &LmbwParsedInput) -> TokenStream2 {
     trace!("generate_impl_language_model_batch_workflow: start.");
 
@@ -17,36 +14,29 @@ pub fn generate_impl_language_model_batch_workflow(parsed: &LmbwParsedInput) -> 
         None    => quote! { TokenExpanderError },
     };
 
-    // If the user added `#[batch_json_output_format(SomeType)]`, we set `user_wants_json = true`.
-    // Then our macro advises the AI to return well-formed JSON.
     let user_wants_json = parsed.json_output_format_type().is_some();
 
-    let appended_instruction = if user_wants_json {
-        let json_output_format_type = parsed.json_output_format_type().as_ref().unwrap();
-        quote!{ RigorousJsonCommandBuilderStage::get_all::<#json_output_format_type>() }
+    // We'll embed the final message-building logic so it never produces
+    // a mismatched argument count.
+    let msg_construction_expr = if user_wants_json {
+        let json_ty = parsed.json_output_format_type().as_ref().unwrap();
+        quote! {
+            {
+                let base_msg = <Self as ComputeSystemMessage>::system_message();
+                let appended = RigorousJsonCommandBuilderStage::get_all::<#json_ty>();
+                format!("{}\n\n{}", base_msg, appended)
+            }
+        }
     } else {
-        quote!{ }
+        quote! {
+            {
+                <Self as ComputeSystemMessage>::system_message()
+            }
+        }
     };
 
-    // The content type used for `execute_language_model_batch_workflow`.
-    let content_type_expr = if user_wants_json {
-        quote! { ExpectedContentType::Json }
-    } else {
-        quote! { ExpectedContentType::PlainText }
-    };
-
-    // The field the user labeled `#[model_type]` (e.g. `lm_type`).
     let model_type_fld = parsed.model_type_field().as_ref().unwrap();
 
-    // Generate `ComputeLanguageModelRequests` impl block.
-    //
-    // Note that `ComputeLanguageModelRequests::compute_language_model_requests` now:
-    //  1) uses the function's `model: &LanguageModelType` parameter (instead of ignoring it).
-    //  2) calls `<Self as ComputeSystemMessage>::system_message()` to get the base system prompt.
-    //  3) appends JSON instructions if `user_wants_json` is set.
-    //  4) calls `<Self as ComputeLanguageModelCoreQuery>::compute_language_model_core_query(...)`
-    //     for each seed item to build the queries.
-    //  5) returns `LanguageModelBatchAPIRequest::requests_from_query_strings(&final_msg, model, &queries)`.
     let compute_requests_impl = quote! {
         impl #impl_generics ComputeLanguageModelRequests for #struct_ident #ty_generics #where_clause {
             type Seed = <#struct_ident #ty_generics as ComputeLanguageModelCoreQuery>::Seed;
@@ -56,26 +46,19 @@ pub fn generate_impl_language_model_batch_workflow(parsed: &LmbwParsedInput) -> 
                 model: &LanguageModelType,
                 inputs: &[Self::Seed]
             ) -> Vec<LanguageModelBatchAPIRequest> {
-                trace!("Generating language model requests with computed system message and user-wants-json={}.", #user_wants_json);
+                tracing::trace!("Generating language model requests; user-wants-json={}", #user_wants_json);
 
-                let base_msg = <Self as ComputeSystemMessage>::system_message();
-                debug!("Base system message is {} chars long.", base_msg.len());
-
-                let final_msg = if #user_wants_json {
-                    format!("{}\n\n{}", base_msg, #appended_instruction)
-                } else {
-                    base_msg
-                };
-                debug!("Final system message length after JSON note: {}", final_msg.len());
+                // Construct the final system prompt with or without JSON instructions
+                let final_msg = #msg_construction_expr;
+                tracing::debug!("Final system message length is {}", final_msg.len());
 
                 let mut core_queries = Vec::with_capacity(inputs.len());
                 for seed_item in inputs {
                     let req = <Self as ComputeLanguageModelCoreQuery>::compute_language_model_core_query(self, seed_item);
                     core_queries.push(req);
                 }
-                info!("Built {} core query item(s) from the input seeds.", core_queries.len());
+                tracing::info!("Built {} core query item(s) from the input seeds.", core_queries.len());
 
-                // Create batch requests from the final system message + each query
                 LanguageModelBatchAPIRequest::requests_from_query_strings(
                     &final_msg,
                     model.clone(),
@@ -85,10 +68,12 @@ pub fn generate_impl_language_model_batch_workflow(parsed: &LmbwParsedInput) -> 
         }
     };
 
-    // Generate `LanguageModelBatchWorkflow<Error>` impl block.
-    //
-    // This block’s `plant_seed_and_wait` method calls `execute_language_model_batch_workflow`
-    // with the struct’s own `#[model_type]` field (e.g. `self.lm_type`).
+    let content_type_expr = if user_wants_json {
+        quote! { ExpectedContentType::Json }
+    } else {
+        quote! { ExpectedContentType::PlainText }
+    };
+
     let workflow_impl = quote! {
         #[async_trait]
         impl #impl_generics LanguageModelBatchWorkflow<#error_type> for #struct_ident #ty_generics #where_clause {
@@ -97,7 +82,7 @@ pub fn generate_impl_language_model_batch_workflow(parsed: &LmbwParsedInput) -> 
                 &mut self,
                 input_tokens: &[<Self as ComputeLanguageModelRequests>::Seed]
             ) -> Result<(), #error_type> {
-                debug!("plant_seed_and_wait => auto-generated logic invoked.");
+                tracing::debug!("plant_seed_and_wait => auto-generated logic invoked.");
                 self.execute_language_model_batch_workflow(
                     self.#model_type_fld.clone(),
                     #content_type_expr.clone(),
@@ -112,7 +97,7 @@ pub fn generate_impl_language_model_batch_workflow(parsed: &LmbwParsedInput) -> 
         #workflow_impl
     };
 
-    trace!("Finished generate_impl_language_model_batch_workflow.");
+    tracing::trace!("Finished generate_impl_language_model_batch_workflow.");
     expanded
 }
 

@@ -41,3 +41,5 @@ version     = "0.1.0"
 path = "../batch-mode-batch-workflow"
 [dev-dependencies.batch-mode-batch-workspace-interface]
 path = "../batch-mode-batch-workspace-interface"
+[dev-dependencies.camel-case-token-with-comment]
+path = "../camel-case-token-with-comment"

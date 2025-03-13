@@ -1,16 +1,21 @@
 [dependencies.batch-mode-3p]
 path = "../batch-mode-3p"
 version = "0.2.0"
-
 [dependencies.save-load-traits]
 path = "../save-load-traits"
 version = "0.2.0"
-
+[dependencies.serde]
+features = [ "derive" ]
+version = "*"
+[dependencies.serde_derive]
+version = "*"
+[dependencies.serde_json]
+version = "*"
 [package]
-edition     = "2024"
-name        = "camel-case-token-with-comment"
-version     = "0.2.0"
+authors = [ "klebs tpk3.mx@gmail.com" ]
 description = "Handles camel case tokens with optional comments and provides utilities for parsing token files and extracting JSON fields."
-authors     = ["klebs tpk3.mx@gmail.com"]
-license     = "MIT"
-repository  = "https://github.com/klebs6/klebs-general"
+edition = "2024"
+license = "MIT"
+name = "camel-case-token-with-comment"
+repository = "https://github.com/klebs6/klebs-general"
+version = "0.2.0"

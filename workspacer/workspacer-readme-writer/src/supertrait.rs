@@ -8,6 +8,8 @@ pub trait ReadmeWritingCrateHandle<P>:
     + Send
     + Sync
     + 'static
+    where
+        P: AsRef<Path> + Send + Sync + 'static,
 {
     // no extra methods needed, just a trait bundling
 }
@@ -20,6 +22,7 @@ where
         + Send
         + Sync
         + 'static,
+    P: AsRef<Path> + Send + Sync + 'static,
 {
     // blanket impl, so any T satisfying these constraints
     // automatically implements ReadmeWritingCrateHandle<P>.

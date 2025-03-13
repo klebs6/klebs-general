@@ -77,16 +77,16 @@ impl ApplyAiReadmeOutput for CrateHandle {
         new_categories: &[String],
     ) -> Result<(), Self::Error> {
 
-        // 1) We must get the path to the Cargo.toml from inside cargo_toml().
-        //    Then drop the guard. 
+        // 1) We create a local PathBuf by locking, extracting the path, and dropping the guard immediately:
         let cargo_path = {
-            let mut guard = self.cargo_toml().lock().unwrap();
-            // cargo_toml() is a trait object that extends AsRef<Path>.
-            // So guard.as_ref() -> &Path, we can clone that into a PathBuf:
-            guard.as_ref().to_path_buf()
+            let cargo_toml_arc = self.cargo_toml();    // Arc<Mutex<dyn CargoTomlInterface>>
+            let mut guard = cargo_toml_arc.lock().unwrap();
+            let path_buf = guard.as_ref().to_path_buf();
+            // guard goes out of scope here
+            path_buf
         };
 
-        // 2) Now do the async read from cargo_path.
+        // 2) Now we can safely do async I/O without holding the MutexGuard.
         let old_contents = tokio::fs::read_to_string(&cargo_path).await.map_err(|io_err| {
             CrateError::IoError {
                 io_error: Arc::new(io_err),

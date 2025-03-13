@@ -48,6 +48,7 @@ error_tree!{
     pub enum BatchSuccessResponseHandlingError {
         UuidParseError(UuidParseError),
         JsonParseError(JsonParseError),
+        SerdeJsonError(serde_json::Error),
         TokenParseError(TokenParseError),
         SaveLoadError(SaveLoadError),
         IoError(std::io::Error),

@@ -6,3 +6,4 @@ pub(crate) use workspacer_errors::*;
 pub(crate) use workspacer_interface::*;
 pub(crate) use workspacer_syntax::*;
 pub(crate) use workspacer_workspace::*;
+pub(crate) use serde_derive::{Serialize,Deserialize};

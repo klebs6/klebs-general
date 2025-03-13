@@ -11,6 +11,10 @@ crate::ix!();
 #[builder(setter(into))]
 pub struct AiReadmeWriterDesiredOutput {
 
+    /// This string should be the name of our crate, *verbatim*, trimmed for use
+    /// as a toml field
+    crate_name: String,
+
     /// This string should be valid markdown representing the readme for this crate.
     /// Please make it terse, useful, and designed for the apex consumer of clear intent and
     /// industrious nature. Use advanced vocabulary. 
@@ -97,4 +101,11 @@ pub struct AiReadmeWriterDesiredOutput {
     /// wasm
     /// web-programming
     package_categories:  Vec<String>,
+}
+
+impl Named for AiReadmeWriterDesiredOutput
+{
+    fn name(&self) -> std::borrow::Cow<'_, str> {
+        std::borrow::Cow::Owned(format!("{}-ai-generated-readme", self.crate_name()))
+    }
 }

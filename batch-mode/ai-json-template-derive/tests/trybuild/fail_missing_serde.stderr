@@ -1,7 +1,32 @@
-error[E0277]: the trait bound `for<'a> NoSerde: Deserialize<'a>` is not satisfied
-  --> tests/trybuild/fail_missing_serde.rs:10:8
+error[E0277]: the trait bound `NoSerde: Serialize` is not satisfied
+  --> tests/trybuild/fail_missing_serde.rs:10:10
    |
-10 | struct NoSerde {
+10 | #[derive(SaveLoad,Debug,Clone,AiJsonTemplate)]
+   |          ^^^^^^^^ the trait `Serialize` is not implemented for `NoSerde`
+   |
+   = note: for local types consider adding `#[derive(serde::Serialize)]` to your `NoSerde` type
+   = note: for types from other crates check whether the crate offers a `serde` feature flag
+   = help: the following other types implement trait `Serialize`:
+             &'a T
+             &'a mut T
+             ()
+             (T,)
+             (T0, T1)
+             (T0, T1, T2)
+             (T0, T1, T2, T3)
+             (T0, T1, T2, T3, T4)
+           and $N others
+   = help: see issue #48214
+   = note: this error originates in the derive macro `SaveLoad` (in Nightly builds, run with -Z macro-backtrace for more info)
+help: add `#![feature(trivial_bounds)]` to the crate attributes to enable
+   |
+3  + #![feature(trivial_bounds)]
+   |
+
+error[E0277]: the trait bound `for<'a> NoSerde: Deserialize<'a>` is not satisfied
+  --> tests/trybuild/fail_missing_serde.rs:11:8
+   |
+11 | struct NoSerde {
    |        ^^^^^^^ the trait `for<'a> Deserialize<'a>` is not implemented for `NoSerde`
    |
    = note: for local types consider adding `#[derive(serde::Deserialize)]` to your `NoSerde` type
@@ -26,9 +51,9 @@ note: required by a bound in `ai_json_template::AiJsonTemplate`
    |   ^^^^^^^^^^^^^^^^^^^^^^^ required by this bound in `AiJsonTemplate`
 
 error[E0277]: the trait bound `NoSerde: Serialize` is not satisfied
-  --> tests/trybuild/fail_missing_serde.rs:10:8
+  --> tests/trybuild/fail_missing_serde.rs:11:8
    |
-10 | struct NoSerde {
+11 | struct NoSerde {
    |        ^^^^^^^ the trait `Serialize` is not implemented for `NoSerde`
    |
    = note: for local types consider adding `#[derive(serde::Serialize)]` to your `NoSerde` type
@@ -51,62 +76,3 @@ note: required by a bound in `ai_json_template::AiJsonTemplate`
 ...
    | + Serialize
    |   ^^^^^^^^^ required by this bound in `AiJsonTemplate`
-
-error[E0277]: the trait bound `NoSerde: Deserialize<'_>` is not satisfied
-  --> tests/trybuild/fail_missing_serde.rs:14:1
-   |
-14 | impl_default_save_to_file_traits!{NoSerde}
-   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `Deserialize<'_>` is not implemented for `NoSerde`
-   |
-   = note: for local types consider adding `#[derive(serde::Deserialize)]` to your `NoSerde` type
-   = note: for types from other crates check whether the crate offers a `serde` feature flag
-   = help: the following other types implement trait `Deserialize<'de>`:
-             &'a [u8]
-             &'a batch_mode_3p::Path
-             &'a str
-             ()
-             (T,)
-             (T0, T1)
-             (T0, T1, T2)
-             (T0, T1, T2, T3)
-           and $N others
-note: required by a bound in `batch_mode_3p::serde_json::from_str`
-  --> $CARGO/serde_json-1.0.139/src/de.rs
-   |
-   | pub fn from_str<'a, T>(s: &'a str) -> Result<T>
-   |        -------- required by a bound in this function
-   | where
-   |     T: de::Deserialize<'a>,
-   |        ^^^^^^^^^^^^^^^^^^^ required by this bound in `from_str`
-   = note: this error originates in the macro `impl_default_save_to_file_traits` (in Nightly builds, run with -Z macro-backtrace for more info)
-
-error[E0277]: the trait bound `NoSerde: Serialize` is not satisfied
-  --> tests/trybuild/fail_missing_serde.rs:14:1
-   |
-14 | impl_default_save_to_file_traits!{NoSerde}
-   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-   | |
-   | the trait `Serialize` is not implemented for `NoSerde`
-   | required by a bound introduced by this call
-   |
-   = note: for local types consider adding `#[derive(serde::Serialize)]` to your `NoSerde` type
-   = note: for types from other crates check whether the crate offers a `serde` feature flag
-   = help: the following other types implement trait `Serialize`:
-             &'a T
-             &'a mut T
-             ()
-             (T,)
-             (T0, T1)
-             (T0, T1, T2)
-             (T0, T1, T2, T3)
-             (T0, T1, T2, T3, T4)
-           and $N others
-note: required by a bound in `to_string_pretty`
-  --> $CARGO/serde_json-1.0.139/src/ser.rs
-   |
-   | pub fn to_string_pretty<T>(value: &T) -> Result<String>
-   |        ---------------- required by a bound in this function
-   | where
-   |     T: ?Sized + Serialize,
-   |                 ^^^^^^^^^ required by this bound in `to_string_pretty`
-   = note: this error originates in the macro `impl_default_save_to_file_traits` (in Nightly builds, run with -Z macro-backtrace for more info)

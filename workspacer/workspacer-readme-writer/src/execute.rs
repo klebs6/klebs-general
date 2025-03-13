@@ -1,8 +1,8 @@
 // ---------------- [ File: workspacer-readme-writer/src/execute.rs ]
 crate::ix!();
 
-pub async fn execute_ai_readme_writer_requests<P>(
-    requests: &[AiReadmeWriterRequest<P>],
+pub async fn execute_ai_readme_writer_requests(
+    requests: &[AiReadmeWriterRequest<PathBuf>],
 ) -> Result<(), ReadmeWriterExecutionError>
 {
     use tracing::{trace, info};

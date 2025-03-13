@@ -13,7 +13,7 @@ pub struct LanguageModelRequestBody {
     messages: Vec<LanguageModelMessage>,
 
     /// Maximum number of tokens to be used by the model.
-    max_tokens: u32,
+    max_completion_tokens: u32,
 }
 
 impl LanguageModelRequestBody {
@@ -35,7 +35,7 @@ impl LanguageModelRequestBody {
                 LanguageModelMessage::system_message(system_message),
                 LanguageModelMessage::user_message(user_message),
             ],
-            max_tokens: Self::default_max_tokens(),
+            max_completion_tokens: Self::default_max_tokens(),
         }
     }
 
@@ -46,7 +46,7 @@ impl LanguageModelRequestBody {
                 LanguageModelMessage::system_message(system_message),
                 LanguageModelMessage::user_message_with_image(user_message,image_b64),
             ],
-            max_tokens: Self::default_max_tokens_given_image(image_b64),
+            max_completion_tokens: Self::default_max_tokens_given_image(image_b64),
         }
     }
 }

@@ -1,6 +1,8 @@
 // ---------------- [ File: src/construct_batches.rs ]
 crate::ix!();
 
+pub const DO_CRAZY_BATCH_SIZE_CHECK: bool = false;
+
 /// Break requests into workable batches.
 pub fn construct_batches(
     requests:           &[LanguageModelBatchAPIRequest], 
@@ -11,7 +13,7 @@ pub fn construct_batches(
     let mut batches = requests.chunks(requests_per_batch).enumerate();
 
     // If there's exactly 1 chunk, and it's under 32, panic:
-    if batches.len() == 1 {
+    if batches.len() == 1 && DO_CRAZY_BATCH_SIZE_CHECK {
         let only_batch_len = batches.nth(0).unwrap().1.len();
         if only_batch_len < 32 {
             panic!(

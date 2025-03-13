@@ -3,7 +3,7 @@ crate::ix!();
 
 pub type TokenQuad = [CamelCaseTokenWithComment; 4];
 
-#[derive(Hash,Debug,Clone,PartialEq,Eq)]
+#[derive(Serialize,Deserialize,Hash,Debug,Clone,PartialEq,Eq)]
 pub struct CamelCaseTokenWithComment {
     data:    String,
     comment: Option<String>,

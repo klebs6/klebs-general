@@ -7,13 +7,13 @@ pub trait BatchWorkspaceInterface
 + GetErrorFilenameAtIndex
 + GetMetadataFilenameAtIndex
 + GetDoneDirectory
-+ GetTokenExpansionPath
 + GetFailedJsonRepairsDir
 + GetFailedItemsDir
 + GetTextStoragePath
 + GetWorkdir
 + Send
 + Sync
++ GetTargetPath<Item = Arc<dyn GetTargetPathForAIExpansion + Send + Sync + 'static>>
 {}
 
 pub trait GetInputFilenameAtIndex {
@@ -36,10 +36,11 @@ pub trait GetDoneDirectory {
     fn get_done_directory(&self) -> &PathBuf;
 }
 
-pub trait GetTokenExpansionPath {
-    fn token_expansion_path(
+pub trait GetTargetPath {
+    type Item;
+    fn target_path(
         &self,
-        token_name:            &CamelCaseTokenWithComment, 
+        item:            &Self::Item, 
         expected_content_type: &ExpectedContentType
     ) -> PathBuf;
 }
@@ -58,4 +59,34 @@ pub trait GetTextStoragePath {
 
 pub trait GetWorkdir {
     fn workdir(&self) -> PathBuf;
+}
+
+pub trait GetTargetPathForAIExpansion {
+
+    fn target_path_for_ai_json_expansion(
+        &self, 
+        target_dir:            &Path,
+        expected_content_type: &ExpectedContentType,
+
+    ) -> PathBuf;
+}
+
+impl<T:Named> GetTargetPathForAIExpansion for T {
+
+    fn target_path_for_ai_json_expansion(
+        &self, 
+        target_dir:            &Path,
+        expected_content_type: &ExpectedContentType,
+
+    ) -> PathBuf {
+
+        // Convert 'token_name' to snake_case
+        let snake_token_name = to_snake_case(&self.name());
+
+        // Determine the output filename based on custom_id
+        // You can customize this as needed, e.g., using token names
+        let filename = format!("{}.json", snake_token_name);
+
+        target_dir.to_path_buf().join(filename)
+    }
 }

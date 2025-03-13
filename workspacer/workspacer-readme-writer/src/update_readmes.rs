@@ -18,7 +18,7 @@ impl UpdateReadmeFiles for CrateHandle {
 
         trace!("Entering CrateHandle::update_readme");
 
-        let requests = vec![AiReadmeWriterRequest::async_try_from::<PathBuf,CrateHandle>(x).await?];
+        let requests = vec![AiReadmeWriterRequest::<PathBuf>::async_try_from::<CrateHandle>(x).await?];
 
         execute_ai_readme_writer_requests(&requests).await?;
 
@@ -29,12 +29,8 @@ impl UpdateReadmeFiles for CrateHandle {
 }
 
 #[async_trait]
-impl<P,H> UpdateReadmeFiles for Workspace<P,H>
-where
-    for<'x> P: Clone + From<PathBuf> + AsRef<Path> + Send + Sync + 'x,
-    H: CrateHandleInterface<P> 
-      + ConsolidateCrateInterface
-      + Sync + Send + 'static,
+impl<H> UpdateReadmeFiles for Workspace<PathBuf,H>
+where H: ReadmeWritingCrateHandle<PathBuf>,
 {
     type Error = ReadmeWriterExecutionError;
 
@@ -47,7 +43,7 @@ where
         let mut requests = Vec::new();
 
         for item in x.crates().iter() {
-            let request = AiReadmeWriterRequest::async_try_from::<P,H>(item.clone()).await?;
+            let request = AiReadmeWriterRequest::<PathBuf>::async_try_from::<H>(item.clone()).await?;
             requests.push(request);
         }
 

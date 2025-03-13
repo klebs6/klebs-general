@@ -1,5 +1,6 @@
 [dependencies]
 derive_builder = "*"
+structopt = "*"
 [dependencies.serde]
 features = [ "derive" ]
 version = "*"
@@ -27,3 +28,7 @@ path = "../workspacer-workspace"
 edition = "2024"
 name = "workspacer-readme-writer"
 version = "0.1.0"
+
+[[bin]]
+path = "src/bin/readme_writer.rs"
+name = "workspacer-readme-writer"
