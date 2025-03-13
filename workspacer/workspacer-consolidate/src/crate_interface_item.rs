@@ -5,8 +5,9 @@ crate::ix!();
 ///
 /// `T` must implement `GenerateSignature` so we can produce something like "fn name()" or
 /// "struct Name" for display.
-#[derive(Getters, Debug, Clone)]
+#[derive(Builder,Getters, Debug, Clone)]
 #[getset(get="pub")]
+#[builder(setter(into))]
 pub struct CrateInterfaceItem<T: GenerateSignature> {
     item:                  Arc<T>,
     docs:                  Option<String>,
@@ -526,5 +527,4 @@ r#"{
             original.item.generate_signature()
         );
     }
-
 }

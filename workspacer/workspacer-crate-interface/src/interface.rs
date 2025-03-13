@@ -6,6 +6,8 @@ pub trait CrateHandleInterface<P>
 + Send
 + Sync
 + Named
++ Serialize
++ DeserializeOwned
 + Versioned<Error=CrateError>
 + IsPrivate<Error=CrateError>
 + ReadFileString

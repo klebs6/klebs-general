@@ -1,5 +1,6 @@
 [dependencies]
 structopt = "*"
+derive_builder = "*"
 [dependencies.serde]
 features = [ "derive" ]
 version = "*"

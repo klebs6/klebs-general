@@ -53,7 +53,7 @@ ACTIVE_PACKAGE := workspacer
 ACTIVE_PACKAGE := workspacer-check-publish-ready
 ACTIVE_PACKAGE := workspacer-publish
 ACTIVE_PACKAGE := workspacer-readme-writer
-ACTIVE_PACKAGE := workspacer-consolidate
+#ACTIVE_PACKAGE := workspacer-consolidate
 #ACTIVE_PACKAGE := workspacer-check-crates-io
 #ACTIVE_PACKAGE := workspacer-check-private
 

@@ -8,5 +8,5 @@ pub(crate) use workspacer_syntax::*;
 pub(crate) use workspacer_workspace::*;
 pub(crate) use ::serde_derive::{Serialize,Deserialize};
 pub(crate) use ::serde::{Deserializer,ser::SerializeStruct};
-pub(crate) use ::serde::de::{Error as DeserError, MapAccess, Visitor};
+pub(crate) use ::serde::de::{Error as DeError, MapAccess, Visitor};
 pub(crate) use std::marker::PhantomData;

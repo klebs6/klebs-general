@@ -2,7 +2,7 @@
 crate::ix!();
 
 /// Handle to manipulate and verify the `Cargo.toml` file
-#[derive(Builder,MutGetters,Getters,Debug,Clone)]
+#[derive(Serialize,Deserialize,Builder,MutGetters,Getters,Debug,Clone)]
 #[builder(setter(into))]
 #[getset(get="pub",get_mut="pub")]
 pub struct CargoToml {
