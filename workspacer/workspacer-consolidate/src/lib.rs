@@ -2,6 +2,7 @@
 #[macro_use] mod imports; use imports::*;
 
 x!{crate_interface_item}
+x!{crate_interface_item_serde}
 x!{merge_doc_attrs}
 x!{gather_impl_methods}
 x!{impl_block_interface}

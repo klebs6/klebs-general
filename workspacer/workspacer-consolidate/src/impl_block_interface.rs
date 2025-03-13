@@ -1,14 +1,14 @@
 // ---------------- [ File: workspacer-consolidate/src/impl_block_interface.rs ]
 crate::ix!();
 
-#[derive(Clone,Getters,Debug)]
+#[derive(Serialize,Deserialize,Clone,Getters,Debug)]
 #[getset(get="pub")]
 pub struct ImplBlockInterface {
     docs:           Option<String>,
     attributes:     Option<String>,
     signature_text: String,
-    methods:        Vec<crate::crate_interface_item::CrateInterfaceItem<ast::Fn>>,
-    type_aliases:   Vec<crate::crate_interface_item::CrateInterfaceItem<ast::TypeAlias>>,
+    methods:        Vec<CrateInterfaceItem<ast::Fn>>,
+    type_aliases:   Vec<CrateInterfaceItem<ast::TypeAlias>>,
 }
 
 impl ImplBlockInterface {

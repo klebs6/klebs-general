@@ -2,7 +2,7 @@
 crate::ix!();
 
 /// A collection of user-defined toggles controlling how items are gathered and displayed.
-#[derive(Debug,Getters,Clone)]
+#[derive(Serialize,Deserialize,Debug,Getters,Clone)]
 #[getset(get = "pub")]
 pub struct ConsolidationOptions {
     include_docs:               bool,

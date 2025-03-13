@@ -475,4 +475,56 @@ r#"{
         assert!(display_str.contains("let x = 10;"));
         assert!(display_str.contains("println!(\"x = {}\", x);"));
     }
+
+    // We'll reuse the same MockItem from the main test module:
+    // (the user code references `MockItem` implementing `GenerateSignature`).
+    // Here we add a trivial RehydrateFromSignature impl to enable round-trip.
+    impl RehydrateFromSignature for MockItem {
+        #[tracing::instrument(level = "trace", skip(signature_source))]
+        fn rehydrate_from_signature(signature_source: &str) -> Option<Self> {
+            trace!("Attempting rehydration from signature: {}", signature_source);
+            // Extremely naive approach: if it contains "fn ", we do so:
+            if signature_source.contains("fn ") {
+                Some(Self {
+                    signature: signature_source.to_string(),
+                })
+            } else {
+                None
+            }
+        }
+    }
+
+    #[traced_test]
+    fn test_round_trip_serde_no_helper_struct() {
+        info!("Testing serde round-trip on CrateInterfaceItem<T> directly.");
+
+        let mock = MockItem {
+            signature: "fn example_signature() -> i32".to_string(),
+        };
+
+        let original = CrateInterfaceItem::new(
+            mock,
+            Some("/// doc lines".to_string()),
+            Some("#[inline]\n#[another_attr]".to_string()),
+            Some("{ println!(\"hello!\"); }".to_string()),
+            None,
+        );
+
+        debug!("Serializing original CrateInterfaceItem to JSON.");
+        let json_str = serde_json::to_string(&original).expect("serialize to JSON");
+        debug!("Serialized to JSON: {}", json_str);
+
+        debug!("Deserializing back to CrateInterfaceItem<T> from JSON.");
+        let deserialized: CrateInterfaceItem<MockItem> =
+            serde_json::from_str(&json_str).expect("deserialize from JSON");
+
+        assert_eq!(deserialized.docs(), original.docs());
+        assert_eq!(deserialized.attributes(), original.attributes());
+        assert_eq!(deserialized.body_source(), original.body_source());
+        assert_eq!(
+            deserialized.item.generate_signature(),
+            original.item.generate_signature()
+        );
+    }
+
 }

@@ -11,3 +11,4 @@ x!{public}
 x!{generate_signature_for_ast_node}
 x!{generate_struct_signature}
 x!{signature_options}
+x!{rehydrate}
