@@ -6,8 +6,6 @@ pub trait CrateHandleInterface<P>
 + Send
 + Sync
 + Named
-+ Serialize
-+ DeserializeOwned
 + Versioned<Error=CrateError>
 + IsPrivate<Error=CrateError>
 + ReadFileString
@@ -20,6 +18,7 @@ pub trait CrateHandleInterface<P>
 + GetFilesInDirectory
 + GetFilesInDirectoryWithExclusions
 + HasCargoToml
++ CrateDirPathBuf
 + AsRef<Path>
 + GatherBinTargetNames<Error=CrateError>
 + AsyncTryFrom<P,Error=CrateError>
@@ -27,12 +26,15 @@ where
     for<'async_trait> 
     P
     : HasCargoTomlPathBuf 
+    + HasCargoTomlPathBufSync
     + AsRef<Path> 
     + Send 
     + Sync
     + 'async_trait,
 
-    CrateError: From<<P as HasCargoTomlPathBuf>::Error>,
+    CrateError
+    : From<<P as HasCargoTomlPathBuf>::Error> 
+    + From<<P as HasCargoTomlPathBufSync>::Error>,
 {}
 
 pub trait HasCargoToml {
@@ -100,6 +102,48 @@ where for <'async_trait> P: AsRef<Path> + Send + Sync + 'async_trait
                 missing_file: cargo_path,
             })
         }
+    }
+}
+
+pub trait HasCargoTomlPathBufSync {
+
+    type Error;
+
+    fn cargo_toml_path_buf_sync(&self) -> Result<PathBuf, Self::Error>;
+}
+
+impl<P> HasCargoTomlPathBufSync for P 
+where P: AsRef<Path>
+{
+    type Error = CrateError;
+
+    /// Asynchronously returns the path to the `Cargo.toml`
+    fn cargo_toml_path_buf_sync(&self) -> Result<PathBuf, Self::Error> 
+    {
+        let cargo_path = self.as_ref().join("Cargo.toml");
+        if std::fs::metadata(&cargo_path).is_ok() {
+            Ok(cargo_path)
+        } else {
+            Err(CrateError::FileNotFound {
+                missing_file: cargo_path,
+            })
+        }
+    }
+}
+
+
+pub trait CrateDirPathBuf {
+
+    fn crate_dir_path_buf(&self) -> PathBuf;
+}
+
+impl<P> CrateDirPathBuf for P 
+where for <'async_trait> P: AsRef<Path> + Send + Sync + 'async_trait
+{
+    /// returns the path to the `Cargo.toml`
+    fn crate_dir_path_buf(&self) -> PathBuf
+    {
+        self.as_ref().to_path_buf()
     }
 }
 

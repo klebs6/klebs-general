@@ -7,3 +7,4 @@ pub(crate) use workspacer_interface::*;
 pub(crate) use workspacer_syntax::*;
 pub(crate) use workspacer_toml::*;
 pub(crate) use workspacer_toml_interface::*;
+pub(crate) use serde_derive::{Serialize,Deserialize};

@@ -60,10 +60,13 @@ where
     for<'async_trait> 
     P
     : HasCargoTomlPathBuf 
+    + HasCargoTomlPathBufSync 
     + AsRef<Path> 
     + Send 
     + Sync
     + 'async_trait,
 
-    CrateError: From<<P as HasCargoTomlPathBuf>::Error>,
+    CrateError
+    : From<<P as HasCargoTomlPathBuf>::Error> 
+    + From<<P as HasCargoTomlPathBufSync>::Error>,
 {}

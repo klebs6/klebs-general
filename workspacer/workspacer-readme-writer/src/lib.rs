@@ -4,6 +4,7 @@
 x!{readme_writer}
 x!{readme_writer_output}
 x!{readme_writer_request}
+x!{readme_writer_request_serde}
 x!{update_readmes}
 x!{errors}
 x!{execute}

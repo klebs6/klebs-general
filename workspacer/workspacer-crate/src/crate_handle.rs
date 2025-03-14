@@ -1,7 +1,7 @@
 // ---------------- [ File: workspacer-crate/src/crate_handle.rs ]
 crate::ix!();
 
-#[derive(Builder,Getters,Debug,Clone)]
+#[derive(Serialize,Deserialize,Builder,Getters,Debug,Clone)]
 #[getset(get="pub")]
 #[builder(setter(into))]
 pub struct CrateHandle {
@@ -50,12 +50,15 @@ where
     for<'async_trait> 
     P
     : HasCargoTomlPathBuf 
+    + HasCargoTomlPathBufSync
     + AsRef<Path> 
     + Send 
     + Sync
     + 'async_trait,
 
-    CrateError: From<<P as HasCargoTomlPathBuf>::Error>,
+    CrateError
+    : From<<P as HasCargoTomlPathBuf>::Error> 
+    + From<<P as HasCargoTomlPathBufSync>::Error>,
 {}
 
 #[async_trait]
@@ -64,12 +67,15 @@ where
     for<'async_trait> 
     P
     : HasCargoTomlPathBuf 
+    + HasCargoTomlPathBufSync 
     + AsRef<Path> 
     + Send 
     + Sync
     + 'async_trait,
 
-    CrateError: From<<P as HasCargoTomlPathBuf>::Error>,
+    CrateError
+    : From<<P as HasCargoTomlPathBuf>::Error> 
+    + From<<P as HasCargoTomlPathBufSync>::Error>,
 {
     type Error = CrateError;
 
@@ -79,6 +85,36 @@ where
         let cargo_toml_path = crate_path.cargo_toml_path_buf().await?;
 
         let cargo_toml_handle = Arc::new(Mutex::new(CargoToml::new(cargo_toml_path).await?));
+
+        Ok(Self {
+            cargo_toml_handle,
+            crate_path: crate_path.as_ref().to_path_buf(),
+        })
+    }
+}
+
+impl CrateHandle 
+{
+    /// Initializes a crate handle from a given crate_path
+    pub fn new_sync<P>(crate_path: &P) -> Result<Self,CrateError> 
+    where 
+        for<'async_trait> 
+            P
+                : HasCargoTomlPathBuf 
+                + HasCargoTomlPathBufSync 
+                + AsRef<Path> 
+                + Send 
+                + Sync
+                + 'async_trait,
+
+        CrateError
+            : From<<P as HasCargoTomlPathBuf>::Error> 
+            + From<<P as HasCargoTomlPathBufSync>::Error>,
+    {
+
+        let cargo_toml_path = crate_path.cargo_toml_path_buf_sync()?;
+
+        let cargo_toml_handle = Arc::new(Mutex::new(CargoToml::new_sync(cargo_toml_path)?));
 
         Ok(Self {
             cargo_toml_handle,

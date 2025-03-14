@@ -107,6 +107,25 @@ impl CargoToml {
             content: parsed,
         })
     }
+
+    pub fn new_sync<P>(cargo_toml_path: P) -> Result<Self, CargoTomlError> 
+        where P: AsRef<Path>
+    {
+        let cargo_content = std::fs::read_to_string(&cargo_toml_path)
+            .map_err(|e| CargoTomlError::ReadError { io: e.into() })?;
+
+        let parsed: toml::Value = toml::from_str(&cargo_content).map_err(|toml_parse_error| {
+            CargoTomlError::TomlParseError {
+                cargo_toml_file: cargo_toml_path.as_ref().to_path_buf(),
+                toml_parse_error,
+            }
+        })?;
+
+        Ok(Self {
+            path: cargo_toml_path.as_ref().to_path_buf(),
+            content: parsed,
+        })
+    }
 }
 
 impl AsRef<Path> for CargoToml {

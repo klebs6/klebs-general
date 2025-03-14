@@ -101,20 +101,12 @@ pub fn generate_impl_finish_processing_uncompleted_batches(parsed: &LmbwParsedIn
                 expected_content_type: &ExpectedContentType
             ) -> Result<(), Self::Error>
             {
-                // We'll do a local import so we can reference
-                //   PROCESS_ERROR_FILE_BRIDGE, and also confirm that
-                //   `process_output_file` is in scope.
-                use batch_mode_batch_workflow::{
-                    PROCESS_ERROR_FILE_BRIDGE,
-                    BatchWorkflowProcessOutputFileFn,
-                };
-
-                tracing::info!("Finishing uncompleted batches if any remain for {}.", stringify!(#struct_ident));
+                info!("Finishing uncompleted batches if any remain for {}.", stringify!(#struct_ident));
                 let workspace = #workspace_expr;
                 let language_model_client = #client_expr;
 
                 let mut batch_triples = workspace.clone().gather_all_batch_triples().await?;
-                tracing::info!("Reconciling unprocessed batch files in the work directory for {}.", stringify!(#struct_ident));
+                info!("Reconciling unprocessed batch files in the work directory for {}.", stringify!(#struct_ident));
 
                 for triple in &mut batch_triples {
                     triple.reconcile_unprocessed(

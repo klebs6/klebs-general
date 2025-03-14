@@ -7,6 +7,7 @@ pub trait ReadmeWritingCrateHandle<P>:
     + ConsolidateCrateInterface
     + Send
     + Sync
+    + Debug
     + 'static
     where
         P: AsRef<Path> + Send + Sync + 'static,
@@ -21,6 +22,7 @@ where
         + ConsolidateCrateInterface
         + Send
         + Sync
+        + Debug
         + 'static,
     P: AsRef<Path> + Send + Sync + 'static,
 {

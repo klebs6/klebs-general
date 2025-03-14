@@ -12,6 +12,8 @@ version = "*"
 path = "../workspacer-3p"
 [dependencies.workspacer-config]
 path = "../workspacer-config"
+[dev-dependencies.workspacer-mock]
+path = "../workspacer-mock"
 [dependencies.workspacer-consolidate]
 path = "../workspacer-consolidate"
 [dependencies.workspacer-crate]
