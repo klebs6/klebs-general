@@ -1,7 +1,7 @@
 // ---------------- [ File: src/batch_response_record.rs ]
 crate::ix!();
 
-#[derive(Debug,Serialize,Deserialize)]
+#[derive(Clone,Debug,Serialize,Deserialize)]
 pub struct BatchResponseRecord {
     id:        BatchRequestId,
     custom_id: CustomRequestId,
@@ -24,8 +24,67 @@ impl BatchResponseRecord {
     }
 }
 
+impl BatchResponseRecord {
+
+    pub fn mock_with_code_and_default_body(custom_id: &str, code: u16) -> Self {
+        // (unchanged)
+        let body = if code == 200 {
+            json!({
+                "id": "success-id",
+                "object": "chat.completion",
+                "created": 0,
+                "model": "test-model",
+                "choices": [],
+                "usage": {
+                    "prompt_tokens": 0,
+                    "completion_tokens": 0,
+                    "total_tokens": 0
+                }
+            })
+        } else {
+            json!({
+                "error": {
+                    "message": format!("Error for {custom_id}"),
+                    "type": "test_error",
+                    "param": null,
+                    "code": null
+                }
+            })
+        };
+
+        BatchResponseRecord::mock_with_code_and_body(custom_id,code,&body)
+    }
+
+    pub fn mock_with_code_and_body(custom_id: &str, code: u16, body: &serde_json::Value) -> Self {
+        BatchResponseRecord {
+            id:        BatchRequestId::new(format!("batch_req_{custom_id}")),
+            custom_id: CustomRequestId::new(custom_id),
+            response:  BatchResponseContent::mock_with_code_and_body(custom_id,code,body),
+            error:     None,
+        }
+    }
+
+    pub fn mock_with_code(custom_id: &str, code: u16) -> Self {
+        BatchResponseRecord {
+            id:        BatchRequestId::new(format!("batch_req_{}", custom_id)),
+            custom_id: CustomRequestId::new(custom_id),
+            response:  BatchResponseContent::mock_with_code(custom_id,code),
+            error:     None,
+        }
+    }
+
+    pub fn mock(custom_id: &str) -> Self {
+        BatchResponseRecord {
+            id: BatchRequestId::new(format!("batch_req_{}", custom_id)),
+            custom_id: CustomRequestId::new(custom_id),
+            response: BatchResponseContent::mock(custom_id),
+            error: None,
+        }
+    }
+}
+
 #[cfg(test)]
-mod tests {
+mod batch_response_record_tests {
     use super::*;
 
     // Additional test to deserialize the provided batch line

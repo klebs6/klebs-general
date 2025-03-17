@@ -76,7 +76,7 @@ impl<T:Named> GetTargetPathForAIExpansion for T {
     fn target_path_for_ai_json_expansion(
         &self, 
         target_dir:            &Path,
-        expected_content_type: &ExpectedContentType,
+        _expected_content_type: &ExpectedContentType,
 
     ) -> PathBuf {
 

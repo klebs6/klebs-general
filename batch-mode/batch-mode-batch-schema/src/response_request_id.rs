@@ -39,7 +39,7 @@ impl Display for ResponseRequestId {
 }
 
 #[cfg(test)]
-mod tests {
+mod response_request_id_tests {
     use super::*;
 
     #[test]

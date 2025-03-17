@@ -1,7 +1,7 @@
 // ---------------- [ File: src/batch_error_data.rs ]
 crate::ix!();
 
-#[derive(Debug)]
+#[derive(Clone,Debug)]
 pub struct BatchErrorData {
     responses: Vec<BatchResponseRecord>,
 }
@@ -56,5 +56,142 @@ impl From<Vec<BatchErrorData>> for BatchErrorData {
             .flat_map(|error_data| error_data.responses)
             .collect();
         BatchErrorData::new(aggregated_responses)
+    }
+}
+
+#[cfg(test)]
+mod batch_error_data_tests {
+    use super::*;
+
+    #[traced_test]
+    fn should_create_new_batch_error_data() {
+        info!("Testing creation of BatchErrorData with 'new' function.");
+
+        let records = vec![
+            BatchResponseRecord::mock("id-1"),
+            BatchResponseRecord::mock("id-2"),
+        ];
+        let error_data = BatchErrorData::new(records.clone());
+
+        assert_eq!(error_data.len(), 2, "Expected error_data to have length 2.");
+        assert_eq!(error_data.responses().len(), 2, "Responses vector should match length 2.");
+        debug!("Created BatchErrorData with {} entries.", error_data.len());
+    }
+
+    #[traced_test]
+    fn should_return_request_ids_correctly() {
+        info!("Testing retrieval of request IDs from BatchErrorData.");
+
+        let records = vec![
+            BatchResponseRecord::mock("custom-1"),
+            BatchResponseRecord::mock("custom-2"),
+        ];
+        let error_data = BatchErrorData::new(records);
+
+        let ids = error_data.request_ids();
+        trace!("Extracted request IDs: {:?}", ids);
+
+        assert_eq!(ids.len(), 2, "Should have exactly 2 IDs.");
+        assert!(ids.contains(&CustomRequestId::new("custom-1")));
+        assert!(ids.contains(&CustomRequestId::new("custom-2")));
+    }
+
+    #[traced_test]
+    fn should_provide_iter_over_responses() {
+        info!("Testing iteration over BatchErrorData responses.");
+
+        let records = vec![
+            BatchResponseRecord::mock("iter-1"),
+            BatchResponseRecord::mock("iter-2"),
+        ];
+        let error_data = BatchErrorData::new(records.clone());
+
+        let mut iter_count = 0;
+        for (index, record) in error_data.iter().enumerate() {
+            trace!("Iterating index: {}, record.custom_id: {}", index, record.custom_id());
+            iter_count += 1;
+        }
+        assert_eq!(iter_count, records.len(), "Iterator should cover all responses.");
+    }
+
+    #[traced_test]
+    fn should_iterate_with_into_iter_borrowed() {
+        info!("Testing the IntoIterator for borrowed BatchErrorData.");
+
+        let records = vec![
+            BatchResponseRecord::mock("borrow-1"),
+            BatchResponseRecord::mock("borrow-2"),
+        ];
+        let error_data = BatchErrorData::new(records.clone());
+
+        let mut iter_count = 0;
+        for record in &error_data {
+            trace!("Borrowed iteration item: {:?}", record.custom_id());
+            iter_count += 1;
+        }
+        assert_eq!(iter_count, records.len(), "Borrowed iterator should cover all responses.");
+    }
+
+    #[traced_test]
+    fn should_iterate_with_into_iter_owned() {
+        info!("Testing the IntoIterator for owned BatchErrorData.");
+
+        let records = vec![
+            BatchResponseRecord::mock("owned-1"),
+            BatchResponseRecord::mock("owned-2"),
+        ];
+        let error_data = BatchErrorData::new(records.clone());
+
+        let mut iter_count = 0;
+        for record in error_data {
+            trace!("Owned iteration item: {:?}", record.custom_id());
+            iter_count += 1;
+        }
+        assert_eq!(iter_count, records.len(), "Owned iterator should yield all responses.");
+    }
+
+    #[traced_test]
+    fn should_convert_from_vec_of_batch_error_data() {
+        info!("Testing conversion from Vec<BatchErrorData> into BatchErrorData via 'From' impl.");
+
+        let batch_1 = BatchErrorData::new(vec![
+            BatchResponseRecord::mock("from-1"),
+            BatchResponseRecord::mock("from-2"),
+        ]);
+        let batch_2 = BatchErrorData::new(vec![
+            BatchResponseRecord::mock("from-3"),
+        ]);
+
+        let combined = BatchErrorData::from(vec![batch_1, batch_2]);
+        assert_eq!(combined.len(), 3, "Expected combined data to have length 3.");
+        debug!("Combined length: {}", combined.len());
+
+        let ids = combined.request_ids();
+        assert_eq!(ids.len(), 3, "Expected 3 request IDs total.");
+        warn!("The request IDs are: {:?}", ids);
+    }
+
+    #[traced_test]
+    fn should_handle_empty_new_batch_error_data() {
+        info!("Testing behavior for an empty BatchErrorData.");
+
+        let error_data = BatchErrorData::new(vec![]);
+        assert_eq!(error_data.len(), 0, "Should be empty.");
+
+        let iter_count = error_data.iter().count();
+        assert_eq!(iter_count, 0, "Iteration should yield none for empty data.");
+        let ids = error_data.request_ids();
+        assert!(ids.is_empty(), "No IDs should be returned for empty data.");
+    }
+
+    #[traced_test]
+    fn should_handle_from_empty_vec_of_batch_error_data() {
+        info!("Testing 'From<Vec<BatchErrorData>>' with an empty vector.");
+
+        let batch_error_list: Vec<BatchErrorData> = vec![];
+        let result = BatchErrorData::from(batch_error_list);
+
+        assert_eq!(result.len(), 0, "Should produce empty BatchErrorData when converting from empty list.");
+        trace!("No data was aggregated, as expected for an empty source.");
     }
 }

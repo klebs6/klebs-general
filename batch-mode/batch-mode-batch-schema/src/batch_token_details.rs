@@ -1,7 +1,7 @@
 // ---------------- [ File: src/batch_token_details.rs ]
 crate::ix!();
 
-#[derive(Debug,Serialize,Deserialize)]
+#[derive(Clone,Debug,Serialize,Deserialize)]
 pub struct BatchTokenDetails {
     cached_tokens:              Option<u32>,
     audio_tokens:               Option<u32>,
@@ -43,7 +43,7 @@ impl BatchTokenDetails {
 }
 
 #[cfg(test)]
-mod tests {
+mod batch_token_details_tests {
     use super::*;
     use serde_json::json;
 

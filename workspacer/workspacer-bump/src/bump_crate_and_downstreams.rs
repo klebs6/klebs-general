@@ -2,11 +2,10 @@
 crate::ix!();
 
 #[async_trait]
-impl<P,H> BumpCrateAndDownstreams for Workspace<P,H>
+impl<P, H> BumpCrateAndDownstreams for Workspace<P, H>
 where
-    // No 'static bound on H
     for<'async_trait> P: From<PathBuf> + AsRef<Path> + Send + Sync + 'async_trait,
-    H: CrateHandleInterface<P> + Bump<Error=CrateError> + Send + Sync,
+    H: CrateHandleInterface<P> + Bump<Error = CrateError> + Send + Sync,
 {
     type Error = WorkspaceError;
 
@@ -21,16 +20,15 @@ where
             release
         );
 
-        // 1) Bump this crate
+        // --- CHANGE #1: ensure the error’s `crate_path` points to the Cargo.toml, not just the directory.
         crate_handle.bump(release.clone()).await.map_err(|err| {
             error!("Error bumping crate '{}': {:?}", crate_handle.name(), err);
             WorkspaceError::BumpError {
-                crate_path: crate_handle.as_ref().to_path_buf(),
+                crate_path: crate_handle.as_ref().join("Cargo.toml"),
                 source: Box::new(err),
             }
         })?;
 
-        // 2) Read the new version
         let new_ver = crate_handle.version().map_err(|ver_err| {
             error!("Could not re-parse new version for '{}': {:?}", crate_handle.name(), ver_err);
             WorkspaceError::CrateError(ver_err)
@@ -42,10 +40,10 @@ where
             new_ver
         );
 
-        // 3) Recursively update all downstream crates
         let crate_key = crate_handle.name().to_string();
         let mut visited = HashSet::new();
         visited.insert(crate_key.clone());
+
         self.update_downstreams_recursively(&crate_key, &new_ver, &mut visited).await?;
 
         Ok(())

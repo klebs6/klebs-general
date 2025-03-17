@@ -12,11 +12,10 @@ pub trait WorkspaceDownstreamExt {
 }
 
 #[async_trait]
-impl<P,H> WorkspaceDownstreamExt for Workspace<P,H>
+impl<P, H> WorkspaceDownstreamExt for Workspace<P, H>
 where
-    // No 'static on H
     for<'async_trait> P: From<PathBuf> + AsRef<Path> + Send + Sync + 'async_trait,
-    H: CrateHandleInterface<P> + Bump<Error=CrateError> + Send + Sync,
+    H: CrateHandleInterface<P> + Bump<Error = CrateError> + Send + Sync,
 {
     async fn update_downstreams_recursively(
         &mut self,
@@ -24,69 +23,51 @@ where
         new_version: &semver::Version,
         visited: &mut HashSet<String>,
     ) -> Result<(), WorkspaceError> {
-        trace!("Updating downstreams for dep='{}' => new_ver={}", dep_name, new_version);
-        let new_version_str = new_version.to_string();
+        use tracing::{trace, debug, warn};
 
-        let crate_names = self.get_all_crate_names();
-        for c_name in crate_names {
-            if visited.contains(&c_name) {
+        let crates_list: Vec<_> = self.crates().iter().cloned().collect();
+        // Now we’re not borrowing `self` immutably any more.
+
+        for arc_crate in crates_list {
+            // Lock once to figure out crate_name
+            let crate_name = {
+                let handle = arc_crate.lock().unwrap();
+                handle.name().to_string()
+            };
+
+            if visited.contains(&crate_name) {
                 continue;
             }
-            let arc_crate = match self.find_crate_by_name(&c_name) {
-                Some(a) => a,
-                None => continue,
-            };
-            let crate_path = {
-                let g = arc_crate.lock().expect("mutex lock for path");
-                g.as_ref().to_path_buf()
-            };
-            let cargo_toml_path = crate_path.join("Cargo.toml");
-            let contents = match fs::read_to_string(&cargo_toml_path).await {
-                Ok(s) => s,
-                Err(e) => {
-                    warn!("Cannot read {:?}: {}, skipping", cargo_toml_path, e);
-                    continue;
-                }
-            };
-            let mut doc = match contents.parse::<toml_edit::Document>() {
-                Ok(d) => d,
-                Err(e) => {
-                    warn!("Parse error on {:?}: {}, skipping", cargo_toml_path, e);
-                    continue;
-                }
-            };
 
-            let mut found = false;
-            for key in ["dependencies","dev-dependencies","build-dependencies"] {
-                if let Some(tbl) = doc.get_mut(key).and_then(|x| x.as_table_mut()) {
-                    if let Some(dep_item) = tbl.get_mut(dep_name) {
-                        if let Some(inline) = dep_item.as_inline_table_mut() {
-                            let expanded = inline.clone().into_table();
-                            *dep_item = toml_edit::Item::Table(expanded);
-                        }
-                        if dep_item.is_table() {
-                            dep_item
-                                .as_table_mut()
-                                .unwrap()
-                                .insert("version", toml_edit::value(new_version_str.clone()));
-                            found = true;
-                        } else if dep_item.is_str() {
-                            *dep_item = toml_edit::value(new_version_str.clone());
-                            found = true;
-                        }
-                    }
-                }
-            }
-            if found {
-                debug!("Rewriting references in {:?}", cargo_toml_path);
-                if let Err(e) = fs::write(&cargo_toml_path, doc.to_string()).await {
-                    warn!("Cannot rewrite references in {:?}: {}", cargo_toml_path, e);
-                }
-                visited.insert(c_name.clone());
-                self.update_downstreams_recursively(&c_name, new_version, visited).await?;
+            // Next, lock again for the update:
+            let mut handle = arc_crate.lock().unwrap();
+            let cargo_toml_arc = handle.cargo_toml();
+            let mut cargo_toml_guard = cargo_toml_arc.lock().unwrap();
+
+            let changed = cargo_toml_guard.update_dependency_version(dep_name, &new_version.to_string())?;
+
+            drop(cargo_toml_guard); // <— drop guard before `.await`
+
+            if changed {
+                // Save new version => must reacquire or have a separate method
+                // or do it in the same guard scope if your saving is synchronous.  
+                // If it’s truly async, do the pattern: copy out data => drop guard => do .await
+                let mut cargo_toml_guard = arc_crate
+                    .lock()
+                    .unwrap()
+                    .cargo_toml()
+                    .lock()
+                    .unwrap();
+                cargo_toml_guard.save_to_disk().await?;
+
+                visited.insert(crate_name.clone());
+
+                // Recurse:
+                self.update_downstreams_recursively(&crate_name, new_version, visited).await?;
             }
         }
 
         Ok(())
     }
+
 }

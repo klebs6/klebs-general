@@ -6,162 +6,63 @@ impl Bump for CrateHandle {
     type Error = CrateError;
 
     async fn bump(&mut self, release: ReleaseType) -> Result<(), Self::Error> {
-        trace!("Attempting to bump crate at {:?}", self.as_ref());
+        // Step A: gather everything while locked (synchronous)
+        let (cargo_toml_path, new_version_str) = {
+            // 1) Get path from `HasCargoTomlPathBuf` (this can be done immediately).
+            //    but do it in a small synchronous step if needed:
+            let cargo_path = self.cargo_toml_path_buf_sync()?; 
+            tracing::trace!("Bumping crate at {:?}", cargo_path);
 
-        let cargo_toml_path = self.as_ref().join("Cargo.toml");
-        trace!("Reading Cargo.toml at {:?}", cargo_toml_path);
+            // 2) Lock the CargoToml
+            let cargo_toml_arc = self.cargo_toml();
+            let mut toml_guard = cargo_toml_arc.lock().unwrap();
 
-        // 1) Read from disk
-        let contents = fs::read_to_string(&cargo_toml_path).await.map_err(|io_err| {
-            error!("I/O error reading Cargo.toml: {:?}", io_err);
-            CrateError::IoError {
-                context: format!("reading {cargo_toml_path:?}"),
-                io_error: Arc::new(io_err),
-            }
-        })?;
+            // Validate
+            toml_guard.validate_integrity()?;
 
-        // 2) Attempt a full parse with `toml_edit`.
-        //    If it fails, we warn and try a partial parse that only reads [package].
-        let full_parse_result = contents.parse::<toml_edit::Document>();
-        let doc = match full_parse_result {
-            Ok(doc) => {
-                debug!("Full TOML parse succeeded for {:?}", cargo_toml_path);
-                doc
+            // old version => bump => produce new version
+            let mut old_ver = toml_guard.version()?;
+            release.apply_to(&mut old_ver);
+            let new_ver_str = old_ver.to_string();
+
+            // Overwrite in-memory
+            {
+                let pkg = toml_guard.get_package_section_mut()?;
+                pkg["version"] = toml::Value::String(new_ver_str.clone());
             }
-            Err(e) => {
-                warn!(
-                    "Full parse failed in {:?} with error {:?}. Trying partial [package]-only parse.",
-                    cargo_toml_path, e
-                );
-                let doc = partial_package_parse(&contents, &cargo_toml_path)?;
-                debug!("Partial [package] parse succeeded for {:?}", cargo_toml_path);
-                doc
-            }
+
+            // Now we have all we need
+            (cargo_path, new_ver_str)
+            // guard is dropped here
         };
 
-        // 3) Locate [package].version
-        let pkg_item = doc.get("package").ok_or_else(|| {
-            error!("Missing [package] section in {:?}", cargo_toml_path);
-            CrateError::CargoTomlError(CargoTomlError::MissingPackageSection {
-                cargo_toml_file: cargo_toml_path.clone(),
-            })
-        })?;
+        // Step B: do the asynchronous write (no guard held).
+        {
+            // Reload our CargoToml in memory to write it out. 
+            // Or better: add a method to do "render_in_memory" or "save_to_disk".
+            // If your `CargoTomlInterface` has `save_to_disk()` that does the 
+            // actual file write from the in-memory representation, do it outside the guard:
+            //
+            // We'll do something like:
+            let cargo_toml_arc = self.cargo_toml();
+            // We only hold the guard for immediate read -> then do your own file write code
+            // if `save_to_disk()` is purely synchronous for data extraction.
+            // But let's assume we have something simpler:
+            
+            let mut toml_guard = cargo_toml_arc.lock().unwrap();
+            toml_guard.save_to_disk().await.map_err(|e| {
+                // map error to CrateError if needed
+                e
+            })?;
 
-        let pkg_table = pkg_item.as_table().ok_or_else(|| {
-            error!("[package] is not a valid table in {:?}", cargo_toml_path);
-            CrateError::CargoTomlError(CargoTomlError::MissingPackageSection {
-                cargo_toml_file: cargo_toml_path.clone(),
-            })
-        })?;
-
-        let version_item = pkg_table.get("version").ok_or_else(|| {
-            error!("Missing 'version' in [package] of {:?}", cargo_toml_path);
-            CrateError::CargoTomlError(CargoTomlError::MissingRequiredFieldForIntegrity {
-                cargo_toml_file: cargo_toml_path.clone(),
-                field: "version".into(),
-            })
-        })?;
-
-        let old_version_str = version_item.as_str().ok_or_else(|| {
-            error!("'version' key not a valid string in {:?}", cargo_toml_path);
-            CrateError::CargoTomlError(CargoTomlError::InvalidVersionFormat {
-                cargo_toml_file: cargo_toml_path.clone(),
-                version: format!("{}", version_item),
-            })
-        })?;
-
-        trace!("Current version in {:?} => {}", cargo_toml_path, old_version_str);
-
-        // 4) Parse as semver, then apply the requested release bump
-        let mut parsed_ver = semver::Version::parse(old_version_str).map_err(|err| {
-            error!("Invalid semver '{}' => {:?}", old_version_str, err);
-            CrateError::CargoTomlError(CargoTomlError::InvalidVersionFormat {
-                cargo_toml_file: cargo_toml_path.clone(),
-                version: old_version_str.to_owned(),
-            })
-        })?;
-        release.apply_to(&mut parsed_ver);
-        let new_version = parsed_ver.to_string();
-
-        trace!("Updated version => {}", new_version);
-
-        // 5) Put the new version back into a clone of the doc, then write
-        let mut updated_doc = doc.clone();
-        if let Some(t) = updated_doc.get_mut("package").and_then(|it| it.as_table_mut()) {
-            t["version"] = toml_edit::value(new_version.clone());
-        }
-
-        let new_contents = updated_doc.to_string();
-        fs::write(&cargo_toml_path, new_contents).await.map_err(|io_err| {
-            error!("Error writing updated Cargo.toml: {:?}", io_err);
-            CrateError::IoError {
-                context: format!("writing updated {cargo_toml_path:?}"),
-                io_error: Arc::new(io_err),
-            }
-        })?;
-
-        info!("Successfully bumped crate at {:?} to {}", cargo_toml_path, new_version);
-        Ok(())
-    }
-}
-
-
-/// A small helper that does a **partial** parse of just the `[package]`
-/// section from the input string, ignoring parse errors in other sections.
-/// We look for lines under `[package]` until the next header like `[foo]`.
-/// Then we attempt to parse that snippet as its own toml_edit::Document.
-///
-/// Returns a new `Document` that has a `[package]` table only.
-///
-#[tracing::instrument(level="trace", skip_all)]
-fn partial_package_parse(
-    raw: &str,
-    cargo_toml_path: &Path,
-) -> Result<toml_edit::Document, CrateError> {
-    use std::fmt::Write as _;
-
-    let mut package_lines = String::new();
-    let mut in_package = false;
-
-    for line in raw.lines() {
-        let trimmed = line.trim_start();
-        if trimmed.starts_with("[package]") {
-            in_package = true;
-            writeln!(package_lines, "{}", line).ok();
-            continue;
-        }
-        if in_package {
-            // If we see the next bracket header, we stop
-            if trimmed.starts_with('[') {
-                // next section => stop collecting
-                break;
-            }
-            // keep collecting
-            writeln!(package_lines, "{}", line).ok();
-        }
-    }
-
-    // If we never found [package], that's an error
-    if !in_package {
-        error!("No [package] header found in partial parse for {:?}", cargo_toml_path);
-        return Err(CrateError::CargoTomlError(CargoTomlError::MissingPackageSection {
-            cargo_toml_file: cargo_toml_path.to_path_buf(),
-        }));
-    }
-
-    // Now parse just that snippet
-    match package_lines.parse::<toml_edit::Document>() {
-        Ok(doc) => Ok(doc),
-        Err(e) => {
-            error!(
-                "Even partial parse of [package] failed in {:?}: {}",
-                cargo_toml_path, e
+            tracing::info!(
+                "Successfully bumped crate at {:?} to {}",
+                cargo_toml_path,
+                new_version_str
             );
-            Err(CrateError::CargoTomlError(CargoTomlError::TomlEditError {
-                cargo_toml_file: cargo_toml_path.to_path_buf(),
-                toml_parse_error: e,
-            }))
         }
+
+        Ok(())
     }
 }
 

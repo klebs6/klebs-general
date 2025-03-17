@@ -2,7 +2,7 @@
 crate::ix!();
 
 /// Enumeration of API URLs.
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Clone,Debug, Serialize, Deserialize)]
 pub enum LanguageModelApiUrl {
 
     #[serde(rename = "/v1/chat/completions")]

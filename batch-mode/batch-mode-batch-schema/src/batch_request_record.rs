@@ -1,7 +1,7 @@
 // ---------------- [ File: src/batch_request_record.rs ]
 crate::ix!();
 
-#[derive(Debug, Deserialize)]
+#[derive(Clone,Debug, Deserialize)]
 pub struct BatchRequestRecord {
     id:        BatchRequestId,
     custom_id: CustomRequestId,
@@ -28,7 +28,7 @@ impl BatchRequestRecord {
 }
 
 #[cfg(test)]
-mod tests {
+mod batch_request_record_tests {
     use super::*;
     use serde_json::json;
 

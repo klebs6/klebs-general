@@ -52,6 +52,17 @@ error_tree!{
 
     #[derive(Clone)]
     pub enum CargoTomlError {
+        TomlSerializeError {
+            message: String, 
+        },
+        IoWriteError {
+            path: PathBuf,
+            source: Arc<std::io::Error>,
+        },
+        TopLevelNotATable {
+            path: PathBuf,
+            details: String,
+        },
         WorkspacerFallbackError(WorkspacerFallbackError),
         ReadError {
             io: Arc<io::Error>,

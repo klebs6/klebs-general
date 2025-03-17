@@ -15,6 +15,15 @@ version = "0.2.0"
 [dependencies.serde]
 features = [ "derive" ]
 version = "1.0.218"
+[dependencies.traced-test]
+version = "*"
+[dependencies.tracing]
+version = "*"
+[dependencies.tracing-setup]
+version = "*"
+[dependencies.tracing-subscriber]
+features = [ "env-filter", "json" ]
+version = "*"
 [package]
 authors = [ "klebs tpk3.mx@gmail.com" ]
 description = "Defines the schema and structures for batch processing, including batch choices, message roles, error handling, and token management, with support for JSON deserialization and validation."

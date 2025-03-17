@@ -1,19 +1,26 @@
 // ---------------- [ File: src/batch_error_response_body.rs ]
 crate::ix!();
 
-#[derive(Debug,Serialize,Deserialize)]
+#[derive(Clone,Debug,Serialize,Deserialize)]
 pub struct BatchErrorResponseBody {
     error: BatchErrorDetails,
 }
 
 impl BatchErrorResponseBody {
+
+    pub fn mock(custom_id: &str) -> Self {
+        BatchErrorResponseBody {
+            error: BatchErrorDetails::mock(custom_id),
+        }
+    }
+
     pub fn error(&self) -> &BatchErrorDetails {
         &self.error
     }
 }
 
 #[cfg(test)]
-mod tests {
+mod batch_error_response_body_tests {
     use super::*;
     use serde_json::json;
 

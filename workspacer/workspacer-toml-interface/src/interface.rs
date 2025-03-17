@@ -11,6 +11,8 @@ pub trait CargoTomlInterface
 + CheckVersionValidityForPublishing<Error=CargoTomlError>
 + CheckRequiredFieldsForIntegrity<Error=CargoTomlError>
 + CheckVersionValidityForIntegrity<Error=CargoTomlError>
++ SaveToDisk<Error=CargoTomlError>
++ UpdateDependencyVersionRaw<Error=CargoTomlError>
 + GetPackageSection<Error=CargoTomlError>
 + GetPackageSectionMut<Error=CargoTomlError>
 //+ ReadyForCargoPublish<Error=CargoTomlError>
@@ -27,6 +29,21 @@ pub trait CargoTomlInterface
 + GetCrateRepositoryLocation<Error=CargoTomlError>
 + GetCrateRepositoryLocationOrFallback<Error=CargoTomlError>
 {}
+
+#[async_trait]
+pub trait SaveToDisk {
+    type Error;
+    async fn save_to_disk(&self) -> Result<(), Self::Error>;
+}
+
+pub trait UpdateDependencyVersionRaw {
+    type Error;
+    fn update_dependency_version(
+        &mut self,
+        dep_name: &str,
+        new_version: &str,
+    ) -> Result<bool, Self::Error>;
+}
 
 pub trait GatherBinTargetNames {
     type Error;

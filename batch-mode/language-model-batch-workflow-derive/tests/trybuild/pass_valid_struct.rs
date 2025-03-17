@@ -30,6 +30,7 @@ use batch_mode_3p::*;
 use std::sync::Arc;
 use serde::{Serialize, Deserialize};
 use camel_case_token_with_comment::CamelCaseTokenWithComment;
+use save_load_traits::*;
 
 #[derive(LanguageModelBatchWorkflow)]
 #[batch_error_type(MyErr)]

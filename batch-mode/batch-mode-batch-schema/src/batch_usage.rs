@@ -1,7 +1,7 @@
 // ---------------- [ File: src/batch_usage.rs ]
 crate::ix!();
 
-#[derive(Debug,Serialize,Deserialize)]
+#[derive(Clone,Debug,Serialize,Deserialize)]
 pub struct BatchUsage {
     prompt_tokens:             u32,
     completion_tokens:         u32,
@@ -11,6 +11,16 @@ pub struct BatchUsage {
 }
 
 impl BatchUsage {
+
+    pub fn mock() -> Self {
+        BatchUsage {
+            prompt_tokens:             0,
+            completion_tokens:         0,
+            total_tokens:              0,
+            prompt_tokens_details:     None,
+            completion_tokens_details: None,
+        }
+    }
 
     pub fn prompt_tokens(&self) -> u32 {
         self.prompt_tokens
@@ -28,7 +38,7 @@ impl BatchUsage {
 }
 
 #[cfg(test)]
-mod tests {
+mod batch_usage_tests {
     use super::*;
     use serde_json::json;
 

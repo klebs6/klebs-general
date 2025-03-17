@@ -7,6 +7,7 @@ crate::ix!();
 pub fn combine_impls_into_final_macro(chunks: Vec<TokenStream2>) -> TokenStream2 {
     trace!("combine_impls_into_final_macro: start.");
     let merged = quote! {
+        #[allow(non_snake_case)]
         #( #chunks )*
     };
     trace!("combine_impls_into_final_macro: done.");

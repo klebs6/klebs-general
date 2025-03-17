@@ -1,7 +1,7 @@
 // ---------------- [ File: src/batch_success_response_body.rs ]
 crate::ix!();
 
-#[derive(Debug,Serialize,Deserialize)]
+#[derive(Clone,Debug,Serialize,Deserialize)]
 pub struct BatchSuccessResponseBody {
     id:                 String,
     object:             String,
@@ -13,6 +13,20 @@ pub struct BatchSuccessResponseBody {
 }
 
 impl BatchSuccessResponseBody {
+
+    pub fn mock() -> Self {
+        info!("Using updated mock to produce recognized 'chat.completion' object for success scenario.");
+
+        BatchSuccessResponseBody {
+            id:                 "success-id".to_string(),
+            object:             "chat.completion".to_string(),
+            created:            0,
+            model:              "test-model".to_string(),
+            choices:            vec![],
+            usage:              BatchUsage::mock(),
+            system_fingerprint: None,
+        }
+    }
 
     pub fn id(&self) -> &str {
         &self.id
@@ -44,7 +58,7 @@ impl BatchSuccessResponseBody {
 }
 
 #[cfg(test)]
-mod tests {
+mod batch_success_response_body_tests {
     use super::*;
     use serde_json::json;
 

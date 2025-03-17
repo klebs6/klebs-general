@@ -2,7 +2,7 @@
 crate::ix!();
 
 /// Enumeration of roles in a message.
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Clone,Debug, Serialize, Deserialize)]
 pub enum LanguageModelMessageRole {
     System,
     User,

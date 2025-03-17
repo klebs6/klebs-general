@@ -12,6 +12,81 @@ pub struct CargoToml {
 
 impl CargoTomlInterface for CargoToml {}
 
+#[async_trait]
+impl SaveToDisk for CargoToml {
+    type Error = CargoTomlError;
+
+    async fn save_to_disk(&self) -> Result<(), Self::Error> {
+        // 1) Convert self.content => string
+        let rendered = toml::to_string_pretty(&self.content).map_err(|e| {
+            // Instead of `TomlRenderError`, use our new variant
+            CargoTomlError::TomlSerializeError {
+                message: format!("Could not render updated TOML: {e}"),
+            }
+        })?;
+
+        // 2) Write to disk
+        tokio::fs::write(&self.path, rendered)
+            .await
+            .map_err(|io_err| CargoTomlError::IoWriteError {
+                path: self.path.clone(),
+                source: Arc::new(io_err),
+            })?;
+
+        Ok(())
+    }
+}
+
+impl UpdateDependencyVersionRaw for CargoToml {
+    type Error = CargoTomlError;
+
+    fn update_dependency_version(
+        &mut self,
+        dep_name: &str,
+        new_version: &str,
+    ) -> Result<bool, Self::Error> {
+
+        // We’re using `serde::toml::Value` here, not `toml_edit`, so we can't do `as_inline_table_mut()`.
+        // Instead, we do:
+        let root_table = self
+            .content
+            .as_table_mut()
+            .ok_or_else(|| CargoTomlError::TopLevelNotATable {
+                path: self.path.clone(),
+                details: "Top-level TOML is not a table".to_string(),
+            })?;
+
+        let mut changed = false;
+        for section_key in &["dependencies", "dev-dependencies", "build-dependencies"] {
+            // Get section as table
+            if let Some(section_val) = root_table.get_mut(*section_key) {
+                if let Some(dep_table) = section_val.as_table_mut() {
+                    // Check if this crate is listed
+                    if let Some(dep_item) = dep_table.get_mut(dep_name) {
+                        // If it’s a table: set dep_item["version"] = new_version
+                        if let Some(tbl) = dep_item.as_table_mut() {
+                            tbl.insert(
+                                "version".to_string(),
+                                toml::Value::String(new_version.into()),
+                            );
+                            changed = true;
+                        }
+                        // If it’s a string: replace it
+                        else if dep_item.is_str() {
+                            *dep_item = toml::Value::String(new_version.into());
+                            changed = true;
+                        }
+                        // else: could also be something else, e.g. a bool or int?
+                        // We can choose to skip or do something else
+                    }
+                }
+            }
+        }
+
+        Ok(changed)
+    }
+}
+
 impl Versioned for CargoToml {
     type Error = CargoTomlError;
 
@@ -80,7 +155,6 @@ impl Versioned for CargoToml {
 }
 
 impl CargoToml {
-
     pub fn package_name(&self) -> Result<String,CargoTomlError> {
         self.check_required_fields_for_integrity()?;
         let package = self.get_package_section()?;

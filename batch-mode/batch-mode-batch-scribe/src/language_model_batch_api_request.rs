@@ -18,7 +18,7 @@
 crate::ix!();
 
 /// Represents the complete request structure.
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Clone,Debug, Serialize, Deserialize)]
 pub struct LanguageModelBatchAPIRequest {
 
     /// Identifier for the custom request.
@@ -37,6 +37,16 @@ pub struct LanguageModelBatchAPIRequest {
 }
 
 impl LanguageModelBatchAPIRequest {
+
+    pub fn mock(custom_id: &str) -> Self {
+        LanguageModelBatchAPIRequest {
+            custom_id: CustomRequestId::new(custom_id),
+            method:    HttpMethod::Post,
+            url:       LanguageModelApiUrl::ChatCompletions,
+            body:      LanguageModelRequestBody::mock(),
+        }
+    }
+
     pub fn custom_id(&self) -> &CustomRequestId {
         &self.custom_id
     }
@@ -177,4 +187,10 @@ mod api_url {
             _ => Err(serde::de::Error::custom("unknown URL")),
         }
     }
+}
+
+// Updated: Provide a minimal request body that matches the struct shape.
+pub fn make_valid_lmb_api_request_json_mock(custom_id: &str) -> String {
+    let request = LanguageModelBatchAPIRequest::mock(custom_id);
+    serde_json::to_string(&request).unwrap()
 }

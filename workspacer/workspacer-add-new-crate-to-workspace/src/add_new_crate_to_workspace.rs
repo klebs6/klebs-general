@@ -33,8 +33,8 @@ where
         + CreateCrateSkeleton<P>
         + AddInternalDependency<P,H,Error = WorkspaceError>
         + AddToWorkspaceMembers<P>
-        + WorkspaceInterface<P,H>  // so we can handle workspace members + crates_mut
-        + AsRef<Path>              // treat T as path
+        + WorkspaceInterface<P,H> 
+        + AsRef<Path>
         + Sync
         + Send,
 {
@@ -61,7 +61,7 @@ where
         // so that subsequent scan() sees it.
         {
             // We get a mutable reference to our crates (from the trait method).
-            let mut_crates = self.crates_mut();
+            let mut_crates = self.crates();
             mut_crates.push(new_handle.clone());
             debug!("Pushed new crate '{}' into in-memory list. Now have {} crates in memory.",
                    new_handle.name(), mut_crates.len());

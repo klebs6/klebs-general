@@ -40,7 +40,7 @@ impl Serialize for MessageRole {
 }
 
 #[cfg(test)]
-mod tests {
+mod message_role_tests {
     use super::*;
 
     // Test suite for MessageRole

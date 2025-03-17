@@ -1,7 +1,7 @@
 // ---------------- [ File: src/batch_response_body.rs ]
 crate::ix!();
 
-#[derive(Debug,Serialize)]
+#[derive(Clone,Debug,Serialize)]
 //#[serde(tag = "object", content = "data")]
 pub enum BatchResponseBody {
 
@@ -32,6 +32,31 @@ impl<'de> Deserialize<'de> for BatchResponseBody {
 }
 
 impl BatchResponseBody {
+
+    pub fn mock_with_code_and_body(code: u16, body: &serde_json::Value) -> Self {
+        if code == 200 {
+            BatchResponseBody::Success(
+                serde_json::from_value(body.clone()).unwrap()
+            )
+        } else {
+            BatchResponseBody::Error(
+                serde_json::from_value(body.clone()).unwrap()
+            )
+        }
+    }
+
+    pub fn mock(custom_id: &str, code: u16) -> Self {
+        if code == 200 {
+            BatchResponseBody::Success(BatchSuccessResponseBody::mock())
+        } else {
+            BatchResponseBody::Error(BatchErrorResponseBody::mock(custom_id))
+        }
+    }
+
+    pub fn mock_error(custom_id: &str) -> Self {
+        BatchResponseBody::Error(BatchErrorResponseBody::mock(custom_id))
+    }
+
     /// Returns `Some(&BatchSuccessResponseBody)` if the response is a success.
     pub fn as_success(&self) -> Option<&BatchSuccessResponseBody> {
         if let BatchResponseBody::Success(ref success_body) = *self {
@@ -82,7 +107,7 @@ impl BatchResponseBody {
 }
 
 #[cfg(test)]
-mod tests {
+mod batch_response_body_tests {
     use super::*;
     use serde_json::json;
 

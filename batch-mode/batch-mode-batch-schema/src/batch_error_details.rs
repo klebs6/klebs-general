@@ -1,7 +1,7 @@
 // ---------------- [ File: src/batch_error_details.rs ]
 crate::ix!();
 
-#[derive(Debug,Serialize,Deserialize)]
+#[derive(Clone,Debug,Serialize,Deserialize)]
 pub struct BatchErrorDetails {
     message:    String,
 
@@ -12,6 +12,15 @@ pub struct BatchErrorDetails {
 }
 
 impl BatchErrorDetails {
+
+    pub fn mock(custom_id: &str) -> Self {
+        BatchErrorDetails {
+            message:    format!("Error for {}", custom_id),
+            error_type: ErrorType::Unknown("some_error".to_string()),
+            param:      None,
+            code:       None,
+        }
+    }
 
     pub fn message(&self) -> &str {
         &self.message
@@ -31,7 +40,7 @@ impl BatchErrorDetails {
 }
 
 #[cfg(test)]
-mod tests {
+mod batch_error_details_tests {
     use super::*;
     use serde_json::json;
 

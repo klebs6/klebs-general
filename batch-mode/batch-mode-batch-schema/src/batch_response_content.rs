@@ -1,7 +1,7 @@
 // ---------------- [ File: src/batch_response_content.rs ]
 crate::ix!();
 
-#[derive(Debug,Serialize,Deserialize)]
+#[derive(Clone,Debug,Serialize,Deserialize)]
 pub struct BatchResponseContent {
     status_code: u16,
     request_id:  ResponseRequestId,
@@ -9,6 +9,30 @@ pub struct BatchResponseContent {
 }
 
 impl BatchResponseContent {
+
+    pub fn mock_with_code_and_body(custom_id: &str, code: u16, body: &serde_json::Value) -> Self {
+        BatchResponseContent {
+            status_code: code,
+            request_id:  ResponseRequestId::new(format!("resp_req_{custom_id}")),
+            body:        BatchResponseBody::mock_with_code_and_body(code,body),
+        }
+    }
+
+    pub fn mock_with_code(custom_id: &str, code: u16) -> Self {
+        BatchResponseContent {
+            status_code: code,
+            request_id:  ResponseRequestId::new(format!("req_resp_{}", custom_id)),
+            body:        BatchResponseBody::mock(custom_id, code),
+        }
+    }
+
+    pub fn mock(custom_id: &str) -> Self {
+        BatchResponseContent {
+            status_code: 400,
+            request_id: ResponseRequestId::new(format!("resp_req_{}", custom_id)),
+            body:       BatchResponseBody::mock_error(custom_id),
+        }
+    }
 
     pub fn status_code(&self) -> u16 {
         self.status_code
@@ -45,7 +69,7 @@ impl BatchResponseContent {
 }
 
 #[cfg(test)]
-mod tests {
+mod batch_response_content_tests {
     use super::*;
     use serde_json::json;
 

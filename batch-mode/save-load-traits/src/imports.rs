@@ -6,3 +6,8 @@ pub(crate) use std::fmt::Display;
 pub(crate) use std::path::{PathBuf,Path};
 pub(crate) use std::io;
 pub(crate) use json_repair::*;
+
+#[cfg(test)] pub(crate) use traced_test::*;
+#[cfg(test)] pub(crate) use tracing_setup::*;
+#[cfg(test)] pub(crate) use serde::*;
+#[cfg(test)] pub(crate) use tempfile::tempdir;

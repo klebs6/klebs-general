@@ -2,7 +2,7 @@
 crate::ix!();
 
 /// Body details of the API request.
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Clone,Debug, Serialize, Deserialize)]
 pub struct LanguageModelRequestBody {
 
     /// Model used for the request.
@@ -17,6 +17,14 @@ pub struct LanguageModelRequestBody {
 }
 
 impl LanguageModelRequestBody {
+
+    pub fn mock() -> Self {
+        LanguageModelRequestBody {
+            model:                 LanguageModelType::Gpt4o,
+            messages:              vec![],
+            max_completion_tokens: 128,
+        }
+    }
 
     pub fn default_max_tokens() -> u32 {
         //1024 

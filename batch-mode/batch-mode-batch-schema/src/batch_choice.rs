@@ -1,7 +1,7 @@
 // ---------------- [ File: src/batch_choice.rs ]
 crate::ix!();
 
-#[derive(Debug,Serialize)]
+#[derive(Clone,Debug,Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct BatchChoice {
     index:         u32,

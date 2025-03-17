@@ -1,7 +1,7 @@
 // ---------------- [ File: src/batch_message.rs ]
 crate::ix!();
 
-#[derive(Debug,Serialize,Deserialize)]
+#[derive(Clone,Debug,Serialize,Deserialize)]
 pub struct BatchMessage {
     role:    MessageRole,
     content: BatchMessageContent,

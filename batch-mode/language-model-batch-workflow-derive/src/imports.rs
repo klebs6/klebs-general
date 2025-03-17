@@ -6,10 +6,6 @@ pub(crate) use quote::{quote};
 
 pub(crate) use syn::{
     DeriveInput,
-    Type::Path as TypePath,
-    GenericArgument::Type as GAType,
-    PathArguments::AngleBracketed,
-    TraitBound,
 };
 
 #[cfg(test)]

@@ -41,7 +41,7 @@ impl Serialize for FinishReason {
 }
 
 #[cfg(test)]
-mod tests {
+mod finish_reason_tests {
     use super::*;
 
     // Test suite for FinishReason

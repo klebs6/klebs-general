@@ -2,7 +2,7 @@
 crate::ix!();
 
 /// Individual message details in the request body.
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Clone,Debug, Serialize, Deserialize)]
 pub struct LanguageModelMessage {
     /// Role of the participant (system/user).
     #[serde(with = "message_role")]
