@@ -5,7 +5,6 @@
 #![allow(dead_code)]
 
 use ai_json_template_derive::AiJsonTemplate;
-use ai_json_template::*;
 use serde::{Serialize, Deserialize};
 use getset::{Getters, Setters};
 use derive_builder::Builder;

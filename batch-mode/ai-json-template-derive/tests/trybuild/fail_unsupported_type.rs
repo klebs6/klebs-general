@@ -1,6 +1,5 @@
 // ---------------- [ File: tests/trybuild/fail_unsupported_type.rs ]
 use ai_json_template_derive::*;
-use ai_json_template::*;
 use save_load_traits::*;
 use save_load_derive::*;
 use serde::{Serialize, Deserialize};
