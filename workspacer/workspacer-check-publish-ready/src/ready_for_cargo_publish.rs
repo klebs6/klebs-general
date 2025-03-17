@@ -17,12 +17,23 @@ impl ReadyForCargoPublish for CrateHandle {
 
     /// Checks if the crate is ready for Cargo publishing
     async fn ready_for_cargo_publish(&self) -> Result<(), Self::Error> {
-        trace!("Entering CrateHandle::ready_for_cargo_publish() at path={:?}", self.as_ref());
+
+        let crate_path = self.crate_dir_path_buf();
+
+        trace!("Entering CrateHandle::ready_for_cargo_publish() at path={:?}", crate_path);
 
         // 1) Ask the Cargo.toml to confirm it's ready for publish (required fields, version validity).
         trace!("Calling cargo_toml().ready_for_cargo_publish() ...");
-        // This presumably calls your existing logic for required fields (name, license, etc).
-        self.cargo_toml().ready_for_cargo_publish().await?;
+
+        {
+            let toml = self.cargo_toml();
+
+            // This presumably calls your existing logic for required fields (name, license, etc).
+            toml.lock()
+                .expect("expected to be able to unlock the Cargo.toml handle")
+                .ready_for_cargo_publish()
+                .await?;
+        }
 
         // 2) Check README.md, and that `src/` directory has main.rs or lib.rs
         trace!("Ensuring README.md exists");
@@ -37,7 +48,7 @@ impl ReadyForCargoPublish for CrateHandle {
         // 4) Verify the crate version is not yet published on crates.io
         self.verify_crate_version_is_not_yet_published_on_crates_io().await?;
 
-        info!("CrateHandle at path={:?} => fully ready for cargo publish!", self.as_ref());
+        info!("CrateHandle at path={:?} => fully ready for cargo publish!", crate_path);
         Ok(())
     }
 }

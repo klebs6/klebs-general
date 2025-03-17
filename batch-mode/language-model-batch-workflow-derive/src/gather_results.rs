@@ -1,3 +1,4 @@
+// ---------------- [ File: src/gather_results.rs ]
 crate::ix!();
 
 pub fn generate_impl_gather_results_trait(parsed: &LmbwParsedInput) -> TokenStream2 {

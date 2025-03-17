@@ -1,3 +1,4 @@
+// ---------------- [ File: src/error.rs ]
 crate::ix!();
 
 error_tree!{

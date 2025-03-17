@@ -74,8 +74,8 @@ where
             }
 
             // find prefix_crate=some( X ), three_p_crate=some( X-3p ), the rest members
-            let mut prefix_crate: Option<H> = None;
-            let mut three_p_crate: Option<H> = None;
+            let mut prefix_crate: Option<Arc<H>> = None;
+            let mut three_p_crate: Option<Arc<H>> = None;
             let mut member_crates = Vec::new();
 
             for pm in potential_members {

@@ -174,7 +174,7 @@ edition = "2021"
         Ok(handle)
     }
 
-    #[tokio::test]
+    #[traced_test]
     async fn test_removes_existing_markers_and_inserts_new_ones() {
         let temp = TempDir::new().unwrap();
         write_minimal_cargo_toml(&temp).await;
@@ -213,7 +213,7 @@ fn example() {
         );
     }
 
-    #[tokio::test]
+    #[traced_test]
     async fn test_inserts_marker_if_none_exists() {
         let temp = TempDir::new().unwrap();
         write_minimal_cargo_toml(&temp).await;
@@ -244,7 +244,7 @@ fn main() {
         );
     }
 
-    #[tokio::test]
+    #[traced_test]
     async fn test_multiple_rs_files_in_src_and_tests() {
         let temp = TempDir::new().unwrap();
         write_minimal_cargo_toml(&temp).await;
@@ -309,7 +309,7 @@ fn main() {
         );
     }
 
-    #[tokio::test]
+    #[traced_test]
     async fn test_no_change_for_unrelated_comment_lines() {
         let temp = TempDir::new().unwrap();
         write_minimal_cargo_toml(&temp).await;
@@ -339,7 +339,7 @@ fn do_something() {}
         assert_eq!(lines[3], "fn do_something() {}");
     }
 
-    #[tokio::test]
+    #[traced_test]
     async fn test_marker_line_threshold_is_respected() {
         let temp = TempDir::new().unwrap();
         write_minimal_cargo_toml(&temp).await;
@@ -368,7 +368,7 @@ fn main() {}
         );
     }
 
-    #[tokio::test]
+    #[traced_test]
     async fn test_subdirectories_are_handled_correctly() {
         // We'll verify it picks up src/nested/deep.rs
         let temp = TempDir::new().unwrap();
@@ -395,7 +395,7 @@ fn deep() {}
         );
     }
 
-    #[tokio::test]
+    #[traced_test]
     async fn test_no_rs_files_in_crate() {
         let temp = TempDir::new().unwrap();
         write_minimal_cargo_toml(&temp).await;
@@ -406,7 +406,7 @@ fn deep() {}
         assert!(result.is_ok(), "Should not fail if no .rs files exist");
     }
 
-    #[tokio::test]
+    #[traced_test]
     async fn test_fails_on_read_only_file_write() {
         let temp = TempDir::new().unwrap();
         write_minimal_cargo_toml(&temp).await;

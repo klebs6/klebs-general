@@ -58,23 +58,23 @@ where
 
         // 1) Compute relative path from prefix_crate to new_crate
         let prefix_abs = prefix_crate
-            .as_ref()
+            .crate_dir_path_buf()
             .canonicalize()
             .map_err(|e| {
                 error!("Failed to canonicalize prefix_crate path: {:?}", e);
                 WorkspaceError::IoError {
                     io_error: Arc::new(e),
-                    context: format!("canonicalizing path for prefix_crate at {:?}", prefix_crate.as_ref()),
+                    context: format!("canonicalizing path for prefix_crate at {:?}", prefix_crate.crate_dir_path_buf()),
                 }
             })?;
         let new_abs = new_crate
-            .as_ref()
+            .crate_dir_path_buf()
             .canonicalize()
             .map_err(|e| {
                 error!("Failed to canonicalize new_crate path: {:?}", e);
                 WorkspaceError::IoError {
                     io_error: Arc::new(e),
-                    context: format!("canonicalizing path for new_crate at {:?}", new_crate.as_ref()),
+                    context: format!("canonicalizing path for new_crate at {:?}", new_crate.crate_dir_path_buf()),
                 }
             })?;
 
@@ -246,7 +246,7 @@ mod test_register_in_prefix_group {
             .expect("Should succeed registering new crate in prefix");
 
         // 2) Verify the prefix crate's Cargo.toml => has [dependencies][batch-mode-batch-schema] = { path="..." }
-        let cargo_toml_path = prefix_crate.as_ref().join("Cargo.toml");
+        let cargo_toml_path = prefix_crate.cargo_toml_path_buf().await?;
         let cargo_content = fs::read_to_string(&cargo_toml_path).await
             .expect("Failed to read prefix crate Cargo.toml");
         debug!("Updated prefix crate Cargo.toml:\n{}", cargo_content);
@@ -256,7 +256,7 @@ mod test_register_in_prefix_group {
             "Should contain a path-based dependency entry for batch-mode-batch-schema");
 
         // 3) Verify that `src/lib.rs` has `pub use batch_mode_batch_schema::*;`
-        let lib_rs_path = prefix_crate.as_ref().join("src").join("lib.rs");
+        let lib_rs_path = prefix_crate.crate_dir_path_buf().join("src").join("lib.rs");
         let lib_rs_content = fs::read_to_string(&lib_rs_path).await
             .expect("Failed to read prefix crate lib.rs");
         debug!("Updated prefix crate lib.rs:\n{}", lib_rs_content);
@@ -479,7 +479,7 @@ mod test_register_in_prefix_group {
             .expect("Should succeed registering new crate in prefix");
         
         // check lib.rs for "pub use acme_awesome_feature::*;"
-        let lib_rs_path = prefix_crate.as_ref().join("src").join("lib.rs");
+        let lib_rs_path = prefix_crate.crate_dir_path_buf().join("src").join("lib.rs");
         let lib_contents = fs::read_to_string(&lib_rs_path).await
             .expect("Failed to read prefix crate lib.rs");
         assert!(

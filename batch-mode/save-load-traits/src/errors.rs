@@ -12,4 +12,16 @@ error_tree!{
             dir: PathBuf,
         }
     }
+
+    #[derive(PartialEq)]
+    pub enum JsonParseError {
+        #[cmp_neq] 
+        SerdeError(serde_json::Error),
+
+        #[cmp_neq] 
+        IoError(std::io::Error),
+
+        JsonRepairError(JsonRepairError),
+        InvalidJson,
+    }
 }

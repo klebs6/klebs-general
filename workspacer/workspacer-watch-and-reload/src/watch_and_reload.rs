@@ -31,7 +31,7 @@ impl WatchAndReload for CrateHandle {
         runner: Arc<dyn CommandRunner + Send + Sync + 'static>,
         cancel_token: CancellationToken,
     ) -> Result<(), Self::Error> {
-        let crate_path = self.as_ref().to_path_buf();
+        let crate_path = self.crate_dir_path_buf();
         info!("Setting up file watching for crate at: {}", crate_path.display());
 
         let (mut watcher, notify_rx) = setup_file_watching(&crate_path)?;
@@ -80,7 +80,7 @@ where
     ) -> Result<(), Self::Error> {
 
         // 1) Setup the file watcher
-        let workspace_path = self.as_ref().to_path_buf();
+        let workspace_path = self.workspace_dir_path_buf();
         let (mut watcher, notify_rx) = setup_file_watching(&workspace_path)
             .map_err(WorkspaceError::from)?;
 
@@ -104,7 +104,7 @@ where
         }
 
         for crate_handle in self.crates() {
-            let crate_src_path = crate_handle.as_ref().join("src");
+            let crate_src_path = crate_handle.crate_dir_path_buf().join("src");
             if path.starts_with(&crate_src_path) {
                 return true;
             }

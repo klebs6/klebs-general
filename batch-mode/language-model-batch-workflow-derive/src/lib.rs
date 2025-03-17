@@ -67,4 +67,3 @@ pub fn language_model_batch_workflow_derive(input: TokenStream) -> TokenStream {
     tracing::trace!("Exiting language_model_batch_workflow_derive proc macro.");
     expanded.into()
 }
-

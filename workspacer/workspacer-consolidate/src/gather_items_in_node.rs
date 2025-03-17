@@ -349,15 +349,6 @@ fn gather_items_from_iter(
     out
 }
 
-/// Trims a string to ~60 chars for logging
-fn trim_to_60(mut s: String) -> String {
-    if s.len() > 60 {
-        s.truncate(57);
-        s.push_str("...");
-    }
-    s
-}
-
 // A test suite for the `gather_items_in_node` function, which inspects the children
 // of a given `SyntaxNode` and collects various Rust items (modules, impl blocks,
 // functions, structs, enums, traits, type aliases, macro_rules, etc.) into

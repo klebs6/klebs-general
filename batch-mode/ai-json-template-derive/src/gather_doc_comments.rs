@@ -101,6 +101,7 @@ pub fn gather_doc_comments(attrs: &[Attribute]) -> Vec<String> {
 #[cfg(test)]
 mod test_gather_doc_comments {
     use super::*;
+    use traced_test::*;
 
     /// Helper to call `gather_doc_comments` and compare to an expected Vec.
     fn assert_gather_equals(attrs: Vec<Attribute>, expected: &[&str]) {

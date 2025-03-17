@@ -10,7 +10,7 @@ pub async fn execute_ai_readme_writer_requests(
     trace!("Starting execute_ai_readme_writer_requests with {} request(s).", requests.len());
 
     let readme_dir = WorkspacerDir::local().ensure_subdir_exists("readme-writer-workspace")?;
-    let mut writer = AiReadmeWriter::new(&readme_dir, LanguageModelType::O1).await?;
+    let mut writer = AiReadmeWriter::new(&readme_dir, LanguageModelType::Gpt4o).await?;
 
     info!("Beginning the AI expansions");
     writer.plant_seed_and_wait(requests).await?;

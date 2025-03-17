@@ -31,8 +31,9 @@ pub fn generate_impl_process_batch_requests(parsed: &LmbwParsedInput) -> TokenSt
         quote!{ self.client() }
     };
 
-    let seed_ty = quote! {
-        <#struct_ident #ty_generics as ComputeLanguageModelCoreQuery>::Seed
+    let user_output_ty = match parsed.json_output_format_type() {
+        Some(t) => quote! { #t },
+        None    => quote! { CamelCaseTokenWithComment },
     };
 
     quote! {
@@ -51,7 +52,7 @@ pub fn generate_impl_process_batch_requests(parsed: &LmbwParsedInput) -> TokenSt
                 let mut triple = BatchFileTriple::new_with_requests(batch_requests, workspace.clone())?;
 
                 let execution_result = triple.fresh_execute(&#client_expr).await?;
-                process_batch_output_and_errors::<#seed_ty>(&*workspace, &execution_result, expected_content_type).await?;
+                process_batch_output_and_errors::<#user_output_ty>(&*workspace, &execution_result, expected_content_type).await?;
                 triple.move_all_to_done().await?;
 
                 Ok(())

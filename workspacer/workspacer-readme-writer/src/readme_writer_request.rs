@@ -1,13 +1,14 @@
 // ---------------- [ File: workspacer-readme-writer/src/readme_writer_request.rs ]
 crate::ix!();
 
-#[derive(Debug,Builder,Getters,Clone)]
+#[derive(Serialize,Deserialize,Debug,Builder,Getters,Clone)]
 #[builder(setter(into))]
 #[getset(get = "pub")]
 pub struct AiReadmeWriterRequest<P> 
 where
     P: AsRef<Path> + Send + Sync + 'static,
 {
+    #[serde(with = "crate_handle_serde")]
     crate_handle:                               Arc<dyn ReadmeWritingCrateHandle<P>>,
     crate_name:                                 String,
     version:                                    semver::Version,

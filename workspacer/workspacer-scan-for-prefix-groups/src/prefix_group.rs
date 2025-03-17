@@ -16,13 +16,13 @@ where
     prefix: String,
 
     /// The facade crate, if any (named exactly the prefix)
-    prefix_crate: Option<H>,
+    prefix_crate: Option<Arc<H>>,
 
     /// The *-3p crate, if any
-    three_p_crate: Option<H>,
+    three_p_crate: Option<Arc<H>>,
 
     /// All crates that belong in this group
-    member_crates: Vec<H>,
+    member_crates: Vec<Arc<H>>,
 
     #[builder(default="None")]
     _0: Option<std::marker::PhantomData<P>>,

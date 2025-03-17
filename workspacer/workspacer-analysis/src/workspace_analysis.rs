@@ -21,7 +21,7 @@ where for<'async_trait> P: From<PathBuf> + AsRef<Path> + Send + Sync + 'async_tr
 
         let mut builder = WorkspaceSizeAnalysis::builder();
 
-        for crate_handle in self {
+        for crate_handle in self.crates() {
             let crate_analysis = CrateAnalysis::new(crate_handle).await?;
             builder.add_crate_analysis(crate_analysis);
         }

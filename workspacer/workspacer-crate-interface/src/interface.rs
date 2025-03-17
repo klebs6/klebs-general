@@ -5,6 +5,7 @@ pub trait CrateHandleInterface<P>
 : ValidateIntegrity<Error=CrateError>
 + Send
 + Sync
++ Debug
 + Named
 + Versioned<Error=CrateError>
 + IsPrivate<Error=CrateError>

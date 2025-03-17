@@ -3,31 +3,30 @@
 //
 crate::ix!();
 
-/// This structure is a schema and a directive indicating what we need you to provide for us in
-/// your response to our query.
+/// This structure is a directive indicating which fields we need you to provide for us in your response to our query.
 ///
 #[derive(AiJsonTemplate,SaveLoad,Builder,Getters,Debug,Clone,Serialize,Deserialize)]
 #[getset(get="pub")]
 #[builder(setter(into))]
 pub struct AiReadmeWriterDesiredOutput {
 
-    /// This string should be the name of our crate, *verbatim*, trimmed for use
-    /// as a toml field
+    /// This string should be the name of our crate, *verbatim*, trimmed for use as a toml field
     crate_name: String,
 
     /// This string should be valid markdown representing the readme for this crate.
-    /// Please make it terse, useful, and designed for the apex consumer of clear intent and
-    /// industrious nature. Use advanced vocabulary. 
     ///
-    /// If this crate involves any concepts from mathematics and/or physics, please document them
-    /// here.
+    /// Please make it terse, useful, and designed for an industrious commercially savy consumer of industrious nature. 
+    ///
+    /// Advanced vocabulary and concepts are welcome. 
+    ///
+    /// If this crate involves concepts from mathematics and/or physics, please describe and document them here.
     ///
     full_readme_markdown: String,
 
     /// We will place this package_description in our Cargo.toml file so the users of this crate
     /// know what it does.
     ///
-    /// Please make the discription technical, memorable, funny, and useful.
+    /// The discription should be technical, clear, and useful. It should be terse.
     ///
     package_description: String,
 
@@ -37,13 +36,15 @@ pub struct AiReadmeWriterDesiredOutput {
     ///
     package_keywords:    Vec<String>,
 
-    /// These categories will be used in our Cargo.toml file so the users of this crate can find it
-    /// when they sort through other packages of the same category on crates.io.
+    /// These categories will be used in our Cargo.toml file.
     ///
-    /// Choose max 5 and make sure they are actually meaningful for our crate.
+    /// It is important that users of this crate can find it on crates.io.
     ///
-    /// These categories should only be chosen from among the legal crates.io categories. These
-    /// are:
+    /// Choose maximum 5 categories and make sure they are actually meaningful for our crate.
+    ///
+    /// These categories should only be chosen from among the legal crates.io categories. 
+    ///
+    /// The legal categoreis are:
     ///
     /// accessibility
     /// aerospace

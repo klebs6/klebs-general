@@ -25,6 +25,14 @@ version = "0.2.0"
 [dependencies.camel-case-token-with-comment]
 path = "../camel-case-token-with-comment"
 version = "0.2.0"
+
+[dependencies.save-load-traits]
+path = "../save-load-traits"
+version = "0.2.0"
+[dependencies.save-load-derive]
+path = "../save-load-derive"
+version = "0.1.0"
+
 [package]
 edition = "2024"
 name = "batch-mode-process-response"

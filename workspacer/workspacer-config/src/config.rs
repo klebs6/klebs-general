@@ -81,8 +81,8 @@ mod tests {
         assert_eq!(cfg.rust_edition().as_ref(), Some(&"2021".to_string()));
     }
 
-    #[test]
-    fn test_subdirectory_creation() {
+    #[traced_test]
+    async fn test_subdirectory_creation() {
         // Just a sync example for subdir creation
         let tmp = tempdir().expect("Failed to create temp dir");
         std::env::set_current_dir(tmp.path()).expect("Failed to set current dir");
@@ -96,7 +96,7 @@ mod tests {
         assert!(subdir_path.is_dir(), "Should be a directory");
 
         // Optionally remove it
-        local_ws.remove_subdir("readme-writer-workspace").expect("Failed to remove subdir");
+        local_ws.remove_subdir("readme-writer-workspace").await.expect("Failed to remove subdir");
         assert!(!subdir_path.exists(), "Subdir should be removed now");
     }
 }

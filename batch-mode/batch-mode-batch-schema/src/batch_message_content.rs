@@ -27,6 +27,10 @@ impl AsRef<str> for BatchMessageContent {
 
 impl BatchMessageContent {
 
+    pub fn len(&self) -> usize { 
+        self.content.len()
+    }
+
     pub fn as_str(&self) -> &str {
         &self.content
     }

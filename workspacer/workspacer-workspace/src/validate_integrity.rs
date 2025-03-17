@@ -10,7 +10,7 @@ where for<'async_trait> P: From<PathBuf> + AsRef<Path> + Send + Sync + 'async_tr
     ///
     fn validate_integrity(&self) -> Result<(), Self::Error> {
         for crate_handle in self {
-            crate_handle.validate_integrity()?;
+            crate_handle.lock().expect("expected to be able to lock our crate").validate_integrity()?;
         }
         Ok(())
     }

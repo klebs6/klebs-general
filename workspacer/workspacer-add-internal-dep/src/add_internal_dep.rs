@@ -42,23 +42,23 @@ where
 
         // 1) Compute the relative path from the target crate to the dep crate
         let target_absolute = target_crate
-            .as_ref()
+            .crate_dir_path_buf()
             .canonicalize()
             .map_err(|e| {
                 error!("Failed to canonicalize target_crate path: {:?}", e);
                 WorkspaceError::IoError {
                     io_error: Arc::new(e),
-                    context: format!("canonicalizing path for target_crate at {:?}", target_crate.as_ref()),
+                    context: format!("canonicalizing path for target_crate at {:?}", target_crate.crate_dir_path_buf()),
                 }
             })?;
         let dep_absolute = dep_crate
-            .as_ref()
+            .crate_dir_path_buf()
             .canonicalize()
             .map_err(|e| {
                 error!("Failed to canonicalize dep_crate path: {:?}", e);
                 WorkspaceError::IoError {
                     io_error: Arc::new(e),
-                    context: format!("canonicalizing path for dep_crate at {:?}", dep_crate.as_ref()),
+                    context: format!("canonicalizing path for dep_crate at {:?}", dep_crate.crate_dir_path_buf()),
                 }
             })?;
         let rel_path = pathdiff::diff_paths(&dep_absolute, &target_absolute)
@@ -208,7 +208,7 @@ mod test_add_internal_dependency {
             .expect("add_internal_dependency should succeed for a happy path test");
 
         // 5) Now verify that crateA's Cargo.toml has a dependency on crateB
-        let cargo_toml_a_path = crate_a.as_ref().join("Cargo.toml");
+        let cargo_toml_a_path = crate_a.cargo_toml_path_buf().await?;
         debug!("Reading updated Cargo.toml at {:?}", cargo_toml_a_path);
         let updated_toml_a = fs::read_to_string(&cargo_toml_a_path).await
             .expect("Failed to read updated Cargo.toml for crateA");
@@ -224,7 +224,7 @@ mod test_add_internal_dependency {
         );
 
         // 6) Verify that crateA's src/imports.rs now has a pub(crate) use crateB
-        let imports_rs_a = crate_a.as_ref().join("src").join("imports.rs");
+        let imports_rs_a = crate_a.crate_dir_path_buf().join("src").join("imports.rs");
         debug!("Reading updated imports.rs at {:?}", imports_rs_a);
         let imports_contents = fs::read_to_string(&imports_rs_a).await
             .expect("Failed to read updated imports.rs for crateA");
@@ -266,7 +266,7 @@ mod test_add_internal_dependency {
             .find(|c| c.name() == "crateY")
             .expect("Expected crateY in workspace");
 
-        let imports_rs = crate_x.as_ref().join("src").join("imports.rs");
+        let imports_rs = crate_x.crate_dir_path_buf().join("src").join("imports.rs");
         fs::create_dir_all(imports_rs.parent().unwrap())
             .await
             .expect("Failed to create src dir");
@@ -359,7 +359,7 @@ mod test_add_internal_dependency {
     ///    and then its Cargo.toml is removed, so reading it for add_internal_dependency
     ///    should fail with an IoError containing context.
     #[traced_test]
-    async fn test_add_internal_dependency_missing_cargo_toml() {
+    async fn test_add_internal_dependency_missing_cargo_toml() -> Result<(),CrateError> {
         info!("Starting test_add_internal_dependency_missing_cargo_toml");
 
         // Create a workspace with two crates: "good_crate" and "broken_crate"
@@ -390,7 +390,7 @@ mod test_add_internal_dependency {
 
         // Now remove broken_crate's Cargo.toml AFTER the workspace is constructed,
         // so that `ws` still has the handle for "broken_crate".
-        let broken_cargo = broken.as_ref().join("Cargo.toml");
+        let broken_cargo = broken.cargo_toml_path_buf().await?;
         fs::remove_file(&broken_cargo)
             .await
             .expect("Failed removing broken crate's Cargo.toml to simulate missing file");
@@ -415,5 +415,7 @@ mod test_add_internal_dependency {
         }
 
         info!("test_add_internal_dependency_missing_cargo_toml passed");
+
+        Ok(())
     }
 }

@@ -4,7 +4,7 @@ crate::ix!();
 pub enum RigorousJsonCommandBuilderStage {
     ExtractAndCleanData,
     GenerateResponseViaTheSchema,
-    EnrichAndRephraseContent,
+    OptimizeContent,
     ApplySpecificAdjustments,
     OutputTheJsonStructure,
 }
@@ -25,7 +25,7 @@ impl RigorousJsonCommandBuilderStage {
         vec![
             RigorousJsonCommandBuilderStage::ExtractAndCleanData,
             RigorousJsonCommandBuilderStage::GenerateResponseViaTheSchema,
-            RigorousJsonCommandBuilderStage::EnrichAndRephraseContent,
+            RigorousJsonCommandBuilderStage::OptimizeContent,
             RigorousJsonCommandBuilderStage::ApplySpecificAdjustments,
             RigorousJsonCommandBuilderStage::OutputTheJsonStructure,
         ]
@@ -35,7 +35,7 @@ impl RigorousJsonCommandBuilderStage {
         match self {
             RigorousJsonCommandBuilderStage::ExtractAndCleanData                 => "Extract and Clean Data",
             RigorousJsonCommandBuilderStage::GenerateResponseViaTheSchema { .. } => "Generate Your Response via the Schema We Sent You",
-            RigorousJsonCommandBuilderStage::EnrichAndRephraseContent            => "Enrich and Rephrase Content",
+            RigorousJsonCommandBuilderStage::OptimizeContent                     => "Ensure Content is Optimal",
             RigorousJsonCommandBuilderStage::ApplySpecificAdjustments            => "Apply Specific Adjustments",
             RigorousJsonCommandBuilderStage::OutputTheJsonStructure              => "Output the JSON Structure",
         }
@@ -60,12 +60,12 @@ impl RigorousJsonCommandBuilderStage {
                         T::to_template()
                 }
             },
-            RigorousJsonCommandBuilderStage::EnrichAndRephraseContent => formatdoc!{
+            RigorousJsonCommandBuilderStage::OptimizeContent => formatdoc!{
                 "
                     Rephrase Entries:
 
                     - Ensure entries are concise and focused.
-                    - Remove vague introductory phrases (e.g., avoid starting with \"Illustrates the...\"; instead, use direct details like \"The hanging green vines on the garden wall\").
+                    - Ensure there are no vague phrases (e.g., avoid starting with \"Illustrates the something something...\"; instead, use direct details like \"The hanging green vines on the garden wall\").
 
                     Ensure Clarity and Consistency:
 
@@ -74,9 +74,8 @@ impl RigorousJsonCommandBuilderStage {
 
                     Enrich Content:
 
-                    - Add additional information where appropriate to enhance depth and value.
+                    - Communicate additional information where appropriate to enhance depth and value.
                     - If a mathematical, physical, or otherwise technical background is helpful, please provide it.
-                    - You may include and interweave latin, sanskrit, and ancient greek vocabulary as you please.
                     - Ensure that the content is comprehensive and meets all requirements."
             },
             RigorousJsonCommandBuilderStage::ApplySpecificAdjustments => formatdoc!{

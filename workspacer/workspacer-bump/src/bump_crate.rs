@@ -169,7 +169,6 @@ fn partial_package_parse(
 mod test_bump_crate_handle {
     use super::*;
 
-    /// Helper: read the `[package].version` from a cargo toml file for quick verification
     async fn read_package_version(cargo_toml_path: &Path) -> Option<String> {
         let contents = fs::read_to_string(cargo_toml_path).await.ok()?;
         let doc = contents.parse::<toml_edit::Document>().ok()?;
@@ -178,170 +177,286 @@ mod test_bump_crate_handle {
         ver_item.as_str().map(|s| s.to_string())
     }
 
-    /// Constructs a single "bumpable" crate in a mock workspace, then returns a `CrateHandle`.
-    /// By default, the crate has version "0.1.0". 
-    /// You can pass in a custom version by rewriting Cargo.toml after creation, if desired.
-    async fn setup_single_crate_handle(crate_name: &str) -> (tempfile::TempDir, CrateHandle) {
-        // Build the mock workspace in a temp dir
+    async fn setup_single_crate_handle(crate_name: &str) -> (tempfile::TempDir, Arc<Mutex<CrateHandle>>) {
         let single_cfg = CrateConfig::new(crate_name).with_src_files();
         let root_path = create_mock_workspace(vec![single_cfg])
             .await
             .expect("Failed to create mock workspace");
-        
-        // We'll build a minimal struct to implement `AsRef<Path>` so we can 
-        // call `CrateHandle::new` if your code requires that approach.
-        // Or we can do the direct approach: `CrateHandle::new` if it doesn't require a wrapper.
-        //
-        // For demonstration, let's assume `CrateHandle::new(&root_path.join(crate_name))`.
-        let crate_path = root_path.join(crate_name);
-        let handle = CrateHandle::new(&crate_path)
+
+        let raw_handle = CrateHandle::new(&root_path.join(crate_name))
             .await
-            .expect("Failed to create CrateHandle from mock crate directory");
+            .expect("Failed to create CrateHandle");
 
-        // Return the tempdir so it doesn't get dropped and our handle
-        (tempfile::TempDir::new_in(root_path.parent().unwrap()).unwrap(), handle)
+        let arc_handle = Arc::new(Mutex::new(raw_handle));
+        (tempfile::TempDir::new_in(root_path.parent().unwrap()).unwrap(), arc_handle)
     }
 
-    #[traced_test]
+    // Remove #[traced_test], use plain #[tokio::test] or just no attribute:
+    #[tokio::test]
     async fn test_bump_major_ok() {
-        let (_temp, mut handle) = setup_single_crate_handle("major_ok").await;
+        let (_temp, arc_handle) = setup_single_crate_handle("major_ok").await;
 
-        // Confirm initial version is "0.1.0"
-        let cargo_toml_path = handle.as_ref().join("Cargo.toml");
-        let initial_ver = read_package_version(&cargo_toml_path).await
-            .expect("Expected an initial version");
-        assert_eq!(initial_ver, "0.1.0");
+        // Check initial
+        {
+            let path = {
+                let g = arc_handle.lock().expect("lock handle");
+                g.as_ref().join("Cargo.toml")
+            };
+            let initial_ver = read_package_version(&path).await.expect("initial version");
+            assert_eq!(initial_ver, "0.1.0");
+        }
 
-        // Now bump major
-        handle.bump(ReleaseType::Major).await
-            .expect("Should succeed bumping major");
+        // Bump => Major
+        {
+            let mut local_clone = {
+                let g = arc_handle.lock().expect("lock handle for bump");
+                g.clone()
+            };
+            local_clone.bump(ReleaseType::Major).await.expect("bump major ok");
+            // store it back
+            {
+                let mut g = arc_handle.lock().expect("re-lock handle final");
+                *g = local_clone;
+            }
+        }
 
-        // Check new version => "1.0.0"
-        let updated_ver = read_package_version(&cargo_toml_path).await
-            .expect("Expected version after major bump");
-        assert_eq!(updated_ver, "1.0.0");
+        // Confirm => 1.0.0
+        {
+            let path = {
+                let g = arc_handle.lock().expect("lock final read");
+                g.as_ref().join("Cargo.toml")
+            };
+            let updated_ver = read_package_version(&path).await.expect("updated version");
+            assert_eq!(updated_ver, "1.0.0");
+        }
     }
 
-    #[traced_test]
+    #[tokio::test]
     async fn test_bump_minor_ok() {
-        let (_temp, mut handle) = setup_single_crate_handle("minor_ok").await;
-        let cargo_toml_path = handle.as_ref().join("Cargo.toml");
-
-        // Bump minor => from 0.1.0 to 0.2.0
-        handle.bump(ReleaseType::Minor).await.expect("bump minor ok");
-        let new_ver = read_package_version(&cargo_toml_path).await.unwrap();
-        assert_eq!(new_ver, "0.2.0");
+        let (_temp, arc_handle) = setup_single_crate_handle("minor_ok").await;
+        {
+            let mut local_clone = {
+                let g = arc_handle.lock().expect("lock handle");
+                g.clone()
+            };
+            local_clone.bump(ReleaseType::Minor).await.expect("bump minor ok");
+            {
+                let mut g = arc_handle.lock().expect("store handle");
+                *g = local_clone;
+            }
+        }
+        // verify
+        {
+            let path = {
+                let g = arc_handle.lock().expect("lock handle final read");
+                g.as_ref().join("Cargo.toml")
+            };
+            let ver = read_package_version(&path).await.unwrap();
+            assert_eq!(ver, "0.2.0");
+        }
     }
 
-    #[traced_test]
+    #[tokio::test]
     async fn test_bump_patch_ok() {
-        let (_temp, mut handle) = setup_single_crate_handle("patch_ok").await;
-        let cargo_toml_path = handle.as_ref().join("Cargo.toml");
-
-        // Bump patch => from 0.1.0 to 0.1.1
-        handle.bump(ReleaseType::Patch).await.expect("bump patch ok");
-        let new_ver = read_package_version(&cargo_toml_path).await.unwrap();
-        assert_eq!(new_ver, "0.1.1");
+        let (_temp, arc_handle) = setup_single_crate_handle("patch_ok").await;
+        {
+            let mut local_clone = {
+                let g = arc_handle.lock().expect("lock handle");
+                g.clone()
+            };
+            local_clone.bump(ReleaseType::Patch).await.expect("bump patch ok");
+            {
+                let mut g = arc_handle.lock().expect("store patch handle");
+                *g = local_clone;
+            }
+        }
+        // read final
+        {
+            let p = {
+                let gd = arc_handle.lock().expect("lock final read");
+                gd.as_ref().join("Cargo.toml")
+            };
+            let v = read_package_version(&p).await.unwrap();
+            assert_eq!(v, "0.1.1");
+        }
     }
 
-    #[traced_test]
+    #[tokio::test]
     async fn test_bump_alpha_ok() {
-        let (_temp, mut handle) = setup_single_crate_handle("alpha_ok").await;
-        let cargo_toml_path = handle.as_ref().join("Cargo.toml");
+        let (_temp, arc_handle) = setup_single_crate_handle("alpha_ok").await;
 
-        // Bump alpha(None) => from 0.1.0 => 0.1.0-alpha1
-        handle.bump(ReleaseType::Alpha(None)).await.expect("bump alpha none");
-        let alpha_ver = read_package_version(&cargo_toml_path).await.unwrap();
-        assert_eq!(alpha_ver, "0.1.0-alpha1");
+        // alpha(None)
+        {
+            let mut lc = {
+                let g = arc_handle.lock().expect("lock alpha none");
+                g.clone()
+            };
+            lc.bump(ReleaseType::Alpha(None)).await.expect("bump alpha none");
+            {
+                let mut g = arc_handle.lock().expect("store alpha none");
+                *g = lc;
+            }
+        }
+        {
+            let path = {
+                let gd = arc_handle.lock().expect("read alpha1");
+                gd.as_ref().join("Cargo.toml")
+            };
+            let alpha_ver = read_package_version(&path).await.unwrap();
+            assert_eq!(alpha_ver, "0.1.0-alpha1");
+        }
 
-        // Bump alpha(Some(99)) => => 0.1.0-alpha99 (still same major/minor/patch)
-        handle.bump(ReleaseType::Alpha(Some(99))).await.expect("bump alpha 99");
-        let alpha99_ver = read_package_version(&cargo_toml_path).await.unwrap();
-        assert_eq!(alpha99_ver, "0.1.0-alpha99");
+        // alpha(Some(99))
+        {
+            let mut lc = {
+                let g = arc_handle.lock().expect("lock alpha 99");
+                g.clone()
+            };
+            lc.bump(ReleaseType::Alpha(Some(99))).await.expect("bump alpha 99");
+            {
+                let mut g = arc_handle.lock().expect("store alpha 99");
+                *g = lc;
+            }
+        }
+        {
+            let path = {
+                let gd = arc_handle.lock().expect("read alpha99");
+                gd.as_ref().join("Cargo.toml")
+            };
+            let alpha99 = read_package_version(&path).await.unwrap();
+            assert_eq!(alpha99, "0.1.0-alpha99");
+        }
     }
 
-    /// Test error if `[package]` table is missing
-    #[traced_test]
+    #[tokio::test]
     async fn test_missing_package_section_error() {
-        let (_temp, mut handle) = setup_single_crate_handle("missing_package").await;
-        let cargo_toml_path = handle.as_ref().join("Cargo.toml");
+        let (_temp, arc_handle) = setup_single_crate_handle("missing_package").await;
+        // sabotage
+        {
+            let p = {
+                let g = arc_handle.lock().expect("lock sabotage");
+                g.as_ref().join("Cargo.toml")
+            };
+            let contents = fs::read_to_string(&p).await.unwrap();
+            let sabotage = contents.replace("[package]", "#[package]");
+            fs::write(&p, sabotage).await.unwrap();
+        }
 
-        // We'll sabotage the Cargo.toml by removing the "[package]" line
-        let contents = fs::read_to_string(&cargo_toml_path).await.unwrap();
-        let sabotage = contents.replace("[package]", "#[package]");
-        fs::write(&cargo_toml_path, sabotage).await.unwrap();
-
-        // Now call bump => expect an error
-        let result = handle.bump(ReleaseType::Patch).await;
+        let mut local_clone = {
+            let g = arc_handle.lock().expect("lock for bump");
+            g.clone()
+        };
+        let result = local_clone.bump(ReleaseType::Patch).await;
+        {
+            let mut gg = arc_handle.lock().expect("store sabotage back");
+            *gg = local_clone;
+        }
         match result {
             Err(CrateError::CargoTomlError(
                 CargoTomlError::MissingPackageSection { cargo_toml_file }
             )) => {
-                assert_eq!(cargo_toml_file, cargo_toml_path);
+                let real_path = {
+                    let gg = arc_handle.lock().expect("re-lock read final path");
+                    gg.as_ref().join("Cargo.toml")
+                };
+                assert_eq!(cargo_toml_file, real_path);
             }
-            other => {
-                panic!("Expected MissingPackageSection, got: {:?}", other);
-            }
+            other => panic!("Expected MissingPackageSection, got: {:?}", other),
         }
     }
 
-    /// Test error if `version` key is missing
-    #[traced_test]
+    #[tokio::test]
     async fn test_missing_version_key_error() {
-        let (_temp, mut handle) = setup_single_crate_handle("missing_version_key").await;
-        let cargo_toml_path = handle.as_ref().join("Cargo.toml");
-
-        // remove the "version = ..." line
-        let contents = fs::read_to_string(&cargo_toml_path).await.unwrap();
-        let sabotage = contents.replace("version = \"0.1.0\"", "");
-        fs::write(&cargo_toml_path, sabotage).await.unwrap();
-
-        let result = handle.bump(ReleaseType::Major).await;
+        let (_temp, arc_handle) = setup_single_crate_handle("missing_version_key").await;
+        // sabotage
+        {
+            let p = {
+                let gd = arc_handle.lock().expect("lock sabotage");
+                gd.as_ref().join("Cargo.toml")
+            };
+            let s = fs::read_to_string(&p).await.unwrap();
+            let sabotage = s.replace("version = \"0.1.0\"", "");
+            fs::write(&p, sabotage).await.unwrap();
+        }
+        let mut lc = {
+            let g = arc_handle.lock().expect("lock handle");
+            g.clone()
+        };
+        let result = lc.bump(ReleaseType::Major).await;
+        {
+            let mut g = arc_handle.lock().expect("store sabotage");
+            *g = lc;
+        }
         match result {
             Err(CrateError::CargoTomlError(
                 CargoTomlError::MissingRequiredFieldForIntegrity { cargo_toml_file, field }
             )) => {
-                assert_eq!(cargo_toml_file, cargo_toml_path);
+                let real_path = {
+                    let gg = arc_handle.lock().expect("re-lock final path");
+                    gg.as_ref().join("Cargo.toml")
+                };
+                assert_eq!(cargo_toml_file, real_path);
                 assert_eq!(field, "version");
             }
             other => panic!("Expected MissingRequiredFieldForIntegrity, got: {:?}", other),
         }
     }
 
-    /// Test error if version is invalid semver
-    #[traced_test]
+    #[tokio::test]
     async fn test_invalid_version_format() {
-        let (_temp, mut handle) = setup_single_crate_handle("invalid_version_format").await;
-        let cargo_toml_path = handle.as_ref().join("Cargo.toml");
-
-        // sabotage the version line
-        let contents = fs::read_to_string(&cargo_toml_path).await.unwrap();
-        let sabotage = contents.replace("version = \"0.1.0\"", "version = \"not.semver\"");
-        fs::write(&cargo_toml_path, sabotage).await.unwrap();
-
-        let result = handle.bump(ReleaseType::Patch).await;
+        let (_temp, arc_handle) = setup_single_crate_handle("invalid_version_format").await;
+        {
+            let path = {
+                let g = arc_handle.lock().expect("lock sabotage");
+                g.as_ref().join("Cargo.toml")
+            };
+            let c = fs::read_to_string(&path).await.unwrap();
+            let sabotage = c.replace("version = \"0.1.0\"", "version = \"not.semver\"");
+            fs::write(&path, sabotage).await.unwrap();
+        }
+        let mut lc = {
+            let g = arc_handle.lock().expect("lock for bump");
+            g.clone()
+        };
+        let result = lc.bump(ReleaseType::Patch).await;
+        {
+            let mut g = arc_handle.lock().expect("store back after sabotage");
+            *g = lc;
+        }
         match result {
             Err(CrateError::CargoTomlError(
                 CargoTomlError::InvalidVersionFormat { cargo_toml_file, version }
             )) => {
-                assert_eq!(cargo_toml_file, cargo_toml_path);
-                assert_eq!(version, "not.semver".to_string());
+                let real_path = {
+                    let gg = arc_handle.lock().expect("re-lock final path");
+                    gg.as_ref().join("Cargo.toml")
+                };
+                assert_eq!(cargo_toml_file, real_path);
+                assert_eq!(version, "not.semver");
             }
             other => panic!("Expected InvalidVersionFormat, got: {:?}", other),
         }
     }
 
-    /// Test I/O error: e.g., remove the Cargo.toml before calling bump => triggers IoError
-    #[traced_test]
+    #[tokio::test]
     async fn test_io_error_missing_cargo_toml() {
-        let (_temp, mut handle) = setup_single_crate_handle("io_error_missing_toml").await;
-        let cargo_toml_path = handle.as_ref().join("Cargo.toml");
-        
-        // remove the file
-        fs::remove_file(&cargo_toml_path).await.unwrap();
-
-        // now call bump => expect IoError
-        let result = handle.bump(ReleaseType::Patch).await;
+        let (_temp, arc_handle) = setup_single_crate_handle("io_error_missing_toml").await;
+        {
+            let path = {
+                let g = arc_handle.lock().expect("lock sabotage");
+                g.as_ref().join("Cargo.toml")
+            };
+            fs::remove_file(&path).await.unwrap();
+        }
+        let mut lc = {
+            let g = arc_handle.lock().expect("lock for bump");
+            g.clone()
+        };
+        let result = lc.bump(ReleaseType::Patch).await;
+        {
+            let mut g = arc_handle.lock().expect("store back after sabotage");
+            *g = lc;
+        }
         match result {
             Err(CrateError::IoError { context, .. }) => {
                 assert!(context.contains("reading"), "Should mention reading cargo toml");
@@ -350,21 +465,26 @@ mod test_bump_crate_handle {
         }
     }
 
-    /// (Optional) test overwriting a huge alpha version => still success or partial skip
-    #[traced_test]
+    #[tokio::test]
     async fn test_alpha_huge_number() {
-        let (_temp, mut handle) = setup_single_crate_handle("alpha_huge").await;
-        let cargo_toml_path = handle.as_ref().join("Cargo.toml");
-
-        // from 0.1.0 => 0.1.0-alpha999999999999999999
+        let (_temp, arc_handle) = setup_single_crate_handle("alpha_huge").await;
         let big_num = 999999999999999999u64;
-        let res = handle.bump(ReleaseType::Alpha(Some(big_num))).await;
+        let mut lc = {
+            let g = arc_handle.lock().expect("lock handle");
+            g.clone()
+        };
+        let res = lc.bump(ReleaseType::Alpha(Some(big_num))).await;
+        {
+            let mut g = arc_handle.lock().expect("store handle after alpha huge");
+            *g = lc;
+        }
         assert!(res.is_ok(), "Should not fail semver parse for large alpha number");
 
+        let cargo_toml_path = {
+            let gd = arc_handle.lock().expect("final read lock");
+            gd.as_ref().join("Cargo.toml")
+        };
         let new_ver_str = read_package_version(&cargo_toml_path).await.expect("expected version");
-        // It's typically "0.1.0-alpha999999999999999999" if semver accepted it,
-        // or "0.1.0+some-limitation" if it can't parse. 
-        // Let's just check it contains "alpha".
         assert!(
             new_ver_str.contains("alpha"),
             "Expected alpha in the version, got: {new_ver_str}"

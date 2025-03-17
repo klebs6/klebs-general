@@ -7,3 +7,4 @@ x!{errors}
 x!{impl_default_macro}
 
 pub use async_trait::async_trait;
+pub use tokio;

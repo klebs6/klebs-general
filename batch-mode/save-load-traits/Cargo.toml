@@ -1,9 +1,9 @@
-[dependencies.batch-mode-3p]
-path = "../batch-mode-3p"
-version = "0.2.0"
-[dependencies.batch-mode-json]
-path = "../batch-mode-json"
-version = "0.2.0"
+[dependencies]
+export-magic = "*"
+tempfile = "*"
+error-tree   = "0.6.0"
+json-repair  = "0.4.0"
+tokio        = { version = "1", features = ["full"] }
 [dependencies.serde]
 features = [ "derive" ]
 version = "*"

@@ -53,7 +53,7 @@ where
                 .map_err(|crate_err| {
                     // map CrateError -> WorkspaceError
                     WorkspaceError::CratePinFailed {
-                        crate_path: c.as_ref().to_path_buf(),
+                        crate_path: c.crate_dir_path_buf(),
                         source: Box::new(crate_err),
                     }
                 })?;

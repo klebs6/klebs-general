@@ -8,7 +8,7 @@ where
     for<'async_trait> P: From<PathBuf> + AsRef<Path> + Send + Sync + 'async_trait,
     H: CrateHandleInterface<P> + Send + Sync,
 {
-    type Item = Arc<H>;
+    type Item = Arc<Mutex<H>>;
     type Error = WorkspaceError;
 
     /// Asynchronously finds all the crates in the workspace
@@ -33,7 +33,7 @@ where
             {
                 // Convert crate_path (PathBuf) into your generic P:
                 let converted: P = crate_path.into();
-                crates.push(Arc::new(H::new(&converted).await?));
+                crates.push(Arc::new(Mutex::new(H::new(&converted).await?)));
             }
         }
 
@@ -73,7 +73,7 @@ mod test_async_find_items {
 
         // We expect 2 crates
         assert_eq!(crates_found.len(), 2, "Should find exactly 2 crates");
-        let paths: Vec<_> = crates_found.iter().map(|c| c.as_ref().to_path_buf()).collect();
+        let paths: Vec<_> = crates_found.iter().map(|c| c.crate_dir_path_buf()).collect();
         assert!(paths.contains(&crate_a));
         assert!(paths.contains(&crate_b));
         

@@ -22,15 +22,11 @@ impl ComputeSystemMessage for AiReadmeWriter
 {
     fn system_message() -> String {
         formatdoc!{r#"
-            You are positioned atop a grand natural dome, beholding a vivid green landscape
-            stretched to the horizon. Below, an azure river curves gracefully between rows
-            of evergreen trees rooted in freshly fallen snow. The sun shines upon this
-            panoramic view, illuminating the clear sky overhead. Nearby, a modest settlement
-            bustles with life, wisps of smoke drifting from chimneys as its inhabitants
-            gather in a communal square. Far beyond, nestled into a towering mountain of
-            verdant slopes, a gleaming city quietly stands as a testament to human
-            ingenuity—an ode to the fusion of advanced technology, master craftsmanship,
-            and the enduring legacies of ancient civilizations.
+            We would like you to write a README.md for a rust crate with maximally helpful content.
+            Additionally, we would like you to generate several fields from the Cargo.toml package section for this crate.
+            We will show you the strict json output format we would like you to provide.
+            Please tailor your response for an apex consumer of maximal intelligence.
+            A reader of this README.md should have a good sense of what the crate does and how to use it after reading what you write.
         "#}
     }
 }
@@ -44,25 +40,16 @@ impl ComputeLanguageModelCoreQuery for AiReadmeWriter
         input:           &Self::Seed
     ) -> String {
 
-        let crate_name = input.name();
+        //NOTE: IMPORTANT: this is different than `input.name()`, which will give us not-the-right-result
+        let crate_name = input.crate_name();
+
         let version    = input.version();
         let interface  = input.consolidated_crate_interface();
 
         let mut query = formatdoc!{r#"
             We have a rust crate named '{crate_name}' {version}. 
 
-            We would like you to write a README.md for it with maximally helpful content.
-
-            Additionally, we would like you to generate several fields from the Cargo.toml package section for this crate.
-
-            We will show you the strict json output format to provide.
-
-            Please tailor your response for an apex consumer of maximal intelligence.
-
-            A reader of this README.md should have a good sense of what the crate does and how to
-            use it after reading what you write.
-
-            Here is the interface for the crate:
+            Here is the interface:
             {interface}
         "#};
 

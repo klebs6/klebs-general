@@ -34,7 +34,7 @@ where
         }
 
         let mut results = Vec::new();
-        let mut entries = fs::read_dir(dir).await?;
+        let mut entries = tokio::fs::read_dir(dir).await?;
 
         while let Some(entry) = entries.next_entry().await? {
             let path = entry.path();

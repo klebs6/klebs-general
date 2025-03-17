@@ -14,94 +14,79 @@ pub trait WorkspaceDownstreamExt {
 #[async_trait]
 impl<P,H> WorkspaceDownstreamExt for Workspace<P,H>
 where
-    P: From<PathBuf> + AsRef<Path> + Send + Sync + 'static,
+    // No 'static on H
+    for<'async_trait> P: From<PathBuf> + AsRef<Path> + Send + Sync + 'async_trait,
     H: CrateHandleInterface<P> + Bump<Error=CrateError> + Send + Sync,
 {
-    /// Recursively updates any crates that depend on `dep_name` to use `new_version`.
-    /// We convert any inline table references to standard tables for consistency,
-    /// and do a best-effort approach (no global failure if one parse fails, as the tests want).
     async fn update_downstreams_recursively(
         &mut self,
         dep_name: &str,
         new_version: &semver::Version,
         visited: &mut HashSet<String>,
     ) -> Result<(), WorkspaceError> {
-        trace!("Updating downstreams for dep='{}' => new_version={}", dep_name, new_version);
+        trace!("Updating downstreams for dep='{}' => new_ver={}", dep_name, new_version);
         let new_version_str = new_version.to_string();
 
-        // gather crate names first
-        let crate_names: Vec<String> = self.crates().iter().map(|ch| ch.name().to_string()).collect();
-
+        let crate_names = self.get_all_crate_names();
         for c_name in crate_names {
             if visited.contains(&c_name) {
                 continue;
             }
-
-            let maybe_handle = self.crates_mut().iter_mut().find(|ch| ch.name() == c_name);
-            if maybe_handle.is_none() {
-                continue;
-            }
-            let crate_handle = maybe_handle.unwrap();
-
-            let cargo_toml_path = crate_handle.as_ref().join("Cargo.toml");
-
-            // parse
+            let arc_crate = match self.find_crate_by_name(&c_name) {
+                Some(a) => a,
+                None => continue,
+            };
+            let crate_path = {
+                let g = arc_crate.lock().expect("mutex lock for path");
+                g.as_ref().to_path_buf()
+            };
+            let cargo_toml_path = crate_path.join("Cargo.toml");
             let contents = match fs::read_to_string(&cargo_toml_path).await {
                 Ok(s) => s,
                 Err(e) => {
-                    warn!("Cannot read {:?} while updating downstreams, skipping: {}", cargo_toml_path, e);
+                    warn!("Cannot read {:?}: {}, skipping", cargo_toml_path, e);
                     continue;
                 }
             };
-            let mut doc = match contents.parse::<TomlEditDocument>() {
+            let mut doc = match contents.parse::<toml_edit::Document>() {
                 Ok(d) => d,
                 Err(e) => {
-                    warn!("Parse error on {:?} while updating downstreams, skipping: {}", cargo_toml_path, e);
+                    warn!("Parse error on {:?}: {}, skipping", cargo_toml_path, e);
                     continue;
                 }
             };
 
-            // attempt to update references
-            let mut found_dep = false;
-            for deps_key in ["dependencies", "dev-dependencies", "build-dependencies"] {
-                if let Some(deps_tbl) = doc.get_mut(deps_key).and_then(|i| i.as_table_mut()) {
-                    if let Some(dep_item) = deps_tbl.get_mut(dep_name) {
-                        // convert inline => normal table if needed
+            let mut found = false;
+            for key in ["dependencies","dev-dependencies","build-dependencies"] {
+                if let Some(tbl) = doc.get_mut(key).and_then(|x| x.as_table_mut()) {
+                    if let Some(dep_item) = tbl.get_mut(dep_name) {
                         if let Some(inline) = dep_item.as_inline_table_mut() {
-                            trace!("Converting inline table in {} -> dep='{}'", c_name, dep_name);
-                            let as_table = inline.clone().into_table();
-                            *dep_item = TomlEditItem::Table(as_table);
+                            let expanded = inline.clone().into_table();
+                            *dep_item = toml_edit::Item::Table(expanded);
                         }
-
                         if dep_item.is_table() {
-                            trace!("Updating table reference in crate='{}' for dep='{}' => '{}'",
-                                   c_name, dep_name, new_version_str);
-                            let t = dep_item.as_table_mut().unwrap();
-                            t.insert("version", TomlEditItem::Value(TomlEditValue::from(new_version_str.clone())));
-                            found_dep = true;
+                            dep_item
+                                .as_table_mut()
+                                .unwrap()
+                                .insert("version", toml_edit::value(new_version_str.clone()));
+                            found = true;
                         } else if dep_item.is_str() {
-                            trace!("Updating string reference in crate='{}' for dep='{}' => '{}'",
-                                   c_name, dep_name, new_version_str);
-                            *dep_item = TomlEditItem::Value(TomlEditValue::from(new_version_str.clone()));
-                            found_dep = true;
-                        } else {
-                            debug!("Dependency '{}' in crate='{}' not a table or string, skipping", dep_name, c_name);
+                            *dep_item = toml_edit::value(new_version_str.clone());
+                            found = true;
                         }
                     }
                 }
             }
-
-            if found_dep {
-                debug!("Rewriting Cargo.toml for crate='{}' => path={:?}", c_name, cargo_toml_path);
+            if found {
+                debug!("Rewriting references in {:?}", cargo_toml_path);
                 if let Err(e) = fs::write(&cargo_toml_path, doc.to_string()).await {
-                    warn!("Failed rewriting references in {:?}: {}", cargo_toml_path, e);
+                    warn!("Cannot rewrite references in {:?}: {}", cargo_toml_path, e);
                 }
                 visited.insert(c_name.clone());
-
-                // Recurse further
                 self.update_downstreams_recursively(&c_name, new_version, visited).await?;
             }
         }
+
         Ok(())
     }
 }

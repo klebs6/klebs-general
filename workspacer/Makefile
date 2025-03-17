@@ -53,6 +53,7 @@ ACTIVE_PACKAGE := workspacer
 ACTIVE_PACKAGE := workspacer-check-publish-ready
 ACTIVE_PACKAGE := workspacer-publish
 ACTIVE_PACKAGE := workspacer-readme-writer
+ACTIVE_PACKAGE := workspacer-bump
 #ACTIVE_PACKAGE := workspacer-consolidate
 #ACTIVE_PACKAGE := workspacer-check-crates-io
 #ACTIVE_PACKAGE := workspacer-check-private
@@ -71,6 +72,7 @@ CONSOLIDATE_CRATE := workspacer-toml
 
 #-----------------------------------------------------[this section lets us choose how we want to test]
 DEFAULT := test
+#DEFAULT := readme_writer
 #DEFAULT := test_file
 #DEFAULT := test_one
 #DEFAULT := test_file_one
@@ -89,14 +91,19 @@ default: $(DEFAULT)
 #NOCAPTURE := --nocapture
 #NOCAPTURE := 
 
+README_WRITE_CRATE := workspacer-readme-writer
+README_WRITE_CRATE := workspacer-consolidate
+
 #----------------------------------------------[here are our rules]
 
 run:
 	RUSTFLAGS=$(RUSTFLAGS) $(CARGO) $(RUN) -p $(ACTIVE_PACKAGE) $(FEATURES)
 
 readme_writer:
-	RUSTFLAGS=$(RUSTFLAGS) $(CARGO) $(RUN) --bin workspacer-readme-writer -- single-crate workspacer-readme-writer
+	RUSTFLAGS=$(RUSTFLAGS) $(CARGO) $(RUN) --bin workspacer-readme-writer -- single-crate $(README_WRITE_CRATE)
 
+readme_writer_all:
+	RUSTFLAGS=$(RUSTFLAGS) $(CARGO) $(RUN) --bin workspacer-readme-writer -- workspace ../batch-mode
 
 pin_wildcard_dep:
 	RUSTFLAGS=$(RUSTFLAGS) $(CARGO) $(RUN) --bin workspacer-pin-wildcard-deps $(FEATURES)

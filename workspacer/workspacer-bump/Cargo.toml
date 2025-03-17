@@ -4,6 +4,8 @@ path = "../workspacer-3p"
 path = "../workspacer-crate"
 [dependencies.workspacer-crate-interface]
 path = "../workspacer-crate-interface"
+[dependencies.workspacer-workspace-interface]
+path = "../workspacer-workspace-interface"
 [dependencies.workspacer-errors]
 path = "../workspacer-errors"
 [dev-dependencies.workspacer-mock]
