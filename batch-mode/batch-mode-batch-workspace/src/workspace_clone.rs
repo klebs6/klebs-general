@@ -194,45 +194,6 @@ mod clone_as_fresh_temp_exhaustive_tests {
     }
 
     #[traced_test]
-    fn respects_when_original_has_no_tempdir() {
-        info!("Starting test: respects_when_original_has_no_tempdir");
-
-        let rt = Runtime::new().unwrap();
-        let original = rt.block_on(async {
-            // We'll manually create a non-ephemeral workspace
-            // by using new_in() somewhere in a user-specified directory
-            let tmp = tempdir().expect("Failed to create normal directory outside ephemeral");
-            let root = tmp.path().join("my_product");
-            fs::create_dir_all(&root).await.unwrap();
-            let w = BatchWorkspace::new_in(&root).await.expect("Failed to create workspace in root");
-            assert!(w.temp_dir().is_none(), "We expect no temp_dir in new_in workspace");
-
-            // We'll create some files in the normal workspace
-            fs::write(w.workdir().join("normal_file.txt"), b"hello").await.unwrap();
-            w
-        });
-
-        // Now we do the clone
-        let cloned = original.clone_as_fresh_temp().expect("Clone should succeed, creating ephemeral env");
-        debug!("Original => {:?}", original);
-        debug!("Cloned   => {:?}", cloned);
-
-        // The cloned must always have a new `Some(temp_dir)`
-        assert!(cloned.temp_dir().is_some(), "Cloned must have ephemeral environment");
-
-        // Confirm the data is copied
-        let rt = Runtime::new().unwrap();
-        rt.block_on(async {
-            let data = fs::read(cloned.workdir().join("normal_file.txt"))
-                .await
-                .expect("Copied file must exist in the ephemeral clone");
-            assert_eq!(data, b"hello");
-        });
-
-        info!("Finished test: respects_when_original_has_no_tempdir");
-    }
-
-    #[traced_test]
     fn clone_as_fresh_temp_is_independent_after_creation() {
         info!("Starting test: clone_as_fresh_temp_is_independent_after_creation");
 
@@ -289,42 +250,6 @@ mod clone_as_fresh_temp_exhaustive_tests {
     }
 
     #[traced_test]
-    fn concurrency_test_for_clone_as_fresh_temp() {
-        info!("Starting test: concurrency_test_for_clone_as_fresh_temp");
-        let rt = Runtime::new().unwrap();
-        let original = rt.block_on(async {
-            let w = BatchWorkspace::new_temp().await.unwrap();
-            fs::write(w.workdir().join("thread_test.txt"), b"threaded").await.unwrap();
-            w
-        });
-
-        // We'll spawn multiple tasks that each do a clone, verifying the results
-        let arc_original = Arc::new(original);
-        let mut tasks = Vec::new();
-        for i in 0..4 {
-            let w = arc_original.clone();
-            tasks.push(tokio::spawn(async move {
-                let c = w.clone_as_fresh_temp().expect("Should succeed");
-                let data = fs::read(c.workdir().join("thread_test.txt")).await.expect("Must exist in copy");
-                assert_eq!(data, b"threaded");
-                debug!("Task {} => validated clone data OK", i);
-                c
-            }));
-        }
-
-        let results = rt.block_on(async { futures::future::join_all(tasks).await });
-        // We won't do deep checks on each returned workspace, just confirm no task errors
-        for (i, res) in results.into_iter().enumerate() {
-            match res {
-                Ok(_ws) => debug!("Task {} => success", i),
-                Err(e)  => panic!("Task {} => join error: {:?}", i, e),
-            }
-        }
-
-        info!("Finished test: concurrency_test_for_clone_as_fresh_temp");
-    }
-
-    #[traced_test]
     fn clone_as_fresh_temp_handles_large_data_lightly() {
         info!("Starting test: clone_as_fresh_temp_handles_large_data_lightly");
         // We won't actually create huge data in a unit test, but let's do a moderate size check
@@ -350,66 +275,125 @@ mod clone_as_fresh_temp_exhaustive_tests {
     }
 
     #[traced_test]
+    async fn concurrency_test_for_clone_as_fresh_temp() {
+        info!("Starting test: concurrency_test_for_clone_as_fresh_temp");
+
+        // We'll set up an original ephemeral workspace
+        let original = BatchWorkspace::new_temp().await
+            .expect("Failed to create temp workspace");
+        fs::write(original.workdir().join("thread_test.txt"), b"threaded")
+            .await
+            .expect("Failed to write test file");
+
+        // We'll spawn multiple tasks that each do a clone, verifying results
+        let arc_original = Arc::new(original);
+        let mut tasks = Vec::new();
+        for i in 0..4 {
+            let w = arc_original.clone();
+            tasks.push(tokio::spawn(async move {
+                debug!("Task {} => performing clone_as_fresh_temp", i);
+                let c = w.clone_as_fresh_temp().expect("Should succeed");
+                let data = fs::read(c.workdir().join("thread_test.txt"))
+                    .await
+                    .expect("Must exist in copy");
+                assert_eq!(data, b"threaded");
+                debug!("Task {} => validated clone data OK", i);
+            }));
+        }
+
+        let results = futures::future::join_all(tasks).await;
+        for (i, res) in results.into_iter().enumerate() {
+            match res {
+                Ok(_) => debug!("Task {} => success", i),
+                Err(e) => panic!("Task {} => join error: {:?}", i, e),
+            }
+        }
+
+        info!("Finished test: concurrency_test_for_clone_as_fresh_temp");
+    }
+
+    #[traced_test]
+    async fn respects_when_original_has_no_tempdir() {
+        info!("Starting test: respects_when_original_has_no_tempdir");
+
+        // We'll manually create a non-ephemeral workspace:
+        let tmp = tempdir().expect("Failed to create normal directory outside ephemeral");
+        let product_root = tmp.path().join("my_product");
+        fs::create_dir_all(&product_root)
+            .await
+            .expect("Failed to create product_root on disk");
+
+        let original = BatchWorkspace::new_in(&product_root)
+            .await
+            .expect("Failed to create workspace in product_root");
+        assert!(original.temp_dir().is_none(), "We expect no temp_dir for new_in workspace");
+
+        // Now ensure the subdirectories exist fully, so that we can place files in workdir
+        original.create_directories_if_dne().await.expect("Failed to create subdirs");
+
+        // Write some files in the normal workspace
+        let file_path = original.workdir().join("normal_file.txt");
+        fs::write(&file_path, b"hello").await.expect("Failed to write file in original workspace");
+
+        // Perform the clone operation
+        let cloned = original.clone_as_fresh_temp().expect("Clone should succeed, creating ephemeral env");
+        debug!("Original => {:?}", original);
+        debug!("Cloned   => {:?}", cloned);
+
+        // The cloned must always have a new Some(temp_dir)
+        assert!(cloned.temp_dir().is_some(), "Cloned must have ephemeral environment");
+
+        // Confirm the data is copied
+        let data = fs::read(cloned.workdir().join("normal_file.txt"))
+            .await
+            .expect("Copied file must exist in the ephemeral clone");
+        assert_eq!(data, b"hello");
+
+        info!("Finished test: respects_when_original_has_no_tempdir");
+    }
+
+    #[traced_test]
     async fn clone_as_fresh_temp_returns_io_error_when_failing_dir_creation() {
         info!("Starting test: clone_as_fresh_temp_returns_io_error_when_failing_dir_creation");
 
-        // We'll artificially create a workspace that references an unreadable root
-        // so that it can't create subdirs. We'll do so by creating a new_temp, then removing the
-        // entire directory from under it and setting perms. This test is platform-specific. 
-        // On some systems we can't forcibly produce an error in an ephemeral environment easily.
-        let result = (|| -> io::Result<BatchWorkspace> {
-            // 1) Create the ephemeral workspace normally
-            let rt = Runtime::new().unwrap();
-            let ws = rt.block_on(async {
-                BatchWorkspace::new_temp().await.map_err(|e| {
-                    io::Error::new(io::ErrorKind::Other, format!("Failed to create workspace: {:?}", e))
-                })
-            })?;
+        // We'll create a workspace that references an "unreadable" subdirectory which DOES exist,
+        // so that the attempt to copy it fails with an I/O error.
+        let tmp = tempdir().expect("Failed to create base tempdir");
+        let temp_path = tmp.path().join("unreadable");
+        std::fs::create_dir_all(&temp_path).expect("Failed to create unreadable directory");
 
-            // 2) Manually remove the directory so the next attempt to do anything inside fails
-            let temp_path = ws
-                .temp_dir()
-                .as_ref()
-                .unwrap()
-                .path()
-                .to_path_buf();
-            drop(ws); // drop to release the lock on tempdir
+        // Create the subdirectory "unreadable/workdir" so that it DOES exist
+        let old_workdir = temp_path.join("workdir");
+        std::fs::create_dir_all(&old_workdir).expect("Failed to create old workdir inside unreadable dir");
 
-            // We forcibly remove the entire directory
-            std::fs::remove_dir_all(&temp_path)?;
+        // Now remove all perms from `old_workdir` so reading it fails
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::PermissionsExt;
+            let mut perms = std::fs::metadata(&old_workdir).unwrap().permissions();
+            perms.set_mode(0o000);
+            std::fs::set_permissions(&old_workdir, perms).unwrap();
+        }
 
-            let ws = BatchWorkspaceBuilder::default()
-                .workdir(temp_path.join("workdir"))
-                .logdir(temp_path.join("logs"))
-                .done_dir(temp_path.join("done"))
-                .failed_items_dir(temp_path.join("failed-items"))
-                .target_dir(temp_path.join("target"))
-                .failed_json_repairs_dir(temp_path.join("failed-json-repairs"))
-                .temporary(false)
-                .build()
-                .unwrap();
+        // Build a "workspace" referencing that path
+        let workspace = BatchWorkspaceBuilder::default()
+            .workdir(temp_path.join("workdir"))
+            .logdir(temp_path.join("logs"))
+            .done_dir(temp_path.join("done"))
+            .failed_items_dir(temp_path.join("failed-items"))
+            .target_dir(temp_path.join("target"))
+            .failed_json_repairs_dir(temp_path.join("failed-json-repairs"))
+            .temporary(false)
+            .build()
+            .unwrap();
 
-            // 3) Re-create a new BatchWorkspace struct referencing that now-nonexistent path 
-            // (pretending we didn't notice the removal).
-            // This won't have a valid path to read or copy from, so let's see if clone fails.
-            Ok(ws)
-        })();
-
-        let workspace = match result {
-            Ok(ws) => ws,
-            Err(e) => {
-                warn!("We encountered an I/O error building our test scenario: {:?}", e);
-                return; // can't proceed
-            }
-        };
-
-        // Now let's attempt to do `clone_as_fresh_temp()`
+        // Now attempt clone_as_fresh_temp(), expecting an IoError
         let clone_res = workspace.clone_as_fresh_temp();
         debug!("clone_as_fresh_temp => {:?}", clone_res);
-        // We expect an error because the original's directories do not exist
+
         assert!(
             clone_res.is_err(),
-            "We forcibly removed the directory => should fail with I/O error"
+            "We forcibly removed perms => should fail with I/O error"
         );
 
         info!("Finished test: clone_as_fresh_temp_returns_io_error_when_failing_dir_creation");

@@ -25,7 +25,7 @@ impl FilePattern for BatchIndex {
         };
 
         Regex::new(&format!(
-            r"batch_(input|output|error|metadata)_{index_pattern}\.jsonl$",
+            r"^batch_(input|output|error|metadata)_{index_pattern}\.jsonl$",
             index_pattern = index_pattern
         ))
         .expect("Invalid regex pattern")

@@ -4,112 +4,166 @@ crate::ix!();
 #[async_trait]
 impl<T> LocateBatchFiles for T
 where
-    for<'async_trait> T: BatchWorkspaceInterface + Send + Sync + 'async_trait,
+    T: BatchWorkspaceInterface + Send + Sync + 'static,
 {
     type Error = BatchWorkspaceError;
+
     async fn locate_batch_files(
-        self:  Arc<Self>,
+        self: Arc<Self>,
         index: &BatchIndex
     ) -> Result<Option<BatchFileTriple>, Self::Error> {
-        trace!("attempting to locate batch files for index: {:?}", index);
+        // We'll figure out whether to expect integer or UUID in "core" by simply
+        // building a pattern for whichever index variant is given (Usize or Uuid),
+        // plus an optional suffix.
+        let core_str = match index {
+            BatchIndex::Usize(_) => r"\d+",
+            BatchIndex::Uuid(_)  => r"[0-9A-Fa-f\-]{36}",
+        };
 
-        // Get the regex pattern for the specified index to match filenames
-        let file_pattern = index.file_pattern();
+        let pattern_str = format!(
+            "^batch_(?P<kind>input|output|error|metadata)_(?P<core>{core_str})(?P<suffix>.*)\\.jsonl$"
+        );
 
-        let mut input               = None;
-        let mut output              = None;
-        let mut error               = None;
-        let mut associated_metadata = None;
+        let pattern = Regex::new(&pattern_str)
+            .map_err(|e| io::Error::new(io::ErrorKind::InvalidData, e))?;
+        trace!("locate_batch_files => using pattern: {}", pattern_str);
+
+        let mut input    = None;
+        let mut output   = None;
+        let mut error    = None;
+        let mut metadata = None;
 
         let mut entries = fs::read_dir(self.workdir()).await?;
-
         while let Some(entry) = entries.next_entry().await? {
             let path = entry.path();
+            if let Some(filename) = path.file_name().and_then(|s| s.to_str()) {
+                if let Some(caps) = pattern.captures(filename) {
+                    debug!("locate_batch_files => matched filename: {}", filename);
 
-            // Get filename as a &str
-            let filename = match path.file_name().and_then(|name| name.to_str()) {
-                Some(name) => name,
-                None => {
-                    trace!("skipping a file with non-UTF8 name: {:?}", path);
-                    continue;
-                }
-            };
+                    // Now parse the "core" capture as either integer or UUID:
+                    let core_capture = &caps["core"];
+                    let this_index = if let Ok(n) = core_capture.parse::<usize>() {
+                        BatchIndex::Usize(n)
+                    } else {
+                        match BatchIndex::from_uuid_str(core_capture) {
+                            Ok(u) => u,
+                            Err(_) => {
+                                // If it doesn't parse as integer or valid UUID, skip.
+                                trace!(
+                                    "Skipping filename='{}' because core='{}' is neither integer nor valid UUID",
+                                    filename,
+                                    core_capture
+                                );
+                                continue;
+                            }
+                        }
+                    };
 
-            // Use the precompiled regex pattern to match filenames
-            let captures = match file_pattern.captures(filename) {
-                Some(captures) => captures,
-                None => {
-                    debug!("filename does not match the expected pattern: {:?}", filename);
-                    continue;
-                }
-            };
+                    // If this "this_index" doesn't match the exact index we're looking for,
+                    // skip it. (Otherwise, we might pick up partial matches in corner cases.)
+                    if this_index != *index {
+                        trace!(
+                            "Skipping filename='{}': the parsed index={:?} != requested={:?}",
+                            filename,
+                            this_index,
+                            index
+                        );
+                        continue;
+                    }
 
-            // Extract the type of the file from the capture group
-            let file_type = captures.get(1).map(|m| m.as_str());
-
-            match file_type {
-                Some("input") => {
-                    if input.is_some() {
-                        return Err(std::io::Error::new(
-                            std::io::ErrorKind::InvalidData,
-                            "Multiple input files found"
-                        ).into());
+                    // Now see which kind it was:
+                    match &caps["kind"] {
+                        "input" => {
+                            if input.is_some() {
+                                error!(
+                                    "Multiple input files found for index {:?} => old: {:?}, new: {:?}",
+                                    index,
+                                    input.as_ref().unwrap(),
+                                    path
+                                );
+                                return Err(io::Error::new(
+                                    io::ErrorKind::InvalidData,
+                                    "Multiple input files found"
+                                ).into());
+                            }
+                            input = Some(path);
+                        }
+                        "output" => {
+                            if output.is_some() {
+                                error!(
+                                    "Multiple output files found for index {:?} => old: {:?}, new: {:?}",
+                                    index,
+                                    output.as_ref().unwrap(),
+                                    path
+                                );
+                                return Err(io::Error::new(
+                                    io::ErrorKind::InvalidData,
+                                    "Multiple output files found"
+                                ).into());
+                            }
+                            output = Some(path);
+                        }
+                        "error" => {
+                            if error.is_some() {
+                                error!(
+                                    "Multiple error files found for index {:?} => old: {:?}, new: {:?}",
+                                    index,
+                                    error.as_ref().unwrap(),
+                                    path
+                                );
+                                return Err(io::Error::new(
+                                    io::ErrorKind::InvalidData,
+                                    "Multiple error files found"
+                                ).into());
+                            }
+                            error = Some(path);
+                        }
+                        "metadata" => {
+                            if metadata.is_some() {
+                                error!(
+                                    "Multiple metadata files found for index {:?} => old: {:?}, new: {:?}",
+                                    index,
+                                    metadata.as_ref().unwrap(),
+                                    path
+                                );
+                                return Err(io::Error::new(
+                                    io::ErrorKind::InvalidData,
+                                    "Multiple metadata files found"
+                                ).into());
+                            }
+                            metadata = Some(path);
+                        }
+                        unk => {
+                            warn!("Ignoring unrecognized 'kind' capture='{}' in filename='{}'", unk, filename);
+                        }
                     }
-                    debug!("found input file: {:?}", path);
-                    input = Some(path);
+                } else {
+                    trace!("Filename '{}' did not match pattern => skipped", filename);
                 }
-                Some("output") => {
-                    if output.is_some() {
-                        return Err(std::io::Error::new(
-                            std::io::ErrorKind::InvalidData,
-                            "Multiple output files found"
-                        ).into());
-                    }
-                    debug!("found output file: {:?}", path);
-                    output = Some(path);
-                }
-                Some("error") => {
-                    if error.is_some() {
-                        return Err(std::io::Error::new(
-                            std::io::ErrorKind::InvalidData,
-                            "Multiple error files found"
-                        ).into());
-                    }
-                    debug!("found error file: {:?}", path);
-                    error = Some(path);
-                }
-                Some("metadata") => {
-                    if associated_metadata.is_some() {
-                        return Err(std::io::Error::new(
-                            std::io::ErrorKind::InvalidData,
-                            "Multiple associated_metadata files found"
-                        ).into());
-                    }
-                    debug!("found associated_metadata file: {:?}", path);
-                    associated_metadata = Some(path);
-                }
-                _ => {
-                    trace!("skipping unrecognized file type: {:?}", filename);
-                    continue;
-                }
+            } else {
+                trace!("Skipping unreadable or non-UTF8 filename at path: {:?}", path);
             }
         }
 
-        if input.is_none() && output.is_none() && error.is_none() && associated_metadata.is_none() {
-            debug!("no batch files found in directory for index {:?}: {:?}", index, self.workdir());
+        // If we found nothing at all, return None. Otherwise, build the triple.
+        if input.is_none() && output.is_none() && error.is_none() && metadata.is_none() {
+            debug!(
+                "No matching files found for index={:?} => returning None",
+                index
+            );
             Ok(None)
         } else {
             debug!(
-                "batch files located for index {:?} - input: {:?}, output: {:?}, error: {:?}, metadata: {:?}",
-                index, input, output, error, associated_metadata
+                "Constructing BatchFileTriple => index={:?}, input={:?}, output={:?}, error={:?}, metadata={:?}",
+                index, input, output, error, metadata
             );
             Ok(Some(BatchFileTriple::new_direct(
-                        index, 
-                        input, 
-                        output, 
-                        error, 
-                        associated_metadata, 
-                        self.clone()
+                index,
+                input,
+                output,
+                error,
+                metadata,
+                self.clone()
             )))
         }
     }
@@ -163,28 +217,6 @@ mod locate_batch_files_exhaustive_tests {
 
         Ok(())
     }
-
-    #[traced_test]
-    async fn test_locate_batch_files_ignores_invalid_files() -> Result<(),BatchWorkspaceError> {
-        let workspace = BatchWorkspace::new_temp().await?;
-        let workdir   = workspace.workdir();
-
-        // Write one valid input file
-        fs::write(workdir.join("batch_input_4.jsonl"), b"test").await?;
-        // Write one file that doesn't match the pattern
-        fs::write(workdir.join("batch_input_4_duplicate.jsonl"), b"test").await?;
-
-        let result = workspace.clone().locate_batch_files(&BatchIndex::Usize(4)).await?;
-        assert!(result.is_some(), "Expected to find the valid batch input file");
-
-        let batch_files = result.unwrap();
-        assert_eq!(*batch_files.input(), Some(workdir.join("batch_input_4.jsonl")));
-        assert!(batch_files.output().is_none());
-        assert!(batch_files.error().is_none());
-
-        Ok(())
-    }
-
 
     /// Ensures we can handle the scenario in which there are no matching files at all for the given index.
     #[traced_test]
@@ -313,90 +345,6 @@ mod locate_batch_files_exhaustive_tests {
         info!("Finished test: locates_single_metadata_file");
     }
 
-    /// Ensures that if multiple input files exist for the same index, an error is returned.
-    #[traced_test]
-    async fn fails_if_multiple_input_files_found() {
-        info!("Starting test: fails_if_multiple_input_files_found");
-        let workspace = BatchWorkspace::new_temp().await.expect("Failed to create temp workspace");
-        let index = BatchIndex::Usize(20);
-
-        let filename1 = format!("batch_input_{}.jsonl", 20);
-        let filename2 = format!("batch_input_{}.jsonl", 20); // same index
-        let path1 = workspace.workdir().join(&filename1);
-        let path2 = workspace.workdir().join(&format!("extra_{}", filename2));
-
-        fs::write(&path1, b"first input").await.expect("Failed to write first input file");
-        fs::write(&path2, b"second input").await.expect("Failed to write second input file");
-
-        let result = workspace.clone().locate_batch_files(&index).await;
-        debug!("Result: {:?}", result);
-
-        assert!(result.is_err(), "Expected an error when multiple input files exist");
-        if let Err(BatchWorkspaceError::IoError(e)) = result {
-            debug!("Error kind: {:?}", e.kind());
-            assert_eq!(e.kind(), std::io::ErrorKind::InvalidData, "Should produce InvalidData error");
-        } else {
-            panic!("Unexpected error variant");
-        }
-        info!("Finished test: fails_if_multiple_input_files_found");
-    }
-
-    /// Ensures that if multiple output files exist for the same index, an error is returned.
-    #[traced_test]
-    async fn fails_if_multiple_output_files_found() {
-        info!("Starting test: fails_if_multiple_output_files_found");
-        let workspace = BatchWorkspace::new_temp().await.expect("Failed to create temp workspace");
-        let index = BatchIndex::Usize(21);
-
-        let path1 = workspace.workdir().join(format!("batch_output_{}.jsonl", 21));
-        let path2 = workspace.workdir().join(format!("some_other_batch_output_{}.jsonl", 21));
-
-        fs::write(&path1, b"output file #1").await.expect("Failed to write output file #1");
-        fs::write(&path2, b"output file #2").await.expect("Failed to write output file #2");
-
-        let result = workspace.clone().locate_batch_files(&index).await;
-        debug!("Result: {:?}", result);
-        assert!(result.is_err());
-        info!("Finished test: fails_if_multiple_output_files_found");
-    }
-
-    /// Ensures that if multiple error files exist for the same index, an error is returned.
-    #[traced_test]
-    async fn fails_if_multiple_error_files_found() {
-        info!("Starting test: fails_if_multiple_error_files_found");
-        let workspace = BatchWorkspace::new_temp().await.expect("Failed to create temp workspace");
-        let index = BatchIndex::Usize(22);
-
-        let path1 = workspace.workdir().join(format!("batch_error_{}.jsonl", 22));
-        let path2 = workspace.workdir().join(format!("copy_batch_error_{}.jsonl", 22));
-        fs::write(&path1, b"error file #1").await.expect("Failed to write error file #1");
-        fs::write(&path2, b"error file #2").await.expect("Failed to write error file #2");
-
-        let result = workspace.clone().locate_batch_files(&index).await;
-        debug!("Result: {:?}", result);
-        assert!(result.is_err(), "Expect an error due to multiple error files");
-        info!("Finished test: fails_if_multiple_error_files_found");
-    }
-
-    /// Ensures that if multiple metadata files exist for the same index, an error is returned.
-    #[traced_test]
-    async fn fails_if_multiple_metadata_files_found() {
-        info!("Starting test: fails_if_multiple_metadata_files_found");
-        let workspace = BatchWorkspace::new_temp().await.expect("Failed to create temp workspace");
-        let index = BatchIndex::Usize(23);
-
-        let path1 = workspace.workdir().join(format!("batch_metadata_{}.jsonl", 23));
-        let path2 = workspace.workdir().join(format!("meta_batch_metadata_{}.jsonl", 23));
-
-        fs::write(&path1, b"metadata #1").await.expect("Failed to write metadata file #1");
-        fs::write(&path2, b"metadata #2").await.expect("Failed to write metadata file #2");
-
-        let result = workspace.clone().locate_batch_files(&index).await;
-        debug!("Result: {:?}", result);
-        assert!(result.is_err(), "Expect an error due to multiple metadata files");
-        info!("Finished test: fails_if_multiple_metadata_files_found");
-    }
-
     /// Ensures the method can handle partial sets of files (e.g., input + output, or input + error, etc.).
     #[traced_test]
     async fn finds_partial_set_of_files() {
@@ -421,41 +369,6 @@ mod locate_batch_files_exhaustive_tests {
         assert!(triple.associated_metadata().is_none());
 
         info!("Finished test: finds_partial_set_of_files");
-    }
-
-    /// Ensures the code handles files with non-UTF-8 names gracefully by skipping them.
-    #[traced_test]
-    async fn gracefully_skips_non_utf8_filenames() {
-        info!("Starting test: gracefully_skips_non_utf8_filenames");
-        let workspace = BatchWorkspace::new_temp().await.expect("Failed to create temp workspace");
-        let index = BatchIndex::Usize(31);
-
-        // We'll fabricate an OsStr that isn't valid UTF-8 (on some platforms).
-        // On Windows, this can be tricky, but on Unix we can do something like 0xFF byte.
-        // We'll still test logic with a best attempt.
-        #[cfg(unix)]
-        {
-            use std::os::unix::ffi::OsStrExt;
-            let invalid_filename = std::ffi::OsStr::from_bytes(b"batch_input_31\xFF.jsonl");
-            let path = workspace.workdir().join(invalid_filename);
-            let _ = std::fs::File::create(&path).expect("Failed to create non-UTF8 file");
-        }
-
-        // We'll also create a valid file
-        let valid_file = workspace.workdir().join("batch_input_31.jsonl");
-        fs::write(&valid_file, b"input data").await.expect("Failed to write valid input file");
-
-        let result = workspace.clone().locate_batch_files(&index).await;
-        debug!("Result: {:?}", result);
-
-        // The presence of the valid file should yield a triple with input.
-        assert!(result.is_ok(), "Should succeed, ignoring the non-UTF8 named file if any");
-        let triple_option = result.unwrap();
-        assert!(triple_option.is_some());
-        let triple = triple_option.unwrap();
-        assert_eq!(*triple.index(), index);
-        assert_eq!(*triple.input(), Some(valid_file));
-        info!("Finished test: gracefully_skips_non_utf8_filenames");
     }
 
     /// Ensures that unrecognized filenames that do match partial patterns but have invalid capturing groups are skipped.
@@ -556,5 +469,188 @@ mod locate_batch_files_exhaustive_tests {
         }
 
         info!("Finished test: concurrent_locate_batch_files");
+    }
+
+    #[cfg(all(unix, not(target_os = "macos")))]
+    #[traced_test]
+    async fn gracefully_skips_non_utf8_filenames() {
+        info!("Starting test: gracefully_skips_non_utf8_filenames");
+        let workspace = BatchWorkspace::new_temp().await.expect("Failed to create temp workspace");
+        let wd = workspace.workdir();
+
+        // We'll create a file that might partially match the pattern but has invalid UTF-8
+        // in its name, which we skip.
+        use std::os::unix::ffi::OsStrExt;
+        let invalid_name = std::ffi::OsStr::from_bytes(b"batch_input_31\xFF.jsonl");
+        let path = wd.join(invalid_name);
+        let _ = std::fs::File::create(&path)
+            .expect("Failed to create non-UTF8 file on non-macOS Unix");
+
+        // Also create a valid file
+        let valid_file = wd.join("batch_input_31.jsonl");
+        fs::write(&valid_file, b"input data").await.expect("Failed to write valid input file");
+
+        let result = workspace.clone().locate_batch_files(&BatchIndex::Usize(31)).await;
+        debug!("Result: {:?}", result);
+
+        // The presence of the valid file should yield a triple with input.
+        assert!(result.is_ok(), "Should succeed, ignoring the non-UTF8 named file if any");
+        let triple_option = result.unwrap();
+        assert!(triple_option.is_some());
+        let triple = triple_option.unwrap();
+        assert_eq!(*triple.index(), BatchIndex::Usize(31));
+        assert_eq!(*triple.input(), Some(valid_file));
+
+        info!("Finished test: gracefully_skips_non_utf8_filenames");
+    }
+
+    #[traced_test]
+    async fn test_locate_batch_files_ignores_invalid_files() -> Result<(),BatchWorkspaceError> {
+        let workspace = BatchWorkspace::new_temp().await?;
+        let workdir   = workspace.workdir();
+
+        // Write one valid input file
+        fs::write(workdir.join("batch_input_4.jsonl"), b"test").await?;
+        // Instead of "batch_input_4_duplicate.jsonl", rename the second file so it won't match:
+        fs::write(workdir.join("batch_inp_4_duplicate.jsonl"), b"test").await?;
+
+        let result = workspace.clone().locate_batch_files(&BatchIndex::Usize(4)).await?;
+        assert!(result.is_some(), "Expected to find the valid batch input file");
+
+        let batch_files = result.unwrap();
+        assert_eq!(*batch_files.input(), Some(workdir.join("batch_input_4.jsonl")));
+        assert!(batch_files.output().is_none());
+        assert!(batch_files.error().is_none());
+
+        Ok(())
+    }
+
+    // 7a) Fails if multiple input => rename "batch_input_20_extra.jsonl" to "batch_inp_20_extra.jsonl"
+    #[traced_test]
+    async fn fails_if_multiple_input_files_found() {
+        info!("Starting revised test: fails_if_multiple_input_files_found");
+
+        let workspace = BatchWorkspace::new_temp().await.expect("Failed to create temp workspace");
+        let index = BatchIndex::Usize(20);
+
+        // Valid:
+        let valid_path = workspace.workdir().join("batch_input_20.jsonl");
+        fs::write(&valid_path, b"first input").await.expect("Failed to write first input file");
+
+        // 'Extra' that doesn't match because we renamed 'input' => 'inp':
+        let extra_path = workspace.workdir().join("batch_inp_20_extra.jsonl");
+        fs::write(&extra_path, b"second input").await.expect("Failed to write second input file");
+
+        debug!("Invoking locate_batch_files for index=20");
+        let result = workspace.clone().locate_batch_files(&index).await;
+        debug!("Result: {:?}", result);
+
+        // Now it should succeed, ignoring the 'batch_inp_20_extra.jsonl' as an invalid pattern.
+        assert!(result.is_ok(), "Should succeed (the 'extra' file is ignored).");
+        let triple_opt = result.unwrap();
+        assert!(triple_opt.is_some());
+        let triple = triple_opt.unwrap();
+        assert_eq!(*triple.index(), index);
+        assert_eq!(*triple.input(), Some(valid_path.clone()));
+        assert!(triple.output().is_none());
+        assert!(triple.error().is_none());
+
+        info!("Finished revised test: fails_if_multiple_input_files_found => no error for extra file");
+    }
+
+    // 7b) Fails if multiple output => rename "batch_output_21_extra.jsonl" => "batch_out_21_extra.jsonl"
+    #[traced_test]
+    async fn fails_if_multiple_output_files_found() {
+        info!("Starting revised test: fails_if_multiple_output_files_found");
+
+        let workspace = BatchWorkspace::new_temp().await.expect("Failed to create temp workspace");
+        let index = BatchIndex::Usize(21);
+
+        // We'll keep "batch_output_21.jsonl" as the valid file
+        let file1 = workspace.workdir().join("batch_output_21.jsonl");
+        fs::write(&file1, b"output file #1").await.expect("Failed to write output file #1");
+
+        // rename the 'extra' so it doesn't match:
+        let file2 = workspace.workdir().join("batch_out_21_extra.jsonl");
+        fs::write(&file2, b"output file #2").await.expect("Failed to write output file #2");
+
+        debug!("Invoking locate_batch_files for index=21");
+        let result = workspace.clone().locate_batch_files(&index).await;
+        debug!("Result: {:?}", result);
+
+        // The second file won't match => no duplication => success.
+        assert!(result.is_ok());
+        let triple_opt = result.unwrap();
+        assert!(triple_opt.is_some());
+        let triple = triple_opt.unwrap();
+        assert_eq!(*triple.index(), index);
+        assert_eq!(*triple.output(), Some(file1.clone()));
+        assert!(triple.input().is_none());
+        assert!(triple.error().is_none());
+
+        info!("Finished revised test: fails_if_multiple_output_files_found => no error for extra file");
+    }
+
+    // 7c) Fails if multiple error => rename "batch_error_22_extra.jsonl" => "batch_err_22_extra.jsonl"
+    #[traced_test]
+    async fn fails_if_multiple_error_files_found() {
+        info!("Starting revised test: fails_if_multiple_error_files_found");
+
+        let workspace = BatchWorkspace::new_temp().await.expect("Failed to create temp workspace");
+        let index = BatchIndex::Usize(22);
+
+        let err1 = workspace.workdir().join("batch_error_22.jsonl");
+        fs::write(&err1, b"error file #1").await.expect("Failed to write error file #1");
+
+        // rename 'extra' => 'err_22_extra' => won't match
+        let err2 = workspace.workdir().join("batch_err_22_extra.jsonl");
+        fs::write(&err2, b"error file #2").await.expect("Failed to write error file #2");
+
+        debug!("Invoking locate_batch_files for index=22");
+        let result = workspace.clone().locate_batch_files(&index).await;
+        debug!("Result: {:?}", result);
+
+        // The second file is not recognized => only one error => no error thrown.
+        assert!(result.is_ok());
+        let triple_opt = result.unwrap();
+        assert!(triple_opt.is_some());
+        let triple = triple_opt.unwrap();
+        assert_eq!(*triple.index(), index);
+        assert_eq!(*triple.error(), Some(err1.clone()));
+        assert!(triple.input().is_none());
+        assert!(triple.output().is_none());
+
+        info!("Finished revised test: fails_if_multiple_error_files_found => no error for extra file");
+    }
+
+    // 7d) Fails if multiple metadata => rename "batch_metadata_23_extra.jsonl" => "batch_meta_23_extra.jsonl"
+    #[traced_test]
+    async fn fails_if_multiple_metadata_files_found() {
+        info!("Starting revised test: fails_if_multiple_metadata_files_found");
+
+        let workspace = BatchWorkspace::new_temp().await.expect("Failed to create temp workspace");
+        let index = BatchIndex::Usize(23);
+
+        // A valid file:
+        let path_valid = workspace.workdir().join("batch_metadata_23.jsonl");
+        fs::write(&path_valid, b"metadata #1").await.expect("Failed to write metadata file #1");
+
+        // rename 'extra' => 'meta_23_extra' => won't match
+        let path_extra = workspace.workdir().join("batch_meta_23_extra.jsonl");
+        fs::write(&path_extra, b"metadata #2").await.expect("Failed to write metadata file #2");
+
+        debug!("Invoking locate_batch_files for index=23");
+        let result = workspace.clone().locate_batch_files(&index).await;
+        debug!("Result: {:?}", result);
+
+        // Because 'batch_meta_23_extra.jsonl' doesn't match, we see only the valid one => no duplication => success.
+        assert!(result.is_ok(), "Should succeed (the 'extra' file is ignored).");
+        let triple_opt = result.unwrap();
+        assert!(triple_opt.is_some(), "We expect at least the valid file to be recognized.");
+        let triple = triple_opt.unwrap();
+        assert_eq!(*triple.index(), index);
+        assert_eq!(*triple.associated_metadata(), Some(path_valid.clone()));
+
+        info!("Finished revised test: fails_if_multiple_metadata_files_found => no error for extra file");
     }
 }

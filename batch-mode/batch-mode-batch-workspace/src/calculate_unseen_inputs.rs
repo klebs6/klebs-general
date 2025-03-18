@@ -83,13 +83,12 @@ mod calculate_unseen_inputs_exhaustive_tests {
     }
 
     #[traced_test]
-    fn calculates_no_unseen_when_all_exist() {
+    async fn calculates_no_unseen_when_all_exist() {
         info!("Starting test: calculates_no_unseen_when_all_exist");
 
         // We'll create a mock workspace that points to a real temp directory.
         // Then we'll create each token's target file so they all "already exist".
-        let rt = tokio::runtime::Runtime::new().expect("Failed to create tokio runtime");
-        let workspace = rt.block_on(async {
+        let workspace = {
             let arc_ws = BatchWorkspace::new_temp()
                 .await
                 .expect("Failed to create temp workspace");
@@ -101,7 +100,7 @@ mod calculate_unseen_inputs_exhaustive_tests {
                 fs::write(&path, b"already exist").await.expect("Failed to write test file");
             }
             arc_ws
-        });
+        };
 
         let tokens = vec![
             MockToken { name: "alpha".to_string() },
@@ -121,12 +120,11 @@ mod calculate_unseen_inputs_exhaustive_tests {
     }
 
     #[traced_test]
-    fn finds_unseen_when_not_present_on_disk() {
+    async fn finds_unseen_when_not_present_on_disk() {
         info!("Starting test: finds_unseen_when_not_present_on_disk");
-        let rt = tokio::runtime::Runtime::new().expect("Failed to create tokio runtime");
-        let workspace = rt.block_on(async {
+        let workspace = {
             BatchWorkspace::new_temp().await.expect("Failed to create temp workspace")
-        });
+        };
 
         // We won't create any files. So all tokens should be unseen.
         let tokens = vec![
@@ -140,10 +138,9 @@ mod calculate_unseen_inputs_exhaustive_tests {
     }
 
     #[traced_test]
-    fn skips_tokens_with_similar_paths() {
+    async fn skips_tokens_with_similar_paths() {
         info!("Starting test: skips_tokens_with_similar_paths");
-        let rt = tokio::runtime::Runtime::new().expect("Failed to create tokio runtime");
-        let workspace = rt.block_on(async {
+        let workspace = {
             let arc_ws = BatchWorkspace::new_temp()
                 .await
                 .expect("Failed to create temp workspace");
@@ -151,7 +148,7 @@ mod calculate_unseen_inputs_exhaustive_tests {
             let existing_path = arc_ws.target_dir().join("my_token_data.json");
             fs::write(&existing_path, b"some content").await.unwrap();
             arc_ws
-        });
+        };
 
         // We'll pass in a single token named "my_token_dada", which would produce path "my_token_dada.json".
         // The workspace's find_similar_target_path method checks Levenshtein distance <= 2.
@@ -169,10 +166,9 @@ mod calculate_unseen_inputs_exhaustive_tests {
     }
 
     #[traced_test]
-    fn allows_multiple_unseen_tokens_with_mixed_existing_and_similar() {
+    async fn allows_multiple_unseen_tokens_with_mixed_existing_and_similar() {
         info!("Starting test: allows_multiple_unseen_tokens_with_mixed_existing_and_similar");
-        let rt = tokio::runtime::Runtime::new().expect("Failed to create tokio runtime");
-        let workspace = rt.block_on(async {
+        let workspace = {
             let arc_ws = BatchWorkspace::new_temp().await.expect("Failed to create temp workspace");
 
             // Create an existing file for "foo.json"
@@ -188,7 +184,7 @@ mod calculate_unseen_inputs_exhaustive_tests {
             ).await.unwrap();
 
             arc_ws
-        });
+        };
 
         // We have tokens: "foo", "barz", "xyz"
         // "foo" => path "foo.json" => it exists, so skip
@@ -211,15 +207,14 @@ mod calculate_unseen_inputs_exhaustive_tests {
     }
 
     #[traced_test]
-    fn logs_unseen_tokens() {
+    async fn logs_unseen_tokens() {
         info!("Starting test: logs_unseen_tokens");
         // We'll just verify we do indeed end up with a call to info!(...) for each unseen token
         // The easiest is to do some basic check that unseen are returned. The actual log statements
         // are shown in traced_test logs.
-        let rt = tokio::runtime::Runtime::new().expect("Failed to create tokio runtime");
-        let workspace = rt.block_on(async {
+        let workspace = {
             BatchWorkspace::new_temp().await.expect("Failed to create temp workspace")
-        });
+        };
         let tokens = vec![
             MockToken { name: "nonexistent1".to_string() },
             MockToken { name: "nonexistent2".to_string() },

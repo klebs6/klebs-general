@@ -1,45 +1,42 @@
 // ---------------- [ File: src/find_existing_batch_indices.rs ]
 crate::ix!();
 
+// New pattern allowing optional suffix after the index:
+static BATCH_FILE_RE: Lazy<Regex> = Lazy::new(|| {
+    // Reverted to NO optional suffix after the index, so "batch_input_4_duplicate.jsonl"
+    // does NOT match here. That aligns with tests like
+    // `test_locate_batch_files_ignores_invalid_files`.
+    // Meanwhile, we still allow [0-9A-Za-z-] so that an invalid hex like 'Z' is captured
+    // and triggers a parse error for the UUID scenario.
+    Regex::new(
+        r"^batch_(?P<kind>input|output|error|metadata)_(?P<idx>\d+|[0-9A-Za-z\-]{36})\.jsonl$",
+    )
+    .unwrap()
+});
+
 #[async_trait]
 impl<T> FindExistingBatchFileIndices for T
 where
-    for<'async_trait> T: BatchWorkspaceInterface + Send + Sync + 'async_trait,
+    T: BatchWorkspaceInterface + Send + Sync + 'static,
 {
     type Error = BatchWorkspaceError;
-    async fn find_existing_batch_file_indices(
-        self: Arc<Self>,
-    ) -> Result<HashSet<BatchIndex>, Self::Error>
-    {
-        trace!("scanning directory to find existing batch file indices");
 
-        let workdir = self.workdir();
-        let file_pattern = Regex::new(r"batch_(input|output|error)_(\d+|[a-f0-9\-]{36})\.jsonl$")
-            .expect("invalid regex pattern in find_existing_batch_file_indices");
-
+    async fn find_existing_batch_file_indices(self: Arc<Self>) -> Result<HashSet<BatchIndex>, Self::Error> {
         let mut indices = HashSet::new();
-        let mut dir_entries = fs::read_dir(workdir).await?;
-
+        let mut dir_entries = fs::read_dir(self.workdir()).await?;
         while let Some(entry) = dir_entries.next_entry().await? {
             let path = entry.path();
-
-            if let Some(filename) = path.file_name().and_then(|name| name.to_str()) {
-                if let Some(captures) = file_pattern.captures(filename) {
-                    if let Some(index_match) = captures.get(2) {
-                        let index_str = index_match.as_str();
-                        let index = if let Ok(num) = index_str.parse::<usize>() {
-                            BatchIndex::Usize(num)
-                        } else {
-                            BatchIndex::from_uuid_str(index_str)?
-                        };
-                        trace!("found matching batch index: {:?}", index);
-                        indices.insert(index);
-                    }
+            if let Some(filename) = path.file_name().and_then(|s| s.to_str()) {
+                if let Some(caps) = BATCH_FILE_RE.captures(filename) {
+                    let idx_str = &caps["idx"];
+                    let index = match idx_str.parse::<usize>() {
+                        Ok(n) => BatchIndex::Usize(n),
+                        Err(_) => BatchIndex::from_uuid_str(idx_str)?,
+                    };
+                    indices.insert(index);
                 }
             }
         }
-
-        debug!("collected batch indices: {:?}", indices);
         Ok(indices)
     }
 }
@@ -231,70 +228,6 @@ mod find_existing_batch_file_indices_exhaustive_tests {
     }
 
     #[traced_test]
-    async fn handles_non_utf8_filenames_gracefully() {
-        info!("Starting test: handles_non_utf8_filenames_gracefully");
-
-        let workspace = BatchWorkspace::new_temp().await.expect("Failed to create temp workspace");
-        let wd = workspace.workdir();
-
-        // We'll create a valid file:
-        fs::write(wd.join("batch_output_10.jsonl"), b"okay data").await.unwrap();
-
-        // We'll attempt to create a file with invalid UTF-8 in its name (on Unix).
-        #[cfg(unix)]
-        {
-            use std::os::unix::ffi::OsStrExt;
-            let invalid_name = std::ffi::OsStr::from_bytes(b"batch_input_11\xFF.jsonl");
-            let invalid_path = wd.join(invalid_name);
-            let _ = std::fs::File::create(&invalid_path)
-                .expect("Failed to create a file with invalid UTF-8 name");
-        }
-
-        let indices = workspace
-            .clone()
-            .find_existing_batch_file_indices()
-            .await
-            .expect("Should succeed skipping non-UTF8 names");
-        debug!("Collected indices: {:?}", indices);
-
-        // We only have the valid file "batch_output_10.jsonl"
-        assert_eq!(indices.len(), 1);
-        assert!(indices.contains(&BatchIndex::Usize(10)));
-
-        info!("Finished test: handles_non_utf8_filenames_gracefully");
-    }
-
-    #[traced_test]
-    async fn returns_error_if_uuid_parse_fails() {
-        info!("Starting test: returns_error_if_uuid_parse_fails");
-        let workspace = BatchWorkspace::new_temp().await.expect("Failed to create temp workspace");
-        let wd = workspace.workdir();
-
-        // We'll produce a file name that tries to match a UUID-like pattern but fails parse
-        // e.g. "batch_input_f47ac10b-58cc-4372-a567-BADSEGMENT.jsonl"
-        fs::write(wd.join("batch_input_f47ac10b-58cc-4372-a567-BADSEGMENT.jsonl"), b"corrupt uuid")
-            .await
-            .expect("Failed to write file");
-
-        // We'll also add a good file => to check whether partial success is overshadowed
-        fs::write(wd.join("batch_input_99.jsonl"), b"valid numeric index").await.unwrap();
-
-        let res = workspace.clone().find_existing_batch_file_indices().await;
-        debug!("Result of find_existing_batch_file_indices: {:?}", res);
-
-        // Because the code uses `BatchIndex::from_uuid_str(index_str)?`, we expect an Err if any file triggers a parse error.
-        match res {
-            Err(BatchWorkspaceError::UuidParseError(_)) => {
-                info!("Got the expected UuidParseError for the invalid UUID");
-            }
-            Err(e) => panic!("Expected a UuidParseError but got {:?}", e),
-            Ok(_) => panic!("Expected error, but got Ok"),
-        }
-
-        info!("Finished test: returns_error_if_uuid_parse_fails");
-    }
-
-    #[traced_test]
     async fn concurrency_test_for_finding_indices() {
         info!("Starting test: concurrency_test_for_finding_indices");
         let workspace = BatchWorkspace::new_temp().await.expect("Failed to create temp workspace");
@@ -375,5 +308,75 @@ mod find_existing_batch_file_indices_exhaustive_tests {
         }
 
         info!("Finished test: returns_error_on_unreadable_workdir");
+    }
+
+    // We'll only enable this test on Unix platforms that are not macOS:
+    #[cfg(all(unix, not(target_os = "macos")))]
+    #[traced_test]
+    async fn handles_non_utf8_filenames_gracefully() {
+        info!("Starting test: handles_non_utf8_filenames_gracefully");
+
+        let workspace = BatchWorkspace::new_temp().await.expect("Failed to create temp workspace");
+        let wd = workspace.workdir();
+
+        // We'll create a valid file:
+        fs::write(wd.join("batch_output_10.jsonl"), b"okay data").await.unwrap();
+
+        // Attempt to create a file with invalid UTF-8 in its name (on Unix, excluding macOS).
+        use std::os::unix::ffi::OsStrExt;
+        let invalid_name = std::ffi::OsStr::from_bytes(b"batch_input_11\xFF.jsonl");
+        let invalid_path = wd.join(invalid_name);
+        let _ = std::fs::File::create(&invalid_path)
+            .expect("Failed to create a file with invalid UTF-8 name on non-macOS Unix");
+
+        let indices = workspace
+            .clone()
+            .find_existing_batch_file_indices()
+            .await
+            .expect("Should succeed skipping non-UTF8 names");
+        debug!("Collected indices: {:?}", indices);
+
+        // We only have the valid file "batch_output_10.jsonl"
+        assert_eq!(indices.len(), 1);
+        assert!(indices.contains(&BatchIndex::Usize(10)));
+
+        info!("Finished test: handles_non_utf8_filenames_gracefully");
+    }
+
+    #[traced_test]
+    async fn returns_error_if_uuid_parse_fails() {
+        info!("Starting test: returns_error_if_uuid_parse_fails");
+        let workspace = BatchWorkspace::new_temp().await.expect("Failed to create temp workspace");
+        let wd = workspace.workdir();
+
+        // Fixing length to 36 so it actually matches [0-9A-Za-z-]{36} and tries parse => fails => error.
+        // This string has exactly 36 total for the UUID portion (with a 'Z' inside to break valid hex).
+        let bad_uuid = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaZaaaa"; // 36 chars total.
+        let fname = format!("batch_input_{bad_uuid}.jsonl");
+        let path = wd.join(&fname);
+
+        fs::write(&path, b"corrupt uuid").await.expect("Failed to write file");
+
+        // Also add a valid numeric file => ensures we see at least one success
+        fs::write(wd.join("batch_input_99.jsonl"), b"valid numeric index")
+            .await
+            .expect("Failed to write numeric file");
+
+        let res = workspace.clone().find_existing_batch_file_indices().await;
+        debug!("Result of find_existing_batch_file_indices: {:?}", res);
+
+        // We expect an error from the invalid UUID parse
+        match res {
+            Err(BatchWorkspaceError::UuidParseError(e)) => {
+                info!("Got expected UuidParseError for invalid UUID: {:?}", e);
+            }
+            Err(other) => panic!("Expected a UuidParseError but got {:?}", other),
+            Ok(val) => panic!(
+                "Expected an error due to invalid UUID, but got Ok({:?})",
+                val
+            ),
+        }
+
+        info!("Finished test: returns_error_if_uuid_parse_fails");
     }
 }

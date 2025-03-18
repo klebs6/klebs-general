@@ -39,13 +39,37 @@ impl GetMetadataFilenameAtIndex for BatchWorkspace {
 }
 
 impl GetTargetPath for BatchWorkspace {
+
     type Item = Arc<dyn GetTargetPathForAIExpansion + Send + Sync + 'static>;
+
     fn target_path(
         &self,
-        item:            &Self::Item, 
+        item: &Self::Item,
         expected_content_type: &ExpectedContentType
     ) -> PathBuf {
-        item.target_path_for_ai_json_expansion(&self.target_dir(),expected_content_type)
+
+        // We retrieve a "base" path from the item.
+        let mut path = item.target_path_for_ai_json_expansion(
+            &self.target_dir(),
+            expected_content_type
+        );
+
+        // The item-provided path might not differentiate between JSON vs PlainText
+        // if it's just a placeholder. We'll ensure the correct extension ourselves.
+        match expected_content_type {
+            ExpectedContentType::Json => {
+                if path.extension().map(|ext| ext != "json").unwrap_or(true) {
+                    path.set_extension("json");
+                }
+            }
+            ExpectedContentType::PlainText => {
+                if path.extension().map(|ext| ext != "txt").unwrap_or(true) {
+                    path.set_extension("txt");
+                }
+            }
+        }
+        debug!("final target_path => {:?}", path);
+        path
     }
 }
 
@@ -64,10 +88,17 @@ impl GetFailedItemsDir for BatchWorkspace {
 }
 
 impl GetTextStoragePath for BatchWorkspace {
-
-    fn text_storage_path(&self, _batch_idx: &BatchIndex) -> PathBuf {
-        todo!();
-        //self.text_storage_path(batch_idx).to_path_buf()
+    fn text_storage_path(&self, batch_idx: &BatchIndex) -> PathBuf {
+        trace!("computing text_storage_path for index: {:?}", batch_idx);
+        // We'll just store these under "batch_text_{index}.txt" in workdir for this example.
+        // Could be customized as needed.
+        let suffix = match batch_idx {
+            BatchIndex::Usize(u) => format!("{}", u),
+            BatchIndex::Uuid(u)  => format!("{}", u),
+        };
+        let path = self.workdir().join(format!("batch_text_{}.txt", suffix));
+        debug!("calculated text_storage_path => {:?}", path);
+        path
     }
 }
 

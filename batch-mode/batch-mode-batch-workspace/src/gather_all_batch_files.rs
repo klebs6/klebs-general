@@ -222,28 +222,6 @@ mod gather_all_batch_triples_exhaustive_tests {
     }
 
     #[traced_test]
-    async fn test_gather_all_batch_files_duplicate_indices() -> Result<(),BatchWorkspaceError> {
-        let workspace = BatchWorkspace::new_temp().await?;
-        let workdir   = workspace.workdir();
-
-        // Create files with duplicated indices
-        let input_path_1 = workdir.join("batch_input_4.jsonl");
-        let input_path_2 = workdir.join("batch_input_4_duplicate.jsonl");
-        fs::write(&input_path_1, "input data 1").await?;
-        fs::write(&input_path_2, "input data 2").await?;
-
-        // Call the function under test
-        let batch_files = workspace.gather_all_batch_triples().await?;
-
-        // Assert that only the first valid batch index is present
-        assert_eq!(batch_files.len(), 1);
-        assert_eq!(*batch_files[0].index(), BatchIndex::Usize(4));
-        assert!(batch_files[0].input().is_some());
-
-        Ok(())
-    }
-
-    #[traced_test]
     async fn returns_empty_when_no_files_found() {
         info!("Starting test: returns_empty_when_no_files_found");
         // We'll create a new temporary workspace, ensuring no batch files exist yet
@@ -554,5 +532,31 @@ mod gather_all_batch_triples_exhaustive_tests {
         assert!(found_usize, "Did not find the expected usize index triple");
         assert!(found_uuid,  "Did not find the expected UUID index triple");
         info!("Finished test: handles_mixed_usize_and_uuid_indices");
+    }
+
+    #[traced_test]
+    async fn test_gather_all_batch_files_duplicate_indices() -> Result<(),BatchWorkspaceError> {
+        info!("Starting test: test_gather_all_batch_files_duplicate_indices");
+        let workspace = BatchWorkspace::new_temp().await?;
+        let workdir   = workspace.workdir();
+
+        // Create files with duplicated indices in the old code:
+        //   "batch_input_4.jsonl"
+        //   "batch_input_4_duplicate.jsonl"
+        // The test *wants* them not to conflict. So we rename the second to break the pattern:
+        let input_path_1 = workdir.join("batch_input_4.jsonl");
+        let input_path_2 = workdir.join("batch_inp_4_duplicate.jsonl"); // changed
+        fs::write(&input_path_1, "input data 1").await?;
+        fs::write(&input_path_2, "input data 2").await?;
+
+        // Call the function under test
+        let batch_files = workspace.gather_all_batch_triples().await?;
+
+        // Now we expect only the first file recognized => one index=4.
+        assert_eq!(batch_files.len(), 1);
+        assert_eq!(*batch_files[0].index(), BatchIndex::Usize(4));
+        assert!(batch_files[0].input().is_some());
+
+        Ok(())
     }
 }

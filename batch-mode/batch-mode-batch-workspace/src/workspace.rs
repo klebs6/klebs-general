@@ -154,7 +154,7 @@ impl BatchWorkspace {
         Ok(())
     }
 
-    async fn create_directories_if_dne(&self) -> Result<(),BatchWorkspaceError> {
+    pub(crate) async fn create_directories_if_dne(&self) -> Result<(),BatchWorkspaceError> {
         // Ensure the work directories exist
         tokio::fs::create_dir_all(&self.workdir).await?;
         tokio::fs::create_dir_all(&self.logdir).await?;
@@ -336,52 +336,6 @@ mod batch_workspace_exhaustive_tests {
             "Expected NoBatchFileTripleAtIndex error"
         );
         info!("Finished test: test_find_existing_triple_with_given_index_not_found");
-    }
-
-    #[traced_test]
-    async fn test_new_in_creates_proper_directories() {
-        info!("Starting test: test_new_in_creates_proper_directories");
-        let temp = tempdir().expect("Failed to create tempdir for test");
-        let dir_path = temp.path().join("product_root");
-        std::fs::create_dir_all(&dir_path).expect("Failed to create product root");
-
-        let rt = Runtime::new().expect("Failed to create tokio runtime");
-        let workspace = rt
-            .block_on(async { BatchWorkspace::new_in(&dir_path).await })
-            .expect("Failed to create new_in workspace");
-
-        debug!("Created workspace in: {:?}", dir_path);
-
-        // Check that subdirectories exist
-        assert!(workspace.workdir().is_dir(), "workdir should exist");
-        assert!(workspace.logdir().is_dir(), "logdir should exist");
-        assert!(workspace.done_dir().is_dir(), "done_dir should exist");
-        assert!(workspace.target_dir().is_dir(), "target_dir should exist");
-        assert!(workspace.failed_json_repairs_dir().is_dir(), "failed_json_repairs_dir should exist");
-        assert!(workspace.failed_items_dir().is_dir(), "failed_items_dir should exist");
-        assert!(!workspace.temporary, "should not be marked temporary");
-        info!("Finished test: test_new_in_creates_proper_directories");
-    }
-
-    #[traced_test]
-    async fn test_new_temp_creates_proper_directories() {
-        info!("Starting test: test_new_temp_creates_proper_directories");
-        let rt = Runtime::new().expect("Failed to create tokio runtime");
-        let workspace = rt
-            .block_on(async { BatchWorkspace::new_temp().await })
-            .expect("Failed to create new_temp workspace");
-
-        debug!("Created new temp workspace: {:?}", workspace);
-
-        // Check that subdirectories exist
-        assert!(workspace.workdir().is_dir(), "workdir should exist");
-        assert!(workspace.logdir().is_dir(), "logdir should exist");
-        assert!(workspace.done_dir().is_dir(), "done_dir should exist");
-        assert!(workspace.target_dir().is_dir(), "target_dir should exist");
-        assert!(workspace.failed_json_repairs_dir().is_dir(), "failed_json_repairs_dir should exist");
-        assert!(workspace.failed_items_dir().is_dir(), "failed_items_dir should exist");
-        assert!(workspace.temporary, "should be marked temporary");
-        info!("Finished test: test_new_temp_creates_proper_directories");
     }
 
     #[traced_test]
@@ -601,5 +555,50 @@ mod batch_workspace_exhaustive_tests {
         }
 
         info!("Finished test: test_concurrent_find_existing_triple_with_given_index");
+    }
+
+    #[traced_test]
+    async fn test_new_in_creates_proper_directories() {
+        info!("Starting test: test_new_in_creates_proper_directories");
+        let temp = tempdir().expect("Failed to create tempdir for test");
+        let dir_path = temp.path().join("product_root");
+        std::fs::create_dir_all(&dir_path).expect("Failed to create product root on disk");
+
+        // Now just call new_in() inside our existing async test
+        let workspace = BatchWorkspace::new_in(&dir_path).await
+            .expect("Failed to create new_in workspace");
+
+        debug!("Created workspace in: {:?}", dir_path);
+
+        // Check that subdirectories exist
+        assert!(workspace.workdir().is_dir(), "workdir should exist");
+        assert!(workspace.logdir().is_dir(), "logdir should exist");
+        assert!(workspace.done_dir().is_dir(), "done_dir should exist");
+        assert!(workspace.target_dir().is_dir(), "target_dir should exist");
+        assert!(workspace.failed_json_repairs_dir().is_dir(), "failed_json_repairs_dir should exist");
+        assert!(workspace.failed_items_dir().is_dir(), "failed_items_dir should exist");
+        assert!(!workspace.temporary, "should not be marked temporary");
+
+        info!("Finished test: test_new_in_creates_proper_directories");
+    }
+
+    #[traced_test]
+    async fn test_new_temp_creates_proper_directories() {
+        info!("Starting test: test_new_temp_creates_proper_directories");
+
+        let workspace = BatchWorkspace::new_temp().await
+            .expect("Failed to create new_temp workspace");
+        debug!("Created new temp workspace: {:?}", workspace);
+
+        // Check that subdirectories exist
+        assert!(workspace.workdir().is_dir(), "workdir should exist");
+        assert!(workspace.logdir().is_dir(), "logdir should exist");
+        assert!(workspace.done_dir().is_dir(), "done_dir should exist");
+        assert!(workspace.target_dir().is_dir(), "target_dir should exist");
+        assert!(workspace.failed_json_repairs_dir().is_dir(), "failed_json_repairs_dir should exist");
+        assert!(workspace.failed_items_dir().is_dir(), "failed_items_dir should exist");
+        assert!(workspace.temporary, "should be marked temporary");
+
+        info!("Finished test: test_new_temp_creates_proper_directories");
     }
 }

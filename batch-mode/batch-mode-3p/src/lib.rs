@@ -82,6 +82,7 @@ pub use std::{
     io::{BufRead, BufWriter, Write},
 };
 
+pub use std::io::ErrorKind;
 pub use async_openai::types::{
     BatchRequestOutputResponse,
     ChatCompletionRequestMessageContentPartImage,
