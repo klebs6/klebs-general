@@ -1,5 +1,6 @@
 // ---------------- [ File: src/imports.rs ]
 pub(crate) use error_tree::*;
+pub(crate) use tokio;
 pub(crate) use export_magic::*;
 pub(crate) use language_model_type::*;
 pub(crate) use serde::de::{DeserializeOwned,Error as DeError};
@@ -22,7 +23,8 @@ pub(crate) use async_openai::{
         BatchEndpoint,
         BatchRequestInput,
         BatchRequestInputMethod,
-        ChatCompletionRequestMessageContentPart,
+        ChatCompletionRequestUserMessageContentPart,
+        ChatCompletionRequestMessageContentPartText,
         ChatCompletionRequestMessageContentPartImage,
         ChatCompletionRequestUserMessageContent,
         Image,

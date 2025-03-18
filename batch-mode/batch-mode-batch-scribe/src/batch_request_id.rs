@@ -21,7 +21,7 @@ impl std::fmt::Display for BatchRequestId {
 }
 
 #[cfg(test)]
-mod tests {
+mod batch_request_id_tests {
     use super::*;
 
     #[test]

@@ -1,8 +1,6 @@
 // ---------------- [ File: workspacer-bump/src/bump.rs ]
 crate::ix!();
 
-// ---------------------- [ File: workspace-bump/src/lib.rs ] ----------------------
-
 /// A trait describing how to bump versions in a workspace.
 #[async_trait]
 pub trait BumpAll {

@@ -1,10 +1,11 @@
 [dependencies]
-async-openai = "0.23.3"
-error-tree = "0.3.6"
-export-magic = "0.3.6"
-traced-test = "0.3.6"
-tracing = "0.1.40"
-tracing-setup = "0.3.6"
+tokio         = { version = "1", features = ["full"] }
+async-openai  = "0.28.0"
+error-tree    = "*"
+export-magic  = "*"
+traced-test   = "*"
+tracing       = "*"
+tracing-setup = "*"
 [dependencies.language-model-type]
 path = "../language-model-type"
 [dependencies.serde]

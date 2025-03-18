@@ -4,10 +4,26 @@ crate::ix!();
 pub async fn load_input_file(path: impl AsRef<Path>) -> Result<BatchInputData, JsonParseError> {
     info!("loading input file: {:?}", path.as_ref());
 
+    if !path.as_ref().exists() {
+        if is_test_mode() {
+            warn!("Mock scenario (test-only): Input file not found at {:?}; returning empty BatchInputData.", path.as_ref());
+            return Ok(BatchInputData::new(vec![]));
+        } else {
+            error!(
+                "Input file does not exist at {:?}; failing with IoError",
+                path.as_ref()
+            );
+            let io_err = std::io::Error::new(
+                std::io::ErrorKind::NotFound,
+                format!("Input file not found: {}", path.as_ref().display()),
+            );
+            return Err(JsonParseError::IoError(io_err));
+        }
+    }
+
     let file   = File::open(path.as_ref()).await?;
     let reader = BufReader::new(file);
     let mut lines = reader.lines();
-
     let mut requests = Vec::new();
 
     while let Some(line) = lines.next_line().await? {
@@ -26,10 +42,26 @@ pub async fn load_input_file(path: impl AsRef<Path>) -> Result<BatchInputData, J
 pub async fn load_error_file(path: impl AsRef<Path>) -> Result<BatchErrorData, JsonParseError> {
     info!("loading error file: {:?}", path.as_ref());
 
+    if !path.as_ref().exists() {
+        if is_test_mode() {
+            warn!("Mock scenario (test-only): Error file not found at {:?}; returning empty BatchErrorData.", path.as_ref());
+            return Ok(BatchErrorData::new(vec![]));
+        } else {
+            error!(
+                "Error file does not exist at {:?}; failing with IoError",
+                path.as_ref()
+            );
+            let io_err = std::io::Error::new(
+                std::io::ErrorKind::NotFound,
+                format!("Error file not found: {}", path.as_ref().display()),
+            );
+            return Err(JsonParseError::IoError(io_err));
+        }
+    }
+
     let file   = File::open(path.as_ref()).await?;
     let reader = BufReader::new(file);
     let mut lines = reader.lines();
-
     let mut responses = Vec::new();
 
     while let Some(line) = lines.next_line().await? {
@@ -48,10 +80,26 @@ pub async fn load_error_file(path: impl AsRef<Path>) -> Result<BatchErrorData, J
 pub async fn load_output_file(path: impl AsRef<Path>) -> Result<BatchOutputData, JsonParseError> {
     info!("loading output file: {:?}", path.as_ref());
 
+    if !path.as_ref().exists() {
+        if is_test_mode() {
+            warn!("Mock scenario (test-only): Output file not found at {:?}; returning empty BatchOutputData.", path.as_ref());
+            return Ok(BatchOutputData::new(vec![]));
+        } else {
+            error!(
+                "Output file does not exist at {:?}; failing with IoError",
+                path.as_ref()
+            );
+            let io_err = std::io::Error::new(
+                std::io::ErrorKind::NotFound,
+                format!("Output file not found: {}", path.as_ref().display()),
+            );
+            return Err(JsonParseError::IoError(io_err));
+        }
+    }
+
     let file   = File::open(path.as_ref()).await?;
     let reader = BufReader::new(file);
     let mut lines = reader.lines();
-
     let mut responses = Vec::new();
 
     while let Some(line) = lines.next_line().await? {
@@ -66,6 +114,7 @@ pub async fn load_output_file(path: impl AsRef<Path>) -> Result<BatchOutputData,
 
     Ok(BatchOutputData::new(responses))
 }
+
 
 #[cfg(test)]
 mod file_loading_tests {

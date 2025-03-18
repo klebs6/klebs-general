@@ -122,4 +122,3 @@ mod verify_batch_index_type {
         assert!(!regex_uuid.is_match("batch_input_123e4567-e89b-12d3-a456-426655440000.txt"));
     }
 }
-

@@ -21,7 +21,7 @@ impl std::fmt::Display for CustomRequestId {
 }
 
 #[cfg(test)]
-mod tests {
+mod custom_request_id_tests {
     use super::*;
 
     #[test]

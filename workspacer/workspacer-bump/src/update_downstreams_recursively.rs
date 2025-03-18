@@ -23,51 +23,48 @@ where
         new_version: &semver::Version,
         visited: &mut HashSet<String>,
     ) -> Result<(), WorkspaceError> {
-        use tracing::{trace, debug, warn};
 
-        let crates_list: Vec<_> = self.crates().iter().cloned().collect();
-        // Now we’re not borrowing `self` immutably any more.
+        // 1) local copy of crates
+        let crate_list: Vec<_> = self.crates().iter().cloned().collect();
 
-        for arc_crate in crates_list {
-            // Lock once to figure out crate_name
+        for arc_crate in crate_list {
             let crate_name = {
-                let handle = arc_crate.lock().unwrap();
-                handle.name().to_string()
+                let h = arc_crate.lock().unwrap();
+                h.name().to_string()
             };
-
             if visited.contains(&crate_name) {
                 continue;
             }
 
-            // Next, lock again for the update:
-            let mut handle = arc_crate.lock().unwrap();
-            let cargo_toml_arc = handle.cargo_toml();
-            let mut cargo_toml_guard = cargo_toml_arc.lock().unwrap();
+            // 2) lock for short, synchronous update
+            let changed = {
 
-            let changed = cargo_toml_guard.update_dependency_version(dep_name, &new_version.to_string())?;
+                let mut h          = arc_crate.lock().unwrap();
+                let toml           = h.cargo_toml();
+                let mut toml_guard = toml.lock().unwrap();
 
-            drop(cargo_toml_guard); // <— drop guard before `.await`
+                // do in-memory updates
+                let changed = toml_guard.update_dependency_version(dep_name, &new_version.to_string())?;
+
+                changed
+                // guard dropped
+            };
 
             if changed {
-                // Save new version => must reacquire or have a separate method
-                // or do it in the same guard scope if your saving is synchronous.  
-                // If it’s truly async, do the pattern: copy out data => drop guard => do .await
-                let mut cargo_toml_guard = arc_crate
-                    .lock()
-                    .unwrap()
-                    .cargo_toml()
-                    .lock()
-                    .unwrap();
-                cargo_toml_guard.save_to_disk().await?;
+                // 3) do async save, once the guard is dropped
+                {
+                    let mut toml = arc_crate
+                        .lock().unwrap()
+                        .cargo_toml()
+                        .lock().unwrap();
+                    toml.save_to_disk().await?;
+                }
 
                 visited.insert(crate_name.clone());
-
-                // Recurse:
                 self.update_downstreams_recursively(&crate_name, new_version, visited).await?;
             }
         }
 
         Ok(())
     }
-
 }

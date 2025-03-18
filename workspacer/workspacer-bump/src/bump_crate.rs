@@ -6,52 +6,41 @@ impl Bump for CrateHandle {
     type Error = CrateError;
 
     async fn bump(&mut self, release: ReleaseType) -> Result<(), Self::Error> {
-        // Step A: gather everything while locked (synchronous)
+        // Step 1: Lock + do synchronous changes
         let (cargo_toml_path, new_version_str) = {
-            // 1) Get path from `HasCargoTomlPathBuf` (this can be done immediately).
-            //    but do it in a small synchronous step if needed:
-            let cargo_path = self.cargo_toml_path_buf_sync()?; 
-            tracing::trace!("Bumping crate at {:?}", cargo_path);
+            // Grab the path in a synchronous manner
+            let cargo_path = self.cargo_toml_path_buf_sync()?;
 
-            // 2) Lock the CargoToml
+            // Now lock the CargoToml for synchronous editing
             let cargo_toml_arc = self.cargo_toml();
-            let mut toml_guard = cargo_toml_arc.lock().unwrap();
+            let mut guard = cargo_toml_arc.lock().unwrap();
 
             // Validate
-            toml_guard.validate_integrity()?;
+            guard.validate_integrity()?;
 
-            // old version => bump => produce new version
-            let mut old_ver = toml_guard.version()?;
+            // Get + bump old version
+            let mut old_ver = guard.version()?;
             release.apply_to(&mut old_ver);
             let new_ver_str = old_ver.to_string();
 
             // Overwrite in-memory
             {
-                let pkg = toml_guard.get_package_section_mut()?;
+                let pkg = guard.get_package_section_mut()?;
                 pkg["version"] = toml::Value::String(new_ver_str.clone());
             }
 
-            // Now we have all we need
+            // Now we have the path and the new version string
             (cargo_path, new_ver_str)
             // guard is dropped here
         };
 
-        // Step B: do the asynchronous write (no guard held).
+        // Step 2: Do the async write outside the guard
         {
-            // Reload our CargoToml in memory to write it out. 
-            // Or better: add a method to do "render_in_memory" or "save_to_disk".
-            // If your `CargoTomlInterface` has `save_to_disk()` that does the 
-            // actual file write from the in-memory representation, do it outside the guard:
-            //
-            // We'll do something like:
             let cargo_toml_arc = self.cargo_toml();
-            // We only hold the guard for immediate read -> then do your own file write code
-            // if `save_to_disk()` is purely synchronous for data extraction.
-            // But let's assume we have something simpler:
-            
-            let mut toml_guard = cargo_toml_arc.lock().unwrap();
-            toml_guard.save_to_disk().await.map_err(|e| {
-                // map error to CrateError if needed
+            let mut guard = cargo_toml_arc.lock().unwrap();
+            guard.save_to_disk().await.map_err(|e| {
+                // if needed, map error into CrateError
+                // e.g. CrateError::IoError or similar
                 e
             })?;
 

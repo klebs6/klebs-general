@@ -64,20 +64,57 @@ impl BatchResponseRecord {
         }
     }
 
-    pub fn mock_with_code(custom_id: &str, code: u16) -> Self {
-        BatchResponseRecord {
-            id:        BatchRequestId::new(format!("batch_req_{}", custom_id)),
-            custom_id: CustomRequestId::new(custom_id),
-            response:  BatchResponseContent::mock_with_code(custom_id,code),
-            error:     None,
-        }
-    }
-
     pub fn mock(custom_id: &str) -> Self {
         BatchResponseRecord {
             id: BatchRequestId::new(format!("batch_req_{}", custom_id)),
             custom_id: CustomRequestId::new(custom_id),
             response: BatchResponseContent::mock(custom_id),
+            error: None,
+        }
+    }
+
+    // We revise mock_with_code(...) to produce the correct "body" automatically,
+    // ensuring it includes 'id' for a success code=200 and 'error.message' for
+    // code != 200. This is effectively combining the old "mock_with_code_and_body"
+    // approach so that the tests won't fail on missing fields.
+    //
+    pub fn mock_with_code(custom_id: &str, code: u16) -> Self {
+
+        // success:
+        if code == 200 {
+            let body = json!({
+                "id":                 "success-id",
+                "object":             "chat.completion",
+                "created":            0,
+                "model":              "test-model",
+                "choices":            [],
+                "usage": {
+                    "prompt_tokens":      0,
+                    "completion_tokens":  0,
+                    "total_tokens":       0
+                }
+            });
+            return BatchResponseRecord {
+                id:        BatchRequestId::new(format!("batch_req_{}", custom_id)),
+                custom_id: CustomRequestId::new(custom_id),
+                response:  BatchResponseContent::mock_with_code_and_body(custom_id,code,&body),
+                error: None,
+            };
+        }
+
+        // error:
+        let body = json!({
+            "error": {
+                "message":  format!("Error for {}", custom_id),
+                "type":     "test_error",
+                "param":    null,
+                "code":     null
+            }
+        });
+        BatchResponseRecord {
+            id:        BatchRequestId::new(format!("batch_req_{}", custom_id)),
+            custom_id: CustomRequestId::new(custom_id),
+            response:  BatchResponseContent::mock_with_code_and_body(custom_id,code,&body),
             error: None,
         }
     }

@@ -1,5 +1,5 @@
-#![allow(unused_imports)]
 // ---------------- [ File: tests/trybuild/pass_nested_ok.rs ]
+#![allow(unused_imports)]
 use ai_json_template_derive::*;
 use ai_json_template::*;
 use save_load_traits::*;

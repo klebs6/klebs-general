@@ -1,6 +1,14 @@
 // ---------------- [ File: src/lib.rs ]
 #![allow(unused_imports)]
 
+#[inline]
+pub fn is_test_mode() -> bool {
+    // This variable is set automatically by Cargo when running tests.
+    // cfg!(test) doesn’t always work for integration tests in separate crates,
+    // so we do an environment var check:
+    std::env::var("CARGO_RUNNING_TEST").is_ok()
+}
+
 pub use structopt::{self,StructOpt};
 pub use tokio::runtime::Runtime as TokioRuntime;
 pub use std::borrow::Cow;
