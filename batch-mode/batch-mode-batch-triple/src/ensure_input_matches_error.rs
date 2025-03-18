@@ -37,32 +37,39 @@ mod batch_file_triple_ensure_input_matches_error_exhaustive_tests {
     use tokio::runtime::Runtime;
     use tracing::*;
 
-    /// We fix this test so the input file has requests, and the error file has
-    /// *failing* responses with the same custom IDs.
     #[traced_test]
     fn ensure_input_matches_error_succeeds_with_identical_ids() {
         info!("Starting test: ensure_input_matches_error_succeeds_with_identical_ids");
 
         let mut input_file = NamedTempFile::new()
-            .expect("Failed to create a temp file for input");
+            .expect("Failed to create temp file for input");
+        {
+            // Each entire JSON object must be on exactly one line:
+            let req_a = LanguageModelBatchAPIRequest::mock("id-a");
+            let req_b = LanguageModelBatchAPIRequest::mock("id-b");
+
+            writeln!(input_file, "{}", serde_json::to_string(&req_a).unwrap())
+                .expect("Failed to write req_a");
+            writeln!(input_file, "{}", serde_json::to_string(&req_b).unwrap())
+                .expect("Failed to write req_b");
+            }
+
+        // code=400 => error scenario. Must match the shape for a single-line BatchResponseRecord
+        // so that each line is parseable as a full JSON object
         let mut error_file = NamedTempFile::new()
-            .expect("Failed to create a temp file for error");
-
-        // Write input lines (LanguageModelBatchAPIRequest).
+            .expect("Failed to create temp file for error");
         {
-            let req1 = LanguageModelBatchAPIRequest::mock("id-a");
-            let req2 = LanguageModelBatchAPIRequest::mock("id-b");
-            writeln!(input_file, "{}", serde_json::to_string(&req1).unwrap()).unwrap();
-            writeln!(input_file, "{}", serde_json::to_string(&req2).unwrap()).unwrap();
-        }
+            // Single-line JSON for the first record:
+            let line_a = r#"{"id":"batch_req_id-a","custom_id":"id-a","response":{"status_code":400,"request_id":"resp_req_id-a","body":{"error":{"message":"Error for id-a","type":"test_error","param":null,"code":null}}},"error":null}"#;
 
-        // Write error lines with code=400, matching custom IDs "id-a" and "id-b".
-        {
-            let err_rec1 = BatchResponseRecord::mock_with_code("id-a", 400);
-            let err_rec2 = BatchResponseRecord::mock_with_code("id-b", 400);
-            writeln!(error_file, "{}", serde_json::to_string(&err_rec1).unwrap()).unwrap();
-            writeln!(error_file, "{}", serde_json::to_string(&err_rec2).unwrap()).unwrap();
-        }
+            // Single-line JSON for the second record:
+            let line_b = r#"{"id":"batch_req_id-b","custom_id":"id-b","response":{"status_code":400,"request_id":"resp_req_id-b","body":{"error":{"message":"Error for id-b","type":"test_error","param":null,"code":null}}},"error":null}"#;
+
+            writeln!(error_file, "{}", line_a)
+                .expect("Failed to write line_a to error file");
+            writeln!(error_file, "{}", line_b)
+                .expect("Failed to write line_b to error file");
+            }
 
         let triple = BatchFileTriple::new_direct(
             &BatchIndex::Usize(6),
@@ -77,7 +84,10 @@ mod batch_file_triple_ensure_input_matches_error_exhaustive_tests {
         let res = rt.block_on(async { triple.ensure_input_matches_error().await });
 
         debug!("Result: {:?}", res);
-        assert!(res.is_ok(), "Should succeed for matching IDs in input vs error");
+        assert!(
+            res.is_ok(),
+            "Should succeed for matching IDs in input vs error"
+        );
 
         info!("Finished test: ensure_input_matches_error_succeeds_with_identical_ids");
     }

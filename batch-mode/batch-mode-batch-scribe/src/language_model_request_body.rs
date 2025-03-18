@@ -2,7 +2,8 @@
 crate::ix!();
 
 /// Body details of the API request.
-#[derive(Clone,Debug, Serialize, Deserialize)]
+#[derive(Getters,Setters,Clone,Debug, Serialize, Deserialize)]
+#[getset(get="pub")]
 pub struct LanguageModelRequestBody {
 
     /// Model used for the request.
@@ -122,13 +123,13 @@ mod language_model_request_body_exhaustive_tests {
             _ => panic!("Expected LanguageModelType::Gpt4o"),
         }
         assert_eq!(body.messages.len(), 2, "Should have 2 messages total");
-        match &body.messages[0].content {
+        match &body.messages[0].content() {
             ChatCompletionRequestUserMessageContent::Text(text) => {
                 assert_eq!(text, system_message, "System message mismatch");
             },
             _ => panic!("Expected text content for system message"),
         }
-        match &body.messages[1].content {
+        match &body.messages[1].content() {
             ChatCompletionRequestUserMessageContent::Text(text) => {
                 assert_eq!(text, user_message, "User message mismatch");
             },
@@ -136,7 +137,7 @@ mod language_model_request_body_exhaustive_tests {
         }
 
         assert_eq!(
-            body.max_completion_tokens,
+            *body.max_completion_tokens(),
             LanguageModelRequestBody::default_max_tokens(),
             "max_completion_tokens should match default"
         );
@@ -159,14 +160,14 @@ mod language_model_request_body_exhaustive_tests {
             _ => panic!("Expected LanguageModelType::Gpt4o"),
         }
         assert_eq!(body.messages.len(), 2, "Should have 2 messages total");
-        match &body.messages[0].content {
+        match &body.messages[0].content() {
             ChatCompletionRequestUserMessageContent::Text(text) => {
                 assert_eq!(text, system_message, "System message mismatch");
             },
             _ => panic!("Expected text content for system message"),
         }
 
-        match &body.messages[1].content {
+        match &body.messages[1].content() {
             ChatCompletionRequestUserMessageContent::Array(parts) => {
                 assert_eq!(parts.len(), 2, "Expected text + image parts");
             },

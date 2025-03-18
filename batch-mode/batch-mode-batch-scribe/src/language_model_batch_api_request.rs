@@ -18,7 +18,8 @@
 crate::ix!();
 
 /// Represents the complete request structure.
-#[derive(Clone,Debug, Serialize, Deserialize)]
+#[derive(Getters,Setters,Clone,Debug, Serialize, Deserialize)]
+#[getset(get="pub")]
 pub struct LanguageModelBatchAPIRequest {
 
     /// Identifier for the custom request.
@@ -45,10 +46,6 @@ impl LanguageModelBatchAPIRequest {
             url:       LanguageModelApiUrl::ChatCompletions,
             body:      LanguageModelRequestBody::mock(),
         }
-    }
-
-    pub fn custom_id(&self) -> &CustomRequestId {
-        &self.custom_id
     }
 }
 
@@ -198,11 +195,6 @@ pub fn make_valid_lmb_api_request_json_mock(custom_id: &str) -> String {
 #[cfg(test)]
 mod language_model_batch_api_request_exhaustive_tests {
     use super::*;
-    use tracing::{trace, debug, info, warn, error};
-    use tracing_test::traced_test;
-    use serde_json;
-    use std::fs;
-    use std::path::PathBuf;
 
     #[traced_test]
     fn mock_produces_expected_fields() {
@@ -220,13 +212,13 @@ mod language_model_batch_api_request_exhaustive_tests {
             LanguageModelApiUrl::ChatCompletions => trace!("URL is ChatCompletions as expected"),
         }
         let body = &request.body;
-        match body.model {
+        match body.model() {
             LanguageModelType::Gpt4o => trace!("Body model is Gpt4o as expected"),
             _ => panic!("Expected LanguageModelType::Gpt4o"),
         }
-        assert!(body.messages.is_empty(), "Mock body should start with no messages");
+        assert!(body.messages().is_empty(), "Mock body should start with no messages");
         assert_eq!(
-            body.max_completion_tokens, 128,
+            *body.max_completion_tokens(), 128,
             "Mock body should have max_completion_tokens=128"
         );
 
@@ -266,7 +258,7 @@ mod language_model_batch_api_request_exhaustive_tests {
             LanguageModelApiUrl::ChatCompletions => trace!("URL is ChatCompletions as expected"),
         }
         assert_eq!(
-            request.body.messages.len(),
+            request.body.messages().len(),
             2,
             "Should have system + user messages"
         );
@@ -294,7 +286,7 @@ mod language_model_batch_api_request_exhaustive_tests {
             LanguageModelApiUrl::ChatCompletions => trace!("URL is ChatCompletions as expected"),
         }
         assert_eq!(
-            request.body.messages.len(),
+            request.body.messages().len(),
             2,
             "Should have system + user-with-image messages"
         );
@@ -383,7 +375,7 @@ mod language_model_batch_api_request_exhaustive_tests {
         let result = create_batch_input_file(&requests, &output_file);
         assert!(result.is_ok(), "create_batch_input_file should succeed");
 
-        let contents = fs::read_to_string(&output_file)
+        let contents = std::fs::read_to_string(&output_file)
             .expect("Failed to read the output file");
         debug!("File contents:\n{}", contents);
         let lines: Vec<&str> = contents.trim().split('\n').collect();
@@ -407,7 +399,7 @@ mod language_model_batch_api_request_exhaustive_tests {
         }
 
         // Clean up
-        if let Err(err) = fs::remove_file(&output_file) {
+        if let Err(err) = std::fs::remove_file(&output_file) {
             warn!("Failed to remove temp file: {:?}", err);
         }
 

@@ -2,7 +2,8 @@
 crate::ix!();
 
 /// Individual message details in the request body.
-#[derive(Clone,Debug, Serialize, Deserialize)]
+#[derive(Getters,Setters,Clone,Debug, Serialize, Deserialize)]
+#[getset(get="pub")]
 pub struct LanguageModelMessage {
     /// Role of the participant (system/user).
     #[serde(with = "message_role")]
@@ -139,12 +140,12 @@ mod language_model_message_exhaustive_tests {
                 assert_eq!(parts.len(), 2, "Expected two parts: text + image");
                 match (&parts[0], &parts[1]) {
                     (
-                        ChatCompletionRequestMessageContentPart::Text(t),
-                        ChatCompletionRequestMessageContentPart::ImageUrl(img),
+                        ChatCompletionRequestUserMessageContentPart::Text(ChatCompletionRequestMessageContentPartText{ text: t }),
+                        ChatCompletionRequestUserMessageContentPart::ImageUrl(ChatCompletionRequestMessageContentPartImage { image_url: img }),
                     ) => {
-                        debug!("Text part: {}, Image URL: {}", t, img.image_url.url);
+                        debug!("Text part: {}, Image URL: {}", t, img.url);
                         assert_eq!(t, msg_text, "Text part should match original message");
-                        assert_eq!(&img.image_url.url, image_b64, "Image URL should match input");
+                        assert_eq!(&img.url, image_b64, "Image URL should match input");
                     },
                     _ => {
                         error!("Array content did not have the expected (Text, ImageUrl) structure");

@@ -31,8 +31,6 @@ pub fn construct_batches(
 #[cfg(test)]
 mod construct_batches_exhaustive_tests {
     use super::*;
-    use traced_test::*;
-    use tracing::*;
 
     // A simple helper to build test requests.
     // (Replace with actual construction logic as needed.)

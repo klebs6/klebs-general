@@ -2,7 +2,6 @@
 crate::ix!();
 
 error_tree!{
-
     pub enum BatchInputCreationError {
         IOError(std::io::Error),
         SerdeJsonError(serde_json::Error),

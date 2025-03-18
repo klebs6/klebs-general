@@ -17,42 +17,46 @@ pub fn extract_token_name_field(json: &serde_json::Value) -> Result<&str, TokenP
 
 
 #[cfg(test)]
-mod tests {
+mod test_extract_token_name_field {
     use super::*;
-    use serde_json::json;
 
-    #[test]
+    #[traced_test]
     fn test_extract_token_name_valid() {
-        let json = json!({ "token_name": "example_token" });
-        let result = extract_token_name_field(&json);
+        tracing::info!("Testing extract_token_name_field with valid data");
+        let json_data = json!({ "token_name": "example_token" });
+        let result = extract_token_name_field(&json_data);
         assert_eq!(result, Ok("example_token"));
     }
 
-    #[test]
+    #[traced_test]
     fn test_extract_token_name_missing_field() {
-        let json = json!({ "other_field": "value" });
-        let result = extract_token_name_field(&json);
+        tracing::info!("Testing extract_token_name_field with missing field");
+        let json_data = json!({ "other_field": "value" });
+        let result = extract_token_name_field(&json_data);
         assert!(matches!(result, Err(TokenParseError::InvalidTokenName)));
     }
 
-    #[test]
+    #[traced_test]
     fn test_extract_token_name_field_not_string() {
-        let json = json!({ "token_name": 123 });
-        let result = extract_token_name_field(&json);
+        tracing::info!("Testing extract_token_name_field with non-string field");
+        let json_data = json!({ "token_name": 123 });
+        let result = extract_token_name_field(&json_data);
         assert!(matches!(result, Err(TokenParseError::InvalidTokenName)));
     }
 
-    #[test]
+    #[traced_test]
     fn test_extract_token_name_empty_json() {
-        let json = json!({});
-        let result = extract_token_name_field(&json);
+        tracing::info!("Testing extract_token_name_field with empty JSON object");
+        let json_data = json!({});
+        let result = extract_token_name_field(&json_data);
         assert!(matches!(result, Err(TokenParseError::InvalidTokenName)));
     }
 
-    #[test]
+    #[traced_test]
     fn test_extract_token_name_null_field() {
-        let json = json!({ "token_name": null });
-        let result = extract_token_name_field(&json);
+        tracing::info!("Testing extract_token_name_field with null token_name field");
+        let json_data = json!({ "token_name": null });
+        let result = extract_token_name_field(&json_data);
         assert!(matches!(result, Err(TokenParseError::InvalidTokenName)));
     }
 }

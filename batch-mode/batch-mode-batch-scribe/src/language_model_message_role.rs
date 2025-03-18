@@ -2,38 +2,90 @@
 crate::ix!();
 
 /// Enumeration of roles in a message.
-#[derive(Clone,Debug, Serialize, Deserialize)]
+#[derive(Clone,Debug)]
 pub enum LanguageModelMessageRole {
     System,
     User,
 }
 
-pub(crate) mod message_role {
-
-    use super::*;
-
-    /// Serialize the `LanguageModelMessageRole` enum into a string.
-    pub fn serialize<S>(value: &LanguageModelMessageRole, serializer: S) -> Result<S::Ok, S::Error>
+impl Serialize for LanguageModelMessageRole {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
     {
-        let role_str = match value {
-            LanguageModelMessageRole::System => "system",
-            LanguageModelMessageRole::User => "user",
-        };
-        serializer.serialize_str(role_str)
+        trace!("Serializing LanguageModelMessageRole: {:?}", self);
+        match self {
+            LanguageModelMessageRole::System => {
+                trace!("Serializing as 'system'");
+                serializer.serialize_str("system")
+            }
+            LanguageModelMessageRole::User => {
+                trace!("Serializing as 'user'");
+                serializer.serialize_str("user")
+            }
+        }
     }
+}
 
-    /// Deserialize a string into a `LanguageModelMessageRole` enum.
-    pub fn deserialize<'de, D>(deserializer: D) -> Result<LanguageModelMessageRole, D::Error>
+impl<'de> Deserialize<'de> for LanguageModelMessageRole {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
         D: Deserializer<'de>,
     {
-        let s: String = Deserialize::deserialize(deserializer)?;
-        match s.as_ref() {
+        let s: String = String::deserialize(deserializer)?;
+        trace!("Deserializing LanguageModelMessageRole from string: {:?}", s);
+        match s.as_str() {
             "system" => Ok(LanguageModelMessageRole::System),
             "user" => Ok(LanguageModelMessageRole::User),
-            _ => Err(DeError::custom("unknown message role")),
+            other => {
+                error!("Unknown role: {}", other);
+                Err(DeError::custom("unknown message role"))
+            }
+        }
+    }
+}
+
+/// Field-level serializers/deserializers used for the `role` field in `LanguageModelMessage`.
+/// We keep these so that references like `#[serde(with = "message_role")]` remain valid.
+pub(crate) mod message_role {
+    use super::*;
+    use crate::imports::*;
+
+    pub fn serialize<S>(
+        value: &LanguageModelMessageRole,
+        serializer: S,
+    ) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        trace!("(message_role) Serializing LanguageModelMessageRole: {:?}", value);
+        match value {
+            LanguageModelMessageRole::System => {
+                trace!("(message_role) Serializing as 'system'");
+                serializer.serialize_str("system")
+            }
+            LanguageModelMessageRole::User => {
+                trace!("(message_role) Serializing as 'user'");
+                serializer.serialize_str("user")
+            }
+        }
+    }
+
+    pub fn deserialize<'de, D>(
+        deserializer: D,
+    ) -> Result<LanguageModelMessageRole, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let s: String = String::deserialize(deserializer)?;
+        trace!("(message_role) Deserializing LanguageModelMessageRole from string: {:?}", s);
+        match s.as_str() {
+            "system" => Ok(LanguageModelMessageRole::System),
+            "user" => Ok(LanguageModelMessageRole::User),
+            other => {
+                error!("(message_role) Unknown role: {}", other);
+                Err(D::Error::custom("unknown message role"))
+            }
         }
     }
 }
@@ -41,6 +93,7 @@ pub(crate) mod message_role {
 #[cfg(test)]
 mod language_model_message_role_exhaustive_tests {
     use super::*;
+    use crate::imports::*;
 
     #[traced_test]
     fn serialize_system_role_to_json() {

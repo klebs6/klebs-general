@@ -21,6 +21,7 @@ path = "../save-load-traits"
 version = "0.2.0"
 
 [dependencies]
+derive_builder = "*"
 traced-test = "1.0.2"
 tracing = "0.1.41"
 tracing-setup = "1.0.2"

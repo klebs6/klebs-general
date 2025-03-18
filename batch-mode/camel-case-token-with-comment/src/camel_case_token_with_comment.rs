@@ -3,7 +3,9 @@ crate::ix!();
 
 pub type TokenQuad = [CamelCaseTokenWithComment; 4];
 
-#[derive(Serialize,Deserialize,Hash,Debug,Clone,PartialEq,Eq)]
+#[derive(Builder,Getters,Setters,Serialize,Deserialize,Hash,Debug,Clone,PartialEq,Eq)]
+#[getset(get = "pub")]
+#[builder(setter(into, strip_option))]
 pub struct CamelCaseTokenWithComment {
     data:    String,
     comment: Option<String>,
@@ -59,29 +61,94 @@ impl std::str::FromStr for CamelCaseTokenWithComment {
     }
 }
 
-pub async fn parse_token_file(filename: &str) 
-    -> Result<Vec<CamelCaseTokenWithComment>, TokenParseError> 
-{
-    info!("parsing token file {}", filename);
+#[cfg(test)]
+mod test_camel_case_token_with_comment {
+    use super::*;
 
-    let file = File::open(filename).await?;
-    let reader = BufReader::new(file);
-    let mut lines = reader.lines();
-
-    let mut tokens = Vec::new();
-
-    while let Some(line) = lines.next_line().await? {
-        let line = line.trim();
-        if line.is_empty() {
-            continue;
-        }
-        match line.parse::<CamelCaseTokenWithComment>() {
-            Ok(token) => tokens.push(token),
-            Err(e) => {
-                warn!("{:?}", e);
-            }
-        }
+    #[traced_test]
+    fn test_from_str_valid() {
+        info!("Testing CamelCaseTokenWithComment::from_str with valid input");
+        let input = "TokenData -- Some comment";
+        let token = CamelCaseTokenWithComment::from_str(input).unwrap();
+        assert_eq!(token.data(), "TokenData");
+        assert_eq!(*token.comment(), Some("Some comment".to_string()));
     }
 
-    Ok(tokens)
+    #[traced_test]
+    fn test_from_str_no_comment() {
+        info!("Testing CamelCaseTokenWithComment::from_str with no comment");
+        let input = "TokenData";
+        let token = CamelCaseTokenWithComment::from_str(input).unwrap();
+        assert_eq!(token.data(), "TokenData");
+        assert_eq!(*token.comment(), None);
+    }
+
+    #[traced_test]
+    fn test_from_str_empty_data() {
+        info!("Testing CamelCaseTokenWithComment::from_str with empty data");
+        let input = " -- CommentOnly";
+        let err = CamelCaseTokenWithComment::from_str(input).unwrap_err();
+        assert!(matches!(err, TokenParseError::InvalidTokenLine(_)));
+    }
+
+    #[traced_test]
+    fn test_from_str_empty_input() {
+        info!("Testing CamelCaseTokenWithComment::from_str with empty input");
+        let input = "";
+        let err = CamelCaseTokenWithComment::from_str(input).unwrap_err();
+        assert!(matches!(err, TokenParseError::InvalidTokenLine(_)));
+    }
+
+    #[traced_test]
+    fn test_into_string_with_comment() {
+        info!("Testing Into<String> for CamelCaseTokenWithComment with comment");
+        let token = CamelCaseTokenWithComment::from_str("Data -- Comment").unwrap();
+        let as_string: String = token.into();
+        assert_eq!(as_string, "Data -- Comment");
+    }
+
+    #[traced_test]
+    fn test_into_string_without_comment() {
+        info!("Testing Into<String> for CamelCaseTokenWithComment without comment");
+        let token = CamelCaseTokenWithComment::from_str("Data").unwrap();
+        let as_string: String = token.into();
+        assert_eq!(as_string, "Data");
+    }
+
+    #[traced_test]
+    fn test_display_with_comment() {
+        info!("Testing Display for CamelCaseTokenWithComment with comment");
+        let token = CamelCaseTokenWithComment::from_str("Data -- Comment").unwrap();
+        assert_eq!(format!("{}", token), "Data -- Comment");
+    }
+
+    #[traced_test]
+    fn test_display_without_comment() {
+        info!("Testing Display for CamelCaseTokenWithComment without comment");
+        let token = CamelCaseTokenWithComment::from_str("Data").unwrap();
+        assert_eq!(format!("{}", token), "Data");
+    }
+
+    #[traced_test]
+    fn test_name_method() {
+        info!("Testing name() from Named trait on CamelCaseTokenWithComment");
+        let token = CamelCaseTokenWithComment::from_str("Data -- Comment").unwrap();
+        assert_eq!(token.name(), "Data");
+    }
+
+    #[traced_test]
+    fn test_token_quad_usage() {
+        info!("Testing TokenQuad type alias (array of 4 CamelCaseTokenWithComment)");
+        let t1 = CamelCaseTokenWithComment::from_str("Data1 -- Comment1").unwrap();
+        let t2 = CamelCaseTokenWithComment::from_str("Data2 -- Comment2").unwrap();
+        let t3 = CamelCaseTokenWithComment::from_str("Data3").unwrap();
+        let t4 = CamelCaseTokenWithComment::from_str("Data4 -- 4").unwrap();
+
+        let quad: TokenQuad = [t1, t2, t3, t4];
+        assert_eq!(quad.len(), 4);
+        assert_eq!(quad[0].data(), "Data1");
+        assert_eq!(quad[1].data(), "Data2");
+        assert_eq!(quad[2].data(), "Data3");
+        assert_eq!(quad[3].data(), "Data4");
+    }
 }

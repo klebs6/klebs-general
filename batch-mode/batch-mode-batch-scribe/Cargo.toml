@@ -1,11 +1,11 @@
 [dependencies]
-tokio         = { version = "1", features = ["full"] }
-async-openai  = "0.28.0"
-error-tree    = "*"
-export-magic  = "*"
-traced-test   = "*"
-tracing       = "*"
+async-openai = "0.28.0"
+error-tree = "*"
+export-magic = "*"
+traced-test = "*"
+tracing = "*"
 tracing-setup = "*"
+getset = "*"
 [dependencies.language-model-type]
 path = "../language-model-type"
 [dependencies.serde]
@@ -13,6 +13,9 @@ features = [ "rc", "derive" ]
 version = "1.0"
 [dependencies.serde_json]
 version = "1.0"
+[dependencies.tokio]
+features = [ "full" ]
+version = "1"
 [dependencies.tracing-subscriber]
 default-features = false
 features = [ "fmt", "std", "env-filter" ]

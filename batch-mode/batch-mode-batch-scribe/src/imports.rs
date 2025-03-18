@@ -17,6 +17,7 @@ pub(crate) use std::fmt::{self,Display};
 pub(crate) use std::path::Path;
 pub(crate) use std::sync::Arc;
 pub(crate) use tracing_setup::*;
+pub(crate) use tracing::*;
 pub(crate) use async_openai::{
     error::OpenAIError,
     types::{
@@ -34,4 +35,5 @@ pub(crate) use async_openai::{
 };
 pub(crate) use std::slice::Chunks;
 pub(crate) use std::iter::Enumerate;
-pub(crate) use tracing::info;
+pub(crate) use getset::*;
+#[cfg(test)] pub(crate) use traced_test::*;

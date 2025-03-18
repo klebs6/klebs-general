@@ -20,9 +20,6 @@ impl fmt::Display for LanguageModelApiUrl {
 #[cfg(test)]
 mod language_model_api_url_exhaustive_tests {
     use super::*;
-    use tracing::{trace, debug, info, warn, error};
-    use tracing_test::traced_test;
-    use serde_json;
 
     #[traced_test]
     fn display_renders_chat_completions() {
