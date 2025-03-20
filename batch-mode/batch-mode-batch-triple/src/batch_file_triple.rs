@@ -2,14 +2,24 @@
 crate::ix!();
 
 /// Represents the batch files associated with a specific index.
-#[derive(Getters,Clone)]
+#[derive(Builder,Getters,Clone)]
 #[getset(get="pub")]
+#[builder(setter(into,strip_option))]
 pub struct BatchFileTriple {
     index:               BatchIndex,
+
+    #[builder(default)]
     input:               Option<PathBuf>,
+
+    #[builder(default)]
     output:              Option<PathBuf>,
+
+    #[builder(default)]
     error:               Option<PathBuf>,
+
+    #[builder(default)]
     associated_metadata: Option<PathBuf>,
+
     workspace:           Arc<dyn BatchWorkspaceInterface>,
 }
 
@@ -61,6 +71,27 @@ impl Ord for BatchFileTriple {
 }
 
 impl BatchFileTriple {
+    /// A convenience constructor for tests that supply a custom workspace. 
+    /// Everything else is None, and we assign a dummy index.
+    pub fn new_for_test_with_workspace(workspace: Arc<dyn BatchWorkspaceInterface>) -> Self {
+        trace!("Constructing a test triple with a custom workspace only");
+        let index = BatchIndex::Usize(9999);
+        Self::new_direct(&index, None, None, None, None, workspace)
+    }
+
+    /// Some tests referred to “new_for_test_empty()”. We define it here 
+    /// as a convenience constructor that sets everything to None, 
+    /// with a dummy index and a MockWorkspace.
+    pub fn new_for_test_empty() -> Self {
+        let index = BatchIndex::Usize(9999);
+        let workspace = Arc::new(MockWorkspace::default());
+        Self::new_direct(&index, None, None, None, None, workspace)
+    }
+
+    /// Some tests set the index after constructing. We add a trivial setter:
+    pub fn set_index(&mut self, new_index: BatchIndex) {
+        self.index = new_index;
+    }
 
     pub fn effective_input_filename(&self) -> PathBuf {
         if let Some(path) = self.input() {
@@ -108,6 +139,11 @@ impl BatchFileTriple {
     pub fn set_output_path(&mut self, path: Option<PathBuf>) {
         trace!("Setting 'output' path to {:?}", path);
         self.output = path;
+    }
+
+    pub fn set_input_path(&mut self, path: Option<PathBuf>) {
+        trace!("Setting 'input' path to {:?}", path);
+        self.input = path;
     }
 
     pub fn set_metadata_path(&mut self, path: Option<PathBuf>) {

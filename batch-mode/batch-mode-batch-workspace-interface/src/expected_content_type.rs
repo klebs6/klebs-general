@@ -7,4 +7,6 @@ pub enum ExpectedContentType {
     Json,
     /// We’re expecting just raw text—no JSON parsing at all.
     PlainText,
+    /// (ADDED) Some tests refer to “JsonLines”. We add it here so they compile.
+    JsonLines,
 }

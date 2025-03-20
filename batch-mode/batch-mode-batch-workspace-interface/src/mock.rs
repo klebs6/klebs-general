@@ -124,6 +124,7 @@ impl GetTargetPath for MockWorkspace {
         let subdir = match expected_content_type {
             ExpectedContentType::Json      => "json_output",
             ExpectedContentType::PlainText => "text_output",
+            ExpectedContentType::JsonLines => "json_lines_output",
         };
         let dir = self.workdir().join(subdir);
         item.target_path_for_ai_json_expansion(dir.as_path(), expected_content_type)

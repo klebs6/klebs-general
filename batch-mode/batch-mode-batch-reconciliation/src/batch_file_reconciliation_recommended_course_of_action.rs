@@ -88,16 +88,17 @@ mod batch_file_reconciliation_recommended_course_of_action_tests {
     use super::*;
 
     #[traced_test]
-    fn test_try_from_triple_all_none() {
+    async fn test_try_from_triple_all_none() {
+
         let mock_index = BatchIndex::from(123u64);
-        let triple = BatchFileTriple {
-            index: mock_index.clone(),
-            input: None,
-            output: None,
-            error: None,
-            associated_metadata: None,
-            associated_workspace: None,
-        };
+
+        let workspace  = BatchWorkspace::new_temp().await.expect("expected to get our workspace") as Arc<dyn BatchWorkspaceInterface>;
+
+        let triple = BatchFileTripleBuilder::default()
+            .index(mock_index.clone())
+            .workspace(workspace)
+            .build()
+            .unwrap();
 
         let result = BatchFileReconciliationRecommendedCourseOfAction::try_from(&triple);
         assert!(result.is_err(), "Expected error if all files are None");
@@ -115,21 +116,22 @@ mod batch_file_reconciliation_recommended_course_of_action_tests {
     }
 
     #[traced_test]
-    fn test_try_from_triple_missing_input_but_has_output() {
-        let triple = BatchFileTriple {
-            index: BatchIndex::from(9999u64),
-            input: None,
-            output: Some("some_output.json".into()),
-            error: None,
-            associated_metadata: None,
-            associated_workspace: None,
-        };
+    async fn test_try_from_triple_missing_input_but_has_output() {
+
+        let workspace  = BatchWorkspace::new_temp().await.expect("expected to get our workspace") as Arc<dyn BatchWorkspaceInterface>;
+
+        let triple = BatchFileTripleBuilder::default()
+            .index(BatchIndex::from(9999u64))
+            .output::<PathBuf>("some_output.json".into())
+            .workspace(workspace)
+            .build()
+            .unwrap();
 
         let result = BatchFileReconciliationRecommendedCourseOfAction::try_from(&triple);
         assert!(result.is_err(), "Should fail if input is missing but output exists");
         match result {
             Err(BatchReconciliationError::MissingBatchInputFileButOthersExist { index, output, error }) => {
-                pretty_assert_eq!(index.as_u64(), 9999u64);
+                pretty_assert_eq!(index.as_u64(), Some(9999u64));
                 pretty_assert_eq!(output, Some("some_output.json".into()));
                 pretty_assert_eq!(error, None);
             }
@@ -138,15 +140,16 @@ mod batch_file_reconciliation_recommended_course_of_action_tests {
     }
 
     #[traced_test]
-    fn test_try_from_triple_input_only() {
-        let triple = BatchFileTriple {
-            index: BatchIndex::from(1000u64),
-            input: Some("input.json".into()),
-            output: None,
-            error: None,
-            associated_metadata: None,
-            associated_workspace: None,
-        };
+    async fn test_try_from_triple_input_only() {
+
+        let workspace  = BatchWorkspace::new_temp().await.expect("expected to get our workspace") as Arc<dyn BatchWorkspaceInterface>;
+
+        let triple = BatchFileTripleBuilder::default()
+            .index(BatchIndex::from(1000u64))
+            .input::<PathBuf>("input.json".into())
+            .workspace(workspace)
+            .build()
+            .unwrap();
 
         let result = BatchFileReconciliationRecommendedCourseOfAction::try_from(&triple);
         assert!(result.is_ok(), "Input-only scenario should be Ok");
@@ -162,15 +165,18 @@ mod batch_file_reconciliation_recommended_course_of_action_tests {
     }
 
     #[traced_test]
-    fn test_try_from_triple_input_output() {
-        let triple = BatchFileTriple {
-            index: BatchIndex::from(1u64),
-            input: Some("input.json".into()),
-            output: Some("output.json".into()),
-            error: None,
-            associated_metadata: None,
-            associated_workspace: None,
-        };
+    async fn test_try_from_triple_input_output() {
+
+        let workspace  = BatchWorkspace::new_temp().await.expect("expected to get our workspace") as Arc<dyn BatchWorkspaceInterface>;
+
+        let triple = BatchFileTripleBuilder::default()
+            .index(BatchIndex::from(1u64))
+            .input::<PathBuf>("input.json".into())
+            .output::<PathBuf>("output.json".into())
+            .workspace(workspace)
+            .build()
+            .unwrap();
+
 
         let result = BatchFileReconciliationRecommendedCourseOfAction::try_from(&triple);
         assert!(result.is_ok(), "Input+Output scenario should be Ok");
@@ -187,15 +193,17 @@ mod batch_file_reconciliation_recommended_course_of_action_tests {
     }
 
     #[traced_test]
-    fn test_try_from_triple_input_error() {
-        let triple = BatchFileTriple {
-            index: BatchIndex::from(2u64),
-            input: Some("input.json".into()),
-            output: None,
-            error: Some("error.json".into()),
-            associated_metadata: None,
-            associated_workspace: None,
-        };
+    async fn test_try_from_triple_input_error() {
+
+        let workspace  = BatchWorkspace::new_temp().await.expect("expected to get our workspace") as Arc<dyn BatchWorkspaceInterface>;
+
+        let triple = BatchFileTripleBuilder::default()
+            .index(BatchIndex::from(2u64))
+            .input::<PathBuf>("input.json".into())
+            .error::<PathBuf>("error.json".into())
+            .workspace(workspace)
+            .build()
+            .unwrap();
 
         let result = BatchFileReconciliationRecommendedCourseOfAction::try_from(&triple);
         assert!(result.is_ok(), "Input+Error scenario should be Ok");
@@ -212,15 +220,18 @@ mod batch_file_reconciliation_recommended_course_of_action_tests {
     }
 
     #[traced_test]
-    fn test_try_from_triple_input_output_error() {
-        let triple = BatchFileTriple {
-            index: BatchIndex::from(3u64),
-            input: Some("input.json".into()),
-            output: Some("output.json".into()),
-            error: Some("error.json".into()),
-            associated_metadata: None,
-            associated_workspace: None,
-        };
+    async fn test_try_from_triple_input_output_error() {
+
+        let workspace  = BatchWorkspace::new_temp().await.expect("expected to get our workspace") as Arc<dyn BatchWorkspaceInterface>;
+
+        let triple = BatchFileTripleBuilder::default()
+            .index(BatchIndex::from(3u64))
+            .input::<PathBuf>("input.json".into())
+            .output::<PathBuf>("output.json".into())
+            .error::<PathBuf>("error.json".into())
+            .workspace(workspace)
+            .build()
+            .unwrap();
 
         let result = BatchFileReconciliationRecommendedCourseOfAction::try_from(&triple);
         assert!(result.is_ok(), "Input+Output+Error scenario should be Ok");

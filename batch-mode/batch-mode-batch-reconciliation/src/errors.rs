@@ -54,3 +54,30 @@ error_tree!{
         IoError(std::io::Error),
     }
 }
+
+impl From<BatchReconciliationError> for MockBatchClientError {
+    fn from(e: BatchReconciliationError) -> Self {
+        MockBatchClientError::BatchReconciliationError { index: e.index().expect("todo: checkme") }
+    }
+}
+
+impl From<BatchOutputProcessingError> for MockBatchClientError {
+    fn from(e: BatchOutputProcessingError) -> Self {
+        MockBatchClientError::BatchOutputProcessingError
+    }
+}
+
+impl BatchReconciliationError {
+    pub fn index(&self) -> Option<BatchIndex> {
+        match self {
+            BatchReconciliationError::ReconciliationFailed { index } => {
+                Some(index.clone())
+            }
+
+            BatchReconciliationError::MissingBatchInputFileButOthersExist { index, output, error } => {
+                Some(index.clone())
+            }
+            _ => None
+        }
+    }
+}

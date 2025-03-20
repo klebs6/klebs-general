@@ -13,6 +13,13 @@ error_tree!{
 
         /// Required so that `E: From<JsonParseError>` is satisfied.
         JsonParseError(JsonParseError),
+        BatchValidationError(BatchValidationError),
+        BatchReconciliationError {
+            index: BatchIndex,
+        },
+        BatchErrorProcessingError(BatchErrorProcessingError),
+        BatchOutputProcessingError,
+        FileMoveError(FileMoveError),
     }
 }
 

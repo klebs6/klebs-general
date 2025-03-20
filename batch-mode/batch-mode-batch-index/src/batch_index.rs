@@ -19,6 +19,22 @@ impl BatchIndex {
     }
 }
 
+impl From<u64> for BatchIndex {
+    fn from(value: u64) -> Self {
+        BatchIndex::Usize(value as usize)
+    }
+}
+
+impl BatchIndex {
+    /// Returns `Some(u64)` if this index is a `Usize(u)`, else returns `None` if it’s a UUID.
+    pub fn as_u64(&self) -> Option<u64> {
+        match self {
+            BatchIndex::Usize(u) => Some(*u as u64),
+            BatchIndex::Uuid(_)  => None,
+        }
+    }
+}
+
 impl Display for BatchIndex {
     fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
         match self {

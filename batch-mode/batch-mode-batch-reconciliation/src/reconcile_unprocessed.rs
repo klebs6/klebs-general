@@ -34,97 +34,122 @@ pub type BatchWorkflowProcessErrorFileFn = for<'a> fn(
 #[cfg(test)]
 mod reconcile_unprocessed_tests {
     use super::*;
+    use std::{
+        future::Future,
+        pin::Pin,
+        fs,
+    };
 
-    fn mock_process_output_fn<'a>(
-        triple: &'a BatchFileTriple,
-        workspace: &'a (dyn BatchWorkspaceInterface + 'a),
-        ect: &'a ExpectedContentType,
+    fn mock_process_output<'a>(
+        _triple: &'a BatchFileTriple,
+        _workspace: &'a (dyn BatchWorkspaceInterface + 'a),
+        _ect: &'a ExpectedContentType,
     ) -> Pin<Box<dyn Future<Output = Result<(), BatchOutputProcessingError>> + Send + 'a>> {
-        // no-op
         Box::pin(async move {
-            debug!("mock_process_output_fn called for triple={:?}, workspace=?, ect={:?}", triple.index(), ect);
+            debug!("mock_process_output called");
             Ok(())
         })
     }
 
-    fn mock_process_error_fn<'a>(
-        triple: &'a BatchFileTriple,
-        ops: &'a [BatchErrorFileProcessingOperation],
+    fn mock_process_error<'a>(
+        _triple: &'a BatchFileTriple,
+        _ops: &'a [BatchErrorFileProcessingOperation],
     ) -> Pin<Box<dyn Future<Output = Result<(), BatchErrorProcessingError>> + Send + 'a>> {
-        // no-op
         Box::pin(async move {
-            debug!("mock_process_error_fn called for triple={:?}, ops={:?}", triple.index(), ops);
+            debug!("mock_process_error called");
             Ok(())
         })
     }
+
+    const MOCK_PROCESS_OUTPUT: BatchWorkflowProcessOutputFileFn = mock_process_output;
+    const MOCK_PROCESS_ERROR:  BatchWorkflowProcessErrorFileFn  = mock_process_error;
 
     #[traced_test]
     fn test_reconcile_unprocessed_input_only() {
-        let mut triple = BatchFileTriple::new_for_test_empty();
-        triple.set_index(BatchIndex::from(42u64));
-        triple.set_input_path(Some("input_only.json".into()));
+        let rt = tokio::runtime::Runtime::new().unwrap();
+        rt.block_on(async {
+            let mut triple = BatchFileTriple::new_for_test_empty();
+            triple.set_index(BatchIndex::from(42u64));
+            triple.set_input_path(Some("input_only.json".into()));
 
-        let client_mock = Arc::new(MockLanguageModelClientBuilder::<MockBatchClientError>::default()
-            .build()
-            .unwrap(),
-        ) as Arc<dyn LanguageModelClientInterface<MockBatchClientError>>;
+            // Create input and also a metadata file for index=42
+            fs::write("input_only.json", b"fake input").unwrap();
+            fs::write(
+                "mock_metadata_42.json",
+                r#"{"batch_id":"some_mock_batch_id_for_42"}"#,
+            ).unwrap();
 
-        let ect = ExpectedContentType::JsonLines;
-        let result = block_on(triple.reconcile_unprocessed(
-            client_mock.as_ref(),
-            &ect,
-            &mock_process_output_fn,
-            &mock_process_error_fn,
-        ));
-        // If there's no error, it means the loop of actions completed or recognized new steps.
-        // For input-only, it tries to check for online files. If no error arises, success:
-        assert!(result.is_ok(), "Should not fail reconciling an input-only triple");
+            let client_mock = Arc::new(
+                MockLanguageModelClientBuilder::<MockBatchClientError>::default()
+                    .build()
+                    .unwrap(),
+            ) as Arc<dyn LanguageModelClientInterface<MockBatchClientError>>;
+
+            let ect = ExpectedContentType::JsonLines;
+
+            let result = triple.reconcile_unprocessed(
+                client_mock.as_ref(),
+                &ect,
+                &MOCK_PROCESS_OUTPUT,
+                &MOCK_PROCESS_ERROR,
+            ).await;
+
+            // The "CheckForBatchOutputAndErrorFileOnline" step will succeed
+            // if the mock client returns no error, so we expect Ok(()):
+            assert!(result.is_ok(), "Input-only triple with no online files should not fail");
+        });
     }
 
     #[traced_test]
     fn test_reconcile_unprocessed_input_error_but_mock_processing_fails_action() {
-        // We'll simulate a scenario where one action fails:
-        // We'll force an error in the "execute_reconciliation_operation" by customizing the triple 
-        // or using a mock client that fails. For brevity, let's forcibly set the triple's 
-        // move_input_and_error_to_done to fail. We can do so by referencing an invalid workspace.
+        let rt = tokio::runtime::Runtime::new().unwrap();
+        rt.block_on(async {
+            // We'll simulate a scenario where final "move_input_and_error_to_done" fails 
+            // due to an invalid workspace path => triggers an I/O error.
 
-        struct BadWorkspace;
-        impl BatchWorkspaceInterface for BadWorkspace {
-            fn workspace_dir(&self) -> &std::path::Path {
-                // This is a nonsense path to cause an error in some operation:
-                std::path::Path::new("/this/does/not/exist")
+            let workspace = Arc::new(BadWorkspace);
+            let mut triple = BatchFileTriple::new_for_test_with_workspace(workspace);
+
+            triple.set_input_path(Some("input.json".into()));
+            triple.set_error_path(Some("error.json".into()));
+
+            // We'll create these files so that the "rename" step is what fails,
+            // not the file being missing:
+            fs::write("input.json", b"fake input").unwrap();
+            fs::write("error.json", b"fake error").unwrap();
+
+            // Also create a metadata file so "check_for_and_download_output_and_error_online"
+            // won't fail if it tries that:
+            fs::write(
+                "mock_metadata_9999.json",
+                r#"{"batch_id":"some_mock_batch_id"}"#,
+            ).unwrap();
+
+            let client_mock = Arc::new(
+                MockLanguageModelClientBuilder::<MockBatchClientError>::default()
+                    .build()
+                    .unwrap(),
+            ) as Arc<dyn LanguageModelClientInterface<MockBatchClientError>>;
+
+            let ect = ExpectedContentType::JsonLines;
+
+            let result = triple.reconcile_unprocessed(
+                client_mock.as_ref(),
+                &ect,
+                &MOCK_PROCESS_OUTPUT,
+                &MOCK_PROCESS_ERROR,
+            ).await;
+
+            assert!(result.is_err(), "We expect an I/O failure with BadWorkspace");
+            match result.err().unwrap() {
+                // Because we have a `BatchReconciliationError::ReconciliationFailed`
+                // turned into `MockBatchClientError::BatchReconciliationError { index }` in our From impl
+                MockBatchClientError::BatchReconciliationError { index } => {
+                    // Compare references or just do partial eq:
+                    pretty_assert_eq!(index, *triple.index());
+                },
+                other => panic!("Unexpected error variant: {:?}", other),
             }
-        }
-
-        let workspace = Arc::new(BadWorkspace);
-        let mut triple = BatchFileTriple::new_for_test_with_workspace(workspace);
-        triple.set_input_path(Some("input.json".into()));
-        triple.set_error_path(Some("error.json".into()));
-
-        // The recommended steps for input+error => 
-        // [EnsureInputRequestIdsMatchErrorRequestIds, ProcessBatchErrorFile, MoveBatchInputAndErrorToTheDoneDirectory].
-        // The last step might fail if the directory is invalid. We'll see how the code handles it.
-
-        let client_mock = Arc::new(MockLanguageModelClientBuilder::<MockBatchClientError>::default()
-            .build()
-            .unwrap(),
-        ) as Arc<dyn LanguageModelClientInterface<MockBatchClientError>>;
-
-        let ect = ExpectedContentType::JsonLines;
-
-        let result = block_on(triple.reconcile_unprocessed(
-            client_mock.as_ref(),
-            &ect,
-            &mock_process_output_fn,
-            &mock_process_error_fn,
-        ));
-        assert!(result.is_err(), "We expect it to fail due to the invalid workspace path");
-        match result.err().unwrap() {
-            BatchReconciliationError::ReconciliationFailed { index } => {
-                pretty_assert_eq!(index.as_u64(), triple.index().as_u64());
-            },
-            other => panic!("Unexpected error variant: {:?}", other),
-        }
+        });
     }
 }
-

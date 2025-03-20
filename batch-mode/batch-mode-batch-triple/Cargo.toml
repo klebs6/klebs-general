@@ -1,3 +1,5 @@
+[dependencies]
+derive_builder = "*"
 [dependencies.batch-mode-3p]
 path = "../batch-mode-3p"
 version = "0.2.0"

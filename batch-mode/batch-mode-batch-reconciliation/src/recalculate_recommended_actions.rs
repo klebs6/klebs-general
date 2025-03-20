@@ -20,15 +20,16 @@ mod recalculate_recommended_actions_tests {
     use super::*;
 
     #[traced_test]
-    fn test_recalculate_recommended_actions() {
-        let triple = BatchFileTriple {
-            index: BatchIndex::from(999u64),
-            input: Some("input.json".into()),
-            output: None,
-            error: None,
-            associated_metadata: None,
-            associated_workspace: None,
-        };
+    async fn test_recalculate_recommended_actions() {
+
+        let workspace: Arc<dyn BatchWorkspaceInterface> = BatchWorkspace::new_temp().await.expect("expected workspace");
+
+        let triple = BatchFileTripleBuilder::default()
+            .index(BatchIndex::from(999u64))
+            .input::<PathBuf>("input.json".into())
+            .workspace(workspace)
+            .build()
+            .unwrap();
 
         let recommended = triple.recalculate_recommended_actions();
         assert!(recommended.is_ok());

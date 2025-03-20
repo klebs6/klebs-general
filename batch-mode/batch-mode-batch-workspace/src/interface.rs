@@ -62,6 +62,11 @@ impl GetTargetPath for BatchWorkspace {
                     path.set_extension("json");
                 }
             }
+            ExpectedContentType::JsonLines => {
+                if path.extension().map(|ext| ext != "jsonl").unwrap_or(true) {
+                    path.set_extension("jsonl");
+                }
+            }
             ExpectedContentType::PlainText => {
                 if path.extension().map(|ext| ext != "txt").unwrap_or(true) {
                     path.set_extension("txt");
