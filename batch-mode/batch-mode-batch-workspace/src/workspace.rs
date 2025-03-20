@@ -214,7 +214,7 @@ mod batch_workspace_exhaustive_tests {
         };
 
         debug!("Comparing ws1 and ws2:\n ws1: {:?}\n ws2: {:?}", ws1, ws2);
-        assert_eq!(ws1, ws2, "Workspaces should be considered equal ignoring temp_dir");
+        pretty_assert_eq!(ws1, ws2, "Workspaces should be considered equal ignoring temp_dir");
         info!("Finished test: ensures_equality_ignores_temp_dir");
     }
 
@@ -287,7 +287,7 @@ mod batch_workspace_exhaustive_tests {
         );
         let found_path = found.unwrap();
         debug!("Found similar path: {:?}", found_path);
-        assert_eq!(found_path, existing_filename);
+        pretty_assert_eq!(found_path, existing_filename);
         info!("Finished test: test_find_similar_target_path_finds_close_match");
     }
 
@@ -311,8 +311,8 @@ mod batch_workspace_exhaustive_tests {
         debug!("Resulting triple: {:?}", triple);
         assert!(triple.is_ok(), "We have an input file => triple is found");
         let triple = triple.unwrap();
-        assert_eq!(*triple.index(), index);
-        assert_eq!(*triple.input(), Some(input_path));
+        pretty_assert_eq!(*triple.index(), index);
+        pretty_assert_eq!(*triple.input(), Some(input_path));
         assert!(triple.output().is_none());
         assert!(triple.error().is_none());
 
@@ -460,7 +460,7 @@ mod batch_workspace_exhaustive_tests {
         let files = workspace.get_target_directory_files();
         debug!("Discovered files in target directory: {:?}", files);
 
-        assert_eq!(files.len(), 2, "We wrote exactly 2 files in the target dir");
+        pretty_assert_eq!(files.len(), 2, "We wrote exactly 2 files in the target dir");
         assert!(files.contains(&sample_file_1));
         assert!(files.contains(&sample_file_2));
 
@@ -517,7 +517,7 @@ mod batch_workspace_exhaustive_tests {
             }
         }
         debug!("Total successful new_temp creations: {}", success_count);
-        assert_eq!(success_count, num_concurrent, "All tasks should succeed");
+        pretty_assert_eq!(success_count, num_concurrent, "All tasks should succeed");
         info!("Finished test: test_concurrent_new_temp_workspaces");
     }
 
@@ -548,7 +548,7 @@ mod batch_workspace_exhaustive_tests {
         for (i, r) in results.into_iter().enumerate() {
             match r {
                 Ok(Ok(triple)) => {
-                    assert_eq!(*triple.index(), index, "Task #{} found the correct triple", i);
+                    pretty_assert_eq!(*triple.index(), index, "Task #{} found the correct triple", i);
                 },
                 other => panic!("Task #{} unexpected result: {:?}", i, other),
             }

@@ -106,7 +106,7 @@ mod test_gather_doc_comments {
     /// Helper to call `gather_doc_comments` and compare to an expected Vec.
     fn assert_gather_equals(attrs: Vec<Attribute>, expected: &[&str]) {
         let lines = gather_doc_comments(&attrs);
-        assert_eq!(lines, expected, "gather_doc_comments mismatch");
+        pretty_assert_eq!(lines, expected, "gather_doc_comments mismatch");
     }
 
     /// 1) Single name-value style: `#[doc = "some doc line"]`
@@ -166,7 +166,7 @@ mod test_gather_doc_comments {
         // => lines: ["value1", "value2", "value3"]
         let lines = gather_doc_comments(&attrs);
         // Depending on how you parse, you might get them in the order they're listed:
-        assert_eq!(lines, ["value1", "value2", "value3"]);
+        pretty_assert_eq!(lines, ["value1", "value2", "value3"]);
     }
 
     /// 6) Invalid doc attribute => no lines are extracted.

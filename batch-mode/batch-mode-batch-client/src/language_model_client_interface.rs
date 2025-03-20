@@ -94,7 +94,7 @@ pub trait WaitForBatchCompletion: Send + Sync {
    it object-safe.
 */
 #[async_trait]
-pub trait LanguageModelClientInterface<E>:
+pub trait LanguageModelClientInterface<E: Debug>:
     RetrieveBatchById<Error = E>
     + GetBatchFileContent<Error = E>
     + UploadBatchFileCore<Error = E>
@@ -102,6 +102,7 @@ pub trait LanguageModelClientInterface<E>:
     + WaitForBatchCompletion<Error = E>
     + Send
     + Sync
+    + Debug
 {
     // No generic methods here => object safe
 }

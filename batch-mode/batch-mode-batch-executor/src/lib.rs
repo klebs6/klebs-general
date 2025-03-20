@@ -4,4 +4,3 @@
 x!{batch_execution_result}
 x!{errors}
 x!{fresh_execute}
-x!{fresh_execute_batch_file_triple}

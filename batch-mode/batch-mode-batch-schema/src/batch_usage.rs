@@ -51,9 +51,9 @@ mod batch_usage_tests {
         });
 
         let usage: BatchUsage = serde_json::from_value(json_data).unwrap();
-        assert_eq!(usage.prompt_tokens(), 100);
-        assert_eq!(usage.completion_tokens(), 50);
-        assert_eq!(usage.total_tokens(), 150);
+        pretty_assert_eq!(usage.prompt_tokens(), 100);
+        pretty_assert_eq!(usage.completion_tokens(), 50);
+        pretty_assert_eq!(usage.total_tokens(), 150);
     }
 
     #[test]

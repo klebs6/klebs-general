@@ -59,12 +59,12 @@ mod batch_token_details_tests {
 
         let token_details: BatchTokenDetails = serde_json::from_value(json_data).unwrap();
 
-        assert_eq!(token_details.cached_tokens(), Some(10));
-        assert_eq!(token_details.audio_tokens(), Some(20));
-        assert_eq!(token_details.reasoning_tokens(), Some(30));
-        assert_eq!(token_details.accepted_prediction_tokens(), Some(40));
-        assert_eq!(token_details.rejected_prediction_tokens(), Some(50));
-        assert_eq!(token_details.total_tokens(), 150);
+        pretty_assert_eq!(token_details.cached_tokens(), Some(10));
+        pretty_assert_eq!(token_details.audio_tokens(), Some(20));
+        pretty_assert_eq!(token_details.reasoning_tokens(), Some(30));
+        pretty_assert_eq!(token_details.accepted_prediction_tokens(), Some(40));
+        pretty_assert_eq!(token_details.rejected_prediction_tokens(), Some(50));
+        pretty_assert_eq!(token_details.total_tokens(), 150);
     }
 
     #[test]
@@ -77,12 +77,12 @@ mod batch_token_details_tests {
 
         let token_details: BatchTokenDetails = serde_json::from_value(json_data).unwrap();
 
-        assert_eq!(token_details.cached_tokens(), None);
-        assert_eq!(token_details.audio_tokens(), Some(25));
-        assert_eq!(token_details.reasoning_tokens(), None);
-        assert_eq!(token_details.accepted_prediction_tokens(), Some(35));
-        assert_eq!(token_details.rejected_prediction_tokens(), None);
-        assert_eq!(token_details.total_tokens(), 60);
+        pretty_assert_eq!(token_details.cached_tokens(), None);
+        pretty_assert_eq!(token_details.audio_tokens(), Some(25));
+        pretty_assert_eq!(token_details.reasoning_tokens(), None);
+        pretty_assert_eq!(token_details.accepted_prediction_tokens(), Some(35));
+        pretty_assert_eq!(token_details.rejected_prediction_tokens(), None);
+        pretty_assert_eq!(token_details.total_tokens(), 60);
     }
 
     #[test]
@@ -96,6 +96,6 @@ mod batch_token_details_tests {
         assert!(token_details.reasoning_tokens().is_none());
         assert!(token_details.accepted_prediction_tokens().is_none());
         assert!(token_details.rejected_prediction_tokens().is_none());
-        assert_eq!(token_details.total_tokens(), 0);
+        pretty_assert_eq!(token_details.total_tokens(), 0);
     }
 }

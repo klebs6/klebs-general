@@ -63,49 +63,49 @@ mod extract_json_from_possible_backticks_block_tests {
     fn test_extract_json_with_markers() {
         let content = "```json\n{\"key\": \"value\"}\n```";
         let result = extract_json_from_possible_backticks_block(content);
-        assert_eq!(result, "{\"key\": \"value\"}");
+        pretty_assert_eq!(result, "{\"key\": \"value\"}");
     }
 
     #[traced_test]
     fn test_extract_json_with_whitespace_and_markers() {
         let content = "   \n```json\n{\"key\": \"value\"}\n```\n   ";
         let result = extract_json_from_possible_backticks_block(content);
-        assert_eq!(result, "{\"key\": \"value\"}");
+        pretty_assert_eq!(result, "{\"key\": \"value\"}");
     }
 
     #[traced_test]
     fn test_extract_json_no_markers() {
         let content = "   {\"key\": \"value\"}   ";
         let result = extract_json_from_possible_backticks_block(content);
-        assert_eq!(result, "{\"key\": \"value\"}");
+        pretty_assert_eq!(result, "{\"key\": \"value\"}");
     }
 
     #[traced_test]
     fn test_extract_json_incomplete_markers() {
         let content = "```json{\"key\": \"value\"}";
         let result = extract_json_from_possible_backticks_block(content);
-        assert_eq!(result, "{\"key\": \"value\"}");
+        pretty_assert_eq!(result, "{\"key\": \"value\"}");
     }
 
     #[traced_test]
     fn test_extract_json_trailing_newline() {
         let content = "```json\n{\"key\": \"value\"}\n\n```";
         let result = extract_json_from_possible_backticks_block(content);
-        assert_eq!(result, "{\"key\": \"value\"}");
+        pretty_assert_eq!(result, "{\"key\": \"value\"}");
     }
 
     #[traced_test]
     fn test_extract_json_empty_string() {
         let content = "   ";
         let result = extract_json_from_possible_backticks_block(content);
-        assert_eq!(result, "");
+        pretty_assert_eq!(result, "");
     }
 
     #[traced_test]
     fn test_extract_json_no_json_after_marker() {
         let content = "```json```";
         let result = extract_json_from_possible_backticks_block(content);
-        assert_eq!(result, "");
+        pretty_assert_eq!(result, "");
     }
 
     #[traced_test]
@@ -113,20 +113,20 @@ mod extract_json_from_possible_backticks_block_tests {
         // Simulate Windows-style line endings
         let content = "```json\r\n{\"key\": \"value\"}\r\n```";
         let result = extract_json_from_possible_backticks_block(content);
-        assert_eq!(result, "{\"key\": \"value\"}");
+        pretty_assert_eq!(result, "{\"key\": \"value\"}");
     }
 
     #[traced_test]
     fn test_extract_json_whitespace_after_marker() {
         let content = "```json     \n{\"key\": \"value\"}\n```";
         let result = extract_json_from_possible_backticks_block(content);
-        assert_eq!(result, "{\"key\": \"value\"}");
+        pretty_assert_eq!(result, "{\"key\": \"value\"}");
     }
 
     #[traced_test]
     fn test_extract_json_random_text_instead_of_json() {
         let content = "```json\nsome random text\n```";
         let result = extract_json_from_possible_backticks_block(content);
-        assert_eq!(result, "some random text");
+        pretty_assert_eq!(result, "some random text");
     }
 }

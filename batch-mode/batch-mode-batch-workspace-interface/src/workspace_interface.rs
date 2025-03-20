@@ -13,6 +13,7 @@ pub trait BatchWorkspaceInterface
 + GetWorkdir
 + Send
 + Sync
++ Debug
 + GetTargetPath<Item = Arc<dyn GetTargetPathForAIExpansion + Send + Sync + 'static>>
 {}
 

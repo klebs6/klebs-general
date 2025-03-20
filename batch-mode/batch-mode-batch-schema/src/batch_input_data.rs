@@ -35,7 +35,7 @@ mod batch_input_data_tests {
         ];
         let input_data = BatchInputData::new(requests.clone());
 
-        assert_eq!(input_data.requests().len(), 2, "Expected two requests in BatchInputData.");
+        pretty_assert_eq!(input_data.requests().len(), 2, "Expected two requests in BatchInputData.");
         debug!("Successfully created BatchInputData with {} requests.", input_data.requests().len());
     }
 
@@ -52,7 +52,7 @@ mod batch_input_data_tests {
         let ids = input_data.request_ids();
         trace!("Extracted request IDs: {:?}", ids);
 
-        assert_eq!(ids.len(), 2, "Should have exactly 2 request IDs.");
+        pretty_assert_eq!(ids.len(), 2, "Should have exactly 2 request IDs.");
         assert!(ids.contains(&CustomRequestId::new("custom-1")));
         assert!(ids.contains(&CustomRequestId::new("custom-2")));
     }
@@ -62,7 +62,7 @@ mod batch_input_data_tests {
         info!("Testing BatchInputData with an empty requests vector.");
 
         let input_data = BatchInputData::new(vec![]);
-        assert_eq!(input_data.requests().len(), 0, "Expected no requests in empty BatchInputData.");
+        pretty_assert_eq!(input_data.requests().len(), 0, "Expected no requests in empty BatchInputData.");
 
         let ids = input_data.request_ids();
         assert!(ids.is_empty(), "No request IDs should be returned for empty data.");
@@ -78,7 +78,7 @@ mod batch_input_data_tests {
 
         let first_ref = input_data.requests() as *const _;
         let second_ref = input_data.requests() as *const _;
-        assert_eq!(first_ref, second_ref, "Should return the same slice reference on subsequent calls.");
+        pretty_assert_eq!(first_ref, second_ref, "Should return the same slice reference on subsequent calls.");
         trace!("Both calls returned the same reference pointer: {:?}", first_ref);
     }
 }

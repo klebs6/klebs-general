@@ -45,7 +45,7 @@ You can extract JSON content from a string that might be surrounded by backticks
 ```rust
 let content = "```json\n{\"key\": \"value\"}\n```";
 let json_content = extract_json_from_possible_backticks_block(content);
-assert_eq!(json_content, "{\"key\": \"value\"}");
+pretty_assert_eq!(json_content, "{\"key\": \"value\"}");
 ```
 
 ### Write JSON to a File

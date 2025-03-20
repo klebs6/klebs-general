@@ -132,7 +132,7 @@ mod batch_response_body_tests {
 
         match body {
             BatchResponseBody::Success(success_body) => {
-                assert_eq!(success_body.id(), "chatcmpl-AVW7Z2Dd49g7Zq5eVExww6dlKA8T9");
+                pretty_assert_eq!(success_body.id(), "chatcmpl-AVW7Z2Dd49g7Zq5eVExww6dlKA8T9");
             }
             _ => panic!("Expected success body"),
         }
@@ -152,7 +152,7 @@ mod batch_response_body_tests {
         let body: BatchResponseBody = serde_json::from_value(json_data).unwrap();
         match body {
             BatchResponseBody::Error(error_body) => {
-                assert_eq!(error_body.error().message(), "An error occurred");
+                pretty_assert_eq!(error_body.error().message(), "An error occurred");
             }
             _ => panic!("Expected error body"),
         }

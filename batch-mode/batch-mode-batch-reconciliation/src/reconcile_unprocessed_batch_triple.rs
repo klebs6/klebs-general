@@ -13,6 +13,7 @@ where E
 + From<FileMoveError>
 + From<OpenAIClientError> 
 + From<std::io::Error>
++ Display
 + Debug
 + Send
 + Sync

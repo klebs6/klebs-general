@@ -43,10 +43,10 @@ mod batch_request_record_tests {
 
         let record: BatchRequestRecord = serde_json::from_value(json_data).unwrap();
 
-        assert_eq!(record.id().as_str(), "batch_req_123");
-        assert_eq!(record.custom_id().as_str(), "custom_456");
-        assert_eq!(record.prompt(), Some("Test prompt"));
-        assert_eq!(record.messages().unwrap(), &["Message 1".to_string(), "Message 2".to_string()]);
+        pretty_assert_eq!(record.id().as_str(), "batch_req_123");
+        pretty_assert_eq!(record.custom_id().as_str(), "custom_456");
+        pretty_assert_eq!(record.prompt(), Some("Test prompt"));
+        pretty_assert_eq!(record.messages().unwrap(), &["Message 1".to_string(), "Message 2".to_string()]);
     }
 
     #[test]
@@ -59,8 +59,8 @@ mod batch_request_record_tests {
 
         let record: BatchRequestRecord = serde_json::from_value(json_data).unwrap();
 
-        assert_eq!(record.id().as_str(), "batch_req_789");
-        assert_eq!(record.custom_id().as_str(), "custom_012");
+        pretty_assert_eq!(record.id().as_str(), "batch_req_789");
+        pretty_assert_eq!(record.custom_id().as_str(), "custom_012");
         assert!(record.prompt().is_none());
         assert!(record.messages().is_none());
     }

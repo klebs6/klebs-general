@@ -120,7 +120,7 @@ mod agent_coordinate_functionality_tests {
         let coord = AgentCoordinate::here_without_a_goal("Kitchen");
         assert!(coord.has_location());
         assert!(!coord.has_goal());
-        assert_eq!(*coord.location(), Some("Kitchen".to_string()));
+        pretty_assert_eq!(*coord.location(), Some("Kitchen".to_string()));
         info!("test_here_without_a_goal passed.");
     }
 
@@ -129,8 +129,8 @@ mod agent_coordinate_functionality_tests {
         let coord = AgentCoordinate::here_with_a_goal("Office", "Finish report");
         assert!(coord.has_location());
         assert!(coord.has_goal());
-        assert_eq!(*coord.location(), Some("Office".to_string()));
-        assert_eq!(*coord.goal(), Some("Finish report".to_string()));
+        pretty_assert_eq!(*coord.location(), Some("Office".to_string()));
+        pretty_assert_eq!(*coord.goal(), Some("Finish report".to_string()));
         info!("test_here_with_a_goal passed.");
     }
 
@@ -147,7 +147,7 @@ mod agent_coordinate_functionality_tests {
         let coord = AgentCoordinate::nowhere_with_a_goal("Become world champion");
         assert!(!coord.has_location());
         assert!(coord.has_goal());
-        assert_eq!(*coord.goal(), Some("Become world champion".to_string()));
+        pretty_assert_eq!(*coord.goal(), Some("Become world champion".to_string()));
         info!("test_nowhere_with_a_goal passed.");
     }
 
@@ -156,8 +156,8 @@ mod agent_coordinate_functionality_tests {
         let mut coord = AgentCoordinate::nowhere_with_no_goal();
         coord.set_location(Some("Library"));
         coord.set_goal(Some("Read more books"));
-        assert_eq!(*coord.location(), Some("Library".to_string()));
-        assert_eq!(*coord.goal(), Some("Read more books".to_string()));
+        pretty_assert_eq!(*coord.location(), Some("Library".to_string()));
+        pretty_assert_eq!(*coord.goal(), Some("Read more books".to_string()));
         info!("test_set_location_and_goal passed.");
     }
 
@@ -186,8 +186,8 @@ mod agent_coordinate_functionality_tests {
             .goal("Attend class")
             .build()
             .expect("Failed to build AgentCoordinate using builder.");
-        assert_eq!(*coord.location(), Some("School".to_string()));
-        assert_eq!(*coord.goal(), Some("Attend class".to_string()));
+        pretty_assert_eq!(*coord.location(), Some("School".to_string()));
+        pretty_assert_eq!(*coord.goal(), Some("Attend class".to_string()));
         info!("test_builder_usage passed.");
     }
 }

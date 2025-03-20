@@ -19,7 +19,7 @@ impl PartialEq for BatchMessageContent {
     }
 }
 
-// NEW: Implement PartialEq<&str> so `assert_eq!(some_batch_message_content, "literal")` works:
+// NEW: Implement PartialEq<&str> so `pretty_assert_eq!(some_batch_message_content, "literal")` works:
 impl PartialEq<&str> for BatchMessageContent {
     fn eq(&self, other: &&str) -> bool {
         &self.content == *other
@@ -117,8 +117,8 @@ mod batch_message_content_tests {
         let parsed = content.extract_clean_parse_json();
         assert!(parsed.is_ok(), "Expected successful parse for valid JSON.");
         if let Ok(SerdeValue::Object(map)) = parsed {
-            assert_eq!(map.get("key").and_then(SerdeValue::as_str), Some("value"));
-            assert_eq!(map.get("number").and_then(SerdeValue::as_i64), Some(42));
+            pretty_assert_eq!(map.get("key").and_then(SerdeValue::as_str), Some("value"));
+            pretty_assert_eq!(map.get("number").and_then(SerdeValue::as_i64), Some(42));
         } else {
             panic!("Parsed JSON did not match expected object structure.");
         }
@@ -184,8 +184,8 @@ mod batch_message_content_tests {
 
         let parsed: SerdeValue = serde_json::from_str(sanitized)
             .expect("Failed to parse sanitized JSON into a Value");
-        assert_eq!(parsed.get("greeting").and_then(SerdeValue::as_str), Some("Hello"));
-        assert_eq!(parsed.get("farewell").and_then(SerdeValue::as_str), Some("Goodbye"));
+        pretty_assert_eq!(parsed.get("greeting").and_then(SerdeValue::as_str), Some("Hello"));
+        pretty_assert_eq!(parsed.get("farewell").and_then(SerdeValue::as_str), Some("Goodbye"));
     }
 
     /// Checks the length and as_str functionality.
@@ -199,8 +199,8 @@ mod batch_message_content_tests {
             sanitized_json_str: OnceCell::new(),
         };
 
-        assert_eq!(content.len(), text.len(), "Length should match underlying string.");
-        assert_eq!(content.as_str(), text, "as_str() should match underlying string.");
+        pretty_assert_eq!(content.len(), text.len(), "Length should match underlying string.");
+        pretty_assert_eq!(content.as_str(), text, "as_str() should match underlying string.");
     }
 
     /// Validates the PartialEq<&str> implementation.
@@ -214,8 +214,8 @@ mod batch_message_content_tests {
             sanitized_json_str: OnceCell::new(),
         };
 
-        // Now works with `assert_eq!` because we implemented PartialEq<&str>
-        assert_eq!(content, "Compare me", "Content should be equal to the same str.");
+        // Now works with `pretty_assert_eq!` because we implemented PartialEq<&str>
+        pretty_assert_eq!(content, "Compare me", "Content should be equal to the same str.");
         assert_ne!(content, "Different text", "Content should not be equal to a different str.");
     }
 
@@ -233,7 +233,7 @@ mod batch_message_content_tests {
         let first = content.get_sanitized_json_str() as *const str;
         let second = content.get_sanitized_json_str() as *const str;
 
-        assert_eq!(
+        pretty_assert_eq!(
             first, second,
             "OnceCell should return the same reference on subsequent calls."
         );
@@ -251,7 +251,7 @@ mod batch_message_content_tests {
         };
 
         let sanitized = content.get_sanitized_json_str();
-        assert_eq!(sanitized, "", "Sanitized string should be empty for empty content.");
+        pretty_assert_eq!(sanitized, "", "Sanitized string should be empty for empty content.");
 
         // Attempt to parse without repair
         let parsed_no_repair = content.extract_clean_parse_json();
@@ -267,7 +267,7 @@ mod batch_message_content_tests {
         let repaired_value = parsed_with_repair.unwrap();
         debug!("Result of repaired parsing: {:?}", repaired_value);
 
-        assert_eq!(
+        pretty_assert_eq!(
             repaired_value,
             serde_json::Value::Object(serde_json::Map::new()),
             "Should yield an empty object upon repair for empty content."

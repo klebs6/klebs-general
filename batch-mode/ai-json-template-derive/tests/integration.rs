@@ -157,12 +157,12 @@ fn test_single_string_field_schema() {
     let fields = obj.get("fields").unwrap().as_object().unwrap();
     let title = fields.get("title").expect("Missing 'title' in fields");
     let t_obj = title.as_object().expect("'title' must be an object");
-    assert_eq!(
+    pretty_assert_eq!(
         t_obj.get("type").unwrap(),
         "string",
         "Expected type=string for the 'title' field"
     );
-    assert_eq!(
+    pretty_assert_eq!(
         t_obj.get("required").unwrap(),
         true,
         "String fields should be required"
@@ -180,12 +180,12 @@ fn test_mixed_fields_schema() {
 
     let summary = fields.get("summary").expect("Missing 'summary'");
     let summary_obj = summary.as_object().unwrap();
-    assert_eq!(
+    pretty_assert_eq!(
         summary_obj.get("type").unwrap(),
         "string",
         "Field 'summary' should be recognized as type=string"
     );
-    assert_eq!(
+    pretty_assert_eq!(
         summary_obj.get("required").unwrap(),
         true,
         "A String field is required"
@@ -193,12 +193,12 @@ fn test_mixed_fields_schema() {
 
     let items = fields.get("items").expect("Missing 'items'");
     let items_obj = items.as_object().unwrap();
-    assert_eq!(
+    pretty_assert_eq!(
         items_obj.get("type").unwrap(),
         "array_of_strings",
         "Field 'items' should be recognized as type=array_of_strings"
     );
-    assert_eq!(
+    pretty_assert_eq!(
         items_obj.get("required").unwrap(),
         true,
         "A Vec<String> field is required"
@@ -206,12 +206,12 @@ fn test_mixed_fields_schema() {
 
     let optional_note = fields.get("optional_note").expect("Missing 'optional_note'");
     let optional_note_obj = optional_note.as_object().unwrap();
-    assert_eq!(
+    pretty_assert_eq!(
         optional_note_obj.get("type").unwrap(),
         "string",
         "Option<String> should be recognized as type=string"
     );
-    assert_eq!(
+    pretty_assert_eq!(
         optional_note_obj.get("required").unwrap(),
         false,
         "Option<String> field is not required"
@@ -229,12 +229,12 @@ fn test_nested_struct_schema() {
 
     let notes = fields.get("notes").expect("Missing 'notes'");
     let notes_obj = notes.as_object().unwrap();
-    assert_eq!(
+    pretty_assert_eq!(
         notes_obj.get("type").unwrap(),
         "string",
         "String field 'notes' is recognized as type=string"
     );
-    assert_eq!(
+    pretty_assert_eq!(
         notes_obj.get("required").unwrap(),
         true,
         "String field 'notes' is required"
@@ -242,7 +242,7 @@ fn test_nested_struct_schema() {
 
     let inner = fields.get("inner").expect("Missing 'inner'");
     let inner_obj = inner.as_object().unwrap();
-    assert_eq!(
+    pretty_assert_eq!(
         inner_obj.get("type").unwrap(),
         "nested_struct",
         "Nested struct 'inner' should be recognized as type=nested_struct"

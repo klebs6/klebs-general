@@ -51,7 +51,7 @@ mod test_token_parse_error {
 
         match e4 {
             TokenParseError::IoError(ref err) => {
-                assert_eq!(format!("{}", err), "oh no!");
+                pretty_assert_eq!(format!("{}", err), "oh no!");
                 tracing::info!("Matched IoError as expected");
             }
             _ => panic!("Should have matched IoError"),

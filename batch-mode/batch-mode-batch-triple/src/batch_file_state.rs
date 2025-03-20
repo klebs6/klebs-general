@@ -44,7 +44,7 @@ mod batch_file_state_exhaustive_tests {
         );
         let state = BatchFileState::from(&triple);
         debug!("Computed state: {:?}", state);
-        assert_eq!(state, BatchFileState::InputOnly, "Expected InputOnly");
+        pretty_assert_eq!(state, BatchFileState::InputOnly, "Expected InputOnly");
         trace!("===== END TEST: from_triple_with_input_only_yields_input_only =====");
     }
 
@@ -61,7 +61,7 @@ mod batch_file_state_exhaustive_tests {
         );
         let state = BatchFileState::from(&triple);
         debug!("Computed state: {:?}", state);
-        assert_eq!(state, BatchFileState::InputOutput, "Expected InputOutput");
+        pretty_assert_eq!(state, BatchFileState::InputOutput, "Expected InputOutput");
         trace!("===== END TEST: from_triple_with_input_output_yields_input_output =====");
     }
 
@@ -78,7 +78,7 @@ mod batch_file_state_exhaustive_tests {
         );
         let state = BatchFileState::from(&triple);
         debug!("Computed state: {:?}", state);
-        assert_eq!(state, BatchFileState::InputError, "Expected InputError");
+        pretty_assert_eq!(state, BatchFileState::InputError, "Expected InputError");
         trace!("===== END TEST: from_triple_with_input_error_yields_input_error =====");
     }
 
@@ -95,7 +95,7 @@ mod batch_file_state_exhaustive_tests {
         );
         let state = BatchFileState::from(&triple);
         debug!("Computed state: {:?}", state);
-        assert_eq!(state, BatchFileState::InputOutputError, "Expected InputOutputError");
+        pretty_assert_eq!(state, BatchFileState::InputOutputError, "Expected InputOutputError");
         trace!("===== END TEST: from_triple_with_all_three_files_yields_input_output_error =====");
     }
 }

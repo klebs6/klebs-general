@@ -184,9 +184,9 @@ mod locate_batch_files_exhaustive_tests {
         fs::write(workdir.join("batch_error_4.jsonl"), b"test").await?;
 
         let batch_files = workspace.clone().locate_batch_files(&BatchIndex::Usize(4)).await?.unwrap();
-        assert_eq!(*batch_files.input(), Some(workdir.join("batch_input_4.jsonl")));
-        assert_eq!(*batch_files.output(), Some(workdir.join("batch_output_4.jsonl")));
-        assert_eq!(*batch_files.error(), Some(workdir.join("batch_error_4.jsonl")));
+        pretty_assert_eq!(*batch_files.input(), Some(workdir.join("batch_input_4.jsonl")));
+        pretty_assert_eq!(*batch_files.output(), Some(workdir.join("batch_output_4.jsonl")));
+        pretty_assert_eq!(*batch_files.error(), Some(workdir.join("batch_error_4.jsonl")));
 
         Ok(())
     }
@@ -201,9 +201,9 @@ mod locate_batch_files_exhaustive_tests {
         fs::write(workdir.join(format!("batch_output_{}.jsonl", uuid)), b"test").await?;
 
         let batch_files = workspace.clone().locate_batch_files(&BatchIndex::from_uuid_str(uuid)?).await?.unwrap();
-        assert_eq!(*batch_files.input(), Some(workdir.join(format!("batch_input_{}.jsonl", uuid))));
-        assert_eq!(*batch_files.output(), Some(workdir.join(format!("batch_output_{}.jsonl", uuid))));
-        assert_eq!(*batch_files.error(), None);
+        pretty_assert_eq!(*batch_files.input(), Some(workdir.join(format!("batch_input_{}.jsonl", uuid))));
+        pretty_assert_eq!(*batch_files.output(), Some(workdir.join(format!("batch_output_{}.jsonl", uuid))));
+        pretty_assert_eq!(*batch_files.error(), None);
 
         Ok(())
     }
@@ -254,8 +254,8 @@ mod locate_batch_files_exhaustive_tests {
         let triple_option = result.unwrap();
         assert!(triple_option.is_some(), "Expected to find a triple with the input file");
         let triple = triple_option.unwrap();
-        assert_eq!(*triple.index(), index, "Index should match");
-        assert_eq!(*triple.input(), Some(path.clone()));
+        pretty_assert_eq!(*triple.index(), index, "Index should match");
+        pretty_assert_eq!(*triple.input(), Some(path.clone()));
         assert!(triple.output().is_none(), "No output file");
         assert!(triple.error().is_none(), "No error file");
         assert!(triple.associated_metadata().is_none(), "No metadata file");
@@ -282,9 +282,9 @@ mod locate_batch_files_exhaustive_tests {
         let triple_option = result.unwrap();
         assert!(triple_option.is_some(), "Should find a triple with the output file only");
         let triple = triple_option.unwrap();
-        assert_eq!(*triple.index(), index);
+        pretty_assert_eq!(*triple.index(), index);
         assert!(triple.input().is_none());
-        assert_eq!(*triple.output(), Some(path.clone()));
+        pretty_assert_eq!(*triple.output(), Some(path.clone()));
         assert!(triple.error().is_none());
         assert!(triple.associated_metadata().is_none());
 
@@ -309,10 +309,10 @@ mod locate_batch_files_exhaustive_tests {
         let triple_option = result.unwrap();
         assert!(triple_option.is_some());
         let triple = triple_option.unwrap();
-        assert_eq!(*triple.index(), index);
+        pretty_assert_eq!(*triple.index(), index);
         assert!(triple.input().is_none());
         assert!(triple.output().is_none());
-        assert_eq!(*triple.error(), Some(path.clone()));
+        pretty_assert_eq!(*triple.error(), Some(path.clone()));
         assert!(triple.associated_metadata().is_none());
 
         info!("Finished test: locates_single_error_file");
@@ -336,11 +336,11 @@ mod locate_batch_files_exhaustive_tests {
         let triple_option = result.unwrap();
         assert!(triple_option.is_some());
         let triple = triple_option.unwrap();
-        assert_eq!(*triple.index(), index);
+        pretty_assert_eq!(*triple.index(), index);
         assert!(triple.input().is_none());
         assert!(triple.output().is_none());
         assert!(triple.error().is_none());
-        assert_eq!(*triple.associated_metadata(), Some(path.clone()));
+        pretty_assert_eq!(*triple.associated_metadata(), Some(path.clone()));
 
         info!("Finished test: locates_single_metadata_file");
     }
@@ -362,9 +362,9 @@ mod locate_batch_files_exhaustive_tests {
         let triple_option = result.unwrap();
         assert!(triple_option.is_some(), "Expect Some(...)");
         let triple = triple_option.unwrap();
-        assert_eq!(*triple.index(), index);
-        assert_eq!(*triple.input(), Some(input_path));
-        assert_eq!(*triple.output(), Some(output_path));
+        pretty_assert_eq!(*triple.index(), index);
+        pretty_assert_eq!(*triple.input(), Some(input_path));
+        pretty_assert_eq!(*triple.output(), Some(output_path));
         assert!(triple.error().is_none());
         assert!(triple.associated_metadata().is_none());
 
@@ -395,8 +395,8 @@ mod locate_batch_files_exhaustive_tests {
         let triple_option = result.unwrap();
         assert!(triple_option.is_some());
         let triple = triple_option.unwrap();
-        assert_eq!(*triple.index(), index);
-        assert_eq!(*triple.input(), Some(valid_input));
+        pretty_assert_eq!(*triple.index(), index);
+        pretty_assert_eq!(*triple.input(), Some(valid_input));
         assert!(triple.output().is_none());
         assert!(triple.error().is_none());
         assert!(triple.associated_metadata().is_none());
@@ -422,9 +422,9 @@ mod locate_batch_files_exhaustive_tests {
         let triple_option = result.unwrap();
         assert!(triple_option.is_some());
         let triple = triple_option.unwrap();
-        assert_eq!(*triple.index(), index);
+        pretty_assert_eq!(*triple.index(), index);
         assert!(triple.input().is_none());
-        assert_eq!(*triple.output(), Some(path.clone()));
+        pretty_assert_eq!(*triple.output(), Some(path.clone()));
         assert!(triple.error().is_none());
         assert!(triple.associated_metadata().is_none());
 
@@ -460,7 +460,7 @@ mod locate_batch_files_exhaustive_tests {
             match res {
                 Ok(Ok(Some(triple))) => {
                     debug!("Task {} => triple found with input: {:?}", i, triple.input());
-                    assert_eq!(*triple.index(), index, "Index must match");
+                    pretty_assert_eq!(*triple.index(), index, "Index must match");
                 }
                 Ok(Ok(None)) => panic!("Task {} => unexpected None, we have an input file!", i),
                 Ok(Err(e)) => panic!("Task {} => unexpected error: {:?}", i, e),
@@ -498,8 +498,8 @@ mod locate_batch_files_exhaustive_tests {
         let triple_option = result.unwrap();
         assert!(triple_option.is_some());
         let triple = triple_option.unwrap();
-        assert_eq!(*triple.index(), BatchIndex::Usize(31));
-        assert_eq!(*triple.input(), Some(valid_file));
+        pretty_assert_eq!(*triple.index(), BatchIndex::Usize(31));
+        pretty_assert_eq!(*triple.input(), Some(valid_file));
 
         info!("Finished test: gracefully_skips_non_utf8_filenames");
     }
@@ -518,7 +518,7 @@ mod locate_batch_files_exhaustive_tests {
         assert!(result.is_some(), "Expected to find the valid batch input file");
 
         let batch_files = result.unwrap();
-        assert_eq!(*batch_files.input(), Some(workdir.join("batch_input_4.jsonl")));
+        pretty_assert_eq!(*batch_files.input(), Some(workdir.join("batch_input_4.jsonl")));
         assert!(batch_files.output().is_none());
         assert!(batch_files.error().is_none());
 
@@ -550,8 +550,8 @@ mod locate_batch_files_exhaustive_tests {
         let triple_opt = result.unwrap();
         assert!(triple_opt.is_some());
         let triple = triple_opt.unwrap();
-        assert_eq!(*triple.index(), index);
-        assert_eq!(*triple.input(), Some(valid_path.clone()));
+        pretty_assert_eq!(*triple.index(), index);
+        pretty_assert_eq!(*triple.input(), Some(valid_path.clone()));
         assert!(triple.output().is_none());
         assert!(triple.error().is_none());
 
@@ -583,8 +583,8 @@ mod locate_batch_files_exhaustive_tests {
         let triple_opt = result.unwrap();
         assert!(triple_opt.is_some());
         let triple = triple_opt.unwrap();
-        assert_eq!(*triple.index(), index);
-        assert_eq!(*triple.output(), Some(file1.clone()));
+        pretty_assert_eq!(*triple.index(), index);
+        pretty_assert_eq!(*triple.output(), Some(file1.clone()));
         assert!(triple.input().is_none());
         assert!(triple.error().is_none());
 
@@ -615,8 +615,8 @@ mod locate_batch_files_exhaustive_tests {
         let triple_opt = result.unwrap();
         assert!(triple_opt.is_some());
         let triple = triple_opt.unwrap();
-        assert_eq!(*triple.index(), index);
-        assert_eq!(*triple.error(), Some(err1.clone()));
+        pretty_assert_eq!(*triple.index(), index);
+        pretty_assert_eq!(*triple.error(), Some(err1.clone()));
         assert!(triple.input().is_none());
         assert!(triple.output().is_none());
 
@@ -648,8 +648,8 @@ mod locate_batch_files_exhaustive_tests {
         let triple_opt = result.unwrap();
         assert!(triple_opt.is_some(), "We expect at least the valid file to be recognized.");
         let triple = triple_opt.unwrap();
-        assert_eq!(*triple.index(), index);
-        assert_eq!(*triple.associated_metadata(), Some(path_valid.clone()));
+        pretty_assert_eq!(*triple.index(), index);
+        pretty_assert_eq!(*triple.associated_metadata(), Some(path_valid.clone()));
 
         info!("Finished revised test: fails_if_multiple_metadata_files_found => no error for extra file");
     }

@@ -18,3 +18,9 @@ error_tree!{
         EmptyBatchTriple { index: BatchIndex },
     }
 }
+
+impl From<BatchProcessingError> for MockBatchClientError {
+    fn from(e: BatchProcessingError) -> Self {
+        MockBatchClientError::BatchProcessingError
+    }
+}

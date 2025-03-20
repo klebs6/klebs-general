@@ -102,7 +102,7 @@ mod default_impl_save_to_file_traits_when_serde_test {
         let loaded = TestData::load_from_file(&file_path)
             .await
             .expect("Failed to load data");
-        assert_eq!(data, loaded, "Loaded data did not match saved data.");
+        pretty_assert_eq!(data, loaded, "Loaded data did not match saved data.");
     }
 
     #[traced_test]

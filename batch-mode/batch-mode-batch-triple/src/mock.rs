@@ -1,6 +1,7 @@
 // ---------------- [ File: src/mock.rs ]
 crate::ix!();
 
+#[cfg(test)]
 pub fn make_mock_batch_file_triple() -> BatchFileTriple {
     let workspace = Arc::new(MockWorkspace::default());
     BatchFileTriple::new_direct(
@@ -10,6 +11,7 @@ pub fn make_mock_batch_file_triple() -> BatchFileTriple {
     )
 }
 
+#[cfg(test)]
 pub fn make_mock_triple_with_files(
     input_ids:  Option<Vec<&str>>,
     output_ids: Option<Vec<&str>>,
@@ -51,6 +53,7 @@ pub fn make_mock_triple_with_files(
     )
 }
 
+#[cfg(test)]
 pub fn make_mock_triple_files(
     input_ids:  Option<Vec<&str>>,
     output_ids: Option<Vec<&str>>

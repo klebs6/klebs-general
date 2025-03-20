@@ -83,7 +83,7 @@ mod error_type_tests {
         info!("Testing deserialization of 'insufficient_quota' into ErrorType.");
         let json_str = r#""insufficient_quota""#;
         let et: ErrorType = serde_json::from_str(json_str).expect("Failed to deserialize known error type.");
-        assert_eq!(et, ErrorType::InsufficientQuota);
+        pretty_assert_eq!(et, ErrorType::InsufficientQuota);
         debug!("Deserialized to {:?}", et);
     }
 
@@ -92,7 +92,7 @@ mod error_type_tests {
         info!("Testing deserialization of 'invalid_request' into ErrorType.");
         let json_str = r#""invalid_request""#;
         let et: ErrorType = serde_json::from_str(json_str).expect("Failed to deserialize known error type.");
-        assert_eq!(et, ErrorType::InvalidRequest);
+        pretty_assert_eq!(et, ErrorType::InvalidRequest);
         debug!("Deserialized to {:?}", et);
     }
 
@@ -103,7 +103,7 @@ mod error_type_tests {
         let et: ErrorType = serde_json::from_str(json_str).expect("Failed to deserialize unknown error type.");
         match et {
             ErrorType::Unknown(s) => {
-                assert_eq!(s, "some_unknown_error");
+                pretty_assert_eq!(s, "some_unknown_error");
                 trace!("Unknown variant holds the correct string: {:?}", s);
             }
             _ => panic!("Expected Unknown variant for an unrecognized string."),
@@ -115,7 +115,7 @@ mod error_type_tests {
         info!("Testing serialization of InsufficientQuota variant.");
         let et = ErrorType::InsufficientQuota;
         let serialized = serde_json::to_string(&et).expect("Failed to serialize InsufficientQuota.");
-        assert_eq!(serialized, r#""insufficient_quota""#);
+        pretty_assert_eq!(serialized, r#""insufficient_quota""#);
         debug!("Serialized to {:?}", serialized);
     }
 
@@ -124,7 +124,7 @@ mod error_type_tests {
         info!("Testing serialization of InvalidRequest variant.");
         let et = ErrorType::InvalidRequest;
         let serialized = serde_json::to_string(&et).expect("Failed to serialize InvalidRequest.");
-        assert_eq!(serialized, r#""invalid_request""#);
+        pretty_assert_eq!(serialized, r#""invalid_request""#);
         debug!("Serialized to {:?}", serialized);
     }
 
@@ -133,7 +133,7 @@ mod error_type_tests {
         info!("Testing serialization of Unknown variant.");
         let et = ErrorType::Unknown("fancy_weird_error".to_string());
         let serialized = serde_json::to_string(&et).expect("Failed to serialize Unknown variant.");
-        assert_eq!(serialized, r#""fancy_weird_error""#);
+        pretty_assert_eq!(serialized, r#""fancy_weird_error""#);
         debug!("Serialized to {:?}", serialized);
     }
 
@@ -164,13 +164,13 @@ mod error_type_tests {
         info!("Testing as_str() method on ErrorType.");
 
         let e_insuf = ErrorType::InsufficientQuota;
-        assert_eq!(e_insuf.as_str(), "insufficient_quota");
+        pretty_assert_eq!(e_insuf.as_str(), "insufficient_quota");
 
         let e_invalid = ErrorType::InvalidRequest;
-        assert_eq!(e_invalid.as_str(), "invalid_request");
+        pretty_assert_eq!(e_invalid.as_str(), "invalid_request");
 
         let e_unknown = ErrorType::Unknown("some_error".to_string());
-        assert_eq!(e_unknown.as_str(), "some_error");
+        pretty_assert_eq!(e_unknown.as_str(), "some_error");
         trace!("All as_str checks passed.");
     }
 }

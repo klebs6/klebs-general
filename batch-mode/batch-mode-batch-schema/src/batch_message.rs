@@ -37,9 +37,9 @@ mod tests {
             "refusal": null
         }"#;
         let message: BatchMessage = serde_json::from_str(json).unwrap();
-        assert_eq!(message.role(), &MessageRole::Assistant);
-        assert_eq!(message.content(), "Hello, world!");
-        assert_eq!(message.refusal(), None);
+        pretty_assert_eq!(message.role(), &MessageRole::Assistant);
+        pretty_assert_eq!(message.content(), "Hello, world!");
+        pretty_assert_eq!(message.refusal(), None);
 
         // Message with refusal
         let json = r#"{
@@ -48,7 +48,7 @@ mod tests {
             "refusal": "Policy refusal"
         }"#;
         let message: BatchMessage = serde_json::from_str(json).unwrap();
-        assert_eq!(message.refusal(), Some(&"Policy refusal".to_string()));
+        pretty_assert_eq!(message.refusal(), Some(&"Policy refusal".to_string()));
 
         // Message with unknown role
         let json = r#"{
@@ -57,7 +57,7 @@ mod tests {
             "refusal": null
         }"#;
         let message: BatchMessage = serde_json::from_str(json).unwrap();
-        assert_eq!(
+        pretty_assert_eq!(
             message.role(),
             &MessageRole::Unknown("unknown_role".to_string())
         );
@@ -68,7 +68,7 @@ mod tests {
             "content": "Content without refusal"
         }"#;
         let message: BatchMessage = serde_json::from_str(json).unwrap();
-        assert_eq!(message.refusal(), None);
+        pretty_assert_eq!(message.refusal(), None);
 
         // Message with empty content
         let json = r#"{
@@ -77,7 +77,7 @@ mod tests {
             "refusal": null
         }"#;
         let message: BatchMessage = serde_json::from_str(json).unwrap();
-        assert_eq!(message.content(), "");
+        pretty_assert_eq!(message.content(), "");
 
         // Message with invalid role (non-string)
         let json = r#"{

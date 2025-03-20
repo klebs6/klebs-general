@@ -29,11 +29,11 @@ TEST_FILE  := tests/test_scale_layer.rs
 #ACTIVE_PACKAGE := batch-mode-batch-workspace-interface
 #ACTIVE_PACKAGE := camel-case-token-with-comment
 #ACTIVE_PACKAGE := batch-mode-batch-triple
-ACTIVE_PACKAGE := batch-mode-batch-workspace
-#-------------------------------------[done-below]
+#ACTIVE_PACKAGE := batch-mode-batch-workspace
 #ACTIVE_PACKAGE := batch-mode-batch-client
-#ACTIVE_PACKAGE := batch-mode-batch-executor
-#ACTIVE_PACKAGE := batch-mode-batch-reconciliation
+#-------------------------------------[done-below]
+ACTIVE_PACKAGE := batch-mode-batch-executor
+ACTIVE_PACKAGE := batch-mode-batch-reconciliation
 #ACTIVE_PACKAGE := batch-mode-batch-workflow
 #ACTIVE_PACKAGE := batch-mode-process-response
 

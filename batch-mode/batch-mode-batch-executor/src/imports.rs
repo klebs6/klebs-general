@@ -7,3 +7,6 @@ pub(crate) use batch_mode_batch_reconciliation::*;
 pub(crate) use batch_mode_batch_schema::*;
 pub(crate) use batch_mode_batch_triple::*;
 pub(crate) use save_load_traits::*;
+
+#[cfg(test)]
+pub(crate) use batch_mode_batch_workspace::*;

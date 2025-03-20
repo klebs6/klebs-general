@@ -179,15 +179,15 @@ mod clone_as_fresh_temp_exhaustive_tests {
             // We read files from the cloned workspace
             let cloned_workdir_file = cloned.workdir().join("file_in_workdir.txt");
             let data = fs::read(&cloned_workdir_file).await.expect("File must exist in clone");
-            assert_eq!(data, b"some data");
+            pretty_assert_eq!(data, b"some data");
 
             let cloned_logs_file = cloned.logdir().join("file_in_logs.txt");
             let data = fs::read(&cloned_logs_file).await.expect("Logs file must exist in clone");
-            assert_eq!(data, b"logs data");
+            pretty_assert_eq!(data, b"logs data");
 
             let cloned_done_file = cloned.done_dir().join("file_in_done.txt");
             let data = fs::read(&cloned_done_file).await.expect("Done file must exist in clone");
-            assert_eq!(data, b"done data");
+            pretty_assert_eq!(data, b"done data");
         });
 
         info!("Finished test: clone_as_fresh_temp_creates_completely_new_workspace");
@@ -215,12 +215,12 @@ mod clone_as_fresh_temp_exhaustive_tests {
         // Confirm the cloned copy is still the old data
         rt.block_on(async {
             let data_clone = fs::read(cloned.workdir().join("shared.txt")).await.expect("File in clone must exist");
-            assert_eq!(data_clone, b"initial", "Clone must remain unchanged after original is updated");
+            pretty_assert_eq!(data_clone, b"initial", "Clone must remain unchanged after original is updated");
 
             // Meanwhile, updating the clone doesn't affect the original
             fs::write(cloned.workdir().join("shared.txt"), b"updated clone").await.unwrap();
             let data_orig = fs::read(original.workdir().join("shared.txt")).await.unwrap();
-            assert_eq!(data_orig, b"updated original");
+            pretty_assert_eq!(data_orig, b"updated original");
         });
 
         info!("Finished test: clone_as_fresh_temp_is_independent_after_creation");
@@ -242,7 +242,7 @@ mod clone_as_fresh_temp_exhaustive_tests {
 
         rt.block_on(async {
             let data = fs::read(cloned.workdir().join("somefile.txt")).await.unwrap();
-            assert_eq!(data, b"some content");
+            pretty_assert_eq!(data, b"some content");
             // logs or done subdir in original was empty or missing => no copies needed => no panic
         });
 
@@ -268,7 +268,7 @@ mod clone_as_fresh_temp_exhaustive_tests {
         let cloned = original.clone_as_fresh_temp().expect("Should handle moderate data");
         rt.block_on(async {
             let data = fs::read(cloned.workdir().join("large_file.bin")).await.unwrap();
-            assert_eq!(data.len(), 1024 * 1024);
+            pretty_assert_eq!(data.len(), 1024 * 1024);
         });
 
         info!("Finished test: clone_as_fresh_temp_handles_large_data_lightly");
@@ -296,7 +296,7 @@ mod clone_as_fresh_temp_exhaustive_tests {
                 let data = fs::read(c.workdir().join("thread_test.txt"))
                     .await
                     .expect("Must exist in copy");
-                assert_eq!(data, b"threaded");
+                pretty_assert_eq!(data, b"threaded");
                 debug!("Task {} => validated clone data OK", i);
             }));
         }
@@ -347,7 +347,7 @@ mod clone_as_fresh_temp_exhaustive_tests {
         let data = fs::read(cloned.workdir().join("normal_file.txt"))
             .await
             .expect("Copied file must exist in the ephemeral clone");
-        assert_eq!(data, b"hello");
+        pretty_assert_eq!(data, b"hello");
 
         info!("Finished test: respects_when_original_has_no_tempdir");
     }

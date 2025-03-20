@@ -57,18 +57,18 @@ mod message_role_tests {
         for (role_str, expected_role) in roles.iter().zip(expected_roles.iter()) {
             let json = format!("\"{}\"", role_str);
             let role: MessageRole = serde_json::from_str(&json).unwrap();
-            assert_eq!(&role, expected_role);
+            pretty_assert_eq!(&role, expected_role);
         }
 
         // Unknown role
         let json = "\"unknown_role\"";
         let role: MessageRole = serde_json::from_str(json).unwrap();
-        assert_eq!(role, MessageRole::Unknown("unknown_role".to_string()));
+        pretty_assert_eq!(role, MessageRole::Unknown("unknown_role".to_string()));
 
         // Empty string as role
         let json = "\"\"";
         let role: MessageRole = serde_json::from_str(json).unwrap();
-        assert_eq!(role, MessageRole::Unknown("".to_string()));
+        pretty_assert_eq!(role, MessageRole::Unknown("".to_string()));
 
         // Invalid role (non-string)
         let json = "123";

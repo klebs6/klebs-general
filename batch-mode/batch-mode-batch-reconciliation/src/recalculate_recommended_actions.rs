@@ -14,3 +14,46 @@ impl RecalculateRecommendedActions for BatchFileTriple {
         BatchFileReconciliationRecommendedCourseOfAction::try_from(self)
     }
 }
+
+#[cfg(test)]
+mod recalculate_recommended_actions_tests {
+    use super::*;
+
+    #[traced_test]
+    fn test_recalculate_recommended_actions() {
+        let triple = BatchFileTriple {
+            index: BatchIndex::from(999u64),
+            input: Some("input.json".into()),
+            output: None,
+            error: None,
+            associated_metadata: None,
+            associated_workspace: None,
+        };
+
+        let recommended = triple.recalculate_recommended_actions();
+        assert!(recommended.is_ok());
+        let steps = recommended.unwrap().steps().to_vec();
+        pretty_assert_eq!(
+            steps,
+            vec![
+                BatchFileTripleReconciliationOperation::CheckForBatchOutputAndErrorFileOnline,
+                BatchFileTripleReconciliationOperation::RecalculateRecommendedCourseOfActionIfTripleChanged,
+            ]
+        );
+    }
+
+    #[traced_test]
+    fn test_recalculate_recommended_actions_failure() {
+        // If the triple is all None => recalc should fail
+        let triple = BatchFileTriple::new_for_test_empty();
+        let recommended = triple.recalculate_recommended_actions();
+        assert!(recommended.is_err());
+        match recommended.err().unwrap() {
+            BatchReconciliationError::BatchWorkspaceError(BatchWorkspaceError::NoBatchFileTripleAtIndex{index}) => {
+                // This is correct
+                pretty_assert_eq!(index.as_u64(), triple.index().as_u64());
+            },
+            other => panic!("Unexpected error variant: {:?}", other),
+        }
+    }
+}

@@ -79,7 +79,7 @@ mod language_model_request_body_exhaustive_tests {
             body.messages.is_empty(),
             "Mock body should have no messages"
         );
-        assert_eq!(
+        pretty_assert_eq!(
             body.max_completion_tokens, 128,
             "Mock body should have max_completion_tokens=128"
         );
@@ -92,7 +92,7 @@ mod language_model_request_body_exhaustive_tests {
         trace!("===== BEGIN TEST: default_max_tokens_returns_8192 =====");
         let tokens = LanguageModelRequestBody::default_max_tokens();
         debug!("default_max_tokens: {}", tokens);
-        assert_eq!(tokens, 8192, "default_max_tokens should return 8192");
+        pretty_assert_eq!(tokens, 8192, "default_max_tokens should return 8192");
         trace!("===== END TEST: default_max_tokens_returns_8192 =====");
     }
 
@@ -102,7 +102,7 @@ mod language_model_request_body_exhaustive_tests {
         let image_b64 = "fake_base64_image_data";
         let tokens = LanguageModelRequestBody::default_max_tokens_given_image(image_b64);
         debug!("default_max_tokens_given_image: {}", tokens);
-        assert_eq!(
+        pretty_assert_eq!(
             tokens, 2048,
             "default_max_tokens_given_image should return 2048"
         );
@@ -122,21 +122,21 @@ mod language_model_request_body_exhaustive_tests {
             LanguageModelType::Gpt4o => trace!("Model is Gpt4o as expected"),
             _ => panic!("Expected LanguageModelType::Gpt4o"),
         }
-        assert_eq!(body.messages.len(), 2, "Should have 2 messages total");
+        pretty_assert_eq!(body.messages.len(), 2, "Should have 2 messages total");
         match &body.messages[0].content() {
             ChatCompletionRequestUserMessageContent::Text(text) => {
-                assert_eq!(text, system_message, "System message mismatch");
+                pretty_assert_eq!(text, system_message, "System message mismatch");
             },
             _ => panic!("Expected text content for system message"),
         }
         match &body.messages[1].content() {
             ChatCompletionRequestUserMessageContent::Text(text) => {
-                assert_eq!(text, user_message, "User message mismatch");
+                pretty_assert_eq!(text, user_message, "User message mismatch");
             },
             _ => panic!("Expected text content for user message"),
         }
 
-        assert_eq!(
+        pretty_assert_eq!(
             *body.max_completion_tokens(),
             LanguageModelRequestBody::default_max_tokens(),
             "max_completion_tokens should match default"
@@ -159,22 +159,22 @@ mod language_model_request_body_exhaustive_tests {
             LanguageModelType::Gpt4o => trace!("Model is Gpt4o as expected"),
             _ => panic!("Expected LanguageModelType::Gpt4o"),
         }
-        assert_eq!(body.messages.len(), 2, "Should have 2 messages total");
+        pretty_assert_eq!(body.messages.len(), 2, "Should have 2 messages total");
         match &body.messages[0].content() {
             ChatCompletionRequestUserMessageContent::Text(text) => {
-                assert_eq!(text, system_message, "System message mismatch");
+                pretty_assert_eq!(text, system_message, "System message mismatch");
             },
             _ => panic!("Expected text content for system message"),
         }
 
         match &body.messages[1].content() {
             ChatCompletionRequestUserMessageContent::Array(parts) => {
-                assert_eq!(parts.len(), 2, "Expected text + image parts");
+                pretty_assert_eq!(parts.len(), 2, "Expected text + image parts");
             },
             _ => panic!("Expected array content for user message with image"),
         }
 
-        assert_eq!(
+        pretty_assert_eq!(
             body.max_completion_tokens,
             LanguageModelRequestBody::default_max_tokens_given_image(image_b64),
             "max_completion_tokens should match default for images"
@@ -200,13 +200,13 @@ mod language_model_request_body_exhaustive_tests {
         debug!("Deserialized: {:?}", deserialized);
 
         // Compare essential fields
-        assert_eq!(format!("{:?}", original.model), format!("{:?}", deserialized.model));
-        assert_eq!(
+        pretty_assert_eq!(format!("{:?}", original.model), format!("{:?}", deserialized.model));
+        pretty_assert_eq!(
             original.messages.len(),
             deserialized.messages.len(),
             "Messages length mismatch after round-trip"
         );
-        assert_eq!(
+        pretty_assert_eq!(
             original.max_completion_tokens,
             deserialized.max_completion_tokens,
             "max_completion_tokens mismatch after round-trip"

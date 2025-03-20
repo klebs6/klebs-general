@@ -59,7 +59,7 @@ mod construct_batches_exhaustive_tests {
         ).unwrap().collect();
 
         debug!("Number of batches returned: {}", result.len());
-        assert_eq!(result.len(), 0, "Expected no batches for empty requests");
+        pretty_assert_eq!(result.len(), 0, "Expected no batches for empty requests");
 
         trace!("===== END TEST: empty_requests_returns_no_batches =====");
     }
@@ -86,10 +86,10 @@ mod construct_batches_exhaustive_tests {
         ).unwrap().collect();
 
         debug!("Number of batches returned: {}", result.len());
-        assert_eq!(result.len(), 1, "Expected exactly one batch");
+        pretty_assert_eq!(result.len(), 1, "Expected exactly one batch");
         let first_batch = &result[0].1;
         debug!("Size of the single batch: {}", first_batch.len());
-        assert_eq!(first_batch.len(), 32, "Batch should contain 32 requests");
+        pretty_assert_eq!(first_batch.len(), 32, "Batch should contain 32 requests");
 
         trace!("===== END TEST: single_batch_at_least_32_no_panic_with_flag =====");
     }
@@ -116,10 +116,10 @@ mod construct_batches_exhaustive_tests {
         ).unwrap().collect();
 
         debug!("Number of batches returned: {}", result.len());
-        assert_eq!(result.len(), 1, "Expected exactly one batch");
+        pretty_assert_eq!(result.len(), 1, "Expected exactly one batch");
         let first_batch = &result[0].1;
         debug!("Size of the single batch: {}", first_batch.len());
-        assert_eq!(first_batch.len(), 10, "Batch should contain 10 requests");
+        pretty_assert_eq!(first_batch.len(), 10, "Batch should contain 10 requests");
 
         trace!("===== END TEST: single_batch_under_32_no_panic_without_flag =====");
     }
@@ -146,11 +146,11 @@ mod construct_batches_exhaustive_tests {
         ).unwrap().collect();
 
         debug!("Number of batches returned: {}", result.len());
-        assert_eq!(result.len(), 3, "Expected 3 batches total");
+        pretty_assert_eq!(result.len(), 3, "Expected 3 batches total");
 
         let sizes: Vec<usize> = result.iter().map(|(_, chunk)| chunk.len()).collect();
         debug!("Batch sizes: {:?}", sizes);
-        assert_eq!(sizes, vec![20, 20, 10], "Unexpected chunk sizes");
+        pretty_assert_eq!(sizes, vec![20, 20, 10], "Unexpected chunk sizes");
 
         trace!("===== END TEST: multiple_batches_with_remainder =====");
     }
@@ -177,11 +177,11 @@ mod construct_batches_exhaustive_tests {
         ).unwrap().collect();
 
         debug!("Number of batches returned: {}", result.len());
-        assert_eq!(result.len(), 4, "Expected 4 batches total");
+        pretty_assert_eq!(result.len(), 4, "Expected 4 batches total");
 
         for (index, (_, chunk)) in result.iter().enumerate() {
             debug!("Batch index {} has size {}", index, chunk.len());
-            assert_eq!(
+            pretty_assert_eq!(
                 chunk.len(),
                 10,
                 "Expected each batch to have exactly 10 requests"

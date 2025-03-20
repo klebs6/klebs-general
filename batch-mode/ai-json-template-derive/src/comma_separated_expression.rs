@@ -32,7 +32,7 @@ mod validate_comma_separated_expressions {
             "Parsing an empty input should succeed and produce an empty expression list"
         );
         let list = result.expect("Expected an empty expression list");
-        assert_eq!(
+        pretty_assert_eq!(
             list.expressions.len(),
             0,
             "The expression list should be empty for empty input"
@@ -48,7 +48,7 @@ mod validate_comma_separated_expressions {
             "Parsing multiple expressions should succeed and yield the correct count"
         );
         let list = result.expect("Expected a list of expressions");
-        assert_eq!(
+        pretty_assert_eq!(
             list.expressions.len(),
             3,
             "The expression list should contain exactly three expressions"

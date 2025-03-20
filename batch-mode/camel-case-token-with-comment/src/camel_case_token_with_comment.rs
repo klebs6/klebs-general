@@ -70,8 +70,8 @@ mod test_camel_case_token_with_comment {
         info!("Testing CamelCaseTokenWithComment::from_str with valid input");
         let input = "TokenData -- Some comment";
         let token = CamelCaseTokenWithComment::from_str(input).unwrap();
-        assert_eq!(token.data(), "TokenData");
-        assert_eq!(*token.comment(), Some("Some comment".to_string()));
+        pretty_assert_eq!(token.data(), "TokenData");
+        pretty_assert_eq!(*token.comment(), Some("Some comment".to_string()));
     }
 
     #[traced_test]
@@ -79,8 +79,8 @@ mod test_camel_case_token_with_comment {
         info!("Testing CamelCaseTokenWithComment::from_str with no comment");
         let input = "TokenData";
         let token = CamelCaseTokenWithComment::from_str(input).unwrap();
-        assert_eq!(token.data(), "TokenData");
-        assert_eq!(*token.comment(), None);
+        pretty_assert_eq!(token.data(), "TokenData");
+        pretty_assert_eq!(*token.comment(), None);
     }
 
     #[traced_test]
@@ -104,7 +104,7 @@ mod test_camel_case_token_with_comment {
         info!("Testing Into<String> for CamelCaseTokenWithComment with comment");
         let token = CamelCaseTokenWithComment::from_str("Data -- Comment").unwrap();
         let as_string: String = token.into();
-        assert_eq!(as_string, "Data -- Comment");
+        pretty_assert_eq!(as_string, "Data -- Comment");
     }
 
     #[traced_test]
@@ -112,28 +112,28 @@ mod test_camel_case_token_with_comment {
         info!("Testing Into<String> for CamelCaseTokenWithComment without comment");
         let token = CamelCaseTokenWithComment::from_str("Data").unwrap();
         let as_string: String = token.into();
-        assert_eq!(as_string, "Data");
+        pretty_assert_eq!(as_string, "Data");
     }
 
     #[traced_test]
     fn test_display_with_comment() {
         info!("Testing Display for CamelCaseTokenWithComment with comment");
         let token = CamelCaseTokenWithComment::from_str("Data -- Comment").unwrap();
-        assert_eq!(format!("{}", token), "Data -- Comment");
+        pretty_assert_eq!(format!("{}", token), "Data -- Comment");
     }
 
     #[traced_test]
     fn test_display_without_comment() {
         info!("Testing Display for CamelCaseTokenWithComment without comment");
         let token = CamelCaseTokenWithComment::from_str("Data").unwrap();
-        assert_eq!(format!("{}", token), "Data");
+        pretty_assert_eq!(format!("{}", token), "Data");
     }
 
     #[traced_test]
     fn test_name_method() {
         info!("Testing name() from Named trait on CamelCaseTokenWithComment");
         let token = CamelCaseTokenWithComment::from_str("Data -- Comment").unwrap();
-        assert_eq!(token.name(), "Data");
+        pretty_assert_eq!(token.name(), "Data");
     }
 
     #[traced_test]
@@ -145,10 +145,10 @@ mod test_camel_case_token_with_comment {
         let t4 = CamelCaseTokenWithComment::from_str("Data4 -- 4").unwrap();
 
         let quad: TokenQuad = [t1, t2, t3, t4];
-        assert_eq!(quad.len(), 4);
-        assert_eq!(quad[0].data(), "Data1");
-        assert_eq!(quad[1].data(), "Data2");
-        assert_eq!(quad[2].data(), "Data3");
-        assert_eq!(quad[3].data(), "Data4");
+        pretty_assert_eq!(quad.len(), 4);
+        pretty_assert_eq!(quad[0].data(), "Data1");
+        pretty_assert_eq!(quad[1].data(), "Data2");
+        pretty_assert_eq!(quad[2].data(), "Data3");
+        pretty_assert_eq!(quad[3].data(), "Data4");
     }
 }

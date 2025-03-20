@@ -93,9 +93,9 @@ mod batch_choice_tests {
             "finish_reason": "stop"
         }"#;
         let choice: BatchChoice = serde_json::from_str(json).unwrap();
-        assert_eq!(choice.index(), 0);
-        assert_eq!(choice.message().role(), &MessageRole::Assistant);
-        assert_eq!(choice.finish_reason(), &FinishReason::Stop);
+        pretty_assert_eq!(choice.index(), 0);
+        pretty_assert_eq!(choice.message().role(), &MessageRole::Assistant);
+        pretty_assert_eq!(choice.finish_reason(), &FinishReason::Stop);
         assert!(choice.logprobs.is_none());
 
         // Choice with logprobs present
@@ -114,7 +114,7 @@ mod batch_choice_tests {
         }"#;
         let choice: BatchChoice = serde_json::from_str(json).unwrap();
         assert!(choice.logprobs.is_some());
-        assert_eq!(choice.finish_reason(), &FinishReason::Length);
+        pretty_assert_eq!(choice.finish_reason(), &FinishReason::Length);
 
         // Choice with unknown finish_reason
         let json = r#"{
@@ -128,7 +128,7 @@ mod batch_choice_tests {
             "finish_reason": "unknown_reason"
         }"#;
         let choice: BatchChoice = serde_json::from_str(json).unwrap();
-        assert_eq!(
+        pretty_assert_eq!(
             choice.finish_reason(),
             &FinishReason::Unknown("unknown_reason".to_string())
         );
@@ -144,7 +144,7 @@ mod batch_choice_tests {
             "logprobs": null
         }"#;
         let choice: BatchChoice = serde_json::from_str(json).unwrap();
-        assert_eq!(
+        pretty_assert_eq!(
             choice.finish_reason(),
             &FinishReason::Unknown("None".to_string())
         );
@@ -158,10 +158,10 @@ mod batch_choice_tests {
             }
         }"#;
         let choice: BatchChoice = serde_json::from_str(json).unwrap();
-        assert_eq!(choice.index(), 4);
-        assert_eq!(choice.message().content(), "Response with minimal fields.");
+        pretty_assert_eq!(choice.index(), 4);
+        pretty_assert_eq!(choice.message().content(), "Response with minimal fields.");
         assert!(choice.logprobs.is_none());
-        assert_eq!(
+        pretty_assert_eq!(
             choice.finish_reason(),
             &FinishReason::Unknown("None".to_string())
         );

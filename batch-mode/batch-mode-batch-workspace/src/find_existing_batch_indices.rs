@@ -59,7 +59,7 @@ mod find_existing_batch_file_indices_exhaustive_tests {
         expected_indices.insert(BatchIndex::from_uuid_str("550e8400-e29b-41d4-a716-446655440000").unwrap());
         expected_indices.insert(BatchIndex::from_uuid_str("f47ac10b-58cc-4372-a567-0e02b2c3d479").unwrap());
 
-        assert_eq!(indices, expected_indices);
+        pretty_assert_eq!(indices, expected_indices);
 
         workspace.cleanup_if_temporary().await
     }
@@ -106,8 +106,8 @@ mod find_existing_batch_file_indices_exhaustive_tests {
             .expect("Should succeed reading directory");
 
         debug!("Collected indices: {:?}", indices);
-        assert_eq!(indices.len(), 1, "Expected exactly one index");
-        assert_eq!(
+        pretty_assert_eq!(indices.len(), 1, "Expected exactly one index");
+        pretty_assert_eq!(
             indices.iter().next().unwrap(),
             &BatchIndex::Usize(idx),
             "The found index should match the one we created"
@@ -138,8 +138,8 @@ mod find_existing_batch_file_indices_exhaustive_tests {
             .expect("Should succeed reading directory");
         debug!("Collected indices: {:?}", indices);
 
-        assert_eq!(indices.len(), 1, "Expected exactly one UUID index");
-        assert_eq!(
+        pretty_assert_eq!(indices.len(), 1, "Expected exactly one UUID index");
+        pretty_assert_eq!(
             indices.iter().next().unwrap(),
             &BatchIndex::from_uuid_str(uuid_str).unwrap(),
             "The found index should match the UUID we created"
@@ -176,7 +176,7 @@ mod find_existing_batch_file_indices_exhaustive_tests {
         debug!("Collected indices: {:?}", indices);
 
         // We have indices 1,2,3,10. Index=1 has 2 separate files but is a single index in set
-        assert_eq!(indices.len(), 4, "Expected 4 distinct indices");
+        pretty_assert_eq!(indices.len(), 4, "Expected 4 distinct indices");
         for i in &[1,2,3,10] {
             assert!(indices.contains(&BatchIndex::Usize(*i)), "Missing index {}", i);
         }
@@ -220,7 +220,7 @@ mod find_existing_batch_file_indices_exhaustive_tests {
             .expect("Should succeed ignoring invalid files");
         debug!("Collected indices: {:?}", indices);
 
-        assert_eq!(indices.len(), 2, "We wrote exactly 2 valid pattern files");
+        pretty_assert_eq!(indices.len(), 2, "We wrote exactly 2 valid pattern files");
         assert!(indices.contains(&BatchIndex::Usize(123)));
         assert!(indices.contains(&BatchIndex::Usize(999)));
 
@@ -261,7 +261,7 @@ mod find_existing_batch_file_indices_exhaustive_tests {
                 Ok(Ok(set)) => {
                     debug!("Task #{} => found indices: {:?}", i, set);
                     // We expect exactly 4 distinct indices: 1,2,3,4
-                    assert_eq!(set.len(), 4, "Expected 4 distinct indices");
+                    pretty_assert_eq!(set.len(), 4, "Expected 4 distinct indices");
                     for j in 1..=4 {
                         assert!(set.contains(&BatchIndex::Usize(j)), "Missing index {}", j);
                     }
@@ -337,7 +337,7 @@ mod find_existing_batch_file_indices_exhaustive_tests {
         debug!("Collected indices: {:?}", indices);
 
         // We only have the valid file "batch_output_10.jsonl"
-        assert_eq!(indices.len(), 1);
+        pretty_assert_eq!(indices.len(), 1);
         assert!(indices.contains(&BatchIndex::Usize(10)));
 
         info!("Finished test: handles_non_utf8_filenames_gracefully");

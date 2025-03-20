@@ -3,12 +3,12 @@ crate::ix!();
 
 //-----------------------------------------[impl for dyn]
 #[async_trait]
-impl<E> LanguageModelClientInterface<E>
+impl<E: Debug> LanguageModelClientInterface<E>
     for std::sync::Arc<dyn LanguageModelClientInterface<E>>
 { }
 
 #[async_trait]
-impl<E> RetrieveBatchById
+impl<E: Debug> RetrieveBatchById
     for std::sync::Arc<dyn LanguageModelClientInterface<E>>
 {
     type Error = E;
@@ -18,7 +18,7 @@ impl<E> RetrieveBatchById
 }
 
 #[async_trait]
-impl<E> GetBatchFileContent
+impl<E: Debug> GetBatchFileContent
     for std::sync::Arc<dyn LanguageModelClientInterface<E>>
 {
     type Error = E;
@@ -29,7 +29,7 @@ impl<E> GetBatchFileContent
 }
 
 #[async_trait]
-impl<E> UploadBatchFileCore
+impl<E: Debug> UploadBatchFileCore
     for std::sync::Arc<dyn LanguageModelClientInterface<E>>
 {
     type Error = E;
@@ -44,7 +44,7 @@ impl<E> UploadBatchFileCore
 }
 
 #[async_trait]
-impl<E> CreateBatch
+impl<E: Debug> CreateBatch
     for std::sync::Arc<dyn LanguageModelClientInterface<E>>
 {
     type Error = E;
@@ -58,7 +58,7 @@ impl<E> CreateBatch
 }
 
 #[async_trait]
-impl<E> WaitForBatchCompletion
+impl<E: Debug> WaitForBatchCompletion
     for std::sync::Arc<dyn LanguageModelClientInterface<E>>
 {
     type Error = E;

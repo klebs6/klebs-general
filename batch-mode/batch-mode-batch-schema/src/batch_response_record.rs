@@ -161,30 +161,30 @@ mod batch_response_record_tests {
         "#;
 
         let batch_response: BatchResponseRecord = serde_json::from_str(json).unwrap();
-        assert_eq!(batch_response.id, BatchRequestId::new("batch_req_673d5e5fc66481908be3f82f25681838"));
-        assert_eq!(batch_response.custom_id, CustomRequestId::new("request-0"));
+        pretty_assert_eq!(batch_response.id, BatchRequestId::new("batch_req_673d5e5fc66481908be3f82f25681838"));
+        pretty_assert_eq!(batch_response.custom_id, CustomRequestId::new("request-0"));
         assert!(batch_response.error.is_none());
 
         let response = batch_response.response;
-        assert_eq!(response.status_code(), 200);
-        assert_eq!(response.request_id(), "7b003085175d218b0ceb2b79d7f60bca");
+        pretty_assert_eq!(response.status_code(), 200);
+        pretty_assert_eq!(response.request_id(), "7b003085175d218b0ceb2b79d7f60bca");
 
         let body = response.body();
-        assert_eq!(body.id(), Some("chatcmpl-AVW7Z2Dd49g7Zq5eVExww6dlKA8T9"));
-        assert_eq!(body.object(), Some("chat.completion"));
-        assert_eq!(body.model(), Some("gpt-4o-2024-08-06"));
+        pretty_assert_eq!(body.id(), Some("chatcmpl-AVW7Z2Dd49g7Zq5eVExww6dlKA8T9"));
+        pretty_assert_eq!(body.object(), Some("chat.completion"));
+        pretty_assert_eq!(body.model(), Some("gpt-4o-2024-08-06"));
 
         let choices = body.choices();
 
         assert!(choices.is_some());
         let choices = choices.unwrap();
 
-        assert_eq!(choices.len(), 1);
+        pretty_assert_eq!(choices.len(), 1);
 
         let choice = &choices[0];
-        assert_eq!(choice.index(), 0);
-        assert_eq!(choice.finish_reason(), &FinishReason::Stop);
-        assert_eq!(choice.message().role(), &MessageRole::Assistant);
-        assert_eq!(choice.message().content(), "Response content here.");
+        pretty_assert_eq!(choice.index(), 0);
+        pretty_assert_eq!(choice.finish_reason(), &FinishReason::Stop);
+        pretty_assert_eq!(choice.message().role(), &MessageRole::Assistant);
+        pretty_assert_eq!(choice.message().content(), "Response content here.");
     }
 }

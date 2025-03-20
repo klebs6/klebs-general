@@ -9,6 +9,7 @@ pub fn is_test_mode() -> bool {
     std::env::var("CARGO_RUNNING_TEST").is_ok()
 }
 
+pub use pretty_assertions::{assert_eq as pretty_assert_eq};
 pub use structopt::{self,StructOpt};
 pub use tokio::runtime::Runtime as TokioRuntime;
 pub use std::borrow::Cow;
@@ -72,7 +73,7 @@ pub use std::rc::Rc;
 pub use tempfile::{self,tempdir,TempDir};
 pub use std::cmp::Ordering;
 pub use uuid::{self,Uuid};
-pub use std::sync::{Arc};
+pub use std::sync::{RwLock,Arc};
 pub use std::ops::Deref;
 
 pub use futures::{self,future::join_all,executor::block_on};
@@ -84,6 +85,7 @@ pub use std::{
 
 pub use std::io::ErrorKind;
 pub use async_openai::types::{
+    OpenAIFilePurpose,
     BatchRequestOutputResponse,
     ChatCompletionRequestMessageContentPartImage,
     ChatCompletionRequestUserMessageContent,

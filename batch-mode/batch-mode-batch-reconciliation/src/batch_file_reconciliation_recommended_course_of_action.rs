@@ -82,3 +82,158 @@ impl TryFrom<&BatchFileTriple> for BatchFileReconciliationRecommendedCourseOfAct
         Ok(BatchFileReconciliationRecommendedCourseOfAction::from(steps))
     }
 }
+
+#[cfg(test)]
+mod batch_file_reconciliation_recommended_course_of_action_tests {
+    use super::*;
+
+    #[traced_test]
+    fn test_try_from_triple_all_none() {
+        let mock_index = BatchIndex::from(123u64);
+        let triple = BatchFileTriple {
+            index: mock_index.clone(),
+            input: None,
+            output: None,
+            error: None,
+            associated_metadata: None,
+            associated_workspace: None,
+        };
+
+        let result = BatchFileReconciliationRecommendedCourseOfAction::try_from(&triple);
+        assert!(result.is_err(), "Expected error if all files are None");
+        match result {
+            Err(BatchReconciliationError::BatchWorkspaceError(e)) => {
+                match e {
+                    BatchWorkspaceError::NoBatchFileTripleAtIndex { index } => {
+                        pretty_assert_eq!(index, mock_index);
+                    }
+                    _ => panic!("Unexpected error variant for all_none scenario"),
+                }
+            }
+            other => panic!("Unexpected result: {:?}", other),
+        }
+    }
+
+    #[traced_test]
+    fn test_try_from_triple_missing_input_but_has_output() {
+        let triple = BatchFileTriple {
+            index: BatchIndex::from(9999u64),
+            input: None,
+            output: Some("some_output.json".into()),
+            error: None,
+            associated_metadata: None,
+            associated_workspace: None,
+        };
+
+        let result = BatchFileReconciliationRecommendedCourseOfAction::try_from(&triple);
+        assert!(result.is_err(), "Should fail if input is missing but output exists");
+        match result {
+            Err(BatchReconciliationError::MissingBatchInputFileButOthersExist { index, output, error }) => {
+                pretty_assert_eq!(index.as_u64(), 9999u64);
+                pretty_assert_eq!(output, Some("some_output.json".into()));
+                pretty_assert_eq!(error, None);
+            }
+            other => panic!("Unexpected error variant for missing input scenario: {:?}", other),
+        }
+    }
+
+    #[traced_test]
+    fn test_try_from_triple_input_only() {
+        let triple = BatchFileTriple {
+            index: BatchIndex::from(1000u64),
+            input: Some("input.json".into()),
+            output: None,
+            error: None,
+            associated_metadata: None,
+            associated_workspace: None,
+        };
+
+        let result = BatchFileReconciliationRecommendedCourseOfAction::try_from(&triple);
+        assert!(result.is_ok(), "Input-only scenario should be Ok");
+        let steps = result.unwrap().steps().to_vec();
+        // Expect: [CheckForBatchOutputAndErrorFileOnline, RecalculateRecommendedCourseOfActionIfTripleChanged]
+        pretty_assert_eq!(
+            steps,
+            vec![
+                BatchFileTripleReconciliationOperation::CheckForBatchOutputAndErrorFileOnline,
+                BatchFileTripleReconciliationOperation::RecalculateRecommendedCourseOfActionIfTripleChanged
+            ]
+        );
+    }
+
+    #[traced_test]
+    fn test_try_from_triple_input_output() {
+        let triple = BatchFileTriple {
+            index: BatchIndex::from(1u64),
+            input: Some("input.json".into()),
+            output: Some("output.json".into()),
+            error: None,
+            associated_metadata: None,
+            associated_workspace: None,
+        };
+
+        let result = BatchFileReconciliationRecommendedCourseOfAction::try_from(&triple);
+        assert!(result.is_ok(), "Input+Output scenario should be Ok");
+        let steps = result.unwrap().steps().to_vec();
+        // Expect: [EnsureInputRequestIdsMatchOutputRequestIds, ProcessBatchOutputFile, MoveBatchInputAndOutputToTheDoneDirectory]
+        pretty_assert_eq!(
+            steps,
+            vec![
+                BatchFileTripleReconciliationOperation::EnsureInputRequestIdsMatchOutputRequestIds,
+                BatchFileTripleReconciliationOperation::ProcessBatchOutputFile,
+                BatchFileTripleReconciliationOperation::MoveBatchInputAndOutputToTheDoneDirectory
+            ]
+        );
+    }
+
+    #[traced_test]
+    fn test_try_from_triple_input_error() {
+        let triple = BatchFileTriple {
+            index: BatchIndex::from(2u64),
+            input: Some("input.json".into()),
+            output: None,
+            error: Some("error.json".into()),
+            associated_metadata: None,
+            associated_workspace: None,
+        };
+
+        let result = BatchFileReconciliationRecommendedCourseOfAction::try_from(&triple);
+        assert!(result.is_ok(), "Input+Error scenario should be Ok");
+        let steps = result.unwrap().steps().to_vec();
+        // Expect: [EnsureInputRequestIdsMatchErrorRequestIds, ProcessBatchErrorFile, MoveBatchInputAndErrorToTheDoneDirectory]
+        pretty_assert_eq!(
+            steps,
+            vec![
+                BatchFileTripleReconciliationOperation::EnsureInputRequestIdsMatchErrorRequestIds,
+                BatchFileTripleReconciliationOperation::ProcessBatchErrorFile,
+                BatchFileTripleReconciliationOperation::MoveBatchInputAndErrorToTheDoneDirectory
+            ]
+        );
+    }
+
+    #[traced_test]
+    fn test_try_from_triple_input_output_error() {
+        let triple = BatchFileTriple {
+            index: BatchIndex::from(3u64),
+            input: Some("input.json".into()),
+            output: Some("output.json".into()),
+            error: Some("error.json".into()),
+            associated_metadata: None,
+            associated_workspace: None,
+        };
+
+        let result = BatchFileReconciliationRecommendedCourseOfAction::try_from(&triple);
+        assert!(result.is_ok(), "Input+Output+Error scenario should be Ok");
+        let steps = result.unwrap().steps().to_vec();
+        // Expect: [EnsureInputRequestIdsMatchOutputRequestIdsCombinedWithErrorRequestIds, ProcessBatchErrorFile, ProcessBatchOutputFile, MoveBatchTripleToTheDoneDirectory]
+        pretty_assert_eq!(
+            steps,
+            vec![
+                BatchFileTripleReconciliationOperation::EnsureInputRequestIdsMatchOutputRequestIdsCombinedWithErrorRequestIds,
+                BatchFileTripleReconciliationOperation::ProcessBatchErrorFile,
+                BatchFileTripleReconciliationOperation::ProcessBatchOutputFile,
+                BatchFileTripleReconciliationOperation::MoveBatchTripleToTheDoneDirectory
+            ]
+        );
+    }
+}

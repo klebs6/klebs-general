@@ -27,7 +27,7 @@ mod language_model_api_url_exhaustive_tests {
         let url = LanguageModelApiUrl::ChatCompletions;
         let result = format!("{}", url);
         debug!("Formatted Display output: {}", result);
-        assert_eq!(result, "/v1/chat/completions", "Display should render the correct endpoint");
+        pretty_assert_eq!(result, "/v1/chat/completions", "Display should render the correct endpoint");
         trace!("===== END TEST: display_renders_chat_completions =====");
     }
 
@@ -38,7 +38,7 @@ mod language_model_api_url_exhaustive_tests {
         let serialized = serde_json::to_string(&url)
             .expect("Failed to serialize LanguageModelApiUrl");
         debug!("Serialized JSON: {}", serialized);
-        assert_eq!(serialized, r#""/v1/chat/completions""#, "Serialization should match expected JSON");
+        pretty_assert_eq!(serialized, r#""/v1/chat/completions""#, "Serialization should match expected JSON");
         trace!("===== END TEST: serialize_chat_completions_produces_expected_json =====");
     }
 

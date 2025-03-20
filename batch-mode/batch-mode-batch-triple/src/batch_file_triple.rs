@@ -62,37 +62,66 @@ impl Ord for BatchFileTriple {
 
 impl BatchFileTriple {
 
+    pub fn effective_input_filename(&self) -> PathBuf {
+        if let Some(path) = self.input() {
+            // If the user/test code explicitly set the input path, use it
+            path.clone()
+        } else {
+            // Otherwise, fall back to workspace
+            self.workspace.input_filename(&self.index)
+        }
+    }
+
+    pub fn effective_output_filename(&self) -> PathBuf {
+        if let Some(path) = self.output() {
+            path.clone()
+        } else {
+            self.workspace.output_filename(&self.index)
+        }
+    }
+
+    pub fn effective_error_filename(&self) -> PathBuf {
+        if let Some(path) = self.error() {
+            path.clone()
+        } else {
+            self.workspace.error_filename(&self.index)
+        }
+    }
+
+    pub fn effective_metadata_filename(&self) -> PathBuf {
+        if let Some(path) = self.associated_metadata() {
+            path.clone()
+        } else {
+            self.workspace.metadata_filename(&self.index)
+        }
+    }
+}
+
+impl BatchFileTriple {
+
     delegate!{
         to self.workspace {
             pub fn get_done_directory(&self) -> &PathBuf;
         }
     }
 
-    pub fn input_filename_which_maybe_does_not_yet_exist(&self) -> PathBuf {
-        self.workspace.input_filename(&self.index)
-    }
-
-    pub fn output_filename_which_maybe_does_not_yet_exist(&self) -> PathBuf {
-        self.workspace.output_filename(&self.index)
-    }
-
-    pub fn error_filename_which_maybe_does_not_yet_exist(&self) -> PathBuf {
-        self.workspace.error_filename(&self.index)
-    }
-
-    pub fn metadata_filename_which_maybe_does_not_yet_exist(&self) -> PathBuf {
-        self.workspace.metadata_filename(&self.index)
-    }
-
     pub fn set_output_path(&mut self, path: Option<PathBuf>) {
+        trace!("Setting 'output' path to {:?}", path);
         self.output = path;
     }
 
+    pub fn set_metadata_path(&mut self, path: Option<PathBuf>) {
+        trace!("Setting 'associated_metadata' path to {:?}", path);
+        self.associated_metadata = path;
+    }
+
     pub fn set_error_path(&mut self, path: Option<PathBuf>) {
+        trace!("Setting 'error' path to {:?}", path);
         self.error = path;
     }
 
     pub fn all_are_none(&self) -> bool {
+        trace!("Checking if input, output, and error are all None for batch index={:?}", self.index);
         self.input.is_none() && self.output.is_none() && self.error.is_none()
     }
 
@@ -100,9 +129,9 @@ impl BatchFileTriple {
     pub fn new_with_requests(
         requests:  &[LanguageModelBatchAPIRequest], 
         workspace: Arc<dyn BatchWorkspaceInterface>
-
     ) -> Result<Self,BatchInputCreationError> {
 
+        trace!("Creating new batch triple with provided requests (count={}) in workspace={:?}", requests.len(), workspace);
         let index = BatchIndex::new();
 
         let batch_input_filename    = workspace.input_filename(&index);
@@ -110,12 +139,10 @@ impl BatchFileTriple {
         let batch_error_filename    = workspace.error_filename(&index);
         let batch_metadata_filename = workspace.metadata_filename(&index);
 
-        info!("creating new batch at {:?} with {} requests", batch_input_filename, requests.len());
-
-        // Create input file
+        info!("Creating new batch input file at {:?} with {} requests", batch_input_filename, requests.len());
         batch_mode_batch_scribe::create_batch_input_file(&requests,&batch_input_filename)?;
 
-        //we do these dev-only checks here just to be sure
+        // dev-only checks
         assert!(batch_input_filename.exists());
         assert!(!batch_output_filename.exists());
         assert!(!batch_error_filename.exists());
@@ -138,9 +165,11 @@ impl BatchFileTriple {
         error:               Option<PathBuf>, 
         associated_metadata: Option<PathBuf>, 
         workspace:           Arc<dyn BatchWorkspaceInterface>
-
     ) -> Self {
-
+        trace!(
+            "Constructing BatchFileTriple::new_direct with index={:?}, input={:?}, output={:?}, error={:?}, metadata={:?}",
+            index, input, output, error, associated_metadata
+        );
         Self { 
             index: index.clone(), 
             input, 
@@ -149,6 +178,62 @@ impl BatchFileTriple {
             associated_metadata, 
             workspace 
         }
+    }
+
+    /// A convenience constructor used by certain unit tests that only need
+    /// to set `associated_metadata` while leaving other paths as None.
+    /// We assign a dummy `BatchIndex` and a default MockWorkspace (or any real workspace).
+    #[cfg(test)]
+    pub fn new_for_test_with_metadata_path(metadata_path: PathBuf) -> Self {
+        trace!(
+            "Constructing a test triple with just an associated metadata path: {:?}",
+            metadata_path
+        );
+
+        let index = BatchIndex::Usize(9999);
+        let workspace = Arc::new(MockWorkspace::default());
+
+        Self::new_direct(
+            &index,
+            None,                 // no input file
+            None,                 // no output file
+            None,                 // no error file
+            Some(metadata_path),  // test sets an associated metadata path
+            workspace
+        )
+    }
+
+    /// A convenience constructor used by certain unit tests that need to set
+    /// specific input, output, and error paths directly (often to temp files).
+    /// We assign a dummy `BatchIndex` and a default MockWorkspace.
+    pub fn new_for_test_with_in_out_err_paths(
+        workspace: Arc<dyn BatchWorkspaceInterface>,
+        input:     PathBuf,
+        output:    Option<PathBuf>,
+        error:     Option<PathBuf>,
+    ) -> Self {
+        trace!(
+            "Constructing a test triple with input={:?}, output={:?}, error={:?}",
+            input,
+            output,
+            error
+        );
+
+        let index = BatchIndex::Usize(9999);
+
+        info!(
+            "Created new_for_test_with_in_out_err_paths triple with index={:?} in a mock workspace",
+            index
+        );
+
+        Self::new_direct(
+            &index,
+            Some(input),
+            output,
+            error,
+            None,
+            workspace,
+        )
     }
 }
 
@@ -167,7 +252,7 @@ mod batch_file_triple_filename_accessors_exhaustive_tests {
         );
         let path = triple.input_filename_which_maybe_does_not_yet_exist();
         debug!("Returned path: {:?}", path);
-        assert_eq!(path, workspace.input_filename(&triple.index()), "Should match workspace input filename");
+        pretty_assert_eq!(path, workspace.input_filename(&triple.index()), "Should match workspace input filename");
         trace!("===== END TEST: input_filename_which_maybe_does_not_yet_exist_returns_correct_path =====");
     }
 
@@ -182,7 +267,7 @@ mod batch_file_triple_filename_accessors_exhaustive_tests {
         );
         let path = triple.output_filename_which_maybe_does_not_yet_exist();
         debug!("Returned path: {:?}", path);
-        assert_eq!(path, workspace.output_filename(&triple.index()), "Should match workspace output filename");
+        pretty_assert_eq!(path, workspace.output_filename(&triple.index()), "Should match workspace output filename");
         trace!("===== END TEST: output_filename_which_maybe_does_not_yet_exist_returns_correct_path =====");
     }
 
@@ -197,7 +282,7 @@ mod batch_file_triple_filename_accessors_exhaustive_tests {
         );
         let path = triple.error_filename_which_maybe_does_not_yet_exist();
         debug!("Returned path: {:?}", path);
-        assert_eq!(path, workspace.error_filename(&triple.index()), "Should match workspace error filename");
+        pretty_assert_eq!(path, workspace.error_filename(&triple.index()), "Should match workspace error filename");
         trace!("===== END TEST: error_filename_which_maybe_does_not_yet_exist_returns_correct_path =====");
     }
 
@@ -212,7 +297,7 @@ mod batch_file_triple_filename_accessors_exhaustive_tests {
         );
         let path = triple.metadata_filename_which_maybe_does_not_yet_exist();
         debug!("Returned path: {:?}", path);
-        assert_eq!(path, workspace.metadata_filename(&triple.index()), "Should match workspace metadata filename");
+        pretty_assert_eq!(path, workspace.metadata_filename(&triple.index()), "Should match workspace metadata filename");
         trace!("===== END TEST: metadata_filename_which_maybe_does_not_yet_exist_returns_correct_path =====");
     }
 
@@ -228,7 +313,7 @@ mod batch_file_triple_filename_accessors_exhaustive_tests {
         let new_path = Some(PathBuf::from("test_output.json"));
         triple.set_output_path(new_path.clone());
         debug!("Updated triple: {:?}", triple);
-        assert_eq!(*triple.output(), new_path, "Output path should be updated");
+        pretty_assert_eq!(*triple.output(), new_path, "Output path should be updated");
         trace!("===== END TEST: set_output_path_updates_field =====");
     }
 
@@ -244,7 +329,7 @@ mod batch_file_triple_filename_accessors_exhaustive_tests {
         let new_path = Some(PathBuf::from("test_error.json"));
         triple.set_error_path(new_path.clone());
         debug!("Updated triple: {:?}", triple);
-        assert_eq!(*triple.error(), new_path, "Error path should be updated");
+        pretty_assert_eq!(*triple.error(), new_path, "Error path should be updated");
         trace!("===== END TEST: set_error_path_updates_field =====");
     }
 
@@ -327,11 +412,11 @@ mod batch_file_triple_filename_accessors_exhaustive_tests {
         );
         debug!("Constructed triple: {:?}", triple);
 
-        assert_eq!(triple.index(), &index, "Index should match");
-        assert_eq!(*triple.input(), input, "Input path mismatch");
-        assert_eq!(*triple.output(), output, "Output path mismatch");
-        assert_eq!(*triple.error(), error, "Error path mismatch");
-        assert_eq!(*triple.associated_metadata(), metadata, "Metadata path mismatch");
+        pretty_assert_eq!(triple.index(), &index, "Index should match");
+        pretty_assert_eq!(*triple.input(), input, "Input path mismatch");
+        pretty_assert_eq!(*triple.output(), output, "Output path mismatch");
+        pretty_assert_eq!(*triple.error(), error, "Error path mismatch");
+        pretty_assert_eq!(*triple.associated_metadata(), metadata, "Metadata path mismatch");
         trace!("===== END TEST: new_direct_sets_all_fields_as_provided =====");
     }
 

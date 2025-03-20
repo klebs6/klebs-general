@@ -60,12 +60,12 @@ mod test_parse_token_file {
         let filename = path.to_str().unwrap();
         let tokens = parse_token_file(filename).await.unwrap();
 
-        assert_eq!(tokens.len(), 2);
-        assert_eq!(tokens[0].data(), "Token1");
-        assert_eq!(*tokens[0].comment(), Some("Comment1".to_string()));
+        pretty_assert_eq!(tokens.len(), 2);
+        pretty_assert_eq!(tokens[0].data(), "Token1");
+        pretty_assert_eq!(*tokens[0].comment(), Some("Comment1".to_string()));
 
-        assert_eq!(tokens[1].data(), "Token2");
-        assert_eq!(*tokens[1].comment(), None);
+        pretty_assert_eq!(tokens[1].data(), "Token2");
+        pretty_assert_eq!(*tokens[1].comment(), None);
     }
 
     #[traced_test]
@@ -80,9 +80,9 @@ mod test_parse_token_file {
         let filename = path.to_str().unwrap();
         let tokens = parse_token_file(filename).await.unwrap();
 
-        assert_eq!(tokens.len(), 1);
-        assert_eq!(tokens[0].data(), "TokenWithData");
-        assert_eq!(*tokens[0].comment(), None);
+        pretty_assert_eq!(tokens.len(), 1);
+        pretty_assert_eq!(tokens[0].data(), "TokenWithData");
+        pretty_assert_eq!(*tokens[0].comment(), None);
     }
 
     #[traced_test]
@@ -105,8 +105,8 @@ mod test_parse_token_file {
         let tokens = parse_token_file(filename).await.unwrap();
 
         // Invalid lines are ignored with warnings, only valid lines remain
-        assert_eq!(tokens.len(), 1);
-        assert_eq!(tokens[0].data(), "ValidToken");
-        assert_eq!(*tokens[0].comment(), Some("ValidComment".to_string()));
+        pretty_assert_eq!(tokens.len(), 1);
+        pretty_assert_eq!(tokens[0].data(), "ValidToken");
+        pretty_assert_eq!(*tokens[0].comment(), Some("ValidComment".to_string()));
     }
 }

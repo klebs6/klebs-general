@@ -58,13 +58,13 @@ mod finish_reason_tests {
         for (reason_str, expected_reason) in reasons.iter().zip(expected_reasons.iter()) {
             let json = format!("\"{}\"", reason_str);
             let finish_reason: FinishReason = serde_json::from_str(&json).unwrap();
-            assert_eq!(&finish_reason, expected_reason);
+            pretty_assert_eq!(&finish_reason, expected_reason);
         }
 
         // Unknown reason
         let json = "\"unknown_reason\"";
         let finish_reason: FinishReason = serde_json::from_str(json).unwrap();
-        assert_eq!(
+        pretty_assert_eq!(
             finish_reason,
             FinishReason::Unknown("unknown_reason".to_string())
         );
@@ -72,7 +72,7 @@ mod finish_reason_tests {
         // Null reason
         let json = "null";
         let finish_reason: FinishReason = serde_json::from_str(json).unwrap();
-        assert_eq!(
+        pretty_assert_eq!(
             finish_reason,
             FinishReason::Unknown("None".to_string())
         );
@@ -80,6 +80,6 @@ mod finish_reason_tests {
         // Empty string as reason
         let json = "\"\"";
         let finish_reason: FinishReason = serde_json::from_str(json).unwrap();
-        assert_eq!(finish_reason, FinishReason::Unknown("".to_string()));
+        pretty_assert_eq!(finish_reason, FinishReason::Unknown("".to_string()));
     }
 }

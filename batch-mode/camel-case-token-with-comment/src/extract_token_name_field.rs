@@ -25,7 +25,7 @@ mod test_extract_token_name_field {
         tracing::info!("Testing extract_token_name_field with valid data");
         let json_data = json!({ "token_name": "example_token" });
         let result = extract_token_name_field(&json_data);
-        assert_eq!(result, Ok("example_token"));
+        pretty_assert_eq!(result, Ok("example_token"));
     }
 
     #[traced_test]

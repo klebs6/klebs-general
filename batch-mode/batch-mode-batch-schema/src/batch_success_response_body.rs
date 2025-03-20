@@ -90,10 +90,10 @@ mod batch_success_response_body_tests {
         });
 
         let body: BatchSuccessResponseBody = serde_json::from_value(json_data).unwrap();
-        assert_eq!(body.id(), "resp_456");
-        assert_eq!(body.choices().len(), 1);
-        assert_eq!(body.usage().total_tokens(), 150);
-        assert_eq!(body.system_fingerprint(), Some("fp_abc"));
+        pretty_assert_eq!(body.id(), "resp_456");
+        pretty_assert_eq!(body.choices().len(), 1);
+        pretty_assert_eq!(body.usage().total_tokens(), 150);
+        pretty_assert_eq!(body.system_fingerprint(), Some("fp_abc"));
     }
 
     #[test]
@@ -113,7 +113,7 @@ mod batch_success_response_body_tests {
         });
 
         let body: BatchSuccessResponseBody = serde_json::from_value(json_data).unwrap();
-        assert_eq!(body.system_fingerprint(), None);
+        pretty_assert_eq!(body.system_fingerprint(), None);
     }
 
     #[test]

@@ -74,7 +74,7 @@ mod language_model_message_exhaustive_tests {
         match &message.content {
             ChatCompletionRequestUserMessageContent::Text(text) => {
                 debug!("Message content is a text field: {}", text);
-                assert_eq!(text, msg_text, "Content text should match");
+                pretty_assert_eq!(text, msg_text, "Content text should match");
             },
             _ => {
                 error!("Expected text content, found a different variant");
@@ -105,7 +105,7 @@ mod language_model_message_exhaustive_tests {
         match &message.content {
             ChatCompletionRequestUserMessageContent::Text(text) => {
                 debug!("Message content is a text field: {}", text);
-                assert_eq!(text, msg_text, "Content text should match");
+                pretty_assert_eq!(text, msg_text, "Content text should match");
             },
             _ => {
                 error!("Expected text content, found a different variant");
@@ -137,15 +137,15 @@ mod language_model_message_exhaustive_tests {
         match &message.content {
             ChatCompletionRequestUserMessageContent::Array(parts) => {
                 debug!("Message content is an array with {} part(s)", parts.len());
-                assert_eq!(parts.len(), 2, "Expected two parts: text + image");
+                pretty_assert_eq!(parts.len(), 2, "Expected two parts: text + image");
                 match (&parts[0], &parts[1]) {
                     (
                         ChatCompletionRequestUserMessageContentPart::Text(ChatCompletionRequestMessageContentPartText{ text: t }),
                         ChatCompletionRequestUserMessageContentPart::ImageUrl(ChatCompletionRequestMessageContentPartImage { image_url: img }),
                     ) => {
                         debug!("Text part: {}, Image URL: {}", t, img.url);
-                        assert_eq!(t, msg_text, "Text part should match original message");
-                        assert_eq!(&img.url, image_b64, "Image URL should match input");
+                        pretty_assert_eq!(t, msg_text, "Text part should match original message");
+                        pretty_assert_eq!(&img.url, image_b64, "Image URL should match input");
                     },
                     _ => {
                         error!("Array content did not have the expected (Text, ImageUrl) structure");
@@ -175,8 +175,8 @@ mod language_model_message_exhaustive_tests {
         debug!("Deserialized system message: {:?}", deserialized);
 
         // Compare fields
-        assert_eq!(format!("{:?}", original.role), format!("{:?}", deserialized.role));
-        assert_eq!(format!("{:?}", original.content), format!("{:?}", deserialized.content));
+        pretty_assert_eq!(format!("{:?}", original.role), format!("{:?}", deserialized.role));
+        pretty_assert_eq!(format!("{:?}", original.content), format!("{:?}", deserialized.content));
 
         trace!("===== END TEST: serialization_and_deserialization_of_system_message =====");
     }
@@ -194,8 +194,8 @@ mod language_model_message_exhaustive_tests {
         debug!("Deserialized user message with image: {:?}", deserialized);
 
         // Compare fields
-        assert_eq!(format!("{:?}", original.role), format!("{:?}", deserialized.role));
-        assert_eq!(format!("{:?}", original.content), format!("{:?}", deserialized.content));
+        pretty_assert_eq!(format!("{:?}", original.role), format!("{:?}", deserialized.role));
+        pretty_assert_eq!(format!("{:?}", original.content), format!("{:?}", deserialized.content));
 
         trace!("===== END TEST: serialization_and_deserialization_of_user_message_with_image =====");
     }

@@ -51,7 +51,7 @@ fn verifies_saveload_derive_for_testdata() {
             .await
             .expect("Load operation failed");
 
-        assert_eq!(instance, loaded, "Loaded instance differs from the original.");
+        pretty_assert_eq!(instance, loaded, "Loaded instance differs from the original.");
     });
 }
 

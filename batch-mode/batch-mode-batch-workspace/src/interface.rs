@@ -141,7 +141,7 @@ mod batch_workspace_interface_exhaustive_tests {
 
         let done_dir = ws.get_done_directory();
         debug!("Returned done_dir: {:?}", done_dir);
-        assert_eq!(
+        pretty_assert_eq!(
             *done_dir, 
             PathBuf::from("/some/root/done"), 
             "Should match the expected done directory"
@@ -167,7 +167,7 @@ mod batch_workspace_interface_exhaustive_tests {
         let idx = BatchIndex::Usize(42);
         let path = ws.input_filename(&idx);
         debug!("input_filename => {:?}", path);
-        assert_eq!(path, PathBuf::from("/my/workdir/batch_input_42.jsonl"));
+        pretty_assert_eq!(path, PathBuf::from("/my/workdir/batch_input_42.jsonl"));
         info!("Finished test: test_get_input_filename_at_index_usize");
     }
 
@@ -190,7 +190,7 @@ mod batch_workspace_interface_exhaustive_tests {
             .unwrap();
         let path = ws.input_filename(&idx_uuid);
         debug!("input_filename => {:?}", path);
-        assert_eq!(
+        pretty_assert_eq!(
             path, 
             PathBuf::from("/my/workdir/batch_input_550e8400-e29b-41d4-a716-446655440000.jsonl")
         );
@@ -215,7 +215,7 @@ mod batch_workspace_interface_exhaustive_tests {
         let idx = BatchIndex::Usize(99);
         let path = ws.output_filename(&idx);
         debug!("output_filename => {:?}", path);
-        assert_eq!(path, PathBuf::from("/data/workdir/batch_output_99.jsonl"));
+        pretty_assert_eq!(path, PathBuf::from("/data/workdir/batch_output_99.jsonl"));
         info!("Finished test: test_get_output_filename_at_index");
     }
 
@@ -237,7 +237,7 @@ mod batch_workspace_interface_exhaustive_tests {
         let idx = BatchIndex::from_uuid_str("f47ac10b-58cc-4372-a567-0e02b2c3d479").unwrap();
         let path = ws.error_filename(&idx);
         debug!("error_filename => {:?}", path);
-        assert_eq!(
+        pretty_assert_eq!(
             path, 
             PathBuf::from("/data/workdir/batch_error_f47ac10b-58cc-4372-a567-0e02b2c3d479.jsonl")
         );
@@ -262,7 +262,7 @@ mod batch_workspace_interface_exhaustive_tests {
         let idx = BatchIndex::Usize(0);
         let path = ws.metadata_filename(&idx);
         debug!("metadata_filename => {:?}", path);
-        assert_eq!(
+        pretty_assert_eq!(
             path, 
             PathBuf::from("/data/workdir/batch_metadata_0.jsonl")
         );
@@ -291,11 +291,11 @@ mod batch_workspace_interface_exhaustive_tests {
 
         let path = ws.target_path(&item, &ExpectedContentType::Json);
         debug!("target_path => {:?}", path);
-        assert_eq!(path, PathBuf::from("/root/target/my_item_name.json"));
+        pretty_assert_eq!(path, PathBuf::from("/root/target/my_item_name.json"));
 
         let path2 = ws.target_path(&item, &ExpectedContentType::PlainText);
         debug!("target_path (PlainText) => {:?}", path2);
-        assert_eq!(path2, PathBuf::from("/root/target/my_item_name.txt"));
+        pretty_assert_eq!(path2, PathBuf::from("/root/target/my_item_name.txt"));
 
         info!("Finished test: test_get_target_path_for_item");
     }
@@ -317,7 +317,7 @@ mod batch_workspace_interface_exhaustive_tests {
 
         let dir = ws.failed_json_repairs_dir();
         debug!("failed_json_repairs_dir => {:?}", dir);
-        assert_eq!(*dir, PathBuf::from("/root/failed-json-repairs"));
+        pretty_assert_eq!(*dir, PathBuf::from("/root/failed-json-repairs"));
 
         info!("Finished test: test_get_failed_json_repairs_dir");
     }
@@ -339,7 +339,7 @@ mod batch_workspace_interface_exhaustive_tests {
 
         let dir = ws.failed_items_dir();
         debug!("failed_items_dir => {:?}", dir);
-        assert_eq!(*dir, PathBuf::from("/root/failed-items"));
+        pretty_assert_eq!(*dir, PathBuf::from("/root/failed-items"));
 
         info!("Finished test: test_get_failed_items_dir");
     }
@@ -379,7 +379,7 @@ mod batch_workspace_interface_exhaustive_tests {
 
         let wd = ws.workdir();
         debug!("workdir => {:?}", wd);
-        assert_eq!(*wd, PathBuf::from("/some/workdir"));
+        pretty_assert_eq!(*wd, PathBuf::from("/some/workdir"));
 
         info!("Finished test: test_get_workdir");
     }

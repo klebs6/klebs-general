@@ -49,7 +49,7 @@ mod write_to_file_tests {
 
         // Read back the file content to verify
         let written_content = fs::read_to_string(&temp_path).await.unwrap();
-        assert_eq!(written_content, json_content);
+        pretty_assert_eq!(written_content, json_content);
 
         // Cleanup
         fs::remove_file(temp_path).await.unwrap();
@@ -112,7 +112,7 @@ mod write_to_file_tests {
 
         trace!("Verifying overwritten content");
         let final_read = fs::read_to_string(&temp_path).await.unwrap();
-        assert_eq!(
+        pretty_assert_eq!(
             final_read, new_content,
             "File content was not correctly overwritten"
         );
@@ -184,7 +184,7 @@ mod write_to_file_tests {
         for (path, content) in paths_and_contents {
             let read_back = fs::read_to_string(&path).await.unwrap();
             debug!("Read from {:?}: {}", path, read_back);
-            assert_eq!(
+            pretty_assert_eq!(
                 read_back, content,
                 "Mismatch between written and read content in concurrency test"
             );
@@ -219,7 +219,7 @@ mod write_to_file_tests {
         trace!("Reading back content for verification");
         let read_content = fs::read_to_string(file_path).await.expect("Failed to read test file");
         debug!("Read content: {}", read_content);
-        assert_eq!(read_content, json_content);
+        pretty_assert_eq!(read_content, json_content);
 
         // Clean up
         trace!("Cleaning up temporary file \"{}\"", file_path);

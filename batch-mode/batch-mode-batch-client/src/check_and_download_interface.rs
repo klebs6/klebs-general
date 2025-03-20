@@ -50,7 +50,9 @@ where
     E: From<BatchDownloadError>
       + From<OpenAIClientError>
       + From<BatchMetadataError>
-      + From<std::io::Error>,
+      + From<std::io::Error> 
+      + Debug
+      + Display,
 {
     // We don’t need any methods here, because this trait 
     // is just the aggregator of the 4 sub‐traits above.

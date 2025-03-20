@@ -36,9 +36,9 @@ mod batch_error_response_body_tests {
         });
 
         let body: BatchErrorResponseBody = serde_json::from_value(json_data).unwrap();
-        assert_eq!(body.error().message(), "Invalid API key");
-        assert_eq!(body.error().error_type(), "authentication_error");
-        assert_eq!(body.error().code(), Some("invalid_api_key"));
+        pretty_assert_eq!(body.error().message(), "Invalid API key");
+        pretty_assert_eq!(body.error().error_type(), "authentication_error");
+        pretty_assert_eq!(body.error().code(), Some("invalid_api_key"));
     }
 
     #[test]

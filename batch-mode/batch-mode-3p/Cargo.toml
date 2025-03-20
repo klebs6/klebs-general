@@ -8,6 +8,7 @@ license     = "MIT"
 repository  = "https://github.com/klebs6/klebs-general"
 
 [dependencies]
+pretty_assertions        = "*"
 async-openai             = "0.27.2"
 export-magic             = "0.3.6"
 uuid                     = { version = "1.14.0", features = ["v4", "serde"] }

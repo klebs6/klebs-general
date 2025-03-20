@@ -94,9 +94,9 @@ mod batch_response_content_tests {
         });
 
         let response: BatchResponseContent = serde_json::from_value(json_data).unwrap();
-        assert_eq!(response.status_code(), 200);
+        pretty_assert_eq!(response.status_code(), 200);
         assert!(response.is_success());
-        assert_eq!(response.request_id().as_str(), "req_123");
+        pretty_assert_eq!(response.request_id().as_str(), "req_123");
         assert!(response.success_body().is_some());
         assert!(response.error_body().is_none());
     }
@@ -117,9 +117,9 @@ mod batch_response_content_tests {
         });
 
         let response: BatchResponseContent = serde_json::from_value(json_data).unwrap();
-        assert_eq!(response.status_code(), 400);
+        pretty_assert_eq!(response.status_code(), 400);
         assert!(!response.is_success());
-        assert_eq!(response.request_id().as_str(), "req_789");
+        pretty_assert_eq!(response.request_id().as_str(), "req_789");
         assert!(response.success_body().is_none());
         assert!(response.error_body().is_some());
     }
@@ -179,18 +179,18 @@ mod batch_response_content_tests {
         // Accessing fields directly through BatchResponseBody methods
         let body = response.body();
 
-        assert_eq!(body.id(), Some("chatcmpl-AVW7Z2Dd49g7Zq5eVExww6dlKA8T9"));
-        assert_eq!(body.object(), Some("chat.completion"));
-        assert_eq!(body.model(), Some("gpt-4o-2024-08-06"));
-        assert_eq!(body.system_fingerprint(), Some("fp_7f6be3efb0"));
+        pretty_assert_eq!(body.id(), Some("chatcmpl-AVW7Z2Dd49g7Zq5eVExww6dlKA8T9"));
+        pretty_assert_eq!(body.object(), Some("chat.completion"));
+        pretty_assert_eq!(body.model(), Some("gpt-4o-2024-08-06"));
+        pretty_assert_eq!(body.system_fingerprint(), Some("fp_7f6be3efb0"));
 
         // Access choices
         if let Some(choices) = body.choices() {
-            assert_eq!(choices.len(), 1);
+            pretty_assert_eq!(choices.len(), 1);
             let choice = &choices[0];
-            assert_eq!(choice.index(), 0);
-            assert_eq!(choice.finish_reason(), &FinishReason::Stop);
-            assert_eq!(choice.message().content(), "Response content here.");
+            pretty_assert_eq!(choice.index(), 0);
+            pretty_assert_eq!(choice.finish_reason(), &FinishReason::Stop);
+            pretty_assert_eq!(choice.message().content(), "Response content here.");
         } else {
             panic!("Expected choices in the response body");
         }

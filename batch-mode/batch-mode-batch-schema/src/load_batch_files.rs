@@ -212,7 +212,7 @@ mod file_loading_tests {
 
         assert!(result.is_ok(), "Should successfully load valid input file.");
         let data = result.unwrap();
-        assert_eq!(data.requests().len(), 2, "Should have exactly two requests.");
+        pretty_assert_eq!(data.requests().len(), 2, "Should have exactly two requests.");
         debug!("Loaded {} requests from input file.", data.requests().len());
     }
 
@@ -239,7 +239,7 @@ mod file_loading_tests {
 
         assert!(result.is_ok(), "Empty file should load successfully, returning 0 requests.");
         let data = result.unwrap();
-        assert_eq!(data.requests().len(), 0, "Should have zero requests from empty file.");
+        pretty_assert_eq!(data.requests().len(), 0, "Should have zero requests from empty file.");
         debug!("Empty file loaded without error, as expected.");
     }
 
@@ -266,7 +266,7 @@ mod file_loading_tests {
 
         assert!(result.is_ok(), "Empty error file should load successfully, returning 0 responses.");
         let data = result.unwrap();
-        assert_eq!(data.responses().len(), 0, "No responses expected from empty error file.");
+        pretty_assert_eq!(data.responses().len(), 0, "No responses expected from empty error file.");
         debug!("Empty error file loaded with no issues.");
     }
 
@@ -293,7 +293,7 @@ mod file_loading_tests {
 
         assert!(result.is_ok(), "Should succeed loading an empty output file.");
         let data = result.unwrap();
-        assert_eq!(data.responses().len(), 0, "No responses in empty file.");
+        pretty_assert_eq!(data.responses().len(), 0, "No responses in empty file.");
         trace!("Empty file loaded correctly for output load.");
     }
 
@@ -315,7 +315,7 @@ mod file_loading_tests {
 
         assert!(result.is_ok(), "Should successfully load valid error file lines.");
         let data = result.unwrap();
-        assert_eq!(data.responses().len(), 2, "Should have exactly two responses for error data.");
+        pretty_assert_eq!(data.responses().len(), 2, "Should have exactly two responses for error data.");
         trace!("Loaded {} responses from error file.", data.responses().len());
     }
 
@@ -337,7 +337,7 @@ mod file_loading_tests {
 
         assert!(result.is_ok(), "Should load valid output file lines successfully.");
         let data = result.unwrap();
-        assert_eq!(data.responses().len(), 2, "Should have exactly 2 response records from output file.");
+        pretty_assert_eq!(data.responses().len(), 2, "Should have exactly 2 response records from output file.");
         debug!("Loaded {} records from output file.", data.responses().len());
     }
 }

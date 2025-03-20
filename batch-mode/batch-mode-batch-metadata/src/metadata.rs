@@ -1,11 +1,16 @@
 // ---------------- [ File: src/metadata.rs ]
 crate::ix!();
 
-#[derive(Debug,Clone,Serialize,Deserialize)]
+#[derive(Builder,Debug,Clone,Serialize,Deserialize)]
+#[builder(setter(into))]
 pub struct BatchMetadata {
     batch_id:       String,
     input_file_id:  String,
+
+    #[builder(default)]
     output_file_id: Option<String>,
+
+    #[builder(default)]
     error_file_id:  Option<String>,
 }
 
@@ -99,12 +104,12 @@ mod batch_metadata_exhaustive_tests {
         let metadata = BatchMetadata::with_input_id_and_batch_id(input_id, batch_id);
         debug!("Constructed metadata: {:?}", metadata);
 
-        assert_eq!(
+        pretty_assert_eq!(
             metadata.batch_id(),
             batch_id,
             "batch_id should match the provided value"
         );
-        assert_eq!(
+        pretty_assert_eq!(
             metadata.input_file_id(),
             input_id,
             "input_file_id should match the provided value"
@@ -126,7 +131,7 @@ mod batch_metadata_exhaustive_tests {
         match metadata.output_file_id() {
             Ok(id) => {
                 debug!("Retrieved output_file_id: {}", id);
-                assert_eq!(id, "output_file_xyz");
+                pretty_assert_eq!(id, "output_file_xyz");
             },
             Err(_) => {
                 error!("Expected output_file_id to be set, but got an error");
@@ -160,7 +165,7 @@ mod batch_metadata_exhaustive_tests {
         match metadata.error_file_id() {
             Ok(id) => {
                 debug!("Retrieved error_file_id: {}", id);
-                assert_eq!(id, "error_file_abc");
+                pretty_assert_eq!(id, "error_file_abc");
             },
             Err(_) => {
                 error!("Expected error_file_id to be set, but got an error");
@@ -214,11 +219,11 @@ mod batch_metadata_exhaustive_tests {
         }
 
         // Compare fields
-        assert_eq!(loaded.batch_id(), original.batch_id());
-        assert_eq!(loaded.input_file_id(), original.input_file_id());
+        pretty_assert_eq!(loaded.batch_id(), original.batch_id());
+        pretty_assert_eq!(loaded.input_file_id(), original.input_file_id());
         // We unwrap or assert on these, because we set them
-        assert_eq!(loaded.output_file_id().unwrap(), original.output_file_id().unwrap());
-        assert_eq!(loaded.error_file_id().unwrap(), original.error_file_id().unwrap());
+        pretty_assert_eq!(loaded.output_file_id().unwrap(), original.output_file_id().unwrap());
+        pretty_assert_eq!(loaded.error_file_id().unwrap(), original.error_file_id().unwrap());
 
         trace!("===== END TEST: save_to_file_and_load_from_file_round_trip =====");
         Ok(())

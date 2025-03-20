@@ -67,11 +67,11 @@ mod gather_all_batch_triples_exhaustive_tests {
         let batch_files = workspace.gather_all_batch_triples().await?;
 
         // Assert that we get the correct number of batch files
-        assert_eq!(batch_files.len(), indices.len());
+        pretty_assert_eq!(batch_files.len(), indices.len());
 
         // Additional assertions to check the contents of each BatchFileTriple
         for (i, batch) in batch_files.iter().enumerate() {
-            assert_eq!(*batch.index(), BatchIndex::Usize(indices[i]));
+            pretty_assert_eq!(*batch.index(), BatchIndex::Usize(indices[i]));
             assert!(batch.input().is_some());
             assert!(batch.output().is_some());
             assert!(batch.error().is_some());
@@ -98,7 +98,7 @@ mod gather_all_batch_triples_exhaustive_tests {
         let batch_files = workspace.gather_all_batch_triples().await?;
 
         // Assert correct batch files were collected
-        assert_eq!(batch_files.len(), 2);
+        pretty_assert_eq!(batch_files.len(), 2);
 
         for batch in batch_files {
             match batch.index() {
@@ -157,7 +157,7 @@ mod gather_all_batch_triples_exhaustive_tests {
 
         // Optionally, check that the error is due to permission denied
         if let Err(BatchWorkspaceError::IoError(ref e)) = result {
-            assert_eq!(e.kind(), std::io::ErrorKind::PermissionDenied);
+            pretty_assert_eq!(e.kind(), std::io::ErrorKind::PermissionDenied);
         } else {
             panic!("Expected an IoError due to permission denied");
         }
@@ -184,8 +184,8 @@ mod gather_all_batch_triples_exhaustive_tests {
         let batch_files = workspace.gather_all_batch_triples().await?;
 
         // Assert that only valid batch files were detected
-        assert_eq!(batch_files.len(), 1);
-        assert_eq!(*batch_files[0].index(), BatchIndex::Usize(3));
+        pretty_assert_eq!(batch_files.len(), 1);
+        pretty_assert_eq!(*batch_files[0].index(), BatchIndex::Usize(3));
         assert!(batch_files[0].input().is_some());
 
         Ok(())
@@ -215,7 +215,7 @@ mod gather_all_batch_triples_exhaustive_tests {
         for result in results {
             assert!(result.is_ok());
             let batch_files = result.unwrap();
-            assert_eq!(batch_files.len(), 10);
+            pretty_assert_eq!(batch_files.len(), 10);
         }
 
         Ok(())
@@ -258,7 +258,7 @@ mod gather_all_batch_triples_exhaustive_tests {
             .expect("Should succeed in reading indices and locating batch files");
         debug!("Gathered triples: {:?}", triples);
 
-        assert_eq!(triples.len(), indices.len());
+        pretty_assert_eq!(triples.len(), indices.len());
         for triple in &triples {
             if let BatchIndex::Usize(u) = triple.index() {
                 assert!(
@@ -305,7 +305,7 @@ mod gather_all_batch_triples_exhaustive_tests {
             .expect("Should succeed scanning partial sets of files");
 
         debug!("Result => Found {} triples: {:?}", all.len(), all);
-        assert_eq!(
+        pretty_assert_eq!(
             all.len(),
             3,
             "Should find exactly 3 distinct batch triples for indices 10,11,12"
@@ -322,7 +322,7 @@ mod gather_all_batch_triples_exhaustive_tests {
             }
         }
         found_usizes.sort();
-        assert_eq!(found_usizes, vec![10, 11, 12]);
+        pretty_assert_eq!(found_usizes, vec![10, 11, 12]);
 
         info!("Finished test: includes_partial_sets_of_files");
     }
@@ -352,14 +352,14 @@ mod gather_all_batch_triples_exhaustive_tests {
             .expect("Should succeed ignoring invalid files");
 
         debug!("gather_all_batch_triples => {:?}", all);
-        assert_eq!(
+        pretty_assert_eq!(
             all.len(),
             1,
             "We have only 1 valid index (42) with recognized file types"
         );
 
         let triple = &all[0];
-        assert_eq!(*triple.index(), BatchIndex::Usize(42));
+        pretty_assert_eq!(*triple.index(), BatchIndex::Usize(42));
         assert!(triple.input().is_some());
         assert!(triple.error().is_some());
         assert!(triple.output().is_none());
@@ -391,7 +391,7 @@ mod gather_all_batch_triples_exhaustive_tests {
 
         debug!("Resulting list => {:?}", all);
         // Expect them sorted: index 1,2,3 in ascending order
-        assert_eq!(all.len(), 3, "We created exactly 3 indices");
+        pretty_assert_eq!(all.len(), 3, "We created exactly 3 indices");
         let mut last = 0;
         for triple in &all {
             if let BatchIndex::Usize(u) = triple.index() {
@@ -433,7 +433,7 @@ mod gather_all_batch_triples_exhaustive_tests {
             match res {
                 Ok(Ok(triples)) => {
                     debug!("Task {} => gathered {} triples", i, triples.len());
-                    assert_eq!(triples.len(), indices.len(), "We expect exactly 5 indices");
+                    pretty_assert_eq!(triples.len(), indices.len(), "We expect exactly 5 indices");
                 }
                 Ok(Err(e)) => panic!("Task {} => unexpected error: {:?}", i, e),
                 Err(e)     => panic!("Task {} => join error: {:?}", i, e),
@@ -506,7 +506,7 @@ mod gather_all_batch_triples_exhaustive_tests {
             .expect("Should succeed gathering mixed-type indices");
 
         debug!("found {} batch file triple(s): {:?}", all.len(), all);
-        assert_eq!(all.len(), 2, "We have 2 distinct indices, one usize, one uuid");
+        pretty_assert_eq!(all.len(), 2, "We have 2 distinct indices, one usize, one uuid");
 
         // Check them
         let mut found_usize = false;
@@ -553,8 +553,8 @@ mod gather_all_batch_triples_exhaustive_tests {
         let batch_files = workspace.gather_all_batch_triples().await?;
 
         // Now we expect only the first file recognized => one index=4.
-        assert_eq!(batch_files.len(), 1);
-        assert_eq!(*batch_files[0].index(), BatchIndex::Usize(4));
+        pretty_assert_eq!(batch_files.len(), 1);
+        pretty_assert_eq!(*batch_files[0].index(), BatchIndex::Usize(4));
         assert!(batch_files[0].input().is_some());
 
         Ok(())

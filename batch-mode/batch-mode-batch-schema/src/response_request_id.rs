@@ -45,20 +45,20 @@ mod response_request_id_tests {
     #[test]
     fn test_response_request_id_creation() {
         let id = ResponseRequestId::new("req_123");
-        assert_eq!(id.as_str(), "req_123");
+        pretty_assert_eq!(id.as_str(), "req_123");
     }
 
     #[test]
     fn test_response_request_id_serialization() {
         let id = ResponseRequestId::new("req_456");
         let serialized = serde_json::to_string(&id).unwrap();
-        assert_eq!(serialized, "\"req_456\"");
+        pretty_assert_eq!(serialized, "\"req_456\"");
     }
 
     #[test]
     fn test_response_request_id_deserialization() {
         let json_data = "\"req_789\"";
         let id: ResponseRequestId = serde_json::from_str(json_data).unwrap();
-        assert_eq!(id.as_str(), "req_789");
+        pretty_assert_eq!(id.as_str(), "req_789");
     }
 }

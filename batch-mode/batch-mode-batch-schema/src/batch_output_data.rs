@@ -103,11 +103,11 @@ mod batch_output_data_tests {
         ];
         let output_data = BatchOutputData::new(records.clone());
 
-        assert_eq!(output_data.len(), records.len(), "Length should match the number of records.");
+        pretty_assert_eq!(output_data.len(), records.len(), "Length should match the number of records.");
         debug!("BatchOutputData created with length: {}", output_data.len());
 
         let retrieved = output_data.responses();
-        assert_eq!(retrieved.len(), records.len(), "responses() should return the same number of records.");
+        pretty_assert_eq!(retrieved.len(), records.len(), "responses() should return the same number of records.");
         trace!("responses() returned: {} items", retrieved.len());
     }
 
@@ -124,7 +124,7 @@ mod batch_output_data_tests {
         let ids = output_data.request_ids();
         trace!("Extracted request IDs: {:?}", ids);
 
-        assert_eq!(ids.len(), 2, "Should have two request IDs.");
+        pretty_assert_eq!(ids.len(), 2, "Should have two request IDs.");
         assert!(ids.contains(&CustomRequestId::new("req-1")));
         assert!(ids.contains(&CustomRequestId::new("req-2")));
     }
@@ -144,7 +144,7 @@ mod batch_output_data_tests {
             trace!("Iterating record custom_id: {}", record.custom_id());
             count += 1;
         }
-        assert_eq!(count, records.len(), "Should iterate over all response records.");
+        pretty_assert_eq!(count, records.len(), "Should iterate over all response records.");
     }
 
     #[traced_test]
@@ -162,7 +162,7 @@ mod batch_output_data_tests {
             trace!("Borrowed iteration on custom_id: {}", record.custom_id());
             count += 1;
         }
-        assert_eq!(count, records.len(), "Should iterate all records in borrowed form.");
+        pretty_assert_eq!(count, records.len(), "Should iterate all records in borrowed form.");
     }
 
     #[traced_test]
@@ -180,7 +180,7 @@ mod batch_output_data_tests {
             trace!("Owned iteration on custom_id: {}", record.custom_id());
             count += 1;
         }
-        assert_eq!(count, records.len(), "Should yield all records when owned iteration is used.");
+        pretty_assert_eq!(count, records.len(), "Should yield all records when owned iteration is used.");
     }
 
     #[traced_test]
@@ -196,12 +196,12 @@ mod batch_output_data_tests {
         ]);
 
         let combined = BatchOutputData::from(vec![batch_1, batch_2]);
-        assert_eq!(combined.len(), 3, "Expected combined vector length of 3.");
+        pretty_assert_eq!(combined.len(), 3, "Expected combined vector length of 3.");
         debug!("Combined length is: {}", combined.len());
 
         let ids = combined.request_ids();
         trace!("Combined request IDs: {:?}", ids);
-        assert_eq!(ids.len(), 3, "Should have 3 distinct request IDs total.");
+        pretty_assert_eq!(ids.len(), 3, "Should have 3 distinct request IDs total.");
     }
 
     #[traced_test]
@@ -209,10 +209,10 @@ mod batch_output_data_tests {
         info!("Testing empty BatchOutputData creation.");
 
         let output_data = BatchOutputData::new(vec![]);
-        assert_eq!(output_data.len(), 0, "Expected no records in empty BatchOutputData.");
+        pretty_assert_eq!(output_data.len(), 0, "Expected no records in empty BatchOutputData.");
 
         let iter_count = output_data.iter().count();
-        assert_eq!(iter_count, 0, "Iterator should yield none for empty data.");
+        pretty_assert_eq!(iter_count, 0, "Iterator should yield none for empty data.");
         let ids = output_data.request_ids();
         assert!(ids.is_empty(), "No IDs should be returned for empty data.");
     }
@@ -224,7 +224,7 @@ mod batch_output_data_tests {
         let empty_vec: Vec<BatchOutputData> = vec![];
         let result = BatchOutputData::from(empty_vec);
 
-        assert_eq!(result.len(), 0, "Should produce empty BatchOutputData from empty vector.");
+        pretty_assert_eq!(result.len(), 0, "Should produce empty BatchOutputData from empty vector.");
         trace!("No data aggregated, as expected.");
     }
 
@@ -271,7 +271,7 @@ mod batch_output_data_tests {
 
         assert!(result.is_ok(), "Expected successful load from file.");
         let loaded_data = result.unwrap();
-        assert_eq!(loaded_data.len(), 2, "Should load exactly 2 records.");
+        pretty_assert_eq!(loaded_data.len(), 2, "Should load exactly 2 records.");
         debug!("Loaded {} records from file.", loaded_data.len());
 
         let ids = loaded_data.request_ids();

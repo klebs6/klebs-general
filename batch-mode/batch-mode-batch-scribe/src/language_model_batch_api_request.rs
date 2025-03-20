@@ -203,7 +203,7 @@ mod language_model_batch_api_request_exhaustive_tests {
         let request = LanguageModelBatchAPIRequest::mock(custom_id_str);
         debug!("Mock request: {:?}", request);
 
-        assert_eq!(request.custom_id().to_string(), custom_id_str, "Custom ID mismatch");
+        pretty_assert_eq!(request.custom_id().to_string(), custom_id_str, "Custom ID mismatch");
         match request.method {
             HttpMethod::Post => trace!("Method is POST as expected"),
             _ => panic!("Expected POST method"),
@@ -217,7 +217,7 @@ mod language_model_batch_api_request_exhaustive_tests {
             _ => panic!("Expected LanguageModelType::Gpt4o"),
         }
         assert!(body.messages().is_empty(), "Mock body should start with no messages");
-        assert_eq!(
+        pretty_assert_eq!(
             *body.max_completion_tokens(), 128,
             "Mock body should have max_completion_tokens=128"
         );
@@ -231,7 +231,7 @@ mod language_model_batch_api_request_exhaustive_tests {
         let idx = 5;
         let custom_id = LanguageModelBatchAPIRequest::custom_id_for_idx(idx);
         debug!("Produced CustomRequestId: {:?}", custom_id);
-        assert_eq!(
+        pretty_assert_eq!(
             custom_id.to_string(),
             "request-5",
             "Expected custom ID format 'request-<idx>'"
@@ -249,7 +249,7 @@ mod language_model_batch_api_request_exhaustive_tests {
         let request = LanguageModelBatchAPIRequest::new_basic(model.clone(), idx, system_msg, user_msg);
         debug!("Constructed request: {:?}", request);
 
-        assert_eq!(request.custom_id().to_string(), "request-2");
+        pretty_assert_eq!(request.custom_id().to_string(), "request-2");
         match request.method {
             HttpMethod::Post => trace!("Method is POST as expected"),
             _ => panic!("Expected POST method"),
@@ -257,7 +257,7 @@ mod language_model_batch_api_request_exhaustive_tests {
         match request.url {
             LanguageModelApiUrl::ChatCompletions => trace!("URL is ChatCompletions as expected"),
         }
-        assert_eq!(
+        pretty_assert_eq!(
             request.body.messages().len(),
             2,
             "Should have system + user messages"
@@ -277,7 +277,7 @@ mod language_model_batch_api_request_exhaustive_tests {
         let request = LanguageModelBatchAPIRequest::new_with_image(model.clone(), idx, system_msg, user_msg, image_b64);
         debug!("Constructed request with image: {:?}", request);
 
-        assert_eq!(request.custom_id().to_string(), "request-3");
+        pretty_assert_eq!(request.custom_id().to_string(), "request-3");
         match request.method {
             HttpMethod::Post => trace!("Method is POST as expected"),
             _ => panic!("Expected POST method"),
@@ -285,7 +285,7 @@ mod language_model_batch_api_request_exhaustive_tests {
         match request.url {
             LanguageModelApiUrl::ChatCompletions => trace!("URL is ChatCompletions as expected"),
         }
-        assert_eq!(
+        pretty_assert_eq!(
             request.body.messages().len(),
             2,
             "Should have system + user-with-image messages"
@@ -302,14 +302,14 @@ mod language_model_batch_api_request_exhaustive_tests {
         let requests = LanguageModelBatchAPIRequest::requests_from_query_strings(system_message, model.clone(), &queries);
         debug!("Constructed requests: {:?}", requests);
 
-        assert_eq!(
+        pretty_assert_eq!(
             requests.len(),
             queries.len(),
             "Number of requests should match number of queries"
         );
         for (idx, req) in requests.iter().enumerate() {
             let expected_custom_id = format!("request-{}", idx);
-            assert_eq!(req.custom_id().to_string(), expected_custom_id);
+            pretty_assert_eq!(req.custom_id().to_string(), expected_custom_id);
             match req.url {
                 LanguageModelApiUrl::ChatCompletions => (),
             }
@@ -339,17 +339,17 @@ mod language_model_batch_api_request_exhaustive_tests {
         let converted: BatchRequestInput = request.clone().into();
         debug!("Converted BatchRequestInput: {:?}", converted);
 
-        assert_eq!(
+        pretty_assert_eq!(
             converted.custom_id,
             request.custom_id().to_string(),
             "Custom ID should match"
         );
-        assert_eq!(
+        pretty_assert_eq!(
             converted.method,
             BatchRequestInputMethod::POST,
             "HTTP method should be POST"
         );
-        assert_eq!(
+        pretty_assert_eq!(
             converted.url,
             BatchEndpoint::V1ChatCompletions,
             "URL should be V1ChatCompletions"
@@ -379,7 +379,7 @@ mod language_model_batch_api_request_exhaustive_tests {
             .expect("Failed to read the output file");
         debug!("File contents:\n{}", contents);
         let lines: Vec<&str> = contents.trim().split('\n').collect();
-        assert_eq!(lines.len(), 2, "Should have exactly 2 lines for 2 requests");
+        pretty_assert_eq!(lines.len(), 2, "Should have exactly 2 lines for 2 requests");
 
         for (i, line) in lines.iter().enumerate() {
             let parsed: serde_json::Value = serde_json::from_str(line)

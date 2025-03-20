@@ -133,7 +133,7 @@ mod calculate_unseen_inputs_exhaustive_tests {
         ];
         let unseen = workspace.calculate_unseen_inputs(&tokens, &ExpectedContentType::Json);
         debug!("Calculated unseen: {:?}", unseen);
-        assert_eq!(unseen.len(), 2, "Should find both tokens as unseen");
+        pretty_assert_eq!(unseen.len(), 2, "Should find both tokens as unseen");
         info!("Finished test: finds_unseen_when_not_present_on_disk");
     }
 
@@ -200,8 +200,8 @@ mod calculate_unseen_inputs_exhaustive_tests {
         debug!("Calculated unseen: {:?}", unseen);
 
         // We expect only "xyz" to appear
-        assert_eq!(unseen.len(), 1);
-        assert_eq!(unseen[0].name, "xyz");
+        pretty_assert_eq!(unseen.len(), 1);
+        pretty_assert_eq!(unseen[0].name, "xyz");
 
         info!("Finished test: allows_multiple_unseen_tokens_with_mixed_existing_and_similar");
     }
@@ -224,7 +224,7 @@ mod calculate_unseen_inputs_exhaustive_tests {
         debug!("Calculated unseen: {:?}", unseen);
         // The logs will appear automatically via traced_test. 
         // We simply confirm the method returns them as unseen.
-        assert_eq!(unseen.len(), 2);
+        pretty_assert_eq!(unseen.len(), 2);
 
         info!("Finished test: logs_unseen_tokens");
     }
@@ -266,7 +266,7 @@ mod calculate_unseen_inputs_exhaustive_tests {
                     debug!("Task {} => unseen: {:?}", i, unseen);
                     // "already_there" is presumably existing => skip
                     // "missing_1" / "missing_2" => unseen
-                    assert_eq!(unseen.len(), 2);
+                    pretty_assert_eq!(unseen.len(), 2);
                 }
                 Err(e) => panic!("Task {} => join error: {:?}", i, e),
             }

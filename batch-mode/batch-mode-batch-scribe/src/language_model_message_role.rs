@@ -102,7 +102,7 @@ mod language_model_message_role_exhaustive_tests {
         let serialized = serde_json::to_string(&role)
             .expect("Failed to serialize LanguageModelMessageRole");
         debug!("Serialized system role: {}", serialized);
-        assert_eq!(serialized, r#""system""#, "System role should serialize to \"system\"");
+        pretty_assert_eq!(serialized, r#""system""#, "System role should serialize to \"system\"");
         trace!("===== END TEST: serialize_system_role_to_json =====");
     }
 
@@ -113,7 +113,7 @@ mod language_model_message_role_exhaustive_tests {
         let serialized = serde_json::to_string(&role)
             .expect("Failed to serialize LanguageModelMessageRole");
         debug!("Serialized user role: {}", serialized);
-        assert_eq!(serialized, r#""user""#, "User role should serialize to \"user\"");
+        pretty_assert_eq!(serialized, r#""user""#, "User role should serialize to \"user\"");
         trace!("===== END TEST: serialize_user_role_to_json =====");
     }
 

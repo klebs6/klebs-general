@@ -73,8 +73,8 @@ mod batch_error_data_tests {
         ];
         let error_data = BatchErrorData::new(records.clone());
 
-        assert_eq!(error_data.len(), 2, "Expected error_data to have length 2.");
-        assert_eq!(error_data.responses().len(), 2, "Responses vector should match length 2.");
+        pretty_assert_eq!(error_data.len(), 2, "Expected error_data to have length 2.");
+        pretty_assert_eq!(error_data.responses().len(), 2, "Responses vector should match length 2.");
         debug!("Created BatchErrorData with {} entries.", error_data.len());
     }
 
@@ -91,7 +91,7 @@ mod batch_error_data_tests {
         let ids = error_data.request_ids();
         trace!("Extracted request IDs: {:?}", ids);
 
-        assert_eq!(ids.len(), 2, "Should have exactly 2 IDs.");
+        pretty_assert_eq!(ids.len(), 2, "Should have exactly 2 IDs.");
         assert!(ids.contains(&CustomRequestId::new("custom-1")));
         assert!(ids.contains(&CustomRequestId::new("custom-2")));
     }
@@ -111,7 +111,7 @@ mod batch_error_data_tests {
             trace!("Iterating index: {}, record.custom_id: {}", index, record.custom_id());
             iter_count += 1;
         }
-        assert_eq!(iter_count, records.len(), "Iterator should cover all responses.");
+        pretty_assert_eq!(iter_count, records.len(), "Iterator should cover all responses.");
     }
 
     #[traced_test]
@@ -129,7 +129,7 @@ mod batch_error_data_tests {
             trace!("Borrowed iteration item: {:?}", record.custom_id());
             iter_count += 1;
         }
-        assert_eq!(iter_count, records.len(), "Borrowed iterator should cover all responses.");
+        pretty_assert_eq!(iter_count, records.len(), "Borrowed iterator should cover all responses.");
     }
 
     #[traced_test]
@@ -147,7 +147,7 @@ mod batch_error_data_tests {
             trace!("Owned iteration item: {:?}", record.custom_id());
             iter_count += 1;
         }
-        assert_eq!(iter_count, records.len(), "Owned iterator should yield all responses.");
+        pretty_assert_eq!(iter_count, records.len(), "Owned iterator should yield all responses.");
     }
 
     #[traced_test]
@@ -163,11 +163,11 @@ mod batch_error_data_tests {
         ]);
 
         let combined = BatchErrorData::from(vec![batch_1, batch_2]);
-        assert_eq!(combined.len(), 3, "Expected combined data to have length 3.");
+        pretty_assert_eq!(combined.len(), 3, "Expected combined data to have length 3.");
         debug!("Combined length: {}", combined.len());
 
         let ids = combined.request_ids();
-        assert_eq!(ids.len(), 3, "Expected 3 request IDs total.");
+        pretty_assert_eq!(ids.len(), 3, "Expected 3 request IDs total.");
         warn!("The request IDs are: {:?}", ids);
     }
 
@@ -176,10 +176,10 @@ mod batch_error_data_tests {
         info!("Testing behavior for an empty BatchErrorData.");
 
         let error_data = BatchErrorData::new(vec![]);
-        assert_eq!(error_data.len(), 0, "Should be empty.");
+        pretty_assert_eq!(error_data.len(), 0, "Should be empty.");
 
         let iter_count = error_data.iter().count();
-        assert_eq!(iter_count, 0, "Iteration should yield none for empty data.");
+        pretty_assert_eq!(iter_count, 0, "Iteration should yield none for empty data.");
         let ids = error_data.request_ids();
         assert!(ids.is_empty(), "No IDs should be returned for empty data.");
     }
@@ -191,7 +191,7 @@ mod batch_error_data_tests {
         let batch_error_list: Vec<BatchErrorData> = vec![];
         let result = BatchErrorData::from(batch_error_list);
 
-        assert_eq!(result.len(), 0, "Should produce empty BatchErrorData when converting from empty list.");
+        pretty_assert_eq!(result.len(), 0, "Should produce empty BatchErrorData when converting from empty list.");
         trace!("No data was aggregated, as expected for an empty source.");
     }
 }
