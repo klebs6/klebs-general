@@ -1,5 +1,6 @@
 [dependencies]
 export-magic = "*"
+pretty_assertions  = "*"
 tempfile = "*"
 error-tree   = "0.6.0"
 json-repair  = "0.4.0"

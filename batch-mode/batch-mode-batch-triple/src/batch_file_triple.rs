@@ -130,6 +130,28 @@ impl BatchFileTriple {
 
 impl BatchFileTriple {
 
+    pub fn new_for_test_with_metadata_path_unique(metadata_path: PathBuf) -> Self {
+        // Any random generator or unique ID logic. We'll just do a
+        // thread‐local counter or random number for demonstration:
+        use std::sync::atomic::{AtomicU64, Ordering};
+        static COUNTER: AtomicU64 = AtomicU64::new(1);
+        let unique_num = COUNTER.fetch_add(1, Ordering::SeqCst);
+
+        // Then we create an index with that unique number, so the default
+        // filenames become "mock_error_{unique_num}.json" etc.
+        let index = BatchIndex::Usize(unique_num as usize);
+
+        let triple = Self::new_direct(
+            &index,
+            None, // no forced input path
+            None, // no forced output path
+            None, // no forced error path
+            Some(metadata_path.clone()),
+            std::sync::Arc::new(MockWorkspace::default()), // or however you handle workspace
+        );
+        triple
+    }
+
     delegate!{
         to self.workspace {
             pub fn get_done_directory(&self) -> &PathBuf;
@@ -219,7 +241,6 @@ impl BatchFileTriple {
     /// A convenience constructor used by certain unit tests that only need
     /// to set `associated_metadata` while leaving other paths as None.
     /// We assign a dummy `BatchIndex` and a default MockWorkspace (or any real workspace).
-    #[cfg(test)]
     pub fn new_for_test_with_metadata_path(metadata_path: PathBuf) -> Self {
         trace!(
             "Constructing a test triple with just an associated metadata path: {:?}",
@@ -278,63 +299,63 @@ mod batch_file_triple_filename_accessors_exhaustive_tests {
     use super::*;
 
     #[traced_test]
-    fn input_filename_which_maybe_does_not_yet_exist_returns_correct_path() {
-        trace!("===== BEGIN TEST: input_filename_which_maybe_does_not_yet_exist_returns_correct_path =====");
+    fn input_filename_returns_correct_path() {
+        trace!("===== BEGIN TEST: input_filename_returns_correct_path =====");
         let workspace = Arc::new(MockWorkspace::default());
         let triple = BatchFileTriple::new_direct(
             &BatchIndex::new(),
             None,None,None,None,
             workspace.clone()
         );
-        let path = triple.input_filename_which_maybe_does_not_yet_exist();
+        let path = triple.effective_input_filename();
         debug!("Returned path: {:?}", path);
         pretty_assert_eq!(path, workspace.input_filename(&triple.index()), "Should match workspace input filename");
-        trace!("===== END TEST: input_filename_which_maybe_does_not_yet_exist_returns_correct_path =====");
+        trace!("===== END TEST: effective_input_filename_returns_correct_path =====");
     }
 
     #[traced_test]
-    fn output_filename_which_maybe_does_not_yet_exist_returns_correct_path() {
-        trace!("===== BEGIN TEST: output_filename_which_maybe_does_not_yet_exist_returns_correct_path =====");
+    fn output_filename_returns_correct_path() {
+        trace!("===== BEGIN TEST: output_filename_returns_correct_path =====");
         let workspace = Arc::new(MockWorkspace::default());
         let triple = BatchFileTriple::new_direct(
             &BatchIndex::new(),
             None,None,None,None,
             workspace.clone()
         );
-        let path = triple.output_filename_which_maybe_does_not_yet_exist();
+        let path = triple.effective_output_filename();
         debug!("Returned path: {:?}", path);
         pretty_assert_eq!(path, workspace.output_filename(&triple.index()), "Should match workspace output filename");
-        trace!("===== END TEST: output_filename_which_maybe_does_not_yet_exist_returns_correct_path =====");
+        trace!("===== END TEST: output_filename_returns_correct_path =====");
     }
 
     #[traced_test]
-    fn error_filename_which_maybe_does_not_yet_exist_returns_correct_path() {
-        trace!("===== BEGIN TEST: error_filename_which_maybe_does_not_yet_exist_returns_correct_path =====");
+    fn error_filename_returns_correct_path() {
+        trace!("===== BEGIN TEST: error_filename_returns_correct_path =====");
         let workspace = Arc::new(MockWorkspace::default());
         let triple = BatchFileTriple::new_direct(
             &BatchIndex::new(),
             None,None,None,None,
             workspace.clone()
         );
-        let path = triple.error_filename_which_maybe_does_not_yet_exist();
+        let path = triple.effective_error_filename();
         debug!("Returned path: {:?}", path);
         pretty_assert_eq!(path, workspace.error_filename(&triple.index()), "Should match workspace error filename");
-        trace!("===== END TEST: error_filename_which_maybe_does_not_yet_exist_returns_correct_path =====");
+        trace!("===== END TEST: error_filename_returns_correct_path =====");
     }
 
     #[traced_test]
-    fn metadata_filename_which_maybe_does_not_yet_exist_returns_correct_path() {
-        trace!("===== BEGIN TEST: metadata_filename_which_maybe_does_not_yet_exist_returns_correct_path =====");
+    fn metadata_filename_returns_correct_path() {
+        trace!("===== BEGIN TEST: metadata_filename_returns_correct_path =====");
         let workspace = Arc::new(MockWorkspace::default());
         let triple = BatchFileTriple::new_direct(
             &BatchIndex::new(),
             None,None,None,None,
             workspace.clone()
         );
-        let path = triple.metadata_filename_which_maybe_does_not_yet_exist();
+        let path = triple.effective_metadata_filename();
         debug!("Returned path: {:?}", path);
         pretty_assert_eq!(path, workspace.metadata_filename(&triple.index()), "Should match workspace metadata filename");
-        trace!("===== END TEST: metadata_filename_which_maybe_does_not_yet_exist_returns_correct_path =====");
+        trace!("===== END TEST: metadata_filename_returns_correct_path =====");
     }
 
     #[traced_test]

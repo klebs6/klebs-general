@@ -1,9 +1,12 @@
 // ---------------- [ File: src/finish_reason.rs ]
 crate::ix!();
 
-#[derive(Debug,Clone,PartialEq,Eq,Hash)]
+#[derive(Default,Debug,Clone,PartialEq,Eq,Hash)]
 pub enum FinishReason {
+
+    #[default]
     Stop,
+
     Length,
     ContentFilter,
     Unknown(String),

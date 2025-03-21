@@ -23,6 +23,7 @@
 // Shown here is your integration test with the lines referencing `derive_ai_json_template` removed,
 // but still testing the expansions via direct usage of `#[derive(AiJsonTemplate)]` on local structs.
 
+use pretty_assertions::assert_eq as pretty_assert_eq;
 use tracing::*;
 use getset::*;
 use derive_builder::*;

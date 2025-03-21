@@ -63,32 +63,52 @@ mod batch_response_content_tests {
     use super::*;
     use serde_json::json;
 
-    #[test]
+    #[traced_test]
     fn test_success_response_content() {
+        info!("Starting test: test_success_response_content");
+
         let json_data = json!({
             "status_code": 200,
             "request_id": "req_123",
             "body": {
-                "id": "resp_456",
-                "object": "response",
-                "created": 1627891234,
-                "model": "test-model",
+                "id": "chatcmpl-AVW7Z2Dd49g7Zq5eVExww6dlKA8T9",
+                "object": "chat.completion",
+                "created": 1732075005,
+                "model": "gpt-4o-2024-08-06",
                 "choices": [],
                 "usage": {
-                    "prompt_tokens": 100,
-                    "completion_tokens": 50,
-                    "total_tokens": 150
+                    "prompt_tokens": 40,
+                    "completion_tokens": 360,
+                    "total_tokens": 400
                 },
-                "system_fingerprint": "fp_abc"
+                "system_fingerprint": "fp_7f6be3efb0"
             }
         });
 
         let response: BatchResponseContent = serde_json::from_value(json_data).unwrap();
-        pretty_assert_eq!(response.status_code(), 200);
+        pretty_assert_eq!(*response.status_code(), 200);
         assert!(response.is_success());
         pretty_assert_eq!(response.request_id().as_str(), "req_123");
-        assert!(response.success_body().is_some());
-        assert!(response.error_body().is_none());
+
+        if let Some(body) = response.success_body() {
+            // FIX: compare with Some(&"string".to_string()) for id/model/object
+            pretty_assert_eq!(
+                body.id(),
+                &"chatcmpl-AVW7Z2Dd49g7Zq5eVExww6dlKA8T9".to_string()
+            );
+            pretty_assert_eq!(
+                body.object(),
+                &"chat.completion".to_string()
+            );
+            pretty_assert_eq!(
+                body.model(),
+                &"gpt-4o-2024-08-06".to_string()
+            );
+        } else {
+            panic!("Expected success_body() to be Some(...)");
+        }
+
+        info!("Finished test: test_success_response_content");
     }
 
     #[test]
@@ -107,7 +127,7 @@ mod batch_response_content_tests {
         });
 
         let response: BatchResponseContent = serde_json::from_value(json_data).unwrap();
-        pretty_assert_eq!(response.status_code(), 400);
+        pretty_assert_eq!(*response.status_code(), 400);
         assert!(!response.is_success());
         pretty_assert_eq!(response.request_id().as_str(), "req_789");
         assert!(response.success_body().is_none());
@@ -169,16 +189,16 @@ mod batch_response_content_tests {
         // Accessing fields directly through BatchResponseBody methods
         let body = response.body();
 
-        pretty_assert_eq!(body.id(), Some("chatcmpl-AVW7Z2Dd49g7Zq5eVExww6dlKA8T9"));
-        pretty_assert_eq!(body.object(), Some("chat.completion"));
-        pretty_assert_eq!(body.model(), Some("gpt-4o-2024-08-06"));
-        pretty_assert_eq!(body.system_fingerprint(), Some("fp_7f6be3efb0"));
+        pretty_assert_eq!(body.id(), Some(&"chatcmpl-AVW7Z2Dd49g7Zq5eVExww6dlKA8T9".to_string()));
+        pretty_assert_eq!(body.object(), Some(&"chat.completion".to_string()));
+        pretty_assert_eq!(body.model(), Some(&"gpt-4o-2024-08-06".to_string()));
+        pretty_assert_eq!(body.system_fingerprint(), Some("fp_7f6be3efb0".to_string()));
 
         // Access choices
         if let Some(choices) = body.choices() {
             pretty_assert_eq!(choices.len(), 1);
             let choice = &choices[0];
-            pretty_assert_eq!(choice.index(), 0);
+            pretty_assert_eq!(*choice.index(), 0);
             pretty_assert_eq!(choice.finish_reason(), &FinishReason::Stop);
             pretty_assert_eq!(choice.message().content(), "Response content here.");
         } else {

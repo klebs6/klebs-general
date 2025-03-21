@@ -1,5 +1,6 @@
 // ---------------- [ File: src/imports.rs ]
 pub(crate) use error_tree::*;
+pub(crate) use pretty_assertions::assert_eq as pretty_assert_eq;
 pub(crate) use tokio;
 pub(crate) use export_magic::*;
 pub(crate) use language_model_type::*;

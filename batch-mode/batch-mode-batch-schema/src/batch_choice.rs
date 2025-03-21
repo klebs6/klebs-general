@@ -81,7 +81,7 @@ mod batch_choice_tests {
             "finish_reason": "stop"
         }"#;
         let choice: BatchChoice = serde_json::from_str(json).unwrap();
-        pretty_assert_eq!(choice.index(), 0);
+        pretty_assert_eq!(*choice.index(), 0);
         pretty_assert_eq!(choice.message().role(), &MessageRole::Assistant);
         pretty_assert_eq!(choice.finish_reason(), &FinishReason::Stop);
         assert!(choice.logprobs.is_none());
@@ -146,7 +146,7 @@ mod batch_choice_tests {
             }
         }"#;
         let choice: BatchChoice = serde_json::from_str(json).unwrap();
-        pretty_assert_eq!(choice.index(), 4);
+        pretty_assert_eq!(*choice.index(), 4);
         pretty_assert_eq!(choice.message().content(), "Response with minimal fields.");
         assert!(choice.logprobs.is_none());
         pretty_assert_eq!(

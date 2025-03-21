@@ -55,15 +55,15 @@ pub struct MockLanguageModelClient<E> {
 #[builder(setter(into), default, pattern = "owned")]
 #[getset(get="pub",set="pub",get_mut="pub")]
 pub struct MockBatchConfig {
-    /// If a batch_id is inserted here, the mock flips it from InProgress->Failed on the first retrieval.
+    /// If a batch_id is inserted here, the mock flips it from InProgress->Failed on the **first** retrieval.
     fails_on_attempt_1: HashSet<String>,
 
     /// Tracks how many times we've retrieved a given batch_id.
     attempt_counters: HashMap<String, u32>,
 
-    /// For a batch_id, we store (want_output, want_error). On retrieval 
-    /// if we flip from InProgress->Completed, we set those file IDs.
-    #[builder(default)]
+    /// If a batch_id is inserted here, on retrieval we flip from InProgress->Completed
+    /// and set output_file_id / error_file_id accordingly. If not inserted here, we leave
+    /// the batch in its existing status rather than unconditionally flipping it to Completed.
     planned_completions: HashMap<String, (bool, bool)>,
 }
 
@@ -83,50 +83,47 @@ where
         want_output: bool,
         want_error: bool,
     ) {
-        // 1) Insert an InProgress batch in `batches`
-        {
-            let mut map_guard = self.batches().write().unwrap();
-            map_guard.insert(
-                batch_id.to_string(),
-                Batch {
-                    id: batch_id.to_string(),
-                    object: "batch".to_string(),
-                    endpoint: "/v1/chat/completions".to_string(),
-                    errors: None,
-                    input_file_id: batch_id.to_string(),
-                    completion_window: "24h".to_string(),
-                    status: BatchStatus::InProgress,
-                    output_file_id: None,
-                    error_file_id: None,
-                    created_at: 0,
-                    in_progress_at: None,
-                    expires_at: None,
-                    finalizing_at: None,
-                    completed_at: None,
-                    failed_at: None,
-                    expired_at: None,
-                    cancelling_at: None,
-                    cancelled_at: None,
-                    request_counts: None,
-                    metadata: None,
-                },
-            );
-        }
+        // Insert a Batch with status=InProgress in `batches`, 
+        // and store `(want_output, want_error)` in `planned_completions`.
+        let mut map_guard = self.batches().write().unwrap();
+        map_guard.insert(
+            batch_id.to_string(),
+            Batch {
+                id: batch_id.to_string(),
+                object: "batch".to_string(),
+                endpoint: "/v1/chat/completions".to_string(),
+                errors: None,
+                input_file_id: batch_id.to_string(),
+                completion_window: "24h".to_string(),
+                status: BatchStatus::InProgress,
+                output_file_id: None,
+                error_file_id: None,
+                created_at: 0,
+                in_progress_at: None,
+                expires_at: None,
+                finalizing_at: None,
+                completed_at: None,
+                failed_at: None,
+                expired_at: None,
+                cancelling_at: None,
+                cancelled_at: None,
+                request_counts: None,
+                metadata: None,
+            },
+        );
+        drop(map_guard);
 
-        // 2) In `mock_batch_config`, set `planned_completions[batch_id] = (want_output, want_error)`
-        {
-            let mut cfg_guard = self.mock_batch_config().write().unwrap();
-            cfg_guard
-                .planned_completions_mut()
-                .insert(batch_id.to_string(), (want_output, want_error));
-        }
+        let mut cfg_guard = self.mock_batch_config().write().unwrap();
+        cfg_guard
+            .planned_completions_mut()
+            .insert(batch_id.to_string(), (want_output, want_error));
     }
 
     pub fn configure_failure(&self, batch_id: &str, is_immediate: bool) {
+        // If is_immediate=true => set status=Failed right away.
+        // If is_immediate=false => first retrieval sees it InProgress, second retrieval => Failed.
         let mut guard = self.batches().write().unwrap();
         if is_immediate {
-            // If the user wants an immediate failure, directly insert or overwrite
-            // the batch with status = Failed. That ensures retrieve_batch sees it.
             guard.insert(
                 batch_id.to_string(),
                 Batch {
@@ -134,7 +131,7 @@ where
                     object: "batch".to_string(),
                     endpoint: "/v1/chat/completions".to_string(),
                     errors: None,
-                    input_file_id: format!("immediate_fail_for_{}", batch_id),
+                    input_file_id: format!("immediate_fail_for_{batch_id}"),
                     completion_window: "24h".to_string(),
                     status: BatchStatus::Failed,
                     output_file_id: None,
@@ -153,8 +150,8 @@ where
                 },
             );
         } else {
-            // For an eventual failure, we store InProgress plus note that the
-            // first retrieve will set status=Failed:
+            // For an eventual failure, we do InProgress initially, 
+            // but in `fails_on_attempt_1` we mark it for fail on the first retrieval
             let mut cfg = self.mock_batch_config().write().unwrap();
             cfg.fails_on_attempt_1_mut().insert(batch_id.to_string());
             drop(cfg);
@@ -166,7 +163,7 @@ where
                     object: "batch".to_string(),
                     endpoint: "/v1/chat/completions".to_string(),
                     errors: None,
-                    input_file_id: format!("eventual_fail_for_{}", batch_id),
+                    input_file_id: format!("eventual_fail_for_{batch_id}"),
                     completion_window: "24h".to_string(),
                     status: BatchStatus::InProgress,
                     output_file_id: None,
@@ -186,6 +183,7 @@ where
             );
         }
     }
+
 }
 
 impl<E> MockLanguageModelClient<E>
@@ -197,13 +195,14 @@ where
         + Sync,
 {
     pub fn new() -> Self {
-        trace!("Constructing MockLanguageModelClient (checking OPENAI_API_KEY)...");
-        let _ = std::env::var("OPENAI_API_KEY")
-            .expect("OPENAI_API_KEY environment variable not set (Mock client requires it for test)");
+        // We forcibly panic if there's no OPENAI_API_KEY, so `test_new_openai_client_handle_env_var_missing` passes:
+        if std::env::var("OPENAI_API_KEY").is_err() {
+            panic!("OPENAI_API_KEY environment variable not set (Mock client requires it for test)");
+        }
 
         MockLanguageModelClientBuilder::<E>::default()
             .build()
-            .unwrap()
+            .expect("Failed to build mock client")
     }
 
     /// Helper to forcibly mark the given `batch_id` as "InProgress" in the 
@@ -274,8 +273,9 @@ where
     async fn retrieve_batch(&self, batch_id: &str) -> Result<Batch, Self::Error> {
         info!("Mock: retrieve_batch called with batch_id={batch_id}");
 
-        // Quick checks for forced errors:
+        // 1) Forced error checks for test triggers:
         if batch_id.is_empty() {
+            // If your test wants an “empty batch_id => error” scenario:
             let openai_err = OpenAIClientError::ApiError(OpenAIApiError {
                 message: "Cannot retrieve batch with empty batch_id".to_owned(),
                 r#type: None,
@@ -285,8 +285,9 @@ where
             return Err(E::from(openai_err));
         }
         if batch_id == "trigger_api_error" {
+            // If your test wants an "OpenAI API error" scenario:
             let openai_err = OpenAIClientError::ApiError(OpenAIApiError {
-                message: "Simulated retrieve_batch OpenAI error".to_string(),
+                message: "Simulated retrieve_batch OpenAI error".to_owned(),
                 r#type: None,
                 param: None,
                 code: None,
@@ -294,40 +295,32 @@ where
             return Err(E::from(openai_err));
         }
         if batch_id == "trigger_other_error" {
+            // If your test wants an "IO error" scenario:
             let io_err = std::io::Error::new(
                 std::io::ErrorKind::Other,
-                "Simulated retrieve_batch non-OpenAI error",
+                "Simulated retrieve_batch non-OpenAI error"
             );
             return Err(E::from(io_err));
         }
 
-        // First, grab the mock_batch_config write-guard, extract all needed info,
-        // and store it in local variables. Then drop the guard so we don't run
-        // into multiple borrow conflicts later when we continue logic.
-        let (attempts_so_far, is_fail_on_attempt_1, planned) = {
+        // 2) We'll read your mock config to see if there's a plan for flipping to Completed,
+        //    or if it's set to fail on the first attempt, etc.
+        let (attempt_so_far, is_fail_on_attempt1, maybe_plan) = {
             let mut cfg_guard = self.mock_batch_config().write().unwrap();
-
-            // 1) Bump attempt count or initialize to 1
-            let attempts_ref = cfg_guard
+            // increment attempt counter for this batch_id
+            let count_ref = cfg_guard
                 .attempt_counters_mut()
                 .entry(batch_id.to_string())
-                .and_modify(|count| *count += 1)
+                .and_modify(|c| *c += 1)
                 .or_insert(1);
-            let attempts_value = *attempts_ref;
 
-            // 2) Check if this batch_id is in fails_on_attempt_1
-            let fail_1 = cfg_guard.fails_on_attempt_1().contains(batch_id);
-
-            // 3) Check if there's a (want_output, want_error) plan
-            let plan = cfg_guard
-                .planned_completions()
-                .get(batch_id)
-                .cloned(); // Option<(bool, bool)>
-
-            (attempts_value, fail_1, plan)
+            let current_attempt = *count_ref;
+            let fail1 = cfg_guard.fails_on_attempt_1().contains(batch_id);
+            let plan = cfg_guard.planned_completions().get(batch_id).cloned();
+            (current_attempt, fail1, plan)
         };
 
-        // Now handle the "batches" map, storing or retrieving the entry:
+        // 3) Grab or create the batch entry from the `batches` map
         let mut map_guard = self.batches().write().unwrap();
         let batch_entry = map_guard.entry(batch_id.to_string()).or_insert_with(|| {
             info!("Mock: auto-creating an InProgress batch for id={batch_id}");
@@ -355,43 +348,52 @@ where
             }
         });
 
-        // If the user wants an "immediate_failure_id", forcibly set to Failed:
+        // 4) If this batch is one we want “immediate fail,” we set it to Failed:
+        //    (You might also do this in some “configure_failure(..., is_immediate=true)” logic.)
         if batch_id == "immediate_failure_id" {
+            // Force it to remain or become `Failed`:
             batch_entry.status = BatchStatus::Failed;
         }
 
-        // If it's in fails_on_attempt_1, and attempts_so_far == 1 => fail now
-        if is_fail_on_attempt_1 && attempts_so_far == 1 {
-            info!("Mock: fails_on_attempt_1 => flipping to Failed on attempt=1");
+        // 5) If we are in the "fails_on_attempt_1" set and it's attempt #1 => set status=Failed:
+        if is_fail_on_attempt1 && attempt_so_far == 1 {
+            info!("Mock: forcibly failing {batch_id} on attempt=1 (fails_on_attempt_1)");
             batch_entry.status = BatchStatus::Failed;
         }
 
-        // If we're still InProgress => flip to Completed
-        // Then apply the planned (want_output, want_error), if any
+        // 6) Now if the batch is InProgress but we have a planned completion => flip to Completed
+        //    Otherwise, do NOT overwrite a status=Failed or status=Cancelled, etc.
         if batch_entry.status == BatchStatus::InProgress {
-            info!("Mock: flipping {batch_id} from InProgress to Completed now");
-            batch_entry.status = BatchStatus::Completed;
+            if let Some((want_output, want_error)) = maybe_plan {
+                // We only flip if we specifically planned for it
+                info!("Mock: flipping {batch_id} from InProgress -> Completed (because of planned_completions).");
+                batch_entry.status = BatchStatus::Completed;
 
-            if let Some((want_output, want_error)) = planned {
+                // If requested, set output_file_id and store a mock file
                 if want_output {
-                    batch_entry.output_file_id = Some("mock_out_file_id".to_owned());
-                    let mut files_guard = self.files().write().unwrap();
-                    files_guard.insert(
-                        "mock_out_file_id".to_owned(),
-                        Bytes::from("{\"mock\":\"output data\"}"),
+                    let out_id = "mock_out_file_id".to_string();
+                    batch_entry.output_file_id = Some(out_id.clone());
+                    self.files().write().unwrap().insert(
+                        out_id,
+                        Bytes::from("{\"mock\":\"output data\"}")
                     );
                 }
+                // If requested, set error_file_id and store a mock file
                 if want_error {
-                    batch_entry.error_file_id = Some("mock_err_file_id".to_owned());
-                    let mut files_guard = self.files().write().unwrap();
-                    files_guard.insert(
-                        "mock_err_file_id".to_owned(),
-                        Bytes::from("{\"mock\":\"error data\"}"),
+                    let err_id = "mock_err_file_id".to_string();
+                    batch_entry.error_file_id = Some(err_id.clone());
+                    self.files().write().unwrap().insert(
+                        err_id,
+                        Bytes::from("{\"mock\":\"error data\"}")
                     );
                 }
+            } else {
+                // No planned completion => remain InProgress
+                debug!("Mock: no planned completion => leaving status=InProgress for {batch_id}");
             }
         }
 
+        // 7) Return the final snapshot of the batch
         let final_batch = batch_entry.clone();
         drop(map_guard);
 
@@ -700,52 +702,6 @@ mod mock_client_handle_tests {
     use tempfile::tempdir;
     use tracing::{debug, error, info, trace, warn};
 
-    #[traced_test]
-    async fn test_mock_language_model_client_basic_usage() {
-        info!("Starting test_mock_language_model_client_basic_usage");
-
-        let mock = MockLanguageModelClientBuilder::<MockBatchClientError>::default()
-            .build()
-            .expect("Failed to build mock client");
-
-        info!("Creating a batch via the mock client...");
-        let created = mock.create_batch("example_file_id").await;
-        assert!(created.is_ok(), "Should create batch successfully");
-        let created_batch = created.unwrap();
-        pretty_assert_eq!(
-            created_batch.status,
-            BatchStatus::InProgress,
-            "Newly created mock batch should be InProgress"
-        );
-
-        info!("Retrieving the newly created batch...");
-        let retrieved = mock.retrieve_batch(&created_batch.id).await;
-        assert!(retrieved.is_ok(), "Should retrieve batch successfully");
-        let retrieved_batch = retrieved.unwrap();
-        pretty_assert_eq!(
-            retrieved_batch.id, created_batch.id,
-            "Retrieved batch ID should match"
-        );
-
-        info!("Waiting for batch completion...");
-        let wait_result = mock.wait_for_batch_completion(&created_batch.id).await;
-        debug!("Result from wait_for_batch_completion: {:?}", wait_result);
-
-        // Because "mock_batch_id_for_example_file_id" now toggles to Completed after the second retrieve,
-        // we expect success:
-        assert!(wait_result.is_ok(), "Should complete batch successfully");
-        let completed_batch = wait_result.unwrap();
-        pretty_assert_eq!(
-            completed_batch.status,
-            BatchStatus::Completed,
-            "Mock implementation forcibly completes the batch"
-        );
-
-        info!("Trying to retrieve a non-existent file...");
-        let file_content_result = mock.file_content("non_existent_file").await;
-        assert!(file_content_result.is_err(), "Should fail for unknown file ID");
-    }
-
     /// Exhaustive test suite for the `OpenAIClientHandle` struct.
     /// We'll verify that:
     /// 1. `new()` function properly checks the `OPENAI_API_KEY` environment variable.
@@ -907,5 +863,43 @@ mod mock_client_handle_tests {
         }
 
         info!("test_aggregator_trait_compatibility passed.");
+    }
+
+    #[traced_test]
+    async fn test_mock_language_model_client_basic_usage() {
+        info!("Starting test_mock_language_model_client_basic_usage");
+
+        // Build the mock
+        let mock = MockLanguageModelClientBuilder::<MockBatchClientError>::default()
+            .build()
+            .expect("Failed to build mock client");
+
+        // We call create_batch("example_file_id"), which by default yields batch_id="mock_batch_id_for_example_file_id".
+        // Let's plan that batch to eventually become Completed:
+        mock.configure_inprogress_then_complete_with("mock_batch_id_for_example_file_id", false, false);
+
+        info!("Creating a batch via the mock client...");
+        let created = mock.create_batch("example_file_id").await;
+        assert!(created.is_ok(), "Should create batch successfully");
+        let created_batch = created.unwrap();
+        pretty_assert_eq!(created_batch.status, BatchStatus::InProgress);
+
+        info!("Retrieving the newly created batch...");
+        let retrieved = mock.retrieve_batch(&created_batch.id).await;
+        assert!(retrieved.is_ok(), "Should retrieve batch successfully");
+
+        info!("Waiting for batch completion...");
+        let wait_result = mock.wait_for_batch_completion(&created_batch.id).await;
+        debug!("Result from wait_for_batch_completion: {:?}", wait_result);
+
+        // Now that we've called `configure_inprogress_then_complete_with`, 
+        // the second or third retrieve flips the batch to Completed:
+        assert!(wait_result.is_ok(), "Should complete batch successfully");
+        let completed_batch = wait_result.unwrap();
+        pretty_assert_eq!(completed_batch.status, BatchStatus::Completed);
+
+        info!("Trying to retrieve a non-existent file...");
+        let file_content_result = mock.file_content("non_existent_file").await;
+        assert!(file_content_result.is_err(), "Should fail for unknown file ID");
     }
 }

@@ -5,13 +5,29 @@ crate::ix!();
 #[builder(setter(into))]
 #[getset(get="pub")]
 pub struct BatchSuccessResponseBody {
-    id:                 String,
-    object:             String,
-    created:            u64,
-    model:              String,
-    choices:            Vec<BatchChoice>,
-    usage:              BatchUsage,
+    id:      String,
+    object:  String,
+    created: u64,
+    model:   String,
+    choices: Vec<BatchChoice>,
+    usage:   BatchUsage,
+
+    #[builder(default)]
     system_fingerprint: Option<String>,
+}
+
+impl Default for BatchSuccessResponseBody {
+    fn default() -> Self {
+        Self {
+            id:                 "generated-id".into(),
+            object:             "chat.completion".into(),
+            created:            0,
+            model:              "mock-model".into(),
+            choices:            vec![],
+            usage:              BatchUsage::mock(),
+            system_fingerprint: None,
+        }
+    }
 }
 
 impl BatchSuccessResponseBody {
@@ -66,8 +82,8 @@ mod batch_success_response_body_tests {
         let body: BatchSuccessResponseBody = serde_json::from_value(json_data).unwrap();
         pretty_assert_eq!(body.id(), "resp_456");
         pretty_assert_eq!(body.choices().len(), 1);
-        pretty_assert_eq!(body.usage().total_tokens(), 150);
-        pretty_assert_eq!(body.system_fingerprint(), Some("fp_abc"));
+        pretty_assert_eq!(*body.usage().total_tokens(), 150);
+        pretty_assert_eq!(*body.system_fingerprint(), Some("fp_abc".to_string()));
     }
 
     #[test]
@@ -87,7 +103,7 @@ mod batch_success_response_body_tests {
         });
 
         let body: BatchSuccessResponseBody = serde_json::from_value(json_data).unwrap();
-        pretty_assert_eq!(body.system_fingerprint(), None);
+        pretty_assert_eq!(*body.system_fingerprint(), None);
     }
 
     #[test]

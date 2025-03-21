@@ -1,8 +1,9 @@
 // ---------------- [ File: src/message_role.rs ]
 crate::ix!();
 
-#[derive(Debug,Clone,PartialEq,Eq,Hash)]
+#[derive(Default,Debug,Clone,PartialEq,Eq,Hash)]
 pub enum MessageRole {
+    #[default]
     Assistant,
     User,
     System,

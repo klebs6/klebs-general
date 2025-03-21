@@ -11,3 +11,4 @@ pub(crate) use json_repair::*;
 #[cfg(test)] pub(crate) use tracing_setup::*;
 #[cfg(test)] pub(crate) use serde::*;
 #[cfg(test)] pub(crate) use tempfile::tempdir;
+#[cfg(test)] pub(crate) use pretty_assertions::assert_eq as pretty_assert_eq;

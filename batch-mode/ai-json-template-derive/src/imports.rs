@@ -7,9 +7,8 @@ pub(crate) use getset::*;
 
 #[cfg(test)] pub(crate) use tracing_setup::*;
 #[cfg(test)] pub(crate) use traced_test::*;
-
-#[cfg(test)]
-pub(crate) use syn::{parse_quote};
+#[cfg(test)] pub(crate) use pretty_assertions::assert_eq as pretty_assert_eq;
+#[cfg(test)] pub(crate) use syn::{parse_quote};
 
 pub(crate) use syn::{
     parse_macro_input,

@@ -1,12 +1,14 @@
 // ---------------- [ File: src/batch_message.rs ]
 crate::ix!();
 
-#[derive(Builder,Getters,Clone,Debug,Serialize,Deserialize)]
+#[derive(Default,Builder,Getters,Clone,Debug,Serialize,Deserialize)]
 #[builder(setter(into))]
 #[getset(get="pub")]
 pub struct BatchMessage {
     role:    MessageRole,
     content: BatchMessageContent,
+
+    #[builder(default)]
     refusal: Option<String>,
 }
 
@@ -51,9 +53,10 @@ impl From<ChatCompletionResponseMessage> for BatchMessage {
 mod tests {
     use super::*;
 
-    // Test suite for BatchMessage
-    #[test]
+    #[traced_test]
     fn test_batch_message_deserialization() {
+        info!("Starting test: test_batch_message_deserialization");
+
         // Message with all fields
         let json = r#"{
             "role": "assistant",
@@ -63,7 +66,7 @@ mod tests {
         let message: BatchMessage = serde_json::from_str(json).unwrap();
         pretty_assert_eq!(message.role(), &MessageRole::Assistant);
         pretty_assert_eq!(message.content(), "Hello, world!");
-        pretty_assert_eq!(message.refusal(), None);
+        pretty_assert_eq!(*message.refusal(), None);
 
         // Message with refusal
         let json = r#"{
@@ -72,7 +75,8 @@ mod tests {
             "refusal": "Policy refusal"
         }"#;
         let message: BatchMessage = serde_json::from_str(json).unwrap();
-        pretty_assert_eq!(message.refusal(), Some(&"Policy refusal".to_string()));
+        // FIX: do not deref an Option<&String> by '*message.refusal()'
+        pretty_assert_eq!(*message.refusal(), Some("Policy refusal".to_string()));
 
         // Message with unknown role
         let json = r#"{
@@ -92,7 +96,7 @@ mod tests {
             "content": "Content without refusal"
         }"#;
         let message: BatchMessage = serde_json::from_str(json).unwrap();
-        pretty_assert_eq!(message.refusal(), None);
+        pretty_assert_eq!(*message.refusal(), None);
 
         // Message with empty content
         let json = r#"{
@@ -119,5 +123,7 @@ mod tests {
         }"#;
         let result: Result<BatchMessage, _> = serde_json::from_str(json);
         assert!(result.is_err());
+
+        info!("Finished test: test_batch_message_deserialization");
     }
 }

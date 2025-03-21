@@ -1,7 +1,7 @@
 // ---------------- [ File: src/batch_output_data.rs ]
 crate::ix!();
 
-#[derive(Builder,Getters,Clone,Debug, Serialize, Deserialize)]
+#[derive(Builder,Getters,Clone,Debug,Serialize,Deserialize)]
 #[builder(setter(into))]
 #[getset(get="pub")]
 pub struct BatchOutputData {

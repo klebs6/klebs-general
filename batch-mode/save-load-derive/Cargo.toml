@@ -20,6 +20,7 @@ version = "0.3.19"
 
 [dependencies]
 proc-macro2    = "1.0"
+pretty_assertions = "*"
 quote          = "1.0"
 derive_builder = "0.20.2"
 serde          = "1.0"

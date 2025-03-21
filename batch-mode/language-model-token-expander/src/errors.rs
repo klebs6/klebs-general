@@ -3,6 +3,7 @@ crate::ix!();
 
 error_tree!{
     pub enum TokenExpanderError {
+        LanguageModelBatchCreationError(LanguageModelBatchCreationError),
         BatchDownloadError(BatchDownloadError),
         BatchError(BatchError),
         BatchErrorProcessingError(BatchErrorProcessingError),

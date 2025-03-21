@@ -9,9 +9,14 @@ pub struct BatchErrorDetails {
 
     #[serde(rename = "type")]
     error_type: ErrorType,
+
+    #[builder(default)]
     param:      Option<String>,
+
+    #[builder(default)]
     code:       Option<String>,
 }
+
 
 impl BatchErrorDetails {
 
@@ -42,8 +47,8 @@ mod batch_error_details_tests {
         let error_details: BatchErrorDetails = serde_json::from_value(json_data).unwrap();
         pretty_assert_eq!(error_details.message(), "Invalid parameters");
         pretty_assert_eq!(error_details.error_type(), "parameter_error");
-        pretty_assert_eq!(error_details.param(), Some("query"));
-        pretty_assert_eq!(error_details.code(), Some("invalid_query"));
+        pretty_assert_eq!(*error_details.param(), Some("query".to_string()));
+        pretty_assert_eq!(*error_details.code(), Some("invalid_query".to_string()));
     }
 
     #[test]
@@ -57,7 +62,7 @@ mod batch_error_details_tests {
         let error_details: BatchErrorDetails = serde_json::from_value(json_data).unwrap();
         pretty_assert_eq!(error_details.message(), "Server error");
         pretty_assert_eq!(error_details.error_type(), "server_error");
-        pretty_assert_eq!(error_details.param(), None);
-        pretty_assert_eq!(error_details.code(), None);
+        pretty_assert_eq!(*error_details.param(), None);
+        pretty_assert_eq!(*error_details.code(), None);
     }
 }

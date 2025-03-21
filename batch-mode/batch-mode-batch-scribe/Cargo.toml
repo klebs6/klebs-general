@@ -1,4 +1,5 @@
 [dependencies]
+pretty_assertions = "*"
 async-openai = "0.28.0"
 error-tree = "*"
 export-magic = "*"

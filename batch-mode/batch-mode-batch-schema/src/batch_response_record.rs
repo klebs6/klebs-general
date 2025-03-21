@@ -8,6 +8,8 @@ pub struct BatchResponseRecord {
     id:        BatchRequestId,
     custom_id: CustomRequestId,
     response:  BatchResponseContent,
+
+    #[builder(default)]
     error:     Option<serde_json::Value>, // Assuming it's always null or can be ignored
 }
 
@@ -111,9 +113,10 @@ impl BatchResponseRecord {
 mod batch_response_record_tests {
     use super::*;
 
-    // Additional test to deserialize the provided batch line
-    #[test]
+    #[traced_test]
     fn test_full_batch_deserialization() {
+        info!("Starting test: test_full_batch_deserialization");
+
         let json = r#"
         {
             "id": "batch_req_673d5e5fc66481908be3f82f25681838",
@@ -148,30 +151,47 @@ mod batch_response_record_tests {
         "#;
 
         let batch_response: BatchResponseRecord = serde_json::from_str(json).unwrap();
-        pretty_assert_eq!(batch_response.id, BatchRequestId::new("batch_req_673d5e5fc66481908be3f82f25681838"));
-        pretty_assert_eq!(batch_response.custom_id, CustomRequestId::new("request-0"));
+        pretty_assert_eq!(
+            batch_response.id,
+            BatchRequestId::new("batch_req_673d5e5fc66481908be3f82f25681838")
+        );
+        pretty_assert_eq!(
+            batch_response.custom_id,
+            CustomRequestId::new("request-0")
+        );
         assert!(batch_response.error.is_none());
 
         let response = batch_response.response;
-        pretty_assert_eq!(response.status_code(), 200);
+        pretty_assert_eq!(*response.status_code(), 200);
         pretty_assert_eq!(response.request_id(), "7b003085175d218b0ceb2b79d7f60bca");
 
         let body = response.body();
-        pretty_assert_eq!(body.id(), Some("chatcmpl-AVW7Z2Dd49g7Zq5eVExww6dlKA8T9"));
-        pretty_assert_eq!(body.object(), Some("chat.completion"));
-        pretty_assert_eq!(body.model(), Some("gpt-4o-2024-08-06"));
+
+        // FIX: compare as Option<&String>, not by deref
+        pretty_assert_eq!(
+            body.id(),
+            Some(&"chatcmpl-AVW7Z2Dd49g7Zq5eVExww6dlKA8T9".to_string())
+        );
+        pretty_assert_eq!(
+            body.object(),
+            Some(&"chat.completion".to_string())
+        );
+        pretty_assert_eq!(
+            body.model(),
+            Some(&"gpt-4o-2024-08-06".to_string())
+        );
 
         let choices = body.choices();
-
         assert!(choices.is_some());
         let choices = choices.unwrap();
-
         pretty_assert_eq!(choices.len(), 1);
 
         let choice = &choices[0];
-        pretty_assert_eq!(choice.index(), 0);
+        pretty_assert_eq!(*choice.index(), 0);
         pretty_assert_eq!(choice.finish_reason(), &FinishReason::Stop);
         pretty_assert_eq!(choice.message().role(), &MessageRole::Assistant);
         pretty_assert_eq!(choice.message().content(), "Response content here.");
+
+        info!("Finished test: test_full_batch_deserialization");
     }
 }

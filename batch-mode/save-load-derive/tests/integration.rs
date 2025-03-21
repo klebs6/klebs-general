@@ -1,5 +1,6 @@
 // ---------------- [ File: tests/integration.rs ]
 use save_load_derive::*;
+use pretty_assertions::assert_eq as pretty_assert_eq;
 use proc_macro2::TokenStream;
 use quote::quote;
 use syn::{DeriveInput,Meta,parse_macro_input};

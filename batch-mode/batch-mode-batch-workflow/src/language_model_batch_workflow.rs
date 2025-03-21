@@ -80,42 +80,49 @@ pub trait ProcessBatchRequests {
 /// - Sending them to a remote server,
 /// - Handling the results.
 #[async_trait]
-pub trait LanguageModelBatchWorkflow<E>
-: FinishProcessingUncompletedBatches<Error=E> 
-+ ComputeLanguageModelRequests
-+ ProcessBatchRequests<Error=E>
+pub trait LanguageModelBatchWorkflow<E: From<LanguageModelBatchCreationError>>: 
+    FinishProcessingUncompletedBatches<Error = E>
+    + ComputeLanguageModelRequests
+    + ProcessBatchRequests<Error = E>
 {
     const REQUESTS_PER_BATCH: usize = 80;
 
     async fn plant_seed_and_wait(
         &mut self,
-        input_tokens:          &[<Self as ComputeLanguageModelRequests>::Seed]
-    ) -> Result<(),E>;
+        input_tokens: &[<Self as ComputeLanguageModelRequests>::Seed]
+    ) -> Result<(), E>;
 
-    /// High-level method that ties it all together:
+    /// High-level method that ties it all together.
+    /// Fixes the mismatch by enumerating chunk-slices properly and passing
+    /// `&[LanguageModelBatchAPIRequest]` to `process_batch_requests`.
     async fn execute_language_model_batch_workflow(
         &mut self,
         model:                 LanguageModelType,
         expected_content_type: ExpectedContentType,
         input_tokens:          &[<Self as ComputeLanguageModelRequests>::Seed]
-    ) -> Result<(),E>
+    ) -> Result<(), E>
     {
         info!("Beginning full batch workflow execution");
 
         self.finish_processing_uncompleted_batches(&expected_content_type).await?;
 
-        let requests = self.compute_language_model_requests(&model, input_tokens);
+        let requests: Vec<_> = self.compute_language_model_requests(&model, input_tokens);
 
-        let batches = construct_batches(&requests, Self::REQUESTS_PER_BATCH);
+        // `construct_batches` presumably returns something like an iterator of chunks.
+        let enumerated_batches = construct_batches(&requests, Self::REQUESTS_PER_BATCH, false)?;
 
-        for (batch_idx, batch_requests) in batches {
+        // Enumerate so we have (batch_idx, chunk_of_requests).
+        for (batch_idx, batch_requests) in enumerated_batches {
             info!("Processing batch #{}", batch_idx);
-            self.process_batch_requests(batch_requests,&expected_content_type).await?;
+            // Here, `batch_requests` is a `&[LanguageModelBatchAPIRequest]`,
+            // matching the expected parameter type in `process_batch_requests`.
+            self.process_batch_requests(batch_requests, &expected_content_type).await?;
         }
 
         Ok(())
     }
 }
+
 
 /// This new trait is used to gather the final AI expansions from disk, 
 /// matching each seed item to its parsed output JSON.

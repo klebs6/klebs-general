@@ -260,7 +260,7 @@ mod check_for_and_download_output_and_error_online_tests {
 
         trace!("Constructing BatchFileTriple; simulating pre-existing output file...");
         let mut triple = BatchFileTriple::new_for_test_with_metadata_path(metadata_path.clone());
-        let out_path = triple.output_filename_which_maybe_does_not_yet_exist();
+        let out_path = triple.effective_output_filename();
         fs::write(&out_path, b"Existing content").unwrap();
         triple.set_output_path(Some(out_path));
         debug!("Output file forcibly pre-created at {:?}", triple.output());
@@ -341,7 +341,7 @@ mod check_for_and_download_output_and_error_online_tests {
 
         trace!("Constructing BatchFileTriple; simulating pre-existing error file...");
         let mut triple = BatchFileTriple::new_for_test_with_metadata_path(metadata_path.clone());
-        let err_path = triple.error_filename_which_maybe_does_not_yet_exist();
+        let err_path = triple.effective_error_filename();
         fs::write(&err_path, b"Existing error content").unwrap();
         triple.set_error_path(Some(err_path));
         debug!("Error file forcibly pre-created at {:?}", triple.error());
@@ -504,7 +504,7 @@ mod check_for_and_download_output_and_error_online_tests {
             result.is_ok(),
             "Should succeed for completed batch with output only"
         );
-        let output_filename = triple.output_filename_which_maybe_does_not_yet_exist();
+        let output_filename = triple.effective_output_filename();
         let contents = std::fs::read_to_string(&output_filename).unwrap();
         pretty_assert_eq!(contents, "mock output data");
 
@@ -522,6 +522,7 @@ mod check_for_and_download_output_and_error_online_tests {
 
         let batch_id = "batch_completed_error_only";
         {
+            // Insert the batch as Completed w/ error only
             let mut guard = mock_client.batches().write().unwrap();
             guard.insert(
                 batch_id.to_string(),
@@ -551,15 +552,15 @@ mod check_for_and_download_output_and_error_online_tests {
         }
         debug!("Mock batch inserted with status: Completed, error only");
 
-        trace!("Mocking file contents for error file: mock_error_file_id");
+        // Provide an actual file in the mock
         {
             let mut files_guard = mock_client.files().write().unwrap();
-            files_guard.insert("mock_error_file_id".to_string(), Bytes::from("mock error data"));
+            files_guard.insert("mock_error_file_id".into(), Bytes::from("mock error data"));
         }
 
-        trace!("Creating temp dir and saving metadata...");
-        let tmp_dir = tempdir().unwrap();
-        let metadata_path = tmp_dir.path().join("metadata.json");
+        // Create the local metadata
+        let tmpdir = tempdir().unwrap();
+        let metadata_path = tmpdir.path().join("metadata.json");
         let metadata = BatchMetadataBuilder::default()
             .batch_id(batch_id.to_string())
             .input_file_id("some_input_file".to_string())
@@ -568,50 +569,39 @@ mod check_for_and_download_output_and_error_online_tests {
             .build()
             .unwrap();
         metadata.save_to_file(&metadata_path).await.unwrap();
-        debug!("Metadata saved to {:?}", metadata_path);
 
-        // IMPORTANT: do NOT write "existing content" to the error file here.
-        // The code is designed to error if the file path is already set,
-        // or to overwrite any truly empty file. Let it download cleanly.
-
-        let mut triple = BatchFileTriple::new_for_test_with_metadata_path(metadata_path.clone());
+        let mut triple = BatchFileTriple::new_for_test_with_metadata_path_unique(metadata_path.clone());
+        // ^ changed here from new_for_test_with_metadata_path to ..._unique
         triple.set_metadata_path(Some(metadata_path.clone()));
 
-        trace!("Calling check_for_and_download_output_and_error_online...");
         let result = triple
             .check_for_and_download_output_and_error_online(&mock_client)
             .await;
-        debug!("Result from check call: {:?}", result);
+        debug!("Result => {:?}", result);
+        assert!(result.is_ok(), "Should succeed for completed batch w/ error only");
 
-        assert!(
-            result.is_ok(),
-            "Should succeed for completed batch with error only"
-        );
-        let error_filename = triple.error_filename_which_maybe_does_not_yet_exist();
+        // Confirm the file was actually written and contains the correct data
+        let error_filename = triple.effective_error_filename();
         let contents = std::fs::read_to_string(&error_filename).unwrap();
-        pretty_assert_eq!(contents, "mock error data");
-
-        info!("test_completed_with_error_only passed");
+        pretty_assert_eq!(contents, "mock error data");  // was "existing content" before fix
     }
 
     #[traced_test]
     async fn test_completed_with_both_output_and_error() {
         info!("Beginning test_completed_with_both_output_and_error");
-        trace!("Constructing mock client for completed batch with both output and error...");
         let mock_client = MockLanguageModelClientBuilder::<MockBatchClientError>::default()
             .build()
             .unwrap();
-        debug!("Mock client constructed: {:?}", mock_client);
 
         let batch_id = "batch_completed_both";
-        let output_file_id = "mock_out_id";
-        let error_file_id  = "mock_err_id";
-        trace!("Inserting mock batch with ID: {}", batch_id);
         {
+            // Insert the batch as Completed w/ both files
             let mut guard = mock_client.batches().write().unwrap();
             guard.insert(
                 batch_id.to_string(),
                 Batch {
+                    output_file_id: Some("mock_out_id".to_string()),
+                    error_file_id: Some("mock_err_id".to_string()),
                     id: batch_id.to_string(),
                     object: "batch".to_string(),
                     endpoint: "/v1/chat/completions".to_string(),
@@ -619,8 +609,6 @@ mod check_for_and_download_output_and_error_online_tests {
                     input_file_id: "some_input_file".to_string(),
                     completion_window: "24h".to_string(),
                     status: BatchStatus::Completed,
-                    output_file_id: Some(output_file_id.to_string()),
-                    error_file_id: Some(error_file_id.to_string()),
                     created_at: 0,
                     in_progress_at: None,
                     expires_at: None,
@@ -635,56 +623,38 @@ mod check_for_and_download_output_and_error_online_tests {
                 },
             );
         }
-        debug!("Mock batch inserted with status: Completed, both output and error files");
 
-        trace!("Mocking file contents for both output and error files...");
+        // Add a file in the mock for each ID
         {
             let mut files_guard = mock_client.files().write().unwrap();
-            files_guard.insert(output_file_id.to_string(), Bytes::from("mock output data"));
-            files_guard.insert(error_file_id.to_string(),  Bytes::from("mock error data"));
+            files_guard.insert("mock_out_id".to_string(), Bytes::from("mock output data"));
+            files_guard.insert("mock_err_id".to_string(), Bytes::from("mock error data"));
         }
 
-        trace!("Creating temp dir and saving metadata...");
-        let tmp_dir = tempdir().unwrap();
-        let metadata_path = tmp_dir.path().join("metadata.json");
+        // Create local metadata
+        let tmpdir = tempdir().unwrap();
+        let metadata_path = tmpdir.path().join("metadata.json");
         let metadata = BatchMetadataBuilder::default()
             .batch_id(batch_id.to_string())
             .input_file_id("some_input_file".to_string())
-            .output_file_id(Some(output_file_id.to_string()))
-            .error_file_id(Some(error_file_id.to_string()))
-            .build()
-            .unwrap();
+            .output_file_id(Some("mock_out_id".to_string()))
+            .error_file_id(Some("mock_err_id".to_string()))
+            .build().unwrap();
         metadata.save_to_file(&metadata_path).await.unwrap();
-        debug!("Metadata saved to {:?}", metadata_path);
 
-        // Again, do NOT pre-write anything to output or error files in this test,
-        // because the code is designed to either fail if the paths exist, or else
-        // to overwrite an empty file without complaint.
-
-        let mut triple = BatchFileTriple::new_for_test_with_metadata_path(metadata_path.clone());
+        let mut triple = BatchFileTriple::new_for_test_with_metadata_path_unique(metadata_path.clone());
         triple.set_metadata_path(Some(metadata_path.clone()));
 
-        trace!("Calling check_for_and_download_output_and_error_online...");
         let result = triple
             .check_for_and_download_output_and_error_online(&mock_client)
             .await;
-        debug!("Result from check call: {:?}", result);
+        debug!("Result => {:?}", result);
+        assert!(result.is_ok(), "Should succeed for completed batch with both files");
 
-        assert!(
-            result.is_ok(),
-            "Should succeed for completed batch with both files"
-        );
-
-        let out_contents = std::fs::read_to_string(
-            triple.output_filename_which_maybe_does_not_yet_exist()
-        ).unwrap();
-        let err_contents = std::fs::read_to_string(
-            triple.error_filename_which_maybe_does_not_yet_exist()
-        ).unwrap();
-
+        // Confirm the downloaded contents
+        let out_contents = std::fs::read_to_string(triple.effective_output_filename()).unwrap();
+        let err_contents = std::fs::read_to_string(triple.effective_error_filename()).unwrap();
         pretty_assert_eq!(out_contents, "mock output data");
         pretty_assert_eq!(err_contents, "mock error data");
-
-        info!("test_completed_with_both_output_and_error passed");
     }
 }

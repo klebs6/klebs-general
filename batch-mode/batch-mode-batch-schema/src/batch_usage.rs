@@ -5,11 +5,24 @@ crate::ix!();
 #[builder(setter(into))]
 #[getset(get="pub")]
 pub struct BatchUsage {
-    prompt_tokens:             u32,
-    completion_tokens:         u32,
-    total_tokens:              u32,
-    prompt_tokens_details:     Option<BatchTokenDetails>,
-    completion_tokens_details: Option<BatchTokenDetails>,
+    prompt_tokens:     u32,
+    completion_tokens: u32,
+    total_tokens:      u32,
+    
+    #[builder(default)] prompt_tokens_details:     Option<BatchTokenDetails>,
+    #[builder(default)] completion_tokens_details: Option<BatchTokenDetails>,
+}
+
+impl Default for BatchUsage {
+    fn default() -> Self {
+        Self {
+            prompt_tokens:             1024,
+            completion_tokens:         1024,
+            total_tokens:              2048,
+            prompt_tokens_details:     None,
+            completion_tokens_details: None,
+        }
+    }
 }
 
 impl BatchUsage {
@@ -39,9 +52,9 @@ mod batch_usage_tests {
         });
 
         let usage: BatchUsage = serde_json::from_value(json_data).unwrap();
-        pretty_assert_eq!(usage.prompt_tokens(), 100);
-        pretty_assert_eq!(usage.completion_tokens(), 50);
-        pretty_assert_eq!(usage.total_tokens(), 150);
+        pretty_assert_eq!(*usage.prompt_tokens(), 100);
+        pretty_assert_eq!(*usage.completion_tokens(), 50);
+        pretty_assert_eq!(*usage.total_tokens(), 150);
     }
 
     #[test]

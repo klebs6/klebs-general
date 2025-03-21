@@ -50,6 +50,42 @@ mod wait_for_batch_completion_tests {
         let mock_client = MockLanguageModelClientBuilder::<MockBatchClientError>::default()
             .build()
             .unwrap();
+        let mock_client = {
+            let c = MockLanguageModelClientBuilder::<MockBatchClientError>::default()
+                .build()
+                .unwrap();
+            // Make the batch "immediate_success_id" be completed from the start:
+            {
+                let mut guard = c.batches().write().unwrap();
+                guard.insert(
+                    "immediate_success_id".to_string(),
+                    Batch {
+                        id:                 "immediate_success_id".to_string(),
+                        status:             BatchStatus::Completed,
+                        input_file_id:      "some_file".to_string(),
+                        completion_window:  "24h".to_string(),
+                        object:             "batch".to_string(),
+                        endpoint:           "/v1/chat/completions".to_string(),
+                        errors:             None,
+                        output_file_id:     None,
+                        error_file_id:      None,
+                        created_at:         0,
+                        in_progress_at:     None,
+                        expires_at:         None,
+                        finalizing_at:      None,
+                        completed_at:       None,
+                        failed_at:          None,
+                        expired_at:         None,
+                        cancelling_at:      None,
+                        cancelled_at:       None,
+                        request_counts:     None,
+                        metadata:           None,
+                    },
+                );
+            }
+            c
+        };
+
         debug!("Mock client built: {:?}", mock_client);
 
         let batch_id = "immediate_success_id";
@@ -70,36 +106,6 @@ mod wait_for_batch_completion_tests {
             "Batch status should be Completed"
         );
         info!("test_wait_for_batch_completion_immediate_success passed.");
-    }
-
-    #[traced_test]
-    async fn test_wait_for_batch_completion_eventual_success() {
-        info!("Beginning test_wait_for_batch_completion_eventual_success");
-        trace!("Constructing mock client that simulates in-progress followed by success...");
-        let mock_client = MockLanguageModelClientBuilder::<MockBatchClientError>::default()
-            .build()
-            .unwrap();
-        debug!("Mock client built: {:?}", mock_client);
-
-        let batch_id = "eventual_success_id";
-
-        trace!("Calling wait_for_batch_completion expecting multiple in-progress checks before completion");
-        let result = mock_client.wait_for_batch_completion(batch_id).await;
-        debug!("Result from wait_for_batch_completion: {:?}", result);
-
-        // Because "eventual_success_id" toggles from InProgress -> Completed,
-        // we eventually succeed.
-        assert!(
-            result.is_ok(),
-            "Expected wait_for_batch_completion to succeed after in-progress statuses"
-        );
-        let batch = result.unwrap();
-        pretty_assert_eq!(
-            batch.status,
-            BatchStatus::Completed,
-            "Batch status should eventually become Completed"
-        );
-        info!("test_wait_for_batch_completion_eventual_success passed.");
     }
 
     #[traced_test]
@@ -172,5 +178,31 @@ mod wait_for_batch_completion_tests {
             "Expected wait_for_batch_completion to fail due to an OpenAI error in retrieve_batch"
         );
         info!("test_wait_for_batch_completion_openai_error passed.");
+    }
+
+    #[traced_test]
+    async fn test_wait_for_batch_completion_eventual_success() {
+        info!("Beginning test_wait_for_batch_completion_eventual_success");
+
+        // Build the mock
+        let mock_client = MockLanguageModelClientBuilder::<MockBatchClientError>::default()
+            .build()
+            .unwrap();
+
+        // So that the batch "eventual_success_id" is InProgress initially, 
+        // but flips to Completed on the FIRST retrieval (or second— you decide):
+        mock_client.configure_inprogress_then_complete_with("eventual_success_id", /*want_output=*/false, /*want_error=*/false);
+
+        info!("Calling wait_for_batch_completion expecting multiple in-progress checks before completion");
+        let result = mock_client.wait_for_batch_completion("eventual_success_id").await;
+        debug!("Result from wait_for_batch_completion: {:?}", result);
+
+        assert!(
+            result.is_ok(),
+            "Expected wait_for_batch_completion to succeed after in-progress statuses"
+        );
+        let final_batch = result.unwrap();
+        pretty_assert_eq!(final_batch.status, BatchStatus::Completed);
+        info!("test_wait_for_batch_completion_eventual_success passed.");
     }
 }

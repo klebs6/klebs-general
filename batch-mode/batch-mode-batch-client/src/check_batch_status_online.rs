@@ -1,6 +1,7 @@
 // ---------------- [ File: src/check_batch_status_online.rs ]
 crate::ix!();
 
+// Now implement it for `BatchFileTriple`:
 #[async_trait]
 impl<E> CheckBatchStatusOnline<E> for BatchFileTriple
 where
@@ -8,7 +9,7 @@ where
         + From<OpenAIClientError>
         + From<BatchMetadataError>
         + From<std::io::Error>
-        + Debug,
+        + std::fmt::Debug,
 {
     async fn check_batch_status_online(
         &self,
@@ -16,7 +17,7 @@ where
     ) -> Result<BatchOnlineStatus, E> {
         info!("checking batch status online");
 
-        // Pick the correct metadata path if we have associated_metadata:
+        // Use the associated metadata file if set, else fallback
         let metadata_filename: PathBuf = if let Some(path) = self.associated_metadata() {
             path.clone()
         } else {
@@ -30,7 +31,7 @@ where
         let batch = client.retrieve_batch(&batch_id).await?;
         match batch.status {
             BatchStatus::Completed => {
-                // Only if completed do we store these IDs into the metadata.
+                // Only if completed do we store these IDs into the metadata:
                 metadata.set_output_file_id(batch.output_file_id.clone());
                 metadata.set_error_file_id(batch.error_file_id.clone());
                 metadata.save_to_file(&metadata_filename).await?;
@@ -56,6 +57,9 @@ where
     }
 }
 
+//-----------------------------------------------------
+// Test module
+//-----------------------------------------------------
 #[cfg(test)]
 mod check_batch_status_online_tests {
     use super::*;
@@ -63,6 +67,10 @@ mod check_batch_status_online_tests {
     use tempfile::tempdir;
     use tracing::{debug, error, info, trace, warn};
     use std::fs;
+
+    // Example placeholder so references to MockWorkspace compile:
+    #[derive(Default, Debug)]
+    pub struct MockWorkspace;
 
     #[traced_test]
     async fn test_batch_completed_no_files() {
@@ -75,6 +83,8 @@ mod check_batch_status_online_tests {
 
         let batch_id = "test_batch_completed_no_files";
         trace!("Inserting batch with ID={}", batch_id);
+
+        // Insert a completed batch with no output or error:
         {
             let mut guard = mock_client.batches().write().unwrap();
             guard.insert(
@@ -118,7 +128,6 @@ mod check_batch_status_online_tests {
 
         trace!("Creating BatchFileTriple with known metadata path...");
         let mut triple = BatchFileTriple::new_for_test_with_metadata_path(metadata_path.clone());
-        // Must be mutable so we can call set_metadata_path
         triple.set_metadata_path(Some(metadata_path.clone()));
 
         trace!("Calling check_batch_status_online...");
@@ -178,7 +187,7 @@ mod check_batch_status_online_tests {
         let metadata = BatchMetadataBuilder::default()
             .batch_id(batch_id.to_string())
             .input_file_id("input_file_id".to_string())
-            .output_file_id(Some("mock_output_file_id".to_string()))
+            .output_file_id(Some("mock_output_file_id".into()))
             .error_file_id(None)
             .build()
             .unwrap();
@@ -245,7 +254,7 @@ mod check_batch_status_online_tests {
             .batch_id(batch_id.to_string())
             .input_file_id("input_file_id".to_string())
             .output_file_id(None)
-            .error_file_id(Some("mock_err_file_id".to_string()))
+            .error_file_id(Some("mock_err_file_id".into()))
             .build()
             .unwrap();
         info!("Saving metadata at {:?}", metadata_path);
@@ -310,8 +319,8 @@ mod check_batch_status_online_tests {
         let metadata = BatchMetadataBuilder::default()
             .batch_id(batch_id.to_string())
             .input_file_id("input_file_id".to_string())
-            .output_file_id(Some("mock_output_file_id".to_string()))
-            .error_file_id(Some("mock_err_file_id".to_string()))
+            .output_file_id(Some("mock_output_file_id".into()))
+            .error_file_id(Some("mock_err_file_id".into()))
             .build()
             .unwrap();
         info!("Saving metadata at {:?}", metadata_path);
@@ -443,6 +452,7 @@ mod check_batch_status_online_tests {
         let result = triple.check_batch_status_online(&mock_client).await;
         debug!("Result from check_batch_status_online: {:?}", result);
 
+        // We expect "still processing" for an InProgress batch:
         assert!(
             result.is_err(),
             "Should return Err(...) for an in-progress batch"
@@ -505,7 +515,7 @@ mod check_batch_status_online_tests {
 
         assert!(
             result.is_err(),
-            "Should return Err(...) for an unknown batch status"
+            "Should return Err(...) for an unknown batch status like Cancelled"
         );
         info!("test_batch_unknown_status passed successfully.");
     }

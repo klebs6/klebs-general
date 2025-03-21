@@ -41,11 +41,11 @@ mod batch_token_details_tests {
 
         let token_details: BatchTokenDetails = serde_json::from_value(json_data).unwrap();
 
-        pretty_assert_eq!(token_details.cached_tokens(), Some(10));
-        pretty_assert_eq!(token_details.audio_tokens(), Some(20));
-        pretty_assert_eq!(token_details.reasoning_tokens(), Some(30));
-        pretty_assert_eq!(token_details.accepted_prediction_tokens(), Some(40));
-        pretty_assert_eq!(token_details.rejected_prediction_tokens(), Some(50));
+        pretty_assert_eq!(*token_details.cached_tokens(), Some(10));
+        pretty_assert_eq!(*token_details.audio_tokens(), Some(20));
+        pretty_assert_eq!(*token_details.reasoning_tokens(), Some(30));
+        pretty_assert_eq!(*token_details.accepted_prediction_tokens(), Some(40));
+        pretty_assert_eq!(*token_details.rejected_prediction_tokens(), Some(50));
         pretty_assert_eq!(token_details.total_tokens(), 150);
     }
 
@@ -59,11 +59,11 @@ mod batch_token_details_tests {
 
         let token_details: BatchTokenDetails = serde_json::from_value(json_data).unwrap();
 
-        pretty_assert_eq!(token_details.cached_tokens(), None);
-        pretty_assert_eq!(token_details.audio_tokens(), Some(25));
-        pretty_assert_eq!(token_details.reasoning_tokens(), None);
-        pretty_assert_eq!(token_details.accepted_prediction_tokens(), Some(35));
-        pretty_assert_eq!(token_details.rejected_prediction_tokens(), None);
+        pretty_assert_eq!(*token_details.cached_tokens(), None);
+        pretty_assert_eq!(*token_details.audio_tokens(), Some(25));
+        pretty_assert_eq!(*token_details.reasoning_tokens(), None);
+        pretty_assert_eq!(*token_details.accepted_prediction_tokens(), Some(35));
+        pretty_assert_eq!(*token_details.rejected_prediction_tokens(), None);
         pretty_assert_eq!(token_details.total_tokens(), 60);
     }
 

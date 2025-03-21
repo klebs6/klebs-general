@@ -12,14 +12,14 @@ pub struct MockItem {
 #[builder(setter(strip_option), default)]
 #[getset(get = "pub", set = "pub")]
 pub struct MockWorkspace {
-    done_dir:            PathBuf,
-    json_repairs_dir:    PathBuf,
-    failed_items_dir:    PathBuf,
-    workdir:             PathBuf,
-    text_storage_prefix: String,
-    input_ids:           Vec<String>,
-    output_ids:          Vec<String>,
-    error_ids:           Vec<String>,
+    done_dir:                PathBuf,
+    failed_json_repairs_dir: PathBuf,
+    failed_items_dir:        PathBuf,
+    workdir:                 PathBuf,
+    text_storage_prefix:     String,
+    input_ids:               Vec<String>,
+    output_ids:              Vec<String>,
+    error_ids:               Vec<String>,
 }
 
 /// The required sub-traits. We'll define minimal logic in each method
@@ -73,10 +73,10 @@ impl GetDoneDirectory for MockWorkspace {
 
 impl GetFailedJsonRepairsDir for MockWorkspace {
     fn failed_json_repairs_dir(&self) -> PathBuf {
-        if self.json_repairs_dir.as_os_str().is_empty() {
+        if self.failed_json_repairs_dir.as_os_str().is_empty() {
             return PathBuf::from("mock_failed_json_repairs_dir");
         }
-        self.json_repairs_dir.clone()
+        self.failed_json_repairs_dir.clone()
     }
 }
 
@@ -208,10 +208,9 @@ mod batch_workspace_interface_exhaustive_tests {
     // ===========================
     // EXHAUSTIVE TESTS
     // ===========================
-
     #[traced_test]
     fn mock_workspace_implements_all_traits() {
-        trace!("===== BEGIN TEST: mock_workspace_implements_all_traits =====");
+        info!("Starting test: mock_workspace_implements_all_traits");
         let workspace = Arc::new(MockWorkspace::default());
         let idx = BatchIndex::Usize(123);
 
@@ -251,8 +250,10 @@ mod batch_workspace_interface_exhaustive_tests {
         let wd = workspace.workdir();
         debug!("workdir => {:?}", wd);
 
-        // Check getTargetPath
-        let item = Arc::new(MockItem { name: "test_item".to_string() });
+        // Here is the fix: make sure we pass an Arc<dyn GetTargetPathForAIExpansion + Send + Sync>
+        let item: Arc<dyn GetTargetPathForAIExpansion + Send + Sync> =
+            Arc::new(MockItem { name: "test_item".to_string() });
+
         let targ = workspace.target_path(&item, &ExpectedContentType::Json);
         debug!("target_path => {:?}", targ);
 
@@ -267,16 +268,16 @@ mod batch_workspace_interface_exhaustive_tests {
         assert!(!fails_dir.as_os_str().is_empty());
         assert!(!wd.as_os_str().is_empty());
         assert!(targ.to_string_lossy().contains("json_output"));
-        trace!("===== END TEST: mock_workspace_implements_all_traits =====");
+
+        info!("Finished test: mock_workspace_implements_all_traits");
     }
 
     #[traced_test]
     fn failing_workspace_implements_all_traits() {
-        trace!("===== BEGIN TEST: failing_workspace_implements_all_traits =====");
+        info!("Starting test: failing_workspace_implements_all_traits");
         let workspace = Arc::new(FailingWorkspace::default());
-        let idx = BatchIndex::new(); // random UUID
+        let idx = BatchIndex::new(); // random UUID or random index
 
-        // We'll just ensure calls don't panic and produce a PathBuf.
         let in_file = workspace.input_filename(&idx);
         debug!("failing input_filename => {:?}", in_file);
 
@@ -304,12 +305,13 @@ mod batch_workspace_interface_exhaustive_tests {
         let wd = workspace.workdir();
         debug!("failing workdir => {:?}", wd);
 
-        let item = Arc::new(MockItem { name: "test_failing_item".to_string() });
+        // Again, fix to pass the correct trait-object type:
+        let item: Arc<dyn GetTargetPathForAIExpansion + Send + Sync> =
+            Arc::new(MockItem { name: "test_failing_item".to_string() });
+
         let targ = workspace.target_path(&item, &ExpectedContentType::PlainText);
         debug!("failing target_path => {:?}", targ);
 
-        // Just confirm no panics.  We can't do real FS ops here, so
-        // everything is "failing" in principle.
         assert!(in_file.to_string_lossy().contains("/this/path/does/not/exist"));
         assert!(out_file.to_string_lossy().contains("/this/path/does/not/exist"));
         assert!(err_file.to_string_lossy().contains("/this/path/does/not/exist"));
@@ -321,6 +323,6 @@ mod batch_workspace_interface_exhaustive_tests {
         assert!(wd.to_string_lossy().contains("/this/path/does/not/exist/workdir"));
         assert!(targ.to_string_lossy().contains("this_cannot_be_created"));
 
-        trace!("===== END TEST: failing_workspace_implements_all_traits =====");
+        info!("Finished test: failing_workspace_implements_all_traits");
     }
 }

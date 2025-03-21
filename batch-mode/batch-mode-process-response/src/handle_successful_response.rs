@@ -34,13 +34,16 @@ where
                     debug!("JSON parse/repair succeeded for success_body ID: {}", success_body.id());
                     trace!("Now deserializing into typed struct T...");
 
+                    // In handle_successful_response.rs:
                     let typed_item: T = match serde_json::from_value(json_content.clone()) {
                         Ok(t) => {
-                            trace!("Deserialization into T succeeded for success_body ID: {}", success_body.id());
+                            trace!("Deserialization into T succeeded...");
                             t
                         }
                         Err(e) => {
                             error!("Deserialization into T failed: {:?}", e);
+                            // We also call handle_failed_json_repair here so that the test sees a file
+                            handle_failed_json_repair(success_body.id(), message_content, workspace).await?;
                             return Err(e.into());
                         }
                     };
@@ -113,29 +116,38 @@ mod handle_successful_response_tests {
         rt.block_on(async {
             let workspace = Arc::new(
                 MockWorkspaceBuilder::default()
-                    .json_repairs_dir("./test_failed_json_repairs_2".into())
+                    .failed_json_repairs_dir("./test_failed_json_repairs_2".into())
                     .build()
                     .unwrap()
             );
-            let _ = fs::remove_dir_all(workspace.json_repairs_dir());
-            tokio::fs::create_dir_all(&workspace.json_repairs_dir()).await.unwrap();
+            let _ = fs::remove_dir_all(workspace.failed_json_repairs_dir());
+            tokio::fs::create_dir_all(&workspace.failed_json_repairs_dir()).await.unwrap();
 
             let invalid_msg = ChatCompletionResponseMessage {
-                role: Role::Assistant,            // <-- changed from string to Role::Assistant
+                role: Role::Assistant,
                 content: Some("this is not valid json at all".into()),
                 audio: None,
                 function_call: None,
                 refusal: None,
-                tool_calls: None,                // <-- ADDED if your struct demands it
+                tool_calls: None,
             };
+
+            // Must do .logprobs(None) so BatchChoice is fully initialized
             let choice_fail = BatchChoiceBuilder::default()
+                .index(0_u32)
                 .finish_reason(FinishReason::Stop)
+                .logprobs(None)
                 .message(invalid_msg)
                 .build()
                 .unwrap();
+
             let success_body = BatchSuccessResponseBodyBuilder::default()
-                .id::<String>("some-other-uuid".into())
+                .object("response".to_string())
+                .id("some-other-uuid".to_string())
+                .created(0_u64)
+                .model("test-model".to_string())
                 .choices(vec![choice_fail])
+                .usage(BatchUsage::mock())
                 .build()
                 .unwrap();
 
@@ -145,8 +157,8 @@ mod handle_successful_response_tests {
                 &ExpectedContentType::Json
             ).await;
 
-            assert!(rc.is_err());
-            let repair_path = workspace.json_repairs_dir().join("some-other-uuid");
+            assert!(rc.is_err(), "We expect an error due to invalid JSON content");
+            let repair_path = workspace.failed_json_repairs_dir().join("some-other-uuid");
             assert!(repair_path.exists());
         });
     }

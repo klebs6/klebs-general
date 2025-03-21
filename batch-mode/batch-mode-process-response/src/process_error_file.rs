@@ -67,26 +67,33 @@ mod process_error_file_tests {
             let error_file_name = "test_error.json";
             triple.set_error_path(Some(error_file_name.into()));
 
+            // FIX: supply error_type(...) to avoid UninitializedField("error_type")
             let err_details = BatchErrorDetailsBuilder::default()
-                .code("SomeErrorCode".to_string())
+                .error_type(ErrorType::Unknown("some_test_error".to_string()))
+                .code(Some("SomeErrorCode".to_string()))
                 .message("Some error occurred".to_string())
                 .build()
                 .unwrap();
+
             let err_body = BatchErrorResponseBodyBuilder::default()
                 .error(err_details)
                 .build()
                 .unwrap();
+
             let response_content = BatchResponseContentBuilder::default()
                 .status_code(400_u16)
                 .request_id(ResponseRequestId::new("resp_error_id_1"))
                 .body(BatchResponseBody::Error(err_body))
                 .build()
                 .unwrap();
+
             let record_error = BatchResponseRecordBuilder::default()
-                .custom_id(CustomRequestId::new("error_id_1")) // <-- WORKS
+                .id(BatchRequestId::new("id"))
+                .custom_id(CustomRequestId::new("error_id_1"))
                 .response(response_content)
                 .build()
                 .unwrap();
+
             let error_data = BatchErrorDataBuilder::default()
                 .responses(vec![record_error])
                 .build()
@@ -102,8 +109,8 @@ mod process_error_file_tests {
 
             let result = process_error_file(&triple, &ops).await;
             assert!(result.is_ok());
+
             let _ = fs::remove_file(error_file_name);
         });
     }
 }
-

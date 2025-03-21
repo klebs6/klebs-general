@@ -2,13 +2,23 @@
 crate::ix!();
 
 #[derive(Builder,Getters,Clone,Debug,Serialize,Deserialize)]
-#[builder(setter(into))]
+#[builder(default,setter(into))]
 #[getset(get="pub")]
 #[serde(transparent)]
 pub struct BatchMessageContent {
     content:            String,
     #[serde(skip)]
+    #[builder(default = "OnceCell::new()")]
     sanitized_json_str: OnceCell<String>,
+}
+
+impl Default for BatchMessageContent {
+    fn default() -> Self {
+        Self {
+            content: "".to_string(),
+            sanitized_json_str: OnceCell::new(),
+        }
+    }
 }
 
 unsafe impl Send for BatchMessageContent {}

@@ -1,0 +1,23 @@
+{
+  "responses": [
+    {
+      "id": "id",
+      "custom_id": "error_id_1",
+      "response": {
+        "status_code": 400,
+        "request_id": "resp_error_id_1",
+        "body": {
+          "error": {
+            "error": {
+              "message": "Some error occurred",
+              "type": "some_test_error",
+              "param": null,
+              "code": "SomeErrorCode"
+            }
+          }
+        }
+      },
+      "error": null
+    }
+  ]
+}

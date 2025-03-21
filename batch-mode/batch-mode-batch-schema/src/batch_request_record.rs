@@ -16,8 +16,10 @@ mod batch_request_record_tests {
     use super::*;
     use serde_json::json;
 
-    #[test]
+    #[traced_test]
     fn test_batch_request_record_deserialization_full() {
+        info!("Starting test: test_batch_request_record_deserialization_full");
+
         let json_data = json!({
             "id": "batch_req_123",
             "custom_id": "custom_456",
@@ -29,8 +31,15 @@ mod batch_request_record_tests {
 
         pretty_assert_eq!(record.id().as_str(), "batch_req_123");
         pretty_assert_eq!(record.custom_id().as_str(), "custom_456");
-        pretty_assert_eq!(record.prompt(), Some("Test prompt"));
-        pretty_assert_eq!(record.messages().unwrap(), &["Message 1".to_string(), "Message 2".to_string()]);
+        pretty_assert_eq!(*record.prompt(), Some("Test prompt".to_string()));
+
+        // FIX: do not unwrap() by value. We do as_ref().unwrap() to avoid moving
+        pretty_assert_eq!(
+            record.messages().as_ref().unwrap(),
+            &["Message 1".to_string(), "Message 2".to_string()]
+        );
+
+        info!("Finished test: test_batch_request_record_deserialization_full");
     }
 
     #[test]

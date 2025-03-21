@@ -18,6 +18,8 @@ path = "../batch-mode-batch-scribe"
 [dependencies.batch-mode-batch-triple]
 path = "../batch-mode-batch-triple"
 version = "0.2.0"
+[dependencies.batch-mode-batch-workspace]
+path = "../batch-mode-batch-workspace"
 [dependencies.batch-mode-batch-workspace-interface]
 path = "../batch-mode-batch-workspace-interface"
 version = "0.2.0"
