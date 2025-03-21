@@ -68,6 +68,91 @@ mod check_for_and_download_output_and_error_online_tests {
     use tracing::{debug, error, info, trace, warn};
 
     #[traced_test]
+    async fn test_completed_with_output_only() {
+        info!("Beginning test_completed_with_output_only");
+        trace!("Constructing mock client for completed batch with output only...");
+        let mock_client = MockLanguageModelClientBuilder::<MockBatchClientError>::default()
+            .build()
+            .unwrap();
+        debug!("Mock client constructed: {:?}", mock_client);
+
+        let batch_id = "batch_completed_output_only";
+        {
+            let mut guard = mock_client.batches().write().unwrap();
+            guard.insert(
+                batch_id.to_string(),
+                Batch {
+                    id: batch_id.to_string(),
+                    object: "batch".to_string(),
+                    endpoint: "/v1/chat/completions".to_string(),
+                    errors: None,
+                    input_file_id: "some_input_file".to_string(),
+                    completion_window: "24h".to_string(),
+                    status: BatchStatus::Completed,
+                    output_file_id: Some("mock_output_file_id".to_string()),
+                    error_file_id: None,
+                    created_at: 0,
+                    in_progress_at: None,
+                    expires_at: None,
+                    finalizing_at: None,
+                    completed_at: None,
+                    failed_at: None,
+                    expired_at: None,
+                    cancelling_at: None,
+                    cancelled_at: None,
+                    request_counts: None,
+                    metadata: None,
+                },
+            );
+        }
+        debug!("Mock batch inserted with status: Completed, output only");
+
+        trace!("Mocking file contents for output file: mock_output_file_id");
+        {
+            let mut files_guard = mock_client.files().write().unwrap();
+            // The actual downloadable content:
+            files_guard.insert("mock_output_file_id".to_string(), Bytes::from("mock output data"));
+        }
+
+        trace!("Creating temp dir and saving metadata...");
+        let tmp_dir = tempdir().unwrap();
+        let metadata_path = tmp_dir.path().join("metadata.json");
+        let metadata = BatchMetadataBuilder::default()
+            .batch_id(batch_id.to_string())
+            .input_file_id("some_input_file".to_string())
+            .output_file_id(Some("mock_output_file_id".into()))
+            .error_file_id(None)
+            .build()
+            .unwrap();
+        info!("Saving metadata at {:?}", metadata_path);
+        metadata.save_to_file(&metadata_path).await.unwrap();
+        debug!("Metadata saved to {:?}", metadata_path);
+
+        trace!("Constructing BatchFileTriple and ensuring we use the correct metadata path...");
+        let mut triple = BatchFileTriple::new_for_test_with_metadata_path(metadata_path.clone());
+        // IMPORTANT: We do NOT pre‐write any existing file content here, so we can truly test the fresh download.
+        triple.set_metadata_path(Some(metadata_path.clone()));
+
+        trace!("Calling check_for_and_download_output_and_error_online...");
+        let result = triple
+            .check_for_and_download_output_and_error_online(&mock_client)
+            .await;
+        debug!("Result from check call: {:?}", result);
+
+        assert!(
+            result.is_ok(),
+            "Should succeed for completed batch with output only"
+        );
+
+        // Confirm the downloaded file has the new mock content
+        let output_filename = triple.effective_output_filename();
+        let contents = std::fs::read_to_string(&output_filename).unwrap();
+        pretty_assert_eq!(contents, "mock output data");
+
+        info!("test_completed_with_output_only passed");
+    }
+
+    #[traced_test]
     async fn test_incomplete_batch_returns_error() {
         info!("Beginning test_incomplete_batch_returns_error");
         trace!("Constructing mock client for incomplete batch scenario...");

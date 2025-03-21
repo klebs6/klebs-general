@@ -56,4 +56,3 @@ mod handle_finish_reason_length_tests {
         });
     }
 }
-

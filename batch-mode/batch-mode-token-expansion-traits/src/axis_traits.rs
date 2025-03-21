@@ -1,4 +1,3 @@
-// ---------------- [ File: src/token_expansion_axis.rs ]
 crate::ix!();
 
 /// A trait that describes the name of an axis. Implementations usually
@@ -27,3 +26,10 @@ pub trait TokenExpansionAxis
 + Send
 + Sync
 { }
+
+pub type TokenExpansionAxes = Vec<Arc<dyn TokenExpansionAxis>>;
+
+pub trait GetTokenExpansionAxes {
+    /// we implement this method to indicate which Axes our token expander corresponds to
+    fn axes(&self) -> TokenExpansionAxes;
+}

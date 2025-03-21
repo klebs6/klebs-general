@@ -19,13 +19,24 @@ impl Parse for ParenthesizedMessage {
     }
 }
 
-/// Attempt to parse parentheses style:
-/// `#[system_message_goal("some text")]`.
+#[tracing::instrument(level = "trace", skip(attr))]
 pub fn try_parse_parenthesized(attr: &Attribute) -> SynResult<Option<LitStr>> {
-    // parse_args_with(ParenthesizedMessage) will expect exactly
-    // parentheses containing a string literal. e.g. `("some text")`
-    match attr.parse_args_with(ParenthesizedMessage::parse) {
-        Ok(val) => Ok(Some(val.msg)),
-        Err(_) => Ok(None), // not parentheses style
+    trace!("Attempting parentheses/single-literal parse for attribute: {:?}", attr);
+
+    // Must be system_message_goal
+    if !attr.path().is_ident("system_message_goal") {
+        return Ok(None);
+    }
+
+    // For parentheses style, we can parse a single literal string out of the attribute.
+    match attr.parse_args::<LitStr>() {
+        Ok(lit_str) => {
+            debug!("Successfully parsed parentheses style literal: {:?}", lit_str.value());
+            Ok(Some(lit_str))
+        }
+        Err(e) => {
+            trace!("Failed parentheses-literal parse: {}", e);
+            Ok(None)
+        }
     }
 }

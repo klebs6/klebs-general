@@ -1,4 +1,4 @@
-# batch-mode-token-expansion-axis
+# batch-mode-token-expansion-traits
 
 This crate provides trait definitions for describing and implementing token expansion axes. It is particularly useful when orchestrating batch-based expansions for language models or similar systems. By defining an axis, you specify a distinct dimension or perspective along which a token can be expanded.
 

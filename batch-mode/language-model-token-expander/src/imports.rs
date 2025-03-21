@@ -9,7 +9,6 @@ pub(crate) use batch_mode_batch_reconciliation::*;
 pub(crate) use batch_mode_batch_scribe::*;
 pub(crate) use batch_mode_batch_triple::*;
 pub(crate) use batch_mode_batch_workflow::*;
-pub(crate) use batch_mode_token_expander::*;
 pub(crate) use camel_case_token_with_comment::*;
 pub(crate) use language_model_batch_workflow_derive::*;
 pub(crate) use save_load_traits::*;

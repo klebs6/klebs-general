@@ -1,7 +1,7 @@
 [dependencies.batch-mode-3p]
 path = "../batch-mode-3p"
-[dependencies.batch-mode-token-expansion-axis]
-path = "../batch-mode-token-expansion-axis"
+[dependencies.batch-mode-token-expansion-traits]
+path = "../batch-mode-token-expansion-traits"
 [package]
 authors     = ["klebs tpk3.mx@gmail.com"]
 categories  = ["text-processing", "api-bindings"]

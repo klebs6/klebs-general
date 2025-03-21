@@ -17,7 +17,6 @@ pub struct BatchErrorDetails {
     code:       Option<String>,
 }
 
-
 impl BatchErrorDetails {
 
     pub fn mock(custom_id: &str) -> Self {

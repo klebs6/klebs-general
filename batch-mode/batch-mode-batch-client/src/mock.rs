@@ -1,3 +1,4 @@
+// ---------------- [ File: src/mock.rs ]
 crate::ix!();
 
 /// A simple error type for the mock, so we can unify all the error conversions.

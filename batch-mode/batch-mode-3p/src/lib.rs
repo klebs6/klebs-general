@@ -63,7 +63,7 @@ pub use tokio::{
 pub use indoc::{formatdoc,indoc};
 pub use std::iter::Enumerate;
 pub use std::slice::Chunks;
-pub use inflector::cases::snakecase::to_snake_case;
+pub use inflector::{Inflector,cases::snakecase::to_snake_case};
 pub use delegate::delegate;
 pub use regex::{self,Regex,Captures};
 pub use std::collections::{VecDeque,HashSet};

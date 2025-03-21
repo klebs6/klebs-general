@@ -1,3 +1,4 @@
+// ---------------- [ File: src/retrieve_batch_by_id.rs ]
 crate::ix!();
 
 #[async_trait]

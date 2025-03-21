@@ -206,45 +206,41 @@ mod execute_reconciliation_for_batch_triple_tests {
     }
 
     #[traced_test]
-    fn test_execute_reconciliation_operation_check_for_batch_output_and_error_file_online() {
-        let rt = tokio::runtime::Runtime::new().unwrap();
-        rt.block_on(async {
-            let mut triple = BatchFileTriple::new_for_test_empty();
-            triple.set_input_path(Some("my_input.json".into()));
+    async fn test_execute_reconciliation_operation_check_for_batch_output_and_error_file_online() {
+        let mut triple = BatchFileTriple::new_for_test_empty();
+        triple.set_input_path(Some("my_input.json".into()));
 
-            // Provide *both* "batch_id" and "input_file_id" so it doesn't fail
-            // with missing field errors:
-            fs::write(
-                "mock_metadata_9999.json",
-                r#"{"batch_id":"some_mock_batch_id","input_file_id":"fake_input_file_id_9999"}"#
-            ).unwrap();
+        // Provide a metadata file referencing "some_mock_batch_id"
+        fs::write(
+            "mock_metadata_9999.json",
+            r#"{"batch_id":"some_mock_batch_id","input_file_id":"fake_input_file_id_9999"}"#
+        ).unwrap();
 
-            // Also create the input file so it doesn't fail if it tries to read it
-            fs::write("my_input.json", b"fake input").unwrap();
+        fs::write("my_input.json", b"fake input").unwrap();
 
-            let client_mock = Arc::new(
-                MockLanguageModelClientBuilder::<MockBatchClientError>::default()
-                    .build()
-                    .unwrap(),
-            ) as Arc<dyn LanguageModelClientInterface<MockBatchClientError>>;
+        let client_mock = MockLanguageModelClientBuilder::<MockBatchClientError>::default().build().unwrap();
 
-            let operation = BatchFileTripleReconciliationOperation::CheckForBatchOutputAndErrorFileOnline;
-            let ect = ExpectedContentType::JsonLines;
+        // NEW: have the mock eventually complete with no files:
+        client_mock.configure_inprogress_then_complete_with("some_mock_batch_id", false, false);
 
-            let result = triple.execute_reconciliation_operation(
-                client_mock.as_ref(),
-                &operation,
-                &ect,
-                &MOCK_PROCESS_OUTPUT,
-                &MOCK_PROCESS_ERROR,
-            ).await;
+        let client_mock = Arc::new(client_mock) as Arc<dyn LanguageModelClientInterface<MockBatchClientError>>;
 
-            assert!(result.is_ok(), "Should succeed checking for files online");
-            let maybe_new_actions = result.unwrap();
-            debug!(
-                "CheckForBatchOutputAndErrorFileOnline => returned new actions: {:?}",
-                maybe_new_actions
-            );
-        });
+        let operation = BatchFileTripleReconciliationOperation::CheckForBatchOutputAndErrorFileOnline;
+        let ect = ExpectedContentType::JsonLines;
+
+        let result = triple.execute_reconciliation_operation(
+            client_mock.as_ref(),
+            &operation,
+            &ect,
+            &MOCK_PROCESS_OUTPUT,
+            &MOCK_PROCESS_ERROR,
+        ).await;
+
+        assert!(result.is_ok(), "Should succeed checking for files online");
+        let maybe_new_actions = result.unwrap();
+        debug!(
+            "CheckForBatchOutputAndErrorFileOnline => returned new actions: {:?}",
+            maybe_new_actions
+        );
     }
 }

@@ -26,8 +26,6 @@ path = "../batch-mode-batch-workspace"
 path = "../batch-mode-batch-workspace-interface"
 [dependencies.batch-mode-process-response]
 path = "../batch-mode-process-response"
-[dependencies.batch-mode-token-expander]
-path = "../batch-mode-token-expander"
 [dependencies.camel-case-token-with-comment]
 path = "../camel-case-token-with-comment"
 [dependencies.language-model-batch-workflow-derive]
