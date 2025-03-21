@@ -1,7 +1,9 @@
 // ---------------- [ File: src/batch_output_data.rs ]
 crate::ix!();
 
-#[derive(Clone,Debug, Serialize, Deserialize)]
+#[derive(Builder,Getters,Clone,Debug, Serialize, Deserialize)]
+#[builder(setter(into))]
+#[getset(get="pub")]
 pub struct BatchOutputData {
     responses: Vec<BatchResponseRecord>,
 }
@@ -17,10 +19,6 @@ impl BatchOutputData {
 
     pub fn new(responses: Vec<BatchResponseRecord>) -> Self {
         Self { responses }
-    }
-
-    pub fn responses(&self) -> &Vec<BatchResponseRecord> {
-        &self.responses
     }
 
     pub fn request_ids(&self) -> Vec<CustomRequestId> {

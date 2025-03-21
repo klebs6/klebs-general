@@ -13,6 +13,8 @@ version = "0.2.0"
 [dependencies.batch-mode-batch-schema]
 path = "../batch-mode-batch-schema"
 version = "0.2.0"
+[dependencies.batch-mode-batch-scribe]
+path = "../batch-mode-batch-scribe"
 [dependencies.batch-mode-batch-triple]
 path = "../batch-mode-batch-triple"
 version = "0.2.0"
@@ -25,19 +27,24 @@ version = "0.2.0"
 [dependencies.camel-case-token-with-comment]
 path = "../camel-case-token-with-comment"
 version = "0.2.0"
-
-[dependencies.save-load-traits]
-path = "../save-load-traits"
-version = "0.2.0"
 [dependencies.save-load-derive]
 path = "../save-load-derive"
 version = "0.1.0"
-
-[package]
-edition = "2024"
-name = "batch-mode-process-response"
+[dependencies.save-load-traits]
+path = "../save-load-traits"
 version = "0.2.0"
+[dependencies.serde]
+features = [ "derive" ]
+version = "*"
+[dependencies.serde_derive]
+version = "*"
+[dependencies.serde_json]
+version = "*"
+[package]
+authors = [ "klebs tpk3.mx@gmail.com" ]
 description = "Handles batch responses, errors, and JSON repairs in a batch processing system."
-authors = ["klebs tpk3.mx@gmail.com"]
+edition = "2024"
 license = "MIT"
+name = "batch-mode-process-response"
 repository = "https://github.com/klebs6/klebs-general"
+version = "0.2.0"

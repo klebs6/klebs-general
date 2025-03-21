@@ -1,7 +1,9 @@
 // ---------------- [ File: src/batch_success_response_body.rs ]
 crate::ix!();
 
-#[derive(Clone,Debug,Serialize,Deserialize)]
+#[derive(Builder,Getters,Clone,Debug,Serialize,Deserialize)]
+#[builder(setter(into))]
+#[getset(get="pub")]
 pub struct BatchSuccessResponseBody {
     id:                 String,
     object:             String,
@@ -26,34 +28,6 @@ impl BatchSuccessResponseBody {
             usage:              BatchUsage::mock(),
             system_fingerprint: None,
         }
-    }
-
-    pub fn id(&self) -> &str {
-        &self.id
-    }
-
-    pub fn object(&self) -> &str {
-        &self.object
-    }
-
-    pub fn created(&self) -> u64 {
-        self.created
-    }
-
-    pub fn model(&self) -> &str {
-        &self.model
-    }
-
-    pub fn choices(&self) -> &[BatchChoice] {
-        &self.choices
-    }
-
-    pub fn usage(&self) -> &BatchUsage {
-        &self.usage
-    }
-
-    pub fn system_fingerprint(&self) -> Option<&str> {
-        self.system_fingerprint.as_deref()
     }
 }
 

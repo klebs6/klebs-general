@@ -53,3 +53,57 @@ fn process_error_file_bridge_fn<'a>(
  * exactly matches the trait's needed function pointer type.
  */
 pub const PROCESS_ERROR_FILE_BRIDGE: BatchWorkflowProcessErrorFileFn = process_error_file_bridge_fn;
+
+#[cfg(test)]
+mod process_error_file_tests {
+    use super::*;
+
+    #[traced_test]
+    fn test_process_error_file() {
+        let rt = tokio::runtime::Runtime::new().unwrap();
+        rt.block_on(async {
+            let workspace = Arc::new(MockWorkspace::default());
+            let mut triple = BatchFileTriple::new_for_test_empty();
+            let error_file_name = "test_error.json";
+            triple.set_error_path(Some(error_file_name.into()));
+
+            let err_details = BatchErrorDetailsBuilder::default()
+                .code("SomeErrorCode".to_string())
+                .message("Some error occurred".to_string())
+                .build()
+                .unwrap();
+            let err_body = BatchErrorResponseBodyBuilder::default()
+                .error(err_details)
+                .build()
+                .unwrap();
+            let response_content = BatchResponseContentBuilder::default()
+                .status_code(400_u16)
+                .request_id(ResponseRequestId::new("resp_error_id_1"))
+                .body(BatchResponseBody::Error(err_body))
+                .build()
+                .unwrap();
+            let record_error = BatchResponseRecordBuilder::default()
+                .custom_id(CustomRequestId::new("error_id_1")) // <-- WORKS
+                .response(response_content)
+                .build()
+                .unwrap();
+            let error_data = BatchErrorDataBuilder::default()
+                .responses(vec![record_error])
+                .build()
+                .unwrap();
+
+            let serialized = serde_json::to_string_pretty(&error_data).unwrap();
+            std::fs::write(error_file_name, &serialized).unwrap();
+
+            let ops = vec![
+                BatchErrorFileProcessingOperation::LogErrors,
+                BatchErrorFileProcessingOperation::RetryFailedRequests,
+            ];
+
+            let result = process_error_file(&triple, &ops).await;
+            assert!(result.is_ok());
+            let _ = fs::remove_file(error_file_name);
+        });
+    }
+}
+

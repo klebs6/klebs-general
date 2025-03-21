@@ -76,22 +76,22 @@ impl BatchResponseBody {
     }
 
     /// Retrieves the `id` if the response is successful.
-    pub fn id(&self) -> Option<&str> {
+    pub fn id(&self) -> Option<&String> {
         self.as_success().map(|body| body.id())
     }
 
     /// Retrieves the `object` if the response is successful.
-    pub fn object(&self) -> Option<&str> {
+    pub fn object(&self) -> Option<&String> {
         self.as_success().map(|body| body.object())
     }
 
     /// Retrieves the `model` if the response is successful.
-    pub fn model(&self) -> Option<&str> {
+    pub fn model(&self) -> Option<&String> {
         self.as_success().map(|body| body.model())
     }
 
     /// Retrieves the `choices` if the response is successful.
-    pub fn choices(&self) -> Option<&[BatchChoice]> {
+    pub fn choices(&self) -> Option<&Vec<BatchChoice>> {
         self.as_success().map(|body| body.choices())
     }
 
@@ -101,8 +101,8 @@ impl BatchResponseBody {
     }
 
     /// Retrieves the `system_fingerprint` if the response is successful.
-    pub fn system_fingerprint(&self) -> Option<&str> {
-        self.as_success().and_then(|body| body.system_fingerprint())
+    pub fn system_fingerprint(&self) -> Option<String> {
+        self.as_success().and_then(|body| body.system_fingerprint().clone())
     }
 }
 

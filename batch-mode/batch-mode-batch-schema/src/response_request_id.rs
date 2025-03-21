@@ -1,7 +1,7 @@
 // ---------------- [ File: src/response_request_id.rs ]
 crate::ix!();
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug,Clone,PartialEq,Eq,Hash,Serialize,Deserialize)]
 pub struct ResponseRequestId(String);
 
 impl ResponseRequestId {

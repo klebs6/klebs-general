@@ -1,30 +1,14 @@
 // ---------------- [ File: src/batch_request_record.rs ]
 crate::ix!();
 
-#[derive(Clone,Debug, Deserialize)]
+#[derive(Builder,Getters,Clone,Debug,Serialize,Deserialize)]
+#[builder(setter(into))]
+#[getset(get="pub")]
 pub struct BatchRequestRecord {
     id:        BatchRequestId,
     custom_id: CustomRequestId,
     prompt:    Option<String>,
     messages:  Option<Vec<String>>,
-}
-
-impl BatchRequestRecord {
-    pub fn id(&self) -> &BatchRequestId {
-        &self.id
-    }
-
-    pub fn custom_id(&self) -> &CustomRequestId {
-        &self.custom_id
-    }
-
-    pub fn prompt(&self) -> Option<&str> {
-        self.prompt.as_deref()
-    }
-
-    pub fn messages(&self) -> Option<&[String]> {
-        self.messages.as_deref()
-    }
 }
 
 #[cfg(test)]

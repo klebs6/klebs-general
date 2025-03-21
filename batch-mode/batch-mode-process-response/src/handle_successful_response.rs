@@ -94,5 +94,60 @@ where
             trace!("Exiting handle_successful_response with success_body ID: {}", success_body.id());
             Ok(())
         }
+        _ => { todo!() }
+    }
+}
+
+#[cfg(test)]
+mod handle_successful_response_tests {
+    use super::*;
+
+    #[derive(Debug, Deserialize, Serialize, NamedItem)]
+    pub struct MockItemForSuccess {
+        pub name: String,
+    }
+
+    #[traced_test]
+    fn test_handle_successful_response_json_failure() {
+        let rt = tokio::runtime::Runtime::new().unwrap();
+        rt.block_on(async {
+            let workspace = Arc::new(
+                MockWorkspaceBuilder::default()
+                    .json_repairs_dir("./test_failed_json_repairs_2".into())
+                    .build()
+                    .unwrap()
+            );
+            let _ = fs::remove_dir_all(workspace.json_repairs_dir());
+            tokio::fs::create_dir_all(&workspace.json_repairs_dir()).await.unwrap();
+
+            let invalid_msg = ChatCompletionResponseMessage {
+                role: Role::Assistant,            // <-- changed from string to Role::Assistant
+                content: Some("this is not valid json at all".into()),
+                audio: None,
+                function_call: None,
+                refusal: None,
+                tool_calls: None,                // <-- ADDED if your struct demands it
+            };
+            let choice_fail = BatchChoiceBuilder::default()
+                .finish_reason(FinishReason::Stop)
+                .message(invalid_msg)
+                .build()
+                .unwrap();
+            let success_body = BatchSuccessResponseBodyBuilder::default()
+                .id::<String>("some-other-uuid".into())
+                .choices(vec![choice_fail])
+                .build()
+                .unwrap();
+
+            let rc = handle_successful_response::<MockItemForSuccess>(
+                &success_body,
+                workspace.as_ref(),
+                &ExpectedContentType::Json
+            ).await;
+
+            assert!(rc.is_err());
+            let repair_path = workspace.json_repairs_dir().join("some-other-uuid");
+            assert!(repair_path.exists());
+        });
     }
 }

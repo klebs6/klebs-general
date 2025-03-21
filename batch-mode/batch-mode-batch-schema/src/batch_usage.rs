@@ -1,7 +1,9 @@
 // ---------------- [ File: src/batch_usage.rs ]
 crate::ix!();
 
-#[derive(Clone,Debug,Serialize,Deserialize)]
+#[derive(Builder,Getters,Clone,Debug,Serialize,Deserialize)]
+#[builder(setter(into))]
+#[getset(get="pub")]
 pub struct BatchUsage {
     prompt_tokens:             u32,
     completion_tokens:         u32,
@@ -21,20 +23,6 @@ impl BatchUsage {
             completion_tokens_details: None,
         }
     }
-
-    pub fn prompt_tokens(&self) -> u32 {
-        self.prompt_tokens
-    }
-
-    pub fn completion_tokens(&self) -> u32 {
-        self.completion_tokens
-    }
-
-    pub fn total_tokens(&self) -> u32 {
-        self.total_tokens
-    }
-
-    // Add other accessor methods as needed
 }
 
 #[cfg(test)]

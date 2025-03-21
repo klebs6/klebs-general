@@ -1,7 +1,9 @@
 // ---------------- [ File: src/batch_error_details.rs ]
 crate::ix!();
 
-#[derive(Clone,Debug,Serialize,Deserialize)]
+#[derive(Getters,Builder,Clone,Debug,Serialize,Deserialize)]
+#[builder(setter(into))]
+#[getset(get="pub")]
 pub struct BatchErrorDetails {
     message:    String,
 
@@ -20,22 +22,6 @@ impl BatchErrorDetails {
             param:      None,
             code:       None,
         }
-    }
-
-    pub fn message(&self) -> &str {
-        &self.message
-    }
-
-    pub fn error_type(&self) -> &ErrorType {
-        &self.error_type
-    }
-
-    pub fn param(&self) -> Option<&str> {
-        self.param.as_ref().map(|x| x.as_str())
-    }
-
-    pub fn code(&self) -> Option<&str> {
-        self.code.as_ref().map(|x| x.as_str())
     }
 }
 

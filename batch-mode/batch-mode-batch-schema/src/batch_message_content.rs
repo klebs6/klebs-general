@@ -1,7 +1,9 @@
 // ---------------- [ File: src/batch_message_content.rs ]
 crate::ix!();
 
-#[derive(Clone,Debug,Serialize,Deserialize)]
+#[derive(Builder,Getters,Clone,Debug,Serialize,Deserialize)]
+#[builder(setter(into))]
+#[getset(get="pub")]
 #[serde(transparent)]
 pub struct BatchMessageContent {
     content:            String,

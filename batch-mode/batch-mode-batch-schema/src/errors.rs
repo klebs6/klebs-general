@@ -2,7 +2,6 @@
 crate::ix!();
 
 error_tree!{
-
     #[derive(PartialEq)]
     pub enum ContentParseError {
         InvalidContent,

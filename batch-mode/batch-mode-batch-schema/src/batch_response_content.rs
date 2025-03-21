@@ -1,7 +1,9 @@
 // ---------------- [ File: src/batch_response_content.rs ]
 crate::ix!();
 
-#[derive(Clone,Debug,Serialize,Deserialize)]
+#[derive(Builder,Getters,Clone,Debug,Serialize,Deserialize)]
+#[builder(setter(into))]
+#[getset(get="pub")]
 pub struct BatchResponseContent {
     status_code: u16,
     request_id:  ResponseRequestId,
@@ -32,18 +34,6 @@ impl BatchResponseContent {
             request_id: ResponseRequestId::new(format!("resp_req_{}", custom_id)),
             body:       BatchResponseBody::mock_error(custom_id),
         }
-    }
-
-    pub fn status_code(&self) -> u16 {
-        self.status_code
-    }
-
-    pub fn request_id(&self) -> &ResponseRequestId {
-        &self.request_id
-    }
-
-    pub fn body(&self) -> &BatchResponseBody {
-        &self.body
     }
 
     /// Checks if the response indicates success (status code 200)

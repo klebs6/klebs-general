@@ -1,7 +1,9 @@
 // ---------------- [ File: src/batch_input_data.rs ]
 crate::ix!();
 
-#[derive(Clone,Debug)]
+#[derive(Serialize,Deserialize,Builder,Getters,Clone,Debug)]
+#[builder(setter(into))]
+#[getset(get="pub")]
 pub struct BatchInputData {
     requests: Vec<LanguageModelBatchAPIRequest>,
 }
@@ -10,10 +12,6 @@ impl BatchInputData {
 
     pub fn new(requests: Vec<LanguageModelBatchAPIRequest>) -> Self {
         Self { requests }
-    }
-
-    pub fn requests(&self) -> &Vec<LanguageModelBatchAPIRequest> {
-        &self.requests
     }
 
     pub fn request_ids(&self) -> Vec<CustomRequestId> {

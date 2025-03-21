@@ -1,27 +1,14 @@
 // ---------------- [ File: src/batch_response_record.rs ]
 crate::ix!();
 
-#[derive(Clone,Debug,Serialize,Deserialize)]
+#[derive(Builder,Getters,Clone,Debug,Serialize,Deserialize)]
+#[builder(setter(into))]
+#[getset(get="pub")]
 pub struct BatchResponseRecord {
     id:        BatchRequestId,
     custom_id: CustomRequestId,
     response:  BatchResponseContent,
     error:     Option<serde_json::Value>, // Assuming it's always null or can be ignored
-}
-
-impl BatchResponseRecord {
-
-    pub fn id(&self) -> &BatchRequestId {
-        &self.id
-    }
-
-    pub fn custom_id(&self) -> &CustomRequestId {
-        &self.custom_id
-    }
-
-    pub fn response(&self) -> &BatchResponseContent {
-        &self.response
-    }
 }
 
 impl BatchResponseRecord {

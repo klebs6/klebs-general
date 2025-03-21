@@ -72,11 +72,11 @@ mod reconcile_unprocessed_tests {
             triple.set_index(BatchIndex::from(42u64));
             triple.set_input_path(Some("input_only.json".into()));
 
-            // Create input and also a metadata file for index=42
+            // Create input & a valid metadata file for index=42
             fs::write("input_only.json", b"fake input").unwrap();
             fs::write(
                 "mock_metadata_42.json",
-                r#"{"batch_id":"some_mock_batch_id_for_42"}"#,
+                r#"{"batch_id":"some_mock_batch_id_for_42","input_file_id":"fake_input_file_id_42"}"#
             ).unwrap();
 
             let client_mock = Arc::new(
@@ -94,8 +94,9 @@ mod reconcile_unprocessed_tests {
                 &MOCK_PROCESS_ERROR,
             ).await;
 
-            // The "CheckForBatchOutputAndErrorFileOnline" step will succeed
-            // if the mock client returns no error, so we expect Ok(()):
+            // The code tries "CheckForBatchOutputAndErrorFileOnline" 
+            // but there's no error file or output file in the mock.
+            // That should be fine: we do not want a parse error or missing field error:
             assert!(result.is_ok(), "Input-only triple with no online files should not fail");
         });
     }
@@ -104,17 +105,13 @@ mod reconcile_unprocessed_tests {
     fn test_reconcile_unprocessed_input_error_but_mock_processing_fails_action() {
         let rt = tokio::runtime::Runtime::new().unwrap();
         rt.block_on(async {
-            // We'll simulate a scenario where final "move_input_and_error_to_done" fails 
-            // due to an invalid workspace path => triggers an I/O error.
-
             let workspace = Arc::new(BadWorkspace);
             let mut triple = BatchFileTriple::new_for_test_with_workspace(workspace);
 
             triple.set_input_path(Some("input.json".into()));
             triple.set_error_path(Some("error.json".into()));
 
-            // We'll create these files so that the "rename" step is what fails,
-            // not the file being missing:
+            // We'll create these files so the rename step is what fails, not "not found"
             fs::write("input.json", b"fake input").unwrap();
             fs::write("error.json", b"fake error").unwrap();
 
@@ -122,7 +119,7 @@ mod reconcile_unprocessed_tests {
             // won't fail if it tries that:
             fs::write(
                 "mock_metadata_9999.json",
-                r#"{"batch_id":"some_mock_batch_id"}"#,
+                r#"{"batch_id":"some_mock_batch_id","input_file_id":"fake_input_file_id_9999"}"#
             ).unwrap();
 
             let client_mock = Arc::new(
@@ -142,10 +139,7 @@ mod reconcile_unprocessed_tests {
 
             assert!(result.is_err(), "We expect an I/O failure with BadWorkspace");
             match result.err().unwrap() {
-                // Because we have a `BatchReconciliationError::ReconciliationFailed`
-                // turned into `MockBatchClientError::BatchReconciliationError { index }` in our From impl
                 MockBatchClientError::BatchReconciliationError { index } => {
-                    // Compare references or just do partial eq:
                     pretty_assert_eq!(index, *triple.index());
                 },
                 other => panic!("Unexpected error variant: {:?}", other),

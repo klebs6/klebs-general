@@ -19,6 +19,8 @@ pub use once_cell::unsync::OnceCell;
 pub use async_openai::{
     self,
     types::{
+        Role,
+        ChatCompletionResponseMessage,
         OpenAIFile,
         Batch, 
         BatchCompletionWindow, 

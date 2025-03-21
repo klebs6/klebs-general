@@ -56,3 +56,69 @@ pub fn default_output_file_bridge_fn<'a>(
 /// The const pointer the macro references.
 pub const DEFAULT_OUTPUT_FILE_BRIDGE: BatchWorkflowProcessOutputFileFn 
     = default_output_file_bridge_fn;
+
+#[cfg(test)]
+mod process_output_file_tests {
+    use super::*;
+
+    #[derive(Debug, Clone, Deserialize, Serialize, NamedItem)]
+    pub struct OutputFileMockItem {
+        pub name: String,
+    }
+
+    #[traced_test]
+    fn test_process_output_file_ok() {
+        let rt = tokio::runtime::Runtime::new().unwrap();
+        rt.block_on(async {
+            let workspace = Arc::new(MockWorkspace::default());
+            let mut triple = BatchFileTriple::new_for_test_empty();
+            triple.set_input_path(Some("dummy_input.json".into()));
+            triple.set_output_path(Some("dummy_output.json".into()));
+
+            let msg = BatchMessageBuilder::default()
+                .role(MessageRole::Assistant)
+                .content(
+                    BatchMessageContentBuilder::default()
+                        .content("{\"name\":\"item-from-output-file\"}".to_string())
+                        .build()
+                        .unwrap()
+                )
+                .build()
+                .unwrap();
+            let choice = BatchChoiceBuilder::default()
+                .index(0_u32)
+                .finish_reason(FinishReason::Stop)
+                .message(msg)
+                .build()
+                .unwrap();
+            let success_body = BatchSuccessResponseBodyBuilder::default()
+                .id("someid123".to_string())
+                .choices(vec![choice])
+                .build()
+                .unwrap();
+            let success_content = BatchResponseContentBuilder::default()
+                .status_code(200_u16)
+                .request_id(ResponseRequestId::new("resp_req_mock_item_1"))
+                .body(BatchResponseBody::Success(success_body))
+                .build()
+                .unwrap();
+            let record_ok = BatchResponseRecordBuilder::default()
+                .custom_id(CustomRequestId::new("mock_item_1")) // <-- WORKS
+                .response(success_content)
+                .build()
+                .unwrap();
+
+            let output_data = BatchOutputData::new(vec![record_ok]);
+            let text = serde_json::to_string_pretty(&output_data).unwrap();
+            std::fs::write("dummy_output.json", text).unwrap();
+
+            let result = process_output_file::<OutputFileMockItem>(
+                &triple,
+                workspace.as_ref(),
+                &ExpectedContentType::Json
+            ).await;
+            assert!(result.is_ok());
+        });
+    }
+}
+

@@ -1,7 +1,9 @@
 // ---------------- [ File: src/batch_error_response_body.rs ]
 crate::ix!();
 
-#[derive(Clone,Debug,Serialize,Deserialize)]
+#[derive(Builder,Getters,Clone,Debug,Serialize,Deserialize)]
+#[builder(setter(into))]
+#[getset(get="pub")]
 pub struct BatchErrorResponseBody {
     error: BatchErrorDetails,
 }
@@ -12,10 +14,6 @@ impl BatchErrorResponseBody {
         BatchErrorResponseBody {
             error: BatchErrorDetails::mock(custom_id),
         }
-    }
-
-    pub fn error(&self) -> &BatchErrorDetails {
-        &self.error
     }
 }
 

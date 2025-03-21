@@ -35,9 +35,9 @@ TEST_FILE  := tests/test_scale_layer.rs
 #ACTIVE_PACKAGE := batch-mode-batch-workflow
 #ACTIVE_PACKAGE := language-model-format-instructions
 #ACTIVE_PACKAGE := language-model-batch-workflow-derive
+#ACTIVE_PACKAGE := batch-mode-batch-reconciliation
 #-------------------------------------[done-below]
-ACTIVE_PACKAGE := batch-mode-batch-reconciliation
-#ACTIVE_PACKAGE := batch-mode-process-response
+ACTIVE_PACKAGE := batch-mode-process-response
 
 #ACTIVE_PACKAGE := batch-mode-token-expander
 #ACTIVE_PACKAGE := batch-mode-token-expansion-axis

@@ -17,3 +17,42 @@ pub async fn process_error_data(error_data: &BatchErrorData)
     }
     Ok(())
 }
+
+#[cfg(test)]
+mod process_error_data_tests {
+    use super::*;
+
+    #[traced_test]
+    fn test_process_error_data() {
+        let rt = tokio::runtime::Runtime::new().unwrap();
+        rt.block_on(async {
+            let err_details = BatchErrorDetailsBuilder::default()
+                .code("401".to_string())
+                .message("Unauthorized".to_string())
+                .build()
+                .unwrap();
+            let err_body = BatchErrorResponseBodyBuilder::default()
+                .error(err_details)
+                .build()
+                .unwrap();
+            let response_content = BatchResponseContentBuilder::default()
+                .status_code(400_u16)
+                .request_id(ResponseRequestId::new("resp_err1"))
+                .body(BatchResponseBody::Error(err_body))
+                .build()
+                .unwrap();
+            let record = BatchResponseRecordBuilder::default()
+                .custom_id(CustomRequestId::new("err1")) // <-- WORKS
+                .response(response_content)
+                .build()
+                .unwrap();
+            let error_data = BatchErrorDataBuilder::default()
+                .responses(vec![record])
+                .build()
+                .unwrap();
+            let result = process_error_data(&error_data).await;
+            assert!(result.is_ok());
+        });
+    }
+}
+

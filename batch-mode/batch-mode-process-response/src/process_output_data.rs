@@ -40,3 +40,62 @@ where
     info!("process_output_data completed without fatal errors.");
     Ok(())
 }
+
+#[cfg(test)]
+mod process_output_data_tests {
+    use super::*;
+
+    #[derive(Debug, Clone, Deserialize, Serialize, NamedItem)]
+    pub struct MockItem {
+        pub name: String,
+    }
+
+    #[traced_test]
+    fn test_process_output_data_with_deserialization_failure() {
+        let rt = tokio::runtime::Runtime::new().unwrap();
+        rt.block_on(async {
+            let workspace = Arc::new(MockWorkspace::default());
+
+            let invalid_msg = BatchMessageBuilder::default()
+                .role(MessageRole::Assistant)
+                .content(
+                    BatchMessageContentBuilder::default()
+                        .content("{\"invalid_field\":12}".to_string())
+                        .build()
+                        .unwrap()
+                )
+                .build()
+                .unwrap();
+            let choice_fail = BatchChoiceBuilder::default()
+                .index(0_u32)
+                .finish_reason(FinishReason::Stop)
+                .message(invalid_msg)
+                .build()
+                .unwrap();
+            let success_body_fail = BatchSuccessResponseBodyBuilder::default()
+                .id("550e8400-e29b-41d4-a716-446655440000".to_string())
+                .choices(vec![choice_fail])
+                .build()
+                .unwrap();
+            let response_content_fail = BatchResponseContentBuilder::default()
+                .status_code(200_u16)
+                .request_id(ResponseRequestId::new("resp_req_mock_item_2"))
+                .body(BatchResponseBody::Success(success_body_fail))
+                .build()
+                .unwrap();
+            let record_fail = BatchResponseRecordBuilder::default()
+                .custom_id(CustomRequestId::new("mock_item_2")) // <-- WORKS
+                .response(response_content_fail)
+                .build()
+                .unwrap();
+
+            let output_data = BatchOutputData::new(vec![record_fail]);
+            let result = process_output_data::<MockItem>(
+                &output_data,
+                workspace.as_ref(),
+                &ExpectedContentType::Json
+            ).await;
+            assert!(result.is_ok());
+        });
+    }
+}

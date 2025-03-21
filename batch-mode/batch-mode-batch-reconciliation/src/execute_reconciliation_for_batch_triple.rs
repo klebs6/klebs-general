@@ -90,6 +90,7 @@ where E
     }
 }
 
+
 #[cfg(test)]
 mod execute_reconciliation_for_batch_triple_tests {
     use super::*;
@@ -162,7 +163,7 @@ mod execute_reconciliation_for_batch_triple_tests {
                 "Move ops typically return no new actions"
             );
 
-            // Cleanup: remove leftover files from done_dir, etc. if desired.
+            // Cleanup if desired
         });
     }
 
@@ -211,12 +212,11 @@ mod execute_reconciliation_for_batch_triple_tests {
             let mut triple = BatchFileTriple::new_for_test_empty();
             triple.set_input_path(Some("my_input.json".into()));
 
-            // We'll assume the code tries to load "mock_metadata_9999.json"
-            // because by default, triple.index() is 9999. Let's create a minimal
-            // metadata file so check_batch_status_online won't fail.
+            // Provide *both* "batch_id" and "input_file_id" so it doesn't fail
+            // with missing field errors:
             fs::write(
                 "mock_metadata_9999.json",
-                r#"{"batch_id":"some_mock_batch_id"}"#,
+                r#"{"batch_id":"some_mock_batch_id","input_file_id":"fake_input_file_id_9999"}"#
             ).unwrap();
 
             // Also create the input file so it doesn't fail if it tries to read it

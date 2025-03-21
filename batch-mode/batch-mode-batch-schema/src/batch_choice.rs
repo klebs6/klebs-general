@@ -1,7 +1,9 @@
 // ---------------- [ File: src/batch_choice.rs ]
 crate::ix!();
 
-#[derive(Clone,Debug,Serialize)]
+#[derive(Getters,Builder,Clone,Debug,Serialize)]
+#[builder(setter(into))]
+#[getset(get="pub")]
 #[serde(deny_unknown_fields)]
 pub struct BatchChoice {
     index:         u32,
@@ -39,20 +41,6 @@ impl<'de> Deserialize<'de> for BatchChoice {
             logprobs: helper.logprobs,
             finish_reason: helper.finish_reason,
         })
-    }
-}
-
-impl BatchChoice {
-    pub fn index(&self) -> u32 {
-        self.index
-    }
-
-    pub fn message(&self) -> &BatchMessage {
-        &self.message
-    }
-
-    pub fn finish_reason(&self) -> &FinishReason {
-        &self.finish_reason
     }
 }
 

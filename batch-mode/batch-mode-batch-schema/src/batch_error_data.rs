@@ -1,7 +1,9 @@
 // ---------------- [ File: src/batch_error_data.rs ]
 crate::ix!();
 
-#[derive(Clone,Debug)]
+#[derive(Serialize,Deserialize,Getters,Builder,Clone,Debug)]
+#[builder(setter(into))]
+#[getset(get="pub")]
 pub struct BatchErrorData {
     responses: Vec<BatchResponseRecord>,
 }
@@ -14,10 +16,6 @@ impl BatchErrorData {
 
     pub fn new(responses: Vec<BatchResponseRecord>) -> Self {
         Self { responses }
-    }
-
-    pub fn responses(&self) -> &Vec<BatchResponseRecord> {
-        &self.responses
     }
 
     pub fn request_ids(&self) -> Vec<CustomRequestId> {

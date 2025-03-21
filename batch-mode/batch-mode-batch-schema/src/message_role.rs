@@ -1,11 +1,13 @@
 // ---------------- [ File: src/message_role.rs ]
 crate::ix!();
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug,Clone,PartialEq,Eq,Hash)]
 pub enum MessageRole {
     Assistant,
     User,
     System,
+    Tool,
+    Function,
     Unknown(String),
 }
 
@@ -19,6 +21,8 @@ impl<'de> Deserialize<'de> for MessageRole {
             "assistant" => Ok(MessageRole::Assistant),
             "user" => Ok(MessageRole::User),
             "system" => Ok(MessageRole::System),
+            "tool" => Ok(MessageRole::Tool),
+            "function" => Ok(MessageRole::Function),
             other => Ok(MessageRole::Unknown(other.to_string())),
         }
     }
@@ -33,6 +37,8 @@ impl Serialize for MessageRole {
             MessageRole::Assistant => "assistant",
             MessageRole::User => "user",
             MessageRole::System => "system",
+            MessageRole::Tool => "tool",
+            MessageRole::Function => "function",
             MessageRole::Unknown(other) => other.as_str(),
         };
         serializer.serialize_str(s)
@@ -47,11 +53,13 @@ mod message_role_tests {
     #[test]
     fn test_message_role_deserialization() {
         // Known roles
-        let roles = vec!["assistant", "user", "system"];
+        let roles = vec!["assistant", "user", "system", "tool", "function"];
         let expected_roles = vec![
             MessageRole::Assistant,
             MessageRole::User,
             MessageRole::System,
+            MessageRole::Tool,
+            MessageRole::Function,
         ];
 
         for (role_str, expected_role) in roles.iter().zip(expected_roles.iter()) {

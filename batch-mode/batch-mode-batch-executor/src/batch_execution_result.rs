@@ -1,7 +1,8 @@
 // ---------------- [ File: src/batch_execution_result.rs ]
 crate::ix!();
 
-#[derive(Debug,Getters)]
+#[derive(Builder,Debug,Getters)]
+#[builder(setter(into))]
 #[getset(get="pub")]
 pub struct BatchExecutionResult {
     outputs: Option<BatchOutputData>,

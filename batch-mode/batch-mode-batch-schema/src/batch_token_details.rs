@@ -1,7 +1,9 @@
 // ---------------- [ File: src/batch_token_details.rs ]
 crate::ix!();
 
-#[derive(Clone,Debug,Serialize,Deserialize)]
+#[derive(Builder,Getters,Clone,Debug,Serialize,Deserialize)]
+#[builder(setter(into))]
+#[getset(get="pub")]
 pub struct BatchTokenDetails {
     cached_tokens:              Option<u32>,
     audio_tokens:               Option<u32>,
@@ -11,26 +13,6 @@ pub struct BatchTokenDetails {
 }
 
 impl BatchTokenDetails {
-
-    pub fn cached_tokens(&self) -> Option<u32> {
-        self.cached_tokens
-    }
-
-    pub fn audio_tokens(&self) -> Option<u32> {
-        self.audio_tokens
-    }
-
-    pub fn reasoning_tokens(&self) -> Option<u32> {
-        self.reasoning_tokens
-    }
-
-    pub fn accepted_prediction_tokens(&self) -> Option<u32> {
-        self.accepted_prediction_tokens
-    }
-
-    pub fn rejected_prediction_tokens(&self) -> Option<u32> {
-        self.rejected_prediction_tokens
-    }
 
     /// Calculates the total tokens by summing up all available token counts.
     pub fn total_tokens(&self) -> u32 {
