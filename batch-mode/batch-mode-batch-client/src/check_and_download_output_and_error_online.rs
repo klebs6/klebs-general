@@ -200,7 +200,7 @@ mod check_for_and_download_output_and_error_online_tests {
     #[traced_test]
     async fn test_output_file_already_exists() {
         info!("Beginning test_output_file_already_exists");
-        trace!("Constructing mock client for completed batch where output already exists...");
+        trace!("Constructing mock client for completed batch where output file already exists...");
         let mock_client = MockLanguageModelClientBuilder::<MockBatchClientError>::default()
             .build()
             .unwrap();
@@ -260,10 +260,10 @@ mod check_for_and_download_output_and_error_online_tests {
 
         trace!("Constructing BatchFileTriple; simulating pre-existing output file...");
         let mut triple = BatchFileTriple::new_for_test_with_metadata_path(metadata_path.clone());
-        let out_path = triple.effective_output_filename();
+        let out_path = tmp_dir.path().join("output.json");
         fs::write(&out_path, b"Existing content").unwrap();
-        triple.set_output_path(Some(out_path));
-        debug!("Output file forcibly pre-created at {:?}", triple.output());
+        triple.set_output_path(Some(out_path.clone()));
+        debug!("Output file forcibly pre-created at {:?}", out_path);
 
         trace!("Calling check_for_and_download_output_and_error_online...");
         let result = triple
@@ -341,10 +341,10 @@ mod check_for_and_download_output_and_error_online_tests {
 
         trace!("Constructing BatchFileTriple; simulating pre-existing error file...");
         let mut triple = BatchFileTriple::new_for_test_with_metadata_path(metadata_path.clone());
-        let err_path = triple.effective_error_filename();
+        let err_path = tmp_dir.path().join("error.json");
         fs::write(&err_path, b"Existing error content").unwrap();
-        triple.set_error_path(Some(err_path));
-        debug!("Error file forcibly pre-created at {:?}", triple.error());
+        triple.set_error_path(Some(err_path.clone()));
+        debug!("Error file forcibly pre-created at {:?}", err_path);
 
         trace!("Calling check_for_and_download_output_and_error_online...");
         let result = triple
@@ -490,8 +490,11 @@ mod check_for_and_download_output_and_error_online_tests {
 
         trace!("Constructing BatchFileTriple and ensuring we use the correct metadata path...");
         let mut triple = BatchFileTriple::new_for_test_with_metadata_path(metadata_path.clone());
-        // IMPORTANT: We do NOT pre‐write any existing file content here, so we can truly test the fresh download.
         triple.set_metadata_path(Some(metadata_path.clone()));
+
+        // Put the output file into the temp dir
+        let out_file_path = tmp_dir.path().join("downloaded_output.json");
+        triple.set_output_path(Some(out_file_path.clone()));
 
         trace!("Calling check_for_and_download_output_and_error_online...");
         let result = triple
@@ -505,8 +508,7 @@ mod check_for_and_download_output_and_error_online_tests {
         );
 
         // Confirm the downloaded file has the new mock content
-        let output_filename = triple.effective_output_filename();
-        let contents = std::fs::read_to_string(&output_filename).unwrap();
+        let contents = fs::read_to_string(&out_file_path).unwrap();
         pretty_assert_eq!(contents, "mock output data");
 
         info!("test_completed_with_output_only passed");
@@ -576,7 +578,7 @@ mod check_for_and_download_output_and_error_online_tests {
         let mut triple = BatchFileTriple::new_for_test_with_metadata_path(metadata_path.clone());
         triple.set_metadata_path(Some(metadata_path.clone()));
 
-        // --- IMPORTANT: Override the "error" path into the temp directory. ---
+        // Put the error file into the temp dir
         let error_file_path = tmp_dir.path().join("downloaded_error.json");
         triple.set_error_path(Some(error_file_path.clone()));
 
@@ -589,7 +591,7 @@ mod check_for_and_download_output_and_error_online_tests {
         assert!(result.is_ok(), "Should succeed for completed batch with error only");
 
         // Now read the file from the unique path in the temp dir
-        let contents = std::fs::read_to_string(&error_file_path)
+        let contents = fs::read_to_string(&error_file_path)
             .expect("Failed to read downloaded error file");
         pretty_assert_eq!(contents, "mock error data");
 
@@ -665,7 +667,7 @@ mod check_for_and_download_output_and_error_online_tests {
         let mut triple = BatchFileTriple::new_for_test_with_metadata_path(metadata_path.clone());
         triple.set_metadata_path(Some(metadata_path.clone()));
 
-        // --- IMPORTANT: Put both output & error in the temp directory. ---
+        // --- Put both output & error in the temp directory. ---
         let output_file_path = tmp_dir.path().join("downloaded_output.json");
         let error_file_path  = tmp_dir.path().join("downloaded_error.json");
         triple.set_output_path(Some(output_file_path.clone()));
@@ -683,9 +685,9 @@ mod check_for_and_download_output_and_error_online_tests {
         );
 
         // Now read from the unique paths
-        let out_contents = std::fs::read_to_string(&output_file_path)
+        let out_contents = fs::read_to_string(&output_file_path)
             .expect("Failed to read downloaded output file");
-        let err_contents = std::fs::read_to_string(&error_file_path)
+        let err_contents = fs::read_to_string(&error_file_path)
             .expect("Failed to read downloaded error file");
 
         pretty_assert_eq!(out_contents, "mock output data");
@@ -694,3 +696,4 @@ mod check_for_and_download_output_and_error_online_tests {
         info!("test_completed_with_both_output_and_error passed");
     }
 }
+

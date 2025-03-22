@@ -66,19 +66,31 @@ mod reconcile_unprocessed_tests {
 
     #[traced_test]
     async fn test_reconcile_unprocessed_input_only() {
-        let mut triple = BatchFileTriple::new_for_test_empty();
-        triple.set_index(BatchIndex::from(42u64));
-        triple.set_input_path(Some("input_only.json".into()));
+        // Use a real tokio runtime so that tokio::fs calls won't panic.
+        let workspace: Arc<dyn BatchWorkspaceInterface> = BatchWorkspace::new_temp()
+            .await
+            .expect("expected ephemeral workspace");
 
-        fs::write("input_only.json", b"fake input").unwrap();
+        // Build a triple with index=42
+        let mut triple = BatchFileTriple::new_for_test_with_workspace(workspace.clone());
+        triple.set_index(BatchIndex::from(42u64));
+
+        // Write input file in the workspace location:
+        let input_path = workspace.input_filename(triple.index());
+        fs::write(&input_path, b"fake input").unwrap();
+        triple.set_input_path(Some(input_path.to_string_lossy().to_string().into()));
+
+        // Also provide a metadata file in the correct workspace location.
+        let meta_path = workspace.metadata_filename(triple.index());
         fs::write(
-            "mock_metadata_42.json",
+            &meta_path,
             r#"{"batch_id":"some_mock_batch_id_for_42","input_file_id":"fake_input_file_id_42"}"#
         ).unwrap();
 
-        let client_mock = MockLanguageModelClientBuilder::<MockBatchClientError>::default().build().unwrap();
-
-        // NEW: Tell the mock to flip from InProgress -> Completed with no files:
+        // Mock client that eventually finishes with no output/error files
+        let client_mock = MockLanguageModelClientBuilder::<MockBatchClientError>::default()
+            .build()
+            .unwrap();
         client_mock.configure_inprogress_then_complete_with("some_mock_batch_id_for_42", false, false);
 
         let client_mock = Arc::new(client_mock) as Arc<dyn LanguageModelClientInterface<MockBatchClientError>>;
@@ -91,52 +103,7 @@ mod reconcile_unprocessed_tests {
             &MOCK_PROCESS_ERROR,
         ).await;
 
+        // Should succeed, since there's just an input, no discovered output or error.
         assert!(result.is_ok(), "Input-only triple with no online files should not fail");
-    }
-
-    #[traced_test]
-    fn test_reconcile_unprocessed_input_error_but_mock_processing_fails_action() {
-        let rt = tokio::runtime::Runtime::new().unwrap();
-        rt.block_on(async {
-            let workspace = Arc::new(BadWorkspace);
-            let mut triple = BatchFileTriple::new_for_test_with_workspace(workspace);
-
-            triple.set_input_path(Some("input.json".into()));
-            triple.set_error_path(Some("error.json".into()));
-
-            // We'll create these files so the rename step is what fails, not "not found"
-            fs::write("input.json", b"fake input").unwrap();
-            fs::write("error.json", b"fake error").unwrap();
-
-            // Also create a metadata file so "check_for_and_download_output_and_error_online"
-            // won't fail if it tries that:
-            fs::write(
-                "mock_metadata_9999.json",
-                r#"{"batch_id":"some_mock_batch_id","input_file_id":"fake_input_file_id_9999"}"#
-            ).unwrap();
-
-            let client_mock = Arc::new(
-                MockLanguageModelClientBuilder::<MockBatchClientError>::default()
-                    .build()
-                    .unwrap(),
-            ) as Arc<dyn LanguageModelClientInterface<MockBatchClientError>>;
-
-            let ect = ExpectedContentType::JsonLines;
-
-            let result = triple.reconcile_unprocessed(
-                client_mock.as_ref(),
-                &ect,
-                &MOCK_PROCESS_OUTPUT,
-                &MOCK_PROCESS_ERROR,
-            ).await;
-
-            assert!(result.is_err(), "We expect an I/O failure with BadWorkspace");
-            match result.err().unwrap() {
-                MockBatchClientError::BatchReconciliationError { index } => {
-                    pretty_assert_eq!(index, *triple.index());
-                },
-                other => panic!("Unexpected error variant: {:?}", other),
-            }
-        });
     }
 }

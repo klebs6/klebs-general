@@ -99,13 +99,16 @@ mod download_output_file_tests {
         let mut triple = BatchFileTriple::new_for_test_with_metadata_path(metadata_path.clone());
         triple.set_metadata_path(Some(metadata_path.clone()));
 
+        // --- IMPORTANT: set the output path to the ephemeral temp dir. ---
+        let out_path = tmpdir.path().join("output.json");
+        triple.set_output_path(Some(out_path.clone()));
+
         trace!("Calling download_output_file...");
         let result = triple.download_output_file(&mock_client).await;
         debug!("Result from download_output_file: {:?}", result);
 
         assert!(result.is_ok(), "Should succeed for a valid output file");
-        // Ensure file was written
-        let out_path = triple.effective_output_filename();
+        // Ensure file was written inside our tempdir
         let contents = fs::read_to_string(&out_path).unwrap();
         pretty_assert_eq!(contents, "mock output contents");
 
@@ -136,10 +139,10 @@ mod download_output_file_tests {
         let mut triple = BatchFileTriple::new_for_test_with_metadata_path(metadata_path.clone());
         triple.set_metadata_path(Some(metadata_path.clone()));
 
-        // Simulate that the output file is already downloaded
-        let existing_output_path = triple.effective_output_filename();
+        // Simulate that the output file is already downloaded (in the tempdir)
+        let existing_output_path = tmpdir.path().join("output.json");
         fs::write(&existing_output_path, b"existing content").unwrap();
-        triple.set_output_path(Some(existing_output_path));
+        triple.set_output_path(Some(existing_output_path.clone()));
 
         let result = triple.download_output_file(&mock_client).await;
         debug!("Result from download_output_file: {:?}", result);
@@ -175,6 +178,10 @@ mod download_output_file_tests {
         let mut triple = BatchFileTriple::new_for_test_with_metadata_path(metadata_path.clone());
         triple.set_metadata_path(Some(metadata_path.clone()));
 
+        // --- Just to keep everything in ephemeral space, set an output path anyway ---
+        let out_path = tmpdir.path().join("will_not_be_written.json");
+        triple.set_output_path(Some(out_path.clone()));
+
         let result = triple.download_output_file(&mock_client).await;
         debug!("Result from download_output_file: {:?}", result);
 
@@ -206,6 +213,10 @@ mod download_output_file_tests {
 
         let mut triple = BatchFileTriple::new_for_test_with_metadata_path(metadata_path.clone());
         triple.set_metadata_path(Some(metadata_path.clone()));
+
+        // ephemeral path
+        let out_path = tmpdir.path().join("output_file.json");
+        triple.set_output_path(Some(out_path.clone()));
 
         let result = triple.download_output_file(&mock_client).await;
         debug!("Result from download_output_file: {:?}", result);

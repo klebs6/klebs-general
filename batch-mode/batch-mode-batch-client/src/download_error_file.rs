@@ -102,13 +102,16 @@ mod download_error_file_tests {
         let mut triple = BatchFileTriple::new_for_test_with_metadata_path(metadata_path.clone());
         triple.set_metadata_path(Some(metadata_path.clone()));
 
+        // --- Set an ephemeral error file path. ---
+        let err_path = tmpdir.path().join("error.json");
+        triple.set_error_path(Some(err_path.clone()));
+
         trace!("Calling download_error_file...");
         let result = triple.download_error_file(&mock_client).await;
         debug!("Result from download_error_file: {:?}", result);
 
         assert!(result.is_ok(), "Should succeed for a valid error file");
         // Ensure file was written
-        let err_path = triple.effective_error_filename();
         let contents = fs::read_to_string(&err_path).unwrap();
         pretty_assert_eq!(contents, "mock error contents");
 
@@ -140,9 +143,9 @@ mod download_error_file_tests {
         triple.set_metadata_path(Some(metadata_path.clone()));
 
         // Simulate that the error file is already downloaded
-        let existing_err_path = triple.effective_error_filename();
+        let existing_err_path = tmpdir.path().join("error.json");
         fs::write(&existing_err_path, b"existing content").unwrap();
-        triple.set_error_path(Some(existing_err_path));
+        triple.set_error_path(Some(existing_err_path.clone()));
 
         let result = triple.download_error_file(&mock_client).await;
         debug!("Result from download_error_file: {:?}", result);
@@ -178,6 +181,10 @@ mod download_error_file_tests {
         let mut triple = BatchFileTriple::new_for_test_with_metadata_path(metadata_path.clone());
         triple.set_metadata_path(Some(metadata_path.clone()));
 
+        // ephemeral path, though it won't actually be written
+        let err_path = tmpdir.path().join("placeholder_error_file.json");
+        triple.set_error_path(Some(err_path.clone()));
+
         let result = triple.download_error_file(&mock_client).await;
         debug!("Result from download_error_file: {:?}", result);
 
@@ -209,6 +216,9 @@ mod download_error_file_tests {
 
         let mut triple = BatchFileTriple::new_for_test_with_metadata_path(metadata_path.clone());
         triple.set_metadata_path(Some(metadata_path.clone()));
+
+        let err_path = tmpdir.path().join("error_file.json");
+        triple.set_error_path(Some(err_path.clone()));
 
         let result = triple.download_error_file(&mock_client).await;
         debug!("Result from download_error_file: {:?}", result);
@@ -256,12 +266,9 @@ mod download_error_file_tests {
         let mut triple = BatchFileTriple::new_for_test_with_metadata_path(metadata_path.clone());
         triple.set_metadata_path(Some(metadata_path.clone()));
 
-        // But we want the error file to attempt to go into the read-only dir:
-        // We'll override the 'error_filename_which_maybe_does_not_yet_exist' by
-        // forcibly setting triple.error to point there, so that the download
-        // code attempts to write the file in a read-only directory.
-        let error_path = tmpdir_readonly.path().join("error.json");
-        triple.set_error_path(Some(error_path.clone()));
+        // We forcibly set the "error file" path to the read-only dir:
+        let err_path = tmpdir_readonly.path().join("error.json");
+        triple.set_error_path(Some(err_path.clone()));
 
         // Make that directory read-only:
         let mut perms = fs::metadata(tmpdir_readonly.path()).unwrap().permissions();
@@ -276,12 +283,11 @@ mod download_error_file_tests {
         perms.set_readonly(false);
         fs::set_permissions(tmpdir_readonly.path(), perms).unwrap();
 
-        // We expect an IO error because we can't write into a read-only directory
         assert!(
             result.is_err(),
             "Should fail with an I/O error when the directory is read-only"
         );
         info!("test_download_error_file_io_write_error passed");
     }
-
 }
+
