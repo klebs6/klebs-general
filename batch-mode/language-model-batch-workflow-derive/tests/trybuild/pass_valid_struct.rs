@@ -1,3 +1,4 @@
+#![allow(unused_imports)]
 // ---------------- [ File: tests/trybuild/pass_valid_struct.rs ]
 // ===========================[ CHANGED ITEM #1 ]===========================
 //
