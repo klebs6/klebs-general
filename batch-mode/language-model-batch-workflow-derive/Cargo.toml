@@ -8,7 +8,7 @@ traced-test = { version = "1.0.2" }
 tracing = { version = "0.1.41" }
 tracing-setup = { version = "1.0.2" }
 tracing-subscriber = { version = "0.3.19", features = [ "env-filter", "json" ] }
-save-load-traits = { version = "*", path = "../save-load-traits" }
+save-load-traits = { version = "0.2.0", path = "../save-load-traits" }
 
 [dependencies.batch-mode-3p]
 path = "../batch-mode-3p"

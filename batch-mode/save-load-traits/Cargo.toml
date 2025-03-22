@@ -1,7 +1,7 @@
 [dependencies]
-export-magic = "*"
-pretty_assertions  = "*"
-tempfile = "*"
+export-magic = "0.3.6"
+pretty_assertions  = "1.4.1"
+tempfile = "3.19.0"
 error-tree   = "0.6.0"
 json-repair  = "0.4.0"
 tokio        = { version = "1", features = ["full"] }

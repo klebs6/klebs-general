@@ -1,7 +1,7 @@
 [dependencies]
 proc-macro2 = "1.0"
 quote = "1.0"
-getset = "*"
+getset = "0.1.5"
 [dependencies.batch-mode-3p]
 path = "../batch-mode-3p"
 [dependencies.serde]

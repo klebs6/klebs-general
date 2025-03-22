@@ -1,12 +1,12 @@
 [dependencies]
-pretty_assertions = "*"
+pretty_assertions = "1.4.1"
 async-openai = "0.28.0"
-error-tree = "*"
-export-magic = "*"
-traced-test = "*"
-tracing = "*"
-tracing-setup = "*"
-getset = "*"
+error-tree = "0.6.0"
+export-magic = "0.3.6"
+traced-test = "1.0.2"
+tracing = "0.1.41"
+tracing-setup = "1.0.2"
+getset = "0.1.5"
 [dependencies.language-model-type]
 path = "../language-model-type"
 [dependencies.serde]

@@ -1,8 +1,8 @@
 [dependencies]
-pretty_assertions = "*"
+pretty_assertions = "1.4.1"
 derive_builder = "0.20.2"
-getset = "*"
-export-magic = "*"
+getset = "0.1.5"
+export-magic = "0.3.6"
 proc-macro2 = "1.0"
 quote = "1.0"
 serde = "1.0"

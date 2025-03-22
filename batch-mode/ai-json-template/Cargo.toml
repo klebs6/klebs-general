@@ -1,6 +1,6 @@
 [dependencies]
-indoc = "*"
-export-magic = "*"
+indoc = "2.0.6"
+export-magic = "0.3.6"
 [dependencies.save-load-traits]
 path = "../save-load-traits"
 [dependencies.serde]

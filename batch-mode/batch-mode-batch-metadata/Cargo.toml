@@ -8,8 +8,8 @@ version = "0.2.0"
 [dependencies]
 serde = { version = "1.0.218", features = [ "derive" ] }
 serde_derive = "1.0.218"
-derive_builder = "*"
-getset = "*"
+derive_builder = "0.20.2"
+getset = "0.1.5"
 serde_json = "1.0.139"
 traced-test = "1.0.2"
 tracing = "0.1.41"
