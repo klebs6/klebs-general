@@ -1,0 +1,8 @@
+#!/usr/bin/env sh
+find workspacer-workspace-interface -type f -name "*.rs"  |  xargs /bin/cat
+find workspacer-workspace-interface -type f -name "*.rs" | xargs /bin/cat
+find workspacer-crate-interface -type f -name "*.rs" | xargs /bin/cat
+find workspacer-toml-interface -type f -name "*.rs" | xargs /bin/cat
+find workspacer-workspace -type f -name "*.rs" | xargs /bin/cat
+find workspacer-crate -type f -name "*.rs" | xargs /bin/cat
+find workspacer-toml -type f -name "*.rs" | xargs /bin/cat
