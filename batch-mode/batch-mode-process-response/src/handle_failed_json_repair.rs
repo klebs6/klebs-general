@@ -28,37 +28,37 @@ mod handle_failed_json_repair_tests {
     use std::fs;
 
     #[traced_test]
-    fn test_handle_failed_json_repair_writes_file() {
-        let rt = tokio::runtime::Runtime::new().unwrap();
-        rt.block_on(async {
-            let workspace = Arc::new(
-                MockWorkspaceBuilder::default()
-                    // Suppose your real method is `failed_json_repairs_dir(...)`
-                    .failed_json_repairs_dir("./test_failed_json_repairs".into())
-                    .build()
-                    .unwrap()
-            );
-            let _ = fs::remove_dir_all(workspace.failed_json_repairs_dir());
-            tokio::fs::create_dir_all(&workspace.failed_json_repairs_dir()).await.unwrap();
+    async fn test_handle_failed_json_repair_writes_file() {
+        // We rely on MockWorkspace's ephemeral sandbox to avoid leaving test files around.
+        // We no longer override the `failed_json_repairs_dir`; we want the default ephemeral dir.
+        trace!("===== BEGIN TEST: test_handle_failed_json_repair_writes_file =====");
+        // 1) Create the ephemeral workspace
+        let workspace = BatchWorkspace::new_temp().await.unwrap();
+        info!("Created ephemeral workspace: {:?}", workspace);
 
-            let failed_id = "failed_request_123";
-            // Instead of `BatchMessageContent::from("...")`, we do builder:
-            let message_content = BatchMessageContentBuilder::default()
-                .content::<String>("some broken json stuff".into())
-                .build()
-                .unwrap();
+        // 2) Clear out the ephemeral `failed_json_repairs_dir()` if it exists
+        let repairs_dir = workspace.failed_json_repairs_dir();
 
-            let result = handle_failed_json_repair(
-                failed_id,
-                &message_content,
-                workspace.as_ref()
-            ).await;
-            assert!(result.is_ok());
+        // 3) Prepare data
+        let failed_id = "failed_request_123";
+        let message_content = BatchMessageContentBuilder::default()
+            .content::<String>("some broken json stuff".into())
+            .build()
+            .unwrap();
 
-            let path = workspace.failed_json_repairs_dir().join(failed_id);
-            assert!(path.exists());
-            let written = fs::read_to_string(&path).unwrap();
-            assert_eq!(written, message_content.get_sanitized_json_str());
-        });
+        // 4) Invoke the function
+        let result = handle_failed_json_repair(failed_id, &message_content, workspace.as_ref()).await;
+        assert!(result.is_ok(), "handle_failed_json_repair should succeed");
+
+        // 5) Verify the file was actually written into the ephemeral repairs dir
+        let path = repairs_dir.join(failed_id);
+        trace!("Asserting that repair file path exists: {:?}", path);
+        assert!(path.exists(), "Repaired JSON file must exist in ephemeral dir");
+
+        // 6) Verify contents match
+        let written = fs::read_to_string(&path).unwrap();
+        assert_eq!(written, message_content.get_sanitized_json_str());
+
+        trace!("===== END TEST: test_handle_failed_json_repair_writes_file =====");
     }
 }

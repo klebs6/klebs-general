@@ -8,7 +8,7 @@ pub struct MockItem {
     pub name: String,
 }
 
-#[derive(Getters, Setters, Builder, Debug)]
+#[derive(Clone,Getters,Setters,Builder,Debug)]
 #[builder(setter(strip_option))]
 #[getset(get = "pub", set = "pub")]
 pub struct MockWorkspace {

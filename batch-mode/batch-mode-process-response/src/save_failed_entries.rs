@@ -50,55 +50,61 @@ pub async fn save_failed_entries(
 #[cfg(test)]
 mod save_failed_entries_tests {
     use super::*;
+    use std::fs;
 
     #[traced_test]
-    fn test_save_failed_entries() {
-        let rt = tokio::runtime::Runtime::new().unwrap();
-        rt.block_on(async {
-            let workspace = Arc::new(
-                MockWorkspaceBuilder::default()
-                    .failed_items_dir("./test_failed_items_dir".into())
-                    .build()
-                    .unwrap()
-            );
-            let _ = std::fs::remove_dir_all(workspace.failed_items_dir());
-            tokio::fs::create_dir_all(&workspace.failed_items_dir()).await.unwrap();
+    async fn test_save_failed_entries() {
+        // This test ensures we can append failed records to `failed_entries.jsonl`.
+        trace!("===== BEGIN TEST: test_save_failed_entries =====");
 
-            // Must supply .error_type(...) here
-            let fail_details = BatchErrorDetailsBuilder::default()
-                .error_type(ErrorType::Unknown("some_error_type".to_string()))
-                .code(Some("xxx".to_string()))
-                .message("some error".to_string())
-                .build()
-                .unwrap();
+        let workspace = BatchWorkspace::new_temp().await.unwrap();
+        info!("Created workspace: {:?}", workspace);
 
-            let fail_errbody = BatchErrorResponseBodyBuilder::default()
-                .error(fail_details)
-                .build()
-                .unwrap();
+        let fail_details = BatchErrorDetailsBuilder::default()
+            .error_type(ErrorType::Unknown("some_error_type".to_string()))
+            .code(Some("xxx".to_string()))
+            .message("some error".to_string())
+            .build()
+            .unwrap();
 
-            let fail_respcontent = BatchResponseContentBuilder::default()
-                .status_code(400_u16)
-                .request_id(ResponseRequestId::new("resp_fail_1"))
-                .body(BatchResponseBody::Error(fail_errbody))
-                .build()
-                .unwrap();
+        let fail_errbody = BatchErrorResponseBodyBuilder::default()
+            .error(fail_details)
+            .build()
+            .unwrap();
 
-            let fail_rec = BatchResponseRecordBuilder::default()
-                .id(BatchRequestId::new("id"))
-                .custom_id(CustomRequestId::new("fail_1"))
-                .response(fail_respcontent)
-                .build()
-                .unwrap();
+        let fail_respcontent = BatchResponseContentBuilder::default()
+            .status_code(400_u16)
+            .request_id(ResponseRequestId::new("resp_fail_1"))
+            .body(BatchResponseBody::Error(fail_errbody))
+            .build()
+            .unwrap();
 
-            let failed_records = vec![ &fail_rec ];
-            let result = save_failed_entries(workspace.as_ref(), &failed_records).await;
-            assert!(result.is_ok());
+        let fail_rec = BatchResponseRecordBuilder::default()
+            .id(BatchRequestId::new("id"))
+            .custom_id(CustomRequestId::new("fail_1"))
+            .response(fail_respcontent)
+            .build()
+            .unwrap();
 
-            let file_path = workspace.failed_items_dir().join("failed_entries.jsonl");
-            assert!(file_path.exists());
-            let contents = std::fs::read_to_string(file_path).unwrap();
-            assert!(contents.contains("\"fail_1\""));
-        });
+        let failed_records = vec![ &fail_rec ];
+
+        // 4) Attempt to save them
+        let result = save_failed_entries(workspace.as_ref(), &failed_records).await;
+        assert!(result.is_ok(), "Saving failed entries should succeed");
+
+        // 5) Verify that the file was actually written
+        let file_path = workspace.failed_items_dir().join("failed_entries.jsonl");
+        trace!("Asserting that failed-entries file path exists: {:?}", file_path);
+        assert!(
+            file_path.exists(),
+            "failed_entries.jsonl must be created in ephemeral failed_items_dir"
+        );
+
+        // 6) Check that it contains the expected JSON line
+        let contents = std::fs::read_to_string(&file_path)
+            .expect("Could not read appended failed_entries.jsonl");
+        assert!(contents.contains("\"fail_1\""));
+
+        trace!("===== END TEST: test_save_failed_entries =====");
     }
 }

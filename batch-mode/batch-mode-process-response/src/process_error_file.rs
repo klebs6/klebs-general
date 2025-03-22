@@ -114,38 +114,35 @@ mod process_error_file_tests {
     use super::*;
 
     #[traced_test]
-    fn test_process_error_file() {
-        let rt = Runtime::new().unwrap();
-        rt.block_on(async {
-            info!("Starting test_process_error_file with NDJSON approach.");
-            let workspace = Arc::new(MockWorkspace::default());
-            let mut triple = BatchFileTriple::new_for_test_empty();
+    async fn test_process_error_file() {
+        info!("Starting test_process_error_file with NDJSON approach.");
+        let workspace = BatchWorkspace::new_temp().await.unwrap();
+        let mut triple = BatchFileTriple::new_for_test_with_workspace(workspace);
 
-            // We'll create a NamedTempFile so no permanent file is left behind
-            let mut tmp = NamedTempFile::new().expect("Failed to create NamedTempFile");
-            let tmp_path = tmp.path().to_path_buf();
-            triple.set_error_path(Some(tmp_path.clone()));
+        // We'll create a NamedTempFile so no permanent file is left behind
+        let mut tmp = NamedTempFile::new().expect("Failed to create NamedTempFile");
+        let tmp_path = tmp.path().to_path_buf();
+        triple.set_error_path(Some(tmp_path.clone()));
 
-            // We'll write 2 lines, each a valid BatchResponseRecord with status_code=400
-            let line_1 = r#"{"id":"batch_req_error_id_1","custom_id":"error_id_1","response":{"status_code":400,"request_id":"resp_error_id_1","body":{"error":{"message":"Some error occurred","type":"some_test_error","param":null,"code":"SomeErrorCode"},"object":"error"}}}"#;
-            let line_2 = r#"{"id":"batch_req_error_id_2","custom_id":"error_id_2","response":{"status_code":400,"request_id":"resp_error_id_2","body":{"error":{"message":"Another error","type":"some_test_error","param":null,"code":"AnotherErrorCode"},"object":"error"}}}"#;
+        // We'll write 2 lines, each a valid BatchResponseRecord with status_code=400
+        let line_1 = r#"{"id":"batch_req_error_id_1","custom_id":"error_id_1","response":{"status_code":400,"request_id":"resp_error_id_1","body":{"error":{"message":"Some error occurred","type":"some_test_error","param":null,"code":"SomeErrorCode"},"object":"error"}}}"#;
+        let line_2 = r#"{"id":"batch_req_error_id_2","custom_id":"error_id_2","response":{"status_code":400,"request_id":"resp_error_id_2","body":{"error":{"message":"Another error","type":"some_test_error","param":null,"code":"AnotherErrorCode"},"object":"error"}}}"#;
 
-            writeln!(tmp, "{}", line_1).unwrap();
-            writeln!(tmp, "{}", line_2).unwrap();
-            tmp.flush().unwrap();
+        writeln!(tmp, "{}", line_1).unwrap();
+        writeln!(tmp, "{}", line_2).unwrap();
+        tmp.flush().unwrap();
 
-            let ops = vec![
-                BatchErrorFileProcessingOperation::LogErrors,
-                BatchErrorFileProcessingOperation::RetryFailedRequests,
-            ];
+        let ops = vec![
+            BatchErrorFileProcessingOperation::LogErrors,
+            BatchErrorFileProcessingOperation::RetryFailedRequests,
+        ];
 
-            let result = process_error_file(&triple, &ops).await;
-            assert!(
-                result.is_ok(),
-                "Expected process_error_file to parse NDJSON and succeed."
-            );
+        let result = process_error_file(&triple, &ops).await;
+        assert!(
+            result.is_ok(),
+            "Expected process_error_file to parse NDJSON and succeed."
+        );
 
-            debug!("test_process_error_file passed successfully.");
-        });
+        debug!("test_process_error_file passed successfully.");
     }
 }

@@ -66,13 +66,8 @@ where
 #[disable]
 mod test_pin_all_wildcard_dependencies_real {
     use super::*;
-    use std::path::PathBuf;
-    use tempfile::tempdir;
-    use workspacer_3p::tokio;
-    // Import your real workspace type, e.g. `Workspace<P,H>`, plus the trait:
-    //   use crate::{ PinAllWildcardDependencies, etc. };
 
-    #[tokio::test]
+    #[traced_test]
     async fn test_pin_all_wildcard_dependencies_succeeds() {
         // 1) Create a temporary workspace with multiple crates that have wildcard deps.
         // For instance, crate_a's Cargo.toml might have something like:
@@ -103,7 +98,7 @@ mod test_pin_all_wildcard_dependencies_real {
     }
 
     /// If there's no Cargo.lock or it's invalid, we expect an error mapping to `WorkspaceError`.
-    #[tokio::test]
+    #[traced_test]
     async fn test_pin_all_wildcard_dependencies_lockfile_missing() {
         let root_path = create_workspace_without_lockfile().await
             .expect("some mock creation");
@@ -121,7 +116,7 @@ mod test_pin_all_wildcard_dependencies_real {
 
     /// If a single crate fails to pin (e.g. parse error in Cargo.toml), we expect
     /// `WorkspaceError::CratePinFailed { crate_path, source }`.
-    #[tokio::test]
+    #[traced_test]
     async fn test_pin_all_wildcard_dependencies_one_crate_fails() {
         let root_path = create_mock_workspace_with_one_broken_crate().await
             .expect("mock with one broken crate");

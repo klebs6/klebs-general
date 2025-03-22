@@ -19,158 +19,62 @@ pub trait PinWildcardDependencies {
     ) -> Result<(), Self::Error>;
 }
 
+
 #[async_trait]
 impl PinWildcardDependencies for CargoToml {
-
     type Error = CargoTomlError;
 
-    /// Pin all wildcard dependencies ("*") in this crate's Cargo.toml
-    /// to the highest version found in `lock_versions`.
-    ///
-    /// - If multiple distinct versions exist for a crate, logs a warning and uses the highest.
-    /// - If a wildcard crate isn't found in the lock map, logs a warning.
-    /// - Preserves formatting/comments as best as `toml_edit` allows.
-    ///
-    /// NOTE: This writes the updated TOML **in-place** to `self.path`.
+    /**
+     * Pins all wildcard dependencies ("*") in this crate's Cargo.toml to the highest version found
+     * in `lock_versions`, or, if the dependency is a path-based neighbor crate and it has no version
+     * (or has "*"), pins it to that neighbor crate's actual version.
+     *
+     * - If a dependency has a `path` but no `version`, we read that neighbor crate's version and set it.
+     * - If a dependency has `version = "*"`, we first check if it has a `path`:
+     *       - If so, use the neighbor crate's version.
+     *       - Otherwise, look up the crate in the provided `lock_versions`.
+     *         If found, use the highest version. If missing, leave as "*".
+     * - If multiple distinct versions exist in `lock_versions`, picks the highest and logs a warning.
+     * - Preserves formatting/comments as best as `toml_edit` allows.
+     *
+     * NOTE: This writes the updated TOML **in-place** to `self.path`.
+     */
     async fn pin_wildcard_dependencies(
         &self,
         lock_versions: &LockVersionMap,
     ) -> Result<(), Self::Error> {
 
-        debug!("Reading Cargo.toml from {:?}", self.as_ref());
+        trace!("pin_wildcard_dependencies: reading original Cargo.toml from {:?}", self.as_ref());
 
-        // 1) Read original TOML text so we can re-parse with toml_edit
-        let original_toml_str = tokio::fs::read_to_string(self.as_ref()).await
+        let original_toml_str = tokio::fs::read_to_string(self.as_ref())
+            .await
             .map_err(|e| CargoTomlError::ReadError { io: e.into() })?;
 
-        // 2) Parse as a toml_edit::Document to preserve formatting
         let mut doc = original_toml_str
-            .parse::<Document>()
+            .parse::<toml_edit::Document>()
             .map_err(|parse_err| CargoTomlError::TomlEditError {
                 cargo_toml_file: self.as_ref().to_path_buf(),
                 toml_parse_error: parse_err,
             })?;
 
-        // 3) Pin the wildcards in the Document
-        debug!("Pinning wildcard deps in doc...");
-        pin_wildcards_in_doc(&mut doc, lock_versions);
+        trace!("pin_wildcard_dependencies: parsed Cargo.toml into toml_edit Document successfully.");
 
-        // 4) Write updated TOML back in original order
-        let pinned_str = doc.to_string(); 
-        debug!("Writing pinned TOML back to {:?}", self.as_ref());
+        // Perform in-place pinning
+        pin_wildcards_in_doc(&mut doc, lock_versions, self).await?;
 
-        tokio::fs::write(self.as_ref(), pinned_str).await
+        let pinned_str = doc.to_string();
+        debug!("pin_wildcard_dependencies: writing pinned TOML back to {:?}", self.as_ref());
+
+        tokio::fs::write(self.as_ref(), pinned_str)
+            .await
             .map_err(|e| CargoTomlWriteError::WriteError {
                 io: e.into(),
                 cargo_toml_file: self.as_ref().to_path_buf(),
             })?;
 
+        info!("pin_wildcard_dependencies: successfully updated {:?}", self.as_ref());
         Ok(())
     }
-}
-
-/// This helper updates all wildcard dependencies in a `Document`.
-fn pin_wildcards_in_doc(
-    doc:           &mut Document,
-    lock_versions: &LockVersionMap,
-) {
-    // Fix top-level sections like [dependencies], [dev-dependencies], etc.
-    for (key, item) in doc.as_table_mut().iter_mut() {
-        if is_dependencies_key(&key) {
-            if let Item::Table(dep_table) = item {
-                pin_deps_in_table(dep_table, lock_versions);
-            }
-        }
-    }
-
-    // Also fix any nested dependencies in [target.'cfg(...)'.dependencies], etc.
-    fix_nested_tables(doc.as_item_mut(), lock_versions);
-}
-
-/// Checks if a table key ends with "dependencies"
-fn is_dependencies_key(k: &str) -> bool {
-    k.ends_with("dependencies")
-}
-
-/// Recursively walks a `toml_edit::Item` looking for tables named "*dependencies".
-fn fix_nested_tables(item: &mut Item, lock_versions: &BTreeMap<String, BTreeSet<Version>>) {
-    if let Item::Table(tbl) = item {
-        for (sub_key, sub_item) in tbl.iter_mut() {
-            if is_dependencies_key(&sub_key) {
-                if let Item::Table(dep_table) = sub_item {
-                    pin_deps_in_table(dep_table, lock_versions);
-                }
-            }
-            // Recurse deeper
-            fix_nested_tables(sub_item, lock_versions);
-        }
-    }
-}
-
-/// This is where we also log when a dep is actually pinned.
-fn pin_deps_in_table(
-    table: &mut Table,
-    lock_versions: &BTreeMap<String, BTreeSet<Version>>,
-) {
-    for (dep_name, dep_item) in table.iter_mut() {
-        match dep_item {
-            // e.g. `dep = "*"`
-            Item::Value(Value::String { .. }) => {
-                let current_str = dep_item.as_str().unwrap_or("");
-                if current_str == "*" {
-                    if let Some(new_ver) = pick_highest_version(&dep_name, lock_versions) {
-                        info!(
-                            "Pinning wildcard dep '{}' from '*' to '{}'",
-                            dep_name, new_ver
-                        );
-                        *dep_item = Item::Value(Value::from(new_ver));
-                    } else {
-                        warn!(
-                            "wildcard dep '{}' was not found in Cargo.lock; leaving as '*'",
-                            dep_name
-                        );
-                    }
-                }
-            }
-            // e.g. `dep = { version = "*", features = [...] }`
-            Item::Value(Value::InlineTable(inline_tab)) => {
-                if let Some(version_item) = inline_tab.get("version") {
-                    if version_item.as_str() == Some("*") {
-                        if let Some(new_ver) = pick_highest_version(&dep_name, lock_versions) {
-                            info!(
-                                "Pinning wildcard dep '{}' from '*' to '{}'",
-                                dep_name, new_ver
-                            );
-                            inline_tab.insert("version", Value::from(new_ver));
-                        } else {
-                            warn!(
-                                "wildcard dep '{}' was not found in Cargo.lock; leaving as '*'",
-                                dep_name
-                            );
-                        }
-                    }
-                }
-            }
-            _ => {}
-        }
-    }
-}
-
-/// Choose the highest SemVer version from lock_versions for `crate_name`.
-/// If multiple distinct versions are found, logs a warning and picks the highest.
-fn pick_highest_version(
-    crate_name: &str,
-    lock_map: &BTreeMap<String, BTreeSet<Version>>,
-) -> Option<String> {
-    let set = lock_map.get(crate_name)?;
-    if set.len() > 1 {
-        warn!(
-            "crate '{}' has multiple versions in Cargo.lock: {:?}. Using the highest.",
-            crate_name, set
-        );
-    }
-    let highest = set.iter().max().unwrap(); // safe if nonempty
-    Some(highest.to_string())
 }
 
 #[cfg(test)]
@@ -218,7 +122,7 @@ mod test_pin_wildcard_dependencies {
     }
 
     /// 1) Test parse error
-    #[tokio::test]
+    #[traced_test]
     async fn test_toml_parse_error() {
         let invalid_toml = r#"
             [package   # missing closing bracket
@@ -239,7 +143,7 @@ mod test_pin_wildcard_dependencies {
     }
 
     /// 2) Test a file with no wildcard dependencies -> pinning is a no-op, but success.
-    #[tokio::test]
+    #[traced_test]
     async fn test_no_wildcards() {
         let contents = r#"
             [package]
@@ -270,7 +174,7 @@ mod test_pin_wildcard_dependencies {
     }
 
     /// 3) Single wildcard pinned from lock
-    #[tokio::test]
+    #[traced_test]
     async fn test_single_wildcard() {
         let contents = r#"
             [package]
@@ -301,7 +205,7 @@ mod test_pin_wildcard_dependencies {
     }
 
     /// 4) Multiple distinct versions in lock -> picks highest
-    #[tokio::test]
+    #[traced_test]
     async fn test_multiple_lock_versions() {
         let contents = r#"
             [package]
@@ -330,7 +234,7 @@ mod test_pin_wildcard_dependencies {
     }
 
     /// 5) Missing crate in lock -> remains "*"
-    #[tokio::test]
+    #[traced_test]
     async fn test_missing_in_lock() {
         let contents = r#"
             [package]
@@ -360,7 +264,7 @@ mod test_pin_wildcard_dependencies {
     }
 
     /// 6) Nested wildcard in target
-    #[tokio::test]
+    #[traced_test]
     async fn test_nested_wildcard() {
         let contents = r#"
             [package]

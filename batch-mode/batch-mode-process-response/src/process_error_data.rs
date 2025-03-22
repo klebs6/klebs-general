@@ -23,43 +23,40 @@ mod process_error_data_tests {
     use super::*;
 
     #[traced_test]
-    fn test_process_error_data() {
-        let rt = tokio::runtime::Runtime::new().unwrap();
-        rt.block_on(async {
-            // Supply error_type
-            let err_details = BatchErrorDetailsBuilder::default()
-                .error_type(ErrorType::Unknown("test_err".to_string()))
-                .code(Some("401".to_string()))
-                .message("Unauthorized".to_string())
-                .build()
-                .unwrap();
+    async fn test_process_error_data() {
+        // Supply error_type
+        let err_details = BatchErrorDetailsBuilder::default()
+            .error_type(ErrorType::Unknown("test_err".to_string()))
+            .code(Some("401".to_string()))
+            .message("Unauthorized".to_string())
+            .build()
+            .unwrap();
 
-            let err_body = BatchErrorResponseBodyBuilder::default()
-                .error(err_details)
-                .build()
-                .unwrap();
+        let err_body = BatchErrorResponseBodyBuilder::default()
+            .error(err_details)
+            .build()
+            .unwrap();
 
-            let response_content = BatchResponseContentBuilder::default()
-                .status_code(400_u16)
-                .request_id(ResponseRequestId::new("resp_err1"))
-                .body(BatchResponseBody::Error(err_body))
-                .build()
-                .unwrap();
+        let response_content = BatchResponseContentBuilder::default()
+            .status_code(400_u16)
+            .request_id(ResponseRequestId::new("resp_err1"))
+            .body(BatchResponseBody::Error(err_body))
+            .build()
+            .unwrap();
 
-            let record = BatchResponseRecordBuilder::default()
-                .id(BatchRequestId::new("id"))
-                .custom_id(CustomRequestId::new("err1"))
-                .response(response_content)
-                .build()
-                .unwrap();
+        let record = BatchResponseRecordBuilder::default()
+            .id(BatchRequestId::new("id"))
+            .custom_id(CustomRequestId::new("err1"))
+            .response(response_content)
+            .build()
+            .unwrap();
 
-            let error_data = BatchErrorDataBuilder::default()
-                .responses(vec![record])
-                .build()
-                .unwrap();
+        let error_data = BatchErrorDataBuilder::default()
+            .responses(vec![record])
+            .build()
+            .unwrap();
 
-            let result = process_error_data(&error_data).await;
-            assert!(result.is_ok());
-        });
+        let result = process_error_data(&error_data).await;
+        assert!(result.is_ok());
     }
 }

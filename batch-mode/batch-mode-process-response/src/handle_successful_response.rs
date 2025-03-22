@@ -104,6 +104,7 @@ where
 #[cfg(test)]
 mod handle_successful_response_tests {
     use super::*;
+    use std::fs;
 
     #[derive(Debug, Deserialize, Serialize, NamedItem)]
     pub struct MockItemForSuccess {
@@ -111,55 +112,61 @@ mod handle_successful_response_tests {
     }
 
     #[traced_test]
-    fn test_handle_successful_response_json_failure() {
-        let rt = tokio::runtime::Runtime::new().unwrap();
-        rt.block_on(async {
-            let workspace = Arc::new(
-                MockWorkspaceBuilder::default()
-                    .failed_json_repairs_dir("./test_failed_json_repairs_2".into())
-                    .build()
-                    .unwrap()
-            );
-            let _ = fs::remove_dir_all(workspace.failed_json_repairs_dir());
-            tokio::fs::create_dir_all(&workspace.failed_json_repairs_dir()).await.unwrap();
+    async fn test_handle_successful_response_json_failure() {
+        // This test tries to parse invalid JSON into our `MockItemForSuccess`,
+        // expecting it to fail and log a file in `failed_json_repairs_dir`.
+        trace!("===== BEGIN TEST: test_handle_successful_response_json_failure =====");
 
-            let invalid_msg = ChatCompletionResponseMessage {
-                role: Role::Assistant,
-                content: Some("this is not valid json at all".into()),
-                audio: None,
-                function_call: None,
-                refusal: None,
-                tool_calls: None,
-            };
+        // 1) Use ephemeral default workspace (no overrides).
+        let workspace = BatchWorkspace::new_temp().await.unwrap();
+        info!("Created ephemeral workspace: {:?}", workspace);
 
-            // Must do .logprobs(None) so BatchChoice is fully initialized
-            let choice_fail = BatchChoiceBuilder::default()
-                .index(0_u32)
-                .finish_reason(FinishReason::Stop)
-                .logprobs(None)
-                .message(invalid_msg)
-                .build()
-                .unwrap();
+        // 2) Ensure repairs dir is empty
+        let repairs_dir = workspace.failed_json_repairs_dir();
 
-            let success_body = BatchSuccessResponseBodyBuilder::default()
-                .object("response".to_string())
-                .id("some-other-uuid".to_string())
-                .created(0_u64)
-                .model("test-model".to_string())
-                .choices(vec![choice_fail])
-                .usage(BatchUsage::mock())
-                .build()
-                .unwrap();
+        // 3) Create a response that is *not* valid JSON
+        let invalid_msg = ChatCompletionResponseMessage {
+            role: Role::Assistant,
+            content: Some("this is not valid json at all".into()),
+            audio: None,
+            function_call: None,
+            refusal: None,
+            tool_calls: None,
+        };
 
-            let rc = handle_successful_response::<MockItemForSuccess>(
-                &success_body,
-                workspace.as_ref(),
-                &ExpectedContentType::Json
-            ).await;
+        let choice_fail = BatchChoiceBuilder::default()
+            .index(0_u32)
+            .finish_reason(FinishReason::Stop)
+            .logprobs(None)
+            .message(invalid_msg)
+            .build()
+            .unwrap();
 
-            assert!(rc.is_err(), "We expect an error due to invalid JSON content");
-            let repair_path = workspace.failed_json_repairs_dir().join("some-other-uuid");
-            assert!(repair_path.exists());
-        });
+        let success_body = BatchSuccessResponseBodyBuilder::default()
+            .object("response".to_string())
+            .id("some-other-uuid".to_string())
+            .created(0_u64)
+            .model("test-model".to_string())
+            .choices(vec![choice_fail])
+            .usage(BatchUsage::mock())
+            .build()
+            .unwrap();
+
+        // 4) Call handle_successful_response with ExpectedContentType=Json
+        let rc = handle_successful_response::<MockItemForSuccess>(
+            &success_body,
+            workspace.as_ref(),
+            &ExpectedContentType::Json
+        ).await;
+
+        // 5) Confirm it fails
+        assert!(rc.is_err(), "We expect an error due to invalid JSON content");
+
+        // 6) Confirm the "some-other-uuid" file is in the ephemeral repairs dir
+        let repair_path = repairs_dir.join("some-other-uuid");
+        trace!("Asserting that repair file path exists: {:?}", repair_path);
+        assert!(repair_path.exists(), "A repair file must be created for invalid JSON");
+
+        trace!("===== END TEST: test_handle_successful_response_json_failure =====");
     }
 }

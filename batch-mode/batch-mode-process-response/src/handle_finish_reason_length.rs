@@ -44,15 +44,12 @@ mod handle_finish_reason_length_tests {
     use futures::executor::block_on;
 
     #[traced_test]
-    fn test_handle_finish_reason_length() {
-        let rt = tokio::runtime::Runtime::new().unwrap();
-        rt.block_on(async {
-            let message_content = BatchMessageContentBuilder::default()
-                .content("Partial/truncated response".to_string()) // <-- REPLACED direct .from(...)
-                .build()
-                .unwrap();
-            let result = handle_finish_reason_length("some_truncated_id", &message_content).await;
-            assert!(result.is_ok());
-        });
+    async fn test_handle_finish_reason_length() {
+        let message_content = BatchMessageContentBuilder::default()
+            .content("Partial/truncated response".to_string()) // <-- REPLACED direct .from(...)
+            .build()
+            .unwrap();
+        let result = handle_finish_reason_length("some_truncated_id", &message_content).await;
+        assert!(result.is_ok());
     }
 }

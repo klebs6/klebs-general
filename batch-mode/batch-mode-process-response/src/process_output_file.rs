@@ -134,39 +134,37 @@ mod process_output_file_tests {
     }
 
     #[traced_test]
-    fn test_process_output_file_ok() {
-        let rt = Runtime::new().unwrap();
-        rt.block_on(async {
-            info!("Starting test_process_output_file_ok with NDJSON approach.");
+    async fn test_process_output_file_ok() {
+        info!("Starting test_process_output_file_ok with NDJSON approach.");
 
-            let workspace = Arc::new(MockWorkspace::default());
-            let mut triple = BatchFileTriple::new_for_test_empty();
-            triple.set_input_path(Some("dummy_input.json".into()));
+        let workspace: Arc<dyn BatchWorkspaceInterface> = BatchWorkspace::new_temp().await.unwrap();
 
-            // We create a NamedTempFile to avoid littering permanent files:
-            let mut tmpfile = NamedTempFile::new().expect("Failed to create NamedTempFile");
-            let tmp_path = tmpfile.path().to_path_buf();
-            triple.set_output_path(Some(tmp_path.clone()));
+        let mut triple = BatchFileTriple::new_for_test_with_workspace(workspace.clone());
+        triple.set_input_path(Some("dummy_input.json".into()));
 
-            // We'll write two lines, each is a valid `BatchResponseRecord` in JSON:
-            let line_1 = r#"{"id":"batch_req_mock_item_1","custom_id":"mock_item_1","response":{"status_code":200,"request_id":"resp_req_mock_item_1","body":{"id":"someid123","object":"chat.completion","created":0,"model":"test-model","choices":[{"index":0,"message":{"role":"assistant","content":"{\"name\":\"item-from-output-file\"}"},"logprobs":null,"finish_reason":"stop"}],"usage":{"prompt_tokens":0,"completion_tokens":0,"total_tokens":0}}}}"#;
-            let line_2 = r#"{"id":"batch_req_mock_item_2","custom_id":"mock_item_2","response":{"status_code":200,"request_id":"resp_req_mock_item_2","body":{"id":"someid456","object":"chat.completion","created":0,"model":"test-model-2","choices":[{"index":0,"message":{"role":"assistant","content":"{\"name\":\"another-output-item\"}"},"logprobs":null,"finish_reason":"stop"}],"usage":{"prompt_tokens":10,"completion_tokens":10,"total_tokens":20}}}}"#;
+        // We create a NamedTempFile to avoid littering permanent files:
+        let mut tmpfile = NamedTempFile::new().expect("Failed to create NamedTempFile");
+        let tmp_path = tmpfile.path().to_path_buf();
+        triple.set_output_path(Some(tmp_path.clone()));
 
-            // Write them to the file as NDJSON (each on its own line):
-            write!(tmpfile, "{}\n{}\n", line_1, line_2).unwrap();
-            tmpfile.flush().unwrap();
+        // We'll write two lines, each is a valid `BatchResponseRecord` in JSON:
+        let line_1 = r#"{"id":"batch_req_mock_item_1","custom_id":"mock_item_1","response":{"status_code":200,"request_id":"resp_req_mock_item_1","body":{"id":"someid123","object":"chat.completion","created":0,"model":"test-model","choices":[{"index":0,"message":{"role":"assistant","content":"{\"name\":\"item-from-output-file\"}"},"logprobs":null,"finish_reason":"stop"}],"usage":{"prompt_tokens":0,"completion_tokens":0,"total_tokens":0}}}}"#;
+        let line_2 = r#"{"id":"batch_req_mock_item_2","custom_id":"mock_item_2","response":{"status_code":200,"request_id":"resp_req_mock_item_2","body":{"id":"someid456","object":"chat.completion","created":0,"model":"test-model-2","choices":[{"index":0,"message":{"role":"assistant","content":"{\"name\":\"another-output-item\"}"},"logprobs":null,"finish_reason":"stop"}],"usage":{"prompt_tokens":10,"completion_tokens":10,"total_tokens":20}}}}"#;
 
-            let result = process_output_file::<OutputFileMockItem>(
-                &triple,
-                workspace.as_ref(),
-                &ExpectedContentType::Json,
-            ).await;
+        // Write them to the file as NDJSON (each on its own line):
+        write!(tmpfile, "{}\n{}\n", line_1, line_2).unwrap();
+        tmpfile.flush().unwrap();
 
-            assert!(
-                result.is_ok(),
-                "Expected process_output_file to succeed with valid NDJSON lines"
-            );
-            debug!("test_process_output_file_ok passed successfully.");
-        });
+        let result = process_output_file::<OutputFileMockItem>(
+            &triple,
+            workspace.as_ref(),
+            &ExpectedContentType::Json,
+        ).await;
+
+        assert!(
+            result.is_ok(),
+            "Expected process_output_file to succeed with valid NDJSON lines"
+        );
+        debug!("test_process_output_file_ok passed successfully.");
     }
 }
