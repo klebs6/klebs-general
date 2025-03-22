@@ -1,3 +1,4 @@
+// ---------------- [ File: src/failing_mock.rs ]
 crate::ix!();
 
 // A similarly "failing" workspace that might simulate an error if needed

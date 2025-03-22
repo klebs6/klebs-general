@@ -1,5 +1,5 @@
-#![allow(unused_imports)]
 // ---------------- [ File: tests/trybuild/pass_valid_struct.rs ]
+#![allow(unused_imports)]
 // ===========================[ CHANGED ITEM #1 ]===========================
 //
 // In your "pass_valid_struct.rs" file, import the correct `JsonParseError` type

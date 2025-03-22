@@ -1,3 +1,4 @@
+// ---------------- [ File: src/axis_traits.rs ]
 crate::ix!();
 
 /// A trait that describes the name of an axis. Implementations usually
