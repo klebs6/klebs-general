@@ -8,19 +8,19 @@ crate::ix!();
 #[derive(Getters,LanguageModelBatchWorkflow)]
 #[getset(get = "pub")]
 #[batch_error_type(TokenExpanderError)]
-pub struct LanguageModelTokenExpander<T: CreateLanguageModelRequestsAtAgentCoordinate> {
+pub struct LanguageModelTokenExpander<T: CreateLanguageModelQueryAtAgentCoordinate> {
 
     language_model_request_creator: Arc<T>,
     agent_coordinate:               AgentCoordinate,
 
-    #[batch_client]                   client:                  Arc<dyn LanguageModelClientInterface<TokenExpanderError>>,
-    #[batch_workspace]                workspace:               Arc<BatchWorkspace>,
-    #[expected_content_type]          expected_content_type:   ExpectedContentType,
-    #[model_type]                     language_model_type:     LanguageModelType,
+    #[batch_client]          client:                  Arc<dyn LanguageModelClientInterface<TokenExpanderError>>,
+    #[batch_workspace]       workspace:               Arc<BatchWorkspace>,
+    #[expected_content_type] expected_content_type:   ExpectedContentType,
+    #[model_type]            language_model_type:     LanguageModelType,
 }
 
 impl<T> LanguageModelTokenExpander<T> 
-where T: CreateLanguageModelRequestsAtAgentCoordinate
+where T: CreateLanguageModelQueryAtAgentCoordinate
 {
     pub async fn new(
         product_root:                   impl AsRef<Path>,
@@ -47,16 +47,19 @@ where T: CreateLanguageModelRequestsAtAgentCoordinate
 }
 
 impl<T> ComputeSystemMessage for LanguageModelTokenExpander<T> 
-where T: CreateLanguageModelRequestsAtAgentCoordinate
+where T: CreateLanguageModelQueryAtAgentCoordinate
 {
     fn system_message() -> String {
-        todo!();
+        //TODO: can make this better
+        formatdoc!{
+            "We are performing a token expansion."
+        }
     }
 }
 
 /// Here we implement the trait that organizes all batch-processing stages.
 impl<T> ComputeLanguageModelCoreQuery for LanguageModelTokenExpander<T> 
-where T: CreateLanguageModelRequestsAtAgentCoordinate
+where T: CreateLanguageModelQueryAtAgentCoordinate
 {
     type Seed  = CamelCaseTokenWithComment;
 
@@ -68,18 +71,14 @@ where T: CreateLanguageModelRequestsAtAgentCoordinate
 
         trace!("Computing query core from seed...");
 
-        todo!();
-        /*
+        let coord   = self.agent_coordinate();
+        let model   = self.language_model_type();
+        let creator = self.language_model_request_creator();
 
-        let workspace = self.workspace();
-
-        let unseen = workspace.calculate_unseen_inputs(inputs);
-
-        self.language_model_request_creator().create_language_model_requests_at_agent_coordinate(
-            model,
-            &self.agent_coordinate,
-            &unseen
+        creator.create_language_model_query_at_agent_coordinate(
+            &model,
+            &coord,
+            input
         )
-        */
     }
 }

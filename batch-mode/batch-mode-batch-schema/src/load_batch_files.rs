@@ -1,9 +1,16 @@
 // ---------------- [ File: src/load_batch_files.rs ]
 crate::ix!();
 
+/**
+ * ALL-OR-NOTHING loader for the input file.  
+ * 
+ * Reads NDJSON (one `LanguageModelBatchAPIRequest` per line). 
+ * If **any** line is invalid, we immediately fail (do not skip).
+ */
 pub async fn load_input_file(path: impl AsRef<Path>) -> Result<BatchInputData, JsonParseError> {
     info!("loading input file: {:?}", path.as_ref());
 
+    // If the file doesn’t exist:
     if !path.as_ref().exists() {
         if is_test_mode() {
             warn!(
@@ -32,25 +39,23 @@ pub async fn load_input_file(path: impl AsRef<Path>) -> Result<BatchInputData, J
     while let Some(line) = lines.next_line().await? {
         let trimmed = line.trim();
         if trimmed.is_empty() {
-            trace!(
-                "Skipping empty line in input file: {}",
-                path.as_ref().display()
-            );
+            trace!("Skipping empty line in input file: {}", path.as_ref().display());
             continue;
         }
 
         trace!("Attempting to parse input line: {}", trimmed);
-        match serde_json::from_str::<LanguageModelBatchAPIRequest>(trimmed) {
-            Ok(request) => {
-                requests.push(request);
-            }
+        // ALL OR NOTHING => if parse fails, return an error immediately.
+        let request = match serde_json::from_str::<LanguageModelBatchAPIRequest>(trimmed) {
+            Ok(req) => req,
             Err(e) => {
-                // We log-and-fail for input lines because typically we *do not*
-                // want to skip malformed lines in the main input file.
-                error!("Failed to parse input line as LanguageModelBatchAPIRequest: {} => {}", trimmed, e);
+                error!(
+                    "Invalid line in input file => returning error. line='{}' error='{}'",
+                    trimmed, e
+                );
                 return Err(JsonParseError::SerdeError(e));
             }
-        }
+        };
+        requests.push(request);
     }
 
     info!(
@@ -61,6 +66,12 @@ pub async fn load_input_file(path: impl AsRef<Path>) -> Result<BatchInputData, J
     Ok(BatchInputData::new(requests))
 }
 
+/**
+ * ALL-OR-NOTHING loader for the error file.  
+ * 
+ * Reads NDJSON (one `BatchResponseRecord` per line). 
+ * If any line is invalid, we return an error. No skipping.
+ */
 pub async fn load_error_file(path: impl AsRef<Path>) -> Result<BatchErrorData, JsonParseError> {
     info!("loading error file: {:?}", path.as_ref());
 
@@ -92,37 +103,39 @@ pub async fn load_error_file(path: impl AsRef<Path>) -> Result<BatchErrorData, J
     while let Some(line) = lines.next_line().await? {
         let trimmed = line.trim();
         if trimmed.is_empty() {
-            trace!(
-                "Skipping empty line in error file: {}",
-                path.as_ref().display()
-            );
+            trace!("Skipping empty line in error file: {}", path.as_ref().display());
             continue;
         }
 
         trace!("Attempting to parse error-file line: {}", trimmed);
-        match serde_json::from_str::<BatchResponseRecord>(trimmed) {
-            Ok(response_record) => {
-                responses.push(response_record);
-            }
+        // ALL OR NOTHING => if parse fails, return an error
+        let response_record = match serde_json::from_str::<BatchResponseRecord>(trimmed) {
+            Ok(r) => r,
             Err(e) => {
-                // CHANGE: in many real batch pipelines, an unparseable line in the *error* NDJSON
-                // can appear if other test code or partial items are appended. We skip with a warn.
-                warn!(
-                    "Skipping line in error file due to parse error: {} => {}",
+                error!(
+                    "Invalid line in error file => returning error. line='{}' error='{}'",
                     trimmed, e
                 );
+                return Err(JsonParseError::SerdeError(e));
             }
-        }
+        };
+        responses.push(response_record);
     }
 
     info!(
-        "Finished loading error file: {:?}, parsed {} record(s) successfully. Invalid lines were skipped.",
-        path.as_ref(),
-        responses.len()
+        "Successfully loaded {} record(s) from error file: {:?}",
+        responses.len(),
+        path.as_ref()
     );
     Ok(BatchErrorData::new(responses))
 }
 
+/**
+ * ALL-OR-NOTHING loader for the output file.  
+ * 
+ * Reads NDJSON (one `BatchResponseRecord` per line). 
+ * If any line is invalid, we fail immediately. 
+ */
 pub async fn load_output_file(path: impl AsRef<Path>) -> Result<BatchOutputData, JsonParseError> {
     info!("loading output file: {:?}", path.as_ref());
 
@@ -154,33 +167,29 @@ pub async fn load_output_file(path: impl AsRef<Path>) -> Result<BatchOutputData,
     while let Some(line) = lines.next_line().await? {
         let trimmed = line.trim();
         if trimmed.is_empty() {
-            trace!(
-                "Skipping empty line in output file: {}",
-                path.as_ref().display()
-            );
+            trace!("Skipping empty line in output file: {}", path.as_ref().display());
             continue;
         }
 
         trace!("Attempting to parse output-file line: {}", trimmed);
-        match serde_json::from_str::<BatchResponseRecord>(trimmed) {
-            Ok(response_record) => {
-                responses.push(response_record);
-            }
+        // ALL OR NOTHING => if parse fails, return an error
+        let response_record = match serde_json::from_str::<BatchResponseRecord>(trimmed) {
+            Ok(r) => r,
             Err(e) => {
-                // CHANGE: we skip lines that fail to parse in the output NDJSON,
-                // logging a warning, so that unrelated lines won't break the entire run.
-                warn!(
-                    "Skipping line in output file due to parse error: {} => {}",
+                error!(
+                    "Invalid line in output file => returning error. line='{}' error='{}'",
                     trimmed, e
                 );
+                return Err(JsonParseError::SerdeError(e));
             }
-        }
+        };
+        responses.push(response_record);
     }
 
     info!(
-        "Finished loading output file: {:?}, parsed {} record(s) successfully. Invalid lines were skipped.",
-        path.as_ref(),
-        responses.len()
+        "Successfully loaded {} record(s) from output file: {:?}",
+        responses.len(),
+        path.as_ref()
     );
     Ok(BatchOutputData::new(responses))
 }

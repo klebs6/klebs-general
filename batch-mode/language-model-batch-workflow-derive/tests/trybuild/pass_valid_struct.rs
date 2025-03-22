@@ -80,6 +80,12 @@ impl std::str::FromStr for TestSeed {
 #[derive(Debug)]
 pub struct MyErr;
 
+impl std::fmt::Display for MyErr {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f,"MyErr")
+    }
+}
+
 // We already convert from sub-errors *into* MyErr:
 impl From<BatchDownloadError>         for MyErr { fn from(_: BatchDownloadError)       -> Self { MyErr } }
 impl From<BatchInputCreationError>    for MyErr { fn from(_: BatchInputCreationError)  -> Self { MyErr } }
@@ -93,6 +99,7 @@ impl From<BatchWorkspaceError>        for MyErr { fn from(_: BatchWorkspaceError
 impl From<FileMoveError>              for MyErr { fn from(_: FileMoveError)            -> Self { MyErr } }
 impl From<OpenAIClientError>          for MyErr { fn from(_: OpenAIClientError)        -> Self { MyErr } }
 impl From<std::io::Error>             for MyErr { fn from(_: std::io::Error)           -> Self { MyErr } }
+impl From<LanguageModelBatchCreationError> for MyErr { fn from(_: LanguageModelBatchCreationError)        -> Self { MyErr } }
 
 // Also handle JSON parse failures => MyErr:
 impl From<JsonParseError> for MyErr {

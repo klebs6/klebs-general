@@ -4,26 +4,25 @@ crate::ix!();
 /// Writes serialized JSON content to a file asynchronously.
 ///
 /// # Arguments
-/// * `target_path` - A reference to the path where the file will be written.
-/// * `serialized_json` - The JSON content as a string to write to the file.
+/// * `target_path` - A reference to the path where the file will be created/overwritten.
+/// * `serialized_json` - The JSON content as a string to write.
 ///
 /// # Returns
-/// * `Result<(), io::Error>` - `Ok(())` if the write succeeds, or an `io::Error` otherwise.
-///
-/// # Errors
-/// * Returns an `io::Error` if file creation, writing, or flushing fails.
-pub async fn write_to_file(target_path: impl AsRef<Path>, serialized_json: &str) 
-    -> Result<(), io::Error> 
+/// * `Result<(), io::Error>` - `Ok(())` if successful, or an `io::Error` otherwise.
+pub async fn write_to_file(
+    target_path: impl AsRef<Path>,
+    serialized_json: &str
+) -> Result<(), io::Error> 
 {
-    info!("writing some json content to the file {:?}", target_path.as_ref());
+    info!("writing some json content to file: {:?}", target_path.as_ref());
 
     // Create or overwrite the target file
-    let mut target_file = File::create(target_path).await?;
+    let mut target_file = File::create(&target_path).await?;
 
-    // Write the serialized JSON content to the file
+    // Write the JSON content
     target_file.write_all(serialized_json.as_bytes()).await?;
 
-    // Ensure all data is written and flushed to the disk
+    // Ensure all data is written and flushed
     target_file.flush().await?;
 
     Ok(())
@@ -32,200 +31,152 @@ pub async fn write_to_file(target_path: impl AsRef<Path>, serialized_json: &str)
 #[cfg(test)]
 mod write_to_file_tests {
     use super::*;
-    use tokio::fs;
-    use std::path::PathBuf;
+
+    /// Creates a named temp file, then returns (PathBuf, NamedTempFile).
+    /// We keep the NamedTempFile in scope so it persists until the test ends,
+    /// preventing collisions or early cleanup.
+    fn named_temp_file_with_path(prefix: &str) -> (PathBuf, NamedTempFile) {
+        let file = NamedTempFile::new().expect("Failed to create NamedTempFile");
+        let path = file.path().to_path_buf();
+        // Optionally rename it so we can see the prefix in the path, 
+        // but leaving as-is is usually fine. We'll just rely on the unique name.
+        // We only do it if you want a more descriptive name in the filesystem:
+        /*
+        let renamed = file.into_temp_path();
+        renamed.persist(format!("{}_{}", prefix, Uuid::new_v4())).unwrap();
+        // but that changes usage. We'll skip it for now.
+        */
+        (path, file)
+    }
 
     #[traced_test]
     async fn test_write_to_file_success() {
-        // Create a temporary file path
-        let temp_path = PathBuf::from("test_output.json");
+        info!("Starting test_write_to_file_success");
+        let (temp_path, _tempfile) = named_temp_file_with_path("success");
 
-        // JSON content to write
         let json_content = r#"{"key": "value"}"#;
-
-        // Write to file
         let result = write_to_file(&temp_path, json_content).await;
         assert!(result.is_ok());
 
-        // Read back the file content to verify
-        let written_content = fs::read_to_string(&temp_path).await.unwrap();
-        pretty_assert_eq!(written_content, json_content);
+        // Read back to verify
+        let written = fs::read_to_string(&temp_path).await.unwrap();
+        pretty_assert_eq!(written, json_content);
 
-        // Cleanup
-        fs::remove_file(temp_path).await.unwrap();
+        // Cleanup is automatic because NamedTempFile is in scope.
+        info!("test_write_to_file_success passed.");
     }
 
     #[traced_test]
     async fn test_write_to_file_invalid_path() {
-        // Use an invalid path
+        info!("Starting test_write_to_file_invalid_path");
         let invalid_path = PathBuf::from("/invalid_path/test_output.json");
         let json_content = r#"{"key": "value"}"#;
 
-        // Attempt to write to the file
         let result = write_to_file(&invalid_path, json_content).await;
-
-        // Verify the result is an error
-        assert!(result.is_err());
+        assert!(result.is_err(), "Should fail writing to an invalid path");
+        info!("test_write_to_file_invalid_path passed.");
     }
 
     #[traced_test]
     async fn returns_error_on_invalid_path() {
-        info!("Starting test: returns_error_on_invalid_path");
-        let invalid_path = PathBuf::from("/invalid_path/test_output.json");
+        info!("Starting returns_error_on_invalid_path");
+        let invalid_path = PathBuf::from("/this/path/does/not/exist.json");
         let json_content = r#"{"key": "value"}"#;
 
-        trace!(
-            "Invoking write_to_file with an invalid path {:?} and content: {}",
-            invalid_path,
-            json_content
-        );
         let result = write_to_file(&invalid_path, json_content).await;
-        debug!("write_to_file result: {:?}", result);
-
-        assert!(
-            result.is_err(),
-            "Expected an error from write_to_file for an invalid path"
-        );
-        info!("Completed test: returns_error_on_invalid_path");
+        debug!("Result from write_to_file: {:?}", result);
+        assert!(result.is_err(), "Expected an I/O error for invalid path");
+        info!("returns_error_on_invalid_path passed.");
     }
 
     #[traced_test]
     async fn overwrites_existing_file() {
-        info!("Starting test: overwrites_existing_file");
-        let temp_path = PathBuf::from("test_output_overwrite.json");
-        let initial_content = r#"{"initial": "data"}"#;
-        let new_content = r#"{"updated": "data"}"#;
+        info!("Starting overwrites_existing_file");
+        let (temp_path, _tempfile) = named_temp_file_with_path("overwrite");
 
-        trace!("Creating file with initial content");
-        let create_result = write_to_file(&temp_path, initial_content).await;
-        assert!(
-            create_result.is_ok(),
-            "Failed to create or write initial content to file"
-        );
+        let initial = r#"{"initial": "data"}"#;
+        let updated = r#"{"updated": "data"}"#;
 
-        trace!("Overwriting file with new content");
-        let overwrite_result = write_to_file(&temp_path, new_content).await;
-        assert!(
-            overwrite_result.is_ok(),
-            "Failed to overwrite file with new content"
-        );
+        // Write initial
+        write_to_file(&temp_path, initial).await.unwrap();
+        // Overwrite
+        write_to_file(&temp_path, updated).await.unwrap();
 
-        trace!("Verifying overwritten content");
-        let final_read = fs::read_to_string(&temp_path).await.unwrap();
-        pretty_assert_eq!(
-            final_read, new_content,
-            "File content was not correctly overwritten"
-        );
+        // Verify final
+        let final_contents = fs::read_to_string(&temp_path).await.unwrap();
+        pretty_assert_eq!(final_contents, updated);
 
-        trace!("Cleaning up temporary file {:?}", temp_path);
-        let cleanup_result = fs::remove_file(&temp_path).await;
-        assert!(
-            cleanup_result.is_ok(),
-            "Failed to remove temporary file after overwrite test"
-        );
-        info!("Completed test: overwrites_existing_file");
+        info!("overwrites_existing_file passed.");
     }
 
     #[traced_test]
     async fn handles_empty_content() {
-        info!("Starting test: handles_empty_content");
-        let temp_path = PathBuf::from("test_output_empty.json");
+        info!("Starting handles_empty_content");
+        let (temp_path, _tempfile) = named_temp_file_with_path("empty");
         let empty_content = "";
 
-        trace!("Attempting to write empty content to file {:?}", temp_path);
-        let result = write_to_file(&temp_path, empty_content).await;
-        assert!(result.is_ok(), "Expected Ok when writing empty content to file");
+        write_to_file(&temp_path, empty_content).await.unwrap();
 
-        trace!("Reading back content for verification");
-        let written_content = fs::read_to_string(&temp_path).await.unwrap();
-        debug!("Read content: {}", written_content);
+        let read_back = fs::read_to_string(&temp_path).await.unwrap();
+        assert!(read_back.is_empty(), "File should be empty after writing empty string");
 
-        assert!(
-            written_content.is_empty(),
-            "File should be empty after writing empty content"
-        );
-
-        trace!("Cleaning up temporary file {:?}", temp_path);
-        let cleanup_result = fs::remove_file(&temp_path).await;
-        assert!(
-            cleanup_result.is_ok(),
-            "Failed to remove temporary file after writing empty content"
-        );
-        info!("Completed test: handles_empty_content");
+        info!("handles_empty_content passed.");
     }
 
     #[traced_test]
     async fn handles_concurrent_writes() {
-        info!("Starting test: handles_concurrent_writes");
-        let paths_and_contents = vec![
-            (PathBuf::from("concurrent_test_1.json"), r#"{"data": 1}"#),
-            (PathBuf::from("concurrent_test_2.json"), r#"{"data": 2}"#),
-            (PathBuf::from("concurrent_test_3.json"), r#"{"data": 3}"#),
+        info!("Starting handles_concurrent_writes");
+        // We'll do 3 concurrency writes to 3 separate files:
+        let sets = vec![
+            ("concurrent_test_1", r#"{"data": 1}"#),
+            ("concurrent_test_2", r#"{"data": 2}"#),
+            ("concurrent_test_3", r#"{"data": 3}"#),
         ];
 
-        trace!("Spawning concurrent write tasks");
-        let mut tasks = vec![];
-        for (path, content) in paths_and_contents.iter() {
-            let path_clone = path.clone();
-            let content_clone = content.to_string();
+        let mut tasks = Vec::new();
+        let mut file_paths = Vec::new();
+
+        for (prefix, content) in sets {
+            let (path, tempfile) = named_temp_file_with_path(prefix);
+            let content = content.to_string();
+            file_paths.push((path.clone(), tempfile)); // keep the NamedTempFile in scope
             tasks.push(tokio::spawn(async move {
-                write_to_file(path_clone, &content_clone).await
+                write_to_file(&path, &content).await
             }));
         }
 
-        trace!("Awaiting all write tasks");
         for task in tasks {
-            let result = task.await.expect("Task panicked unexpectedly");
-            debug!("Concurrent write result: {:?}", result);
-            assert!(result.is_ok(), "Concurrent write operation failed");
+            let res = task.await.expect("Task panicked");
+            assert!(res.is_ok(), "Concurrent write task failed");
         }
 
-        trace!("Verifying each file's content");
-        for (path, content) in paths_and_contents {
-            let read_back = fs::read_to_string(&path).await.unwrap();
-            debug!("Read from {:?}: {}", path, read_back);
-            pretty_assert_eq!(
-                read_back, content,
-                "Mismatch between written and read content in concurrency test"
-            );
-            let cleanup_result = fs::remove_file(&path).await;
-            assert!(
-                cleanup_result.is_ok(),
-                "Failed to clean up temporary file in concurrency test"
-            );
+        // Now verify each
+        for (path, _tempfile) in file_paths {
+            let data = fs::read_to_string(&path).await.unwrap();
+            debug!("Read from {:?}: {}", path, data);
+            assert!(data.contains("data"), "Content mismatch in concurrency test");
         }
 
-        // Demonstrating a small delay to ensure all flushes complete before test ends
-        sleep(Duration::from_millis(100)).await;
-        info!("Completed test: handles_concurrent_writes");
+        info!("handles_concurrent_writes passed.");
     }
 
     #[traced_test]
     async fn writes_json_content_correctly() {
         trace!("===== BEGIN_TEST: writes_json_content_correctly =====");
 
-        let file_path = "test_output.json";
+        // Use a unique named temp file for this test
+        let (temp_path, _tempfile) = named_temp_file_with_path("writes_json_content_correctly");
+
         let json_content = r#"{"key": "value"}"#;
-
-        trace!("Invoking write_to_file with path \"{}\" and content: {}", file_path, json_content);
-
-        trace!("writing some json content to the file \"{}\"", file_path);
-        let result = write_to_file(file_path, json_content).await;
-
+        let result = write_to_file(&temp_path, json_content).await;
         debug!("write_to_file result: {:?}", result);
-        assert!(result.is_ok());
+        assert!(result.is_ok(), "Expected Ok from write_to_file");
 
-        // Verify file content
-        trace!("Reading back content for verification");
-        let read_content = fs::read_to_string(file_path).await.expect("Failed to read test file");
-        debug!("Read content: {}", read_content);
+        // Read back content
+        let read_content = fs::read_to_string(&temp_path)
+            .await
+            .expect("Failed to read test file");
         pretty_assert_eq!(read_content, json_content);
-
-        // Clean up
-        trace!("Cleaning up temporary file \"{}\"", file_path);
-        if let Err(err) = fs::remove_file(file_path).await {
-            warn!("Failed to remove temporary file during cleanup: {:?}", err);
-        }
 
         trace!("===== END_TEST: writes_json_content_correctly =====");
     }

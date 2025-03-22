@@ -8,6 +8,7 @@ error_tree!{
         JsonParseError(JsonParseError),
         IoError(std::io::Error),
         SerializationError(serde_json::Error),
+        MissingFilePath,
     }
 
     pub enum ErrorSavingFailedBatchEntries {
@@ -62,7 +63,7 @@ impl From<BatchReconciliationError> for MockBatchClientError {
 }
 
 impl From<BatchOutputProcessingError> for MockBatchClientError {
-    fn from(e: BatchOutputProcessingError) -> Self {
+    fn from(_e: BatchOutputProcessingError) -> Self {
         MockBatchClientError::BatchOutputProcessingError
     }
 }
@@ -74,7 +75,7 @@ impl BatchReconciliationError {
                 Some(index.clone())
             }
 
-            BatchReconciliationError::MissingBatchInputFileButOthersExist { index, output, error } => {
+            BatchReconciliationError::MissingBatchInputFileButOthersExist { index, output: _, error: _ } => {
                 Some(index.clone())
             }
             _ => None

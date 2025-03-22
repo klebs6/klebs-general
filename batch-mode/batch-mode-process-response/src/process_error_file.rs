@@ -2,20 +2,74 @@
 crate::ix!();
 
 /**
- * This is the real async function that processes the error file
- * for a given triple, using the list of error operations.
+ * Loads the error file at `path` in NDJSON format (one JSON object per line).
+ * Each line is parsed into a `BatchResponseRecord`. Invalid lines are skipped
+ * with a warning.
  */
+#[instrument(level="trace", skip_all)]
+async fn load_ndjson_error_file(
+    path: &Path
+) -> Result<BatchErrorData, BatchErrorProcessingError> {
+    info!("loading NDJSON error file: {:?}", path);
+
+    let file = File::open(path).await?;
+    let reader = BufReader::new(file);
+    let mut lines = reader.lines();
+
+    let mut responses = Vec::new();
+    while let Some(line_res) = lines.next_line().await? {
+        let trimmed = line_res.trim();
+        if trimmed.is_empty() {
+            trace!("Skipping empty line in error file: {:?}", path);
+            continue;
+        }
+
+        trace!("Parsing NDJSON error line: {}", trimmed);
+        match serde_json::from_str::<BatchResponseRecord>(trimmed) {
+            Ok(record) => {
+                responses.push(record);
+            }
+            Err(e) => {
+                warn!(
+                    "Skipping invalid JSON line in error file {:?}: {} => {}",
+                    path, trimmed, e
+                );
+            }
+        }
+    }
+
+    info!(
+        "Finished loading NDJSON error file: {:?}, found {} valid record(s).",
+        path, responses.len()
+    );
+
+    Ok(BatchErrorData::new(responses))
+}
+
+/**
+ * This is the real async function that processes the error file for a given triple,
+ * using the list of error operations. Now uses NDJSON approach line by line.
+ */
+#[instrument(level="trace", skip_all)]
 pub async fn process_error_file(
     triple:     &BatchFileTriple,
     operations: &[BatchErrorFileProcessingOperation],
 ) -> Result<(), BatchErrorProcessingError> {
 
-    let error_file = triple.error().as_ref().unwrap();
+    let error_file_path = match triple.error() {
+        Some(e) => e.clone(),
+        None => {
+            error!("No error path found in triple => cannot process error file.");
+            return Err(BatchErrorProcessingError::MissingFilePath);
+        }
+    };
 
-    info!("processing batch error file {:?} with operations: {:#?}", error_file, operations);
+    info!("processing NDJSON error file {:?} with operations: {:#?}", error_file_path, operations);
 
-    let error_data = load_error_file(error_file).await?;
+    // 1) Load error file line-by-line, parse as `BatchResponseRecord`, accumulate.
+    let error_data = load_ndjson_error_file(&error_file_path).await?;
 
+    // 2) Perform each requested operation
     for operation in operations {
         match operation {
             BatchErrorFileProcessingOperation::LogErrors => {
@@ -49,10 +103,11 @@ fn process_error_file_bridge_fn<'a>(
 }
 
 /**
- * We expose a CONST of type `BatchWorkflowProcessErrorFileFn`, so passing `&PROCESS_ERROR_FILE_BRIDGE` 
+ * We expose a CONST of type `BatchWorkflowProcessErrorFileFn`, so passing `&PROCESS_ERROR_FILE_BRIDGE`
  * exactly matches the trait's needed function pointer type.
  */
 pub const PROCESS_ERROR_FILE_BRIDGE: BatchWorkflowProcessErrorFileFn = process_error_file_bridge_fn;
+
 
 #[cfg(test)]
 mod process_error_file_tests {
@@ -60,47 +115,24 @@ mod process_error_file_tests {
 
     #[traced_test]
     fn test_process_error_file() {
-        let rt = tokio::runtime::Runtime::new().unwrap();
+        let rt = Runtime::new().unwrap();
         rt.block_on(async {
+            info!("Starting test_process_error_file with NDJSON approach.");
             let workspace = Arc::new(MockWorkspace::default());
             let mut triple = BatchFileTriple::new_for_test_empty();
-            let error_file_name = "test_error.json";
-            triple.set_error_path(Some(error_file_name.into()));
 
-            // FIX: supply error_type(...) to avoid UninitializedField("error_type")
-            let err_details = BatchErrorDetailsBuilder::default()
-                .error_type(ErrorType::Unknown("some_test_error".to_string()))
-                .code(Some("SomeErrorCode".to_string()))
-                .message("Some error occurred".to_string())
-                .build()
-                .unwrap();
+            // We'll create a NamedTempFile so no permanent file is left behind
+            let mut tmp = NamedTempFile::new().expect("Failed to create NamedTempFile");
+            let tmp_path = tmp.path().to_path_buf();
+            triple.set_error_path(Some(tmp_path.clone()));
 
-            let err_body = BatchErrorResponseBodyBuilder::default()
-                .error(err_details)
-                .build()
-                .unwrap();
+            // We'll write 2 lines, each a valid BatchResponseRecord with status_code=400
+            let line_1 = r#"{"id":"batch_req_error_id_1","custom_id":"error_id_1","response":{"status_code":400,"request_id":"resp_error_id_1","body":{"error":{"message":"Some error occurred","type":"some_test_error","param":null,"code":"SomeErrorCode"},"object":"error"}}}"#;
+            let line_2 = r#"{"id":"batch_req_error_id_2","custom_id":"error_id_2","response":{"status_code":400,"request_id":"resp_error_id_2","body":{"error":{"message":"Another error","type":"some_test_error","param":null,"code":"AnotherErrorCode"},"object":"error"}}}"#;
 
-            let response_content = BatchResponseContentBuilder::default()
-                .status_code(400_u16)
-                .request_id(ResponseRequestId::new("resp_error_id_1"))
-                .body(BatchResponseBody::Error(err_body))
-                .build()
-                .unwrap();
-
-            let record_error = BatchResponseRecordBuilder::default()
-                .id(BatchRequestId::new("id"))
-                .custom_id(CustomRequestId::new("error_id_1"))
-                .response(response_content)
-                .build()
-                .unwrap();
-
-            let error_data = BatchErrorDataBuilder::default()
-                .responses(vec![record_error])
-                .build()
-                .unwrap();
-
-            let serialized = serde_json::to_string_pretty(&error_data).unwrap();
-            std::fs::write(error_file_name, &serialized).unwrap();
+            writeln!(tmp, "{}", line_1).unwrap();
+            writeln!(tmp, "{}", line_2).unwrap();
+            tmp.flush().unwrap();
 
             let ops = vec![
                 BatchErrorFileProcessingOperation::LogErrors,
@@ -108,9 +140,12 @@ mod process_error_file_tests {
             ];
 
             let result = process_error_file(&triple, &ops).await;
-            assert!(result.is_ok());
+            assert!(
+                result.is_ok(),
+                "Expected process_error_file to parse NDJSON and succeed."
+            );
 
-            let _ = fs::remove_file(error_file_name);
+            debug!("test_process_error_file passed successfully.");
         });
     }
 }

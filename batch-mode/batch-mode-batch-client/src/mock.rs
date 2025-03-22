@@ -1,7 +1,9 @@
+#![allow(unused_variables)]
+
 // ---------------- [ File: src/mock.rs ]
 crate::ix!();
 
-/// A simple error type for the mock, so we can unify all the error conversions.
+// A simple error type for the mock, so we can unify all the error conversions.
 error_tree!{
     pub enum MockBatchClientError {
         OpenAIClientError(OpenAIClientError),
@@ -15,9 +17,11 @@ error_tree!{
         /// Required so that `E: From<JsonParseError>` is satisfied.
         JsonParseError(JsonParseError),
         BatchValidationError(BatchValidationError),
+
         BatchReconciliationError {
             index: BatchIndex,
         },
+
         BatchErrorProcessingError(BatchErrorProcessingError),
         BatchOutputProcessingError,
         FileMoveError(FileMoveError),
@@ -276,7 +280,6 @@ where
 
         // 1) Forced error checks for test triggers:
         if batch_id.is_empty() {
-            // If your test wants an “empty batch_id => error” scenario:
             let openai_err = OpenAIClientError::ApiError(OpenAIApiError {
                 message: "Cannot retrieve batch with empty batch_id".to_owned(),
                 r#type: None,
@@ -286,7 +289,6 @@ where
             return Err(E::from(openai_err));
         }
         if batch_id == "trigger_api_error" {
-            // If your test wants an "OpenAI API error" scenario:
             let openai_err = OpenAIClientError::ApiError(OpenAIApiError {
                 message: "Simulated retrieve_batch OpenAI error".to_owned(),
                 r#type: None,
@@ -296,10 +298,9 @@ where
             return Err(E::from(openai_err));
         }
         if batch_id == "trigger_other_error" {
-            // If your test wants an "IO error" scenario:
             let io_err = std::io::Error::new(
                 std::io::ErrorKind::Other,
-                "Simulated retrieve_batch non-OpenAI error"
+                "Simulated retrieve_batch non-OpenAI error",
             );
             return Err(E::from(io_err));
         }
@@ -350,9 +351,7 @@ where
         });
 
         // 4) If this batch is one we want “immediate fail,” we set it to Failed:
-        //    (You might also do this in some “configure_failure(..., is_immediate=true)” logic.)
         if batch_id == "immediate_failure_id" {
-            // Force it to remain or become `Failed`:
             batch_entry.status = BatchStatus::Failed;
         }
 
@@ -363,33 +362,34 @@ where
         }
 
         // 6) Now if the batch is InProgress but we have a planned completion => flip to Completed
-        //    Otherwise, do NOT overwrite a status=Failed or status=Cancelled, etc.
         if batch_entry.status == BatchStatus::InProgress {
             if let Some((want_output, want_error)) = maybe_plan {
-                // We only flip if we specifically planned for it
                 info!("Mock: flipping {batch_id} from InProgress -> Completed (because of planned_completions).");
                 batch_entry.status = BatchStatus::Completed;
 
-                // If requested, set output_file_id and store a mock file
+                // If requested, set output_file_id and store a single-line JSON so parsing succeeds
                 if want_output {
                     let out_id = "mock_out_file_id".to_string();
                     batch_entry.output_file_id = Some(out_id.clone());
                     self.files().write().unwrap().insert(
                         out_id,
-                        Bytes::from("{\"mock\":\"output data\"}")
+                        Bytes::from(
+r#"{"id":"batch_req_mock_output","custom_id":"mock_out","response":{"status_code":200,"request_id":"resp_req_mock_output","body":{"id":"success-id","object":"chat.completion","created":0,"model":"test-model","choices":[],"usage":{"prompt_tokens":0,"completion_tokens":0,"total_tokens":0}}},"error":null}"#
+                        ),
                     );
                 }
-                // If requested, set error_file_id and store a mock file
+                // If requested, set error_file_id and store a single-line JSON so parsing succeeds
                 if want_error {
                     let err_id = "mock_err_file_id".to_string();
                     batch_entry.error_file_id = Some(err_id.clone());
                     self.files().write().unwrap().insert(
                         err_id,
-                        Bytes::from("{\"mock\":\"error data\"}")
+                        Bytes::from(
+r#"{"id":"batch_req_mock_error","custom_id":"mock_err","response":{"status_code":400,"request_id":"resp_req_mock_error","body":{"error":{"message":"Some error message","type":"test_error","param":null,"code":null}}},"error":null}"#
+                        ),
                     );
                 }
             } else {
-                // No planned completion => remain InProgress
                 debug!("Mock: no planned completion => leaving status=InProgress for {batch_id}");
             }
         }
@@ -657,6 +657,7 @@ where
             files_guard.insert(file_id.clone(), Bytes::from("mock file content"));
         }
 
+        #[allow(deprecated)]
         let openai_file = OpenAIFile {
             id: file_id.clone(),
             bytes: 123,
@@ -690,11 +691,6 @@ where
 {
     // No additional methods; aggregator trait is just sub-traits.
 }
-
-// Demonstration of how you might test with this mock:
-// (We strongly prefer #[traced_test] alone; we wrap async with block_on.)
-use futures::executor::block_on;
-
 
 #[cfg(test)]
 mod mock_client_handle_tests {

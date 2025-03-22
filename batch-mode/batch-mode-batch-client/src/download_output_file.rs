@@ -16,11 +16,20 @@ where
     ) -> Result<(), E> {
         info!("downloading batch output file");
 
-        if self.output().is_some() {
-            return Err(BatchDownloadError::OutputFileAlreadyExists {
-                triple: self.clone(),
+        // CHANGE: Instead of failing when `self.output().is_some()`,
+        // we only fail if the path is actually present on disk.
+        if let Some(out_path) = &self.output() {
+            if out_path.exists() {
+                warn!(
+                    "Output file already present on disk at path={:?}. \
+                     Aborting to avoid overwriting.",
+                    out_path
+                );
+                return Err(BatchDownloadError::OutputFileAlreadyExists {
+                    triple: self.clone(),
+                }
+                .into());
             }
-            .into());
         }
 
         // Use associated_metadata if we have it:
@@ -41,16 +50,12 @@ where
             tokio::fs::create_dir_all(parent).await.ok();
         }
 
-        // REMOVED: `assert!(!output_path.exists());`
-        // Instead, if that file exists, the test that expects an error uses `self.output().is_some()`.
-
         std::fs::write(&output_path, file_content)?;
         self.set_output_path(Some(output_path));
 
         Ok(())
     }
 }
-
 
 #[cfg(test)]
 mod download_output_file_tests {

@@ -10,8 +10,7 @@ impl<T: TokenExpander> GetSystemMessageAtAgentCoordinate for T {
 
     fn get_system_message_at_agent_coordinate(&self, coord: &AgentCoordinate) -> String {
 
-        let llm = InstructedLanguageModelAtCoordinate::emit_detailed_json_objects(coord);
-
+        let llm   = InstructedLanguageModelAtCoordinate::emit_detailed_json_objects(coord);
         let steps = TokenExpansionStep::vec_from_axes(&self.axes());
 
         let message_header = SystemMessageHeader::from(&llm);
@@ -33,4 +32,3 @@ impl<T: TokenExpander> GetSystemMessageAtAgentCoordinate for T {
         system_message
     }
 }
-

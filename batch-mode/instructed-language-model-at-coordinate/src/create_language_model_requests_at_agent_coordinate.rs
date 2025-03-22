@@ -1,31 +1,35 @@
 // ---------------- [ File: src/create_language_model_requests_at_agent_coordinate.rs ]
 crate::ix!();
 
-pub trait CreateLanguageModelRequestsAtAgentCoordinate {
+pub trait CreateLanguageModelQueryAtAgentCoordinate {
 
-    fn create_language_model_requests_at_agent_coordinate<X:IntoLanguageModelQueryString>(
+    fn create_language_model_query_at_agent_coordinate<X:IntoLanguageModelQueryString>(
         &self,
-        model:     &LanguageModelType, 
-        coord:     &AgentCoordinate, 
-        inputs:    &[X]
+        model: &LanguageModelType, 
+        coord: &AgentCoordinate, 
+        input: &X
 
-    ) -> Vec<LanguageModelBatchAPIRequest>;
+    ) -> String;
 }
 
-impl<T:GetSystemMessageAtAgentCoordinate> CreateLanguageModelRequestsAtAgentCoordinate for T {
+impl<T:GetSystemMessageAtAgentCoordinate> CreateLanguageModelQueryAtAgentCoordinate for T {
 
-    fn create_language_model_requests_at_agent_coordinate<X:IntoLanguageModelQueryString>(
+    fn create_language_model_query_at_agent_coordinate<X:IntoLanguageModelQueryString>(
         &self,
-        model:     &LanguageModelType, 
-        coord:     &AgentCoordinate, 
-        inputs:    &[X]
+        model: &LanguageModelType, 
+        coord: &AgentCoordinate, 
+        input: &X
 
-    ) -> Vec<LanguageModelBatchAPIRequest>
-    {
+    ) -> String {
+
         let system_message = self.get_system_message_at_agent_coordinate(coord);
+        let query_string   = input.into_language_model_query_string();
 
-        let queries: Vec<String> = inputs.iter().map(|tok| tok.into_language_model_query_string()).collect();
-
-        LanguageModelBatchAPIRequest::requests_from_query_strings(&system_message,model.clone(),&queries)
+        formatdoc!{
+            "
+            {system_message}
+            {query_string}
+            "
+        }
     }
 }

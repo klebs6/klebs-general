@@ -21,22 +21,36 @@ impl Parse for ParenthesizedMessage {
 
 #[tracing::instrument(level = "trace", skip(attr))]
 pub fn try_parse_parenthesized(attr: &Attribute) -> SynResult<Option<LitStr>> {
-    trace!("Attempting parentheses/single-literal parse for attribute: {:?}", attr);
+    /*
+       We want to parse attributes of the form:
+           #[system_message_goal("some text")]
+       which in Syn 2.0 appears as `Meta::List(MetaList { path, tokens, .. })`.
 
-    // Must be system_message_goal
-    if !attr.path().is_ident("system_message_goal") {
-        return Ok(None);
+       The attribute's `tokens` will be `("some text")`, so we can parse it as a single LitStr.
+    */
+
+    let meta_opt = &attr.meta;
+    if let syn::Meta::List(list) = meta_opt {
+        // Check path
+        if list.path.is_ident("system_message_goal") {
+            // Attempt to parse the token content as a single string literal
+            if list.tokens.is_empty() {
+                trace!("List tokens are empty; cannot parse parentheses string.");
+                return Ok(None);
+            }
+            match syn::parse2::<syn::LitStr>(list.tokens.clone()) {
+                Ok(lit_str) => {
+                    debug!("Parsed system_message_goal via parentheses form: {:?}", lit_str.value());
+                    return Ok(Some(lit_str));
+                }
+                Err(e) => {
+                    trace!("Failed to parse parentheses-literal: {}", e);
+                    return Ok(None);
+                }
+            }
+        }
     }
 
-    // For parentheses style, we can parse a single literal string out of the attribute.
-    match attr.parse_args::<LitStr>() {
-        Ok(lit_str) => {
-            debug!("Successfully parsed parentheses style literal: {:?}", lit_str.value());
-            Ok(Some(lit_str))
-        }
-        Err(e) => {
-            trace!("Failed parentheses-literal parse: {}", e);
-            Ok(None)
-        }
-    }
+    trace!("Either not Meta::List or path not 'system_message_goal'; returning None.");
+    Ok(None)
 }

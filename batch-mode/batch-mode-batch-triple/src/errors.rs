@@ -5,6 +5,8 @@ error_tree!{
 
     pub enum BatchErrorProcessingError {
         JsonParseError(JsonParseError),
+        IoError(std::io::Error),
+        MissingFilePath,
     }
 
     pub enum FileMoveError {

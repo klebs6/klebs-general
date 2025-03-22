@@ -2,9 +2,57 @@
 crate::ix!();
 
 /**
- * The core async function to process the output file 
- * for a given triple. Now requiring T: 'static + Send + Sync.
+ * Loads the output file at `path` in NDJSON format (one JSON object per line).
+ * Each line is parsed into a `BatchResponseRecord`. Invalid lines are skipped
+ * with a warning, so that partial data doesn't abort the entire read.
  */
+#[instrument(level="trace", skip_all)]
+async fn load_ndjson_output_file(
+    path: &Path
+) -> Result<BatchOutputData, BatchOutputProcessingError> {
+    info!("loading NDJSON output file: {:?}", path);
+
+    // Attempt to open the file
+    let file = File::open(path).await.map_err(BatchOutputProcessingError::from)?;
+    let reader = BufReader::new(file);
+    let mut lines = reader.lines();
+
+    let mut responses = Vec::new();
+    while let Some(line_res) = lines.next_line().await? {
+        let trimmed = line_res.trim();
+        if trimmed.is_empty() {
+            trace!("Skipping empty line in output file: {:?}", path);
+            continue;
+        }
+
+        trace!("Parsing NDJSON output line: {}", trimmed);
+        match serde_json::from_str::<BatchResponseRecord>(trimmed) {
+            Ok(record) => {
+                responses.push(record);
+            }
+            Err(e) => {
+                warn!(
+                    "Skipping invalid JSON line in output file {:?}: {} => {}",
+                    path, trimmed, e
+                );
+                // We skip this line instead of failing the entire load
+            }
+        }
+    }
+
+    info!(
+        "Finished loading NDJSON output file: {:?}, found {} valid record(s).",
+        path, responses.len()
+    );
+
+    Ok(BatchOutputData::new(responses))
+}
+
+/**
+ * The core async function to process the output file for a given triple.
+ * Now we do NDJSON line-by-line parsing, just like the older batch-mode approach.
+ */
+#[instrument(level="trace", skip_all)]
 pub async fn process_output_file<T>(
     triple:                &BatchFileTriple,
     workspace:             &dyn BatchWorkspaceInterface,
@@ -14,7 +62,20 @@ where
     T: 'static + Send + Sync + DeserializeOwned + Named + GetTargetPathForAIExpansion,
 {
     trace!("process_output_file => index = {:?}", triple.index());
-    let output_data = load_output_file(triple.output().as_ref().unwrap()).await?;
+
+    // 1) Identify the path to the output file, which must be NDJSON (one record per line).
+    let output_path = match triple.output() {
+        Some(p) => p.clone(),
+        None => {
+            error!("No output path found in triple => cannot process output file.");
+            return Err(BatchOutputProcessingError::MissingFilePath);
+        }
+    };
+
+    // 2) Load as NDJSON => gather into a BatchOutputData
+    let output_data = load_ndjson_output_file(&output_path).await?;
+
+    // 3) Process all records
     process_output_data::<T>(&output_data, workspace, expected_content_type).await
 }
 
@@ -40,7 +101,10 @@ where
     })
 }
 
-/// A non-generic fallback bridging function:
+/**
+ * A default bridging function, if the user doesn't specify a particular T type.
+ * We'll parse each line as a `CamelCaseTokenWithComment` or whichever default type we prefer.
+ */
 pub fn default_output_file_bridge_fn<'a>(
     triple:    &'a BatchFileTriple,
     workspace: &'a (dyn BatchWorkspaceInterface + 'a),
@@ -48,14 +112,17 @@ pub fn default_output_file_bridge_fn<'a>(
 ) -> Pin<Box<dyn Future<Output = Result<(), BatchOutputProcessingError>> + Send + 'a>>
 {
     Box::pin(async move {
-        // Use CamelCaseTokenWithComment (or another default type) here:
+        // Use CamelCaseTokenWithComment (or any other default T) as the type:
         process_output_file::<CamelCaseTokenWithComment>(triple, workspace, ect).await
     })
 }
 
-/// The const pointer the macro references.
+/**
+ * The const pointer the macro references.
+ */
 pub const DEFAULT_OUTPUT_FILE_BRIDGE: BatchWorkflowProcessOutputFileFn 
     = default_output_file_bridge_fn;
+
 
 #[cfg(test)]
 mod process_output_file_tests {
@@ -67,65 +134,39 @@ mod process_output_file_tests {
     }
 
     #[traced_test]
-    async fn test_process_output_file_ok() {
-        let workspace = Arc::new(MockWorkspace::default());
-        let mut triple = BatchFileTriple::new_for_test_empty();
-        triple.set_input_path(Some("dummy_input.json".into()));
-        triple.set_output_path(Some("dummy_output.json".into()));
+    fn test_process_output_file_ok() {
+        let rt = Runtime::new().unwrap();
+        rt.block_on(async {
+            info!("Starting test_process_output_file_ok with NDJSON approach.");
 
-        let msg = BatchMessageBuilder::default()
-            .role(MessageRole::Assistant)
-            .content(
-                BatchMessageContentBuilder::default()
-                    .content(r#"{"name":"item-from-output-file"}"#.to_string())
-                    .build()
-                    .unwrap()
-            )
-            .build()
-            .unwrap();
+            let workspace = Arc::new(MockWorkspace::default());
+            let mut triple = BatchFileTriple::new_for_test_empty();
+            triple.set_input_path(Some("dummy_input.json".into()));
 
-        let choice = BatchChoiceBuilder::default()
-            .index(0_u32)
-            .finish_reason(FinishReason::Stop)
-            .logprobs(None)
-            .message(msg)
-            .build()
-            .unwrap();
+            // We create a NamedTempFile to avoid littering permanent files:
+            let mut tmpfile = NamedTempFile::new().expect("Failed to create NamedTempFile");
+            let tmp_path = tmpfile.path().to_path_buf();
+            triple.set_output_path(Some(tmp_path.clone()));
 
-        let success_body = BatchSuccessResponseBodyBuilder::default()
-            .id("someid123".to_string())
-            .object("response".to_string())
-            .created(0_u64)
-            .model("test-model".to_string())
-            .choices(vec![choice])
-            .usage(BatchUsage::mock())
-            .build()
-            .unwrap();
+            // We'll write two lines, each is a valid `BatchResponseRecord` in JSON:
+            let line_1 = r#"{"id":"batch_req_mock_item_1","custom_id":"mock_item_1","response":{"status_code":200,"request_id":"resp_req_mock_item_1","body":{"id":"someid123","object":"chat.completion","created":0,"model":"test-model","choices":[{"index":0,"message":{"role":"assistant","content":"{\"name\":\"item-from-output-file\"}"},"logprobs":null,"finish_reason":"stop"}],"usage":{"prompt_tokens":0,"completion_tokens":0,"total_tokens":0}}}}"#;
+            let line_2 = r#"{"id":"batch_req_mock_item_2","custom_id":"mock_item_2","response":{"status_code":200,"request_id":"resp_req_mock_item_2","body":{"id":"someid456","object":"chat.completion","created":0,"model":"test-model-2","choices":[{"index":0,"message":{"role":"assistant","content":"{\"name\":\"another-output-item\"}"},"logprobs":null,"finish_reason":"stop"}],"usage":{"prompt_tokens":10,"completion_tokens":10,"total_tokens":20}}}}"#;
 
-        let success_content = BatchResponseContentBuilder::default()
-            .status_code(200_u16)
-            .request_id(ResponseRequestId::new("resp_req_mock_item_1"))
-            .body(BatchResponseBody::Success(success_body))
-            .build()
-            .unwrap();
+            // Write them to the file as NDJSON (each on its own line):
+            write!(tmpfile, "{}\n{}\n", line_1, line_2).unwrap();
+            tmpfile.flush().unwrap();
 
-        // FIX: Supply id(...) so the builder doesn't fail with "UninitializedField('id')"
-        let record_ok = BatchResponseRecordBuilder::default()
-            .id(BatchRequestId::new("batch_req_mock_item_1"))
-            .custom_id(CustomRequestId::new("mock_item_1"))
-            .response(success_content)
-            .build()
-            .unwrap();
+            let result = process_output_file::<OutputFileMockItem>(
+                &triple,
+                workspace.as_ref(),
+                &ExpectedContentType::Json,
+            ).await;
 
-        let output_data = BatchOutputData::new(vec![record_ok]);
-        let text = serde_json::to_string_pretty(&output_data).unwrap();
-        std::fs::write("dummy_output.json", text).unwrap();
-
-        let result = process_output_file::<OutputFileMockItem>(
-            &triple,
-            workspace.as_ref(),
-            &ExpectedContentType::Json
-        ).await;
-        assert!(result.is_ok());
+            assert!(
+                result.is_ok(),
+                "Expected process_output_file to succeed with valid NDJSON lines"
+            );
+            debug!("test_process_output_file_ok passed successfully.");
+        });
     }
 }

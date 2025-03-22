@@ -130,6 +130,20 @@ impl BatchFileTriple {
 
 impl BatchFileTriple {
 
+    pub fn new_for_test_unique(workspace: Arc<dyn BatchWorkspaceInterface>) -> Self {
+        
+        // Now build the triple, but override the “index” or “output filename” with something unique:
+        let triple = BatchFileTriple::new_direct(
+            // Or pick some new function signature. For now, we pass a mocked index:
+            &BatchIndex::new(/*this is random uuid4 */),
+            None, None, None, None,
+            workspace,
+        );
+        
+        // If you prefer, also set triple metadata path, etc. 
+        triple
+    }
+
     pub fn new_for_test_with_metadata_path_unique(metadata_path: PathBuf) -> Self {
         // Any random generator or unique ID logic. We'll just do a
         // thread‐local counter or random number for demonstration:

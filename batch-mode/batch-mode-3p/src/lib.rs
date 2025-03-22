@@ -11,7 +11,7 @@ pub fn is_test_mode() -> bool {
 
 pub use pretty_assertions::{assert_eq as pretty_assert_eq};
 pub use structopt::{self,StructOpt};
-pub use tokio::runtime::Runtime as TokioRuntime;
+pub use tokio::runtime::Runtime;
 pub use std::borrow::Cow;
 pub use strum::{self,VariantNames,IntoEnumIterator};
 pub use strum_macros::{Display as StrumDisplay, EnumIter, EnumString, EnumVariantNames};
@@ -72,7 +72,7 @@ pub use tracing_setup::*;
 pub use tracing::{self,instrument,trace,info,debug,error,warn};
 pub use std::cell::RefCell;
 pub use std::rc::Rc;
-pub use tempfile::{self,tempdir,TempDir};
+pub use tempfile::{self,NamedTempFile,tempdir,TempDir};
 pub use std::cmp::Ordering;
 pub use uuid::{self,Uuid};
 pub use std::sync::{RwLock,Arc};

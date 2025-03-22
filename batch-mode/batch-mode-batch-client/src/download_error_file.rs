@@ -16,18 +16,25 @@ where
     ) -> Result<(), E> {
         info!("downloading batch error file");
 
-        if self.error().is_some() {
-            return Err(BatchDownloadError::ErrorFileAlreadyExists {
-                triple: self.clone(),
+        // CHANGE: Instead of failing when `self.error().is_some()`,
+        // we only fail if the path is actually present on disk.
+        if let Some(err_path) = &self.error() {
+            if err_path.exists() {
+                warn!(
+                    "Error file already present on disk at path={:?}. \
+                     Aborting to avoid overwriting.",
+                    err_path
+                );
+                return Err(BatchDownloadError::ErrorFileAlreadyExists {
+                    triple: self.clone(),
+                }
+                .into());
             }
-            .into());
         }
 
-        // Prefer associated_metadata if set:
-        let metadata_filename: PathBuf = if let Some(path) = self.associated_metadata() {
-            path.clone()
-        } else {
-            self.effective_metadata_filename()
+        let metadata_filename = match self.associated_metadata() {
+            Some(file) => file.to_path_buf(),
+            None => self.effective_metadata_filename().to_path_buf(),
         };
         debug!("Using metadata file for error: {:?}", metadata_filename);
 
@@ -41,7 +48,10 @@ where
             tokio::fs::create_dir_all(parent).await.ok();
         }
 
-        // REMOVED: `assert!(!error_path.exists());`
+        // Force removal if the file already exists, so no leftover content remains:
+        if error_path.exists() {
+            std::fs::remove_file(&error_path)?;
+        }
 
         std::fs::write(&error_path, file_content)?;
         self.set_error_path(Some(error_path));

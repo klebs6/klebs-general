@@ -111,86 +111,6 @@ mod fresh_execute_tests {
         format!("mock_batch_id_for_{}", input_file_id)
     }
 
-    /// Reusable snippet: sets a batch to "Completed" with an output_file_id, an error_file_id,
-    /// or both, as desired. Also inserts the corresponding Bytes in the mock's `files` map,
-    /// so that `file_content` calls succeed.
-    ///
-    /// This is needed so that when `wait_for_batch_completion` flips from InProgress -> Completed,
-    /// the final batch object has the correct file IDs. Then the test code's `fresh_execute`
-    /// sees them and downloads them successfully.
-    fn configure_mock_batch_for_success(
-        mock_client: &MockLanguageModelClient<MockBatchClientError>,
-        batch_id: &str,
-        want_output: bool,
-        want_error: bool,
-    ) {
-        let mut guard = mock_client.batches().write().unwrap();
-        if let Some(batch_entry) = guard.get_mut(batch_id) {
-            // Force status = Completed
-            batch_entry.status = BatchStatus::Completed;
-            if want_output {
-                batch_entry.output_file_id = Some("mock_out_file_id".to_string());
-            }
-            if want_error {
-                batch_entry.error_file_id = Some("mock_err_file_id".to_string());
-            }
-        } else {
-            // The batch might not exist yet (if the test hasn't triggered create_batch).
-            // We'll insert a new one. But typically we do this *after* the test calls
-            // create_batch, so we expect to see an existing batch. For safety:
-            warn!("We inserted a new batch with Completed status for id={batch_id:?}");
-            guard.insert(
-                batch_id.to_string(),
-                Batch {
-                    id: batch_id.to_string(),
-                    object: "batch".to_string(),
-                    endpoint: "/v1/chat/completions".to_string(),
-                    errors: None,
-                    input_file_id: "inserted_dummy".to_string(),
-                    completion_window: "24h".to_string(),
-                    status: BatchStatus::Completed,
-                    output_file_id: if want_output {
-                        Some("mock_out_file_id".to_string())
-                    } else {
-                        None
-                    },
-                    error_file_id: if want_error {
-                        Some("mock_err_file_id".to_string())
-                    } else {
-                        None
-                    },
-                    created_at: 0,
-                    in_progress_at: None,
-                    expires_at: None,
-                    finalizing_at: None,
-                    completed_at: None,
-                    failed_at: None,
-                    expired_at: None,
-                    cancelling_at: None,
-                    cancelled_at: None,
-                    request_counts: None,
-                    metadata: None,
-                },
-            );
-        }
-        drop(guard); // release the lock
-
-        // Insert the corresponding file contents in the mock's "files" store
-        let mut files_guard = mock_client.files().write().unwrap();
-        if want_output {
-            files_guard.insert(
-                "mock_out_file_id".to_string(),
-                Bytes::from("{\"mock\":\"output data\"}"),
-            );
-        }
-        if want_error {
-            files_guard.insert(
-                "mock_err_file_id".to_string(),
-                Bytes::from("{\"mock\":\"error data\"}"),
-            );
-        }
-    }
-
     /// For "immediate_failure" or "eventual_failure" we want the final batch to end up with status=Failed.
     /// Because the mock by default toggles from InProgress -> Completed, we can forcibly override
     /// the final result to be "Failed" on the second retrieval. We'll do that by storing the
@@ -263,6 +183,134 @@ mod fresh_execute_tests {
                 },
             );
         }
+    }
+
+    #[tracing::instrument(level = "trace", skip(mock_client))]
+    pub fn configure_mock_batch_for_success(
+        mock_client: &MockLanguageModelClient<MockBatchClientError>,
+        batch_id: &str,
+        want_output: bool,
+        want_error: bool,
+    ) {
+        trace!("Configuring mock batch for success with batch_id='{}', want_output={}, want_error={}", batch_id, want_output, want_error);
+
+        // Force the batch's status = Completed and set output_file_id/error_file_id if requested
+        {
+            let mut guard = mock_client.batches().write().unwrap();
+            match guard.get_mut(batch_id) {
+                Some(batch_entry) => {
+                    debug!("Found existing batch entry for batch_id='{}'; setting status=Completed.", batch_id);
+                    batch_entry.status = BatchStatus::Completed;
+                    if want_output {
+                        batch_entry.output_file_id = Some("mock_out_file_id".to_string());
+                    }
+                    if want_error {
+                        batch_entry.error_file_id = Some("mock_err_file_id".to_string());
+                    }
+                }
+                None => {
+                    warn!("No existing batch entry for batch_id='{}'; inserting a new one with Completed status.", batch_id);
+                    guard.insert(
+                        batch_id.to_string(),
+                        Batch {
+                            id: batch_id.to_string(),
+                            object: "batch".to_string(),
+                            endpoint: "/v1/chat/completions".to_string(),
+                            errors: None,
+                            input_file_id: "inserted_dummy".to_string(),
+                            completion_window: "24h".to_string(),
+                            status: BatchStatus::Completed,
+                            output_file_id: if want_output {
+                                Some("mock_out_file_id".to_string())
+                            } else {
+                                None
+                            },
+                            error_file_id: if want_error {
+                                Some("mock_err_file_id".to_string())
+                            } else {
+                                None
+                            },
+                            created_at: 0,
+                            in_progress_at: None,
+                            expires_at: None,
+                            finalizing_at: None,
+                            completed_at: None,
+                            failed_at: None,
+                            expired_at: None,
+                            cancelling_at: None,
+                            cancelled_at: None,
+                            request_counts: None,
+                            metadata: None,
+                        },
+                    );
+                }
+            }
+        }
+
+        // Insert the corresponding file contents into the mock's "files" map so
+        // that calls to `file_content("mock_out_file_id")` or `file_content("mock_err_file_id")`
+        // will return valid JSON that can be parsed as BatchResponseRecord.
+        {
+            let mut files_guard = mock_client.files().write().unwrap();
+
+            if want_output {
+                debug!("Inserting mock_out_file_id with a valid BatchResponseRecord JSON line.");
+                files_guard.insert(
+                    "mock_out_file_id".to_string(),
+                    Bytes::from(
+    r#"{
+      "id": "batch_req_mock_output",
+      "custom_id": "mock_out",
+      "response": {
+        "status_code": 200,
+        "request_id": "resp_req_mock_output",
+        "body": {
+          "id": "success-id",
+          "object": "chat.completion",
+          "created": 0,
+          "model": "test-model",
+          "choices": [],
+          "usage": {
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "total_tokens": 0
+          }
+        }
+      },
+      "error": null
+    }"#,
+                    ),
+                );
+            }
+
+            if want_error {
+                debug!("Inserting mock_err_file_id with a valid BatchResponseRecord JSON line (status=400).");
+                files_guard.insert(
+                    "mock_err_file_id".to_string(),
+                    Bytes::from(
+    r#"{
+      "id": "batch_req_mock_error",
+      "custom_id": "mock_err",
+      "response": {
+        "status_code": 400,
+        "request_id": "resp_req_mock_error",
+        "body": {
+          "error": {
+            "message": "Some error message",
+            "type": "test_error",
+            "param": null,
+            "code": null
+          }
+        }
+      },
+      "error": null
+    }"#,
+                    ),
+                );
+            }
+        }
+
+        trace!("configure_mock_batch_for_success done for batch_id='{}'", batch_id);
     }
 
     #[traced_test]
