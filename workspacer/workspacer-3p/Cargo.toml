@@ -13,6 +13,7 @@ keywords = ["workspace", "crate", "validation", "coverage", "dependency"]
 categories = ["development-tools"]
 
 [dependencies]
+lazy_static             = "*"
 named-item              = "0.6.0"
 named-item-derive       = "0.2.0"
 reqwest                 = "0.12.12"

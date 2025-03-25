@@ -1,0 +1,15 @@
+[dependencies]
+derive_builder = "*"
+getset = "*"
+[dependencies.workspacer-3p]
+path = "../workspacer-3p"
+[dependencies.workspacer-errors]
+path = "../workspacer-errors"
+[dependencies.workspacer-toml]
+path = "../workspacer-toml"
+[dependencies.workspacer-toml-interface]
+path = "../workspacer-toml-interface"
+[package]
+edition = "2024"
+name = "workspacer-toml-mock"
+version = "0.1.0"

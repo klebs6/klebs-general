@@ -23,21 +23,23 @@ where
     for<'async_trait> P: From<PathBuf> + AsRef<Path> + Send + Sync + 'async_trait,
     T: CrateHandleInterface<P> 
 {
-    fn crates(&self) -> &[Arc<Mutex<T>>];
+    fn crates(&self) -> &[Arc<AsyncMutex<T>>];
 }
 
 pub trait NumCrates {
     fn n_crates(&self) -> usize;
 }
 
+#[async_trait]
 pub trait FindCrateByName<P,T> 
 where 
     for<'async_trait> P: From<PathBuf> + AsRef<Path> + Send + Sync + 'async_trait,
     T: CrateHandleInterface<P> 
 {
-    fn find_crate_by_name(&self, name: &str) -> Option<Arc<Mutex<T>>>;
+    async fn find_crate_by_name(&self, name: &str) -> Option<Arc<AsyncMutex<T>>>;
 }
 
+#[async_trait]
 pub trait GetAllCrateNames {
-    fn get_all_crate_names(&self) -> Vec<String>;
+    async fn get_all_crate_names(&self) -> Vec<String>;
 }

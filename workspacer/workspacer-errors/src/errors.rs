@@ -221,6 +221,9 @@ error_tree!{
 
     #[derive(Clone)]
     pub enum CrateError {
+        SimulatedIntegrityFailureInMockCrate,
+        SimulatedInvalidVersionFormat,
+        SemverError(Arc<semver::Error>),
 
         ReadmeWriteError(ReadmeWriteError),
 

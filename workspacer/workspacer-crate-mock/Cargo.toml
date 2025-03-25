@@ -1,0 +1,23 @@
+[package]
+edition = "2024"
+name    = "workspacer-crate-mock"
+version = "0.1.0"
+
+[dependencies]
+derive_builder = "*"
+getset         = "*"
+
+[dependencies.workspacer-3p]
+path = "../workspacer-3p"
+[dependencies.workspacer-errors]
+path = "../workspacer-errors"
+[dependencies.workspacer-toml-mock]
+path = "../workspacer-toml-mock"
+[dependencies.workspacer-toml-interface]
+path = "../workspacer-toml-interface"
+[dependencies.workspacer-toml]
+path = "../workspacer-toml"
+[dependencies.workspacer-crate]
+path = "../workspacer-crate"
+[dependencies.workspacer-crate-interface]
+path = "../workspacer-crate-interface"

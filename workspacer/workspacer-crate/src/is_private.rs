@@ -1,17 +1,18 @@
 // ---------------- [ File: workspacer-crate/src/is_private.rs ]
 crate::ix!();
 
+#[async_trait]
 impl IsPrivate for CrateHandle
 {
     type Error = CrateError;
     /// Checks if the crate is private by reading the 'publish' field
     /// or 'publish = false' or 'package.publish = false' in Cargo.toml.
     /// Returns `Ok(true)` if private, `Ok(false)` if not private.
-    fn is_private(&self) -> Result<bool, Self::Error>
+    async fn is_private(&self) -> Result<bool, Self::Error>
     {
         let cargo_toml = self.cargo_toml();
 
-        let cargo_toml_guard = cargo_toml.lock().unwrap();
+        let cargo_toml_guard = cargo_toml.lock().await;
 
         let pkg_section = cargo_toml_guard.get_package_section()?;
 

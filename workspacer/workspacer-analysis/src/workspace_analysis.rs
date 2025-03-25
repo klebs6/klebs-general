@@ -9,20 +9,35 @@ pub trait Analyze {
     async fn analyze(&self) -> Result<Self::Analysis, Self::Error>;
 }
 
+/// Here we implement `Analyze` for `Workspace<P, H>`.
+/// Notice that each crate is `Arc<Mutex<H>>`. Now that we have "passthrough" impls
+/// (see below), `Arc<Mutex<H>>` will satisfy `HasTestsDirectory + GetTestFiles + GetSourceFilesWithExclusions`.
 #[async_trait]
-impl<P,H:CrateHandleInterface<P>> Analyze for Workspace<P,H> 
-where for<'async_trait> P: From<PathBuf> + AsRef<Path> + Send + Sync + 'async_trait
+impl<P, H> Analyze for Workspace<P, H>
+where
+    for<'async_trait> P: From<PathBuf> + AsRef<Path> + Send + Sync + 'async_trait,
+    for<'async_trait> H: CrateHandleInterface<P>
+        + HasTestsDirectory
+        + GetTestFiles
+        + GetSourceFilesWithExclusions
+        + Send
+        + Sync
+        + 'async_trait,
 {
-
     type Analysis = WorkspaceSizeAnalysis;
     type Error    = WorkspaceError;
 
     async fn analyze(&self) -> Result<Self::Analysis, Self::Error> {
+        info!("Analyzing entire workspace for size metrics...");
 
-        let mut builder = WorkspaceSizeAnalysis::builder();
+        let mut builder = WorkspaceAnalysisBuilder::new();
 
         for crate_handle in self.crates() {
-            let crate_analysis = CrateAnalysis::new(crate_handle).await?;
+            // Now that we've given Arc<Mutex<H>> passthrough impls (below),
+            // we can call `CrateAnalysis::new(&*crate_handle)`.
+            // The `&*crate_handle` turns the `Arc<Mutex<H>>` reference into something
+            // that implements `HasTestsDirectory + GetTestFiles + GetSourceFilesWithExclusions`.
+            let crate_analysis = CrateAnalysis::new(&*crate_handle).await?;
             builder.add_crate_analysis(crate_analysis);
         }
 

@@ -1,23 +1,39 @@
 // ---------------- [ File: workspacer-crate/src/crate_handle.rs ]
 crate::ix!();
 
-#[derive(Serialize,Deserialize,Builder,Getters,Debug,Clone)]
+#[derive(Builder,Getters,Debug,Clone)]
 #[getset(get="pub")]
 #[builder(setter(into))]
 pub struct CrateHandle {
     crate_path:        PathBuf,
-    cargo_toml_handle: Arc<Mutex<CargoToml>>,
+    cargo_toml_handle: Arc<AsyncMutex<CargoToml>>,
 }
 
 impl Named for CrateHandle {
-    fn name(&self) -> Cow<'_, str> {
-        Cow::Owned(
-            self.cargo_toml_handle.lock().unwrap()
+    fn name(&self) -> std::borrow::Cow<'_, str> {
+        use tracing::{trace, debug, info};
+
+        trace!("Entering CrateHandle::name");
+
+        // Clone so the async closure can be 'static without borrowing &self.
+        let cargo_toml_handle = self.cargo_toml_handle.clone();
+
+        let package_name = run_async_without_nested_runtime(async move {
+            trace!("Locking cargo_toml_handle in async block");
+            let guard = cargo_toml_handle.lock().await;
+            let name = guard
                 .package_name()
-                .expect("expect that our crate has a package name")
-                .trim_matches('"')
-                .to_string()
-        )
+                .expect("Expected a valid package name");
+            debug!("Retrieved package name from guard: {:?}", name);
+            name
+        });
+
+        info!("Synchronous retrieval of package name succeeded: {}", package_name);
+
+        let trimmed = package_name.trim_matches('"').to_string();
+        trace!("Trimmed package name: {}", trimmed);
+
+        std::borrow::Cow::Owned(trimmed)
     }
 }
 
@@ -25,8 +41,21 @@ impl Versioned for CrateHandle {
     type Error = CrateError;
 
     fn version(&self) -> Result<semver::Version, Self::Error> {
-        trace!("CrateHandle::version() - retrieving version via cargo_toml_handle");
-        let mut version_str = self.cargo_toml_handle.lock().unwrap().version()?.to_string();
+        use tracing::{trace, debug, error, info};
+        trace!("CrateHandle::version() - retrieving version from cargo_toml_handle");
+
+        // Clone so the async closure does not capture &self.
+        let cargo_toml_handle = self.cargo_toml_handle.clone();
+
+        let mut version_str = run_async_without_nested_runtime(async move {
+            trace!("Locking cargo_toml_handle in async block for version");
+            let guard = cargo_toml_handle.lock().await;
+            guard
+                .version()
+                .expect("expected our Cargo.toml to have a valid `version`")
+                .to_string()
+        });
+
         debug!("Raw version_str from CargoTomlHandle: {:?}", version_str);
 
         // Clean/trim quotes if present
@@ -36,11 +65,14 @@ impl Versioned for CrateHandle {
         // Parse as semver
         let parsed = semver::Version::parse(&version_str)
             .map_err(|e| {
-                error!("Failed to parse semver from string='{}': {:?}", version_str, e);
+                error!(
+                    "Failed to parse semver from string='{}': {:?}",
+                    version_str, e
+                );
                 CrateError::CargoTomlError(CargoTomlError::SemverError(Arc::new(e)))
             })?;
 
-        info!("CrateHandle::version() - final parsed version for {:?} => {}", self.as_ref(), parsed);
+        info!("Parsed semver for {:?} => {}", self.as_ref(), parsed);
         Ok(parsed)
     }
 }
@@ -84,7 +116,7 @@ where
 
         let cargo_toml_path = crate_path.cargo_toml_path_buf().await?;
 
-        let cargo_toml_handle = Arc::new(Mutex::new(CargoToml::new(cargo_toml_path).await?));
+        let cargo_toml_handle = Arc::new(AsyncMutex::new(CargoToml::new(cargo_toml_path).await?));
 
         Ok(Self {
             cargo_toml_handle,
@@ -114,7 +146,7 @@ impl CrateHandle
 
         let cargo_toml_path = crate_path.cargo_toml_path_buf_sync()?;
 
-        let cargo_toml_handle = Arc::new(Mutex::new(CargoToml::new_sync(cargo_toml_path)?));
+        let cargo_toml_handle = Arc::new(AsyncMutex::new(CargoToml::new_sync(cargo_toml_path)?));
 
         Ok(Self {
             cargo_toml_handle,
@@ -124,16 +156,25 @@ impl CrateHandle
 }
 
 impl ValidateIntegrity for CrateHandle {
-
     type Error = CrateError;
 
-    /// Validates the integrity of a crate by checking required files and directory structure
     fn validate_integrity(&self) -> Result<(), Self::Error> {
+        use tracing::{trace, error};
 
-        let cargo_toml = self.cargo_toml();
+        trace!("CrateHandle::validate_integrity() - will lock cargo_toml_handle via async");
 
-        cargo_toml.lock().unwrap().validate_integrity()?;
+        // Clone so the async block can own the handle.
+        let cargo_toml_handle = self.cargo_toml_handle.clone();
+        
+        // Run async code without nesting runtimes
+        run_async_without_nested_runtime(async move {
+            trace!("Locking cargo_toml_handle in async block to validate CargoToml");
+            let guard = cargo_toml_handle.lock().await;
+            guard.validate_integrity()?;
+            Ok::<(),CrateError>(())
+        })?;
 
+        // Now do any synchronous checks
         self.check_src_directory_contains_valid_files()?;
         self.check_readme_exists()?;
 
@@ -270,10 +311,19 @@ impl GetFilesInDirectoryWithExclusions for CrateHandle {
 
 impl HasCargoToml for CrateHandle {
 
-    fn cargo_toml(&self) -> Arc<Mutex<dyn CargoTomlInterface>> {
+    fn cargo_toml(&self) -> Arc<AsyncMutex<dyn CargoTomlInterface>> {
         self.cargo_toml_handle.clone()
     }
 }
+
+impl CrateHandle {
+
+    /// sometimes we need to do this, but do try not to
+    pub fn cargo_toml_direct(&self) -> Arc<AsyncMutex<CargoToml>> {
+        self.cargo_toml_handle.clone()
+    }
+}
+
 
 impl AsRef<Path> for CrateHandle {
     /// Allows CrateHandle to be used as a path by referencing crate_path

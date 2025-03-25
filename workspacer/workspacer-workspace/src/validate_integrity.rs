@@ -10,7 +10,13 @@ where for<'async_trait> P: From<PathBuf> + AsRef<Path> + Send + Sync + 'async_tr
     ///
     fn validate_integrity(&self) -> Result<(), Self::Error> {
         for crate_handle in self {
-            crate_handle.lock().expect("expected to be able to lock our crate").validate_integrity()?;
+            let handle = crate_handle.clone();
+            run_async_without_nested_runtime(async move {
+                trace!("Locking cargo_toml_handle in async block to validate CargoToml");
+                let guard = handle.lock().await;
+                guard.validate_integrity()?;
+                Ok::<(),WorkspaceError>(())
+            })?;
         }
         Ok(())
     }

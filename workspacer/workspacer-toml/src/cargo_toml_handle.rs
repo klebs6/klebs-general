@@ -87,6 +87,48 @@ impl UpdateDependencyVersionRaw for CargoToml {
     }
 }
 
+#[async_trait]
+impl WriteDocumentBack for CargoToml {
+
+    type Error = CargoTomlError;
+
+    async fn write_document_back(&mut self, doc: &toml_edit::Document) 
+        -> Result<(),Self::Error> 
+    {
+        let doc_str = doc.to_string();
+        debug!("Writing pinned TOML back to {:?}", self.as_ref());
+        Ok(
+            tokio::fs::write(self.as_ref(), doc_str)
+            .await
+            .map_err(|ioe| CargoTomlWriteError::WriteError {
+                io: ioe.into(),
+                cargo_toml_file: self.as_ref().to_path_buf(),
+            })?
+        )
+    }
+}
+
+#[async_trait]
+impl DocumentClone for CargoToml {
+
+    type Error = CargoTomlError;
+
+    async fn document_clone(&self) -> Result<toml_edit::Document,Self::Error> {
+
+        let original = tokio::fs::read_to_string(self.as_ref())
+            .await
+            .map_err(|ioe| CargoTomlError::ReadError { io: ioe.into() })?;
+
+        let parse_result = original.parse::<toml_edit::Document>();
+
+        Ok(parse_result
+            .map_err(|parse_err| CargoTomlError::TomlEditError {
+                cargo_toml_file: self.as_ref().to_path_buf(),
+                toml_parse_error: parse_err,
+            })?)
+    }
+}
+
 impl Versioned for CargoToml {
     type Error = CargoTomlError;
 
@@ -95,35 +137,12 @@ impl Versioned for CargoToml {
     /// the version on disk, calling `.version()` immediately afterwards
     /// will see the newly updated version.
     fn version(&self) -> Result<semver::Version, Self::Error> {
+
         trace!("CargoToml::version: forcing a fresh read from disk");
-        let contents = std::fs::read_to_string(&self.path).map_err(|io_err| {
-            error!("I/O error re-reading cargo toml at {:?}", self.path);
-            CargoTomlError::ReadError {
-                io: Arc::new(io_err),
-            }
-        })?;
 
-        let doc = contents.parse::<toml_edit::Document>().map_err(|toml_err| {
-            error!("Could not parse cargo toml at {:?}: {:?}", self.path, toml_err);
-            CargoTomlError::TomlEditError {
-                cargo_toml_file: self.path.clone(),
-                toml_parse_error: toml_err,
-            }
-        })?;
+        let package_section = self.get_package_section()?;
 
-        // Now we effectively do the same integrity checks that were in `check_required_fields_for_integrity()`
-        // but inline, because we must do them on this new parse.
-        let pkg_table = doc.get("package")
-            .and_then(|it| it.as_table())
-            .ok_or_else(|| {
-                error!("Missing [package] table in {:?}", self.path);
-                CargoTomlError::MissingRequiredFieldForIntegrity {
-                    cargo_toml_file: self.path.clone(),
-                    field: "package".to_string(),
-                }
-            })?;
-
-        let ver_item = pkg_table.get("version").ok_or_else(|| {
+        let ver_item = package_section.get("version").ok_or_else(|| {
             error!("Missing 'version' in [package] for {:?}", self.path);
             CargoTomlError::MissingRequiredFieldForIntegrity {
                 cargo_toml_file: self.path.clone(),

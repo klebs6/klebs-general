@@ -28,7 +28,22 @@ pub trait CargoTomlInterface
 + GetLicenseTypeOrFallback<Error=CargoTomlError>
 + GetCrateRepositoryLocation<Error=CargoTomlError>
 + GetCrateRepositoryLocationOrFallback<Error=CargoTomlError>
++ WriteDocumentBack<Error=CargoTomlError>
++ DocumentClone<Error=CargoTomlError>
 {}
+
+#[async_trait]
+pub trait WriteDocumentBack {
+    type Error;
+    async fn write_document_back(&mut self, doc: &toml_edit::Document) 
+        -> Result<(),Self::Error>; 
+}
+
+#[async_trait]
+pub trait DocumentClone {
+    type Error;
+    async fn document_clone(&self) -> Result<toml_edit::Document,Self::Error>;
+}
 
 #[async_trait]
 pub trait SaveToDisk {
@@ -45,9 +60,10 @@ pub trait UpdateDependencyVersionRaw {
     ) -> Result<bool, Self::Error>;
 }
 
+#[async_trait]
 pub trait GatherBinTargetNames {
     type Error;
-    fn gather_bin_target_names(&self) -> Result<Vec<String>, Self::Error>;
+    async fn gather_bin_target_names(&self) -> Result<Vec<String>, Self::Error>;
 }
 
 pub trait Versioned {

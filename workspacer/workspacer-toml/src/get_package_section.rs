@@ -28,10 +28,11 @@ impl GetPackageSectionMut for CargoToml {
     }
 }
 
+#[async_trait]
 impl GatherBinTargetNames for CargoToml {
     type Error = CargoTomlError;
 
-    fn gather_bin_target_names(&self) -> Result<Vec<String>, Self::Error> {
+    async fn gather_bin_target_names(&self) -> Result<Vec<String>, Self::Error> {
         let binding = Vec::new();
         // 1) Look up `[bin]` array if it exists
         let bin_array = self

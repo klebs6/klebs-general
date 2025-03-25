@@ -11,7 +11,8 @@ where for<'async_trait> P: From<PathBuf> + AsRef<Path> + Send + Sync + 'async_tr
     async fn ready_for_cargo_publish(&self) -> Result<(), WorkspaceError> {
         let mut errors = vec![];
         for crate_handle in self {
-            if let Err(e) = crate_handle.ready_for_cargo_publish().await {
+            let guard = crate_handle.lock().unwrap();
+            if let Err(e) = guard.ready_for_cargo_publish().await {
                 errors.push(e);
             }
         }

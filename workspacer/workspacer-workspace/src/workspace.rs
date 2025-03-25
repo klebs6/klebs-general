@@ -8,7 +8,7 @@ pub struct Workspace<P,H:CrateHandleInterface<P>>
 where for<'async_trait> P: From<PathBuf> + AsRef<Path> + Send + Sync + 'async_trait 
 {
     path:   P,
-    crates: Vec<Arc<Mutex<H>>>,
+    crates: Vec<Arc<AsyncMutex<H>>>,
 }
 
 impl<P,H:CrateHandleInterface<P>> WorkspaceInterface<P,H> for Workspace<P,H> 
@@ -27,17 +27,18 @@ where for<'async_trait> P: From<PathBuf> + AsRef<Path> + Send + Sync + 'async_tr
 impl<P,H:CrateHandleInterface<P>> GetCrates<P,H> for Workspace<P,H> 
 where for<'async_trait> P: From<PathBuf> + AsRef<Path> + Send + Sync + 'async_trait
 {
-    fn crates(&self) -> &[Arc<Mutex<H>>] {
+    fn crates(&self) -> &[Arc<AsyncMutex<H>>] {
         &self.crates
     }
 }
 
+#[async_trait]
 impl<P,H:CrateHandleInterface<P>> FindCrateByName<P,H> for Workspace<P,H> 
 where for<'async_trait> P: From<PathBuf> + AsRef<Path> + Send + Sync + 'async_trait
 {
-    fn find_crate_by_name(&self, name: &str) -> Option<Arc<Mutex<H>>> {
+    async fn find_crate_by_name(&self, name: &str) -> Option<Arc<AsyncMutex<H>>> {
         for item in self.crates() {
-            let crate_guard = item.lock().expect("expected to get crate_guard");
+            let crate_guard = item.lock().await;
             if crate_guard.name() == name {
                 return Some(item.clone());
             }
@@ -46,13 +47,14 @@ where for<'async_trait> P: From<PathBuf> + AsRef<Path> + Send + Sync + 'async_tr
     }
 }
 
+#[async_trait]
 impl<P,H:CrateHandleInterface<P>> GetAllCrateNames for Workspace<P,H> 
 where for<'async_trait> P: From<PathBuf> + AsRef<Path> + Send + Sync + 'async_trait
 {
-    fn get_all_crate_names(&self) -> Vec<String> {
+    async fn get_all_crate_names(&self) -> Vec<String> {
         let mut names = Vec::new();
         for item in self.crates() {
-            let crate_guard = item.lock().expect("expected to get crate_guard");
+            let crate_guard = item.lock().await;
             names.push(crate_guard.name().to_string());
         }
         names

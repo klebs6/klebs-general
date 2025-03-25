@@ -41,6 +41,7 @@ impl ApplyAiReadmeOutput for CrateHandle {
     type Error = CrateError;
 
     async fn update_readme_md(&self, new_contents: &str) -> Result<(), Self::Error> {
+
         trace!("update_readme_md: preparing to update README for crate at {:?}", self.as_ref());
 
         let maybe_readme_path = self.readme_path().await?;

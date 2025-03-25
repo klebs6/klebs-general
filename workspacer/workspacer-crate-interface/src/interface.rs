@@ -40,12 +40,13 @@ where
 
 pub trait HasCargoToml {
 
-    fn cargo_toml(&self) -> Arc<Mutex<dyn CargoTomlInterface>>;
+    fn cargo_toml(&self) -> Arc<AsyncMutex<dyn CargoTomlInterface>>;
 }
 
+#[async_trait]
 pub trait IsPrivate {
     type Error;
-    fn is_private(&self) -> Result<bool,Self::Error>;
+    async fn is_private(&self) -> Result<bool,Self::Error>;
 }
 
 /// We add a new method to CrateHandleInterface so we can read file text from 
@@ -62,9 +63,42 @@ pub trait GetTestFiles {
     async fn test_files(&self) -> Result<Vec<PathBuf>, CrateError>;
 }
 
+#[async_trait]
+impl<P> GetTestFiles for Arc<AsyncMutex<P>>
+where
+    P: GetTestFiles + Send + Sync,
+{
+    async fn test_files(&self) -> Result<Vec<PathBuf>, CrateError> {
+        let guard = self.lock().await;
+        guard.test_files().await
+    }
+}
+
 pub trait HasTestsDirectory {
 
     fn has_tests_directory(&self) -> bool;
+}
+
+impl<P> HasTestsDirectory for Arc<AsyncMutex<P>>
+where
+    P: HasTestsDirectory,
+{
+    fn has_tests_directory(&self) -> bool {
+        // We only need a synchronous lock here because HasTestsDirectory's method is sync,
+        // but our crate uses `tokio::sync::AsyncMutex`, so we do `.blocking_lock()`
+        // or we can do `.try_lock()`, depending on usage. If you want the async version,
+        // you might have to change the trait or store that state differently.
+        // For simplicity, we'll do `.try_lock()` and fallback to false if locked.
+        // Ideally, you'd define HasTestsDirectory as async, or
+        // use the feature "blocking" from `tokio`.
+        if let Ok(guard) = self.try_lock() {
+            guard.has_tests_directory()
+        } else {
+            // If for some reason it's locked, we might do something else. 
+            // For test usage, it's probably safe to do a separate approach:
+            panic!("Cannot lock Arc<AsyncMutex<P>> in has_tests_directory synchronously! Consider an async method or a blocking lock feature.")
+        }
+    }
 }
 
 pub trait CheckIfReadmeExists {
@@ -157,6 +191,21 @@ pub trait CheckIfSrcDirectoryContainsValidFiles {
 pub trait GetSourceFilesWithExclusions {
 
     async fn source_files_excluding(&self, exclude_files: &[&str]) -> Result<Vec<PathBuf>, CrateError>;
+}
+
+#[async_trait]
+impl<P> GetSourceFilesWithExclusions for Arc<AsyncMutex<P>>
+where
+    P: GetSourceFilesWithExclusions + Send + Sync,
+{
+    async fn source_files_excluding(
+        &self,
+        exclude: &[&str],
+    ) -> Result<Vec<PathBuf>, CrateError> {
+        // Lock and forward
+        let guard = self.lock().await;
+        guard.source_files_excluding(exclude).await
+    }
 }
 
 #[async_trait]

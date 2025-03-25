@@ -14,7 +14,7 @@ async fn main() -> Result<(), WorkspaceError> {
     let path = PathBuf::from(".");
 
     match Workspace::<PathBuf, CrateHandle>::new(&path).await {
-        Ok(workspace) => {
+        Ok(mut workspace) => {
             // If we successfully built a workspace, proceed.
             workspace.ensure_git_clean().await?;
             workspace.pin_all_wildcard_dependencies().await?;
@@ -25,7 +25,7 @@ async fn main() -> Result<(), WorkspaceError> {
             println!("No [workspace] found; using single-crate logic...");
 
             // Build a single CrateHandle
-            let single_crate = CrateHandle::new(&path).await
+            let mut single_crate = CrateHandle::new(&path).await
                 .map_err(|e| WorkspaceError::CrateError(e))?;
 
             single_crate.ensure_git_clean().await
