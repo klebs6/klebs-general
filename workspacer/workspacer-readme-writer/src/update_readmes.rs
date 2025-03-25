@@ -6,7 +6,7 @@ pub trait UpdateReadmeFiles {
     type Error;
 
     /// Orchestrates the steps to generate queries, call the AI, and update README(s).
-    async fn update_readme_files(x: Arc<Self>) -> Result<(), Self::Error>;
+    async fn update_readme_files(x: Arc<AsyncMutex<Self>>) -> Result<(), Self::Error>;
 }
 
 #[async_trait]
@@ -14,7 +14,7 @@ impl UpdateReadmeFiles for CrateHandle {
 
     type Error = ReadmeWriterExecutionError;
 
-    async fn update_readme_files(x: Arc<Self>) -> Result<(), Self::Error> {
+    async fn update_readme_files(x: Arc<AsyncMutex<Self>>) -> Result<(), Self::Error> {
 
         trace!("Entering CrateHandle::update_readme");
 
@@ -34,15 +34,17 @@ where H: ReadmeWritingCrateHandle<PathBuf>,
 {
     type Error = ReadmeWriterExecutionError;
 
-    async fn update_readme_files(x: Arc<Self>) -> Result<(), Self::Error> {
+    async fn update_readme_files(x: Arc<AsyncMutex<Self>>) -> Result<(), Self::Error> {
 
         //TODO: we want to create a batch containing a request for each crate
         // instead of a batch for each crate.
         trace!("Entering Workspace update_readme");
 
+        let guard = x.lock().await;
+
         let mut requests = Vec::new();
 
-        for item in x.crates().iter() {
+        for item in guard.crates().iter() {
             let request = AiReadmeWriterRequest::<PathBuf>::async_try_from::<H>(item.clone()).await?;
             requests.push(request);
         }

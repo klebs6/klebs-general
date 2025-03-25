@@ -56,7 +56,7 @@ pub async fn main() -> Result<(), ReadmeWriterExecutionError> {
             //    (using your real creation method).
             // 2) Then call `update_readme_files` on it.
 
-            let handle = Arc::new(CrateHandle::new(&crate_path).await?);
+            let handle = Arc::new(AsyncMutex::new(CrateHandle::new(&crate_path).await?));
             info!("Starting readme updates for single crate at {:?}", crate_path);
 
             // The trait method from `UpdateReadmeFiles`
@@ -71,7 +71,7 @@ pub async fn main() -> Result<(), ReadmeWriterExecutionError> {
             for path in crate_paths {
                 debug!("Processing crate at {:?}", path);
 
-                let handle = Arc::new(CrateHandle::new(&path).await?);
+                let handle = Arc::new(AsyncMutex::new(CrateHandle::new(&path).await?));
 
                 UpdateReadmeFiles::update_readme_files(handle.clone()).await?;
 
@@ -85,7 +85,7 @@ pub async fn main() -> Result<(), ReadmeWriterExecutionError> {
             // 1) Build a Workspace object (depending on your real code).
             // 2) Then call `update_readme_files` on it.
 
-            let ws = Arc::new(Workspace::<std::path::PathBuf, CrateHandle>::new(&workspace_path).await?);
+            let ws = Arc::new(AsyncMutex::new(Workspace::<std::path::PathBuf, CrateHandle>::new(&workspace_path).await?));
 
             info!("Starting readme updates for full workspace at {:?}", workspace_path);
             UpdateReadmeFiles::update_readme_files(ws.clone()).await?;

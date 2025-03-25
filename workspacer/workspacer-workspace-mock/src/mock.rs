@@ -423,7 +423,7 @@ mod test_mock_workspace {
         assert_eq!(ws.n_crates(), 2, "We have 2 crates total");
         let found = ws.find_crate_by_name("crateB");
         assert!(found.is_some(), "Should find crateB by name");
-        assert_eq!(found.unwrap().lock().unwrap().name(), "crateB");
+        assert_eq!(found.await.lock().unwrap().name(), "crateB");
     }
 
     #[traced_test]

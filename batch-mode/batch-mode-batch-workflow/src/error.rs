@@ -4,6 +4,7 @@ crate::ix!();
 error_tree!{
     pub enum LanguageModelBatchWorkflowError {
         BatchWorkspaceError(BatchWorkspaceError),
+        LanguageModelBatchCreationError(LanguageModelBatchCreationError),
         BatchReconciliationError(BatchReconciliationError),
         BatchDownloadError(BatchDownloadError),
         BatchErrorProcessingError(BatchErrorProcessingError),

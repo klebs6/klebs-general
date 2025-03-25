@@ -165,7 +165,7 @@ edition = "2021"
         let crate_path = dir.path().to_path_buf();
         let cargo_toml_path = crate_path.join("Cargo.toml");
 
-        let cargo_toml_handle = CargoToml::new(cargo_toml_path).await?;
+        let cargo_toml_handle = Arc::new(AsyncMutex::new(CargoToml::new(cargo_toml_path).await?));
         let handle = CrateHandleBuilder::default()
             .crate_path(crate_path)
             .cargo_toml_handle(cargo_toml_handle)

@@ -177,35 +177,54 @@ where
 mod test_add_internal_dependency {
     use super::*;
 
+    /// A small helper that locks all `Arc<AsyncMutex<H>>` crate items in the workspace
+    /// once and returns them in a `Vec<H>`. This lets us directly call `.name()`, 
+    /// `.root_dir_path_buf()`, etc. on each crate handle rather than on the `Arc<Mutex<>>`.
+    async fn ephemeral_handles<P, H>(ws: &Workspace<P, H>) -> Vec<H>
+    where
+        for<'async_trait> P: Debug + Clone + From<PathBuf> + AsRef<Path> + Send + Sync + 'async_trait,
+        H: CrateHandleInterface<P> + Debug + Send + Sync + Clone,
+    {
+        let mut result = Vec::new();
+        for arc_h in ws.crates() {
+            let locked = arc_h.lock().await;
+            result.push(locked.clone());
+        }
+        result
+    }
+
     /// 1) Tests that adding a dependency to a crate successfully creates/updates
     ///    the [dependencies] in Cargo.toml and appends the `pub(crate) use dep_crate::*;` line
-    ///    to src/imports.rs.
-    #[traced_test]
-    async fn test_add_internal_dependency_happy_path() {
+    ///    to `src/imports.rs`.
+    #[tokio::test]
+    async fn test_add_internal_dependency_happy_path() -> Result<(), WorkspaceError> {
         info!("Starting test_add_internal_dependency_happy_path");
         // 1) Create a mock workspace with two crates: A & B
         let workspace_path = create_mock_workspace(vec![
             CrateConfig::new("crateA").with_src_files(),
             CrateConfig::new("crateB").with_src_files(),
-        ]).await.expect("Failed to create mock workspace");
+        ])
+        .await
+        .expect("Failed to create mock workspace");
 
         // 2) Build the workspace
         let ws = Workspace::<PathBuf, CrateHandle>::new(&workspace_path)
             .await
             .expect("Should create a valid Workspace from path");
 
-        // 3) Acquire references to the two crates
-        let crate_a = ws.crates().iter()
-            .find(|c| c.name() == "crateA")
+        // 3) Lock the crate handles once into ephemeral handles
+        let ephemeral = ephemeral_handles(&ws).await;
+        let crate_a = ephemeral
+            .iter()
+            .find(|h| h.name() == "crateA")
             .expect("Expected crateA in workspace");
-        let crate_b = ws.crates().iter()
-            .find(|c| c.name() == "crateB")
+        let crate_b = ephemeral
+            .iter()
+            .find(|h| h.name() == "crateB")
             .expect("Expected crateB in workspace");
 
         // 4) Perform the operation: add_internal_dependency
-        ws.add_internal_dependency(crate_a, crate_b)
-            .await
-            .expect("add_internal_dependency should succeed for a happy path test");
+        ws.add_internal_dependency(crate_a, crate_b).await?;
 
         // 5) Now verify that crateA's Cargo.toml has a dependency on crateB
         let cargo_toml_a_path = crate_a.cargo_toml_path_buf().await?;
@@ -236,12 +255,13 @@ mod test_add_internal_dependency {
         );
 
         info!("test_add_internal_dependency_happy_path passed");
+        Ok(())
     }
 
     /// 2) Tests that if the `src/imports.rs` file already has the desired
     ///    `pub(crate) use crateB::*;` line, we do not duplicate it.
-    #[traced_test]
-    async fn test_add_internal_dependency_existing_import_line() {
+    #[tokio::test]
+    async fn test_add_internal_dependency_existing_import_line() -> Result<(), WorkspaceError> {
         info!("Starting test_add_internal_dependency_existing_import_line");
         let workspace_path = create_mock_workspace(vec![
             CrateConfig::new("crateX").with_src_files(),
@@ -254,18 +274,18 @@ mod test_add_internal_dependency {
             .await
             .expect("Should create a valid Workspace");
 
-        // We'll add the line to crateX's src/imports.rs manually
-        let crate_x = ws
-            .crates()
+        // Lock ephemeral crate handles
+        let ephemeral = ephemeral_handles(&ws).await;
+        let crate_x = ephemeral
             .iter()
-            .find(|c| c.name() == "crateX")
+            .find(|h| h.name() == "crateX")
             .expect("Expected crateX in workspace");
-        let crate_y = ws
-            .crates()
+        let crate_y = ephemeral
             .iter()
-            .find(|c| c.name() == "crateY")
+            .find(|h| h.name() == "crateY")
             .expect("Expected crateY in workspace");
 
+        // We'll add the line to crateX's src/imports.rs manually
         let imports_rs = crate_x.root_dir_path_buf().join("src").join("imports.rs");
         fs::create_dir_all(imports_rs.parent().unwrap())
             .await
@@ -276,25 +296,25 @@ mod test_add_internal_dependency {
 
         // Add the dependency
         ws.add_internal_dependency(crate_x, crate_y)
-            .await
-            .expect("Should succeed to add dependency even if line pre-exists");
+            .await?;
 
         // Verify we did NOT duplicate the line
-        let updated_imports = fs::read_to_string(&imports_rs).await
-            .expect("Failed to read back imports.rs");
+        let updated_imports = fs::read_to_string(&imports_rs).await?;
         let count_matches = updated_imports.matches("pub(crate) use crateY::*;").count();
         assert_eq!(
-            count_matches, 1,
+            count_matches, 
+            1, 
             "Should have exactly one line for crateY"
         );
 
         info!("test_add_internal_dependency_existing_import_line passed");
+        Ok(())
     }
 
     /// 3) Tests that if the `[dependencies]` table is missing in Cargo.toml,
     ///    we create it before inserting the new dependency.
-    #[traced_test]
-    async fn test_add_internal_dependency_creates_dependencies_table() {
+    #[tokio::test]
+    async fn test_add_internal_dependency_creates_dependencies_table() -> Result<(), WorkspaceError> {
         info!("Starting test_add_internal_dependency_creates_dependencies_table");
 
         let workspace_path = create_mock_workspace(vec![
@@ -309,9 +329,7 @@ mod test_add_internal_dependency {
         let cargo_contents = fs::read_to_string(&alpha_cargo_path)
             .await
             .expect("Failed reading alpha Cargo.toml");
-        let sanitized = cargo_contents
-            // Just ensure no `[dependencies]` is present
-            .replace("[dependencies]\n", "");
+        let sanitized = cargo_contents.replace("[dependencies]", "");
         fs::write(&alpha_cargo_path, sanitized)
             .await
             .expect("Failed rewriting alpha Cargo.toml without [dependencies]");
@@ -321,26 +339,21 @@ mod test_add_internal_dependency {
             .await
             .expect("Should parse workspace after manual cargo edits");
 
-        let alpha_crate = ws
-            .crates()
+        let ephemeral = ephemeral_handles(&ws).await;
+        let alpha_crate = ephemeral
             .iter()
-            .find(|c| c.name() == "alpha")
+            .find(|h| h.name() == "alpha")
             .expect("Should find alpha crate");
-        let beta_crate = ws
-            .crates()
+        let beta_crate = ephemeral
             .iter()
-            .find(|c| c.name() == "beta")
+            .find(|h| h.name() == "beta")
             .expect("Should find beta crate");
 
         // Now call add_internal_dependency
-        ws.add_internal_dependency(alpha_crate, beta_crate)
-            .await
-            .expect("Should succeed even though alpha had no [dependencies] table initially");
+        ws.add_internal_dependency(alpha_crate, beta_crate).await?;
 
         // Check the updated Cargo.toml for alpha
-        let updated = fs::read_to_string(&alpha_cargo_path)
-            .await
-            .expect("Failed to read updated alpha Cargo.toml");
+        let updated = fs::read_to_string(&alpha_cargo_path).await?;
         debug!("Updated alpha Cargo.toml:\n{}", updated);
 
         assert!(
@@ -353,13 +366,14 @@ mod test_add_internal_dependency {
         );
 
         info!("test_add_internal_dependency_creates_dependencies_table passed");
+        Ok(())
     }
 
     /// 4) Tests scenario where we have a crate recognized by the workspace at creation,
-    ///    and then its Cargo.toml is removed, so reading it for add_internal_dependency
+    ///    and then its Cargo.toml is removed. Reading it for add_internal_dependency
     ///    should fail with an IoError containing context.
-    #[traced_test]
-    async fn test_add_internal_dependency_missing_cargo_toml() -> Result<(),CrateError> {
+    #[tokio::test]
+    async fn test_add_internal_dependency_missing_cargo_toml() -> Result<(), CrateError> {
         info!("Starting test_add_internal_dependency_missing_cargo_toml");
 
         // Create a workspace with two crates: "good_crate" and "broken_crate"
@@ -370,43 +384,38 @@ mod test_add_internal_dependency {
         .await
         .expect("Failed to create mock workspace");
 
-        // First, build the workspace. This ensures both crates are recognized by the
-        // workspace since they have Cargo.toml files right now.
+        // First, build the workspace. This ensures both crates are recognized 
+        // by the workspace since they have Cargo.toml files at creation time.
         let ws = Workspace::<PathBuf, CrateHandle>::new(&workspace_path)
             .await
             .expect("Should create a valid Workspace with both crates recognized");
 
-        // Grab references to the crates we care about
-        let good = ws
-            .crates()
+        // Lock ephemeral handles
+        let ephemeral = ephemeral_handles(&ws).await;
+        let good = ephemeral
             .iter()
-            .find(|c| c.name() == "good_crate")
+            .find(|h| h.name() == "good_crate")
             .expect("Expected good_crate in workspace");
-        let broken = ws
-            .crates()
+        let broken = ephemeral
             .iter()
-            .find(|c| c.name() == "broken_crate")
+            .find(|h| h.name() == "broken_crate")
             .expect("Expected broken_crate in workspace");
 
-        // Now remove broken_crate's Cargo.toml AFTER the workspace is constructed,
-        // so that `ws` still has the handle for "broken_crate".
+        // Now remove broken_crate's Cargo.toml AFTER the workspace is constructed
         let broken_cargo = broken.cargo_toml_path_buf().await?;
         fs::remove_file(&broken_cargo)
             .await
             .expect("Failed removing broken crate's Cargo.toml to simulate missing file");
 
-        // Attempt to add dependency from broken->good, which should fail reading broken's Cargo.toml
+        // Attempt to add dependency from broken->good => fails reading broken's Cargo.toml
         let result = ws.add_internal_dependency(broken, good).await;
-        assert!(
-            result.is_err(),
-            "Should fail if we can't read the target crate's Cargo.toml"
-        );
+        assert!(result.is_err(), "Should fail if Cargo.toml is missing for broken crate");
 
         match result.err().unwrap() {
             WorkspaceError::IoError { context, .. } => {
                 assert!(
                     context.contains("reading target crate Cargo.toml"),
-                    "Should have IoError with context about reading the target crate Cargo.toml"
+                    "Should have IoError with context about reading target crate Cargo.toml"
                 );
             }
             other => {
@@ -415,7 +424,6 @@ mod test_add_internal_dependency {
         }
 
         info!("test_add_internal_dependency_missing_cargo_toml passed");
-
         Ok(())
     }
 }

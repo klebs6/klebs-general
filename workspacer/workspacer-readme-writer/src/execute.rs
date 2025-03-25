@@ -21,8 +21,9 @@ pub async fn execute_ai_readme_writer_requests(
         // Because request.crate_handle() => Arc<dyn ReadmeWritingCrateHandle<P>>
         // that has .update_readme_md + .update_cargo_toml
         let handle = request.crate_handle();
-        handle.update_readme_md(response.full_readme_markdown()).await?;
-        handle.update_cargo_toml(
+        let guard = handle.lock().await;
+        guard.update_readme_md(response.full_readme_markdown()).await?;
+        guard.update_cargo_toml(
             response.package_description(),
             response.package_keywords(),
             response.package_categories(),

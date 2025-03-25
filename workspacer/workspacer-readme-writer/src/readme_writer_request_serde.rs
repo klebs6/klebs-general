@@ -1,6 +1,7 @@
 crate::ix!();
 
 pub mod crate_handle_serde {
+    use super::*;
     use std::path::{Path, PathBuf};
     use std::sync::Arc;
 
@@ -25,17 +26,27 @@ pub mod crate_handle_serde {
 
     /// The function Serde calls when serializing `Arc<dyn ReadmeWritingCrateHandle<P>>`.
     pub fn serialize<S, P>(
-        field: &Arc<dyn ReadmeWritingCrateHandle<P>>,
+        field: &Arc<AsyncMutex<dyn ReadmeWritingCrateHandle<P>>>,
         serializer: S,
     ) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
         P: AsRef<Path> + Send + Sync + 'static,
     {
-        // Convert the handle to a path
-        let path_buf = field.root_dir_path_buf();
+        let field_clone = field.clone();
+        
+        let helper = run_async_without_nested_runtime(async move {
 
-        let helper = CrateHandleJsonRepr { path: path_buf };
+            let guard = field_clone.lock().await;
+
+            // Convert the handle to a path
+            let path_buf = guard.root_dir_path_buf();
+
+            let helper = CrateHandleJsonRepr { path: path_buf };
+
+            helper
+        });
+
         helper.serialize(serializer)
     }
 
@@ -44,7 +55,7 @@ pub mod crate_handle_serde {
     /// If your code must truly do async I/O, consider storing the path and deferring creation instead.
     pub fn deserialize<'de, D, P>(
         deserializer: D
-    ) -> Result<Arc<dyn ReadmeWritingCrateHandle<P>>, D::Error>
+    ) -> Result<Arc<AsyncMutex<dyn ReadmeWritingCrateHandle<P>>>, D::Error>
     where
         D: Deserializer<'de>,
         P: AsRef<Path> + Send + Sync + 'static,
@@ -53,7 +64,7 @@ pub mod crate_handle_serde {
 
         // We'll call a synchronous constructor. Adjust to your real code:
         match CrateHandle::new_sync(&helper.path) {
-            Ok(real_handle) => Ok(Arc::new(real_handle)),
+            Ok(real_handle) => Ok(Arc::new(AsyncMutex::new(real_handle))),
             Err(e) => Err(DeError::custom(format!("Cannot build CrateHandle: {:?}", e))),
         }
     }
@@ -96,7 +107,7 @@ mod crate_handle_serde_tests {
             })?;
 
         // 4) Wrap it in an Arc<dyn ReadmeWritingCrateHandle<PathBuf>>
-        let handle_arc: Arc<dyn ReadmeWritingCrateHandle<PathBuf>> = Arc::new(handle);
+        let handle_arc: Arc<AsyncMutex<dyn ReadmeWritingCrateHandle<PathBuf>>> = Arc::new(AsyncMutex::new(handle));
 
         // 5) Build the AiReadmeWriterRequest
         let original = AiReadmeWriterRequestBuilder::<PathBuf>::default()
@@ -123,8 +134,11 @@ mod crate_handle_serde_tests {
             serde_json::from_str(&json).expect("failed to deserialize AiReadmeWriterRequest");
         trace!("Deserialized request: {:?}", roundtrip);
 
+        let crate_handle = roundtrip.crate_handle();
+        let guard = crate_handle.lock().await;
+
         // 8) Check that the path is what we expect
-        let reconstructed_path = roundtrip.crate_handle().root_dir_path_buf();
+        let reconstructed_path = guard.root_dir_path_buf();
         info!("Reconstructed path = {:?}", reconstructed_path);
 
         // Should match the mock crate path we used

@@ -196,6 +196,21 @@ where
 mod test_register_in_prefix_group {
     use super::*;
 
+    /// A small helper that locks all crate Arc<AsyncMutex<H>> items and returns
+    /// them in a new Vec. We can then do direct crate.name(), crate.root_dir_path_buf(), etc.
+    async fn ephemeral_handles<P, H>(ws: &Workspace<P, H>) -> Vec<H>
+    where
+        for<'async_trait> P: Debug + Clone + From<PathBuf> + AsRef<Path> + Send + Sync + 'async_trait,
+        H: CrateHandleInterface<P> + Send + Sync + Debug + Clone,
+    {
+        let mut result = Vec::new();
+        for arc_h in ws.crates() {
+            let locked = arc_h.lock().await;
+            result.push(locked.clone());
+        }
+        result
+    }
+
     ///
     /// Exhaustive tests for `register_in_prefix_crate(...)`, verifying that:
     ///
@@ -212,10 +227,8 @@ mod test_register_in_prefix_group {
     // -------------------------------------------------------------------------
     // 1) Basic scenario: prefix crate + new crate => success
     // -------------------------------------------------------------------------
-    #[traced_test]
-    async fn test_basic_register_success() {
-        info!("Scenario 1: Basic success registering a new crate");
-
+    #[tokio::test]
+    async fn test_basic_register_success() -> Result<(), WorkspaceError> {
         // We'll create a workspace with 2 crates:
         // prefix_crate: "batch-mode"
         // new_crate: "batch-mode-batch-schema"
@@ -226,55 +239,59 @@ mod test_register_in_prefix_group {
         .await
         .expect("Failed to create mock workspace");
 
-        let ws = Workspace::<PathBuf,CrateHandle>::new(&workspace_path)
+        let ws = Workspace::<PathBuf, CrateHandle>::new(&workspace_path)
             .await
             .expect("Should parse workspace");
-        
-        // Grab references
-        let prefix_crate = ws.crates()
+
+        // Lock each crate handle so we can do .name() directly.
+        let ephemeral = ephemeral_handles(&ws).await;
+
+        // Grab references by name
+        let prefix_crate = ephemeral
             .iter()
-            .find(|c| c.name() == "batch-mode")
+            .find(|h| h.name() == "batch-mode")
             .expect("Expected batch-mode in workspace");
-        let new_crate = ws.crates()
+        let new_crate = ephemeral
             .iter()
-            .find(|c| c.name() == "batch-mode-batch-schema")
+            .find(|h| h.name() == "batch-mode-batch-schema")
             .expect("Expected batch-mode-batch-schema in workspace");
 
         // 1) Call register_in_prefix_crate
-        ws.register_in_prefix_crate(prefix_crate, new_crate)
-            .await
-            .expect("Should succeed registering new crate in prefix");
+        ws.register_in_prefix_crate(prefix_crate, new_crate).await?;
 
-        // 2) Verify the prefix crate's Cargo.toml => has [dependencies][batch-mode-batch-schema] = { path="..." }
+        // 2) Verify the prefix crate's Cargo.toml => has [dependencies][batch-mode-batch-schema]
         let cargo_toml_path = prefix_crate.cargo_toml_path_buf().await?;
-        let cargo_content = fs::read_to_string(&cargo_toml_path).await
+        let cargo_content = fs::read_to_string(&cargo_toml_path)
+            .await
             .expect("Failed to read prefix crate Cargo.toml");
-        debug!("Updated prefix crate Cargo.toml:\n{}", cargo_content);
-        assert!(cargo_content.contains("[dependencies]"),
-            "Should contain a [dependencies] section");
-        assert!(cargo_content.contains("batch-mode-batch-schema = { path = "),
-            "Should contain a path-based dependency entry for batch-mode-batch-schema");
+        assert!(
+            cargo_content.contains("[dependencies]"),
+            "Should contain a [dependencies] section"
+        );
+        assert!(
+            cargo_content.contains("batch-mode-batch-schema = { path = "),
+            "Should contain a path-based dependency entry for batch-mode-batch-schema"
+        );
 
         // 3) Verify that `src/lib.rs` has `pub use batch_mode_batch_schema::*;`
         let lib_rs_path = prefix_crate.root_dir_path_buf().join("src").join("lib.rs");
         let lib_rs_content = fs::read_to_string(&lib_rs_path).await
             .expect("Failed to read prefix crate lib.rs");
-        debug!("Updated prefix crate lib.rs:\n{}", lib_rs_content);
         assert!(
             lib_rs_content.contains("pub use batch_mode_batch_schema::*;"),
             "Expected `pub use batch_mode_batch_schema::*;` line in lib.rs"
         );
+
+        Ok(())
     }
 
     // -------------------------------------------------------------------------
     // 2) If lib.rs doesn't exist, we create it
     // -------------------------------------------------------------------------
-    #[traced_test]
-    async fn test_missing_lib_rs_is_created() {
-        info!("Scenario 2: prefix crate has no lib.rs => we create it with re-export line");
-
+    #[tokio::test]
+    async fn test_missing_lib_rs_is_created() -> Result<(), WorkspaceError> {
         let workspace_path = create_mock_workspace(vec![
-            CrateConfig::new("some-facade").with_src_files(), 
+            CrateConfig::new("some-facade").with_src_files(),
             CrateConfig::new("some-facade-extra").with_src_files(),
         ])
         .await
@@ -284,39 +301,39 @@ mod test_register_in_prefix_group {
         let facade_dir = workspace_path.join("some-facade");
         let _ = fs::remove_file(facade_dir.join("src").join("lib.rs")).await;
 
-        let ws = Workspace::<PathBuf,CrateHandle>::new(&workspace_path)
+        let ws = Workspace::<PathBuf, CrateHandle>::new(&workspace_path)
             .await
             .expect("Should parse workspace");
 
-        let prefix_crate = ws.crates()
+        let ephemeral = ephemeral_handles(&ws).await;
+        let prefix_crate = ephemeral
             .iter()
-            .find(|c| c.name() == "some-facade")
+            .find(|h| h.name() == "some-facade")
             .expect("Expected some-facade");
-        let new_crate = ws.crates()
+        let new_crate = ephemeral
             .iter()
-            .find(|c| c.name() == "some-facade-extra")
+            .find(|h| h.name() == "some-facade-extra")
             .expect("Expected some-facade-extra");
 
-        // Register
-        ws.register_in_prefix_crate(prefix_crate, new_crate)
-            .await
-            .expect("Should succeed even if lib.rs was missing");
+        ws.register_in_prefix_crate(prefix_crate, new_crate).await?;
 
         // Check that lib.rs now exists
         let lib_rs_path = facade_dir.join("src").join("lib.rs");
         let lib_rs_content = fs::read_to_string(&lib_rs_path).await
             .expect("lib.rs should be created");
-        assert!(lib_rs_content.contains("pub use some_facade_extra::*;"),
-            "Should contain the re-export line in newly created lib.rs");
+        assert!(
+            lib_rs_content.contains("pub use some_facade_extra::*;"),
+            "Should contain the re-export line in newly created lib.rs"
+        );
+
+        Ok(())
     }
 
     // -------------------------------------------------------------------------
     // 3) If the re-export line is already present, do not duplicate
     // -------------------------------------------------------------------------
-    #[traced_test]
-    async fn test_already_has_reexport_line_no_duplicate() {
-        info!("Scenario 3: prefix crate's lib.rs already has re-export => no duplication");
-
+    #[tokio::test]
+    async fn test_already_has_reexport_line_no_duplicate() -> Result<(), WorkspaceError> {
         let workspace_path = create_mock_workspace(vec![
             CrateConfig::new("abc").with_src_files(),
             CrateConfig::new("abc-sub").with_src_files(),
@@ -330,37 +347,42 @@ mod test_register_in_prefix_group {
         // Write an existing line to lib.rs
         let existing_line = "pub use abc_sub::*;\n";
         let lib_rs_path = abc_dir.join("src").join("lib.rs");
-        fs::write(&lib_rs_path, existing_line).await
+        fs::write(&lib_rs_path, existing_line)
+            .await
             .expect("Failed to write existing lib.rs content");
 
-        let ws = Workspace::<PathBuf,CrateHandle>::new(&workspace_path)
+        let ws = Workspace::<PathBuf, CrateHandle>::new(&workspace_path)
             .await
             .expect("Should parse workspace");
-        
-        let prefix_crate = ws.crates().iter().find(|c| c.name() == "abc")
+
+        let ephemeral = ephemeral_handles(&ws).await;
+        let prefix_crate = ephemeral
+            .iter()
+            .find(|h| h.name() == "abc")
             .expect("Expected abc crate");
-        let new_crate = ws.crates().iter().find(|c| c.name() == "abc-sub")
+        let new_crate = ephemeral
+            .iter()
+            .find(|h| h.name() == "abc-sub")
             .expect("Expected abc-sub crate");
 
-        // Register
-        ws.register_in_prefix_crate(prefix_crate, new_crate)
-            .await
-            .expect("Should succeed, no duplication");
+        ws.register_in_prefix_crate(prefix_crate, new_crate).await?;
 
         // read lib.rs again
         let updated_lib = fs::read_to_string(&lib_rs_path).await.unwrap();
         let count_matches = updated_lib.matches("pub use abc_sub::*;").count();
-        assert_eq!(count_matches, 1,
-            "Should have exactly one line for `pub use abc_sub::*;`");
+        assert_eq!(
+            count_matches, 1,
+            "Should have exactly one line for `pub use abc_sub::*;`"
+        );
+
+        Ok(())
     }
 
     // -------------------------------------------------------------------------
     // 4) If prefix crate Cargo.toml has no [dependencies], we create it
     // -------------------------------------------------------------------------
-    #[traced_test]
-    async fn test_no_dependencies_section() {
-        info!("Scenario 4: prefix crate has no [dependencies], we create it and add new crate");
-
+    #[tokio::test]
+    async fn test_no_dependencies_section() -> Result<(), WorkspaceError> {
         let workspace_path = create_mock_workspace(vec![
             CrateConfig::new("xyz").with_src_files(),
             CrateConfig::new("xyz-tool").with_src_files(),
@@ -371,35 +393,42 @@ mod test_register_in_prefix_group {
         // We'll remove any existing [dependencies] from xyz's Cargo.toml
         let xyz_cargo_path = workspace_path.join("xyz").join("Cargo.toml");
         let original = fs::read_to_string(&xyz_cargo_path).await.unwrap();
-        let sanitized = original.replace("[dependencies]", ""); // forcibly remove
+        let sanitized = original.replace("[dependencies]", "");
         fs::write(&xyz_cargo_path, sanitized).await.unwrap();
 
-        let ws = Workspace::<PathBuf,CrateHandle>::new(&workspace_path)
+        let ws = Workspace::<PathBuf, CrateHandle>::new(&workspace_path)
             .await
             .expect("Should parse workspace");
-        
-        let prefix_crate = ws.crates().iter().find(|c| c.name() == "xyz")
+
+        let ephemeral = ephemeral_handles(&ws).await;
+        let prefix_crate = ephemeral
+            .iter()
+            .find(|h| h.name() == "xyz")
             .expect("Expected xyz crate");
-        let new_crate = ws.crates().iter().find(|c| c.name() == "xyz-tool")
+        let new_crate = ephemeral
+            .iter()
+            .find(|h| h.name() == "xyz-tool")
             .expect("Expected xyz-tool crate");
 
-        // Register => should create [dependencies] table
-        ws.register_in_prefix_crate(prefix_crate, new_crate)
-            .await
-            .expect("Should succeed creating [dependencies] if missing");
+        ws.register_in_prefix_crate(prefix_crate, new_crate).await?;
 
         let updated_cargo = fs::read_to_string(&xyz_cargo_path).await.unwrap();
-        assert!(updated_cargo.contains("[dependencies]"),
-            "Should now have a [dependencies] table in xyz's Cargo.toml");
-        assert!(updated_cargo.contains("xyz-tool = { path = "),
-            "Should have path-based dependency on xyz-tool");
+        assert!(
+            updated_cargo.contains("[dependencies]"),
+            "Should now have a [dependencies] table in xyz's Cargo.toml"
+        );
+        assert!(
+            updated_cargo.contains("xyz-tool = { path = "),
+            "Should have path-based dependency on xyz-tool"
+        );
+        Ok(())
     }
 
-    #[traced_test]
-    async fn test_missing_prefix_crate_cargo_toml() {
-        info!("Scenario 5: prefix crate's Cargo.toml is missing => error with IoError (after workspace sees the crate).");
-
-        // 1) Create a mock workspace with 2 crates: "prefix_miss" & "prefix_miss_lib"
+    // -------------------------------------------------------------------------
+    // 5) Missing prefix crate Cargo.toml => IoError
+    // -------------------------------------------------------------------------
+    #[tokio::test]
+    async fn test_missing_prefix_crate_cargo_toml() -> Result<(), ()> {
         let workspace_path = create_mock_workspace(vec![
             CrateConfig::new("prefix_miss").with_src_files(),
             CrateConfig::new("prefix_miss_lib").with_src_files(),
@@ -407,53 +436,47 @@ mod test_register_in_prefix_group {
         .await
         .expect("Failed to create workspace");
 
-        // 2) Build the workspace so it sees BOTH crates, including "prefix_miss"
-        let ws = Workspace::<PathBuf,CrateHandle>::new(&workspace_path)
+        let ws = Workspace::<PathBuf, CrateHandle>::new(&workspace_path)
             .await
             .expect("Should parse workspace with 2 crates");
 
-        // 3) Now remove prefix_miss's Cargo.toml AFTER the workspace is constructed
+        // Remove the prefix crate's Cargo.toml
         let prefix_cargo_path = workspace_path.join("prefix_miss").join("Cargo.toml");
         fs::remove_file(&prefix_cargo_path)
             .await
             .expect("Removed prefix_miss Cargo.toml to trigger IoError later");
 
-        // 4) Look up the crates. They exist in the workspace's internal list.
-        let prefix_crate = ws.crates().iter()
-            .find(|c| c.name() == "prefix_miss")
-            .expect("Expected prefix_miss recognized by workspace");
-        let new_crate = ws.crates().iter()
-            .find(|c| c.name() == "prefix_miss_lib")
-            .expect("Expected prefix_miss_lib recognized by workspace");
+        // Lock ephemeral
+        let ephemeral = ephemeral_handles(&ws).await;
+        let prefix_crate = ephemeral
+            .iter()
+            .find(|h| h.name() == "prefix_miss")
+            .expect("prefix_miss recognized by workspace");
+        let new_crate = ephemeral
+            .iter()
+            .find(|h| h.name() == "prefix_miss_lib")
+            .expect("prefix_miss_lib recognized by workspace");
 
-        // 5) Attempt to register => fails reading the prefix crate’s missing Cargo.toml
+        // Attempt to register => fails
         let result = ws.register_in_prefix_crate(prefix_crate, new_crate).await;
-        assert!(
-            result.is_err(),
-            "Should fail because prefix_miss's Cargo.toml is missing"
-        );
-
-        // 6) Confirm it's an IoError with relevant context
-        match result.err().unwrap() {
-            WorkspaceError::IoError { context, .. } => {
+        match result {
+            Err(WorkspaceError::IoError { context, .. }) => {
                 assert!(
                     context.contains("reading prefix_crate Cargo.toml"),
                     "Should mention reading prefix_crate Cargo.toml in the context"
                 );
-                info!("Got expected IoError for missing prefix crate Cargo.toml");
-            },
+            }
             other => panic!("Expected IoError, got {other:?}"),
         }
+
+        Ok(())
     }
 
     // -------------------------------------------------------------------------
     // 6) Check dash => underscore transformation in `lib.rs` re-export
     // -------------------------------------------------------------------------
-    #[traced_test]
-    async fn test_dashes_to_underscores() {
-        info!("Scenario 6: crate name with dashes => underscores in `pub use ...;` line");
-
-        // We'll create prefix crate "acme" and new crate "acme-awesome-feature"
+    #[tokio::test]
+    async fn test_dashes_to_underscores() -> Result<(), WorkspaceError> {
         let workspace_path = create_mock_workspace(vec![
             CrateConfig::new("acme").with_src_files(),
             CrateConfig::new("acme-awesome-feature").with_src_files(),
@@ -461,23 +484,22 @@ mod test_register_in_prefix_group {
         .await
         .expect("Failed to create workspace");
 
-        let ws = Workspace::<PathBuf,CrateHandle>::new(&workspace_path)
+        let ws = Workspace::<PathBuf, CrateHandle>::new(&workspace_path)
             .await
             .expect("Should parse workspace");
 
-        let prefix_crate = ws.crates()
+        let ephemeral = ephemeral_handles(&ws).await;
+        let prefix_crate = ephemeral
             .iter()
-            .find(|c| c.name() == "acme")
+            .find(|h| h.name() == "acme")
             .expect("Expected acme in workspace");
-        let new_crate = ws.crates()
+        let new_crate = ephemeral
             .iter()
-            .find(|c| c.name() == "acme-awesome-feature")
+            .find(|h| h.name() == "acme-awesome-feature")
             .expect("Expected acme-awesome-feature in workspace");
 
-        ws.register_in_prefix_crate(prefix_crate, new_crate)
-            .await
-            .expect("Should succeed registering new crate in prefix");
-        
+        ws.register_in_prefix_crate(prefix_crate, new_crate).await?;
+
         // check lib.rs for "pub use acme_awesome_feature::*;"
         let lib_rs_path = prefix_crate.root_dir_path_buf().join("src").join("lib.rs");
         let lib_contents = fs::read_to_string(&lib_rs_path).await
@@ -486,5 +508,7 @@ mod test_register_in_prefix_group {
             lib_contents.contains("pub use acme_awesome_feature::*;"),
             "Should contain underscores in re-export line"
         );
+
+        Ok(())
     }
 }

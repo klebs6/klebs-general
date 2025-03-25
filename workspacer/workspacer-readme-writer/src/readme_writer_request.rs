@@ -9,7 +9,7 @@ where
     P: AsRef<Path> + Send + Sync + 'static,
 {
     #[serde(with = "crate_handle_serde")]
-    crate_handle:                               Arc<dyn ReadmeWritingCrateHandle<P>>,
+    crate_handle:                               Arc<AsyncMutex<dyn ReadmeWritingCrateHandle<P>>>,
     crate_name:                                 String,
     version:                                    semver::Version,
     consolidated_crate_interface:               ConsolidatedCrateInterface,
@@ -24,32 +24,35 @@ where
     P: AsRef<Path> + Send + Sync + 'static,
 {
     pub async fn async_try_from<H>(
-        handle: Arc<H>,
+        handle: Arc<AsyncMutex<H>>,
     ) -> Result<Self, ReadmeWriterExecutionError>
     where
         H: ReadmeWritingCrateHandle<P>, // the super-trait
     {
         use std::ops::Deref;
 
+        // 2) We'll store it as Arc<dyn ReadmeWritingCrateHandle<P>>.
+        let crate_handle_obj: Arc<AsyncMutex<dyn ReadmeWritingCrateHandle<P>>> = handle.clone();
+
+        let guard = handle.lock().await;
+
         let consolidation_opts = ConsolidationOptions::new().with_docs().with_fn_bodies();
 
         // 1) We can call name(), version(), etc. because H: CrateHandleInterface<P>.
-        let crate_name = handle.name().to_string();
-        let version = handle
+        let crate_name = guard.name().to_string();
+        let version = guard
             .version()
             .expect("expected a valid version in the crate");
 
-        let consolidated_crate_interface = handle
+        let consolidated_crate_interface = guard
             .consolidate_crate_interface(&consolidation_opts)
             .await?;
 
-        // 2) We'll store it as Arc<dyn ReadmeWritingCrateHandle<P>>.
-        let crate_handle_obj: Arc<dyn ReadmeWritingCrateHandle<P>> = handle;
 
         // 3) Now we do a short synchronous read from CargoToml (like get_package_authors),
         //    but we must not hold any lock across await, so keep it “direct.”
         let direct_authors = {
-            let cargo_toml = crate_handle_obj.cargo_toml();
+            let cargo_toml = guard.cargo_toml();
             let mut guard = cargo_toml.lock().await;
             guard.get_package_authors()?
         };
@@ -61,7 +64,7 @@ where
         };
 
         let direct_edition = {
-            let cargo_toml = crate_handle_obj.cargo_toml();
+            let cargo_toml = guard.cargo_toml();
             let mut guard = cargo_toml.lock().await;
             guard.get_rust_edition()?
         };
@@ -72,7 +75,7 @@ where
         };
 
         let direct_license = {
-            let cargo_toml = crate_handle_obj.cargo_toml();
+            let cargo_toml = guard.cargo_toml();
             let mut guard = cargo_toml.lock().await;
             guard.get_license_type()?
         };
@@ -83,7 +86,7 @@ where
         };
 
         let direct_repo = {
-            let cargo_toml = crate_handle_obj.cargo_toml();
+            let cargo_toml = guard.cargo_toml();
             let mut guard = cargo_toml.lock().await;
             guard.get_crate_repository_location()?
         };
