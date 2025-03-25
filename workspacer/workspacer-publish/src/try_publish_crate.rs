@@ -45,12 +45,13 @@ impl TryPublish for CrateHandle {
 
         // We want the path to the crate's Cargo.toml
         let cargo_toml = self.cargo_toml();
+        let guard = cargo_toml.lock().await;
 
         // Prepare `cargo publish` command
         let mut cmd = Command::new(cargo_path);
         cmd.arg("publish")
             .arg("--allow-dirty")
-            .arg(&format!("--manifest-path={}", (*cargo_toml).as_ref().display()))
+            .arg(&format!("--manifest-path={}", guard.as_ref().display()))
             .arg(&format!("--package={}", crate_name));
 
         debug!("Running: {:?}", cmd);

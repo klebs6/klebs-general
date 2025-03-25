@@ -11,8 +11,9 @@ where
 
     async fn sort_and_format_imports(&self) -> Result<(), Self::Error> {
         for crate_handle in self.into_iter() {
-            debug!("Sorting/formatting imports for crate: {}", crate_handle.name());
-            crate_handle.sort_and_format_imports().await
+            let guard = crate_handle.lock().await;
+            debug!("Sorting/formatting imports for crate: {}", guard.name());
+            guard.sort_and_format_imports().await
                 .map_err(|ce| WorkspaceError::CrateError(ce))?;
         }
         Ok(())

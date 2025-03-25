@@ -19,7 +19,7 @@ pub trait CrateHandleInterface<P>
 + GetFilesInDirectory
 + GetFilesInDirectoryWithExclusions
 + HasCargoToml
-+ CrateDirPathBuf
++ RootDirPathBuf
 + AsRef<Path>
 + GatherBinTargetNames<Error=CrateError>
 + AsyncTryFrom<P,Error=CrateError>
@@ -167,16 +167,16 @@ where P: AsRef<Path>
 }
 
 
-pub trait CrateDirPathBuf {
+pub trait RootDirPathBuf {
 
-    fn crate_dir_path_buf(&self) -> PathBuf;
+    fn root_dir_path_buf(&self) -> PathBuf;
 }
 
-impl<P> CrateDirPathBuf for P 
+impl<P> RootDirPathBuf for P 
 where for <'async_trait> P: AsRef<Path> + Send + Sync + 'async_trait
 {
     /// returns the path to the `Cargo.toml`
-    fn crate_dir_path_buf(&self) -> PathBuf
+    fn root_dir_path_buf(&self) -> PathBuf
     {
         self.as_ref().to_path_buf()
     }

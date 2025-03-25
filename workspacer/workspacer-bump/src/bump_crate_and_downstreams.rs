@@ -65,7 +65,7 @@ mod test_bump_crate_and_downstreams {
     async fn setup_workspace_and_handle(
         crate_configs: Vec<CrateConfig>,
         target_crate_name: &str,
-    ) -> (TempDir, Workspace<PathBuf, CrateHandle>, Arc<Mutex<CrateHandle>>) {
+    ) -> (TempDir, Workspace<PathBuf, CrateHandle>, Arc<AsyncMutex<CrateHandle>>) {
         let tmp_root = create_mock_workspace(crate_configs)
             .await
             .expect("Failed to create mock workspace");
@@ -74,8 +74,10 @@ mod test_bump_crate_and_downstreams {
             .await
             .expect("Failed to create Workspace");
 
-        let maybe_ch = workspace.find_crate_by_name(target_crate_name);
-        let ch = maybe_ch.expect(&format!("Cannot find crate '{}'", target_crate_name));
+        let ch = workspace
+            .find_crate_by_name(target_crate_name)
+            .await
+            .expect("expected find crate by name to succeed");
 
         (
             TempDir::new_in(tmp_root.parent().unwrap()).unwrap(),
@@ -84,45 +86,50 @@ mod test_bump_crate_and_downstreams {
         )
     }
 
-    // NOTE: We remove #[traced_test] so it's just a normal async test now:
     #[tokio::test]
     async fn test_bump_with_no_downstreams() -> Result<(), CrateError> {
         let crate_a = CrateConfig::new("crate_a").with_src_files();
         let crate_b = CrateConfig::new("crate_b").with_src_files();
-        let (_temp, mut workspace, arc_a) =
-            setup_workspace_and_handle(vec![crate_a, crate_b], "crate_a").await;
+        let tmp_root = create_mock_workspace(vec![crate_a, crate_b])
+            .await
+            .expect("Failed to create mock workspace");
+
+        let mut workspace = Workspace::<PathBuf, CrateHandle>::new(&tmp_root)
+            .await
+            .expect("Failed to create Workspace");
+
+        // We'll choose crate_a, which (so far) has no crates depending on it
+        let arc_a = workspace.find_crate_by_name("crate_a").await
+            .expect("crate_a not found in workspace");
 
         // Confirm initial version
         {
-            let handle_clone = {
-                let g = arc_a.lock().expect("lock handle_a");
-                g.clone()
-            };
+            let handle_clone = arc_a.lock().await.clone();
             assert_eq!(handle_clone.version()?.to_string(), "0.1.0");
         }
 
-        // Bump crate_a => patch => "0.1.1"
+        // Bump => patch => "0.1.1"
         {
             let mut local_clone = {
-                let g = arc_a.lock().expect("lock handle_a");
-                g.clone()
+                let guard = arc_a.lock().await;
+                guard.clone()
             };
             workspace
                 .bump_crate_and_downstreams(&mut local_clone, ReleaseType::Patch)
                 .await
                 .expect("bump crate_a patch ok");
-            // store it back
+            // store back
             {
-                let mut g = arc_a.lock().expect("re-lock handle_a");
-                *g = local_clone;
+                let mut guard = arc_a.lock().await;
+                *guard = local_clone;
             }
         }
 
         // Confirm crate_a => 0.1.1
         {
             let path_a = {
-                let g = arc_a.lock().expect("lock handle_a");
-                g.as_ref().join("Cargo.toml")
+                let guard = arc_a.lock().await;
+                guard.as_ref().join("Cargo.toml")
             };
             let new_ver_a = read_crate_version(&path_a).await.unwrap();
             assert_eq!(new_ver_a, "0.1.1");
@@ -130,10 +137,11 @@ mod test_bump_crate_and_downstreams {
 
         // Confirm crate_b => still "0.1.0"
         {
-            let arc_b = workspace.find_crate_by_name("crate_b").unwrap();
+            let arc_b = workspace.find_crate_by_name("crate_b").await
+                .expect("crate_b not found");
             let path_b = {
-                let gb = arc_b.lock().expect("lock handle_b");
-                gb.as_ref().join("Cargo.toml")
+                let guard_b = arc_b.lock().await;
+                guard_b.as_ref().join("Cargo.toml")
             };
             let ver_b = read_crate_version(&path_b).await.unwrap();
             assert_eq!(ver_b, "0.1.0", "crate_b should be unchanged");
@@ -154,9 +162,9 @@ mod test_bump_crate_and_downstreams {
         let orig_a = fs::read_to_string(&a_cargo_path).await.unwrap();
         let appended = format!(
             r#"{}
-[dependencies]
-crate_b = {{ path = "../crate_b", version = "0.1.0" }}
-"#,
+    [dependencies]
+    crate_b = {{ path = "../crate_b", version = "0.1.0" }}
+    "#,
             orig_a
         );
         fs::write(&a_cargo_path, appended).await.unwrap();
@@ -164,27 +172,29 @@ crate_b = {{ path = "../crate_b", version = "0.1.0" }}
         let mut ws = Workspace::<PathBuf, CrateHandle>::new(&tmp)
             .await
             .expect("workspace creation ok");
-        let arc_b = ws.find_crate_by_name("crate_b").expect("crate_b not found");
+
+        let arc_b = ws.find_crate_by_name("crate_b").await
+            .expect("crate_b not found in workspace");
 
         // Bump crate_b => major => "1.0.0"
         {
             let mut local_clone = {
-                let g = arc_b.lock().expect("lock handle_b");
-                g.clone()
+                let gb = arc_b.lock().await;
+                gb.clone()
             };
             ws.bump_crate_and_downstreams(&mut local_clone, ReleaseType::Major)
                 .await
                 .expect("bump crate_b major ok");
             {
-                let mut g = arc_b.lock().expect("store back b");
-                *g = local_clone;
+                let mut gb = arc_b.lock().await;
+                *gb = local_clone;
             }
         }
 
         // Check crate_b => "1.0.0"
         {
             let path_b = {
-                let gb = arc_b.lock().expect("lock handle_b");
+                let gb = arc_b.lock().await;
                 gb.as_ref().join("Cargo.toml")
             };
             let ver_b = read_crate_version(&path_b).await.unwrap();
@@ -194,7 +204,7 @@ crate_b = {{ path = "../crate_b", version = "0.1.0" }}
         // Check crate_a => references crate_b => "version=1.0.0"
         {
             let new_a_contents = fs::read_to_string(&a_cargo_path).await.unwrap();
-            let doc_a = new_a_contents.parse::<TomlEditDocument>().unwrap();
+            let doc_a = new_a_contents.parse::<toml_edit::Document>().unwrap();
             let deps_table = doc_a["dependencies"].as_table().unwrap();
             let crate_b_dep = &deps_table["crate_b"];
             assert!(crate_b_dep.is_table());
@@ -203,6 +213,7 @@ crate_b = {{ path = "../crate_b", version = "0.1.0" }}
         }
         Ok(())
     }
+
 
     #[tokio::test]
     async fn test_bump_with_multiple_downstreams() -> Result<(), CrateError> {
@@ -219,9 +230,9 @@ crate_b = {{ path = "../crate_b", version = "0.1.0" }}
             let orig = fs::read_to_string(&cp).await.unwrap();
             let appended = format!(
                 r#"{orig}
-[dependencies]
-crate_b = {{ path = "../crate_b", version = "0.1.0" }}
-"#
+    [dependencies]
+    crate_b = {{ path = "../crate_b", version = "0.1.0" }}
+    "#
             );
             fs::write(&cp, appended).await.unwrap();
         }
@@ -229,19 +240,21 @@ crate_b = {{ path = "../crate_b", version = "0.1.0" }}
         let mut ws = Workspace::<PathBuf, CrateHandle>::new(&tmp)
             .await
             .expect("workspace ok");
-        let arc_b = ws.find_crate_by_name("crate_b").expect("crate_b missing");
+
+        let arc_b = ws.find_crate_by_name("crate_b").await
+            .expect("crate_b not found");
 
         // Bump crate_b => Minor => "0.2.0"
         {
             let mut local_clone = {
-                let gb = arc_b.lock().expect("lock b");
+                let gb = arc_b.lock().await;
                 gb.clone()
             };
             ws.bump_crate_and_downstreams(&mut local_clone, ReleaseType::Minor)
                 .await
                 .expect("bump crate_b minor ok");
             {
-                let mut gb = arc_b.lock().expect("store b back");
+                let mut gb = arc_b.lock().await;
                 *gb = local_clone;
             }
         }
@@ -249,7 +262,7 @@ crate_b = {{ path = "../crate_b", version = "0.1.0" }}
         // check crate_b => "0.2.0"
         {
             let path_b = {
-                let gb = arc_b.lock().expect("lock b final");
+                let gb = arc_b.lock().await;
                 gb.as_ref().join("Cargo.toml")
             };
             let ver_b = read_crate_version(&path_b).await.unwrap();
@@ -259,7 +272,7 @@ crate_b = {{ path = "../crate_b", version = "0.1.0" }}
         // check crate_a => references crate_b => "version=0.2.0"
         {
             let a_cp = tmp.join("crate_a").join("Cargo.toml");
-            let doc_a = fs::read_to_string(&a_cp).await.unwrap().parse::<TomlEditDocument>().unwrap();
+            let doc_a = fs::read_to_string(&a_cp).await.unwrap().parse::<toml_edit::Document>().unwrap();
             let a_deps = doc_a["dependencies"].as_table().unwrap();
             let a_dep_b = &a_deps["crate_b"];
             let a_ver = a_dep_b.as_table().unwrap()["version"].as_str().unwrap();
@@ -269,7 +282,7 @@ crate_b = {{ path = "../crate_b", version = "0.1.0" }}
         // check crate_c => references crate_b => "version=0.2.0"
         {
             let c_cp = tmp.join("crate_c").join("Cargo.toml");
-            let doc_c = fs::read_to_string(&c_cp).await.unwrap().parse::<TomlEditDocument>().unwrap();
+            let doc_c = fs::read_to_string(&c_cp).await.unwrap().parse::<toml_edit::Document>().unwrap();
             let c_deps = doc_c["dependencies"].as_table().unwrap();
             let c_dep_b = &c_deps["crate_b"];
             let c_ver = c_dep_b.as_table().unwrap()["version"].as_str().unwrap();
@@ -277,6 +290,7 @@ crate_b = {{ path = "../crate_b", version = "0.1.0" }}
         }
         Ok(())
     }
+
 
     #[tokio::test]
     async fn test_bump_with_chain_of_downstreams() -> Result<(), CrateError> {
@@ -292,9 +306,9 @@ crate_b = {{ path = "../crate_b", version = "0.1.0" }}
         let ob = fs::read_to_string(&cargo_b_path).await.unwrap();
         let ab = format!(
             r#"{ob}
-[dependencies]
-crate_c = {{ path = "../crate_c", version = "0.1.0" }}
-"#
+    [dependencies]
+    crate_c = {{ path = "../crate_c", version = "0.1.0" }}
+    "#
         );
         fs::write(&cargo_b_path, ab).await.unwrap();
 
@@ -302,28 +316,30 @@ crate_c = {{ path = "../crate_c", version = "0.1.0" }}
         let oa = fs::read_to_string(&cargo_a_path).await.unwrap();
         let aa = format!(
             r#"{oa}
-[dependencies]
-crate_b = {{ path = "../crate_b", version = "0.1.0" }}
-"#
+    [dependencies]
+    crate_b = {{ path = "../crate_b", version = "0.1.0" }}
+    "#
         );
         fs::write(&cargo_a_path, aa).await.unwrap();
 
         let mut ws = Workspace::<PathBuf, CrateHandle>::new(&tmp)
             .await
             .expect("workspace ok");
-        let arc_c = ws.find_crate_by_name("crate_c").expect("crate_c missing");
+
+        let arc_c = ws.find_crate_by_name("crate_c").await
+            .expect("crate_c not found");
 
         // Bump crate_c => major => "1.0.0"
         {
             let mut local_clone = {
-                let gc = arc_c.lock().expect("lock c");
+                let gc = arc_c.lock().await;
                 gc.clone()
             };
             ws.bump_crate_and_downstreams(&mut local_clone, ReleaseType::Major)
                 .await
                 .expect("bump crate_c major ok");
             {
-                let mut gc = arc_c.lock().expect("store c back");
+                let mut gc = arc_c.lock().await;
                 *gc = local_clone;
             }
         }
@@ -331,7 +347,7 @@ crate_b = {{ path = "../crate_b", version = "0.1.0" }}
         // check crate_c => 1.0.0
         {
             let path_c = {
-                let g = arc_c.lock().expect("lock c");
+                let g = arc_c.lock().await;
                 g.as_ref().join("Cargo.toml")
             };
             let ver_c = read_crate_version(&path_c).await.unwrap();
@@ -341,7 +357,7 @@ crate_b = {{ path = "../crate_b", version = "0.1.0" }}
         // check crate_b => references crate_c => "1.0.0"
         {
             let b_str = fs::read_to_string(&cargo_b_path).await.unwrap();
-            let doc_b = b_str.parse::<TomlEditDocument>().unwrap();
+            let doc_b = b_str.parse::<toml_edit::Document>().unwrap();
             let b_deps = doc_b["dependencies"].as_table().unwrap();
             let b_dep_c = &b_deps["crate_c"];
             let b_c_ver = b_dep_c.as_table().unwrap()["version"].as_str().unwrap();
@@ -351,7 +367,7 @@ crate_b = {{ path = "../crate_b", version = "0.1.0" }}
         // check crate_a => references crate_b => "1.0.0"
         {
             let a_str = fs::read_to_string(&cargo_a_path).await.unwrap();
-            let doc_a = a_str.parse::<TomlEditDocument>().unwrap();
+            let doc_a = a_str.parse::<toml_edit::Document>().unwrap();
             let a_deps = doc_a["dependencies"].as_table().unwrap();
             let a_dep_b = &a_deps["crate_b"];
             let a_b_ver = a_dep_b.as_table().unwrap()["version"].as_str().unwrap();
@@ -366,12 +382,13 @@ crate_b = {{ path = "../crate_b", version = "0.1.0" }}
         let tmp = create_mock_workspace(vec![crate_b]).await.unwrap();
 
         let mut ws = Workspace::<PathBuf, CrateHandle>::new(&tmp).await.unwrap();
-        let arc_b = ws.find_crate_by_name("b_fail").unwrap();
+        let arc_b = ws.find_crate_by_name("b_fail").await
+            .expect("b_fail crate not found");
 
-        // sabotage
+        // sabotage: remove Cargo.toml
         {
             let path_b = {
-                let gb = arc_b.lock().expect("lock crate_b");
+                let gb = arc_b.lock().await;
                 gb.as_ref().join("Cargo.toml")
             };
             fs::remove_file(&path_b).await.unwrap();
@@ -379,12 +396,12 @@ crate_b = {{ path = "../crate_b", version = "0.1.0" }}
 
         // Now attempt to bump => expect IoError
         let mut local_b_clone = {
-            let gb = arc_b.lock().expect("lock handle_b");
+            let gb = arc_b.lock().await;
             gb.clone()
         };
         let res = ws.bump_crate_and_downstreams(&mut local_b_clone, ReleaseType::Patch).await;
         {
-            let mut gb = arc_b.lock().expect("store b back anyway");
+            let mut gb = arc_b.lock().await;
             *gb = local_b_clone;
         }
 
@@ -411,29 +428,32 @@ crate_b = {{ path = "../crate_b", version = "0.1.0" }}
         Ok(())
     }
 
+
     #[tokio::test]
     async fn test_crate_handle_version_fails() -> Result<(), CrateError> {
         let single_cfg = CrateConfig::new("ver_fails").with_src_files();
         let tmp2 = create_mock_workspace(vec![single_cfg]).await.unwrap();
         let mut ws2 = Workspace::<PathBuf, CrateHandle>::new(&tmp2).await.unwrap();
-        let arc_x2 = ws2.find_crate_by_name("ver_fails").unwrap();
+
+        let arc_x2 = ws2.find_crate_by_name("ver_fails").await
+            .expect("ver_fails crate not found");
 
         // normal bump => "0.1.0" => "0.1.1"
         {
             let mut local_clone = {
-                let gx2 = arc_x2.lock().expect("lock handle_x2");
+                let gx2 = arc_x2.lock().await;
                 gx2.clone()
             };
             local_clone.bump(ReleaseType::Patch).await.expect("bump patch ok");
             {
-                let mut gx2 = arc_x2.lock().expect("store x2");
+                let mut gx2 = arc_x2.lock().await;
                 *gx2 = local_clone;
             }
         }
 
         // sabotage => set final version => "not.semver"
         let cargo_x2 = {
-            let gx2 = arc_x2.lock().expect("lock handle_x2 read path");
+            let gx2 = arc_x2.lock().await;
             gx2.as_ref().join("Cargo.toml")
         };
         let contents2 = fs::read_to_string(&cargo_x2).await.unwrap();
@@ -442,7 +462,7 @@ crate_b = {{ path = "../crate_b", version = "0.1.0" }}
 
         // now crate_handle.version() should fail
         let handle_clone = {
-            let gx2 = arc_x2.lock().expect("lock handle_x2 final");
+            let gx2 = arc_x2.lock().await;
             gx2.clone()
         };
         let ret = handle_clone.version();

@@ -19,7 +19,7 @@ where
     H: CrateHandleInterface<P> + Send + Sync + Debug + Clone,
     E: From<WorkspaceError>,
 {
-    let facade_root = facade_crate.crate_dir_path_buf();
+    let facade_root  = facade_crate.root_dir_path_buf();
     let imports_file = facade_root.join("src").join("imports.rs");
 
     let contents = match tokio::fs::read_to_string(&imports_file).await {

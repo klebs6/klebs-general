@@ -13,8 +13,9 @@ where
         trace!("Entering Workspace<P,H>::ensure_all_source_files_are_registered");
 
         for crate_handle in self.crates() {
-            debug!("Ensuring source files registered for crate '{}'", crate_handle.name());
-            crate_handle.ensure_all_source_files_are_registered().await?;
+            let guard = crate_handle.lock().await;
+            debug!("Ensuring source files registered for crate '{}'", guard.name());
+            guard.ensure_all_source_files_are_registered().await?;
         }
 
         trace!("Exiting Workspace<P,H>::ensure_all_source_files_are_registered");

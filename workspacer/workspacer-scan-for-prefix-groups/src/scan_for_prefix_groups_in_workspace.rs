@@ -1,107 +1,130 @@
 // ---------------- [ File: workspacer-scan-for-prefix-groups/src/scan_for_prefix_groups_in_workspace.rs ]
 crate::ix!();
 
-// -----------------------------------------------------------------------------
-// 3) Implementation of ScanPrefixGroups for our real Workspace<P,H>
-// -----------------------------------------------------------------------------
 #[async_trait]
-impl<P,H> ScanPrefixGroups<P,H> for Workspace<P,H>
+impl<P, H> ScanPrefixGroups<P, H> for Workspace<P, H>
 where
     for<'async_trait> P: Debug + Clone + From<PathBuf> + AsRef<Path> + Send + Sync + 'async_trait,
     H: CrateHandleInterface<P> + Send + Sync + Debug + Clone,
 {
-    // We'll make the error be `WorkspaceError` for now
     type Error = WorkspaceError;
 
     ///
     /// Identifies prefix groups using the "longest facade" logic:
     ///
-    /// 1) Collect all crates in descending order of name length.
-    /// 2) For each crate X, if not assigned, see if we can form a group with name == X,
-    ///    plus crates that start with X-.
-    /// 3) If we have at least 2, mark them as a group: X is the facade, X-3p is the three_p_crate, etc.
+    /// 1) First, we lock each `Arc<AsyncMutex<H>>` to retrieve its name (as `String`) and store
+    ///    `(name, arc_handle)` pairs in a local vector.
+    /// 2) Sort these pairs by descending name length (so "batch-mode-extra" is processed before "batch-mode").
+    /// 3) For each pair `(facade_name, facade_arc)`, if not yet assigned to a group, gather all
+    ///    `(other_name, other_arc)` whose names match `facade_name` or start with `"facade_name-"`.
+    /// 4) If we get fewer than 2 matches, no group is formed. Otherwise, we form a `PrefixGroup`
+    ///    whose `prefix = facade_name`, optionally set `prefix_crate = Some(Arc<H>)` for the one
+    ///    whose name is exactly `facade_name`, and `three_p_crate = Some(Arc<H>)` for the one
+    ///    whose name is `facade_name-3p`, with the rest in `member_crates`.
+    /// 5) We store them as `Arc<H>` (not `Arc<AsyncMutex<H>>`) by locking each handle and cloning
+    ///    the inner `H`. This ensures the `PrefixGroup` holds a “snapshot” of each crate handle
+    ///    rather than a locked mutex.
+    /// 6) Mark all involved crates as assigned. Repeat until all pairs are processed.
     ///
-    async fn scan(&self) -> Result<Vec<PrefixGroup<P,H>>, Self::Error> {
-        info!("Starting prefix group scan with 'longest facade' logic...");
+    async fn scan(&self) -> Result<Vec<PrefixGroup<P, H>>, Self::Error> {
+        use std::collections::HashSet;
+        use tracing::{debug, info, trace};
 
-        let all_crates = self.crates();
-        let mut crate_list: Vec<_> = all_crates.iter().cloned().collect();
+        info!("Starting prefix group scan with 'longest facade' logic (Arc<AsyncMutex<H>> => Arc<H> snapshot).");
 
-        // Sort crate names descending by length
-        crate_list.sort_by(|a, b| b.name().len().cmp(&a.name().len()));
+        // Collect (name, arc<mutex<h>>) for each crate by locking them once to get the name.
+        let mut ephemeral = Vec::with_capacity(self.crates().len());
+        for arc_handle in self.crates().iter().cloned() {
+            let arc_handle_clone = arc_handle.clone();
+            let locked = arc_handle_clone.lock().await; 
+            let name = locked.name().to_string();
+            ephemeral.push((name, arc_handle));
+        }
+
+        // Sort by descending name length
+        ephemeral.sort_by(|(name_a, _), (name_b, _)| name_b.len().cmp(&name_a.len()));
 
         let mut assigned = HashSet::<String>::new();
         let mut groups = Vec::new();
 
-        for crt in &crate_list {
-            let facade_name = crt.name();
-
-            if assigned.contains(&*facade_name) {
+        // Try forming groups in sorted order
+        for (facade_name, facade_arc) in &ephemeral {
+            // Already assigned?
+            if assigned.contains(facade_name) {
                 debug!(
-                    "Skipping crate '{}' because it is already assigned to a group",
+                    "Skipping crate '{}' because it's already assigned to a group",
                     facade_name
                 );
                 continue;
             }
 
-            // gather all crates that are either exactly facade_name or start with facade_name-
-            let mut potential_members = Vec::new();
-            for other_crt in &crate_list {
-                if assigned.contains(&*other_crt.name()) {
+            // Gather all ephemeral entries that match either exactly facade_name
+            // or start with "facade_name-"
+            let mut potential = Vec::new();
+            for (other_name, other_arc) in &ephemeral {
+                if assigned.contains(other_name) {
                     continue;
                 }
-                let oname = other_crt.name();
-                if oname == facade_name
-                    || (oname.starts_with(&*facade_name)
-                        && oname.get(facade_name.len()..)
-                             .map_or(false, |tail| tail.starts_with('-')))
+                if other_name == facade_name
+                    || (other_name.starts_with(facade_name)
+                        && other_name.get(facade_name.len()..)
+                                     .map_or(false, |tail| tail.starts_with('-')))
                 {
-                    potential_members.push(other_crt.clone());
+                    potential.push((other_name.clone(), other_arc.clone()));
                 }
             }
 
-            if potential_members.len() < 2 {
+            if potential.len() < 2 {
                 debug!(
-                    "Skipping crate '{}' because no other crate matched prefix '{}-'",
+                    "Skipping '{}' because it doesn't have at least 1 additional crate matching '{}-'",
                     facade_name, facade_name
                 );
                 continue;
             }
 
-            // Mark them assigned
-            for m in &potential_members {
-                assigned.insert(m.name().to_string());
+            // Mark them all assigned
+            for (nm, _) in &potential {
+                assigned.insert(nm.clone());
             }
 
-            // find prefix_crate=some( X ), three_p_crate=some( X-3p ), the rest members
+            // Convert potential members into Arc<H> snapshots
             let mut prefix_crate: Option<Arc<H>> = None;
             let mut three_p_crate: Option<Arc<H>> = None;
             let mut member_crates = Vec::new();
 
-            for pm in potential_members {
-                let pm_name = pm.name();
-                if pm_name == facade_name {
-                    prefix_crate = Some(pm.clone());
-                } else if pm_name == format!("{}-3p", facade_name) {
-                    three_p_crate = Some(pm.clone());
+            for (nm, arc_mutex_h) in potential {
+                let locked = arc_mutex_h.lock().await;
+                // Clone the underlying handle into a brand-new Arc<H>
+                let handle_snapshot = Arc::new(locked.clone());
+
+                if nm == *facade_name {
+                    // facade itself
+                    prefix_crate = Some(handle_snapshot);
+                } else if nm == format!("{}-3p", facade_name) {
+                    // the *-3p crate
+                    three_p_crate = Some(handle_snapshot);
                 } else {
-                    member_crates.push(pm.clone());
+                    // just a normal group member
+                    member_crates.push(handle_snapshot);
                 }
             }
 
+            // Build a new PrefixGroup
             let group = PrefixGroupBuilder::default()
                 .prefix(facade_name.to_string())
                 .prefix_crate(prefix_crate)
                 .three_p_crate(three_p_crate)
                 .member_crates(member_crates)
                 .build()
-                .unwrap();
+                .expect("PrefixGroupBuilder should succeed");
 
-            debug!("Formed prefix group for facade='{}'", facade_name);
+            debug!("Formed prefix group with facade='{}'", facade_name);
             groups.push(group);
         }
 
+        // Sort by .prefix() for stable output
         groups.sort_by(|a, b| a.prefix().cmp(&b.prefix()));
+
         info!("Completed prefix group scan. Found {} groups.", groups.len());
         Ok(groups)
     }

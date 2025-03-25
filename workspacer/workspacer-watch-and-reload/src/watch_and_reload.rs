@@ -13,7 +13,7 @@ pub trait WatchAndReload {
         cancel_token: CancellationToken,
     ) -> Result<(), Self::Error>;
 
-    fn is_relevant_change(&self, path: &Path) -> bool;
+    async fn is_relevant_change(&self, path: &Path) -> bool;
 }
 
 #[async_trait]
@@ -31,7 +31,7 @@ impl WatchAndReload for CrateHandle {
         runner: Arc<dyn CommandRunner + Send + Sync + 'static>,
         cancel_token: CancellationToken,
     ) -> Result<(), Self::Error> {
-        let crate_path = self.crate_dir_path_buf();
+        let crate_path = self.root_dir_path_buf();
         info!("Setting up file watching for crate at: {}", crate_path.display());
 
         let (mut watcher, notify_rx) = setup_file_watching(&crate_path)?;
@@ -55,7 +55,7 @@ impl WatchAndReload for CrateHandle {
     ///
     /// A change is considered “relevant” if it's Cargo.toml or in `src/`
     ///
-    fn is_relevant_change(&self, path: &Path) -> bool {
+    async fn is_relevant_change(&self, path: &Path) -> bool {
         if path.file_name() == Some(std::ffi::OsStr::new("Cargo.toml")) {
             return true;
         }
@@ -80,7 +80,7 @@ where
     ) -> Result<(), Self::Error> {
 
         // 1) Setup the file watcher
-        let workspace_path = self.workspace_dir_path_buf();
+        let workspace_path = self.root_dir_path_buf();
         let (mut watcher, notify_rx) = setup_file_watching(&workspace_path)
             .map_err(WorkspaceError::from)?;
 
@@ -97,14 +97,18 @@ where
     }
 
     /// (unchanged) - determines if a file change is relevant
-    fn is_relevant_change(&self, path: &Path) -> bool {
+    async fn is_relevant_change(&self, path: &Path) -> bool {
         // same logic as before:
         if path.file_name() == Some(std::ffi::OsStr::new("Cargo.toml")) {
             return true;
         }
 
         for crate_handle in self.crates() {
-            let crate_src_path = crate_handle.crate_dir_path_buf().join("src");
+
+            let guard = crate_handle.lock().await;
+
+            let crate_src_path = guard.root_dir_path_buf().join("src");
+
             if path.starts_with(&crate_src_path) {
                 return true;
             }

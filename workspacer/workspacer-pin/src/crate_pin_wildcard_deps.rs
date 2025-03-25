@@ -17,7 +17,7 @@ impl PinWildcardDependencies for CrateHandle {
         // Store the Arc so it isn't dropped before we're done using guard
         let cargo_toml_arc = self.cargo_toml_direct();
         let cargo_toml_path = {
-            let guard = cargo_toml_arc.lock().unwrap();
+            let guard = cargo_toml_arc.lock().await;
             let path = guard.as_ref().to_path_buf();
             trace!("pin_wildcard_dependencies: got Cargo.toml path={:?}", path);
             path
@@ -50,7 +50,7 @@ impl PinWildcardDependencies for CrateHandle {
 
         // Now overwrite the in-memory CargoToml under lock
         {
-            let mut guard = cargo_toml_arc.lock().unwrap();
+            let mut guard = cargo_toml_arc.lock().await;
             *guard = ephemeral;
             debug!(
                 "pin_wildcard_dependencies: replaced in-memory CargoToml at path={:?}",

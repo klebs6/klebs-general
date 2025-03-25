@@ -52,7 +52,7 @@ tracing-subscriber      = { version = "0.3", default-features = false, features 
 disable_macro           = "0.3.6"
 ra_ap_syntax            = "0.0.237"
 scan-crate-for-typedefs = "0.8.1"
-async-try-from          = "0.1.0"
+async-try-from          = "0.2.0"
 which                   = "*"
 batch-mode              = { version = "*", path = "../../batch-mode/batch-mode" }
 

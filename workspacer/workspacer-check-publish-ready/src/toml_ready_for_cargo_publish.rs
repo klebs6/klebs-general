@@ -8,7 +8,7 @@ impl ReadyForCargoPublish for dyn CargoTomlInterface {
 
     /// Checks if the crate is ready for Cargo publishing
     async fn ready_for_cargo_publish(&self) -> Result<(), Self::Error> {
-        self.validate_integrity()?;
+        self.validate_integrity().await?;
         self.check_required_fields_for_publishing()?;
         self.check_version_validity_for_publishing()?;
         Ok(())
@@ -20,7 +20,7 @@ impl ReadyForCargoPublish for CargoToml {
     type Error = CargoTomlError;
 
     async fn ready_for_cargo_publish(&self) -> Result<(), Self::Error> {
-        self.validate_integrity()?;
+        self.validate_integrity().await?;
         self.check_required_fields_for_publishing()?;
         self.check_version_validity_for_publishing()?;
         Ok(())

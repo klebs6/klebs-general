@@ -25,14 +25,16 @@ where
         })?;
 
         // Build a map of `crate_name -> &CrateHandle`
-        let mut name_to_handle = BTreeMap::<String, &H>::new();
+        let mut name_to_handle = BTreeMap::<String, Arc<AsyncMutex<H>>>::new();
         for crate_handle in self.into_iter() {
 
-            let cargo_toml = crate_handle.cargo_toml();
+            let guard = crate_handle.lock().await;
 
-            let package_section = cargo_toml
-                .get_package_section()
-                .map_err(|e| WorkspaceError::CrateError(CrateError::CargoTomlError(e)))?;
+            let cargo_toml = guard.cargo_toml();
+
+            let guard = cargo_toml.lock().await;
+
+            let package_section = guard.get_package_section()?;
 
             let crate_name = package_section
                 .get("name")
@@ -40,7 +42,7 @@ where
                 .unwrap_or("<unknown_name>")
                 .to_string();
 
-            name_to_handle.insert(crate_name, crate_handle);
+            name_to_handle.insert(crate_name, crate_handle.clone());
         }
 
         info!(
@@ -57,14 +59,15 @@ where
 
             // Then look up the handle by that string
             if let Some(crate_handle) = name_to_handle.get(crate_node_name) {
-                let is_private = crate_handle.is_private()?;
+                let guard = crate_handle.lock().await;
+                let is_private = guard.is_private().await?;
                 if is_private {
                     debug!("SKIP: crate '{crate_node_name}' is private.");
                     continue;
                 }
 
-                let crate_name    = crate_handle.name();
-                let crate_version = crate_handle.version().expect("expected crate to have a version");
+                let crate_name    = guard.name();
+                let crate_version = guard.version().expect("expected crate to have a version");
 
                 info!("------------------------------------------------");
                 info!("Crate:   {crate_name}");
@@ -76,7 +79,7 @@ where
                 } else {
                     info!("Attempting to publish {crate_name}@{crate_version} ...");
                     // Run cargo publish, ignoring 'already exists' errors
-                    match crate_handle.try_publish(dry_run).await {
+                    match guard.try_publish(dry_run).await {
                         Ok(_) => { /* all good */ }
                         Err(e) => {
                             error!("FATAL: Could not publish {crate_name}@{crate_version}.");

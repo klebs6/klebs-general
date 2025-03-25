@@ -29,7 +29,7 @@ where
 
         for arc_crate in crate_list {
             let crate_name = {
-                let h = arc_crate.lock().unwrap();
+                let h = arc_crate.lock().await;
                 h.name().to_string()
             };
             if visited.contains(&crate_name) {
@@ -39,9 +39,9 @@ where
             // 2) lock for short, synchronous update
             let changed = {
 
-                let mut h          = arc_crate.lock().unwrap();
+                let mut h          = arc_crate.lock().await;
                 let toml           = h.cargo_toml();
-                let mut toml_guard = toml.lock().unwrap();
+                let mut toml_guard = toml.lock().await;
 
                 // do in-memory updates
                 let changed = toml_guard.update_dependency_version(dep_name, &new_version.to_string())?;
@@ -53,11 +53,13 @@ where
             if changed {
                 // 3) do async save, once the guard is dropped
                 {
-                    let mut toml = arc_crate
-                        .lock().unwrap()
-                        .cargo_toml()
-                        .lock().unwrap();
-                    toml.save_to_disk().await?;
+                    let crate_guard = arc_crate.lock().await;
+
+                    let toml = crate_guard.cargo_toml();
+
+                    let mut toml_guard = toml.lock().await;
+
+                    toml_guard.save_to_disk().await?;
                 }
 
                 visited.insert(crate_name.clone());

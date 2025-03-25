@@ -81,7 +81,7 @@ impl ApplyAiReadmeOutput for CrateHandle {
         // 1) We create a local PathBuf by locking, extracting the path, and dropping the guard immediately:
         let cargo_path = {
             let cargo_toml_arc = self.cargo_toml();    // Arc<Mutex<dyn CargoTomlInterface>>
-            let mut guard = cargo_toml_arc.lock().unwrap();
+            let mut guard = cargo_toml_arc.lock().await;
             let path_buf = guard.as_ref().to_path_buf();
             // guard goes out of scope here
             path_buf

@@ -5,18 +5,18 @@ lazy_static! {
     /// We store them as `Box<dyn Any + Send + Sync>` so they can be downcast to the appropriate
     /// generic type at runtime. This allows us to store multiple `MockWorkspace<P,H>` types
     /// while keeping a single global map.
-    static ref MOCK_WORKSPACE_REGISTRY: Mutex<HashMap<PathBuf, Box<dyn std::any::Any + Send + Sync>>> 
-        = Mutex::new(HashMap::new());
+    static ref MOCK_WORKSPACE_REGISTRY: AsyncMutex<HashMap<PathBuf, Box<dyn std::any::Any + Send + Sync>>> 
+        = AsyncMutex::new(HashMap::new());
 }
 
 impl MockWorkspace<PathBuf, MockCrateHandle> {
     /// Registers this `MockWorkspace<PathBuf, MockCrateHandle>` in the global registry so that
     /// subsequent calls to `MockWorkspace::<PathBuf, MockCrateHandle>::new(&path)` will pick up
     /// these exact simulation settings for the given path.
-    pub fn register_in_global(&self) {
+    pub async fn register_in_global(&self) {
         let path: PathBuf = self.path().to_path_buf();
         trace!("Registering MockWorkspace<PathBuf,MockCrateHandle> in global map, path={:?}", path);
-        let mut lock = MOCK_WORKSPACE_REGISTRY.lock().expect("Failed to lock global registry");
+        let mut lock = MOCK_WORKSPACE_REGISTRY.lock().await;
         // We store it as a `Box<dyn Any + Send + Sync>` so we can downcast later:
         lock.insert(path.clone(), Box::new(self.clone()));
         info!("MockWorkspace<PathBuf,MockCrateHandle> with path={:?} has been registered", path);
@@ -36,10 +36,10 @@ where
     path: P,
 
     /// A list of crates in this mock workspace.
-    /// Each crate is itself wrapped in an Arc<Mutex<...>> so the calling code
+    /// Each crate is itself wrapped in an Arc<AsyncMutex<...>> so the calling code
     /// can lock and operate on them.
     #[builder(default = "Vec::new()")]
-    crates: Vec<Arc<Mutex<H>>>,
+    crates: Vec<Arc<AsyncMutex<H>>>,
 
     /// If `simulate_missing_cargo_toml` is true, then we pretend that there's
     /// no top-level Cargo.toml, causing `AsyncTryFrom::new(...)` to fail
@@ -88,8 +88,8 @@ where
         // Adjust as needed.
 
         // If `H` has a convenience constructor, you might do:
-        // let crate_a = Arc::new(Mutex::new(H::new_from_mock("crateA")?));
-        // let crate_b = Arc::new(Mutex::new(H::new_from_mock("crateB")?));
+        // let crate_a = Arc::new(AsyncMutex::new(H::new_from_mock("crateA")?));
+        // let crate_b = Arc::new(AsyncMutex::new(H::new_from_mock("crateB")?));
         // For simplicity, we'll keep it empty unless you have a known H constructor.
         let crates_list = vec![];
 
@@ -121,7 +121,7 @@ where
         // 1) See if there's a pre-registered MockWorkspace in the global map.
         //    If found, attempt a downcast to `MockWorkspace<P,H>`.
         {
-            let lock = MOCK_WORKSPACE_REGISTRY.lock().expect("Failed to lock global registry");
+            let lock = MOCK_WORKSPACE_REGISTRY.lock().await;
             if let Some(boxed_any) = lock.get(&path_buf) {
                 debug!("Found a pre-registered Box<dyn Any> for path={:?}", path_buf);
                 if let Some(existing_ws) = boxed_any.downcast_ref::<MockWorkspace<P, H>>() {
@@ -185,7 +185,7 @@ where
     H: Clone + CrateHandleInterface<P>,
     for<'async_trait> P: Clone + From<PathBuf> + AsRef<Path> + Send + Sync + 'async_trait,
 {
-    fn crates(&self) -> &[Arc<Mutex<H>>] {
+    fn crates(&self) -> &[Arc<AsyncMutex<H>>] {
         trace!("MockWorkspace::GetCrates::crates called");
         self.crates()
     }
@@ -202,6 +202,7 @@ where
     }
 }
 
+#[async_trait]
 impl<P, H> ValidateIntegrity for MockWorkspace<P, H>
 where
     H: Clone + CrateHandleInterface<P>,
@@ -209,7 +210,7 @@ where
 {
     type Error = WorkspaceError;
 
-    fn validate_integrity(&self) -> Result<(), Self::Error> {
+    async fn validate_integrity(&self) -> Result<(), Self::Error> {
         trace!("MockWorkspace::validate_integrity called");
         if *self.simulate_failed_integrity() {
             error!("MockWorkspace: simulating overall integrity failure");
@@ -219,23 +220,24 @@ where
         }
         // Otherwise, just validate each crate in turn
         for c in self.crates().iter() {
-            let guard = c.lock().expect("MockWorkspace: could not lock crate mutex");
-            guard.validate_integrity()?;
+            let guard = c.lock().await;
+            guard.validate_integrity().await?;
         }
         info!("MockWorkspace: integrity validation passed");
         Ok(())
     }
 }
 
+#[async_trait]
 impl<P, H> FindCrateByName<P, H> for MockWorkspace<P, H>
 where
     H: Clone + CrateHandleInterface<P>,
     for<'async_trait> P: Clone + From<PathBuf> + AsRef<Path> + Send + Sync + 'async_trait,
 {
-    fn find_crate_by_name(&self, name: &str) -> Option<Arc<Mutex<H>>> {
+    async fn find_crate_by_name(&self, name: &str) -> Option<Arc<AsyncMutex<H>>> {
         trace!("MockWorkspace::FindCrateByName::find_crate_by_name called, name={}", name);
         for crate_arc in self.crates().iter() {
-            let guard = crate_arc.lock().expect("MockWorkspace: could not lock crate mutex");
+            let guard = crate_arc.lock().await;
             if guard.name() == name {
                 debug!("MockWorkspace: found crate matching name='{}'", name);
                 return Some(Arc::clone(crate_arc));
@@ -246,16 +248,17 @@ where
     }
 }
 
+#[async_trait]
 impl<P, H> GetAllCrateNames for MockWorkspace<P, H>
 where
     H: Clone + CrateHandleInterface<P>,
     for<'async_trait> P: Clone + From<PathBuf> + AsRef<Path> + Send + Sync + 'async_trait,
 {
-    fn get_all_crate_names(&self) -> Vec<String> {
+    async fn get_all_crate_names(&self) -> Vec<String> {
         trace!("MockWorkspace::GetAllCrateNames::get_all_crate_names called");
         let mut names = vec![];
         for crate_arc in self.crates().iter() {
-            let guard = crate_arc.lock().expect("MockWorkspace: could not lock crate mutex");
+            let guard = crate_arc.lock().await;
             names.push(guard.name().to_string());
         }
         info!("MockWorkspace: returning crate names: {:?}", names);
@@ -280,7 +283,7 @@ where
     H: Clone + CrateHandleInterface<P> + Send + Sync,
     for<'async_trait> P: Clone + From<PathBuf> + AsRef<Path> + Send + Sync + 'async_trait,
 {
-    type Item = Arc<Mutex<H>>;
+    type Item = Arc<AsyncMutex<H>>;
     type Error = WorkspaceError;
 
     async fn find_items(_path: &Path) -> Result<Vec<Self::Item>, Self::Error> {
@@ -396,14 +399,14 @@ mod test_mock_workspace {
     fn test_mock_workspace_find_crate_by_name() {
         // We'll put some crates in the list and see if we can find them by name
         // For demonstration, we'll create 2 MockCrateHandles with names "crateA" and "crateB"
-        let crate_a = Arc::new(Mutex::new(
+        let crate_a = Arc::new(AsyncMutex::new(
             MockCrateHandle::fully_valid_config()
                 .to_builder()
                 .crate_name("crateA")
                 .build()
                 .unwrap()
         ));
-        let crate_b = Arc::new(Mutex::new(
+        let crate_b = Arc::new(AsyncMutex::new(
             MockCrateHandle::fully_valid_config()
                 .to_builder()
                 .crate_name("crateB")
@@ -426,14 +429,14 @@ mod test_mock_workspace {
     #[traced_test]
     fn test_mock_workspace_get_all_crate_names() {
         // Similar to above
-        let crate_1 = Arc::new(Mutex::new(
+        let crate_1 = Arc::new(AsyncMutex::new(
             MockCrateHandle::fully_valid_config()
                 .to_builder()
                 .crate_name("crateAlpha")
                 .build()
                 .unwrap()
         ));
-        let crate_2 = Arc::new(Mutex::new(
+        let crate_2 = Arc::new(AsyncMutex::new(
             MockCrateHandle::fully_valid_config()
                 .to_builder()
                 .crate_name("crateBeta")

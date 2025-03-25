@@ -268,10 +268,11 @@ impl IsValidVersion for MockCargoToml {
     }
 }
 
+#[async_trait]
 impl ValidateIntegrity for MockCargoToml {
     type Error = CargoTomlError;
 
-    fn validate_integrity(&self) -> Result<(), Self::Error> {
+    async fn validate_integrity(&self) -> Result<(), Self::Error> {
         trace!("MockCargoToml::validate_integrity called");
         self.check_existence()?;
         self.check_required_fields_for_integrity()?;
@@ -571,7 +572,7 @@ mod test_mock_cargo_toml {
     }
 
     #[traced_test]
-    fn test_mock_cargo_toml_fully_valid_config() {
+    async fn test_mock_cargo_toml_fully_valid_config() {
         let mock = MockCargoToml::fully_valid_config();
 
         // All checks should pass
@@ -580,7 +581,7 @@ mod test_mock_cargo_toml {
         assert!(mock.check_required_fields_for_integrity().is_ok());
         assert!(mock.check_version_validity_for_publishing().is_ok());
         assert!(mock.check_version_validity_for_integrity().is_ok());
-        assert!(mock.validate_integrity().is_ok());
+        assert!(mock.validate_integrity().await.is_ok());
 
         let version = mock.version().expect("Expected valid version");
         assert_eq!(version.to_string(), "1.2.3");

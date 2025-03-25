@@ -13,10 +13,10 @@ impl Bump for CrateHandle {
 
             // Now lock the CargoToml for synchronous editing
             let cargo_toml_arc = self.cargo_toml();
-            let mut guard = cargo_toml_arc.lock().unwrap();
+            let mut guard = cargo_toml_arc.lock().await;
 
             // Validate
-            guard.validate_integrity()?;
+            guard.validate_integrity().await?;
 
             // Get + bump old version
             let mut old_ver = guard.version()?;
@@ -37,7 +37,7 @@ impl Bump for CrateHandle {
         // Step 2: Do the async write outside the guard
         {
             let cargo_toml_arc = self.cargo_toml();
-            let mut guard = cargo_toml_arc.lock().unwrap();
+            let mut guard = cargo_toml_arc.lock().await;
             guard.save_to_disk().await.map_err(|e| {
                 // if needed, map error into CrateError
                 // e.g. CrateError::IoError or similar
@@ -67,7 +67,7 @@ mod test_bump_crate_handle {
         ver_item.as_str().map(|s| s.to_string())
     }
 
-    async fn setup_single_crate_handle(crate_name: &str) -> (tempfile::TempDir, Arc<Mutex<CrateHandle>>) {
+    async fn setup_single_crate_handle(crate_name: &str) -> (tempfile::TempDir, Arc<AsyncMutex<CrateHandle>>) {
         let single_cfg = CrateConfig::new(crate_name).with_src_files();
         let root_path = create_mock_workspace(vec![single_cfg])
             .await
@@ -77,7 +77,7 @@ mod test_bump_crate_handle {
             .await
             .expect("Failed to create CrateHandle");
 
-        let arc_handle = Arc::new(Mutex::new(raw_handle));
+        let arc_handle = Arc::new(AsyncMutex::new(raw_handle));
         (tempfile::TempDir::new_in(root_path.parent().unwrap()).unwrap(), arc_handle)
     }
 
@@ -89,7 +89,7 @@ mod test_bump_crate_handle {
         // Check initial
         {
             let path = {
-                let g = arc_handle.lock().expect("lock handle");
+                let g = arc_handle.lock().await;
                 g.as_ref().join("Cargo.toml")
             };
             let initial_ver = read_package_version(&path).await.expect("initial version");
@@ -99,13 +99,13 @@ mod test_bump_crate_handle {
         // Bump => Major
         {
             let mut local_clone = {
-                let g = arc_handle.lock().expect("lock handle for bump");
+                let g = arc_handle.lock().await;
                 g.clone()
             };
             local_clone.bump(ReleaseType::Major).await.expect("bump major ok");
             // store it back
             {
-                let mut g = arc_handle.lock().expect("re-lock handle final");
+                let mut g = arc_handle.lock().await;
                 *g = local_clone;
             }
         }
@@ -113,7 +113,7 @@ mod test_bump_crate_handle {
         // Confirm => 1.0.0
         {
             let path = {
-                let g = arc_handle.lock().expect("lock final read");
+                let g = arc_handle.lock().await;
                 g.as_ref().join("Cargo.toml")
             };
             let updated_ver = read_package_version(&path).await.expect("updated version");
@@ -126,19 +126,19 @@ mod test_bump_crate_handle {
         let (_temp, arc_handle) = setup_single_crate_handle("minor_ok").await;
         {
             let mut local_clone = {
-                let g = arc_handle.lock().expect("lock handle");
+                let g = arc_handle.lock().await;
                 g.clone()
             };
             local_clone.bump(ReleaseType::Minor).await.expect("bump minor ok");
             {
-                let mut g = arc_handle.lock().expect("store handle");
+                let mut g = arc_handle.lock().await;
                 *g = local_clone;
             }
         }
         // verify
         {
             let path = {
-                let g = arc_handle.lock().expect("lock handle final read");
+                let g = arc_handle.lock().await;
                 g.as_ref().join("Cargo.toml")
             };
             let ver = read_package_version(&path).await.unwrap();
@@ -151,19 +151,19 @@ mod test_bump_crate_handle {
         let (_temp, arc_handle) = setup_single_crate_handle("patch_ok").await;
         {
             let mut local_clone = {
-                let g = arc_handle.lock().expect("lock handle");
+                let g = arc_handle.lock().await;
                 g.clone()
             };
             local_clone.bump(ReleaseType::Patch).await.expect("bump patch ok");
             {
-                let mut g = arc_handle.lock().expect("store patch handle");
+                let mut g = arc_handle.lock().await;
                 *g = local_clone;
             }
         }
         // read final
         {
             let p = {
-                let gd = arc_handle.lock().expect("lock final read");
+                let gd = arc_handle.lock().await;
                 gd.as_ref().join("Cargo.toml")
             };
             let v = read_package_version(&p).await.unwrap();
@@ -178,18 +178,18 @@ mod test_bump_crate_handle {
         // alpha(None)
         {
             let mut lc = {
-                let g = arc_handle.lock().expect("lock alpha none");
+                let g = arc_handle.lock().await;
                 g.clone()
             };
             lc.bump(ReleaseType::Alpha(None)).await.expect("bump alpha none");
             {
-                let mut g = arc_handle.lock().expect("store alpha none");
+                let mut g = arc_handle.lock().await;
                 *g = lc;
             }
         }
         {
             let path = {
-                let gd = arc_handle.lock().expect("read alpha1");
+                let gd = arc_handle.lock().await;
                 gd.as_ref().join("Cargo.toml")
             };
             let alpha_ver = read_package_version(&path).await.unwrap();
@@ -199,18 +199,18 @@ mod test_bump_crate_handle {
         // alpha(Some(99))
         {
             let mut lc = {
-                let g = arc_handle.lock().expect("lock alpha 99");
+                let g = arc_handle.lock().await;
                 g.clone()
             };
             lc.bump(ReleaseType::Alpha(Some(99))).await.expect("bump alpha 99");
             {
-                let mut g = arc_handle.lock().expect("store alpha 99");
+                let mut g = arc_handle.lock().await;
                 *g = lc;
             }
         }
         {
             let path = {
-                let gd = arc_handle.lock().expect("read alpha99");
+                let gd = arc_handle.lock().await;
                 gd.as_ref().join("Cargo.toml")
             };
             let alpha99 = read_package_version(&path).await.unwrap();
@@ -224,7 +224,7 @@ mod test_bump_crate_handle {
         // sabotage
         {
             let p = {
-                let g = arc_handle.lock().expect("lock sabotage");
+                let g = arc_handle.lock().await;
                 g.as_ref().join("Cargo.toml")
             };
             let contents = fs::read_to_string(&p).await.unwrap();
@@ -233,12 +233,12 @@ mod test_bump_crate_handle {
         }
 
         let mut local_clone = {
-            let g = arc_handle.lock().expect("lock for bump");
+            let g = arc_handle.lock().await;
             g.clone()
         };
         let result = local_clone.bump(ReleaseType::Patch).await;
         {
-            let mut gg = arc_handle.lock().expect("store sabotage back");
+            let mut gg = arc_handle.lock().await;
             *gg = local_clone;
         }
         match result {
@@ -246,7 +246,7 @@ mod test_bump_crate_handle {
                 CargoTomlError::MissingPackageSection { cargo_toml_file }
             )) => {
                 let real_path = {
-                    let gg = arc_handle.lock().expect("re-lock read final path");
+                    let gg = arc_handle.lock().await;
                     gg.as_ref().join("Cargo.toml")
                 };
                 assert_eq!(cargo_toml_file, real_path);
@@ -261,7 +261,7 @@ mod test_bump_crate_handle {
         // sabotage
         {
             let p = {
-                let gd = arc_handle.lock().expect("lock sabotage");
+                let gd = arc_handle.lock().await;
                 gd.as_ref().join("Cargo.toml")
             };
             let s = fs::read_to_string(&p).await.unwrap();
@@ -269,12 +269,12 @@ mod test_bump_crate_handle {
             fs::write(&p, sabotage).await.unwrap();
         }
         let mut lc = {
-            let g = arc_handle.lock().expect("lock handle");
+            let g = arc_handle.lock().await;
             g.clone()
         };
         let result = lc.bump(ReleaseType::Major).await;
         {
-            let mut g = arc_handle.lock().expect("store sabotage");
+            let mut g = arc_handle.lock().await;
             *g = lc;
         }
         match result {
@@ -282,7 +282,7 @@ mod test_bump_crate_handle {
                 CargoTomlError::MissingRequiredFieldForIntegrity { cargo_toml_file, field }
             )) => {
                 let real_path = {
-                    let gg = arc_handle.lock().expect("re-lock final path");
+                    let gg = arc_handle.lock().await;
                     gg.as_ref().join("Cargo.toml")
                 };
                 assert_eq!(cargo_toml_file, real_path);
@@ -297,7 +297,7 @@ mod test_bump_crate_handle {
         let (_temp, arc_handle) = setup_single_crate_handle("invalid_version_format").await;
         {
             let path = {
-                let g = arc_handle.lock().expect("lock sabotage");
+                let g = arc_handle.lock().await;
                 g.as_ref().join("Cargo.toml")
             };
             let c = fs::read_to_string(&path).await.unwrap();
@@ -305,12 +305,12 @@ mod test_bump_crate_handle {
             fs::write(&path, sabotage).await.unwrap();
         }
         let mut lc = {
-            let g = arc_handle.lock().expect("lock for bump");
+            let g = arc_handle.lock().await;
             g.clone()
         };
         let result = lc.bump(ReleaseType::Patch).await;
         {
-            let mut g = arc_handle.lock().expect("store back after sabotage");
+            let mut g = arc_handle.lock().await;
             *g = lc;
         }
         match result {
@@ -318,7 +318,7 @@ mod test_bump_crate_handle {
                 CargoTomlError::InvalidVersionFormat { cargo_toml_file, version }
             )) => {
                 let real_path = {
-                    let gg = arc_handle.lock().expect("re-lock final path");
+                    let gg = arc_handle.lock().await;
                     gg.as_ref().join("Cargo.toml")
                 };
                 assert_eq!(cargo_toml_file, real_path);
@@ -333,18 +333,18 @@ mod test_bump_crate_handle {
         let (_temp, arc_handle) = setup_single_crate_handle("io_error_missing_toml").await;
         {
             let path = {
-                let g = arc_handle.lock().expect("lock sabotage");
+                let g = arc_handle.lock().await;
                 g.as_ref().join("Cargo.toml")
             };
             fs::remove_file(&path).await.unwrap();
         }
         let mut lc = {
-            let g = arc_handle.lock().expect("lock for bump");
+            let g = arc_handle.lock().await;
             g.clone()
         };
         let result = lc.bump(ReleaseType::Patch).await;
         {
-            let mut g = arc_handle.lock().expect("store back after sabotage");
+            let mut g = arc_handle.lock().await;
             *g = lc;
         }
         match result {
@@ -360,18 +360,18 @@ mod test_bump_crate_handle {
         let (_temp, arc_handle) = setup_single_crate_handle("alpha_huge").await;
         let big_num = 999999999999999999u64;
         let mut lc = {
-            let g = arc_handle.lock().expect("lock handle");
+            let g = arc_handle.lock().await;
             g.clone()
         };
         let res = lc.bump(ReleaseType::Alpha(Some(big_num))).await;
         {
-            let mut g = arc_handle.lock().expect("store handle after alpha huge");
+            let mut g = arc_handle.lock().await;
             *g = lc;
         }
         assert!(res.is_ok(), "Should not fail semver parse for large alpha number");
 
         let cargo_toml_path = {
-            let gd = arc_handle.lock().expect("final read lock");
+            let gd = arc_handle.lock().await;
             gd.as_ref().join("Cargo.toml")
         };
         let new_ver_str = read_package_version(&cargo_toml_path).await.expect("expected version");

@@ -53,16 +53,15 @@ where
         self.add_to_workspace_members(&new_crate_dir).await?;
 
         // 3) Build a new CrateHandle
-        let new_handle = H::new(&new_crate_dir).await
-            .map_err(|e| WorkspaceError::CrateError(e))?;
+        let new_handle = H::new(&new_crate_dir).await?;
         debug!("Created handle for crate='{}'", new_handle.name());
 
         // *** IMPORTANT FIX ***: push this new handle into self.crates 
         // so that subsequent scan() sees it.
         {
             // We get a mutable reference to our crates (from the trait method).
-            let mut_crates = self.crates();
-            mut_crates.push(new_handle.clone());
+            let mut mut_crates = self.crates().to_vec();
+            mut_crates.push(Arc::new(AsyncMutex::new(new_handle.clone())));
             debug!("Pushed new crate '{}' into in-memory list. Now have {} crates in memory.",
                    new_handle.name(), mut_crates.len());
         }

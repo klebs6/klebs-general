@@ -18,7 +18,7 @@ impl ReadyForCargoPublish for CrateHandle {
     /// Checks if the crate is ready for Cargo publishing
     async fn ready_for_cargo_publish(&self) -> Result<(), Self::Error> {
 
-        let crate_path = self.crate_dir_path_buf();
+        let crate_path = self.root_dir_path_buf();
 
         trace!("Entering CrateHandle::ready_for_cargo_publish() at path={:?}", crate_path);
 

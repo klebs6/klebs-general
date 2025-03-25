@@ -42,23 +42,23 @@ where
 
         // 1) Compute the relative path from the target crate to the dep crate
         let target_absolute = target_crate
-            .crate_dir_path_buf()
+            .root_dir_path_buf()
             .canonicalize()
             .map_err(|e| {
                 error!("Failed to canonicalize target_crate path: {:?}", e);
                 WorkspaceError::IoError {
                     io_error: Arc::new(e),
-                    context: format!("canonicalizing path for target_crate at {:?}", target_crate.crate_dir_path_buf()),
+                    context: format!("canonicalizing path for target_crate at {:?}", target_crate.root_dir_path_buf()),
                 }
             })?;
         let dep_absolute = dep_crate
-            .crate_dir_path_buf()
+            .root_dir_path_buf()
             .canonicalize()
             .map_err(|e| {
                 error!("Failed to canonicalize dep_crate path: {:?}", e);
                 WorkspaceError::IoError {
                     io_error: Arc::new(e),
-                    context: format!("canonicalizing path for dep_crate at {:?}", dep_crate.crate_dir_path_buf()),
+                    context: format!("canonicalizing path for dep_crate at {:?}", dep_crate.root_dir_path_buf()),
                 }
             })?;
         let rel_path = pathdiff::diff_paths(&dep_absolute, &target_absolute)
@@ -224,7 +224,7 @@ mod test_add_internal_dependency {
         );
 
         // 6) Verify that crateA's src/imports.rs now has a pub(crate) use crateB
-        let imports_rs_a = crate_a.crate_dir_path_buf().join("src").join("imports.rs");
+        let imports_rs_a = crate_a.root_dir_path_buf().join("src").join("imports.rs");
         debug!("Reading updated imports.rs at {:?}", imports_rs_a);
         let imports_contents = fs::read_to_string(&imports_rs_a).await
             .expect("Failed to read updated imports.rs for crateA");
@@ -266,7 +266,7 @@ mod test_add_internal_dependency {
             .find(|c| c.name() == "crateY")
             .expect("Expected crateY in workspace");
 
-        let imports_rs = crate_x.crate_dir_path_buf().join("src").join("imports.rs");
+        let imports_rs = crate_x.root_dir_path_buf().join("src").join("imports.rs");
         fs::create_dir_all(imports_rs.parent().unwrap())
             .await
             .expect("Failed to create src dir");

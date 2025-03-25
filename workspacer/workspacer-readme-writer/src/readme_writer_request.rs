@@ -50,7 +50,7 @@ where
         //    but we must not hold any lock across await, so keep it “direct.”
         let direct_authors = {
             let cargo_toml = crate_handle_obj.cargo_toml();
-            let mut guard = cargo_toml.lock().unwrap();
+            let mut guard = cargo_toml.lock().await;
             guard.get_package_authors()?
         };
         let maybe_cargo_toml_package_authors = if direct_authors.is_some() {
@@ -62,7 +62,7 @@ where
 
         let direct_edition = {
             let cargo_toml = crate_handle_obj.cargo_toml();
-            let mut guard = cargo_toml.lock().unwrap();
+            let mut guard = cargo_toml.lock().await;
             guard.get_rust_edition()?
         };
         let maybe_cargo_toml_rust_edition = if direct_edition.is_some() {
@@ -73,7 +73,7 @@ where
 
         let direct_license = {
             let cargo_toml = crate_handle_obj.cargo_toml();
-            let mut guard = cargo_toml.lock().unwrap();
+            let mut guard = cargo_toml.lock().await;
             guard.get_license_type()?
         };
         let maybe_cargo_toml_license = if direct_license.is_some() {
@@ -84,7 +84,7 @@ where
 
         let direct_repo = {
             let cargo_toml = crate_handle_obj.cargo_toml();
-            let mut guard = cargo_toml.lock().unwrap();
+            let mut guard = cargo_toml.lock().await;
             guard.get_crate_repository_location()?
         };
         let maybe_cargo_toml_crate_repository_location = if direct_repo.is_some() {

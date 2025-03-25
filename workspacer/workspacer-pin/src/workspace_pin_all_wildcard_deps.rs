@@ -51,7 +51,7 @@ where
         // For each crate in this workspace, do not hold the MutexGuard across .await
         for arc_crate in self.crates() {
             let crate_path = {
-                let guard = arc_crate.lock().expect("expected to lock crate");
+                let guard = arc_crate.lock().await;
                 let path = guard.as_ref().to_path_buf();
                 debug!(
                     "pin_all_wildcard_dependencies: captured crate path={:?}, dropping guard",
@@ -95,7 +95,7 @@ where
 
             // Overwrite the crate in memory
             {
-                let mut guard = arc_crate.lock().expect("expected to lock crate for overwrite");
+                let mut guard = arc_crate.lock().await;
                 *guard = ephemeral;
                 debug!(
                     "pin_all_wildcard_dependencies: replaced crate data in memory for path={:?}",

@@ -1,12 +1,13 @@
 // ---------------- [ File: workspacer-toml/src/validate_integrity.rs ]
 crate::ix!();
 
+#[async_trait]
 impl ValidateIntegrity for CargoToml {
 
     type Error = CargoTomlError;
 
     /// Validates the integrity of a crate by checking required files and directory structure
-    fn validate_integrity(&self) -> Result<(), Self::Error> {
+    async fn validate_integrity(&self) -> Result<(), Self::Error> {
         self.check_existence()?;
         self.check_required_fields_for_integrity()?;
         self.check_version_validity_for_integrity()?;
@@ -21,8 +22,8 @@ mod test_validate_integrity {
     use tempfile::tempdir;
     use std::fs::File;
 
-    #[test]
-    fn validate_integrity_succeeds_with_valid_file_and_fields() {
+    #[traced_test]
+    async fn validate_integrity_succeeds_with_valid_file_and_fields() {
         // Create a temp dir and a valid Cargo.toml file
         let temp = tempdir().expect("Failed to create temp directory for test");
         let file_path = temp.path().join("Cargo.toml");
@@ -45,12 +46,12 @@ mod test_validate_integrity {
             .unwrap();
 
         // Also ensure version is valid for check_version_validity_for_integrity
-        let result = cargo_toml.validate_integrity();
+        let result = cargo_toml.validate_integrity().await;
         assert!(result.is_ok(), "Expected Ok for valid file, presence of fields, and valid version");
     }
 
-    #[test]
-    fn validate_integrity_fails_when_file_does_not_exist() {
+    #[traced_test]
+    async fn validate_integrity_fails_when_file_does_not_exist() {
         // Provide a path that doesn't exist
         let cargo_toml = CargoTomlBuilder::default()
             .path(PathBuf::from("non_existent_dir/non_existent.toml"))
@@ -58,7 +59,7 @@ mod test_validate_integrity {
             .build()
             .unwrap();
 
-        let result = cargo_toml.validate_integrity();
+        let result = cargo_toml.validate_integrity().await;
         match result {
             Err(CargoTomlError::FileNotFound { .. }) => {
                 // Good
@@ -69,8 +70,8 @@ mod test_validate_integrity {
         }
     }
 
-    #[test]
-    fn validate_integrity_fails_when_required_fields_for_integrity_are_missing() {
+    #[traced_test]
+    async fn validate_integrity_fails_when_required_fields_for_integrity_are_missing() {
         // Create a temp file but with incomplete package data
         let temp = tempdir().expect("Failed to create temp directory for test");
         let file_path = temp.path().join("Cargo.toml");
@@ -89,7 +90,7 @@ mod test_validate_integrity {
             .build()
             .unwrap();
 
-        let result = cargo_toml.validate_integrity();
+        let result = cargo_toml.validate_integrity().await;
         match result {
             Err(CargoTomlError::MissingRequiredFieldForIntegrity { field, .. }) => {
                 assert_eq!(field, "version");
@@ -100,8 +101,8 @@ mod test_validate_integrity {
         }
     }
 
-    #[test]
-    fn validate_integrity_fails_on_invalid_version() {
+    #[traced_test]
+    async fn validate_integrity_fails_on_invalid_version() {
         // Create a temp file but give it an invalid semver
         let temp = tempdir().expect("Failed to create temp directory for test");
         let file_path = temp.path().join("Cargo.toml");
@@ -121,7 +122,7 @@ mod test_validate_integrity {
             .build()
             .unwrap();
 
-        let result = cargo_toml.validate_integrity();
+        let result = cargo_toml.validate_integrity().await;
         match result {
             Err(CargoTomlError::InvalidVersionFormat { version, .. }) => {
                 assert_eq!(version, "abcxyz");

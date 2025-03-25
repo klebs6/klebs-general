@@ -155,10 +155,11 @@ impl CrateHandle
     }
 }
 
+#[async_trait]
 impl ValidateIntegrity for CrateHandle {
     type Error = CrateError;
 
-    fn validate_integrity(&self) -> Result<(), Self::Error> {
+    async fn validate_integrity(&self) -> Result<(), Self::Error> {
         use tracing::{trace, error};
 
         trace!("CrateHandle::validate_integrity() - will lock cargo_toml_handle via async");
@@ -166,13 +167,9 @@ impl ValidateIntegrity for CrateHandle {
         // Clone so the async block can own the handle.
         let cargo_toml_handle = self.cargo_toml_handle.clone();
         
-        // Run async code without nesting runtimes
-        run_async_without_nested_runtime(async move {
-            trace!("Locking cargo_toml_handle in async block to validate CargoToml");
-            let guard = cargo_toml_handle.lock().await;
-            guard.validate_integrity()?;
-            Ok::<(),CrateError>(())
-        })?;
+        trace!("Locking cargo_toml_handle in async block to validate CargoToml");
+        let guard = cargo_toml_handle.lock().await;
+        guard.validate_integrity().await?;
 
         // Now do any synchronous checks
         self.check_src_directory_contains_valid_files()?;
@@ -637,7 +634,7 @@ license = "MIT"
 
     /// Test validate_integrity => ensures the crate has Cargo.toml, a valid src file, and readme, etc.
     /// (check_src_directory_contains_valid_files + check_readme_exists).
-    #[tokio::test]
+    #[traced_test]
     async fn test_validate_integrity() {
         // a) valid scenario
         let (_tmp_dir, handle_ok) = create_crate_handle_in_temp(
@@ -649,7 +646,7 @@ license = "MIT"
             Some("lib"),
         )
         .await;
-        let res_ok = handle_ok.validate_integrity();
+        let res_ok = handle_ok.validate_integrity().await;
         assert!(res_ok.is_ok(), "Expected valid integrity with a src file and README");
 
         // b) missing main.rs/lib.rs => should fail
@@ -662,7 +659,7 @@ license = "MIT"
             None, // no main/lib
         )
         .await;
-        let res_bad_src = handle_bad_src.validate_integrity();
+        let res_bad_src = handle_bad_src.validate_integrity().await;
         assert!(
             res_bad_src.is_err(),
             "Expected integrity check to fail with missing main.rs/lib.rs"
@@ -678,7 +675,7 @@ license = "MIT"
             Some("main"),
         )
         .await;
-        let res_no_readme = handle_no_readme.validate_integrity();
+        let res_no_readme = handle_no_readme.validate_integrity().await;
         assert!(res_no_readme.is_err(), "Expected missing README.md error");
         match res_no_readme {
             Err(CrateError::FileNotFound { missing_file }) => {

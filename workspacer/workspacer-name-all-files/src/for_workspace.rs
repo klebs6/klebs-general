@@ -17,7 +17,7 @@ where
         let mut errors = Vec::new();
 
         for crate_handle in self {
-            if let Err(e) = crate_handle.name_all_files().await {
+            if let Err(e) = crate_handle.lock().await.name_all_files().await {
                 // Wrap the `CrateError` in a `WorkspaceError` variant:
                 errors.push(WorkspaceError::CrateError(e.into()));
             }

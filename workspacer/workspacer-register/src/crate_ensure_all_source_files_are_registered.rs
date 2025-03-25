@@ -10,7 +10,7 @@ impl EnsureAllSourceFilesAreRegistered for CrateHandle {
 
         // 1) Gather bin-target exclusions
         debug!("Gathering bin-target exclusions");
-        let bin_exclusions = self.gather_bin_target_names()?;
+        let bin_exclusions = self.gather_bin_target_names().await?;
 
         // 2) Source files (excluding special ones)
         debug!("Fetching source files (excluding main/lib/imports)");

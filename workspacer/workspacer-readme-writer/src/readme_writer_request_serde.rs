@@ -33,7 +33,7 @@ pub mod crate_handle_serde {
         P: AsRef<Path> + Send + Sync + 'static,
     {
         // Convert the handle to a path
-        let path_buf = field.crate_dir_path_buf();
+        let path_buf = field.root_dir_path_buf();
 
         let helper = CrateHandleJsonRepr { path: path_buf };
         helper.serialize(serializer)
@@ -124,7 +124,7 @@ mod crate_handle_serde_tests {
         trace!("Deserialized request: {:?}", roundtrip);
 
         // 8) Check that the path is what we expect
-        let reconstructed_path = roundtrip.crate_handle().crate_dir_path_buf();
+        let reconstructed_path = roundtrip.crate_handle().root_dir_path_buf();
         info!("Reconstructed path = {:?}", reconstructed_path);
 
         // Should match the mock crate path we used

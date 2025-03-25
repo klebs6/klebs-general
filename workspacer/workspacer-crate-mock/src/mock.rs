@@ -429,16 +429,18 @@ impl GatherBinTargetNames for MockCrateHandle {
         let bin_list = self.mock_cargo_toml()
             .lock()
             .await
-            .gather_bin_target_names()?;
+            .gather_bin_target_names()
+            .await?;
 
         Ok(bin_list)
     }
 }
 
+#[async_trait]
 impl ValidateIntegrity for MockCrateHandle {
     type Error = CrateError;
 
-    fn validate_integrity(&self) -> Result<(), Self::Error> {
+    async fn validate_integrity(&self) -> Result<(), Self::Error> {
         trace!("MockCrateHandle::validate_integrity called");
         if *self.simulate_failed_integrity() {
             error!("MockCrateHandle: simulating overall integrity failure");
@@ -453,6 +455,7 @@ impl ValidateIntegrity for MockCrateHandle {
             .lock()
             .await
             .validate_integrity()
+            .await
             .map_err(|e| CrateError::CargoTomlError(e))?;
 
         info!("MockCrateHandle: integrity validation passed");
@@ -505,7 +508,7 @@ mod tests_mock_crate_handle {
     // Basic test demonstrating usage of the default "fully_valid_config"
     // and verifying that the mock calls work as expected.
     #[traced_test]
-    fn test_fully_valid_config_behaves_correctly() {
+    async fn test_fully_valid_config_behaves_correctly() {
         let mock = MockCrateHandle::fully_valid_config();
 
         // 1) name() and version()
@@ -514,7 +517,7 @@ mod tests_mock_crate_handle {
         assert_eq!(ver.to_string(), "1.2.3");
 
         // 2) is_private => false
-        let priv_check = mock.is_private().await;
+        let priv_check = mock.is_private().await.unwrap();
         assert!(!priv_check, "Expected is_private_crate = false");
 
         // 3) read_file_string => can we read "README.md" from the map?
@@ -532,7 +535,7 @@ mod tests_mock_crate_handle {
         // 6) gather_bin_target_names => delegates to embedded MockCargoToml
         // By default, the embedded MockCargoToml is "fully_valid_config" which might have no bin targets,
         // so let's see if it's empty:
-        let bin_targets = mock.gather_bin_target_names().await;
+        let bin_targets = mock.gather_bin_target_names().await.unwrap();
         assert!(bin_targets.len() == 1, "Default fully_valid_config from MockCargoToml has a single bin target");
     }
 
@@ -567,21 +570,21 @@ mod tests_mock_crate_handle {
     }
 
     #[traced_test]
-    fn test_private_crate_config_returns_true_for_is_private() {
+    async fn test_private_crate_config_returns_true_for_is_private() {
         let mock = MockCrateHandle::private_crate_config();
-        let priv_check = mock.is_private().await;
+        let priv_check = mock.is_private().await.unwrap();
         assert!(priv_check, "Should be private");
     }
 
     #[traced_test]
-    fn test_failed_integrity_config() {
+    async fn test_failed_integrity_config() {
         let mock = MockCrateHandle::failed_integrity_config();
-        let integrity_res = mock.validate_integrity();
+        let integrity_res = mock.validate_integrity().await;
         assert!(integrity_res.is_err(), "Simulated integrity failure");
     }
 
     #[traced_test]
-    fn test_read_file_string_map_lookup() {
+    async fn test_read_file_string_map_lookup() {
         let mut file_map = HashMap::new();
         file_map.insert(PathBuf::from("src/main.rs"), "fn main() {}".into());
         let mock = MockCrateHandle::fully_valid_config()

@@ -75,7 +75,7 @@ mod test_async_find_items {
         assert_eq!(crates_found.len(), 2, "Should find exactly 2 crates");
         let mut paths = Vec::new();
         for c in crates_found.iter() {
-            paths.push(c.lock().await.crate_dir_path_buf());
+            paths.push(c.lock().await.root_dir_path_buf());
         }
         assert!(paths.contains(&crate_a));
         assert!(paths.contains(&crate_b));
