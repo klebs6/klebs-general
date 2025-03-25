@@ -112,7 +112,7 @@ mod test_is_private {
         //    Or we could do: `let handle: CrateHandle = CrateHandle::new(&LocalCratePath(root_path)).await?;`
         let handle = CrateHandle::new(&LocalCratePath(root_path)).await?;
 
-        let is_priv = handle.is_private()?;
+        let is_priv = handle.is_private().await?;
         assert!(is_priv, "Expected is_private() to be true when publish=false");
         Ok(())
     }
@@ -137,7 +137,7 @@ mod test_is_private {
         file.write_all(cargo_toml_contents.as_bytes()).await?;
 
         let handle: CrateHandle = CrateHandle::new(&LocalCratePath(root_path)).await?;
-        let is_priv = handle.is_private()?;
+        let is_priv = handle.is_private().await?;
         assert!(!is_priv, "No publish field => not private");
         Ok(())
     }
@@ -162,7 +162,7 @@ mod test_is_private {
         file.write_all(cargo_toml_contents.as_bytes()).await?;
 
         let handle = CrateHandle::new(&LocalCratePath(root_path)).await?;
-        assert!(!handle.is_private()?, "publish=true => not private");
+        assert!(!handle.is_private().await?, "publish=true => not private");
         Ok(())
     }
 
@@ -186,7 +186,7 @@ mod test_is_private {
         file.write_all(cargo_toml_contents.as_bytes()).await?;
 
         let handle = CrateHandle::new(&LocalCratePath(root_path)).await?;
-        assert!(!handle.is_private()?, "Array publish => not private");
+        assert!(!handle.is_private().await?, "Array publish => not private");
         Ok(())
     }
 
@@ -210,7 +210,7 @@ mod test_is_private {
         file.write_all(cargo_toml_contents.as_bytes()).await?;
 
         let handle = CrateHandle::new(&LocalCratePath(root_path)).await?;
-        assert!(handle.is_private()?, "`private=true` => is_private=true");
+        assert!(handle.is_private().await?, "`private=true` => is_private=true");
         Ok(())
     }
 
@@ -235,7 +235,7 @@ mod test_is_private {
         file.write_all(cargo_toml_contents.as_bytes()).await?;
 
         let handle = CrateHandle::new(&LocalCratePath(root_path)).await?;
-        assert!(handle.is_private()?, "publish=false overrides private=false => private");
+        assert!(handle.is_private().await?, "publish=false overrides private=false => private");
         Ok(())
     }
 
@@ -259,7 +259,7 @@ mod test_is_private {
         file.write_all(cargo_toml_contents.as_bytes()).await?;
 
         let handle = CrateHandle::new(&LocalCratePath(root_path)).await?;
-        assert!(!handle.is_private()?, "publish = \"string\" => not private");
+        assert!(!handle.is_private().await?, "publish = \"string\" => not private");
         Ok(())
     }
 }

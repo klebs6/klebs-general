@@ -526,7 +526,7 @@ mod test_mock_cargo_toml {
     use super::*;
 
     #[traced_test]
-    fn test_mock_cargo_toml_basic() {
+    async fn test_mock_cargo_toml_basic() {
         let mock = MockCargoTomlBuilder::default()
             .path("fake/path/Cargo.toml")
             .file_exists(true)
@@ -562,7 +562,7 @@ mod test_mock_cargo_toml {
         assert_eq!(authors, Some(vec!["Alice <alice@example.com>".to_string()]));
 
         // Check bin target names
-        let bins = mock.gather_bin_target_names().expect("gather_bin_target_names should not fail");
+        let bins = mock.gather_bin_target_names().await.expect("gather_bin_target_names should not fail");
         assert_eq!(bins, vec!["cli-tool"]);
 
         // Check fallback authors (should be same as direct authors for this mock)

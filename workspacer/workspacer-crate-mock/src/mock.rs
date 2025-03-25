@@ -60,8 +60,8 @@ pub struct MockCrateHandle {
     /// An embedded mock of `CargoTomlInterface`. This can be a `MockCargoToml`
     /// or something that *itself* is fully configurable.
     /// We store it in an `Arc<Mutex<...>>` so we can hand it out in `HasCargoToml`.
-    #[builder(default = "Arc::new(Mutex::new(MockCargoToml::fully_valid_config()))")]
-    mock_cargo_toml: Arc<Mutex<MockCargoToml>>,
+    #[builder(default = "Arc::new(AsyncMutex::new(MockCargoToml::fully_valid_config()))")]
+    mock_cargo_toml: Arc<AsyncMutex<MockCargoToml>>,
 }
 
 impl MockCrateHandle {
@@ -96,7 +96,7 @@ impl MockCrateHandle {
             .source_files(vec![PathBuf::from("src/main.rs")])
             .test_files(vec![PathBuf::from("tests/test_basic.rs")])
             // By default, embed a fully-valid MockCargoToml
-            .mock_cargo_toml(Arc::new(Mutex::new(MockCargoToml::fully_valid_config())))
+            .mock_cargo_toml(Arc::new(AsyncMutex::new(MockCargoToml::fully_valid_config())))
             .build()
             .unwrap()
     }
@@ -406,7 +406,7 @@ impl GetFilesInDirectoryWithExclusions for MockCrateHandle {
 }
 
 impl HasCargoToml for MockCrateHandle {
-    fn cargo_toml(&self) -> Arc<Mutex<dyn CargoTomlInterface>> {
+    fn cargo_toml(&self) -> Arc<AsyncMutex<dyn CargoTomlInterface>> {
         trace!("MockCrateHandle::cargo_toml called");
         self.mock_cargo_toml().clone()
     }
@@ -426,7 +426,11 @@ impl GatherBinTargetNames for MockCrateHandle {
     async fn gather_bin_target_names(&self) -> Result<Vec<String>, Self::Error> {
         trace!("MockCrateHandle::gather_bin_target_names called");
         // For the mock, let's just delegate to the embedded MockCargoToml's gather_bin_target_names
-        let bin_list = self.mock_cargo_toml().lock().unwrap().gather_bin_target_names()?;
+        let bin_list = self.mock_cargo_toml()
+            .lock()
+            .await
+            .gather_bin_target_names()?;
+
         Ok(bin_list)
     }
 }
@@ -447,7 +451,7 @@ impl ValidateIntegrity for MockCrateHandle {
         // For now, let's skip or do it:
         self.mock_cargo_toml()
             .lock()
-            .unwrap()
+            .await
             .validate_integrity()
             .map_err(|e| CrateError::CargoTomlError(e))?;
 
@@ -510,7 +514,7 @@ mod tests_mock_crate_handle {
         assert_eq!(ver.to_string(), "1.2.3");
 
         // 2) is_private => false
-        let priv_check = mock.is_private().expect("Should not fail");
+        let priv_check = mock.is_private().await;
         assert!(!priv_check, "Expected is_private_crate = false");
 
         // 3) read_file_string => can we read "README.md" from the map?
@@ -528,7 +532,7 @@ mod tests_mock_crate_handle {
         // 6) gather_bin_target_names => delegates to embedded MockCargoToml
         // By default, the embedded MockCargoToml is "fully_valid_config" which might have no bin targets,
         // so let's see if it's empty:
-        let bin_targets = mock.gather_bin_target_names().expect("Should not fail");
+        let bin_targets = mock.gather_bin_target_names().await;
         assert!(bin_targets.len() == 1, "Default fully_valid_config from MockCargoToml has a single bin target");
     }
 
@@ -565,7 +569,7 @@ mod tests_mock_crate_handle {
     #[traced_test]
     fn test_private_crate_config_returns_true_for_is_private() {
         let mock = MockCrateHandle::private_crate_config();
-        let priv_check = mock.is_private().expect("Should not fail");
+        let priv_check = mock.is_private().await;
         assert!(priv_check, "Should be private");
     }
 

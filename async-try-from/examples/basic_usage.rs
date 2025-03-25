@@ -21,10 +21,11 @@ mod basic_usage_example {
     }
 
     // Implement a basic validation check
+    #[async_trait]
     impl ValidateIntegrity for MyType {
         type Error = io::Error;
 
-        fn validate_integrity(&self) -> Result<(), Self::Error> {
+        async fn validate_integrity(&self) -> Result<(), Self::Error> {
             // Add real integrity checks here if needed
             Ok(())
         }

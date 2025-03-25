@@ -108,7 +108,6 @@ impl<'de> ::serde::Deserialize<'de> for CrateHandle {
 #[cfg(test)]
 mod test_crate_handle_serde {
     use super::*;
-    use traced_test::traced_test;
     use serde_json;
 
     #[traced_test]
@@ -142,10 +141,11 @@ mod test_crate_handle_serde {
         let cargo_toml_handle = Arc::new(AsyncMutex::new(cargo_toml));
 
         // 3) Build an example CrateHandle with something to serialize
-        let handle = CrateHandle {
-            crate_path: tmp_dir.path().to_path_buf(),
-            cargo_toml_handle,
-        };
+        let handle = CrateHandleBuilder::default()
+            .crate_path(tmp_dir.path().to_path_buf())
+            .cargo_toml_handle(cargo_toml_handle)
+            .build()
+            .unwrap();
 
         // 4) Serialize to JSON
         let json_str = serde_json::to_string_pretty(&handle)

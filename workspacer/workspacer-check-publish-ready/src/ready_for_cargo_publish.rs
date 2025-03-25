@@ -30,7 +30,7 @@ impl ReadyForCargoPublish for CrateHandle {
 
             // This presumably calls your existing logic for required fields (name, license, etc).
             toml.lock()
-                .expect("expected to be able to unlock the Cargo.toml handle")
+                .await
                 .ready_for_cargo_publish()
                 .await?;
         }
@@ -43,7 +43,7 @@ impl ReadyForCargoPublish for CrateHandle {
         self.check_src_directory_contains_valid_files()?;
 
         // 3) Verify the crate is not private
-        self.verify_crate_is_not_private()?;
+        self.verify_crate_is_not_private().await?;
 
         // 4) Verify the crate version is not yet published on crates.io
         self.verify_crate_version_is_not_yet_published_on_crates_io().await?;

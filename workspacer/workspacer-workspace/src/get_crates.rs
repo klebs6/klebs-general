@@ -43,7 +43,7 @@ mod test_num_crates_and_get_crates {
         assert_eq!(ws.crates().len(), 1, "crates() slice should have length 1");
         // We can check the name or path if we want
         let the_crate = &ws.crates()[0];
-        let crate_path = the_crate.crate_dir_path_buf();
+        let crate_path = the_crate.crate_dir_path_buf().await;
         println!("Single crate path = {}", crate_path.display());
     }
 

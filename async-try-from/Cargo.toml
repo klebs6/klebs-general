@@ -1,6 +1,6 @@
 [package]
 name = "async-try-from"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2024"
 authors = ["klebs tpk3.mx@gmail.com"]
 description = "A crate that provides asynchronous trait-based creation and validation patterns."

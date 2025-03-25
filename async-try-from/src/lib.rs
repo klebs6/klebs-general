@@ -31,7 +31,7 @@ pub trait AsyncCreateWithAndValidate<X>:
     // Automatically forward the error type from AsyncTryFrom
     async fn new_and_validate(input: &X) -> Result<Self, <Self as AsyncTryFrom<X>>::Error> {
         let instance = Self::new(&input).await?;
-        instance.validate_integrity()?; // Validation
+        instance.validate_integrity().await?; // Validation
         Ok(instance)
     }
 }
@@ -63,11 +63,12 @@ pub trait AsyncFindItems {
 }
 
 /// Trait for validating integrity of a component (e.g., Workspace or Crate)
+#[async_trait]
 pub trait ValidateIntegrity {
 
     type Error;
 
-    fn validate_integrity(&self) -> Result<(), Self::Error>;
+    async fn validate_integrity(&self) -> Result<(), Self::Error>;
 }
 
 /// Trait for asynchronously creating `Self` specifically from an environment variable name.
@@ -101,7 +102,7 @@ pub trait AsyncCreateWithAndValidateEnv:
 {
     async fn new_from_env_and_validate(var_name: &str) -> Result<Self, <Self as AsyncTryFromEnv>::Error> {
         let instance = Self::new_from_env(var_name).await?;
-        instance.validate_integrity()?;
+        instance.validate_integrity().await?;
         Ok(instance)
     }
 }
@@ -121,7 +122,7 @@ pub trait AsyncCreateWithAndValidateFile:
 {
     async fn new_from_file_and_validate(path: &Path) -> Result<Self, <Self as AsyncTryFromFile>::Error> {
         let instance = Self::new_from_file(path).await?;
-        instance.validate_integrity()?;
+        instance.validate_integrity().await?;
         Ok(instance)
     }
 }
