@@ -176,8 +176,8 @@ mod test_mock_workspace_bumping {
         trace!("test_bump_with_no_downstreams => starting");
 
         // Create actual in-memory mock directories/crates on disk to test (like an integration style):
-        let crate_a = CrateConfig::new("crate_a").with_src_files();
-        let crate_b = CrateConfig::new("crate_b").with_src_files();
+        let crate_a = CrateConfig::new("crate_a").with_src_files().with_readme();
+        let crate_b = CrateConfig::new("crate_b").with_src_files().with_readme();
 
         // This helper is from `create_mock_workspace`, which is also local in crate::mock:
         let tmp_root = create_mock_workspace(vec![crate_a, crate_b])

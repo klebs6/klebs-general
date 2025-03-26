@@ -15,7 +15,7 @@ impl CheckExistence for CargoToml {
 
         // Optionally ensure it's a file, not a directory
         let meta = std::fs::metadata(&p)
-            .map_err(|e| CargoTomlError::ReadError { io: e.into() })?;
+            .map_err(|e| CargoTomlError::ReadError { path: p.to_path_buf(), io: e.into() })?;
         if !meta.is_file() {
             return Err(CargoTomlError::FileIsNotAFile {
                 invalid_path: p.to_path_buf(),

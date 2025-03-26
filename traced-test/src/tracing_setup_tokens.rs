@@ -16,13 +16,15 @@ impl TracedTestGenerator {
         let enable_backtrace = self.traced_test_attr().backtrace().unwrap_or(false);
 
         let show_timestamp  = self.show_timestamp();
+        let show_location   = self.show_location();
         let show_loglevel   = self.show_loglevel();
 
         // Build the second argument as a single `EventPrinter` expression
         let printer_expr = quote! {
-            ::tracing_setup::EventPrinter::LogLineAndContents {
+            EventPrinter::LogLineAndContents {
                 show_timestamp: #show_timestamp,
-                show_loglevel: #show_loglevel,
+                show_location:  #show_location,
+                show_loglevel:  #show_loglevel,
             }
         };
 

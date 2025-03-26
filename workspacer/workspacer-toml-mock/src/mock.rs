@@ -53,6 +53,15 @@ pub struct MockCargoToml {
     /// Mock binary target names for `gather_bin_target_names`.
     #[builder(default)]
     bin_target_names: Vec<String>,
+
+    /// If true, then get_package_section_mut() will return a dummy mutable table
+    /// rather than always erroring out.
+    #[builder(default = "false")]
+    allow_package_section_mut: bool,
+    
+    /// The actual table we return in get_package_section_mut().
+    #[builder(default = "default_empty_table()")]
+    package_section_value: toml::Value,
 }
 
 impl AsRef<Path> for MockCargoToml {
@@ -60,6 +69,11 @@ impl AsRef<Path> for MockCargoToml {
         trace!("MockCargoToml::as_ref called, returning path={:?}", self.path);
         &self.path
     }
+}
+
+/// Just a small helper to build a `toml::Value::Table(...)` with no keys at first.
+fn default_empty_table() -> toml::Value {
+    toml::Value::Table(toml::map::Map::new())
 }
 
 #[async_trait]
@@ -120,19 +134,59 @@ impl Versioned for MockCargoToml {
 
     fn version(&self) -> Result<semver::Version, Self::Error> {
         trace!("MockCargoToml::version called");
-        // For demonstration, if either "valid_version_for_publishing" or "valid_version_for_integrity" is `true`,
-        // we treat that as a valid version. Otherwise, we simulate an error.
-        if *self.valid_version_for_publishing() || *self.valid_version_for_integrity() {
-            let ver = semver::Version::parse("1.2.3").unwrap();
-            info!("MockCargoToml: returning simulated version {}", ver);
-            Ok(ver)
-        } else {
-            error!("MockCargoToml: simulating invalid version format error");
-            Err(CargoTomlError::InvalidVersionFormat {
-                cargo_toml_file: self.path().clone(),
-                version: "mock_invalid_version".to_string(),
-            })
+
+        // If file doesn't exist, or required fields are missing, or user forced an invalid version:
+        if !self.file_exists() {
+            error!("MockCargoToml: simulating file not found");
+            return Err(CargoTomlError::FileNotFound {
+                missing_file: self.path().clone(),
+            });
         }
+        if !self.all_required_fields_for_integrity_present() {
+            error!("MockCargoToml: simulating missing required fields for integrity");
+            return Err(CargoTomlError::MissingRequiredFieldForIntegrity {
+                cargo_toml_file: self.path().clone(),
+                field: "mock_missing_field_integrity".to_string(),
+            });
+        }
+        if !self.valid_version_for_integrity() {
+            error!("MockCargoToml: simulating invalid version format for integrity");
+            return Err(CargoTomlError::InvalidVersionFormat {
+                cargo_toml_file: self.path().clone(),
+                version: "mock_invalid_version_for_integrity".to_string(),
+            });
+        }
+
+        // Otherwise, parse the actual [package].version from package_section_value
+        // If none is set, we fallback to "1.2.3"
+        if let Some(tbl) = self.package_section_value.as_table() {
+            if let Some(ver_val) = tbl.get("version") {
+                if let Some(ver_str) = ver_val.as_str() {
+                    trace!("MockCargoToml: attempting semver parse on '{}'", ver_str);
+                    match semver::Version::parse(ver_str) {
+                        Ok(v) => {
+                            info!("MockCargoToml: returning semver={}", v);
+                            return Ok(v);
+                        }
+                        Err(_parse_e) => {
+                            error!("MockCargoToml: parse failed for '{}'", ver_str);
+                            return Err(CargoTomlError::InvalidVersionFormat {
+                                cargo_toml_file: self.path().clone(),
+                                version: ver_str.to_string(),
+                            });
+                        }
+                    }
+                }
+            }
+        }
+
+        // If no version was found in the table, we do a fallback "1.2.3"
+        let fallback = semver::Version::parse("1.2.3").unwrap();
+        info!(
+            "MockCargoToml: no [package].version found => returning fallback {}",
+            fallback
+        );
+        Ok(fallback)
     }
 }
 
@@ -252,12 +306,24 @@ impl GetPackageSectionMut for MockCargoToml {
 
     fn get_package_section_mut(&mut self) -> Result<&mut toml::Value, Self::Error> {
         trace!("MockCargoToml::get_package_section_mut called");
-        // For simplicity, we just simulate that it's not supported in this mock
-        // or that the package section is missing.
-        error!("MockCargoToml: simulating missing or unsupported package section mut");
-        Err(CargoTomlError::MissingPackageSection {
-            cargo_toml_file: self.path().clone(),
-        })
+        if self.allow_package_section_mut {
+            // We expect `self.package_section_value` to be a `Value::Table(...)`.
+            if let toml::Value::Table(_) = self.package_section_value {
+                info!("MockCargoToml: returning a mutable dummy package section (Table)");
+                Ok(&mut self.package_section_value)
+            } else {
+                error!("MockCargoToml: 'package_section_value' wasn't a Table");
+                Err(CargoTomlError::TopLevelNotATable {
+                    path: self.path().clone(),
+                    details: "package_section_value was not a table".to_string(),
+                })
+            }
+        } else {
+            error!("MockCargoToml: simulating missing or unsupported package section mut");
+            Err(CargoTomlError::MissingPackageSection {
+                cargo_toml_file: self.path().clone(),
+            })
+        }
     }
 }
 
@@ -404,9 +470,8 @@ impl WriteDocumentBack for MockCargoToml {
 }
 
 impl MockCargoToml {
-    /// Creates a MockCargoToml that is fully valid in every way.
+
     pub fn fully_valid_config() -> Self {
-        trace!("MockCargoToml::fully_valid_config constructor called");
         MockCargoTomlBuilder::default()
             .path("fake/path/Cargo.toml")
             .file_exists(true)
@@ -421,6 +486,8 @@ impl MockCargoToml {
             .license(Some("MIT".to_string()))
             .repository(Some("https://example.com/myrepo.git".to_string()))
             .bin_target_names(vec!["cli-tool".to_string()])
+            .allow_package_section_mut(true)
+            // package_section_value defaults to an empty table from `default_empty_table()`
             .build()
             .unwrap()
     }

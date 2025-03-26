@@ -213,7 +213,18 @@ impl Versioned for MockCrateHandle {
             error!("MockCrateHandle: simulating invalid version parse error");
             return Err(CrateError::SimulatedInvalidVersionFormat);
         }
-        let parsed = semver::Version::parse(&self.crate_version()).map_err(|e| Arc::new(e))?;
+
+        // Forward to the embedded MockCargoToml, so we see any updated [package].version
+        let cargo_toml_arc = self.mock_cargo_toml();
+        // Because this is a sync method, we'll do a best-effort try_lock:
+        let guard = match cargo_toml_arc.try_lock() {
+            Ok(g) => g,
+            Err(_) => {
+                error!("MockCrateHandle: unable to lock mock_cargo_toml => returning error");
+                return Err(CrateError::CouldNotLockMockCargoTomlInVersion);
+            }
+        };
+        let parsed = guard.version().map_err(|e| CrateError::CargoTomlError(e))?;
         info!("MockCrateHandle: returning semver={}", parsed);
         Ok(parsed)
     }

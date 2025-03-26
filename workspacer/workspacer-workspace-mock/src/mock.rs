@@ -223,17 +223,40 @@ where
 
     async fn validate_integrity(&self) -> Result<(), Self::Error> {
         trace!("MockWorkspace::validate_integrity called");
-        if *self.simulate_failed_integrity() {
-            error!("MockWorkspace: simulating overall integrity failure");
+
+        // If simulate_missing_cargo_toml is true, pretend there's no top-level Cargo.toml:
+        if *self.simulate_missing_cargo_toml() {
+            error!("simulate_missing_cargo_toml=true => returning InvalidWorkspace");
             return Err(WorkspaceError::InvalidWorkspace {
                 invalid_workspace_path: self.path().as_ref().to_path_buf(),
             });
         }
-        // Otherwise, just validate each crate in turn
+
+        // If simulate_not_a_workspace is true, pretend there's no [workspace] table:
+        if *self.simulate_not_a_workspace() {
+            error!("simulate_not_a_workspace=true => returning ActuallyInSingleCrate");
+            return Err(WorkspaceError::ActuallyInSingleCrate {
+                path: self.path().as_ref().to_path_buf(),
+            });
+        }
+
+        // If simulate_failed_integrity is set, we bail:
+        if *self.simulate_failed_integrity() {
+            error!("simulate_failed_integrity=true => returning InvalidWorkspace");
+            return Err(WorkspaceError::InvalidWorkspace {
+                invalid_workspace_path: self.path().as_ref().to_path_buf(),
+            });
+        }
+
+        // If simulate_no_crates => do nothing special here; the logic 
+        // for find_items might produce an empty list, etc.
+
+        // Otherwise, validate each crate:
         for c in self.crates().iter() {
             let guard = c.lock().await;
             guard.validate_integrity().await?;
         }
+
         info!("MockWorkspace: integrity validation passed");
         Ok(())
     }

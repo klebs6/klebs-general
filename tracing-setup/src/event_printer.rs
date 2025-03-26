@@ -9,6 +9,7 @@ pub enum EventPrinter {
     LogLineAndContents {
         show_timestamp: bool,
         show_loglevel:  bool,
+        show_location:  bool,
     },
 
     /// Prints only the event's field values.
@@ -19,8 +20,9 @@ pub enum EventPrinter {
 impl Default for EventPrinter {
     fn default() -> Self {
         Self::LogLineAndContents {
-            show_timestamp: true,
+            show_timestamp: false,
             show_loglevel:  true,
+            show_location:  true,
         }
     }
 }

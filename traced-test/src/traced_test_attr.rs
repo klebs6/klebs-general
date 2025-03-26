@@ -7,6 +7,7 @@ pub struct TracedTestAttr {
     trace:          Option<bool>,
     backtrace:      Option<bool>,
     show_timestamp: Option<bool>,
+    show_location:  Option<bool>,
     show_loglevel:  Option<bool>,
 
     // NEW FIELDS: “should_fail” plus the optional fail-message
@@ -39,6 +40,7 @@ impl SynParse for TracedTestAttr {
         let mut trace          = None;
         let mut backtrace      = None;
         let mut show_timestamp = None;
+        let mut show_location  = None;
         let mut show_loglevel  = None;
 
         let mut should_fail    = false;
@@ -71,6 +73,16 @@ impl SynParse for TracedTestAttr {
                     _ => return Err(syn::Error::new(value.span(), "Expected boolean for `show_timestamp`")),
                 }
             }
+
+            else if ident == "show_location" {
+                input.parse::<Token![=]>()?;
+                let value: Lit = input.parse()?;
+                match value {
+                    Lit::Bool(b) => show_location = Some(b.value),
+                    _ => return Err(syn::Error::new(value.span(), "Expected boolean for `show_location`")),
+                }
+            }
+
             else if ident == "show_loglevel" {
                 input.parse::<Token![=]>()?;
                 let value: Lit = input.parse()?;
@@ -110,7 +122,7 @@ impl SynParse for TracedTestAttr {
             else {
                 return Err(syn::Error::new(
                     ident.span(),
-                    "Unknown attribute key; expected one of `trace`, `backtrace`, `show_timestamp`, `show_loglevel`, or `should_fail`"
+                    "Unknown attribute key; expected one of `trace`, `backtrace`, `show_location`, `show_timestamp`, `show_loglevel`, or `should_fail`"
                 ));
             }
 
@@ -127,6 +139,7 @@ impl SynParse for TracedTestAttr {
             trace,
             backtrace,
             show_timestamp,
+            show_location,
             show_loglevel,
             should_fail,
             fail_message,

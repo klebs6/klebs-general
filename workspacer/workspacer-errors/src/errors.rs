@@ -65,7 +65,8 @@ error_tree!{
         },
         WorkspacerFallbackError(WorkspacerFallbackError),
         ReadError {
-            io: Arc<io::Error>,
+            path: PathBuf,
+            io:   Arc<io::Error>,
         },
         CargoTomlWriteError(CargoTomlWriteError),
         MissingRequiredFieldForPublishing {
@@ -75,6 +76,10 @@ error_tree!{
         MissingRequiredFieldForIntegrity {
             cargo_toml_file: PathBuf,
             field: String,
+        },
+        InvalidToml {
+            path:    PathBuf,
+            details: String,
         },
         InvalidVersionFormat {
             cargo_toml_file: PathBuf,
@@ -221,6 +226,9 @@ error_tree!{
 
     #[derive(Clone)]
     pub enum CrateError {
+        CargoTomlIsLocked,
+        CouldNotLockMockCargoTomlInVersion,
+        CouldNotSetPackageVersionBecausePackageIsNotATable,
         SimulatedIntegrityFailureInMockCrate,
         SimulatedInvalidVersionFormat,
         SemverError(Arc<semver::Error>),

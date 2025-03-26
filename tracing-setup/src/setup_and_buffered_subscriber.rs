@@ -52,7 +52,7 @@ pub fn setup_default_buffered_tracing() -> Arc<BufferedSubscriberLayer<Registry>
 
 pub fn setup_buffered_tracing(
     tag: Option<&str>,
-    printer: EventPrinter, // e.g. `EventPrinter::LogLineAndContents { show_timestamp, show_loglevel }`
+    printer: EventPrinter,
 ) -> Arc<BufferedSubscriberLayer<Registry>>
 {
     let mut layer = match tag {

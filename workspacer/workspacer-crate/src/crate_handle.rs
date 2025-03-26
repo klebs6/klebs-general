@@ -41,39 +41,48 @@ impl Versioned for CrateHandle {
     type Error = CrateError;
 
     fn version(&self) -> Result<semver::Version, Self::Error> {
-        use tracing::{trace, debug, error, info};
-        trace!("CrateHandle::version() - retrieving version from cargo_toml_handle");
+        trace!("CrateHandle::version called");
 
-        // Clone so the async closure does not capture &self.
-        let cargo_toml_handle = self.cargo_toml_handle.clone();
+        // We'll do an immediate read from the embedded CargoToml
+        let cargo_toml_arc = self.cargo_toml();
 
-        let mut version_str = safe_run_async(async move {
-            trace!("Locking cargo_toml_handle in async block for version");
-            let guard = cargo_toml_handle.lock().await;
-            guard
-                .version()
-                .expect("expected our Cargo.toml to have a valid `version`")
-                .to_string()
-        });
+        // Because `version()` is a sync method, we do a best-effort lock attempt:
+        // (If your code is guaranteed single-thread, a direct lock() is fine.)
+        let guard = match cargo_toml_arc.try_lock() {
+            Ok(g) => g,
+            Err(_) => {
+                error!("CrateHandle::version: cannot lock cargo_toml right now => returning a general error");
+                return Err(CrateError::CargoTomlIsLocked);
+            }
+        };
 
-        debug!("Raw version_str from CargoTomlHandle: {:?}", version_str);
-
-        // Clean/trim quotes if present
-        version_str = version_str.trim().replace('"', "");
-        debug!("Cleaned version_str: {:?}", version_str);
-
-        // Parse as semver
-        let parsed = semver::Version::parse(&version_str)
-            .map_err(|e| {
-                error!(
-                    "Failed to parse semver from string='{}': {:?}",
-                    version_str, e
-                );
-                CrateError::CargoTomlError(CargoTomlError::SemverError(Arc::new(e)))
-            })?;
-
-        info!("Parsed semver for {:?} => {}", self.as_ref(), parsed);
-        Ok(parsed)
+        // Now parse the version from cargo_toml, mapping each error:
+        match guard.version() {
+            Ok(ver) => {
+                info!("CrateHandle: returning semver={}", ver);
+                Ok(ver)
+            }
+            Err(e) => {
+                error!("CrateHandle: cargo_toml.version() => encountered error: {:?}", e);
+                // Convert cargo_toml errors to crate errors
+                match e {
+                    CargoTomlError::FileNotFound { missing_file } => {
+                        // For example, unify that into IoError
+                        Err(CrateError::IoError {
+                            io_error: Arc::new(std::io::Error::new(
+                                std::io::ErrorKind::NotFound,
+                                format!("Cargo.toml missing at {}", missing_file.display()),
+                            )),
+                            context: format!("CrateHandle::version => no Cargo.toml at {:?}", missing_file),
+                        })
+                    }
+                    other => {
+                        // For invalid semver or anything else, we pass as CargoTomlError
+                        Err(CrateError::CargoTomlError(other))
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -162,57 +171,40 @@ impl ValidateIntegrity for CrateHandle {
     async fn validate_integrity(&self) -> Result<(), Self::Error> {
         trace!("CrateHandle::validate_integrity() - forcing a re-parse from disk to catch sabotage or missing fields.");
 
-        // 1) forcibly re-parse from disk with NO lock held => avoids self-deadlock
-        let path = self.as_ref().join("Cargo.toml");
-        let content_str = tokio::fs::read_to_string(&path).await.map_err(|io_err| {
-            CrateError::IoError {
-                context: format!("Failed re-reading Cargo.toml at {}", path.display()),
-                io_error: Arc::new(io_err),
-            }
-        })?;
-
-        // parse as toml::Value
-        let parsed_value = toml::from_str::<toml::Value>(&content_str).map_err(|e| {
-            CrateError::CargoTomlError(CargoTomlError::TomlParseError {
-                cargo_toml_file: path.clone(),
-                toml_parse_error: e,
-            })
-        })?;
-
-        // 2) lock cargo_toml_handle once
-        let cargo_toml_arc = self.cargo_toml_handle.clone();
-        {
-            let mut guard = cargo_toml_arc.lock().await;
-
-            // overwrite the in-memory content so sabotage is recognized
-            guard.set_content(parsed_value);
-
-            // now run the existing cargo-toml integrity checks
-            match guard.validate_integrity().await {
-                Ok(()) => (),
-                Err(e) => {
-                    // map FileNotFound => IoError so the tests see IoError if the file is missing
-                    let mapped = match e {
-                        CargoTomlError::FileNotFound { missing_file } => {
-                            CrateError::IoError {
-                                context: format!("reading cargo toml: {}", missing_file.display()),
-                                io_error: Arc::new(std::io::Error::new(
-                                    std::io::ErrorKind::NotFound,
-                                    "File not found",
-                                )),
-                            }
-                        }
-                        other => CrateError::CargoTomlError(other),
-                    };
-                    return Err(mapped);
+        // 1) Ensure Cargo.toml is readable & has a valid version (no `.expect(...)`!)
+        let cargo_toml_arc = self.cargo_toml();
+        let mut ct_guard = cargo_toml_arc.lock().await;
+        match ct_guard.version() {
+            Err(e) => {
+                error!("CrateHandle: cargo_toml.version() => encountered error: {:?}", e);
+                // Convert cargo-toml errors to crate errors (FileNotFound => IoError, InvalidVersionFormat => CargoTomlError, etc)
+                match e {
+                    CargoTomlError::FileNotFound { missing_file } => {
+                        return Err(CrateError::IoError {
+                            io_error: Arc::new(std::io::Error::new(
+                                std::io::ErrorKind::NotFound,
+                                format!("Cargo.toml missing at {}", missing_file.display()),
+                            )),
+                            context: format!("validate_integrity: no Cargo.toml at {:?}", missing_file),
+                        });
+                    }
+                    _ => {
+                        return Err(CrateError::CargoTomlError(e));
+                    }
                 }
             }
-        } // drop lock
+            Ok(ver) => {
+                trace!("CrateHandle::validate_integrity => version is valid ({})", ver);
+            }
+        }
 
-        // 3) then do the synchronous checks for src dir, readme, etc.
+        // 2) Additional checks like "has src/main.rs" or "has lib.rs"
         self.check_src_directory_contains_valid_files()?;
+
+        // 3) Check README
         self.check_readme_exists()?;
 
+        info!("CrateHandle::validate_integrity passed successfully");
         Ok(())
     }
 }

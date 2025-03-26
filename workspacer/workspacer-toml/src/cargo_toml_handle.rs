@@ -117,7 +117,7 @@ impl DocumentClone for CargoToml {
 
         let original = tokio::fs::read_to_string(self.as_ref())
             .await
-            .map_err(|ioe| CargoTomlError::ReadError { io: ioe.into() })?;
+            .map_err(|ioe| CargoTomlError::ReadError { path: self.as_ref().to_path_buf(), io: ioe.into() })?;
 
         let parse_result = original.parse::<toml_edit::Document>();
 
@@ -132,44 +132,71 @@ impl DocumentClone for CargoToml {
 impl Versioned for CargoToml {
     type Error = CargoTomlError;
 
-    /// Always re-reads the Cargo.toml file from disk (rather than using any
-    /// cached or in-memory TOML data) so that, if a bump() call changed
-    /// the version on disk, calling .version() immediately afterwards
-    /// will see the newly updated version.
     fn version(&self) -> Result<semver::Version, Self::Error> {
-
         trace!("CargoToml::version: forcing a fresh read from disk");
 
-        let package_section = self.get_package_section()?;
+        // 1) Check if the file even exists on disk. If not, return error:
+        if !std::fs::metadata(&self.path).is_ok() {
+            error!(
+                "CargoToml::version => file not found at path={:?}",
+                self.path
+            );
+            return Err(CargoTomlError::FileNotFound {
+                missing_file: self.path.clone(),
+            });
+        }
 
-        let ver_item = package_section.get("version").ok_or_else(|| {
-            error!("Missing 'version' in [package] for {:?}", self.path);
-            CargoTomlError::MissingRequiredFieldForIntegrity {
-                cargo_toml_file: self.path.clone(),
-                field: "package.version".to_string(),
+        // 2) Read the entire file from disk:
+        let contents = std::fs::read_to_string(&self.path).map_err(|io_err| {
+            error!("CargoToml::version => read_to_string failed: {}", io_err);
+            CargoTomlError::ReadError {
+                path: self.path.clone(),
+                io: Arc::new(io_err),
             }
         })?;
 
-        let ver_str = ver_item.as_str().ok_or_else(|| {
-            error!("package.version not a valid string in {:?}", self.path);
-            CargoTomlError::MissingRequiredFieldForIntegrity {
-                cargo_toml_file: self.path.clone(),
-                field: "package.version (expected a string)".to_string(),
+        // 3) Parse into toml_edit::Document to find [package].version:
+        let doc = contents.parse::<toml_edit::Document>().map_err(|parse_e| {
+            error!(
+                "CargoToml::version => TOML parse error: {}",
+                parse_e
+            );
+            CargoTomlError::InvalidToml {
+                path: self.path.clone(),
+                details: parse_e.to_string(),
             }
         })?;
 
-        trace!("CargoToml::version - read version_str='{}' from disk for {:?}", ver_str, self.path);
+        // 4) Grab the version string:
+        let version_str = doc
+            .get("package")
+            .and_then(|val| val.as_table())
+            .and_then(|tbl| tbl.get("version"))
+            .and_then(|ver| ver.as_str())
+            .ok_or_else(|| {
+                error!("CargoToml::version => no 'version' key in [package] table");
+                CargoTomlError::MissingRequiredFieldForIntegrity {
+                    cargo_toml_file: self.path.clone(),
+                    field: "version".to_string(),
+                }
+            })?;
 
-        let parsed = semver::Version::parse(ver_str).map_err(|err| {
-            error!("Invalid semver='{}' in {:?}: {:?}", ver_str, self.path, err);
-            CargoTomlError::InvalidVersionFormat {
-                cargo_toml_file: self.path.clone(),
-                version: ver_str.to_owned(),
+        debug!("CargoToml::version - read version_str='{}' from disk for {:?}", version_str, self.path);
+
+        // 5) Parse semver:
+        match semver::Version::parse(version_str) {
+            Ok(ver) => {
+                info!("CargoToml::version => parsed version={} for {:?}", ver, self.path);
+                Ok(ver)
             }
-        })?;
-
-        info!("CargoToml::version => parsed version={} for {:?}", parsed, self.path);
-        Ok(parsed)
+            Err(_e) => {
+                error!("CargoToml::version => invalid semver: '{}'", version_str);
+                Err(CargoTomlError::InvalidVersionFormat {
+                    cargo_toml_file: self.path.clone(),
+                    version: version_str.into(),
+                })
+            }
+        }
     }
 }
 
@@ -186,7 +213,7 @@ impl CargoToml {
         where P: AsRef<Path>
     {
         let cargo_content = fs::read_to_string(&cargo_toml_path).await
-            .map_err(|e| CargoTomlError::ReadError { io: e.into() })?;
+            .map_err(|e| CargoTomlError::ReadError { path: cargo_toml_path.as_ref().to_path_buf(), io: e.into() })?;
 
         let parsed: toml::Value = toml::from_str(&cargo_content).map_err(|toml_parse_error| {
             CargoTomlError::TomlParseError {
@@ -205,7 +232,10 @@ impl CargoToml {
         where P: AsRef<Path>
     {
         let cargo_content = std::fs::read_to_string(&cargo_toml_path)
-            .map_err(|e| CargoTomlError::ReadError { io: e.into() })?;
+            .map_err(|e| CargoTomlError::ReadError { 
+                path: cargo_toml_path.as_ref().to_path_buf(), 
+                io: e.into() 
+            })?;
 
         let parsed: toml::Value = toml::from_str(&cargo_content).map_err(|toml_parse_error| {
             CargoTomlError::TomlParseError {

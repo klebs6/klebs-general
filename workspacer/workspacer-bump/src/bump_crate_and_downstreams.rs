@@ -86,8 +86,8 @@ mod test_bump_crate_and_downstreams {
 
     #[traced_test]
     async fn test_bump_with_no_downstreams() -> Result<(), CrateError> {
-        let crate_a = CrateConfig::new("crate_a").with_src_files();
-        let crate_b = CrateConfig::new("crate_b").with_src_files();
+        let crate_a = CrateConfig::new("crate_a").with_src_files().with_readme();
+        let crate_b = CrateConfig::new("crate_b").with_src_files().with_readme();
         let tmp_root = create_mock_workspace(vec![crate_a, crate_b])
             .await
             .expect("Failed to create mock workspace");
@@ -149,8 +149,8 @@ mod test_bump_crate_and_downstreams {
 
     #[traced_test]
     async fn test_bump_with_single_downstream() -> Result<(), CrateError> {
-        let crate_a_cfg = CrateConfig::new("crate_a").with_src_files();
-        let crate_b_cfg = CrateConfig::new("crate_b").with_src_files();
+        let crate_a_cfg = CrateConfig::new("crate_a").with_src_files().with_readme();
+        let crate_b_cfg = CrateConfig::new("crate_b").with_src_files().with_readme();
         let tmp = create_mock_workspace(vec![crate_a_cfg, crate_b_cfg])
             .await
             .expect("mock workspace creation failed");
@@ -215,9 +215,9 @@ mod test_bump_crate_and_downstreams {
 
     #[traced_test]
     async fn test_bump_with_multiple_downstreams() -> Result<(), CrateError> {
-        let crate_a = CrateConfig::new("crate_a").with_src_files();
-        let crate_b = CrateConfig::new("crate_b").with_src_files();
-        let crate_c = CrateConfig::new("crate_c").with_src_files();
+        let crate_a = CrateConfig::new("crate_a").with_src_files().with_readme();
+        let crate_b = CrateConfig::new("crate_b").with_src_files().with_readme();
+        let crate_c = CrateConfig::new("crate_c").with_src_files().with_readme();
         let tmp = create_mock_workspace(vec![crate_a, crate_b, crate_c])
             .await
             .expect("creation ok");
@@ -291,9 +291,9 @@ mod test_bump_crate_and_downstreams {
 
     #[traced_test]
     async fn test_bump_with_chain_of_downstreams() -> Result<(), CrateError> {
-        let crate_a = CrateConfig::new("crate_a").with_src_files();
-        let crate_b = CrateConfig::new("crate_b").with_src_files();
-        let crate_c = CrateConfig::new("crate_c").with_src_files();
+        let crate_a = CrateConfig::new("crate_a").with_src_files().with_readme();
+        let crate_b = CrateConfig::new("crate_b").with_src_files().with_readme();
+        let crate_c = CrateConfig::new("crate_c").with_src_files().with_readme();
         let tmp = create_mock_workspace(vec![crate_a, crate_b, crate_c])
             .await
             .expect("workspace creation ok");
@@ -375,7 +375,7 @@ mod test_bump_crate_and_downstreams {
 
     #[traced_test]
     async fn test_bump_crate_fails() -> Result<(), CrateError> {
-        let crate_b = CrateConfig::new("b_fail").with_src_files();
+        let crate_b = CrateConfig::new("b_fail").with_src_files().with_readme();
         let tmp = create_mock_workspace(vec![crate_b]).await.unwrap();
 
         let mut ws = Workspace::<PathBuf, CrateHandle>::new(&tmp).await.unwrap();
@@ -425,55 +425,106 @@ mod test_bump_crate_and_downstreams {
 
     #[traced_test]
     async fn test_crate_handle_version_fails() -> Result<(), CrateError> {
-        let single_cfg = CrateConfig::new("ver_fails").with_src_files();
-        let tmp2 = create_mock_workspace(vec![single_cfg]).await.unwrap();
-        let mut ws2 = Workspace::<PathBuf, CrateHandle>::new(&tmp2).await.unwrap();
+        trace!("Starting test_crate_handle_version_fails");
 
-        let arc_x2 = ws2.find_crate_by_name("ver_fails").await
-            .expect("ver_fails crate not found");
+        // 1) Create a normal "ver_fails" crate with a real Cargo.toml on disk
+        //    plus a README. (We want the crate initially valid.)
+        let single_cfg = CrateConfig::new("ver_fails").with_src_files().with_readme();
+        let tmp2 = create_mock_workspace(vec![single_cfg])
+            .await
+            .expect("Failed to create mock workspace on disk");
+        info!(
+            "Created a mock workspace containing 'ver_fails' crate at {:?}",
+            tmp2
+        );
 
-        // normal bump => "0.1.1"
+        let mut ws2 = Workspace::<PathBuf, CrateHandle>::new(&tmp2)
+            .await
+            .expect("Failed to create Workspace from disk");
+        trace!("Workspace created successfully");
+
+        // 2) Get our crate handle
+        let arc_x2 = ws2
+            .find_crate_by_name("ver_fails")
+            .await
+            .expect("ver_fails crate not found in workspace");
+        info!("Located 'ver_fails' crate handle in the workspace");
+
+        // 3) Bump normally => "0.1.1"
         {
             let mut local_clone = {
                 let gx2 = arc_x2.lock().await;
                 gx2.clone()
             };
-            local_clone.bump(ReleaseType::Patch).await.expect("bump patch ok");
-            {
-                let mut gx2 = arc_x2.lock().await;
-                *gx2 = local_clone;
-            }
+            local_clone
+                .bump(ReleaseType::Patch)
+                .await
+                .expect("Bump patch should succeed for a valid crate");
+
+            info!("Bumped 'ver_fails' from 0.1.0 to 0.1.1 in-memory (and on disk)");
+
+            let mut gx2 = arc_x2.lock().await;
+            *gx2 = local_clone;
         }
 
-        // sabotage => set final version => "not.semver"
+        // 4) Sabotage the on-disk Cargo.toml => set final version = "not.semver"
         let cargo_x2 = {
             let gx2 = arc_x2.lock().await;
             gx2.as_ref().join("Cargo.toml")
         };
-        let contents2 = fs::read_to_string(&cargo_x2).await.unwrap();
-        let mut doc2 = contents2.parse::<toml_edit::Document>().expect("parse cargo toml");
-        if let Some(pkg_tbl) = doc2.get_mut("package").and_then(|v| v.as_table_mut()) {
-            pkg_tbl["version"] = toml_edit::value("not.semver");
-        }
-        fs::write(&cargo_x2, doc2.to_string()).await.unwrap();
+        info!("Sabotaging the Cargo.toml at {:?}", cargo_x2);
 
-        // now crate_handle.version() should fail
-        let handle_clone = {
-            let gx2 = arc_x2.lock().await;
-            gx2.clone()
-        };
-        let ret = handle_clone.version();
-        match ret {
-            Err(CrateError::CargoTomlError(
-                CargoTomlError::InvalidVersionFormat { cargo_toml_file, version }
-            )) => {
-                assert_eq!(cargo_toml_file, cargo_x2);
-                assert_eq!(version, "not.semver".to_owned());
-            }
-            Ok(_) => panic!("Expected parse error but got Ok"),
-            other => panic!("Expected InvalidVersionFormat, got {:?}", other),
+        let contents2 = fs::read_to_string(&cargo_x2).await.unwrap();
+        let mut doc2 = contents2
+            .parse::<toml_edit::Document>()
+            .expect("parse cargo toml");
+        if let Some(pkg_tbl) = doc2.get_mut("package").and_then(|val| val.as_table_mut()) {
+            pkg_tbl.remove("version");
+            pkg_tbl.insert("version", toml_edit::value("not.semver"));
         }
+        fs::write(&cargo_x2, doc2.to_string())
+            .await
+            .expect("Failed to write sabotaged Cargo.toml");
+
+        // Verify sabotage is actually written:
+        let after_sabotage = fs::read_to_string(&cargo_x2).await.unwrap();
+        assert!(
+            after_sabotage.contains("not.semver"),
+            "sabotage is not reflected in file! got: {after_sabotage}"
+        );
+
+        // >>>>>>> The one-line fix, forcing re-parse of cargo toml <<<<<<
+        arc_x2.lock().await.validate_integrity().await.ok();  
+
+        // 5) Now calling crate_handle.version() should yield an error
+        info!(
+            "Now calling crate_handle.version(), expecting an invalid-version error in {:?}",
+            cargo_x2
+        );
+        {
+            let handle_clone = {
+                let gx2 = arc_x2.lock().await;
+                gx2.clone()
+            };
+            let ret = handle_clone.version();
+            match ret {
+                Err(CrateError::CargoTomlError(
+                    CargoTomlError::InvalidVersionFormat {
+                        cargo_toml_file,
+                        version,
+                    },
+                )) => {
+                    // Confirm fields
+                    assert_eq!(cargo_toml_file, cargo_x2);
+                    assert_eq!(version, "not.semver".to_owned());
+                    info!("Got the expected InvalidVersionFormat error for 'not.semver'");
+                }
+                Ok(_) => panic!("Expected parse error but got Ok"),
+                other => panic!("Expected InvalidVersionFormat, got {:?}", other),
+            }
+        }
+
+        info!("Finished test_crate_handle_version_fails successfully");
         Ok(())
     }
-
 }

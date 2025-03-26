@@ -2,29 +2,50 @@
 crate::ix!();
 
 #[async_trait]
-impl<T> Bump for T 
-where T
-: ValidateIntegrity<Error=CrateError> 
-+ HasCargoToml
-+ HasCargoTomlPathBuf<Error=CrateError>
-+ AsRef<Path>
-+ Send
-+ Sync
+impl<T> Bump for T
+where
+    T: ValidateIntegrity<Error = CrateError>
+        + HasCargoToml
+        + HasCargoTomlPathBuf<Error = CrateError>
+        + AsRef<Path>
+        + Send
+        + Sync,
 {
     type Error = CrateError;
 
     async fn bump(&mut self, release: ReleaseType) -> Result<(), Self::Error> {
+        trace!("Entered Bump::bump with release={:?}", release);
+
         // A) Lock briefly just to *read* the old version
         let old_version_str = {
             let cargo_toml_arc = self.cargo_toml();
             let guard = cargo_toml_arc.lock().await;
 
-            // read old version as a string
-            let ver = guard.version()?;
-            ver.to_string()
-        }; // guard dropped here => no deadlock
+            // read old version as a string, BUT unify missing file => IoError
+            let ver = match guard.version() {
+                Err(CargoTomlError::FileNotFound { missing_file }) => {
+                    error!("bump(): mapping 'FileNotFound' to CrateError::IoError");
+                    return Err(CrateError::IoError {
+                        io_error: Arc::new(std::io::Error::new(
+                            std::io::ErrorKind::NotFound,
+                            format!("Cargo.toml not found at {}", missing_file.display())
+                        )),
+                        context: format!("Cannot read Cargo.toml at {:?}", missing_file),
+                    });
+                }
+                Err(e) => {
+                    error!("bump(): got CargoTomlError => returning CrateError::CargoTomlError({:?})", e);
+                    return Err(CrateError::CargoTomlError(e));
+                }
+                Ok(ver_ok) => ver_ok,
+            };
+            let ver_str = ver.to_string();
+            debug!("Current version (before bump) is '{}', about to do integrity check", ver_str);
+            ver_str
+        };
 
         // B) Now do sabotage check and forced re-parse from disk
+        trace!("Validating crate integrity before proceeding with bump");
         self.validate_integrity().await?;
 
         // C) Re-lock to do the actual bump patch
@@ -34,8 +55,24 @@ where T
             let cargo_toml_arc = self.cargo_toml();
             let mut guard = cargo_toml_arc.lock().await;
 
-            // parse the old version again (now that sabotage is recognized)
-            let mut old_ver = guard.version()?;
+            // parse the old version again (fresh)
+            let mut old_ver = match guard.version() {
+                Err(CargoTomlError::FileNotFound { missing_file }) => {
+                    error!("bump(): second read => mapping 'FileNotFound' to IoError");
+                    return Err(CrateError::IoError {
+                        io_error: Arc::new(std::io::Error::new(
+                            std::io::ErrorKind::NotFound,
+                            format!("Cargo.toml not found at {}", missing_file.display())
+                        )),
+                        context: format!("Cannot re-read Cargo.toml at {:?}", missing_file),
+                    });
+                }
+                Err(e) => {
+                    error!("bump(): second read => CargoTomlError => returning CrateError::CargoTomlError({:?})", e);
+                    return Err(CrateError::CargoTomlError(e));
+                }
+                Ok(ver_ok) => ver_ok,
+            };
             let old_clone = old_ver.clone();
 
             // apply the release
@@ -48,7 +85,14 @@ where T
             let bumped = old_ver.to_string();
             {
                 let pkg = guard.get_package_section_mut()?;
-                pkg["version"] = toml::Value::String(bumped.clone());
+                // same code as before for setting the version in the table
+                if let Some(tbl) = pkg.as_table_mut() {
+                    tbl.insert("version".to_owned(), toml::Value::String(bumped.clone()));
+                    debug!("Set `package.version` to '{}'", bumped);
+                } else {
+                    error!("`package` section was not a TOML table; cannot set version!");
+                    return Err(CrateError::CouldNotSetPackageVersionBecausePackageIsNotATable);
+                }
             }
 
             cargo_toml_path = self.as_ref().join("Cargo.toml");
@@ -62,10 +106,9 @@ where T
             guard.save_to_disk().await?;
         }
 
-        tracing::info!(
-            "Successfully bumped crate at {:?} to {}",
-            cargo_toml_path,
-            new_version_str
+        info!(
+            "Successfully bumped crate at {:?} from {} to {}",
+            cargo_toml_path, old_version_str, new_version_str
         );
         Ok(())
     }

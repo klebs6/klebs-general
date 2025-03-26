@@ -17,6 +17,7 @@ pub struct TracedTestGenerator {
     /// NEW: store final booleans after applying defaults
     show_timestamp: bool,
     show_loglevel:  bool,
+    show_location:  bool,
 }
 
 impl TracedTestGenerator {
@@ -45,8 +46,9 @@ impl TracedTestGenerator {
         let is_async       = orig.is_async();
         let returns_result = orig.returns_result();
 
-        let show_timestamp = traced_test_attr.show_timestamp().unwrap_or(true);
+        let show_timestamp = traced_test_attr.show_timestamp().unwrap_or(false);
         let show_loglevel  = traced_test_attr.show_loglevel().unwrap_or(true);
+        let show_location  = traced_test_attr.show_location().unwrap_or(true);
 
         let name = orig.sig.ident.to_string();
 
@@ -69,6 +71,7 @@ impl TracedTestGenerator {
             returns_result,
             traced_test_attr,
             show_timestamp,
+            show_location,
             show_loglevel,
         })
     }

@@ -20,59 +20,96 @@ impl BufferedLayer {
     }
 }
 
-// A single, unified impl Layer<S>
 impl<S: Subscriber> tracing_subscriber::Layer<S> for BufferedLayer {
-
     fn on_event(&self, event: &tracing::Event<'_>, _ctx: Context<'_, S>) {
+        use tracing::{trace, debug, info, warn, error};
+
+        trace!("on_event called for BufferedLayer");
+
         if let Ok(mut buf) = self.buffer.lock() {
+            trace!("successfully acquired buffer lock, building event log line");
 
             match &self.event_printer {
                 EventPrinter::FullWithHeader => {
                     // Original approach: debug-print the entire event
                     let mut msg = String::new();
                     let _ = write!(&mut msg, "{:#?}", event);
+
+                    debug!("pushing fully detailed event log line");
                     buf.push(msg);
                 }
 
                 EventPrinter::LogLineAndContents {
                     show_timestamp,
                     show_loglevel,
+                    show_location,
                 } => {
-                    // Single-line approach with optional timestamp/level
+                    // Single-line approach with optional timestamp/level, but
+                    // place the location info after the message with alignment
                     use chrono::{Local, SecondsFormat};
+
                     let now  = Local::now().to_rfc3339_opts(SecondsFormat::Millis, true);
                     let meta = event.metadata();
 
                     let mut line = String::new();
 
+                    if *show_loglevel {
+                        let desired = 6;
+                        let level   = meta.level().to_string();
+                        let pad     = desired - level.len();
+                        line.push_str(&level);
+                        line.push_str(&" ".repeat(pad));
+                    }
+
+                    if *show_location {
+                        // we place the location (and level, if requested) at a fixed column
+                        // for consistent right-bracket alignment across lines
+                        let location = format!(" [{}] ", meta.target());
+                        let max_len = 60;
+                        if location.len() > max_len {
+                            let prefix = &location[0..max_len];
+                            line.push_str(&prefix);
+                        } else {
+                            line.push_str(&location);
+                            let pad = max_len - location.len();
+                            line.push_str(&" ".repeat(pad));
+                        }
+                        line.push_str(&" ");
+                    }
+
+                    // optional timestamp
                     if *show_timestamp {
                         line.push_str(&now);
                         line.push(' ');
                     }
-                    if *show_loglevel {
-                        line.push('[');
-                        line.push_str(&meta.level().to_string());
-                        line.push(' ');
-                        line.push_str(meta.target());
-                        line.push_str("] ");
-                    }
 
-                    // Collect field data
+                    // collect field data
                     struct FieldCollector(String);
                     impl tracing::field::Visit for FieldCollector {
-                        fn record_debug(&mut self, f: &tracing::field::Field, v: &dyn std::fmt::Debug) {
-                            let _ = write!(self.0, "{} = {:?}, ", f.name(), v);
+                        fn record_debug(
+                            &mut self,
+                            f: &tracing::field::Field,
+                            v: &dyn std::fmt::Debug
+                        ) {
+                            if f.name() == "message" {
+                                let _ = write!(self.0, "{:?}, ", v);
+                            } else {
+                                let _ = write!(self.0, "{} = {:?}, ", f.name(), v);
+                            }
                         }
                     }
                     let mut visitor = FieldCollector(String::new());
                     event.record(&mut visitor);
 
+                    // trim trailing comma, if any
                     if !visitor.0.is_empty() {
-                        // Remove trailing ", "
                         visitor.0.truncate(visitor.0.len().saturating_sub(2));
-                        line.push_str(&visitor.0);
                     }
 
+                    // build the main part of the line (timestamp + message fields)
+                    line.push_str(&visitor.0);
+
+                    trace!("pushing single-line log event with aligned location bracket");
                     buf.push(line);
                 }
 
@@ -81,7 +118,11 @@ impl<S: Subscriber> tracing_subscriber::Layer<S> for BufferedLayer {
                     let mut message = String::new();
                     struct FieldCollector(String);
                     impl tracing::field::Visit for FieldCollector {
-                        fn record_debug(&mut self, _f: &tracing::field::Field, v: &dyn std::fmt::Debug) {
+                        fn record_debug(
+                            &mut self,
+                            _f: &tracing::field::Field,
+                            v: &dyn std::fmt::Debug
+                        ) {
                             let _ = write!(self.0, "{:?}, ", v);
                         }
                     }
@@ -93,9 +134,12 @@ impl<S: Subscriber> tracing_subscriber::Layer<S> for BufferedLayer {
                         message.push_str(&visitor.0);
                     }
 
+                    debug!("pushing minimal event fields");
                     buf.push(message);
                 }
             }
+        } else {
+            warn!("failed to acquire buffer lock in BufferedLayer::on_event");
         }
     }
 }
