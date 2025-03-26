@@ -81,10 +81,10 @@ impl BatchFileTriple {
 
     /// Some tests referred to “new_for_test_empty()”. We define it here 
     /// as a convenience constructor that sets everything to None, 
-    /// with a dummy index and a MockWorkspace.
+    /// with a dummy index and a MockBatchWorkspace.
     pub fn new_for_test_empty() -> Self {
         let index = BatchIndex::Usize(9999);
-        let workspace = Arc::new(MockWorkspace::default());
+        let workspace = Arc::new(MockBatchWorkspace::default());
         Self::new_direct(&index, None, None, None, None, workspace)
     }
 
@@ -161,7 +161,7 @@ impl BatchFileTriple {
             None, // no forced output path
             None, // no forced error path
             Some(metadata_path.clone()),
-            std::sync::Arc::new(MockWorkspace::default()), // or however you handle workspace
+            std::sync::Arc::new(MockBatchWorkspace::default()), // or however you handle workspace
         );
         triple
     }
@@ -254,7 +254,7 @@ impl BatchFileTriple {
 
     /// A convenience constructor used by certain unit tests that only need
     /// to set `associated_metadata` while leaving other paths as None.
-    /// We assign a dummy `BatchIndex` and a default MockWorkspace (or any real workspace).
+    /// We assign a dummy `BatchIndex` and a default MockBatchWorkspace (or any real workspace).
     pub fn new_for_test_with_metadata_path(metadata_path: PathBuf) -> Self {
         trace!(
             "Constructing a test triple with just an associated metadata path: {:?}",
@@ -262,7 +262,7 @@ impl BatchFileTriple {
         );
 
         let index = BatchIndex::Usize(9999);
-        let workspace = Arc::new(MockWorkspace::default());
+        let workspace = Arc::new(MockBatchWorkspace::default());
 
         Self::new_direct(
             &index,
@@ -276,7 +276,7 @@ impl BatchFileTriple {
 
     /// A convenience constructor used by certain unit tests that need to set
     /// specific input, output, and error paths directly (often to temp files).
-    /// We assign a dummy `BatchIndex` and a default MockWorkspace.
+    /// We assign a dummy `BatchIndex` and a default MockBatchWorkspace.
     pub fn new_for_test_with_in_out_err_paths(
         workspace: Arc<dyn BatchWorkspaceInterface>,
         input:     PathBuf,
@@ -315,7 +315,7 @@ mod batch_file_triple_filename_accessors_exhaustive_tests {
     #[traced_test]
     fn input_filename_returns_correct_path() {
         trace!("===== BEGIN TEST: input_filename_returns_correct_path =====");
-        let workspace = Arc::new(MockWorkspace::default());
+        let workspace = Arc::new(MockBatchWorkspace::default());
         let triple = BatchFileTriple::new_direct(
             &BatchIndex::new(),
             None,None,None,None,
@@ -330,7 +330,7 @@ mod batch_file_triple_filename_accessors_exhaustive_tests {
     #[traced_test]
     fn output_filename_returns_correct_path() {
         trace!("===== BEGIN TEST: output_filename_returns_correct_path =====");
-        let workspace = Arc::new(MockWorkspace::default());
+        let workspace = Arc::new(MockBatchWorkspace::default());
         let triple = BatchFileTriple::new_direct(
             &BatchIndex::new(),
             None,None,None,None,
@@ -345,7 +345,7 @@ mod batch_file_triple_filename_accessors_exhaustive_tests {
     #[traced_test]
     fn error_filename_returns_correct_path() {
         trace!("===== BEGIN TEST: error_filename_returns_correct_path =====");
-        let workspace = Arc::new(MockWorkspace::default());
+        let workspace = Arc::new(MockBatchWorkspace::default());
         let triple = BatchFileTriple::new_direct(
             &BatchIndex::new(),
             None,None,None,None,
@@ -360,7 +360,7 @@ mod batch_file_triple_filename_accessors_exhaustive_tests {
     #[traced_test]
     fn metadata_filename_returns_correct_path() {
         trace!("===== BEGIN TEST: metadata_filename_returns_correct_path =====");
-        let workspace = Arc::new(MockWorkspace::default());
+        let workspace = Arc::new(MockBatchWorkspace::default());
         let triple = BatchFileTriple::new_direct(
             &BatchIndex::new(),
             None,None,None,None,
@@ -375,7 +375,7 @@ mod batch_file_triple_filename_accessors_exhaustive_tests {
     #[traced_test]
     fn set_output_path_updates_field() {
         trace!("===== BEGIN TEST: set_output_path_updates_field =====");
-        let workspace = Arc::new(MockWorkspace::default());
+        let workspace = Arc::new(MockBatchWorkspace::default());
         let mut triple = BatchFileTriple::new_direct(
             &BatchIndex::new(),
             None,None,None,None,
@@ -391,7 +391,7 @@ mod batch_file_triple_filename_accessors_exhaustive_tests {
     #[traced_test]
     fn set_error_path_updates_field() {
         trace!("===== BEGIN TEST: set_error_path_updates_field =====");
-        let workspace = Arc::new(MockWorkspace::default());
+        let workspace = Arc::new(MockBatchWorkspace::default());
         let mut triple = BatchFileTriple::new_direct(
             &BatchIndex::new(),
             None,None,None,None,
@@ -407,7 +407,7 @@ mod batch_file_triple_filename_accessors_exhaustive_tests {
     #[traced_test]
     fn all_are_none_returns_true_when_no_paths_present() {
         trace!("===== BEGIN TEST: all_are_none_returns_true_when_no_paths_present =====");
-        let workspace = Arc::new(MockWorkspace::default());
+        let workspace = Arc::new(MockBatchWorkspace::default());
         let triple = BatchFileTriple::new_direct(
             &BatchIndex::new(),
             None,None,None,None,
@@ -421,7 +421,7 @@ mod batch_file_triple_filename_accessors_exhaustive_tests {
     #[traced_test]
     fn all_are_none_returns_false_when_any_path_present() {
         trace!("===== BEGIN TEST: all_are_none_returns_false_when_any_path_present =====");
-        let workspace = Arc::new(MockWorkspace::default());
+        let workspace = Arc::new(MockBatchWorkspace::default());
         let triple = BatchFileTriple::new_direct(
             &BatchIndex::new(),
             Some(PathBuf::from("some_input.json")),
@@ -436,7 +436,7 @@ mod batch_file_triple_filename_accessors_exhaustive_tests {
     #[traced_test]
     fn new_with_requests_creates_input_file_and_none_for_others() {
         trace!("===== BEGIN TEST: new_with_requests_creates_input_file_and_none_for_others =====");
-        let workspace = Arc::new(MockWorkspace::default());
+        let workspace = Arc::new(MockBatchWorkspace::default());
         let requests = vec![LanguageModelBatchAPIRequest::mock("req-1")];
 
         let triple_res = BatchFileTriple::new_with_requests(&requests, workspace.clone());
@@ -475,7 +475,7 @@ mod batch_file_triple_filename_accessors_exhaustive_tests {
         let error    = Some(PathBuf::from("error.json"));
         let metadata = Some(PathBuf::from("metadata.json"));
 
-        let workspace = Arc::new(MockWorkspace::default());
+        let workspace = Arc::new(MockBatchWorkspace::default());
         let triple = BatchFileTriple::new_direct(
             &index,
             input.clone(), output.clone(), error.clone(), metadata.clone(),
@@ -500,12 +500,12 @@ mod batch_file_triple_filename_accessors_exhaustive_tests {
         let triple1 = BatchFileTriple::new_direct(
             &idx1,
             None, None, None, None,
-            Arc::new(MockWorkspace::default())
+            Arc::new(MockBatchWorkspace::default())
         );
         let triple2 = BatchFileTriple::new_direct(
             &idx2,
             None, None, None, None,
-            Arc::new(MockWorkspace::default())
+            Arc::new(MockBatchWorkspace::default())
         );
 
         // Equality vs difference

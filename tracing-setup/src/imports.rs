@@ -17,3 +17,4 @@ pub(crate) use std::path::{PathBuf,Path};
 pub(crate) use std::fmt::Write;
 pub(crate) use disable_macro::*;
 pub(crate) use serial_test::*;
+pub(crate) use getset::*;

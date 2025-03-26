@@ -4,11 +4,11 @@ crate::ix!();
 // ------------------------------------------------------------------------
 // Subroutine #3: Process a single notify::Result<notify::Event>
 // ------------------------------------------------------------------------
-pub async fn process_notify_event<X,E>(
+pub async fn process_notify_event<'a,X,E>(
     watched: &X,
     event:   Result<notify::Event, notify::Error>,
     tx:      Option<&mpsc::Sender<Result<(), E>>>,
-    runner:  &Arc<dyn CommandRunner + Send + Sync + 'static>,
+    runner:  &Arc<dyn CommandRunner + Send + Sync + 'a>,
 ) -> Result<(), E>
 where
     X: WatchAndReload<Error=E> + RebuildOrTest<Error=E>,

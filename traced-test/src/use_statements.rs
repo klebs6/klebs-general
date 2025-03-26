@@ -1,3 +1,4 @@
+// ---------------- [ File: src/use_statements.rs ]
 crate::ix!();
 
 impl TracedTestGenerator {
@@ -9,11 +10,10 @@ impl TracedTestGenerator {
         use_statements.extend(quote!{ use tracing::*; });
         use_statements.extend(quote!{ use std::panic::AssertUnwindSafe; });
 
-        if self.is_async() {
+        if *self.is_async() {
             use_statements.extend(quote!{ use tokio::task; });
         }
 
         use_statements
     }
 }
-

@@ -10,6 +10,12 @@ path = "../workspacer-workspace-interface"
 path = "../workspacer-errors"
 [dev-dependencies.workspacer-mock]
 path = "../workspacer-mock"
+[dev-dependencies.workspacer-crate-mock]
+path = "../workspacer-crate-mock"
+[dev-dependencies.workspacer-workspace-mock]
+path = "../workspacer-workspace-mock"
+[dev-dependencies.workspacer-toml-mock]
+path = "../workspacer-toml-mock"
 [dependencies.workspacer-toml-interface]
 path = "../workspacer-toml-interface"
 [dependencies.workspacer-workspace]

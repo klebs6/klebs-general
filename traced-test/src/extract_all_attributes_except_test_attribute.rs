@@ -1,3 +1,4 @@
+// ---------------- [ File: src/extract_all_attributes_except_test_attribute.rs ]
 crate::ix!();
 
 pub trait ExtractAllAttributesExcept {
@@ -13,14 +14,12 @@ impl ExtractAllAttributesExcept for ItemFn {
         self.attrs
             .iter()
             .filter(|attr| {
-                // Try converting the attribute to AttributeKind and check if it's in the `kinds` set
-                if let Ok(kind) = AttributeKind::try_from(*attr) {
-                    !kinds.contains(&kind)
-                } else {
-                    true
-                }
+                let kind = AttributeKind::from(*attr);
+                // If it’s in `kinds` OR if it’s recognized as `TracedTestAttr`,
+                // we skip it so it doesn’t get re-injected
+                !kinds.contains(&kind) && kind != AttributeKind::TracedTest
             })
-            .cloned()
+        .cloned()
             .collect()
     }
 }

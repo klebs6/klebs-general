@@ -68,9 +68,9 @@ mod check_batch_status_online_tests {
     use tracing::{debug, error, info, trace, warn};
     use std::fs;
 
-    // Example placeholder so references to MockWorkspace compile:
+    // Example placeholder so references to MockBatchWorkspace compile:
     #[derive(Default, Debug)]
-    pub struct MockWorkspace;
+    pub struct MockBatchWorkspace;
 
     #[traced_test]
     async fn test_batch_completed_no_files() {

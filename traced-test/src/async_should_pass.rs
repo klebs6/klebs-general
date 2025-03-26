@@ -1,3 +1,4 @@
+// ---------------- [ File: src/async_should_pass.rs ]
 crate::ix!();
 
 pub struct AsynchronousTest {

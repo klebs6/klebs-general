@@ -1,3 +1,4 @@
+// ---------------- [ File: src/end_of_test_guard.rs ]
 crate::ix!();
 
 impl TracedTestGenerator {

@@ -40,7 +40,7 @@ mod batch_file_state_exhaustive_tests {
             &BatchIndex::new(),
             Some(PathBuf::from("in.json")),
             None, None, None,
-            Arc::new(MockWorkspace::default())
+            Arc::new(MockBatchWorkspace::default())
         );
         let state = BatchFileState::from(&triple);
         debug!("Computed state: {:?}", state);
@@ -57,7 +57,7 @@ mod batch_file_state_exhaustive_tests {
             Some(PathBuf::from("out.json")),
             None,
             None,
-            Arc::new(MockWorkspace::default())
+            Arc::new(MockBatchWorkspace::default())
         );
         let state = BatchFileState::from(&triple);
         debug!("Computed state: {:?}", state);
@@ -74,7 +74,7 @@ mod batch_file_state_exhaustive_tests {
             None,
             Some(PathBuf::from("err.json")),
             None,
-            Arc::new(MockWorkspace::default())
+            Arc::new(MockBatchWorkspace::default())
         );
         let state = BatchFileState::from(&triple);
         debug!("Computed state: {:?}", state);
@@ -91,7 +91,7 @@ mod batch_file_state_exhaustive_tests {
             Some(PathBuf::from("out.json")),
             Some(PathBuf::from("err.json")),
             None,
-            Arc::new(MockWorkspace::default())
+            Arc::new(MockBatchWorkspace::default())
         );
         let state = BatchFileState::from(&triple);
         debug!("Computed state: {:?}", state);

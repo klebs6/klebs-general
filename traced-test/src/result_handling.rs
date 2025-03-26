@@ -1,3 +1,4 @@
+// ---------------- [ File: src/result_handling.rs ]
 crate::ix!();
 
 impl TracedTestGenerator {

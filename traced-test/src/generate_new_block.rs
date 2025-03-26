@@ -1,3 +1,4 @@
+// ---------------- [ File: src/generate_new_block.rs ]
 crate::ix!();
 
 pub trait GenerateNewBlock {
@@ -17,7 +18,7 @@ impl GenerateNewBlock for TracedTestGenerator {
         let result_handling_tokens = self.result_handling_tokens();
         let tracing_setup          = self.tracing_setup_tokens();
 
-        let new_block = if self.is_async() {
+        let new_block = if *self.is_async() {
             quote! {
                 {
                     #use_statements

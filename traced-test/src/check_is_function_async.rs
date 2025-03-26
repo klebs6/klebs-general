@@ -1,3 +1,4 @@
+// ---------------- [ File: src/check_is_function_async.rs ]
 crate::ix!();
 
 pub trait IsAsync {

@@ -1,3 +1,4 @@
+// ---------------- [ File: src/lib.rs ]
 #![allow(dead_code)]
 #![allow(unreachable_code)]
 #![allow(unused_imports)]
@@ -9,6 +10,7 @@ extern crate proc_macro;
 #[macro_use] mod syn_imports; use syn_imports::*;
 
 xp!{async_should_fail}
+xp!{should_fail_attr}
 xp!{async_should_pass}
 xp!{attribute_kind}
 xp!{check_is_function_async}
@@ -28,7 +30,6 @@ xp!{original}
 xp!{panic_handler}
 xp!{parse_or_compile_error}
 xp!{result_handling}
-xp!{should_fail_attr}
 xp!{should_panic_attr}
 xp!{traced_test_attr}
 xp!{sync_should_fail}
@@ -62,11 +63,4 @@ pub fn traced_test(attr: TokenStream, item: TokenStream) -> TokenStream {
     };
 
     output.into()
-}
-
-/// A no-op attribute to allow the compiler to recognize `#[should_fail]`.
-#[proc_macro_attribute]
-pub fn should_fail(_attr: TokenStream, item: TokenStream) -> TokenStream {
-    // Simply return the item unchanged
-    item
 }

@@ -1,3 +1,4 @@
+// ---------------- [ File: src/wrap_sync_test.rs ]
 crate::ix!();
 
 impl WrapBlock for SynchronousTest {
@@ -5,7 +6,7 @@ impl WrapBlock for SynchronousTest {
         let original_block = self.original_block();
         let test_failed = quote! { test_failed_clone };
 
-        if generator.returns_result() {
+        if *generator.returns_result() {
             let return_type_tokens = generator.return_type_tokens();
             let result_handling_tokens = generator.result_handling_tokens().unwrap();
 
@@ -66,7 +67,7 @@ impl WrapBlock for SynchronousTestShouldFail {
         // Reference to test_failed_clone
         let test_failed = quote! { test_failed_clone };
 
-        if generator.returns_result() {
+        if *generator.returns_result() {
 
             let return_type_tokens = generator.return_type_tokens();
 

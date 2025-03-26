@@ -18,7 +18,7 @@ impl Named for CrateHandle {
         // Clone so the async closure can be 'static without borrowing &self.
         let cargo_toml_handle = self.cargo_toml_handle.clone();
 
-        let package_name = run_async_without_nested_runtime(async move {
+        let package_name = safe_run_async(async move {
             trace!("Locking cargo_toml_handle in async block");
             let guard = cargo_toml_handle.lock().await;
             let name = guard
@@ -47,7 +47,7 @@ impl Versioned for CrateHandle {
         // Clone so the async closure does not capture &self.
         let cargo_toml_handle = self.cargo_toml_handle.clone();
 
-        let mut version_str = run_async_without_nested_runtime(async move {
+        let mut version_str = safe_run_async(async move {
             trace!("Locking cargo_toml_handle in async block for version");
             let guard = cargo_toml_handle.lock().await;
             guard
@@ -160,18 +160,56 @@ impl ValidateIntegrity for CrateHandle {
     type Error = CrateError;
 
     async fn validate_integrity(&self) -> Result<(), Self::Error> {
-        use tracing::{trace, error};
+        trace!("CrateHandle::validate_integrity() - forcing a re-parse from disk to catch sabotage or missing fields.");
 
-        trace!("CrateHandle::validate_integrity() - will lock cargo_toml_handle via async");
+        // 1) forcibly re-parse from disk with NO lock held => avoids self-deadlock
+        let path = self.as_ref().join("Cargo.toml");
+        let content_str = tokio::fs::read_to_string(&path).await.map_err(|io_err| {
+            CrateError::IoError {
+                context: format!("Failed re-reading Cargo.toml at {}", path.display()),
+                io_error: Arc::new(io_err),
+            }
+        })?;
 
-        // Clone so the async block can own the handle.
-        let cargo_toml_handle = self.cargo_toml_handle.clone();
-        
-        trace!("Locking cargo_toml_handle in async block to validate CargoToml");
-        let guard = cargo_toml_handle.lock().await;
-        guard.validate_integrity().await?;
+        // parse as toml::Value
+        let parsed_value = toml::from_str::<toml::Value>(&content_str).map_err(|e| {
+            CrateError::CargoTomlError(CargoTomlError::TomlParseError {
+                cargo_toml_file: path.clone(),
+                toml_parse_error: e,
+            })
+        })?;
 
-        // Now do any synchronous checks
+        // 2) lock cargo_toml_handle once
+        let cargo_toml_arc = self.cargo_toml_handle.clone();
+        {
+            let mut guard = cargo_toml_arc.lock().await;
+
+            // overwrite the in-memory content so sabotage is recognized
+            guard.set_content(parsed_value);
+
+            // now run the existing cargo-toml integrity checks
+            match guard.validate_integrity().await {
+                Ok(()) => (),
+                Err(e) => {
+                    // map FileNotFound => IoError so the tests see IoError if the file is missing
+                    let mapped = match e {
+                        CargoTomlError::FileNotFound { missing_file } => {
+                            CrateError::IoError {
+                                context: format!("reading cargo toml: {}", missing_file.display()),
+                                io_error: Arc::new(std::io::Error::new(
+                                    std::io::ErrorKind::NotFound,
+                                    "File not found",
+                                )),
+                            }
+                        }
+                        other => CrateError::CargoTomlError(other),
+                    };
+                    return Err(mapped);
+                }
+            }
+        } // drop lock
+
+        // 3) then do the synchronous checks for src dir, readme, etc.
         self.check_src_directory_contains_valid_files()?;
         self.check_readme_exists()?;
 

@@ -11,9 +11,9 @@ pub struct MockItem {
 #[derive(Clone,Getters,Setters,Builder,Debug)]
 #[builder(setter(strip_option))]
 #[getset(get = "pub", set = "pub")]
-pub struct MockWorkspace {
+pub struct MockBatchWorkspace {
     /// A temporary directory that is automatically
-    /// cleaned up when `MockWorkspace` is dropped.
+    /// cleaned up when `MockBatchWorkspace` is dropped.
     #[builder(default = "Arc::new(tempfile::tempdir().expect(\"Failed to create temp directory\"))")]
     ephemeral_dir: Arc<tempfile::TempDir>,
 
@@ -50,10 +50,10 @@ pub struct MockWorkspace {
     ephemeral_done_dir: PathBuf,
 }
 
-impl Default for MockWorkspace {
+impl Default for MockBatchWorkspace {
     fn default() -> Self {
-        let temp = tempfile::tempdir().expect("Could not create temp directory for MockWorkspace");
-        info!("Created ephemeral directory for MockWorkspace at: {:?}", temp.path());
+        let temp = tempfile::tempdir().expect("Could not create temp directory for MockBatchWorkspace");
+        info!("Created ephemeral directory for MockBatchWorkspace at: {:?}", temp.path());
 
         // Pre‐compute the ephemeral “done” directory
         // so we can return it by reference in the trait method.
@@ -77,7 +77,7 @@ impl Default for MockWorkspace {
     }
 }
 
-impl GetInputFilenameAtIndex for MockWorkspace {
+impl GetInputFilenameAtIndex for MockBatchWorkspace {
     fn input_filename(&self, batch_idx: &BatchIndex) -> PathBuf {
         let path = self
             .ephemeral_dir
@@ -88,7 +88,7 @@ impl GetInputFilenameAtIndex for MockWorkspace {
     }
 }
 
-impl GetOutputFilenameAtIndex for MockWorkspace {
+impl GetOutputFilenameAtIndex for MockBatchWorkspace {
     fn output_filename(&self, batch_idx: &BatchIndex) -> PathBuf {
         let path = self
             .ephemeral_dir
@@ -99,7 +99,7 @@ impl GetOutputFilenameAtIndex for MockWorkspace {
     }
 }
 
-impl GetErrorFilenameAtIndex for MockWorkspace {
+impl GetErrorFilenameAtIndex for MockBatchWorkspace {
     fn error_filename(&self, batch_idx: &BatchIndex) -> PathBuf {
         let path = self
             .ephemeral_dir
@@ -110,7 +110,7 @@ impl GetErrorFilenameAtIndex for MockWorkspace {
     }
 }
 
-impl GetMetadataFilenameAtIndex for MockWorkspace {
+impl GetMetadataFilenameAtIndex for MockBatchWorkspace {
     fn metadata_filename(&self, batch_idx: &BatchIndex) -> PathBuf {
         let path = self
             .ephemeral_dir
@@ -121,7 +121,7 @@ impl GetMetadataFilenameAtIndex for MockWorkspace {
     }
 }
 
-impl GetDoneDirectory for MockWorkspace {
+impl GetDoneDirectory for MockBatchWorkspace {
     fn get_done_directory(&self) -> &PathBuf {
         trace!(
             "Returning ephemeral done directory for mock workspace: {:?}",
@@ -131,7 +131,7 @@ impl GetDoneDirectory for MockWorkspace {
     }
 }
 
-impl GetFailedJsonRepairsDir for MockWorkspace {
+impl GetFailedJsonRepairsDir for MockBatchWorkspace {
     fn failed_json_repairs_dir(&self) -> PathBuf {
         let path = self.ephemeral_dir.path().join(&self.failed_json_repairs_dir);
         trace!("Returning ephemeral failed_json_repairs_dir: {:?}", path);
@@ -142,7 +142,7 @@ impl GetFailedJsonRepairsDir for MockWorkspace {
     }
 }
 
-impl GetFailedItemsDir for MockWorkspace {
+impl GetFailedItemsDir for MockBatchWorkspace {
     fn failed_items_dir(&self) -> PathBuf {
         let path = self.ephemeral_dir.path().join(&self.failed_items_dir);
         trace!("Returning ephemeral failed_items_dir: {:?}", path);
@@ -153,7 +153,7 @@ impl GetFailedItemsDir for MockWorkspace {
     }
 }
 
-impl GetTextStoragePath for MockWorkspace {
+impl GetTextStoragePath for MockBatchWorkspace {
     fn text_storage_path(&self, batch_idx: &BatchIndex) -> PathBuf {
         let path = if self.text_storage_prefix.is_empty() {
             self.ephemeral_dir
@@ -175,7 +175,7 @@ impl GetTextStoragePath for MockWorkspace {
     }
 }
 
-impl GetWorkdir for MockWorkspace {
+impl GetWorkdir for MockBatchWorkspace {
     fn workdir(&self) -> PathBuf {
         let path = self.ephemeral_dir.path().join(&self.workdir);
         trace!("Returning ephemeral workdir: {:?}", path);
@@ -186,7 +186,7 @@ impl GetWorkdir for MockWorkspace {
     }
 }
 
-impl GetTargetPath for MockWorkspace {
+impl GetTargetPath for MockBatchWorkspace {
     type Item = Arc<dyn GetTargetPathForAIExpansion + Send + Sync + 'static>;
 
     fn target_path(
@@ -205,7 +205,7 @@ impl GetTargetPath for MockWorkspace {
     }
 }
 
-impl BatchWorkspaceInterface for MockWorkspace {}
+impl BatchWorkspaceInterface for MockBatchWorkspace {}
 
 #[cfg(test)]
 mod test_mock_workspace_ephemeral {
@@ -215,7 +215,7 @@ mod test_mock_workspace_ephemeral {
     fn test_ephemeral_cleanup() {
         let ephemeral_done: PathBuf;
         {
-            let workspace = MockWorkspace::default();
+            let workspace = MockBatchWorkspace::default();
             ephemeral_done = workspace.get_done_directory().to_path_buf();
             assert!(
                 !ephemeral_done.as_os_str().is_empty(),
@@ -237,7 +237,7 @@ mod test_mock_workspace_ephemeral {
 
     #[traced_test]
     fn test_mock_workspace_interface() {
-        let w = MockWorkspace::default();
+        let w = MockBatchWorkspace::default();
         // We only test to the interface:
         let done = w.get_done_directory();
         let fail_json = w.failed_json_repairs_dir();

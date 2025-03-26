@@ -1,3 +1,4 @@
+// ---------------- [ File: src/sync_should_pass.rs ]
 crate::ix!();
 
 pub struct SynchronousTest {

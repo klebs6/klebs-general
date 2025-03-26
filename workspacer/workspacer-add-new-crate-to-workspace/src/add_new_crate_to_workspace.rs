@@ -60,10 +60,9 @@ where
         // so that subsequent scan() sees it.
         {
             // We get a mutable reference to our crates (from the trait method).
-            let mut mut_crates = self.crates().to_vec();
-            mut_crates.push(Arc::new(AsyncMutex::new(new_handle.clone())));
+            self.crates_mut().push(Arc::new(AsyncMutex::new(new_handle.clone())));
             debug!("Pushed new crate '{}' into in-memory list. Now have {} crates in memory.",
-                   new_handle.name(), mut_crates.len());
+                   new_handle.name(), self.n_crates());
         }
 
         // 4) Try to detect a prefix group by scanning

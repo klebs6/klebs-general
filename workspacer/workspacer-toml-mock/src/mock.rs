@@ -554,8 +554,7 @@ mod test_mock_cargo_toml {
         assert_eq!(ver.to_string(), "1.2.3");
 
         // Save to disk (should succeed because simulate_save_error is false)
-        let rt = tokio::runtime::Runtime::new().unwrap();
-        let save_res = rt.block_on(mock.save_to_disk());
+        let save_res = mock.save_to_disk().await;
         assert!(save_res.is_ok(), "Expected save_to_disk to succeed");
 
         // Check authors
@@ -567,7 +566,7 @@ mod test_mock_cargo_toml {
         assert_eq!(bins, vec!["cli-tool"]);
 
         // Check fallback authors (should be same as direct authors for this mock)
-        let authors_fallback = rt.block_on(mock.get_package_authors_or_fallback()).unwrap();
+        let authors_fallback = mock.get_package_authors_or_fallback().await.unwrap();
         assert_eq!(authors_fallback, Some(vec!["Alice <alice@example.com>".to_string()]));
     }
 

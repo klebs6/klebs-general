@@ -32,6 +32,14 @@ where for<'async_trait> P: From<PathBuf> + AsRef<Path> + Send + Sync + 'async_tr
     }
 }
 
+impl<P,H:CrateHandleInterface<P>> GetCratesMut<P,H> for Workspace<P,H> 
+where for<'async_trait> P: From<PathBuf> + AsRef<Path> + Send + Sync + 'async_trait
+{
+    fn crates_mut(&mut self) -> &mut Vec<Arc<AsyncMutex<H>>> {
+        &mut self.crates
+    }
+}
+
 #[async_trait]
 impl<P,H:CrateHandleInterface<P>> FindCrateByName<P,H> for Workspace<P,H> 
 where for<'async_trait> P: From<PathBuf> + AsRef<Path> + Send + Sync + 'async_trait

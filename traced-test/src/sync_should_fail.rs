@@ -1,3 +1,4 @@
+// ---------------- [ File: src/sync_should_fail.rs ]
 crate::ix!();
 
 pub struct SynchronousTestShouldFail {

@@ -29,7 +29,7 @@ mod handle_failed_json_repair_tests {
 
     #[traced_test]
     async fn test_handle_failed_json_repair_writes_file() {
-        // We rely on MockWorkspace's ephemeral sandbox to avoid leaving test files around.
+        // We rely on MockBatchWorkspace's ephemeral sandbox to avoid leaving test files around.
         // We no longer override the `failed_json_repairs_dir`; we want the default ephemeral dir.
         trace!("===== BEGIN TEST: test_handle_failed_json_repair_writes_file =====");
         // 1) Create the ephemeral workspace

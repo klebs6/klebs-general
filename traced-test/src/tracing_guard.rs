@@ -1,10 +1,10 @@
+// ---------------- [ File: src/tracing_guard.rs ]
 crate::ix!();
 
 impl TracedTestGenerator {
 
     pub fn define_tracing_guard(&self) -> TokenStream2 {
         quote!{
-
             // TracingGuard struct and implementation
             #[derive(Debug)]
             struct TracingGuard<TSubscriber>

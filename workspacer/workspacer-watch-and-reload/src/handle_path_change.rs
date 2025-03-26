@@ -4,17 +4,17 @@ crate::ix!();
 // ------------------------------------------------------------------------
 // Subroutine #4: Handle an individual changed path
 // ------------------------------------------------------------------------
-pub async fn handle_path_change<X,E>(
+pub async fn handle_path_change<'a,X,E>(
     watched:   &X,
     path:      &Path,
     tx:        Option<&mpsc::Sender<Result<(), E>>>,
-    runner:    &Arc<dyn CommandRunner + Send + Sync + 'static>,
+    runner:    &Arc<dyn CommandRunner + Send + Sync + 'a>,
 ) -> Result<(), E>
 where
     X: WatchAndReload<Error=E> + RebuildOrTest<Error=E>,
     E: From<WatchError>,
 {
-    if watched.is_relevant_change(path) {
+    if watched.is_relevant_change(path).await {
         info!("Detected relevant change in file: {:?}", path);
 
         let rebuild_result = watched.rebuild_or_test(runner.as_ref()).await;

@@ -8,4 +8,7 @@ pub(crate) use workspacer_workspace::*;
 pub(crate) use workspacer_workspace_interface::*;
 pub(crate) use tracing::*;
 
-#[cfg(test)] pub(crate) use workspacer_mock::*;
+#[cfg(test)] pub(crate) use workspacer_mock::{create_mock_workspace};
+#[cfg(test)] pub(crate) use workspacer_crate_mock::*;
+#[cfg(test)] pub(crate) use workspacer_toml_mock::*;
+#[cfg(test)] pub(crate) use workspacer_workspace_mock::*;

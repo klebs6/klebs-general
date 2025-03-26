@@ -157,7 +157,7 @@ mod batch_file_triple_moving_files_exhaustive_tests {
         info!("Starting test: move_input_and_output_to_done_moves_correct_files");
 
         // Create a temp workspace that is fully sandboxed
-        let workspace = MockWorkspace::default();
+        let workspace = MockBatchWorkspace::default();
         let batch_idx = BatchIndex::Usize(42);
 
         // Write some fake files in the ephemeral workspace:
@@ -228,7 +228,7 @@ mod batch_file_triple_moving_files_exhaustive_tests {
         trace!("===== BEGIN TEST: move_input_and_error_to_done_moves_correct_files =====");
         info!("Starting test: move_input_and_error_to_done_moves_correct_files");
 
-        let workspace = MockWorkspace::default();
+        let workspace = MockBatchWorkspace::default();
         let batch_idx = BatchIndex::Usize(777);
 
         let input_path = workspace.input_filename(&batch_idx);
@@ -295,7 +295,7 @@ mod batch_file_triple_moving_files_exhaustive_tests {
         trace!("===== BEGIN TEST: move_all_to_done_moves_input_output_error_and_metadata =====");
         info!("Starting test: move_all_to_done_moves_input_output_error_and_metadata");
 
-        let workspace = MockWorkspace::default();
+        let workspace = MockBatchWorkspace::default();
         let batch_idx = BatchIndex::Usize(5);
 
         let input_path = workspace.input_filename(&batch_idx);

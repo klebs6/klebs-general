@@ -2,9 +2,9 @@
 crate::ix!();
 
 /// Handle to manipulate and verify the `Cargo.toml` file
-#[derive(Serialize,Deserialize,Builder,MutGetters,Getters,Debug,Clone)]
+#[derive(Serialize,Deserialize,Builder,MutGetters,Getters,Setters,Debug,Clone)]
 #[builder(setter(into))]
-#[getset(get="pub",get_mut="pub")]
+#[getset(set="pub",get="pub",get_mut="pub")]
 pub struct CargoToml {
     path:    PathBuf,
     content: toml::Value,  // Parsed TOML content
@@ -133,8 +133,8 @@ impl Versioned for CargoToml {
     type Error = CargoTomlError;
 
     /// Always re-reads the Cargo.toml file from disk (rather than using any
-    /// cached or in-memory TOML data) so that, if a `bump()` call changed
-    /// the version on disk, calling `.version()` immediately afterwards
+    /// cached or in-memory TOML data) so that, if a bump() call changed
+    /// the version on disk, calling .version() immediately afterwards
     /// will see the newly updated version.
     fn version(&self) -> Result<semver::Version, Self::Error> {
 

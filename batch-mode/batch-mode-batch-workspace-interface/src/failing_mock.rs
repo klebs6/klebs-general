@@ -78,7 +78,7 @@ mod batch_workspace_interface_exhaustive_tests {
     #[traced_test]
     fn mock_workspace_implements_all_traits() {
         info!("Starting test: mock_workspace_implements_all_traits");
-        let workspace = Arc::new(MockWorkspace::default());
+        let workspace = Arc::new(MockBatchWorkspace::default());
         let idx = BatchIndex::Usize(123);
 
         // Check input filename

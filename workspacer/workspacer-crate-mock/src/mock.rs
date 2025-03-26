@@ -521,8 +521,7 @@ mod tests_mock_crate_handle {
         assert!(!priv_check, "Expected is_private_crate = false");
 
         // 3) read_file_string => can we read "README.md" from the map?
-        let rt = tokio::runtime::Runtime::new().unwrap();
-        let readme_contents = rt.block_on(mock.read_file_string(Path::new("README.md")))
+        let readme_contents = mock.read_file_string(Path::new("README.md")).await
             .expect("Should find README.md in file_contents");
         assert!(readme_contents.contains("# Mock Crate"));
 
@@ -564,7 +563,6 @@ mod tests_mock_crate_handle {
     fn test_no_tests_directory_config() {
         let mock = MockCrateHandle::no_tests_directory_config();
         assert!(!mock.has_tests_directory(), "Should simulate no tests directory");
-        let rt = tokio::runtime::Runtime::new().unwrap();
         let test_files = mock.test_files();
         assert!(test_files.is_empty(), "No test files in this config");
     }
@@ -593,13 +591,12 @@ mod tests_mock_crate_handle {
             .build()
             .unwrap();
 
-        let rt = tokio::runtime::Runtime::new().unwrap();
-        let contents = rt.block_on(mock.read_file_string(Path::new("src/main.rs")))
+        let contents = mock.read_file_string(Path::new("src/main.rs")).await
             .expect("Should find main.rs in the file map");
         assert_eq!(contents, "fn main() {}");
 
         // If we try to read a file not in the map, we get an error
-        let missing_res = rt.block_on(mock.read_file_string(Path::new("non_existent_file.txt")));
+        let missing_res = mock.read_file_string(Path::new("non_existent_file.txt")).await;
         assert!(missing_res.is_err(), "Expect an IoError for missing file path in the map");
     }
 }

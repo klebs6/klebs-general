@@ -16,6 +16,13 @@ pub struct WorkspacerDir {
 }
 
 impl WorkspacerDir {
+
+    pub fn from_root(root: impl AsRef<Path>) -> Self {
+        Self {
+            root: root.as_ref().to_path_buf()
+        }
+    }
+
     /// Creates a `WorkspacerDir` pointing to the local `.ws` directory in
     /// the current working directory (e.g., `./.ws`).
     pub fn local() -> Self {

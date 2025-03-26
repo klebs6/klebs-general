@@ -6,10 +6,10 @@ pub trait WatchAndReload {
 
     type Error;
 
-    async fn watch_and_reload(
+    async fn watch_and_reload<'a>(
         &self,
         tx: Option<mpsc::Sender<Result<(), Self::Error>>>,
-        runner: Arc<dyn CommandRunner + Send + Sync + 'static>,
+        runner: Arc<dyn CommandRunner + Send + Sync + 'a>,
         cancel_token: CancellationToken,
     ) -> Result<(), Self::Error>;
 
@@ -25,10 +25,10 @@ impl WatchAndReload for CrateHandle {
     /// until `cancel_token` is triggered. Triggers rebuild/test whenever
     /// a relevant change is detected.
     ///
-    async fn watch_and_reload(
+    async fn watch_and_reload<'a>(
         &self,
         tx: Option<mpsc::Sender<Result<(), Self::Error>>>,
-        runner: Arc<dyn CommandRunner + Send + Sync + 'static>,
+        runner: Arc<dyn CommandRunner + Send + Sync + 'a>,
         cancel_token: CancellationToken,
     ) -> Result<(), Self::Error> {
         let crate_path = self.root_dir_path_buf();
@@ -68,47 +68,65 @@ impl WatchAndReload for CrateHandle {
 impl<P,H> WatchAndReload for Workspace<P,H>
 where
     for<'async_trait> P: From<PathBuf> + AsRef<Path> + Send + Sync + 'async_trait,
-    H: WatchAndReload<Error=CrateError> + RebuildOrTest<Error=CrateError> + CrateHandleInterface<P> + Send + Sync,
+    H: WatchAndReload<Error=CrateError>
+      + RebuildOrTest<Error=CrateError>
+      + CrateHandleInterface<P>
+      + Send
+      + Sync,
 {
     type Error = WorkspaceError;
 
-    async fn watch_and_reload(
+    async fn watch_and_reload<'a>(
         &self,
-        tx:           Option<mpsc::Sender<Result<(), Self::Error>>>,
-        runner:       Arc<dyn CommandRunner + Send + Sync + 'static>,
+        tx: Option<mpsc::Sender<Result<(), Self::Error>>>,
+        runner: Arc<dyn CommandRunner + Send + Sync + 'a>,
         cancel_token: CancellationToken,
     ) -> Result<(), Self::Error> {
 
-        // 1) Setup the file watcher
+        trace!("workspace::watch_and_reload invoked");
+
         let workspace_path = self.root_dir_path_buf();
+
+        trace!("Workspace path is: {}", workspace_path.display());
+
         let (mut watcher, notify_rx) = setup_file_watching(&workspace_path)
             .map_err(WorkspaceError::from)?;
 
-        // 2) Enter the watch loop
-        watch_loop(
-            self,
-            &mut watcher,
-            &workspace_path,
-            notify_rx,
-            tx,
-            runner,
-            cancel_token,
-        ).await
+        debug!("Created file watcher for workspace at: {}", workspace_path.display());
+
+        // 2) Wrap the call to `watch_loop` in a block so that the short-lived borrow of `self`
+        //    does not get carried across `.await`. We pass `ws_ref` briefly, then `.await`.
+        let result = {
+            let ws_ref = self; // ephemeral borrow
+            async move {
+                watch_loop(
+                    ws_ref,
+                    &mut watcher,
+                    &workspace_path,
+                    notify_rx,
+                    tx,
+                    runner,
+                    cancel_token,
+                )
+                .await
+            }
+        }
+        .await;
+
+        info!("workspace::watch_and_reload finished with result: {:?}", result);
+        result
     }
 
-    /// (unchanged) - determines if a file change is relevant
     async fn is_relevant_change(&self, path: &Path) -> bool {
-        // same logic as before:
+        trace!("Checking if path is relevant in workspace: {:?}", path);
+
         if path.file_name() == Some(std::ffi::OsStr::new("Cargo.toml")) {
             return true;
         }
 
         for crate_handle in self.crates() {
-
             let guard = crate_handle.lock().await;
-
             let crate_src_path = guard.root_dir_path_buf().join("src");
-
             if path.starts_with(&crate_src_path) {
                 return true;
             }

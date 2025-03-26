@@ -191,6 +191,17 @@ where
     }
 }
 
+impl<P, H> GetCratesMut<P, H> for MockWorkspace<P, H>
+where
+    H: Clone + CrateHandleInterface<P>,
+    for<'async_trait> P: Clone + From<PathBuf> + AsRef<Path> + Send + Sync + 'async_trait,
+{
+    fn crates_mut(&mut self) -> &mut Vec<Arc<AsyncMutex<H>>> {
+        trace!("MockWorkspace::GetCratesMut::crates called");
+        self.crates_mut()
+    }
+}
+
 impl<P, H> NumCrates for MockWorkspace<P, H>
 where
     H: Clone + CrateHandleInterface<P>,
@@ -339,18 +350,25 @@ mod test_mock_workspace {
 
     #[traced_test]
     async fn test_mock_workspace_new_missing_cargo_toml_fails() {
+        // The key fix is to use a UNIQUE path per test so we don't overwrite or conflict
+        // with another global registry entry in a different test that sets different flags.
+        let path = PathBuf::from("/fake/mock/workspace/path_for_missing_cargo_toml");
+
         trace!("test_mock_workspace_new_missing_cargo_toml_fails starting");
         // 1) Build a "fully valid" MockWorkspace
         let mut failing_ws = MockWorkspace::<PathBuf, MockCrateHandle>::fully_valid_config();
-        // 2) Toggle the simulation flag so that we want to see a missing Cargo.toml error
+        // 2) Provide a custom path so we don't conflict with other tests
+        *failing_ws.path_mut() = path.clone();
+        // 3) Toggle the simulation flag to simulate missing Cargo.toml
         *failing_ws.simulate_missing_cargo_toml_mut() = true;
-        // 3) Register this exact instance in the global registry, keyed by its path
-        failing_ws.register_in_global();
+        // 4) Register in the global map, making sure to `await`
+        failing_ws.register_in_global().await;
 
-        // 4) Now call `MockWorkspace::new(...)`, which will look up our pre-registered instance
-        let result = MockWorkspace::<PathBuf, MockCrateHandle>::new(&failing_ws.path()).await;
+        // 5) Now call `MockWorkspace::new(...)`, which should see that
+        //    `simulate_missing_cargo_toml = true` for this path
+        let result = MockWorkspace::<PathBuf, MockCrateHandle>::new(&path).await;
 
-        // 5) Assert that we do, in fact, get the expected WorkspaceError
+        // 6) Check that we do, in fact, get `WorkspaceError::InvalidWorkspace`
         assert!(result.is_err(), "Should fail with simulate_missing_cargo_toml=true");
         match result.err().unwrap() {
             WorkspaceError::InvalidWorkspace { .. } => {
@@ -364,19 +382,24 @@ mod test_mock_workspace {
 
     #[traced_test]
     async fn test_mock_workspace_new_not_a_workspace_fails() {
+        // Again, use a UNIQUE path for not-a-workspace scenario
+        let path = PathBuf::from("/fake/mock/workspace/path_for_not_a_workspace");
+
         trace!("test_mock_workspace_new_not_a_workspace_fails starting");
         // 1) Build a "fully valid" MockWorkspace
         let mut failing_ws = MockWorkspace::<PathBuf, MockCrateHandle>::fully_valid_config();
-        // 2) Toggle the simulation flag so that we want to simulate no [workspace] table
+        // 2) Provide a custom path so we don't conflict with other tests
+        *failing_ws.path_mut() = path.clone();
+        // 3) Toggle the simulation flag
         *failing_ws.simulate_not_a_workspace_mut() = true;
-        // 3) Register this exact instance in the global registry, keyed by its path
-        failing_ws.register_in_global();
+        // 4) Register in the global map
+        failing_ws.register_in_global().await;
 
-        // 4) Now call `MockWorkspace::new(...)`, which will look up our pre-registered instance
-        let result = MockWorkspace::<PathBuf, MockCrateHandle>::new(&failing_ws.path()).await;
-
-        // 5) Assert that we do, in fact, get the expected WorkspaceError
+        // 5) This should find the pre-registered configuration and produce
+        //    `WorkspaceError::ActuallyInSingleCrate`
+        let result = MockWorkspace::<PathBuf, MockCrateHandle>::new(&path).await;
         assert!(result.is_err(), "Should fail with simulate_not_a_workspace=true");
+
         match result.err().unwrap() {
             WorkspaceError::ActuallyInSingleCrate { .. } => {
                 info!("Got expected WorkspaceError::ActuallyInSingleCrate");
@@ -388,15 +411,15 @@ mod test_mock_workspace {
     }
 
     #[traced_test]
-    fn test_mock_workspace_validate_integrity_fails_when_simulated() {
+    async fn test_mock_workspace_validate_integrity_fails_when_simulated() {
         let mut ws = MockWorkspace::<PathBuf, MockCrateHandle>::fully_valid_config();
         *ws.simulate_failed_integrity_mut() = true;
-        let result = ws.validate_integrity();
+        let result = ws.validate_integrity().await;
         assert!(result.is_err(), "Should fail if simulate_failed_integrity=true");
     }
 
     #[traced_test]
-    fn test_mock_workspace_find_crate_by_name() {
+    async fn test_mock_workspace_find_crate_by_name() {
         // We'll put some crates in the list and see if we can find them by name
         // For demonstration, we'll create 2 MockCrateHandles with names "crateA" and "crateB"
         let crate_a = Arc::new(AsyncMutex::new(
@@ -421,13 +444,14 @@ mod test_mock_workspace {
             .unwrap();
 
         assert_eq!(ws.n_crates(), 2, "We have 2 crates total");
-        let found = ws.find_crate_by_name("crateB");
+        let found = ws.find_crate_by_name("crateB").await;
         assert!(found.is_some(), "Should find crateB by name");
-        assert_eq!(found.await.lock().unwrap().name(), "crateB");
+        let found = found.unwrap();
+        assert_eq!(found.lock().await.name(), "crateB");
     }
 
     #[traced_test]
-    fn test_mock_workspace_get_all_crate_names() {
+    async fn test_mock_workspace_get_all_crate_names() {
         // Similar to above
         let crate_1 = Arc::new(AsyncMutex::new(
             MockCrateHandle::fully_valid_config()
@@ -450,7 +474,7 @@ mod test_mock_workspace {
             .build()
             .unwrap();
 
-        let names = ws.get_all_crate_names();
+        let names = ws.get_all_crate_names().await;
         assert_eq!(names.len(), 2, "Should have 2 names total");
         assert!(names.contains(&"crateAlpha".to_string()));
         assert!(names.contains(&"crateBeta".to_string()));

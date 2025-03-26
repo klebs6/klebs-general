@@ -1,40 +1,113 @@
 crate::ix!();
 
+/// The struct your code already used
 #[derive(Clone, Debug)]
 pub struct ShouldFailAttr {
+    /// If `#[should_fail(message = "...")]` was present, we store Some("...").
     message: Option<String>,
 }
 
 impl ShouldFailAttr {
-
     pub fn new(message: Option<String>) -> Self {
         Self { message }
     }
+
+    pub fn message(&self) -> Option<&str> {
+        self.message.as_deref()
+    }
 }
 
+/// Let other code get the “message” for checks
 impl MaybeHasExpectedFailureMessage for ShouldFailAttr {
-
     fn expected_failure_message(&self) -> Option<Cow<'_, str>> {
         self.message.as_deref().map(Cow::Borrowed)
     }
 }
 
-impl TryFrom<syn::Attribute> for ShouldFailAttr {
-
+impl TryFrom<Attribute> for ShouldFailAttr {
     type Error = ShouldFailAttrError;
 
-    fn try_from(attr: syn::Attribute) -> Result<Self, Self::Error> {
+    fn try_from(attr: Attribute) -> Result<Self, Self::Error> {
+        // Must be named `#[should_fail]`
         if !attr.path().is_ident("should_fail") {
             return Err(ShouldFailAttrError::NotShouldFailAttr);
         }
 
-        // Check if the attribute has no arguments (no parentheses)
-        if let syn::Meta::Path(_) = attr.meta {
-            return Ok(ShouldFailAttr::new(None));
-        }
+        // Let’s examine the attribute’s meta:
+        let meta = attr.meta;
 
-        // Use the extracted parser and error mapping logic
-        attr.parse_args_with(parse::parse_should_fail_args).map_err(parse::map_parse_error)
+        match meta {
+            // e.g. `#[should_fail]`
+            Meta::Path(_) => {
+                // Means "no parentheses", so no message
+                Ok(ShouldFailAttr { message: None })
+            }
+
+            // e.g. `#[should_fail(...)]`
+            Meta::List(meta_list) => parse_list(meta_list),
+
+            // e.g. `#[should_fail = something]` is unusual; we can error
+            Meta::NameValue(nv) => {
+                Err(ShouldFailAttrError::MetaParseError(syn::Error::new_spanned(
+                    nv,
+                    "invalid format for #[should_fail]; expected `#[should_fail]` \
+                     or `#[should_fail(message = \"...\")]`",
+                )))
+            }
+        }
+    }
+}
+
+/// Parse the parentheses: #[should_fail(...)]
+fn parse_list(meta_list: MetaList) -> Result<ShouldFailAttr, ShouldFailAttrError> {
+    let mut message: Option<String> = None;
+
+    // parse_nested_meta will call the closure on each nested token like `message="..."`
+    meta_list
+        .parse_nested_meta(|nested| {
+            if nested.path.is_ident("message") {
+                // user wrote: `message = "..."`
+                let lit: LitStr = nested.value()?.parse()?;
+                message = Some(lit.value());
+            } else {
+                // unknown key
+                return Err(syn::Error::new(
+                    nested.path.span(),
+                    "unknown key; expected `message = \"...\"`",
+                ));
+            }
+            Ok(())
+        })
+        .map_err(map_parse_error)?;
+
+    Ok(ShouldFailAttr { message })
+}
+
+/// Convert a `syn::Error` to your existing `ShouldFailAttrError`
+pub fn map_parse_error(err: syn::Error) -> ShouldFailAttrError {
+    trace!("map_parse_error: got syn error: {}", err);
+    let msg = err.to_string();
+
+    // Handle case where a non-string literal (like integer) was given for `message`
+    if msg.contains("expected string literal for `message` value")
+        || msg.contains("expected string literal")
+        || msg.contains("invalid value: integer")
+    {
+        debug!("map_parse_error: treating as InvalidExpectedValueFormat");
+        ShouldFailAttrError::InvalidExpectedValueFormat
+    }
+    // Handle other syntax issues such as missing '=' or unexpected EOI
+    else if msg.contains("expected `=`") 
+        || msg.contains("expected string literal") 
+        || msg.contains("unexpected end of input") 
+    {
+        debug!("map_parse_error: treating as ExpectedValueMissing");
+        ShouldFailAttrError::ExpectedValueMissing
+    }
+    // Fallback: bubble up the original parse error
+    else {
+        warn!("map_parse_error: returning MetaParseError");
+        ShouldFailAttrError::MetaParseError(err)
     }
 }
 

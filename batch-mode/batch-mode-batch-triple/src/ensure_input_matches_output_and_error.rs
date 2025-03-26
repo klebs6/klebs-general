@@ -85,7 +85,7 @@ mod batch_file_triple_ensure_input_matches_output_and_error_exhaustive_tests {
             Some(output_file.path().to_path_buf()),
             Some(error_file.path().to_path_buf()),
             None,
-            Arc::new(MockWorkspace::default()),
+            Arc::new(MockBatchWorkspace::default()),
         );
 
         let rt = Runtime::new().expect("Failed to create tokio runtime");

@@ -3,6 +3,7 @@ crate::ix!();
 
 pub trait WorkspaceInterface<P,T>
 : GetCrates<P,T>
++ GetCratesMut<P,T>
 + Send
 + Sync
 + NumCrates
@@ -24,6 +25,14 @@ where
     T: CrateHandleInterface<P> 
 {
     fn crates(&self) -> &[Arc<AsyncMutex<T>>];
+}
+
+pub trait GetCratesMut<P,T> 
+where 
+    for<'async_trait> P: From<PathBuf> + AsRef<Path> + Send + Sync + 'async_trait,
+    T: CrateHandleInterface<P> 
+{
+    fn crates_mut(&mut self) -> &mut Vec<Arc<AsyncMutex<T>>>;
 }
 
 pub trait NumCrates {

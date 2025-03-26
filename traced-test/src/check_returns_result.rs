@@ -1,3 +1,4 @@
+// ---------------- [ File: src/check_returns_result.rs ]
 crate::ix!();
 
 pub trait ReturnsResult {

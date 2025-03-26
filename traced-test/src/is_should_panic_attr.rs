@@ -1,3 +1,4 @@
+// ---------------- [ File: src/is_should_panic_attr.rs ]
 crate::ix!();
 
 pub trait IsShouldPanicAttr {

@@ -1,3 +1,4 @@
+// ---------------- [ File: src/wrap_the_original_block.rs ]
 crate::ix!();
 
 pub trait WrapBlock {
@@ -14,7 +15,7 @@ impl TracedTestGenerator {
             .return_type(self.return_type())
             .original_block(self.original_block());
 
-        if self.is_async() {
+        if *self.is_async() {
             builder = builder.async_test();
         }
 

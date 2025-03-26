@@ -13,7 +13,7 @@ impl ::serde::Serialize for CrateHandle {
         // Clone the Arc so the async closure can own it by value and not borrow `self`.
         let cargo_toml_handle = self.cargo_toml_handle().clone();
 
-        let cargo_toml_raw = run_async_without_nested_runtime(async move {
+        let cargo_toml_raw = safe_run_async(async move {
             trace!("Locking cargo_toml_handle in async block for serialization");
             let guard = cargo_toml_handle.lock().await;
             match toml::to_string(&*guard) {

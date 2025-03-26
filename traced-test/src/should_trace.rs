@@ -1,3 +1,4 @@
+// ---------------- [ File: src/should_trace.rs ]
 crate::ix!();
 
 pub trait ShouldTrace {

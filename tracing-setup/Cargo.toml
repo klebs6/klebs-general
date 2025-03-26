@@ -1,7 +1,7 @@
 [package]
 edition = "2021"
 name = "tracing-setup"
-version = "1.0.2"
+version = "1.0.3"
 
 description = "this crate helps us configure tracing for a rust project. It is designed to be used with the `traced-test` crate"
 license = "MIT"
@@ -10,6 +10,7 @@ categories = ["development-tools"]
 repository = "https://github.com/klebs6/klebs-general"
 
 [dependencies]
+getset = "*"
 export-magic = "0.3.6"
 tracing = { version = "0.1.40", features = ["log"] }
 tracing-subscriber = { version = "0.3", default-features = false, features = ["fmt", "std", "env-filter"] }

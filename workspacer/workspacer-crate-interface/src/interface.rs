@@ -173,7 +173,7 @@ pub trait RootDirPathBuf {
 }
 
 impl<P> RootDirPathBuf for P 
-where for <'async_trait> P: AsRef<Path> + Send + Sync + 'async_trait
+where P: AsRef<Path> + Send + Sync
 {
     /// returns the path to the `Cargo.toml`
     fn root_dir_path_buf(&self) -> PathBuf

@@ -1,3 +1,4 @@
+// ---------------- [ File: src/should_panic_attr.rs ]
 crate::ix!();
 
 #[derive(Clone, Debug)]

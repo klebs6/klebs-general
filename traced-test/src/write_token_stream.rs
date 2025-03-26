@@ -1,3 +1,4 @@
+// ---------------- [ File: src/write_token_stream.rs ]
 crate::ix!();
 
 pub trait WriteTokenStream {
@@ -21,7 +22,7 @@ impl WriteTokenStream for TracedTestGenerator {
         traced_test.block   = self.generate_new_block()?;
 
         // Ensure the function is marked as async if it was originally async
-        if self.is_async() {
+        if *self.is_async() {
             traced_test.sig.asyncness = Some(syn::token::Async::default());
         }
 

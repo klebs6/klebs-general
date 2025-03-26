@@ -43,12 +43,10 @@ ACTIVE_PACKAGE := workspacer-workspace
 #ACTIVE_PACKAGE := workspacer
 ACTIVE_PACKAGE := workspacer-scan-for-prefix-groups
 ACTIVE_PACKAGE := workspacer-register-internal-crate-in-prefix-group
-ACTIVE_PACKAGE := workspacer-add-new-crate-to-workspace
 ACTIVE_PACKAGE := workspacer
 ACTIVE_PACKAGE := workspacer-pin
 ACTIVE_PACKAGE := workspacer-analysis
 ACTIVE_PACKAGE := workspacer-scan-for-prefix-groups
-ACTIVE_PACKAGE := workspacer-bump
 ACTIVE_PACKAGE := workspacer-publish
 ACTIVE_PACKAGE := workspacer-register-internal-crate-in-prefix-group
 ACTIVE_PACKAGE := workspacer-check-publish-ready
@@ -62,6 +60,14 @@ ACTIVE_PACKAGE := workspacer-watch-and-reload
 #ACTIVE_PACKAGE := workspacer-consolidate
 #ACTIVE_PACKAGE := workspacer-check-crates-io
 #ACTIVE_PACKAGE := workspacer-check-private
+
+ACTIVE_PACKAGE := workspacer-publish
+ACTIVE_PACKAGE := workspacer-bump
+#ACTIVE_PACKAGE := workspacer-add-new-crate-to-workspace
+#ACTIVE_PACKAGE := workspacer-config
+#ACTIVE_PACKAGE := workspacer-workspace-mock
+#ACTIVE_PACKAGE := workspacer-crate-mock
+#ACTIVE_PACKAGE := workspacer-toml-mock
 
 INDIVIDUAL_TEST := gather_leading_token_comments
 INDIVIDUAL_TEST := gather_leading_comment_lines
@@ -81,7 +87,7 @@ DEFAULT := test
 #DEFAULT := test_file
 #DEFAULT := test_one
 #DEFAULT := test_file_one
-DEFAULT := test_all
+#DEFAULT := test_all
 #DEFAULT := test_individual
 #DEFAULT := pin_wildcard_deps
 #DEFAULT := consolidate_crate_interface
@@ -159,7 +165,10 @@ test_file_one:
 
 #-----------------------------
 test_all:
-	RUSTFLAGS=$(RUSTFLAGS) $(CARGO) $(TEST) -- $(NOCAPTURE)
+	RUSTFLAGS=$(RUSTFLAGS) $(CARGO) $(TEST) --workspace -- $(NOCAPTURE)
+
+test_all_nofail:
+	RUSTFLAGS=$(RUSTFLAGS) $(CARGO) $(TEST) --workspace --no-fail-fast -- $(NOCAPTURE)
 
 coverage:
 	cargo tarpaulin --all-features --workspace

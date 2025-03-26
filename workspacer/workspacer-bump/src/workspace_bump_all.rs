@@ -1,508 +1,328 @@
 // ---------------- [ File: workspacer-bump/src/workspace_bump_all.rs ]
 crate::ix!();
 
-#[async_trait]
-impl<P, H> BumpAll for Workspace<P, H>
-where
-    for<'async_trait> P: From<PathBuf> + AsRef<Path> + Clone + Send + Sync + 'async_trait,
-    for<'async_trait> H: CrateHandleInterface<P>
-        + Bump<Error = CrateError>
-        + Send
-        + Sync
-        + 'async_trait,  // <== note: we remove the second AsyncTryFrom so we don’t keep re-creating handles
-{
-    type Error = WorkspaceError;
+/// Macro that generates an `impl BumpAll for SomeWorkspace<P,T>` block.
+/// Use it once for your real `Workspace<P,T>` and once for your `MockWorkspace<P,T>`.
+#[macro_export]
+macro_rules! gen_bump_all_for_workspace {
+    ($ws_type:ident) => {
+        // We bring all the needed items into scope, 
+        // but if you're defining the macro in the same module, 
+        // you may not need as many `use` lines.
 
-    #[instrument(level = "trace", skip_all, fields(release = ?release))]
-    async fn bump_all(&mut self, release: ReleaseType) -> Result<(), Self::Error> {
-        use tracing::{trace, warn, error, info};
+        #[async_trait]
+        impl<P, T> BumpAll for $ws_type<P, T>
+        where
+            // The workspace must implement your `WorkspaceInterface<P,T>`
+            // so we can call self.crates().
+            Self: WorkspaceInterface<P, T> + Send + Sync,
 
-        trace!("Starting bump_all with release={:?}", release);
+            // P must be from PathBuf, etc.
+            for<'any> P: From<std::path::PathBuf> 
+                + AsRef<std::path::Path> 
+                + Send 
+                + Sync 
+                + Clone
+                + 'any,
 
-        // 2) First pass: for each crate => bump it => record new version
-        let mut updated_versions = HashMap::<String, String>::new();
+            // T must be your crate handle, which also implements Bump
+            for<'any> T: CrateHandleInterface<P> 
+                + Bump<Error = CrateError> 
+                + Send 
+                + Sync 
+                + Clone
+                + 'any,
+        {
+            type Error = WorkspaceError;
 
-        for arc_crate in self.crates() {
-            let mut guard = arc_crate.lock().await;
-            let crate_name = guard.name().to_string();
+            async fn bump_all(&mut self, release: ReleaseType) 
+                -> Result<(), Self::Error> 
+            {
+                tracing::trace!(
+                    "Entering blanket-impl bump_all for {} with release={:?}",
+                    stringify!($ws_type),
+                    release
+                );
 
-            // Attempt to bump
-            match guard.bump(release.clone()).await {
-                Ok(()) => {
-                    // Retrieve the new version from the handle
-                    match guard.version() {
-                        Ok(ver) => {
-                            updated_versions.insert(crate_name, ver.to_string());
+                let mut updated_versions = std::collections::HashMap::<String, String>::new();
+
+                // --- First pass: bump each crate
+                for arc_crate in self.crates() {
+                    let mut guard = arc_crate.lock().await;
+                    let crate_name: String = guard.name().to_string(); 
+                    // (Fix Cow<str> -> String)
+
+                    match guard.bump(release.clone()).await {
+                        Ok(()) => {
+                            // retrieve new version
+                            match guard.version() {
+                                Ok(ver) => {
+                                    updated_versions.insert(crate_name, ver.to_string());
+                                }
+                                Err(e) => {
+                                    tracing::error!(
+                                        "Could not parse new version for '{}': {:?}",
+                                        crate_name, 
+                                        e
+                                    );
+                                    return Err(
+                                        WorkspaceError::BumpError {
+                                            crate_path: guard.as_ref().join("Cargo.toml"),
+                                            source: Box::new(e),
+                                        }
+                                    );
+                                }
+                            }
                         }
                         Err(e) => {
-                            warn!("Could not parse new version for crate '{}': {:?}; skipping second-pass updates for it", crate_name, e);
-                        }
-                    }
-                }
-                Err(e) => {
-                    // If cargo toml is missing => error out
-                    // If parse error => skip
-                    if let CrateError::IoError { io_error, .. } = &e {
-                        if io_error.kind() == std::io::ErrorKind::NotFound {
-                            error!("Crate '{}' is missing Cargo.toml => returning an error", crate_name);
-                            return Err(WorkspaceError::BumpError {
-                                crate_path: guard.as_ref().join("Cargo.toml"),
-                                source: Box::new(e),
-                            });
-                        }
-                    }
-                    warn!(
-                        "Crate '{}' parse/other error => skipping. Error: {:?}",
-                        crate_name, e
-                    );
-                }
-            }
-        }
-
-        info!("All crates bumped successfully; starting second-pass reference updates.");
-
-        // 3) Second pass: rewrite references
-        for arc_crate in self.crates() {
-            let mut handle = arc_crate.lock().await;
-            let crate_name = handle.name().to_string();
-
-            // Access crate’s CargoToml
-            let cargo_toml_arc = handle.cargo_toml();
-            let mut cargo_toml = cargo_toml_arc.lock().await;
-
-            let mut changed_any = false;
-
-            for (dep_name, new_ver) in &updated_versions {
-                match cargo_toml.update_dependency_version(dep_name, new_ver) {
-                    Ok(true) => {
-                        changed_any = true;
-                        trace!(
-                            "[2nd pass] crate='{}': updated dep='{}' => version='{}'",
-                            crate_name,
-                            dep_name,
-                            new_ver
-                        );
-                    }
-                    Ok(false) => { /* no references to dep_name here */ }
-                    Err(e) => {
-                        warn!("Could not update '{}' in '{}': {:?}", dep_name, crate_name, e);
-                        // continue or break — up to you
-                    }
-                }
-            }
-
-            if changed_any {
-                // Save changes to disk
-                if let Err(save_err) = cargo_toml.save_to_disk().await {
-                    warn!(
-                        "Could not rewrite references in '{}' Cargo.toml: {:?}",
-                        crate_name, save_err
-                    );
-                }
-            }
-        }
-
-        info!("Finished bump_all successfully for release={:?}", release);
-        Ok(())
-    }
-}
-
-// ====================[ Tests changed in this same file: test_bump_all ]====================
-
-#[cfg(test)]
-mod test_bump_all {
-    use super::*;
-    use std::collections::HashMap;
-    use tokio::fs;
-    use toml_edit::Document as TomlEditDocument;
-    use std::path::PathBuf;
-    use tempfile::TempDir;
-    use workspacer_mock::*;
-    use tracing::*;
-
-    /// Helper: reads the `[package].version` in a crate's `Cargo.toml`.
-    async fn read_version(cargo_toml: &Path) -> Option<String> {
-        let contents = fs::read_to_string(cargo_toml).await.ok()?;
-        let doc = contents.parse::<TomlEditDocument>().ok()?;
-        let pkg_tbl = doc.get("package")?.as_table()?;
-        let ver_item = pkg_tbl.get("version")?;
-        ver_item.as_str().map(|s| s.to_string())
-    }
-
-    /// Helper: writes a local path dependency with a given initial version
-    async fn add_local_dep_with_version(
-        root_path: &Path,
-        dependent_crate: &str,
-        dep_crate: &str,
-        version_str: &str,
-    ) {
-        let cargo_path = root_path.join(dependent_crate).join("Cargo.toml");
-        let original = fs::read_to_string(&cargo_path)
-            .await
-            .expect("Failed to read dependent crate cargo toml");
-        let appended = format!(
-            r#"{original}
-[dependencies]
-{dep_crate} = {{ path = "../{dep_crate}", version="{version_str}" }}
-"#
-        );
-        fs::write(&cargo_path, appended)
-            .await
-            .expect("Failed to write local dep to dependent crate's Cargo.toml");
-    }
-
-    #[traced_test]
-    async fn test_bump_all_with_one_crate_failing() -> Result<(), WorkspaceError> {
-        info!("test_bump_all_with_one_crate_failing");
-        // 1) Create a mock workspace with two crates: crate_x and crate_y
-        let crate_x = CrateConfig::new("crate_x").with_src_files();
-        let crate_y = CrateConfig::new("crate_y").with_src_files();
-        let root_path = create_mock_workspace(vec![crate_x, crate_y])
-            .await
-            .expect("Failed to create mock workspace with crate_x and crate_y");
-
-        // 2) sabotage: remove crate_y's Cargo.toml => triggers IoError upon bump()
-        let y_cargo_toml = root_path.join("crate_y").join("Cargo.toml");
-        fs::remove_file(&y_cargo_toml).await.unwrap();
-
-        // 3) Build a workspace
-        let mut workspace = Workspace::<PathBuf, CrateHandle>::new(&root_path)
-            .await
-            .expect("Workspace creation ok");
-
-        // 4) Attempt to bump_all => expect crate_y to fail
-        let result = workspace.bump_all(ReleaseType::Patch).await;
-
-        match result {
-            Err(WorkspaceError::BumpError { crate_path, source }) => {
-                let missing_str = "crate_y/Cargo.toml".replace('/', &std::path::MAIN_SEPARATOR.to_string());
-                assert!(
-                    crate_path.ends_with(&missing_str),
-                    "Expected failing path = crate_y’s Cargo.toml, got: {:?}",
-                    crate_path
-                );
-                match *source {
-                    CrateError::IoError { ref context, .. } => {
-                        assert!(
-                            context.contains("reading"),
-                            "Should mention reading cargo toml in context: got {context}"
-                        );
-                    }
-                    other => panic!("Expected CrateError::IoError, got {:?}", other),
-                }
-            }
-            other => panic!("Expected BumpError, got {:?}", other),
-        }
-        Ok(())
-    }
-
-    #[tokio::test]
-    async fn test_bump_all_ignores_non_workspace_crates() -> Result<(), CrateError> {
-        info!("test_bump_all_ignores_non_workspace_crates");
-        let crate_a = CrateConfig::new("crate_a").with_src_files();
-        let crate_b = CrateConfig::new("crate_b").with_src_files();
-        let root = create_mock_workspace(vec![crate_a, crate_b])
-            .await
-            .expect("mock workspace creation");
-
-        // Add external crate reference in crate_a => e.g. "serde" = "1.0"
-        let a_cargo_path = root.join("crate_a").join("Cargo.toml");
-        let orig_a = fs::read_to_string(&a_cargo_path).await.unwrap();
-        let appended = format!(
-            r#"{orig_a}
-    [dependencies]
-    serde = "1.0"
-    crate_b = {{ path="../crate_b", version="0.1.0" }}
-    "#
-        );
-        fs::write(&a_cargo_path, appended).await.unwrap();
-
-        let mut ws = Workspace::<PathBuf, CrateHandle>::new(&root)
-            .await
-            .expect("workspace ok");
-
-        // do bump_all => Patch => crate_a, crate_b => "0.1.0" => "0.1.1"
-        ws.bump_all(ReleaseType::Patch).await.unwrap();
-
-        // check crate_a => 0.1.1
-        let a_ver = read_version(&a_cargo_path).await.unwrap();
-        assert_eq!(a_ver, "0.1.1", "crate_a version => 0.1.1 after patch");
-
-        // check crate_b => 0.1.1
-        let arc_b = ws
-            .find_crate_by_name("crate_b")
-            .await
-            .expect("should find crate_b");
-        let b_path = {
-            let locked = arc_b.lock().await;
-            locked.as_ref().join("Cargo.toml")
-        };
-        let b_ver = read_version(&b_path).await.unwrap();
-        assert_eq!(b_ver, "0.1.1", "crate_b => 0.1.1 after patch");
-
-        // check crate_a references => crate_b => "0.1.1"; serde => "1.0" unchanged
-        let new_a_contents = fs::read_to_string(&a_cargo_path).await.unwrap();
-        let doc_a = new_a_contents.parse::<toml_edit::Document>().unwrap();
-
-        if let Some(deps_table) = doc_a.get("dependencies").and_then(|val| val.as_table()) {
-            // **Important**: collect these into a Vec so that we do not hold
-            // references across the async boundary (await). This ensures
-            // the future is Send.
-            let deps: Vec<(String, toml_edit::Item)> = deps_table
-                .iter()
-                .map(|(k, v)| (k.to_string(), v.clone()))
-                .collect();
-
-            for (dep_name, item) in deps {
-                // If referencing a local crate in the workspace, we updated its version
-                if ws.find_crate_by_name(&dep_name).await.is_some() {
-                    if let Some(tbl) = item.as_table() {
-                        if let Some(ver_item) = tbl.get("version") {
-                            assert_eq!(
-                                ver_item.as_str(),
-                                Some("0.1.1"),
-                                "Updated local crate dep to 0.1.1"
+                            tracing::error!(
+                                "Crate '{}' failed to bump => returning an error",
+                                crate_name
+                            );
+                            return Err(
+                                WorkspaceError::BumpError {
+                                    crate_path: guard.as_ref().join("Cargo.toml"),
+                                    source: Box::new(e),
+                                }
                             );
                         }
                     }
-                } else {
-                    // "serde" => "1.0" remains unchanged
-                    if dep_name == "serde" {
-                        assert_eq!(item.as_str(), Some("1.0"));
-                    }
                 }
-            }
-        }
 
-        Ok(())
-    }
+                tracing::info!(
+                    "All crates in {} bumped successfully. Now doing 2nd pass updates.",
+                    stringify!($ws_type)
+                );
 
-    #[traced_test]
-    async fn test_bump_all_with_build_metadata() -> Result<(), WorkspaceError> {
-        info!("test_bump_all_with_build_metadata");
-        let crate_x = CrateConfig::new("crate_x").with_src_files();
-        let root = create_mock_workspace(vec![crate_x])
-            .await
-            .expect("workspace creation ok");
-        let mut ws = Workspace::<PathBuf, CrateHandle>::new(&root)
-            .await
-            .expect("ws ok");
+                // --- Second pass: rewrite dependencies
+                for arc_crate in self.crates() {
+                    let mut handle = arc_crate.lock().await;
+                    let crate_name = handle.name().to_string();
 
-        // sabotage: set crate_x => version="0.1.0+build999"
-        let cargo_x_path = root.join("crate_x").join("Cargo.toml");
-        let contents = fs::read_to_string(&cargo_x_path).await.unwrap();
-        let mut doc = contents.parse::<TomlEditDocument>().unwrap();
-        {
-            let pkg_tbl = doc["package"].as_table_mut().unwrap();
-            pkg_tbl.insert("version", toml_edit::value("0.1.0+build999"));
-        }
-        fs::write(&cargo_x_path, doc.to_string()).await.unwrap();
+                    let cargo_toml_arc = handle.cargo_toml();
+                    let mut cargo_toml = cargo_toml_arc.lock().await;
 
-        // do bump_all => Patch => "0.1.0+build999" => "0.1.1+build999"
-        ws.bump_all(ReleaseType::Patch).await.unwrap();
-        let updated = read_version(&cargo_x_path).await.unwrap();
-        assert_eq!(updated, "0.1.1+build999");
-        Ok(())
-    }
-
-    // This is the ENTIRE test function `test_bump_all_no_cross_deps`,
-    // with the lock-lifetime fix applied. We now store `name` as a String
-    // before dropping the lock. That way the references remain valid.
-    // Everything else is unchanged.
-    #[traced_test]
-    async fn test_bump_all_no_cross_deps() -> Result<(), CrateError> {
-        info!("test_bump_all_no_cross_deps: creating crates with no inter-deps");
-        let crate_a = CrateConfig::new("crate_a").with_src_files();
-        let crate_b = CrateConfig::new("crate_b").with_src_files();
-        let crate_c = CrateConfig::new("crate_c").with_src_files();
-
-        let workspace_root = create_mock_workspace(vec![crate_a, crate_b, crate_c])
-            .await
-            .expect("Failed to create mock workspace");
-        let mut workspace = Workspace::<PathBuf, CrateHandle>::new(&workspace_root)
-            .await
-            .expect("Workspace creation ok");
-
-        for arc_ch in workspace.crates() {
-            let (path, name) = {
-                let lock = arc_ch.lock().await;
-                let path = lock.as_ref().join("Cargo.toml");
-                let name = lock.name().to_string();
-                (path, name)
-            };
-            let version = read_version(&path).await.unwrap();
-            assert_eq!(
-                version, "0.1.0",
-                "{} should start at 0.1.0",
-                name
-            );
-        }
-
-        // Bump => Patch => 0.1.0 => 0.1.1
-        info!("Calling bump_all => Patch ...");
-        workspace
-            .bump_all(ReleaseType::Patch)
-            .await
-            .expect("bump_all patch should succeed");
-
-        for arc_ch in workspace.crates() {
-            let (path, name) = {
-                let lock = arc_ch.lock().await;
-                let path = lock.as_ref().join("Cargo.toml");
-                let name = lock.name().to_string();
-                (path, name)
-            };
-            let new_ver = read_version(&path).await.unwrap();
-            assert_eq!(
-                new_ver, "0.1.1",
-                "{} should have 0.1.1 after patch bump",
-                name
-            );
-        }
-        Ok(())
-    }
-
-    // This is the ENTIRE test function `test_bump_all_with_cross_deps`,
-    // again fixing the lock-lifetime by storing the name as a String
-    // before the lock is dropped.
-    #[tokio::test]
-    async fn test_bump_all_with_cross_deps() -> Result<(), CrateError> {
-        info!("test_bump_all_with_cross_deps: creating crates with cross-deps (a->b->c, etc)");
-        // Suppose crate_a depends on crate_b, crate_b depends on crate_c
-        let crate_a = CrateConfig::new("crate_a").with_src_files();
-        let crate_b = CrateConfig::new("crate_b").with_src_files();
-        let crate_c = CrateConfig::new("crate_c").with_src_files();
-
-        let root_path = create_mock_workspace(vec![crate_a, crate_b, crate_c])
-            .await
-            .expect("Failed to create mock workspace");
-
-        // a->b
-        add_local_dep_with_version(&root_path, "crate_a", "crate_b", "0.1.0").await;
-        // b->c
-        add_local_dep_with_version(&root_path, "crate_b", "crate_c", "0.1.0").await;
-
-        let mut workspace = Workspace::<PathBuf, CrateHandle>::new(&root_path)
-            .await
-            .expect("workspace creation ok");
-
-        // Bump all => Minor => 0.2.0
-        workspace
-            .bump_all(ReleaseType::Minor)
-            .await
-            .expect("bump_all minor ok");
-
-        // Check each => now "0.2.0"
-        for arc_ch in workspace.crates() {
-            let (toml_path, name) = {
-                let lock = arc_ch.lock().await;
-                let path = lock.as_ref().join("Cargo.toml");
-                let nm = lock.name().to_string();
-                (path, nm)
-            };
-            let ver = read_version(&toml_path).await.unwrap();
-            assert_eq!(
-                ver, "0.2.0",
-                "{} should be 0.2.0 now",
-                name
-            );
-
-            // Also check references to see if they updated
-            let content = fs::read_to_string(&toml_path).await.unwrap();
-            let doc = content.parse::<toml_edit::Document>().unwrap();
-            for deps_key in &["dependencies", "dev-dependencies", "build-dependencies"] {
-                if let Some(tbl) = doc.get(*deps_key).and_then(|it| it.as_table()) {
-                    for (dep_name, item) in tbl.iter() {
-                        // If referencing a local crate in the workspace, should be "0.2.0"
-                        if workspace.find_crate_by_name(dep_name).await.is_some() {
-                            if item.is_table() {
-                                let t = item.as_table().unwrap();
-                                if let Some(ver_item) = t.get("version") {
-                                    assert_eq!(
-                                        ver_item.as_str(),
-                                        Some("0.2.0"),
-                                        "dep {} => version should be 0.2.0",
-                                        dep_name
-                                    );
-                                }
-                            } else if item.is_str() {
-                                assert_eq!(
-                                    item.as_str(),
-                                    Some("0.2.0"),
-                                    "string dep {} => version should be 0.2.0",
-                                    dep_name
+                    let mut changed_any = false;
+                    for (dep_name, new_ver) in &updated_versions {
+                        match cargo_toml.update_dependency_version(dep_name, new_ver) {
+                            Ok(true) => {
+                                changed_any = true;
+                                tracing::trace!(
+                                    "[2nd pass] crate='{}': updated dep='{}' => '{}'",
+                                    crate_name, 
+                                    dep_name, 
+                                    new_ver
+                                );
+                            }
+                            Ok(false) => {
+                                // not referenced
+                            }
+                            Err(e) => {
+                                // log but do not short-circuit entire workspace
+                                tracing::error!(
+                                    "Failed updating '{}' in '{}': {:?}",
+                                    dep_name,
+                                    crate_name,
+                                    e
                                 );
                             }
                         }
                     }
+
+                    if changed_any {
+                        if let Err(save_err) = cargo_toml.save_to_disk().await {
+                            tracing::error!(
+                                "Could not rewrite references in '{}' Cargo.toml: {:?}",
+                                crate_name, 
+                                save_err
+                            );
+                        }
+                    }
                 }
+
+                tracing::info!(
+                    "Finished bump_all successfully for {} with release={:?}.",
+                    stringify!($ws_type),
+                    release
+                );
+                Ok(())
+            }
+        }
+    };
+}
+
+gen_bump_all_for_workspace!(Workspace);
+
+#[cfg(test)]
+gen_bump_all_for_workspace!(MockWorkspace);
+
+#[cfg(test)]
+mod test_mock_workspace_bumping {
+
+    use super::*;
+
+    /// A helper to extract the "version" string from a given Cargo.toml path.
+    async fn read_crate_version(cargo_toml_path: &std::path::Path) -> Option<String> {
+        trace!("read_crate_version: about to read {cargo_toml_path:?}");
+        let contents = fs::read_to_string(cargo_toml_path).await.ok()?;
+        let doc = contents.parse::<TomlEditDocument>().ok()?;
+        let pkg = doc.get("package")?.as_table()?;
+        let ver_item = pkg.get("version")?;
+        ver_item.as_str().map(|s| s.to_string())
+    }
+
+    #[traced_test]
+    async fn test_bump_with_no_downstreams() -> Result<(), CrateError> {
+        trace!("test_bump_with_no_downstreams => starting");
+
+        // Create actual in-memory mock directories/crates on disk to test (like an integration style):
+        let crate_a = CrateConfig::new("crate_a").with_src_files();
+        let crate_b = CrateConfig::new("crate_b").with_src_files();
+
+        // This helper is from `create_mock_workspace`, which is also local in crate::mock:
+        let tmp_root = create_mock_workspace(vec![crate_a, crate_b])
+            .await
+            .expect("Failed to create mock workspace on disk");
+
+        let mut workspace = Workspace::<PathBuf, CrateHandle>::new(&tmp_root)
+            .await
+            .expect("Failed to create real-lifish Workspace from mock fs data");
+
+        // We'll choose crate_a, which (so far) has no crates depending on it
+        let arc_a = workspace.find_crate_by_name("crate_a").await
+            .expect("crate_a not found in workspace");
+
+        // Confirm initial version
+        {
+            let handle_clone = arc_a.lock().await.clone();
+            assert_eq!(handle_clone.version()?.to_string(), "0.1.0");
+        }
+
+        // Bump => patch => "0.1.1"
+        {
+            let mut local_clone = {
+                let guard = arc_a.lock().await;
+                guard.clone()
+            };
+            workspace
+                .bump_crate_and_downstreams(&mut local_clone, ReleaseType::Patch)
+                .await
+                .expect("bump crate_a patch ok");
+            {
+                let mut guard = arc_a.lock().await;
+                *guard = local_clone;
             }
         }
 
+        // Confirm crate_a => 0.1.1
+        {
+            let path_a = {
+                let guard = arc_a.lock().await;
+                guard.as_ref().join("Cargo.toml")
+            };
+            let new_ver_a = read_crate_version(&path_a).await.unwrap();
+            assert_eq!(new_ver_a, "0.1.1");
+        }
+
+        // Confirm crate_b => still "0.1.0"
+        {
+            let arc_b = workspace.find_crate_by_name("crate_b").await
+                .expect("crate_b not found");
+            let path_b = {
+                let guard_b = arc_b.lock().await;
+                guard_b.as_ref().join("Cargo.toml")
+            };
+            let ver_b = read_crate_version(&path_b).await.unwrap();
+            assert_eq!(ver_b, "0.1.0", "crate_b should be unchanged");
+        }
         Ok(())
     }
 
-    #[tokio::test]
-    async fn test_bump_all_parse_error_in_second_pass() {
-        use tokio::fs;
-        use toml_edit::Document as TomlEditDocument;
+    #[traced_test]
+    async fn test_mock_workspace_bump_all_patch() {
+        trace!("test_mock_workspace_bump_all_patch => starting");
 
-        async fn read_package_version_partial(path: &Path) -> Option<String> {
-            // We'll parse the entire Cargo.toml but ignore errors by falling back to an empty doc
-            let raw = fs::read_to_string(path).await.ok()?;
-            let doc = raw.parse::<TomlEditDocument>().unwrap_or_default();
-            let pkg_tbl = doc.get("package")?.as_table()?;
-            let ver_item = pkg_tbl.get("version")?;
-            ver_item.as_str().map(|s| s.to_string())
+        // 1) Create a couple of mock crates in memory (both are MockCrateHandles):
+        let crate_a = Arc::new(AsyncMutex::new(
+            MockCrateHandle::fully_valid_config()
+                .to_builder()
+                .crate_name("crate_a")
+                .build()
+                .unwrap()
+        ));
+        let crate_b = Arc::new(AsyncMutex::new(
+            MockCrateHandle::fully_valid_config()
+                .to_builder()
+                .crate_name("crate_b")
+                .build()
+                .unwrap()
+        ));
+
+        // 2) Build a local mock workspace using <PathBuf, MockCrateHandle>,
+        //    because we're passing Arc<AsyncMutex<MockCrateHandle>> items.
+        let mut my_ws = MockWorkspaceBuilder::<PathBuf, MockCrateHandle>::default()
+            .path(std::path::PathBuf::from("/fake/mock/workspace/path"))
+            .crates(vec![crate_a.clone(), crate_b.clone()])
+            .simulate_missing_cargo_toml(false)
+            .simulate_not_a_workspace(false)
+            .simulate_failed_integrity(false)
+            .simulate_no_crates(false)
+            .build()
+            .unwrap();
+
+        // 3) Bump all => patch => (1.2.3 -> 1.2.4)
+        my_ws
+            .bump_all(ReleaseType::Patch)
+            .await
+            .expect("Bumping all crates patch-version should succeed in mock workspace");
+
+        // 4) Confirm crate_a => "1.2.4"
+        {
+            let arc_a = my_ws
+                .find_crate_by_name("crate_a")
+                .await
+                .expect("Expected crate_a in the mock workspace");
+            let ver_a = arc_a.lock().await.version().unwrap();
+            assert_eq!(
+                ver_a.to_string(),
+                "1.2.4",
+                "crate_a should be patched from 1.2.3 -> 1.2.4 in mock scenario"
+            );
         }
 
-        info!("test_bump_all_parse_error_in_second_pass");
-        // 1) Create a mock workspace with two crates: crate_a and crate_b
-        let crate_a = CrateConfig::new("crate_a").with_src_files();
-        let crate_b = CrateConfig::new("crate_b").with_src_files();
-        let root_path = create_mock_workspace(vec![crate_a, crate_b])
-            .await
-            .expect("Failed to create mock workspace with crate_a and crate_b");
+        // 5) Confirm crate_b => "1.2.4"
+        {
+            let arc_b = my_ws
+                .find_crate_by_name("crate_b")
+                .await
+                .expect("Expected crate_b in the mock workspace");
+            let ver_b = arc_b.lock().await.version().unwrap();
+            assert_eq!(
+                ver_b.to_string(),
+                "1.2.4",
+                "crate_b should be patched from 1.2.3 -> 1.2.4 in memory"
+            );
+        }
 
-        // 2) Build the workspace *once*, then do bump => from 0.1.0 => 0.1.1
-        let mut workspace = Workspace::<PathBuf, CrateHandle>::new(&root_path)
-            .await
-            .expect("Initial workspace creation ok");
-        workspace
-            .bump_all(ReleaseType::Patch)
-            .await
-            .expect("first bump_all => 0.1.1");
+        info!("test_mock_workspace_bump_all_patch => finished successfully");
+    }
 
-        // 3) sabotage crate_a: put nonsense in [dependencies]
-        let a_cargo_toml = root_path.join("crate_a/Cargo.toml");
-        let contents = fs::read_to_string(&a_cargo_toml)
-            .await
-            .expect("read crate_a/Cargo.toml");
-        let sabotaged = format!("{contents}\n[dependencies]\nTHIS??IS??INVALID = ??\n");
-        fs::write(&a_cargo_toml, sabotaged)
-            .await
-            .expect("write sabotage to crate_a/Cargo.toml");
+    #[traced_test]
+    async fn test_mock_workspace_fails_integrity() {
+        trace!("test_mock_workspace_fails_integrity => starting");
 
-        // 4) Use the same workspace object => Bump again => from 0.1.1 => 0.1.2
-        //    crate_a now has invalid TOML in [dependencies], but partial parse for [package] is ok
-        workspace
-            .bump_all(ReleaseType::Patch)
-            .await
-            .expect("second bump_all => 0.1.2");
+        // Build a "fully valid" mock workspace, then sabotage it:
+        let mut broken_ws = MockWorkspace::<PathBuf,CrateHandle>::fully_valid_config();
+        *broken_ws.simulate_missing_cargo_toml_mut() = true;
 
-        // 5) Verify final versions:
-        let b_cargo_toml = root_path.join("crate_b").join("Cargo.toml");
-        let actual_b = read_version(&b_cargo_toml)
-            .await
-            .unwrap_or_else(|| "???".to_owned());
-        assert_eq!(actual_b, "0.1.2", "crate_b => 0.1.2");
+        // Now calling validate_integrity() should fail
+        let result = broken_ws.validate_integrity().await;
+        assert!(
+            result.is_err(),
+            "We set simulate_missing_cargo_toml=true => should fail"
+        );
 
-        // crate_a => "0.1.2" but we do partial parse ignoring [dependencies]
-        let actual_a = read_package_version_partial(&a_cargo_toml)
-            .await
-            .unwrap_or_else(|| "???".to_owned());
-        assert_eq!(actual_a, "0.1.2", "crate_a => 0.1.2");
-
-        info!("test_bump_all_parse_error_in_second_pass => SUCCESS");
+        info!("Got expected error result => {result:?}");
+        info!("test_mock_workspace_fails_integrity => finished successfully");
     }
 }

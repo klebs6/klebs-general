@@ -51,28 +51,47 @@ mod tests {
 
     #[tokio::test]
     async fn test_local_ws_dir_and_config() {
-        // 1) Temp directory to simulate our project root
+        // Instead of changing the current working directory globally (which can conflict
+        // with other tests running in parallel), create a dedicated "local" WorkspacerDir
+        // by joining the temp path yourself. Then you don't need `set_current_dir(...)`.
+
+        // 1) Create a temp dir
         let tmp = tempdir().expect("Failed to create temp dir");
-        std::env::set_current_dir(tmp.path()).expect("Failed to set current dir");
 
-        // 2) Construct local WorkspacerDir => "./.ws"
-        let local_ws = WorkspacerDir::local();
-        local_ws.ensure_dir_exists().expect("Could not create local .ws dir");
+        // 2) Build a WorkspacerDir using an absolute path instead of a relative ".ws"
+        let local_ws_dir = tmp.path().join(".ws");
+        let local_ws = WorkspacerDir::from_root(local_ws_dir);
 
-        // 3) Write a config file at `.ws/workspacer-config`
+        // 3) Ensure the .ws dir exists
+        local_ws
+            .ensure_dir_exists()
+            .expect("Could not create local .ws dir");
+
+        // 4) Write a config file at that explicit path
         let config_path = local_ws.config_file_path();
         let content = r#"
             authors = ["Test Author <test@example.com>"]
             rust_edition = "2021"
         "#;
         {
-            let mut f = File::create(&config_path).expect("Failed to create config file");
-            write!(f, "{}", content).expect("Failed to write config content");
+            use std::io::Write;
+            let mut f = std::fs::File::create(&config_path).expect("Failed to create config file");
+            f.write_all(content.as_bytes())
+                .expect("Failed to write config content");
+            // f is dropped here, so data is flushed
         }
 
-        // 4) Load config
-        let cfg_opt = local_ws.load_config_async().await.expect("Failed to load config");
-        assert!(cfg_opt.is_some(), "Expected some config after writing it.");
+        // 5) Now load config from that known path
+        let cfg_opt = local_ws
+            .load_config_async()
+            .await
+            .expect("Failed to load config");
+        assert!(
+            cfg_opt.is_some(),
+            "Expected some config after writing it at {:?}.",
+            config_path
+        );
+
         let cfg = cfg_opt.unwrap();
         assert_eq!(
             cfg.authors().as_ref(),

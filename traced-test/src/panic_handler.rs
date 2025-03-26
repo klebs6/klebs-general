@@ -1,3 +1,4 @@
+// ---------------- [ File: src/panic_handler.rs ]
 crate::ix!();
 
 pub trait CheckForAndRetrieveTheUniqueShouldPanicAttr {

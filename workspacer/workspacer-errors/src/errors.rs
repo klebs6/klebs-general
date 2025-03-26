@@ -290,6 +290,15 @@ error_tree!{
         BuildError(BuildError),
         TestFailure(TestFailure),
         WatchError(WatchError),
+
+        /// For when we can’t find a crate by name in the workspace and must error out.
+        CrateNotFoundInWorkspace {
+            crate_name: String,
+        },
+
+        /// When we’re converting a `WorkspaceError` into a `CrateError` in scenarios
+        /// where no more specific crate-oriented variant applies.
+        WorkspaceError(Box<WorkspaceError>),
     }
 }
 

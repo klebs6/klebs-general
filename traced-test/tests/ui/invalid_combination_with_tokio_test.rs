@@ -1,3 +1,4 @@
+// ---------------- [ File: tests/ui/invalid_combination_with_tokio_test.rs ]
 use traced_test::traced_test;
 
 #[traced_test]
@@ -7,3 +8,4 @@ async fn invalid_combination_of_test_attributes_with_tokio_test() {
     // Test will fail if `#[tokio::test]` is present alongside `#[traced_test]`.
 }
 
+fn main() {}

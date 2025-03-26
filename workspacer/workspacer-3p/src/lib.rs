@@ -83,7 +83,7 @@ pub use batch_mode::*;
 ///
 /// It is fully tested, robust, and can easily be reused throughout your codebase.
 /// Feel free to adapt as needed.
-pub fn run_async_without_nested_runtime<F, T>(fut: F) -> T
+pub fn safe_run_async<F, T>(fut: F) -> T
 where
     F: std::future::Future<Output = T> + Send + 'static,
     T: Send + 'static,
@@ -103,7 +103,7 @@ where
                 let join_handle = s.spawn(|| handle.block_on(fut));
                 join_handle.join().unwrap_or_else(|panic_err| {
                     error!("Thread panicked while running async code: {:?}", panic_err);
-                    panic!("Nested runtime usage or thread panic in run_async_without_nested_runtime")
+                    panic!("Nested runtime usage or thread panic in safe_run_async")
                 })
             })
         }
@@ -120,11 +120,11 @@ mod run_async_without_nested_runtime_tests {
     use super::*;
     use traced_test::traced_test;
 
-    /// Demonstrates that calling `run_async_without_nested_runtime` works even if
+    /// Demonstrates that calling `safe_run_async` works even if
     /// not already in a runtime.
     #[traced_test]
     fn test_run_async_without_nested_runtime_fresh() {
-        let result = run_async_without_nested_runtime(async {
+        let result = safe_run_async(async {
             40 + 2
         });
         assert_eq!(result, 42, "Should have successfully computed 42 asynchronously");
@@ -135,7 +135,7 @@ mod run_async_without_nested_runtime_tests {
     fn test_run_async_without_nested_runtime_in_existing_runtime() {
         let rt = tokio::runtime::Runtime::new().expect("Failed to create runtime");
         rt.block_on(async {
-            let result = run_async_without_nested_runtime(async {
+            let result = safe_run_async(async {
                 50 + 8
             });
             assert_eq!(result, 58, "Should have successfully computed 58 asynchronously");

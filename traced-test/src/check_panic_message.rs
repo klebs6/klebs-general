@@ -1,3 +1,4 @@
+// ---------------- [ File: src/check_panic_message.rs ]
 crate::ix!();
 
 // Inside the macro-generated code

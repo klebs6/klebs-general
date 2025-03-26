@@ -1,3 +1,4 @@
+// ---------------- [ File: src/parse_or_compile_error.rs ]
 crate::ix!();
 
 pub(crate) fn parse_or_compile_error(block: TokenStream2) -> Result<syn::Block, TracedTestError> {
@@ -52,4 +53,3 @@ mod parse_or_compile_error_tests {
         assert!(parsed_block.is_err(), "Expected the block parsing to fail");
     }
 }
-

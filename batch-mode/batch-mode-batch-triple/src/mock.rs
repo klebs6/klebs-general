@@ -3,7 +3,7 @@ crate::ix!();
 
 #[cfg(test)]
 pub fn make_mock_batch_file_triple() -> BatchFileTriple {
-    let workspace = Arc::new(MockWorkspace::default());
+    let workspace = Arc::new(MockBatchWorkspace::default());
     BatchFileTriple::new_direct(
         &BatchIndex::new(),
         None, None, None, None,
@@ -17,8 +17,8 @@ pub fn make_mock_triple_with_files(
     output_ids: Option<Vec<&str>>,
     error_ids:  Option<Vec<&str>>,
 ) -> BatchFileTriple {
-    // Build a MockWorkspace that has the requested ID lists
-    let workspace = MockWorkspaceBuilder::default()
+    // Build a MockBatchWorkspace that has the requested ID lists
+    let workspace = MockBatchWorkspaceBuilder::default()
         .input_ids(
             input_ids
                 .unwrap_or_default()
@@ -58,7 +58,7 @@ pub fn make_mock_triple_files(
     input_ids:  Option<Vec<&str>>,
     output_ids: Option<Vec<&str>>
 ) -> BatchFileTriple {
-    let workspace = MockWorkspaceBuilder::default()
+    let workspace = MockBatchWorkspaceBuilder::default()
         .input_ids(
             input_ids
                 .unwrap_or_default()
