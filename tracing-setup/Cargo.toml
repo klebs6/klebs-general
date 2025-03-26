@@ -10,7 +10,7 @@ categories = ["development-tools"]
 repository = "https://github.com/klebs6/klebs-general"
 
 [dependencies]
-getset = "*"
+getset = "0.1.5"
 export-magic = "0.3.6"
 tracing = { version = "0.1.40", features = ["log"] }
 tracing-subscriber = { version = "0.3", default-features = false, features = ["fmt", "std", "env-filter"] }
