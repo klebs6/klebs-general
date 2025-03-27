@@ -81,15 +81,15 @@ CONSOLIDATE_CRATE := workspacer-toml
 
 #-----------------------------------------------------[this section lets us choose how we want to test]
 DEFAULT := test
-DEFAULT := readme_writer
-DEFAULT := readme_writer_all
+#DEFAULT := readme_writer
+#DEFAULT := readme_writer_all
 #DEFAULT := test_file
 #DEFAULT := test_one
 #DEFAULT := test_file_one
 #DEFAULT := test_all
-#DEFAULT := test_all_nofail
+DEFAULT := test_all_nofail
 #DEFAULT := test_individual
-DEFAULT := pin_wildcard_deps
+#DEFAULT := pin_wildcard_deps
 #DEFAULT := consolidate_crate_interface
 #DEFAULT := ensure
 #DEFAULT := publish_public_crates_in_order

@@ -7,22 +7,31 @@ serde_json.workspace     = true
 
 [dependencies.workspacer-3p]
 path = "../workspacer-3p"
+version = "0.5.0"
 [dependencies.workspacer-config]
 path = "../workspacer-config"
+version = "0.1.0"
 [dev-dependencies.workspacer-mock]
 path = "../workspacer-mock"
+version = "0.5.0"
 [dependencies.workspacer-consolidate]
 path = "../workspacer-consolidate"
+version = "0.5.0"
 [dependencies.workspacer-crate]
 path = "../workspacer-crate"
+version = "0.5.0"
 [dependencies.workspacer-crate-interface]
 path = "../workspacer-crate-interface"
+version = "0.1.0"
 [dependencies.workspacer-errors]
 path = "../workspacer-errors"
+version = "0.1.0"
 [dependencies.workspacer-toml-interface]
 path = "../workspacer-toml-interface"
+version = "0.1.0"
 [dependencies.workspacer-workspace]
 path = "../workspacer-workspace"
+version = "0.1.0"
 [package]
 edition = "2024"
 name = "workspacer-readme-writer"

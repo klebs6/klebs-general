@@ -9,13 +9,16 @@ path = "../workspacer-3p"
 version = "0.5.0"
 [dependencies.workspacer-config]
 path = "../workspacer-config"
+version = "0.1.0"
 [dependencies.workspacer-errors]
 path = "../workspacer-errors"
+version = "0.1.0"
 [dependencies.workspacer-interface]
 path = "../workspacer-interface"
 version = "0.5.0"
 [dependencies.workspacer-toml-interface]
 path = "../workspacer-toml-interface"
+version = "0.1.0"
 [package]
 authors = [ "klebs tpk3.mx@gmail.com" ]
 description = "Efficiently manage and validate `Cargo.toml` files with field verification and asynchronous operations."

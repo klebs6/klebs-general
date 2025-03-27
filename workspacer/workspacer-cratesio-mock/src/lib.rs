@@ -17,7 +17,6 @@ mod test_publish_integration {
     use crate::app_state::AppStateBuilder;
     use crate::crates_db::MockCratesDb;
     use crate::stored_crate::StoredCrate;
-    use std::sync::{Arc, Mutex};
     use getset::*;
     use derive_builder::*;
 
@@ -27,7 +26,7 @@ mod test_publish_integration {
         trace!("Setting up test rocket instance.");
 
         let state = AppStateBuilder::default()
-            .db(Arc::new(Mutex::new(MockCratesDb::default())))
+            .db(Arc::new(AsyncMutex::new(MockCratesDb::default())))
             .build()
             .unwrap();
 

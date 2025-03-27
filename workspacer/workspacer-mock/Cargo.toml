@@ -9,8 +9,10 @@ path = "../workspacer-crate"
 version = "0.5.0"
 [dependencies.workspacer-crate-interface]
 path = "../workspacer-crate-interface"
+version = "0.1.0"
 [dependencies.workspacer-errors]
 path = "../workspacer-errors"
+version = "0.1.0"
 [dependencies.workspacer-interface]
 path = "../workspacer-interface"
 version = "0.5.0"

@@ -1,5 +1,6 @@
 [dependencies.workspacer-3p]
 path = "../workspacer-3p"
+version = "0.5.0"
 [package]
 edition = "2024"
 name = "workspacer-upgrade-test-suites"

@@ -1,11 +1,15 @@
 [dependencies.workspacer-crate-interface]
 path = "../workspacer-crate-interface"
+version = "0.1.0"
 [dependencies.workspacer-errors]
 path = "../workspacer-errors"
+version = "0.1.0"
 [dependencies.workspacer-toml-interface]
 path = "../workspacer-toml-interface"
+version = "0.1.0"
 [dependencies.workspacer-workspace-interface]
 path = "../workspacer-workspace-interface"
+version = "0.1.0"
 [package]
 edition = "2024"
 name = "workspacer-interface"
