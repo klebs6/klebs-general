@@ -41,33 +41,40 @@ impl ApplyAiReadmeOutput for CrateHandle {
     type Error = CrateError;
 
     async fn update_readme_md(&self, new_contents: &str) -> Result<(), Self::Error> {
-
-        trace!("update_readme_md: preparing to update README for crate at {:?}", self.as_ref());
+        trace!("update_readme_md: preparing to update or create README for crate at {:?}", self.as_ref());
 
         let maybe_readme_path = self.readme_path().await?;
-        if let Some(readme_path) = maybe_readme_path {
-            debug!("update_readme_md: found README at {:?}", readme_path);
-            let mut file = tokio::fs::File::create(&readme_path).await.map_err(|io_err| {
-                error!("update_readme_md: failed to create README file at {:?}", readme_path);
-                CrateError::IoError {
-                    io_error: Arc::new(io_err),
-                    context: format!("Failed to open README.md at {}", readme_path.display()),
-                }
-            })?;
+        let readme_path = match maybe_readme_path {
+            Some(existing) => {
+                debug!("update_readme_md: found existing README at {:?}", existing);
+                existing
+            },
+            None => {
+                warn!("No existing README.md was found; will create a new one in the crate root directory for {:?}", self.as_ref());
+                self.root_dir_path_buf().join("README.md")
+            }
+        };
 
-            file.write_all(new_contents.as_bytes()).await.map_err(|io_err| {
-                error!("update_readme_md: failed to write README at {:?}", readme_path);
-                CrateError::IoError {
-                    io_error: Arc::new(io_err),
-                    context: format!("Failed to write README.md at {}", readme_path.display()),
-                }
-            })?;
+        let mut file = tokio::fs::File::create(&readme_path).await.map_err(|io_err| {
+            error!("update_readme_md: failed to create or open README file at {:?}", readme_path);
+            CrateError::IoError {
+                io_error: std::sync::Arc::new(io_err),
+                context: format!("Failed to open README.md at {}", readme_path.display()),
+            }
+        })?;
 
-            info!("update_readme_md: successfully updated README for crate at {:?}", self.as_ref());
-        } else {
-            warn!("update_readme_md: crate at {:?} has no README.md file to update!", self.as_ref());
-        }
+        file.write_all(new_contents.as_bytes()).await.map_err(|io_err| {
+            error!("update_readme_md: failed to write README at {:?}", readme_path);
+            CrateError::IoError {
+                io_error: std::sync::Arc::new(io_err),
+                context: format!("Failed to write README.md at {}", readme_path.display()),
+            }
+        })?;
 
+        info!(
+            "update_readme_md: successfully updated/created README for crate at {:?}",
+            self.as_ref()
+        );
         Ok(())
     }
 

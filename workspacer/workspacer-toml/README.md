@@ -1,65 +1,41 @@
 # workspacer-toml
 
-`workspacer-toml` is a utility crate within the Workspacer ecosystem that provides functionality for parsing, validating, and manipulating `Cargo.toml` files. It offers a convenient handle (`CargoToml`) to access and verify a crate’s manifest, ensuring that required fields exist and that the version string is a valid SemVer.
+`workspacer-toml` is a Rust crate designed to manage and validate `Cargo.toml` files efficiently. It provides an interface to manipulate, inspect, and ensure the integrity of essential fields required for Rust package publishing such as `name`, `version`, `authors`, and `license`.
 
 ## Features
 
-- **TOML Parsing and Validation:**  
-  Reads and parses a `Cargo.toml` file into a `toml::Value` and validates its contents.
-  
-- **Required Field Checks:**  
-  Ensures that the `[package]` section contains all required fields for both integrity (e.g. `name`, `version`) and publishing (e.g. `authors`, `license`).
+- **Validation**: Ensures that all mandatory fields are present and correctly formatted according to Semantic Versioning.
+- **Asynchronous Operations**: Uses `tokio` for non-blocking file operations on `Cargo.toml`, enhancing performance in concurrent environments.
+- **Field Manipulation**: Easily retrieve and update fields like `version`, `license`, `authors`, and `repository` using provided trait implementations.
+- **Integrity Checks**: Verifies the presence of necessary fields, ensuring the file's compliance for both integrity and publishing standards.
 
-- **Version Validation:**  
-  Uses the `semver` crate to verify that the version string follows valid SemVer conventions.
+## Technical Insights
 
-- **Ready-for-Publishing Checks:**  
-  Implements the `ReadyForCargoPublish` trait to determine if a crate is properly configured for Cargo publishing.
+`workspacer-toml` employs `serde` for serialization and deserialization of TOML content, and uses `toml_edit` for precise document manipulation. This combination ensures robust parsing and serialization, minimizing errors during version control and dependency management.
 
-- **Unified Error Handling:**  
-  Provides a comprehensive set of error types (via `error_tree!`) for issues encountered during TOML reading, parsing, or validation.
+### Trait Implementations
 
-## Installation
-
-Add the following dependency to your `Cargo.toml`:
-
-```toml
-[dependencies]
-workspacer-toml = "0.1.0"
-```
-
-## Usage
-
-Below is a simple example of how to use `workspacer-toml` to create a `CargoToml` handle and validate a `Cargo.toml` file:
-
-```rust
-use workspacer_toml::{CargoToml, CargoTomlInterface};
-use workspacer_interface::ReadyForCargoPublish;
-use tokio;
-
-#[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    // Provide the path to a Cargo.toml file.
-    let cargo_toml_path = "path/to/Cargo.toml";
-    
-    // Create a CargoToml handle from the file.
-    let cargo_toml = CargoToml::new(cargo_toml_path).await?;
-    
-    // Validate the integrity of the Cargo.toml file.
-    cargo_toml.validate_integrity()?;
-    
-    // Check if the Cargo.toml is ready for publishing.
-    cargo_toml.ready_for_cargo_publish().await?;
-    
-    println!("Cargo.toml is valid and ready for publishing.");
-    Ok(())
-}
-```
-
-## Contributing
-
-Contributions are welcome! Please see the [repository](https://github.com/klebs6/klebs-general) for guidelines on contributing and reporting issues.
+- **GetPackageAuthors**: Retrieve the package's authors.
+- **CheckExistence**: Confirm the existence and validity of the `Cargo.toml` file path.
+- **UpdateDependencyVersionRaw**: Update the specified dependency version within the TOML.
 
 ## License
 
-This project is dual-licensed under either the [MIT license](LICENSE-MIT) or the [Apache License, Version 2.0](LICENSE-APACHE), at your option.
+Licensed under either of MIT License or Apache License, Version 2.0 at your option.
+
+## Repository
+
+For access and contributions, visit the [GitHub repository](https://github.com/klebs6/klebs-general).
+
+## Authors
+
+- Klebs - [tpk3.mx@gmail.com](mailto:tpk3.mx@gmail.com)
+
+## Usage
+
+```rust
+use workspacer_toml::CargoToml;
+
+let cargo_toml = CargoToml::new("path/to/Cargo.toml").await.expect("Valid Cargo.toml required");
+cargo_toml.validate_toml().expect("Validation failed");
+```

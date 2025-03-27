@@ -1,86 +1,45 @@
 # workspacer-crate
 
-`workspacer-crate` is a core library in the Workspacer suite that focuses on analyzing individual Rust crates. It provides functionality to:
-
-- **Extract Public Interfaces:**  
-  Wrap public items (functions, structs, enums, traits, type aliases, and macros) into a unified interface using the `CrateInterfaceItem` type.
-
-- **Analyze Crate Metrics:**  
-  Compute useful metrics such as total file size, lines of code, number of source files, and test files through asynchronous analysis (`CrateAnalysis`).
-
-- **Unified Crate Handling:**  
-  Offer a high-level `CrateHandle` to manage crate-related operations, including integrity checks (e.g. verifying the existence of essential files like `Cargo.toml`, `lib.rs`/`main.rs`, and `README.md`), fetching source files with exclusions, and more.
-
-- **Mock Crate Configuration:**  
-  Easily configure and create mock crates for testing purposes using `CrateConfig`.
-
-This crate leverages Tokio for asynchronous file I/O, along with a suite of helper libraries from the Workspacer ecosystem to provide an efficient, non-blocking approach to analyzing Rust projects.
+**workspacer-crate** is a comprehensive utility for managing Rust workspaces with refined asynchronous handling and intricate management of workspace constructs. This crate is tailored for developers who require detailed control over crate initialization, integrity validation, version management, and more.
 
 ## Features
 
-- **Async File Analysis:**  
-  Uses Tokio's async APIs to read files, count lines, and calculate file sizes without blocking your runtime.
+- **Crate Initialization**: Efficiently initialize crates within a workspace, complete with optional README, source files, and test files.
+  
+- **Asynchronous Operations**: Utilize asynchronous mechanisms to manage concurrent operations, ensuring thread-safe access and modification of the `Cargo.toml` and associated paths.
 
-- **Interface Extraction:**  
-  Automatically extracts and displays public API items (e.g., functions, structs, traits) for further processing or documentation.
+- **Version and Integrity Management**: Safeguard version consistency and workspace integrity with automated checks for required files such as `Cargo.toml` and source files.
 
-- **Comprehensive Integrity Checks:**  
-  Ensures that critical files exist (e.g., `Cargo.toml`, `lib.rs`/`main.rs`, and `README.md`) to verify crate validity.
-
-- **Extensible & Modular:**  
-  Designed to integrate seamlessly with other parts of the Workspacer suite (such as workspacer-consolidate and workspacer-interface).
-
-## Installation
-
-Add the following to your `Cargo.toml`:
-
-```toml
-[dependencies]
-workspacer-crate = "0.1.0"
-```
+- **Serialize and Deserialize Support**: Offers serialization for crate handles, facilitating network transmission or persistent storage.
 
 ## Usage
 
-Below is an example of how to use `workspacer-crate` to analyze a Rust crate:
+Incorporate `workspacer-crate` into your Rust project to streamline workspace management:
 
 ```rust
-use workspacer_crate::{CrateHandle, CrateHandleInterface, CrateAnalysis, CrateConfig};
-use std::path::PathBuf;
-use tokio;
+use workspacer_crate::CrateHandle;
 
-#[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    // Specify the path to your crate.
-    let crate_path = PathBuf::from("path/to/your/crate");
-
-    // Initialize a CrateHandle for the given crate.
-    let crate_handle = CrateHandle::new(&crate_path).await?;
-    
-    // Validate the integrity of the crate (checks for Cargo.toml, src/ files, README.md, etc.).
-    crate_handle.validate_integrity()?;
-    
-    // Analyze the crate to obtain metrics such as file size, line count, etc.
-    let analysis = CrateAnalysis::new(&crate_handle).await?;
-    println!("Total file size: {} bytes", analysis.total_file_size());
-    println!("Total lines of code: {}", analysis.total_lines_of_code());
-    println!("Source files: {}", analysis.total_source_files());
-    println!("Test files: {}", analysis.total_test_files());
-    
-    // (Optional) Use CrateConfig to create a mock crate for testing.
-    let config = CrateConfig::new("my_crate")
-        .with_readme()
-        .with_src_files()
-        .with_test_files();
-    println!("Mock crate config for '{}'", config.name());
-    
-    Ok(())
+async fn main() {
+    // Example usage of CrateHandle
+    let crate_handle = CrateHandle::new("/path/to/crate").await.unwrap();
+    let version = crate_handle.version().unwrap();
+    println!("Crate version: {}", version);
 }
 ```
 
-## Contributing
+## Installation
 
-Contributions to `workspacer-crate` are welcome! Please refer to the [repository](https://github.com/klebs6/klebs-general) for guidelines on contributing and reporting issues.
+Add to your `Cargo.toml`:
+
+```toml
+[dependencies]
+workspacer-crate = "0.5.0"
+```
+
+## Contributions
+
+Contributions are welcome! Please look at the [issues](https://github.com/klebs6/klebs-general/issues) on GitHub.
 
 ## License
 
-This project is dual-licensed under either the [MIT license](LICENSE-MIT) or the [Apache License, Version 2.0](LICENSE-APACHE), at your option.
+This project is licensed under the MIT OR Apache-2.0 licenses.

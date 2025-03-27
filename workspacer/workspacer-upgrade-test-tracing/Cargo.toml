@@ -4,3 +4,6 @@ path = "../workspacer-3p"
 edition = "2024"
 name = "workspacer-upgrade-test-tracing"
 version = "0.1.0"
+description = "A tracing and diagnostic tool for monitoring workspace upgrade processes, leveraging Rust 2024 features for high efficiency and low-latency logging."
+keywords = ["tracing", "workspace", "upgrade", "diagnostics", "rust2024"]
+categories = ["development-tools", "concurrency", "asynchronous", "logging", "performance"]

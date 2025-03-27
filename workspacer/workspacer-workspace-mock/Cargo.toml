@@ -26,3 +26,6 @@ path = "../workspacer-workspace-interface"
 edition = "2024"
 name = "workspacer-workspace-mock"
 version = "0.1.0"
+description = "A flexible mock framework to simulate and test Rust workspace environments, supporting various configurations for testing."
+keywords = ["rust", "workspace", "mock", "simulation", "testing"]
+categories = ["development-tools", "simulation", "rust-patterns", "concurrency", "testing"]

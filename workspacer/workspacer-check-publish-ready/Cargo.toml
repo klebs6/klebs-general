@@ -24,3 +24,6 @@ path = "../workspacer-mock"
 edition = "2024"
 name = "workspacer-check-publish-ready"
 version = "0.1.0"
+description = "A Rust crate providing async interfaces for checking if a workspace or crate is ready for publishing on crates.io, ensuring integrity, version validity, and readiness through comprehensive validation."
+keywords = ["rust", "cargo", "publishing", "workspace", "validation"]
+categories = ["development-tools", "command-line-utilities", "config"]

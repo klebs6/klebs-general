@@ -12,3 +12,6 @@ path = "../workspacer-workspace"
 edition = "2024"
 name = "workspacer-git"
 version = "0.1.0"
+description = "Ensures that Git workspaces are clean, suitable for async Rust applications. Implements checks for uncommitted changes, relies on 'git status --porcelain' for validation."
+keywords = ["git", "workspace", "async", "clean", "version-control"]
+categories = ["version-control", "async-programming", "concurrency", "development-tools"]

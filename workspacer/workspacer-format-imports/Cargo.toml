@@ -15,3 +15,6 @@ path = "../workspacer-workspace"
 edition = "2024"
 name = "workspacer-format-imports"
 version = "0.1.0"
+description = "A Rust crate for parsing, sorting, and formatting import statements across crates and workspaces. Uses RA-AP-syntax to reorganize 'use' statements by prefix, sort them alphabetically, and preserve comments."
+keywords = ["rust-imports", "syntax-analysis", "code-formatting", "async-processing", "workspace-management"]
+categories = ["development-tools", "parsing", "syntax", "code-generation", "text-processing"]

@@ -18,9 +18,11 @@ version = "0.5.0"
 path = "../workspacer-toml-interface"
 [package]
 authors = [ "klebs tpk3.mx@gmail.com" ]
-description = "A utility crate for parsing, validating, and handling Cargo.toml files as part of the Workspacer ecosystem."
+description = "Efficiently manage and validate `Cargo.toml` files with field verification and asynchronous operations."
 edition = "2024"
 license = "MIT OR Apache-2.0"
 name = "workspacer-toml"
 repository = "https://github.com/klebs6/klebs-general"
 version = "0.5.0"
+keywords = ["Cargo.toml", "Rust", "validation", "TOML", "semver"]
+categories = ["parsing", "development-tools", "filesystem", "config", "rust-patterns"]

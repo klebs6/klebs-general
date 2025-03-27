@@ -4,3 +4,6 @@ path = "../workspacer-3p"
 edition = "2024"
 name = "workspacer-upgrade-function-tracing"
 version = "0.1.0"
+description = "Enhances workspace function tracing by capturing execution insights for performance and reliability improvements."
+keywords = ["rust", "tracing", "performance", "workspace", "analytics"]
+categories = ["development-tools", "performance", "visualization"]

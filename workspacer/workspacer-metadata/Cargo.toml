@@ -12,3 +12,6 @@ path = "../workspacer-workspace-interface"
 edition = "2024"
 name = "workspacer-metadata"
 version = "0.1.0"
+description = "A Rust crate for retrieving Cargo workspace metadata asynchronously, using Tokio for task management and async_trait for non-blocking trait-based operations."
+keywords = ["async", "metadata", "cargo", "workspace", "tokio"]
+categories = ["asynchronous", "concurrency", "development-tools", "parsing", "filesystem"]

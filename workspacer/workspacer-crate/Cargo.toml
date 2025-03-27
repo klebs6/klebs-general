@@ -26,9 +26,11 @@ version = "0.5.0"
 path = "../workspacer-toml-interface"
 [package]
 authors = [ "klebs tpk3.mx@gmail.com" ]
-description = "Core library for analyzing and extracting the public interface of individual Rust crates as part of the Workspacer suite."
+description = "Efficient management of Rust workspaces with asynchronous operations, offering functionalities for crate initialization, integrity validation, version management, and serialization."
 edition = "2024"
 license = "MIT OR Apache-2.0"
 name = "workspacer-crate"
 repository = "https://github.com/klebs6/klebs-general"
 version = "0.5.0"
+keywords = ["workspace", "async", "crate management", "rust", "Cargo.toml"]
+categories = ["development-tools", "asynchronous", "filesystem", "config", "parsing"]

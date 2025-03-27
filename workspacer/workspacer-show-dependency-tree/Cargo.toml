@@ -4,3 +4,6 @@ path = "../workspacer-3p"
 edition = "2024"
 name = "workspacer-show-dependency-tree"
 version = "0.1.0"
+description = "Displays an intuitive dependency tree for Rust workspaces, enhancing dependency management and project structure understanding."
+keywords = ["rust", "dependencies", "workspace", "visualization", "project-management"]
+categories = ["development-tools", "command-line-utilities", "data-structures", "parsing", "network-programming"]

@@ -19,6 +19,9 @@ path = "../workspacer-toml-interface"
 edition = "2024"
 name = "workspacer-register"
 version = "0.1.0"
+description = "Utility crate to ensure all source files are registered within a workspace, managing macro definitions and integration for seamless Rust project maintenance."
+keywords = ["macro", "workspace", "source-files", "register", "rust"]
+categories = ["development-tools", "parsing", "asynchronous", "compilation", "utilities"]
 [[bin]]
 path = "src/bin/ensure_all_source_files_are_registered.rs"
 name = "workspacer-ensure-all-source-files-are-registered"

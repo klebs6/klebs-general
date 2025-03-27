@@ -10,3 +10,6 @@ path = "../workspacer-errors"
 edition = "2024"
 name = "workspacer-check-private"
 version = "0.1.0"
+description = "Ensures that a Rust crate is not marked as private before cargo publish, leveraging the async programming capabilities of Rust 2024 edition."
+keywords = ["cargo", "publishing", "crate", "private", "asynchronous"]
+categories = ["development-tools", "asynchronous", "config", "rust-patterns", "automation"]

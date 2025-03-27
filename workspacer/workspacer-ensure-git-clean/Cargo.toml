@@ -4,3 +4,6 @@ path = "../workspacer-3p"
 edition = "2024"
 name = "workspacer-ensure-git-clean"
 version = "0.1.0"
+description = "Asserts and enforces a clean Git workspace state prior to critical operations."
+keywords = ["git", "workspace", "clean", "integrity", "automation"]
+categories = ["development-tools", "command-line-utilities", "utilities", "filesystem", "config"]

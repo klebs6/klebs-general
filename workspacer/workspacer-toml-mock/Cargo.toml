@@ -14,3 +14,6 @@ path = "../workspacer-toml-interface"
 edition = "2024"
 name = "workspacer-toml-mock"
 version = "0.1.0"
+description = "A Rust library providing a fully functional mock implementation of CargoTomlInterface, simulating Cargo.toml behaviors for testing."
+keywords = ["mock", "toml", "Cargo.toml", "testing", "simulation"]
+categories = ["development-tools", "simulation", "parsing"]

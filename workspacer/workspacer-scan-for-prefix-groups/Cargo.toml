@@ -17,3 +17,6 @@ path = "../workspacer-workspace"
 edition = "2024"
 name = "workspacer-scan-for-prefix-groups"
 version = "0.1.0"
+description = "Provide utilities for creating cohesive prefix-based crate groups in a Rust workspace with asynchronous validation and scanning traits."
+keywords = ["async", "rust", "workspace", "crate", "cohesion"]
+categories = ["algorithms", "asynchronous", "development-tools", "programming", "workspace-management"]

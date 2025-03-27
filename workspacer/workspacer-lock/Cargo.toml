@@ -6,3 +6,6 @@ path = "../workspacer-errors"
 edition = "2024"
 name = "workspacer-lock"
 version = "0.1.0"
+description = "Asynchronously reads `Cargo.lock` to map crates to versions, supporting dependency management in Rust projects with detailed error handling."
+keywords = ["Cargo.lock", "dependencies", "asynchronous", "versioning", "Rust"]
+categories = ["development-tools", "parsing", "data-structures", "async", "filesystem"]

@@ -22,6 +22,9 @@ path = "../workspacer-workspace-interface"
 edition = "2024"
 name = "workspacer-pin"
 version = "0.1.0"
+description = "A Rust crate for pinning wildcard dependencies within workspaces using local versions or lockfile fallbacks, ensuring reliable and reproducible builds. Supports async operations and complex nested structures in `Cargo.toml`."
+keywords = ["dependencies", "pinning", "workspace", "versioning", "rust"]
+categories = ["development-tools", "dependencies"]
 [[bin]]
 name = "workspacer-pin-wildcard-deps"
 path = "src/bin/pin_wildcard_deps.rs"

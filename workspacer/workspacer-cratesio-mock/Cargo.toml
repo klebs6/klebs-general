@@ -12,6 +12,9 @@ path = "../workspacer-3p"
 edition = "2024"
 name = "workspacer-cratesio-mock"
 version = "0.1.0"
+description = "A mock in-memory interface for simulating crate publishing on crates.io, primarily aimed for testing environments."
+keywords = ["mock", "crates.io", "testing", "publishing", "simulation"]
+categories = ["development-tools", "database", "network-programming", "simulation", "testing"]
 [[bin]]
 name = "workspacer-cratesio-mock"
 path = "src/bin/main.rs"

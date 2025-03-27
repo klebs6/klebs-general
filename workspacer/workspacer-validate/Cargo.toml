@@ -4,3 +4,6 @@ path = "../workspacer-3p"
 edition = "2024"
 name = "workspacer-validate"
 version = "0.1.0"
+description = "A high-performance Rust crate for validating structured data within workspaces, emphasizing schema enforcement and error diagnostics."
+keywords = ["validation", "schema", "data integrity", "workspace", "data consistency"]
+categories = ["data-structures", "development-tools", "parsing", "validation"]

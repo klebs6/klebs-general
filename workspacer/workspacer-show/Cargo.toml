@@ -4,3 +4,6 @@ path = "../workspacer-3p"
 edition = "2024"
 name = "workspacer-show"
 version = "0.1.0"
+description = "A Rust crate for managing and visualizing workspaces with dynamic visualization and manipulation capabilities, leveraging efficient algorithms for real-time rendering."
+keywords = ["workspace", "visualization", "real-time", "efficiency", "dynamic"]
+categories = ["visualization", "development-tools", "simulation", "rendering", "os"]

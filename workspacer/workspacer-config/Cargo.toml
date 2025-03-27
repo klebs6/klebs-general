@@ -11,3 +11,6 @@ path = "../workspacer-3p"
 edition = "2024"
 name = "workspacer-config"
 version = "0.1.0"
+description = "A Rust crate to manage and utilize workspace configuration data in `.ws` directories for local and global setups, focusing on file management and configuration handling."
+keywords = ["workspace", "configuration", "TOML", "asynchronous", "file-management"]
+categories = ["config", "filesystem", "asynchronous", "development-tools", "parsing"]

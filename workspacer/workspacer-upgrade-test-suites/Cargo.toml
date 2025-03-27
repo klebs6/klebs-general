@@ -4,3 +4,6 @@ path = "../workspacer-3p"
 edition = "2024"
 name = "workspacer-upgrade-test-suites"
 version = "0.1.0"
+description = "A robust framework for testing upgrade paths in Rust workspaces, ensuring compatibility and reliability during version transitions."
+keywords = ["workspace", "upgrade", "testing", "compatibility", "automation"]
+categories = ["development-tools", "rust-patterns", "testing"]

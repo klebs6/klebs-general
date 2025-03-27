@@ -27,6 +27,9 @@ path = "../workspacer-workspace"
 edition = "2024"
 name = "workspacer-readme-writer"
 version = "0.1.0"
+description = "Automates the generation of README.md and Cargo.toml fields using AI to enhance documentation quality in Rust projects."
+keywords = ["README automation", "Rust crates", "AI-assisted documentation", "Cargo.toml management", "language models"]
+categories = ["development-tools", "rust-patterns", "language-bindings", "async-io", "no-std"]
 
 [[bin]]
 path = "src/bin/readme_writer.rs"

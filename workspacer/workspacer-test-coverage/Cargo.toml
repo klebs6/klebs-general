@@ -14,3 +14,6 @@ path = "../workspacer-workspace-interface"
 edition = "2024"
 name = "workspacer-test-coverage"
 version = "0.1.0"
+description = "Facilitates test execution with code coverage gathering for cargo workspaces using cargo-tarpaulin."
+keywords = ["testing", "code-coverage", "rust", "cargo", "tarpaulin"]
+categories = ["development-tools", "testing", "automation", "command-line-utilities"]

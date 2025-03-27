@@ -1,43 +1,49 @@
 # workspacer-consolidate
 
-`workspacer-consolidate` is a Rust library for aggregating and managing complex crate interfaces with precision and efficiency. It provides utilities for collecting and structuring various coding elements, such as functions, structs, enums, and other constructs, into a comprehensive and organized interface.
+## Overview
 
-## Features
+The `workspacer-consolidate` Rust crate offers a robust mechanism to assemble and manage consolidated representations of typical Rust code entities, such as functions, structs, enums, traits, type aliases, macros, modules, and implementation blocks, pulled together into a unified crate interface. By capturing these elements in a systematic way, developers can facilitate the introspection, documentation, and manipulation of code at a higher semantic level than mere text processing.
 
-- **Consolidated Interfaces:** Merge and manage crate elements like functions, structs, enums, and traits into a single cohesive structure.
-- **Customization Options:** Utilize `ConsolidationOptions` for custom consolidation strategies, deciding which elements to include or omit.
-- **Attribute and Documentation Management:** Extract and unify documentation and attributes from code items for a consistent representation.
-- **Test Item Handling:** Flexibly include or exclude test items based on configuration, aiding in streamlined interface presentation.
-- **Trait and Module Management:** Seamlessly handle trait implementations and nested modules with robust management logic.
+Our API leverages advanced paradigms of async processing using the `async_trait` for consolidated operations, allowing non-blocking management of crate interfaces.
+
+## Key Features
+
+- **Consolidated Item Handling**: Enumerates over nine primary consolidated Rust code entities
+- **Async Trait Consolidation**: Implements an asynchronous trait interface for consolidation operations
+- **Comprehensive Filtering**: Utilize `ConsolidationOptions` for specific content gathering including documentation, visibility restrictions, and test items
+- **Item Collection and Signature Generation**: Systems in place for the easy gathering of items and generation of syntactically correct signatures
+
+## Mathematical and Technical Concepts
+
+1. **Collective Representation**: Leveraging enum types to encapsulate variant forms of code constructs for ease of manipulation and display.
+2. **Regular Expression Parsing**: Employed in transforming documentation comments and attributes for improved legibility and uniformity.
+3. **Abstract Syntax Tree (AST) Manipulation**: Direct access and transformation of syntax nodes to enable fine-grained introspection and output formatting.
+4. **Lazy Evaluation with Async**: The asynchronous interfaces cater to efficient performance optimization via lazy evaluation, particularly under I/O-bound tasks during source retrieval operations.
 
 ## Usage
 
-This crate allows developers to consolidate their crate's interface elements in a highly configurable manner. To achieve this, the `ConsolidateCrateInterface` trait can be implemented and executed asynchronously:
+To integrate `workspacer-consolidate` into your project, add it to your `Cargo.toml`:
+
+```toml
+[dependencies]
+workspacer-consolidate = "0.5.0"
+```
+
+Utilize the crate by creating a custom struct that implements the `ConsolidateCrateInterface` trait, leveraging its methods in an async context for consolidating interface elements per provided options:
 
 ```rust
-#[async_trait]
-trait ConsolidateCrateInterface {
-    async fn consolidate_crate_interface(&self, options: &ConsolidationOptions) -> Result<ConsolidatedCrateInterface, CrateError>;
+use workspacer_consolidate::{ConsolidatedCrateInterface, ConsolidationOptions};
+
+async fn consolidate_interface() -> Result<ConsolidatedCrateInterface, workspacer_consolidate::CrateError> {
+    let options = ConsolidationOptions::new()
+        .with_docs()
+        .with_private_items();
+
+    // Assuming `my_crate` implements `ConsolidateCrateInterface`.
+    my_crate.consolidate_crate_interface(&options).await
 }
 ```
 
-The consolidation process aggregates different elements based on detailed settings provided through `ConsolidationOptions`. You can manipulate the inclusion of documentation, private items, test items, and function bodies. Here's a brief configuration example:
-
-```rust
-let options = ConsolidationOptions::new()
-    .with_docs()
-    .with_private_items()
-    .with_fn_bodies();
-```
-
-## Licensing
-
-This project is dual-licensed under the MIT and Apache-2.0 licenses.
-
-## Repository
-
-Code and contribution guidelines are available on [GitHub](https://github.com/klebs6/klebs-general).
-
 ## Contributions
 
-We welcome community contributions and encourage participation of all forms. Kindly refer to the contribution guide in our GitHub repository.
+Contributions are welcomed on our [GitHub repository](https://github.com/klebs6/klebs-general). Feel free to open issues or pull requests.

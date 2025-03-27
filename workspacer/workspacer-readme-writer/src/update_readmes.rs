@@ -6,7 +6,7 @@ pub trait UpdateReadmeFiles {
     type Error;
 
     /// Orchestrates the steps to generate queries, call the AI, and update README(s).
-    async fn update_readme_files(handle: Arc<AsyncMutex<Self>>) -> Result<(), Self::Error>;
+    async fn update_readme_files(handle: Arc<AsyncMutex<Self>>, plant: bool) -> Result<(), Self::Error>;
 }
 
 #[async_trait]
@@ -14,7 +14,7 @@ impl UpdateReadmeFiles for CrateHandle {
 
     type Error = AiReadmeWriterError;
 
-    async fn update_readme_files(crate_handle: Arc<AsyncMutex<Self>>) -> Result<(), Self::Error> {
+    async fn update_readme_files(crate_handle: Arc<AsyncMutex<Self>>, plant: bool) -> Result<(), Self::Error> {
 
         trace!("Entering CrateHandle::update_readme");
 
@@ -24,7 +24,7 @@ impl UpdateReadmeFiles for CrateHandle {
             AiReadmeWriterRequest::<PathBuf>::async_try_from::<CrateHandle>(crate_handle).await?
         ];
 
-        execute_ai_readme_writer_requests(&mut writer,&requests).await?;
+        execute_ai_readme_writer_requests(&mut writer,&requests,plant).await?;
 
         info!("Exiting CrateHandle::update_readme with success");
 
@@ -38,7 +38,7 @@ where H: ReadmeWritingCrateHandle<PathBuf>,
 {
     type Error = AiReadmeWriterError;
 
-    async fn update_readme_files(workspace_handle: Arc<AsyncMutex<Self>>) -> Result<(), Self::Error> {
+    async fn update_readme_files(workspace_handle: Arc<AsyncMutex<Self>>, plant: bool) -> Result<(), Self::Error> {
 
         //TODO: we want to create a batch containing a request for each crate
         // instead of a batch for each crate.
@@ -60,7 +60,7 @@ where H: ReadmeWritingCrateHandle<PathBuf>,
             requests
         };
 
-        execute_ai_readme_writer_requests(&mut writer,&requests).await?;
+        execute_ai_readme_writer_requests(&mut writer,&requests,plant).await?;
 
         info!("Exiting Workspace update_readme with success");
 
@@ -71,21 +71,27 @@ where H: ReadmeWritingCrateHandle<PathBuf>,
 pub async fn execute_ai_readme_writer_requests(
     writer:   &mut AiReadmeWriter,
     requests: &[AiReadmeWriterRequest<PathBuf>],
+    plant:    bool,
 ) -> Result<(), AiReadmeWriterError>
 {
     let unseen = writer.batch_workspace().calculate_unseen_inputs(&requests,&ExpectedContentType::Json);
 
-    writer.plant_seed_and_wait(&unseen).await?;
+    info!("Gathering AI expansions from the workspace. unseen inputs={:#?}", unseen);
 
-    info!("Gathering AI expansions from the workspace.");
+    if plant {
+        writer.plant_seed_and_wait(&unseen).await?;
+    }
+
     let results = writer.gather_results(&unseen).await?;
 
     debug!("Gathered results={:#?}",results);
     for (request, response) in results {
+
         // Because request.crate_handle() => Arc<dyn ReadmeWritingCrateHandle<P>>
         // that has .update_readme_md + .update_cargo_toml
         let handle = request.crate_handle();
-        let guard = handle.lock().await;
+        let guard  = handle.lock().await;
+
         guard.update_readme_md(response.full_readme_markdown()).await?;
         guard.update_cargo_toml(
             response.package_description(),

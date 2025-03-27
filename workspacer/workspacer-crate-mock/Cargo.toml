@@ -2,6 +2,9 @@
 edition = "2024"
 name    = "workspacer-crate-mock"
 version = "0.1.0"
+description = "Simulate Rust crate structures and behaviors without filesystem interference, via reproducible mock interfaces."
+keywords = ["rust", "crate", "mocking", "simulation", "testing"]
+categories = ["development-tools", "simulation", "filesystem", "testing", "mocking"]
 
 [dependencies]
 derive_builder.workspace = true

@@ -4,3 +4,6 @@ path = "../workspacer-3p"
 edition = "2024"
 name = "workspacer-upgrade-test-suite-tracing"
 version = "0.1.0"
+description = "Trace and validate upgrade processes in workspace-style Rust projects, providing detailed execution profiles for improved refactoring workflows."
+keywords = ["workspace", "tracing", "upgrade", "testing", "utility"]
+categories = ["development-tools", "testing", "workspace", "trace", "debug"]

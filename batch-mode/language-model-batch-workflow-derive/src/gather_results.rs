@@ -53,8 +53,12 @@ pub fn generate_impl_gather_results_trait(parsed: &LmbwParsedInput) -> TokenStre
                             results.push((s.clone(), parsed));
                         },
                         Err(e) => {
+                            // in practice, we don't want this to blow up if we somehow can't parse
+                            // it.
+                            //
+                            // we will log an error, though.
                             error!("Failed to load AI output for seed '{}': {:?}", s.name(), e);
-                            return Err(#error_type::from(e));
+                            //return Err(#error_type::from(e));
                         }
                     }
                 }

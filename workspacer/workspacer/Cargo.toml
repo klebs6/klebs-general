@@ -63,12 +63,14 @@ path = "../workspacer-workspace"
 path = "../workspacer-workspace-interface"
 [package]
 authors = [ "klebs tpk3.mx@gmail.com" ]
-description = "An asynchronous workspace management library for Rust projects, providing utilities for automation, analysis, and maintenance of multi-crate workspaces."
+description = "A Rust crate providing extended interfaces for workspaces and crates, facilitating modular and reusable code development."
 edition = "2024"
 license = "MIT OR Apache-2.0"
 name = "workspacer"
 repository = "https://github.com/klebs6/klebs-general"
 version = "0.6.0"
+keywords = ["workspace", "crate", "interface", "development", "rust"]
+categories = ["development-tools", "rust-patterns", "project-management", "api-bindings", "library"]
 [[bin]]
 name = "ws"
 path = "src/bin/workspacer.rs"

@@ -34,6 +34,9 @@ path = "../workspacer-cratesio-mock"
 edition = "2024"
 name = "workspacer-publish"
 version = "0.1.0"
+description = "Enables asynchronous publishing of Rust workspace packages, managing dependencies and registry configurations."
+keywords = ["rust", "publishing", "workspace", "asynchronous", "crates"]
+categories = ["development-tools", "asynchronous", "network-programming", "config", "command-line-utilities"]
 [[bin]]
 name = "workspacer-publish-public-crates-in-order"
 path = "src/bin/publish_public_crates_in_order.rs"

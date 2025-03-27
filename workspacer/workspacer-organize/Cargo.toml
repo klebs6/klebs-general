@@ -4,3 +4,6 @@ path = "../workspacer-3p"
 edition = "2024"
 name = "workspacer-organize"
 version = "0.1.0"
+description = "A versatile crate for designing and managing workspace layouts, facilitating improved productivity and workflow optimization."
+keywords = ["workspace", "organization", "layout", "productivity", "management"]
+categories = ["development-tools", "concurrency", "config", "command-line-utilities", "productivity"]

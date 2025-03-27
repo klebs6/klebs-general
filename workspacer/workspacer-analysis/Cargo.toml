@@ -16,3 +16,6 @@ path = "../workspacer-workspace-interface"
 edition = "2024"
 name = "workspacer-analysis"
 version = "0.1.0"
+description = "Asynchronous Rust crate for detailed analysis of workspace file metrics, including sizes, lines of code, and file counts across crates."
+keywords = ["workspace", "analysis", "rust", "asynchronous", "metrics"]
+categories = ["development-tools", "asynchronous", "data-structures", "parsing", "science"]

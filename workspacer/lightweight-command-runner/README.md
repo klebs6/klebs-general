@@ -1,62 +1,48 @@
 # Lightweight Command Runner
 
-Lightweight Command Runner is a lightweight asynchronous command execution library that provides a simple trait-based interface for running system commands using [Tokio](https://tokio.rs). With a default implementation and the ability to customize, it lets you integrate command execution easily into your asynchronous Rust applications.
+## Overview
+
+`lightweight-command-runner` is a Rust crate providing an efficient and asynchronous interface for executing system commands. Built on top of the `tokio` runtime, it facilitates seamless command execution with minimal resource footprint.
 
 ## Features
-
-- **Asynchronous Execution:** Run system commands using async/await.
-- **Trait-Based API:** Easily swap out or extend the command runner with your own implementation.
-- **Cross-Platform Support:** Includes Unix/Windows specific extensions for exit status handling.
-- **Ergonomic Design:** Clean, minimal API for straightforward command execution.
-
-## Installation
-
-Add the following to your `Cargo.toml`:
-
-```toml
-[dependencies]
-lightweight-command-runner = "0.1.0"
-```
+- **Asynchronous Execution**: Leverages Tokio's async capabilities, enabling non-blocking command execution.
+- **Cross-Platform Support**: Functions on both Unix and Windows platforms.
+- **Streamlined API**: A simple and minimalistic trait-based interface for command execution.
 
 ## Usage
-
-Here's a basic example using the default implementation:
+To utilize this crate, implement the `CommandRunner` trait for your objects or use the provided `DefaultCommandRunner` struct.
 
 ```rust
 use lightweight_command_runner::{CommandRunner, DefaultCommandRunner};
 use tokio::process::Command;
 
 #[tokio::main]
-async fn main() {
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let runner = DefaultCommandRunner;
+    let command = Command::new("echo").arg("Hello, World!");
 
-    // Configure the command based on the target OS
-    let mut cmd = if cfg!(target_os = "windows") {
-        let mut c = Command::new("cmd");
-        c.args(["/C", "echo hello"]);
-        c
-    } else {
-        let mut c = Command::new("echo");
-        c.arg("hello");
-        c
-    };
+    let handle = runner.run_command(command);
+    let output = handle.await??;
 
-    match runner.run_command(cmd).await {
-        Ok(output) => {
-            println!("Command executed successfully!");
-            println!("stdout: {}", String::from_utf8_lossy(&output.stdout));
-        },
-        Err(e) => {
-            eprintln!("Command execution failed: {}", e);
-        }
-    }
+    println!("Command executed with output: {:?}", output);
+
+    Ok(())
 }
 ```
 
+## Technical Details
+- **Exit Status Handling**: Provides platform-specific implementations to manage command exit statuses.
+- This crate is designed for asynchronous execution using the `tokio` runtime.
+
+### Platforms Supported
+- Unix-based systems
+- Windows
+
 ## License
+This project is licensed under either the MIT license or Apache License 2.0, at your option.
 
-This project is dual-licensed under either the [MIT license](LICENSE-MIT) or the [Apache License, Version 2.0](LICENSE-APACHE), at your option.
+## Repository
+For more details and to contribute, visit the [GitHub repository](https://github.com/klebs6/klebs-general).
 
-## Contributing
-
-Contributions are welcome! Please check out the [repository](https://github.com/klebs6/klebs-general) for details.
+## Contact
+For any inquiries, reach out to the author, klebs, at tpk3.mx@gmail.com.

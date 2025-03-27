@@ -16,3 +16,6 @@ path = "../workspacer-workspace"
 edition = "2024"
 name = "workspacer-detect-circular-deps"
 version = "0.1.0"
+description = "A Rust crate to construct and analyze dependency trees within a workspace, identifying circular dependencies using cargo metadata."
+keywords = ["circular dependencies", "dependency tree", "rust workspace", "cargo metadata", "graph analysis"]
+categories = ["development-tools", "parsing", "analysis", "dependency-management", "rust-patterns"]

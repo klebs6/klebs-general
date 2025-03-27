@@ -10,3 +10,6 @@ path = "../workspacer-workspace"
 edition = "2024"
 name = "workspacer-linting"
 version = "0.1.0"
+description = "Async Rust crate for linting workspaces using cargo clippy, capturing detailed reports and converting them to structured errors."
+keywords = ["rust", "linting", "cargo", "clippy", "asynchronous"]
+categories = ["development-tools", "concurrency", "linting", "command-line-utilities", "asynchronous"]

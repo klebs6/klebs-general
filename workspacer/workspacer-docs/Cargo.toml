@@ -10,3 +10,6 @@ path = "../workspacer-workspace"
 edition = "2024"
 name = "workspacer-docs"
 version = "0.1.0"
+description = "Provides an async interface to run `cargo doc` within Cargo workspaces, facilitating Rust documentation generation."
+keywords = ["rust", "workspace", "documentation", "async", "cargo"]
+categories = ["development-tools", "command-line-utilities", "async-execution", "rust-patterns"]

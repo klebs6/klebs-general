@@ -4,3 +4,6 @@ path = "../workspacer-3p"
 edition = "2024"
 name = "workspacer-document"
 version = "0.1.0"
+description = "A Rust library for parsing, organizing, and managing documents within multi-workspace environments. Optimized for speed and efficiency."
+keywords = ["document", "workspace", "parser", "optimization", "rust"]
+categories = ["data-structures", "parsing", "template-engine", "development-tools", "text-processing"]

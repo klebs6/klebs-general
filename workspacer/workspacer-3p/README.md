@@ -1,12 +1,42 @@
 # workspacer-3p
-This crate encapsulates the third party deps for the `workspacer` system.
 
-Please see the following for more information:
+## Overview
+`workspacer-3p` is a highly efficient utility for executing asynchronous futures from synchronous contexts in Rust applications. It leverages existing Tokio runtime handles when available and creates new ones when necessary, eliminating runtime nesting concerns. This crate is particularly beneficial for developers who need a reliable way to bridge synchronous and asynchronous code without introducing runtime complexity.
 
-`workspacer`
-`workspacer-consolidate`
-`workspacer-crate`
-`workspacer-interface`
-`workspacer-mock`
-`workspacer-syntax`
-`workspacer-toml`
+## Features
+- **Seamless Invocation**: Automatically detects existing Tokio runtimes to execute asynchronous code, reducing overhead and complexity.
+- **Robust Error Handling**: Isolates potential panics, ensuring your application remains stable even when threading issues occur.
+- **Production-Ready**: Extensively tested within production environments, providing assurance of its reliability and performance.
+
+## Usage
+### Basic Usage
+To use `workspacer-3p`, simply call the `safe_run_async` function with your future:
+
+```rust
+use workspacer_3p::safe_run_async;
+
+async fn my_async_function() -> i32 {
+    42
+}
+
+fn main() {
+    let result = safe_run_async(my_async_function());
+    println!("Result: {}", result);
+}
+```
+
+### Application
+Ideal for scenarios where asynchronous operations must be launched from synchronous code but need to safely handle runtime context determination. Perfect for scenarios like testing or embedding asynchronous operation in traditionally synchronous codebases.
+
+## Installation
+Add the following to your `Cargo.toml`:
+```toml
+[dependencies]
+workspacer-3p = "0.5.0"
+```
+
+## Contributions
+This crate is open-source and contributors are welcomed. The code repository is hosted on [GitHub](https://github.com/klebs6/klebs-general). Please adhere to the contributor guidelines.
+
+## License
+Licensed under the MIT License. See the LICENSE file for details.

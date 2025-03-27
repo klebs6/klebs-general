@@ -12,3 +12,6 @@ path = "../workspacer-toml-interface"
 edition = "2024"
 name = "workspacer-workspace-interface"
 version = "0.1.0"
+description = "A Rust crate offering asynchronous interfaces for sophisticated workspace and crate management, leveraging advanced concurrency and data handling patterns."
+keywords = ["workspace", "interface", "concurrency", "async", "management"]
+categories = ["concurrency", "asynchronous", "data-structures", "network-programming", "development-tools"]

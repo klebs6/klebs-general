@@ -12,3 +12,6 @@ path = "../workspacer-toml-interface"
 edition = "2024"
 name = "workspacer-check-crates-io"
 version = "0.1.0"
+description = "An asynchronous Rust crate offering verification of crate version publish status on crates.io, enhancing automated release workflows."
+keywords = ["crates.io", "version-check", "async", "publish", "validation"]
+categories = ["async", "network-programming", "development-tools", "commands-line-utilities", "web-programming"]

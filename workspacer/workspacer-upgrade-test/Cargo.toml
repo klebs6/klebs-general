@@ -4,3 +4,6 @@ path = "../workspacer-3p"
 edition = "2024"
 name = "workspacer-upgrade-test"
 version = "0.1.0"
+description = "A Rust crate for testing, simulating, and automating upgrade processes in Rust workspace environments."
+keywords = ["rust", "workspace", "upgrade", "testing", "automation"]
+categories = ["development-tools", "concurrency", "algorithms", "config", "rust-patterns"]

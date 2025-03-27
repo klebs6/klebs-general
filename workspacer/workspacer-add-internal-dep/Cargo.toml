@@ -14,3 +14,6 @@ path = "../workspacer-workspace"
 edition = "2024"
 name = "workspacer-add-internal-dep"
 version = "0.1.0"
+description = "Facilitates adding internal dependencies between crates within a Cargo workspace asynchronously with `toml_edit` for robust dependency management."
+keywords = ["workspace", "dependency", "cargo", "toml", "asynchronous"]
+categories = ["development-tools", "rust-patterns", "concurrency", "asynchronous", "config"]

@@ -4,3 +4,6 @@ path = "../workspacer-3p"
 edition = "2024"
 name = "workspacer-upgrade-tracing"
 version = "0.1.0"
+description = "Enhances tracing and logging capabilities in workspacer applications."
+keywords = ["tracing", "workspacer", "logging", "debugging", "monitoring"]
+categories = ["development-tools", "logging", "debugging", "data-analysis"]

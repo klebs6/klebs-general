@@ -3,14 +3,14 @@ name          = "workspacer-3p"
 version       = "0.5.0"
 edition       = "2024"
 authors       = ["klebs tpk3.mx@gmail.com"]
-description   = "Workspacer is a Rust library for managing and validating workspaces and crates, with support for test coverage, circular dependency detection, and publishing readiness. This crate encapsulates its third party deps."
+description   = "A utility crate that allows safe execution of async futures from sync contexts by leveraging existing or temporary Tokio runtimes. Ideal for scenarios where runtime nesting should be avoided."
 homepage      = "https://github.com/klebs6/klebs-general"
 repository    = "https://github.com/klebs6/klebs-general"
 documentation = "https://docs.rs/workspacer"
 readme        = "README.md"
 license       = "MIT"
-keywords      = ["workspace", "crate", "validation", "coverage", "dependency"]
-categories    = ["development-tools"]
+keywords      = ["async", "tokio", "runtime", "synchronous", "futures"]
+categories    = ["asynchronous", "concurrency", "development-tools"]
 
 [dependencies]
 async-channel.workspace           = true

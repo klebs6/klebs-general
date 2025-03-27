@@ -21,3 +21,6 @@ path = "../workspacer-workspace-interface"
 edition = "2024"
 name = "workspacer-workspace"
 version = "0.1.0"
+description = "Asynchronous Rust workspace management crate, facilitating crate discovery and manipulation in Rust workspaces with thread-safe operations."
+keywords = ["rust", "workspace", "asynchronous", "concurrency", "filesystem"]
+categories = ["development-tools", "asynchronous", "concurrency", "filesystem", "project-management"]

@@ -12,3 +12,6 @@ path = "../workspacer-workspace-interface"
 edition = "2024"
 name = "workspacer-cleanup"
 version = "0.1.0"
+description = "A Rust crate for asynchronous cleanup of unnecessary files and directories in a workspace, maintaining development efficiency."
+keywords = ["rust", "workspace", "cleanup", "async", "filesystem"]
+categories = ["development-tools", "asynchronous", "filesystem", "utilities"]

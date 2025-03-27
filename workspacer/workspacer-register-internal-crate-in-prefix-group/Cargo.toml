@@ -14,3 +14,6 @@ path = "../workspacer-workspace"
 edition = "2024"
 name = "workspacer-register-internal-crate-in-prefix-group"
 version = "0.1.0"
+description = "A Rust crate to register new internal crates in a prefix group, automating dependency and module adjustments within workspace structures."
+keywords = ["crates", "workspace", "dependency", "cargo", "automation"]
+categories = ["development-tools", "config", "concurrency", "asynchronous", "parsing"]

@@ -23,10 +23,10 @@ pub fn gather_items_in_node(
         let items_iter = sf.items();
         // We'll collect them in a vector just to debug their count:
         let all_items: Vec<_> = items_iter.collect();
-        debug!(">>> recognized SourceFile => found {} top-level items", all_items.len());
+        trace!(">>> recognized SourceFile => found {} top-level items", all_items.len());
         for (i, it) in all_items.iter().enumerate() {
             let k = it.syntax().kind();
-            debug!("    item #{}: kind={:?}, text={:?}",
+            trace!("    item #{}: kind={:?}, text={:?}",
                 i, k,
                 trim_to_60(it.syntax().text().to_string())
             );
@@ -39,10 +39,10 @@ pub fn gather_items_in_node(
     if let Some(item_list) = ast::ItemList::cast(parent_node.clone()) {
         let items_iter = item_list.items();
         let all_items: Vec<_> = items_iter.collect();
-        debug!(">>> recognized ItemList => found {} items", all_items.len());
+        trace!(">>> recognized ItemList => found {} items", all_items.len());
         for (i, it) in all_items.iter().enumerate() {
             let k = it.syntax().kind();
-            debug!("    item #{}: kind={:?}, text={:?}",
+            trace!("    item #{}: kind={:?}, text={:?}",
                 i, k,
                 trim_to_60(it.syntax().text().to_string())
             );
@@ -60,13 +60,13 @@ pub fn gather_items_in_node(
         count_children += 1;
         let k = child.kind();
         let short_txt = trim_to_60(child.text().to_string());
-        debug!("   - fallback child #{} => kind={:?}, text={:?}", count_children, k, short_txt);
+        trace!("   - fallback child #{} => kind={:?}, text={:?}", count_children, k, short_txt);
 
         // Attempt the same item logic:
         if let Some(mod_ast) = ast::Module::cast(child.clone()) {
-            debug!("       => recognized ast::Module");
+            trace!("       => recognized ast::Module");
             if should_skip_item(&child, options) {
-                debug!("         [skipped by should_skip_item]");
+                trace!("         [skipped by should_skip_item]");
                 continue;
             }
             let docs = if *options.include_docs() {
@@ -92,9 +92,9 @@ pub fn gather_items_in_node(
             items.push(ConsolidatedItem::Module(mod_iface));
 
         } else if let Some(impl_ast) = ast::Impl::cast(child.clone()) {
-            debug!("       => recognized ast::Impl");
+            trace!("       => recognized ast::Impl");
             if should_skip_impl(&impl_ast, options) {
-                debug!("         [skipped by should_skip_impl]");
+                trace!("         [skipped by should_skip_impl]");
                 continue;
             }
             let docs  = None; // or extract_docs
@@ -107,16 +107,16 @@ pub fn gather_items_in_node(
             items.push(ConsolidatedItem::ImplBlock(ib));
 
         } else if let Some(fn_ast) = ast::Fn::cast(child.clone()) {
-            debug!("       => recognized ast::Fn");
+            trace!("       => recognized ast::Fn");
             if should_skip_item(&child, options) {
-                debug!("         [skipped by should_skip_item]");
+                trace!("         [skipped by should_skip_item]");
                 continue;
             }
             let ci = gather_fn_item(&fn_ast, options);
             items.push(ConsolidatedItem::Fn(ci));
 
         } else if let Some(st_ast) = ast::Struct::cast(child.clone()) {
-            debug!("       => recognized ast::Struct");
+            trace!("       => recognized ast::Struct");
             if should_skip_item(&child, options) {
                 continue;
             }
@@ -131,7 +131,7 @@ pub fn gather_items_in_node(
             ));
 
         } else if let Some(en_ast) = ast::Enum::cast(child.clone()) {
-            debug!("       => recognized ast::Enum");
+            trace!("       => recognized ast::Enum");
             if should_skip_item(&child, options) {
                 continue;
             }
@@ -146,7 +146,7 @@ pub fn gather_items_in_node(
             ));
 
         } else if let Some(tr_ast) = ast::Trait::cast(child.clone()) {
-            debug!("       => recognized ast::Trait");
+            trace!("       => recognized ast::Trait");
             if should_skip_item(&child, options) {
                 continue;
             }
@@ -161,7 +161,7 @@ pub fn gather_items_in_node(
             ));
 
         } else if let Some(ty_ast) = ast::TypeAlias::cast(child.clone()) {
-            debug!("       => recognized ast::TypeAlias");
+            trace!("       => recognized ast::TypeAlias");
             if should_skip_item(&child, options) {
                 continue;
             }
@@ -176,7 +176,7 @@ pub fn gather_items_in_node(
             ));
 
         } else if let Some(mac_ast) = ast::MacroRules::cast(child.clone()) {
-            debug!("       => recognized ast::MacroRules");
+            trace!("       => recognized ast::MacroRules");
             if should_skip_item(&child, options) {
                 continue;
             }
@@ -191,7 +191,7 @@ pub fn gather_items_in_node(
             ));
 
         } else {
-            debug!("       => no recognized item cast");
+            trace!("       => no recognized item cast");
         }
     }
 
@@ -215,12 +215,12 @@ fn gather_items_from_iter(
     for (idx, item) in items_iter.enumerate() {
         let syn = item.syntax().clone();
         let short_txt = trim_to_60(syn.text().to_string());
-        debug!("   item #{} => kind={:?}, text={:?}", idx, syn.kind(), short_txt);
+        trace!("   item #{} => kind={:?}, text={:?}", idx, syn.kind(), short_txt);
 
         if let Some(mod_ast) = ast::Module::cast(syn.clone()) {
-            debug!("       => recognized ast::Module");
+            trace!("       => recognized ast::Module");
             if should_skip_item(&syn, options) {
-                debug!("         [skipped by should_skip_item]");
+                trace!("         [skipped by should_skip_item]");
                 continue;
             }
             let docs = if *options.include_docs() {
@@ -243,9 +243,9 @@ fn gather_items_from_iter(
             out.push(ConsolidatedItem::Module(mod_iface));
 
         } else if let Some(impl_ast) = ast::Impl::cast(syn.clone()) {
-            debug!("       => recognized ast::Impl");
+            trace!("       => recognized ast::Impl");
             if should_skip_impl(&impl_ast, options) {
-                debug!("         [skipped by should_skip_impl]");
+                trace!("         [skipped by should_skip_impl]");
                 continue;
             }
             let docs = None;
@@ -257,16 +257,16 @@ fn gather_items_from_iter(
             out.push(ConsolidatedItem::ImplBlock(ib));
 
         } else if let Some(fn_ast) = ast::Fn::cast(syn.clone()) {
-            debug!("       => recognized ast::Fn");
+            trace!("       => recognized ast::Fn");
             if should_skip_item(&syn, options) {
-                debug!("         [skipped by should_skip_item]");
+                trace!("         [skipped by should_skip_item]");
                 continue;
             }
             let ci = gather_fn_item(&fn_ast, options);
             out.push(ConsolidatedItem::Fn(ci));
 
         } else if let Some(st_ast) = ast::Struct::cast(syn.clone()) {
-            debug!("       => recognized ast::Struct");
+            trace!("       => recognized ast::Struct");
             if should_skip_item(&syn, options) {
                 continue;
             }
@@ -281,7 +281,7 @@ fn gather_items_from_iter(
             ));
 
         } else if let Some(en_ast) = ast::Enum::cast(syn.clone()) {
-            debug!("       => recognized ast::Enum");
+            trace!("       => recognized ast::Enum");
             if should_skip_item(&syn, options) {
                 continue;
             }
@@ -296,7 +296,7 @@ fn gather_items_from_iter(
             ));
 
         } else if let Some(tr_ast) = ast::Trait::cast(syn.clone()) {
-            debug!("       => recognized ast::Trait");
+            trace!("       => recognized ast::Trait");
             if should_skip_item(&syn, options) {
                 continue;
             }
@@ -311,7 +311,7 @@ fn gather_items_from_iter(
             ));
 
         } else if let Some(ty_ast) = ast::TypeAlias::cast(syn.clone()) {
-            debug!("       => recognized ast::TypeAlias");
+            trace!("       => recognized ast::TypeAlias");
             if should_skip_item(&syn, options) {
                 continue;
             }
@@ -326,7 +326,7 @@ fn gather_items_from_iter(
             ));
 
         } else if let Some(mac_ast) = ast::MacroRules::cast(syn.clone()) {
-            debug!("       => recognized ast::MacroRules");
+            trace!("       => recognized ast::MacroRules");
             if should_skip_item(&syn, options) {
                 continue;
             }
@@ -341,7 +341,7 @@ fn gather_items_from_iter(
             ));
 
         } else {
-            debug!("       => no recognized item cast for this item");
+            trace!("       => no recognized item cast for this item");
         }
     }
 

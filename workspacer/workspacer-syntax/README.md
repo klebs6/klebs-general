@@ -1,67 +1,39 @@
 # workspacer-syntax
 
-`workspacer-syntax` is a utility crate in the Workspacer ecosystem that provides tools for processing and analyzing Rust source code at the syntax (AST) level. It enables you to:
-
-- **Extract Documentation:**  
-  Use the `extract_docs` function to collect documentation comments (e.g. `///` and `/** ... */`) from a syntax node.
-
-- **Check Public Visibility:**  
-  Determine if an AST node is public via the `is_node_public` function by examining its visibility modifiers and attributes.
-
-- **Generate Signatures:**  
-  Implement the `GenerateSignature` trait for common Rust items (functions, structs, enums, traits, type aliases, and macro rules) to produce standardized signature strings with optional documentation.
-
-This crate is a core component for building automated interface extraction, documentation generation, and analysis tools for Rust projects.
+The `workspacer-syntax` crate is a Rust library designed for parsing and generating signature strings for various abstract syntax tree (AST) nodes, such as functions, structs, enums, traits, type aliases, and macros. It facilitates both the creation of textual signatures and their rehydration from signature strings, thereby enabling syntactic reconstruction of Rust code components.
 
 ## Features
 
-- **Documentation Extraction:**  
-  The `extract_docs` function scans an AST node’s tokens and collects its doc comments into a single string.
-
-- **Public Visibility Check:**  
-  The `is_node_public` function checks if a syntax node is public by inspecting its children and attributes (including special handling for macros).
-
-- **Signature Generation:**  
-  The `GenerateSignature` trait is implemented for various AST node types (e.g. `ast::Fn`, `ast::Struct`, `ast::Trait`, etc.) to generate human-readable signatures.
-
-## Installation
-
-Add `workspacer-syntax` to your `Cargo.toml` dependencies:
-
-```toml
-[dependencies]
-workspacer-syntax = "0.1.0"
-```
+- **Signature Generation**: Create signature strings for AST nodes, including optional documentation comments.
+- **Signature Options**: Tailor signature generation with options like full expansion of types and conditional inclusion of documentation lines.
+- **Rehydration**: Convert signature strings back to AST nodes, facilitating round-trip conversions.
+- **Public Visibility Checking**: Determine if a node represents a public interface element, such as a `pub fn` or `pub struct`.
+- **Post-processing**: Correctly formats spacing around signature elements, enhancing legibility.
 
 ## Usage
 
-Below is an example that demonstrates how to use workspacer-syntax to extract documentation and generate a signature from an AST node:
+Add the following to your `Cargo.toml`:
 
-```rust
-use workspacer_syntax::{extract_docs, is_node_public, GenerateSignature};
-use ra_ap_syntax::{SyntaxNode, SyntaxKind};
-use ra_ap_syntax::ast;
-
-fn process_node(node: &SyntaxNode) {
-    if is_node_public(node) {
-        if let Some(docs) = extract_docs(node) {
-            println!("Documentation:\n{}", docs);
-        }
-        // If the node represents a function, generate its signature.
-        if let Some(func) = ast::Fn::cast(node.clone()) {
-            let signature = func.generate_signature(None);
-            println!("Signature: {}", signature);
-        }
-    }
-}
+```toml
+[dependencies]
+workspacer-syntax = "0.5.0"
 ```
 
-This example assumes you have a valid `SyntaxNode` from the RA (Rust Analyzer) parser, and it demonstrates how to check for public visibility, extract documentation, and generate a signature for a function.
+### Example
 
-## License
+Here is an example of generating a signature for a struct and retrieving its documentation:
 
-This project is dual-licensed under either the [MIT license](LICENSE-MIT) or the [Apache License, Version 2.0](LICENSE-APACHE), at your option.
+```rust
+use workspacer_syntax::{GenerateSignature, SignatureOptions};
+use your_syntex_crate::ast;
 
-## Repository
+let struct_ast: ast::Struct = /* Assume you have an AST node */;
+let options = SignatureOptions::default();
+let signature = struct_ast.generate_signature_with_opts(&options);
 
-For more information and to contribute, please visit the [GitHub repository](https://github.com/klebs6/klebs-general).
+println!("Generated Signature:\n{}", signature);
+```
+
+### License
+
+This project is licensed under either the MIT or Apache-2.0 license at your option.

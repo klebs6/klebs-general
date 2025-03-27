@@ -11,3 +11,6 @@ path = "../workspacer-errors"
 edition = "2024"
 name = "workspacer-toml-interface"
 version = "0.1.0"
+description = "workspacer-toml-interface provides a comprehensive interface for Cargo.toml manipulation, supporting versioning, dependency, and metadata management through synchronous and asynchronous Rust traits."
+keywords = ["Cargo.toml", "traits", "Rust", "workspace", "asynchronous"]
+categories = ["async", "config", "development-tools", "rust-patterns", "filesystem"]

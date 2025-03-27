@@ -24,3 +24,6 @@ path = "../workspacer-workspace"
 edition = "2024"
 name = "workspacer-bump"
 version = "0.1.0"
+description = "A Rust crate to manage and increment semantic versions within a workspace with support for async version bumping and recursive downstream updates."
+keywords = ["versioning", "semver", "workspace", "async", "dependency-management"]
+categories = ["development-tools", "parser-implementations", "algorithms"]

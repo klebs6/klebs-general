@@ -25,14 +25,14 @@ version = "0.5.0"
 path = "../workspacer-workspace"
 [package]
 authors = [ "klebs tpk3.mx@gmail.com" ]
-description = "A Rust library to consolidate and streamline the management of crate interface components, offering customization and comprehensive structural integrity."
+description = "Asynchronously consolidate and introspect Rust crate interfaces, gathering typical items within a unified system for enhanced analysis and modification."
 edition = "2024"
 license = "MIT OR Apache-2.0"
 name = "workspacer-consolidate"
 repository = "https://github.com/klebs6/klebs-general"
 version = "0.5.0"
-keywords = ["consolidation", "interface", "rust", "module-management", "code-organization"]
-categories = ["development-tools", "parsing", "concurrency", "data-structures", "code-generation"]
+keywords = ["Rust", "AST", "consolidation", "async", "code-introspection"]
+categories = ["development-tools", "parsing", "asynchronous", "code-generation", "api-bindings"]
 [[bin]]
 name = "workspacer-show-consolidated-crate-interface"
 path = "src/bin/show_consolidated_crate_interface.rs"

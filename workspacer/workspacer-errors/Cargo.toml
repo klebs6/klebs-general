@@ -8,3 +8,6 @@ path = "../workspacer-config"
 edition = "2024"
 name = "workspacer-errors"
 version = "0.1.0"
+description = "The workspacer-errors crate provides error handling for asynchronous and I/O operations within the workspacer system, catering to robust error propagation and context attachment."
+keywords = ["error-handling", "async", "io-error", "tokio", "workspace"]
+categories = ["asynchronous", "concurrency", "config", "development-tools"]

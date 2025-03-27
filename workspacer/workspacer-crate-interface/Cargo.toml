@@ -13,3 +13,6 @@ path = "../workspacer-toml-interface"
 edition = "2024"
 name = "workspacer-crate-interface"
 version = "0.1.0"
+description = "A Rust library offering traits for interacting with crate files; enables asynchronous and synchronous operations on `Cargo.toml`, source, and test files."
+keywords = ["cargo", "rust", "filesystem", "asynchronous", "interface"]
+categories = ["development-tools", "parsing", "filesystem", "network-programming", "async"]

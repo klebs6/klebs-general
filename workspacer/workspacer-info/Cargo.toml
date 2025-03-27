@@ -4,3 +4,6 @@ path = "../workspacer-3p"
 edition = "2024"
 name = "workspacer-info"
 version = "0.1.0"
+description = "A Rust crate offering utilities for workspace information management and dynamic data retrieval in software projects."
+keywords = ["workspace", "information", "data-retrieval", "analytics", "utilities"]
+categories = ["development-tools", "data-structures", "algorithms", "parsing", "network-programming"]
