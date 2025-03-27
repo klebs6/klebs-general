@@ -48,5 +48,3 @@ impl PinWildcardDependencies for CargoToml {
         Ok(())
     }
 }
-
-

@@ -1,3 +1,4 @@
+// ---------------- [ File: workspacer-pin/src/pin_wildcard_table_dependency.rs ]
 crate::ix!();
 
 /// Pins a wildcard sub-table dependency (e.g. `[dependencies.somecrate] version="*", path="..."`).

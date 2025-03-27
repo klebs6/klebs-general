@@ -60,9 +60,13 @@ ACTIVE_PACKAGE := workspacer-watch-and-reload
 #ACTIVE_PACKAGE := workspacer-consolidate
 #ACTIVE_PACKAGE := workspacer-check-crates-io
 #ACTIVE_PACKAGE := workspacer-check-private
+#ACTIVE_PACKAGE := workspacer-bump
+#ACTIVE_PACKAGE := workspacer-check-crates-io
 
 ACTIVE_PACKAGE := workspacer-publish
-ACTIVE_PACKAGE := workspacer-bump
+#ACTIVE_PACKAGE := workspacer-cratesio-mock
+#ACTIVE_PACKAGE := workspacer-check-publish-ready
+
 #ACTIVE_PACKAGE := workspacer-add-new-crate-to-workspace
 #ACTIVE_PACKAGE := workspacer-config
 #ACTIVE_PACKAGE := workspacer-workspace-mock
@@ -87,13 +91,14 @@ DEFAULT := test
 #DEFAULT := test_file
 #DEFAULT := test_one
 #DEFAULT := test_file_one
-DEFAULT := test_all
-DEFAULT := test_all_nofail
+#DEFAULT := test_all
+#DEFAULT := test_all_nofail
 #DEFAULT := test_individual
 #DEFAULT := pin_wildcard_deps
 #DEFAULT := consolidate_crate_interface
 #DEFAULT := ensure
 #DEFAULT := publish_public_crates_in_order
+#DEFAULT := run_cratesio_mock
 #DEFAULT := run_workspacer
 #DEFAULT := name_all_files
 #DEFAULT := run
@@ -122,6 +127,9 @@ pin_wildcard_dep:
 
 run_workspacer:
 	RUSTFLAGS=$(RUSTFLAGS) $(CARGO) $(RUN) --bin ws $(FEATURES)
+
+run_cratesio_mock:
+	RUSTFLAGS=$(RUSTFLAGS) $(CARGO) $(RUN) --bin workspacer-cratesio-mock $(FEATURES)
 
 publish_public_crates_in_order:
 	RUSTFLAGS=$(RUSTFLAGS) $(CARGO) $(RUN) --bin workspacer-publish-public-crates-in-order $(FEATURES) -- --dry-run

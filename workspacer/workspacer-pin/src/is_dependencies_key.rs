@@ -1,3 +1,4 @@
+// ---------------- [ File: workspacer-pin/src/is_dependencies_key.rs ]
 crate::ix!();
 
 /// Checks if a table key ends with "dependencies"

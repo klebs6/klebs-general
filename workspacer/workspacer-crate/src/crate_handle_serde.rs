@@ -1,3 +1,4 @@
+// ---------------- [ File: workspacer-crate/src/crate_handle_serde.rs ]
 crate::ix!();
 
 impl ::serde::Serialize for CrateHandle {
@@ -162,4 +163,3 @@ mod test_crate_handle_serde {
         assert_eq!(ver.to_string(), "0.1.2");
     }
 }
-

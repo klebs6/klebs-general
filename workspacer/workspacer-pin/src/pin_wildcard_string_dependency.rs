@@ -1,3 +1,4 @@
+// ---------------- [ File: workspacer-pin/src/pin_wildcard_string_dependency.rs ]
 crate::ix!();
 
 /// Pins a wildcard string dependency (e.g. `serde = "*"`) from the lockfile if its version is `*`.

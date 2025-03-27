@@ -1,3 +1,4 @@
+// ---------------- [ File: workspacer-consolidate/src/crate_interface_item_serde.rs ]
 crate::ix!();
 
 impl<T> ::serde::Serialize for CrateInterfaceItem<T>

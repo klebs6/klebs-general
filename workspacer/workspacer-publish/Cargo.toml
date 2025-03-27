@@ -1,5 +1,7 @@
 [dependencies]
-structopt = "*"
+structopt.workspace = true
+rocket.workspace = true
+
 [dependencies.workspacer-3p]
 path = "../workspacer-3p"
 [dependencies.workspacer-check-crates-io]
@@ -24,6 +26,10 @@ path = "../workspacer-toml-interface"
 path = "../workspacer-workspace"
 [dev-dependencies.workspacer-mock]
 path = "../workspacer-mock"
+
+[dev-dependencies.workspacer-cratesio-mock]
+path = "../workspacer-cratesio-mock"
+
 [package]
 edition = "2024"
 name = "workspacer-publish"

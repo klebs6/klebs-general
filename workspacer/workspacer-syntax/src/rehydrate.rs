@@ -1,3 +1,4 @@
+// ---------------- [ File: workspacer-syntax/src/rehydrate.rs ]
 crate::ix!();
 
 pub trait RehydrateFromSignature: GenerateSignature + Sized {
@@ -7,4 +8,3 @@ pub trait RehydrateFromSignature: GenerateSignature + Sized {
     /// Returns `None` if reconstruction fails.
     fn rehydrate_from_signature(signature_source: &str) -> Option<Self>;
 }
-

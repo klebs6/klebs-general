@@ -4,8 +4,8 @@ name    = "workspacer-crate-mock"
 version = "0.1.0"
 
 [dependencies]
-derive_builder = "*"
-getset         = "*"
+derive_builder.workspace = true
+getset.workspace         = true
 
 [dependencies.workspacer-3p]
 path = "../workspacer-3p"

@@ -1,13 +1,10 @@
 [dependencies]
-structopt = "*"
-derive_builder = "*"
-[dependencies.serde]
-features = [ "derive" ]
-version = "*"
-[dependencies.serde_derive]
-version = "*"
-[dependencies.serde_json]
-version = "*"
+structopt.workspace      = true
+derive_builder.workspace = true
+serde.workspace          = true
+serde_derive.workspace   = true
+serde_json.workspace     = true
+
 [dependencies.workspacer-3p]
 path = "../workspacer-3p"
 version = "0.5.0"

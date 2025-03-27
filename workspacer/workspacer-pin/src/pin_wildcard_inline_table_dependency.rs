@@ -1,3 +1,4 @@
+// ---------------- [ File: workspacer-pin/src/pin_wildcard_inline_table_dependency.rs ]
 crate::ix!();
 
 /* =========================== 1) CHANGED ITEM ===========================
@@ -110,4 +111,3 @@ mod test_pin_wildcard_inline_table_dependency {
         debug!("test_pin_wildcard_inline_table_dependency::pins_local_star_version passed");
     }
 }
-

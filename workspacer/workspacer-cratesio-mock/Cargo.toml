@@ -1,13 +1,17 @@
 [dependencies]
+rocket.workspace         = true
 derive_builder.workspace = true
+getset.workspace         = true
 serde.workspace          = true
 serde_derive.workspace   = true
 serde_json.workspace     = true
 
 [dependencies.workspacer-3p]
 path = "../workspacer-3p"
-
 [package]
 edition = "2024"
-name = "workspacer-config"
+name = "workspacer-cratesio-mock"
 version = "0.1.0"
+[[bin]]
+name = "workspacer-cratesio-mock"
+path = "src/bin/main.rs"

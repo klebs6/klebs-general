@@ -1,3 +1,4 @@
+// ---------------- [ File: workspacer-workspace-mock/src/mock.rs ]
 crate::ix!();
 
 lazy_static! {

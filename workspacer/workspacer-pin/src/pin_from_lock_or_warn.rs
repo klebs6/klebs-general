@@ -1,3 +1,4 @@
+// ---------------- [ File: workspacer-pin/src/pin_from_lock_or_warn.rs ]
 crate::ix!();
 
 /* =========================== 2) CHANGED ITEM ===========================
@@ -91,4 +92,3 @@ mod test_pin_from_lock_or_warn {
         debug!("Completed test with item still = {:?}", item);
     }
 }
-

@@ -1,3 +1,4 @@
+// ---------------- [ File: workspacer-crate-mock/src/mock.rs ]
 crate::ix!();
 
 /// A fully functional mock implementing the same `CrateHandleInterface<P>`

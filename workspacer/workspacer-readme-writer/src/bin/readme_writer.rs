@@ -1,3 +1,4 @@
+// ---------------- [ File: workspacer-readme-writer/src/bin/readme_writer.rs ]
 use workspacer_3p::*;
 use structopt::*;
 use workspacer_readme_writer::*;

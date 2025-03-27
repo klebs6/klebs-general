@@ -1,10 +1,8 @@
-[dependencies.serde]
-features = [ "derive" ]
-version = "*"
-[dependencies.serde_derive]
-version = "*"
-[dependencies.serde_json]
-version = "*"
+[dependencies]
+serde.workspace        = true
+serde_derive.workspace = true
+serde_json.workspace   = true
+
 [dependencies.workspacer-3p]
 path = "../workspacer-3p"
 [dependencies.workspacer-errors]

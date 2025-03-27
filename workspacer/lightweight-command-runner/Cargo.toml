@@ -1,6 +1,6 @@
 [dependencies]
-export-magic = "0.3.6"
-tokio        = { version = "1.40.0", features = ["full"] }
+export-magic.workspace = true
+tokio.workspace        = true
 
 [package]
 name        = "lightweight-command-runner"

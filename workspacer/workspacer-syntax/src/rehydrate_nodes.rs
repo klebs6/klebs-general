@@ -1,3 +1,4 @@
+// ---------------- [ File: workspacer-syntax/src/rehydrate_nodes.rs ]
 crate::ix!();
 
 impl RehydrateFromSignature for ast::Fn {

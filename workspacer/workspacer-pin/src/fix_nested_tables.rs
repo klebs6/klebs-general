@@ -1,3 +1,4 @@
+// ---------------- [ File: workspacer-pin/src/fix_nested_tables.rs ]
 crate::ix!();
 
 /* =========================== 3) CHANGED ITEM ===========================
@@ -161,4 +162,3 @@ mod test_fix_nested_tables {
         debug!("test_fix_nested_tables::pins_nested_dependencies passed");
     }
 }
-

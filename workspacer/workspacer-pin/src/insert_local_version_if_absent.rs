@@ -1,3 +1,4 @@
+// ---------------- [ File: workspacer-pin/src/insert_local_version_if_absent.rs ]
 crate::ix!();
 
 /// If a local path is provided but no version is present, attempts to fetch the version

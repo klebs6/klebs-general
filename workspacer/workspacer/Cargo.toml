@@ -1,5 +1,6 @@
 [dependencies]
-structopt = "0.3.26"
+structopt.workspace = true
+
 [dependencies.generate-report-trait]
 path = "../generate-report-trait"
 version = "0.1.0"

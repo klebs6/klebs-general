@@ -1,3 +1,4 @@
+// ---------------- [ File: workspacer-pin/src/replace_wildcard_version_with_local.rs ]
 crate::ix!();
 
 /// If a local path is provided and the version is `"*"`, fetches the local version

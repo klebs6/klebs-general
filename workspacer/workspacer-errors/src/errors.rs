@@ -246,7 +246,7 @@ error_tree!{
         FailedToRunCargoPublish {
             crate_name:    String,
             crate_version: semver::Version,
-            which_err:     Arc<WhichError>,
+            io_err:        Arc<std::io::Error>,
         },
         CargoPublishFailedForCrateWithExitCode {
             crate_name:    String,

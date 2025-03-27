@@ -1,5 +1,6 @@
 // ---------------- [ File: workspacer-publish/src/imports.rs ]
 #[cfg(test)] pub(crate) use workspacer_mock::*;
+#[cfg(test)] pub(crate) use workspacer_cratesio_mock::*;
 pub(crate) use workspacer_3p::*;
 pub(crate) use workspacer_check_crates_io::*;
 pub(crate) use workspacer_check_publish_ready::*;

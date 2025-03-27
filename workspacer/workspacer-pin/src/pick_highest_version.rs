@@ -1,3 +1,4 @@
+// ---------------- [ File: workspacer-pin/src/pick_highest_version.rs ]
 crate::ix!();
 
 // A small helper to pick the highest version from lock map (already stable).

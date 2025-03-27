@@ -1,3 +1,4 @@
+// ---------------- [ File: workspacer-pin/src/pin_wildcard_dependencies_in_table.rs ]
 crate::ix!();
 
 /// Iterates over a TOML `TeTable` (i.e., `[dependencies]` or similar),

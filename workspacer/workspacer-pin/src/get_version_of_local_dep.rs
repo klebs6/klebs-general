@@ -1,3 +1,4 @@
+// ---------------- [ File: workspacer-pin/src/get_version_of_local_dep.rs ]
 crate::ix!();
 
 #[async_trait]

@@ -1,3 +1,4 @@
+// ---------------- [ File: workspacer-pin/src/pin_wildcards_in_doc.rs ]
 crate::ix!();
 
 /* =========================== 4) CHANGED ITEM ===========================
@@ -95,4 +96,3 @@ mod test_pin_wildcards_in_doc {
         debug!("test_pin_wildcards_in_doc::pins_top_level_and_nested passed");
     }
 }
-
