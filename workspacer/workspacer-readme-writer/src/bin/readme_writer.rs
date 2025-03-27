@@ -24,22 +24,21 @@ enum ReadmeWriterCommand {
     SingleCrate {
         /// Path to the crate directory containing Cargo.toml
         #[structopt(parse(from_os_str))]
-        crate_path: std::path::PathBuf,
+        crate_path: PathBuf,
     },
     /// Run on multiple crate paths
     MultiCrate {
         /// Paths to crate directories
         #[structopt(parse(from_os_str))]
-        crate_paths: Vec<std::path::PathBuf>,
+        crate_paths: Vec<PathBuf>,
     },
     /// Run on a full workspace directory
     Workspace {
         /// Path to the workspace directory containing Cargo.toml(s)
         #[structopt(parse(from_os_str))]
-        workspace_path: std::path::PathBuf,
+        workspace_path: PathBuf,
     },
 }
-
 
 #[tokio::main]
 pub async fn main() -> Result<(), AiReadmeWriterError> {
@@ -88,7 +87,7 @@ pub async fn main() -> Result<(), AiReadmeWriterError> {
             // 1) Build a Workspace object (depending on your real code).
             // 2) Then call `update_readme_files` on it.
 
-            let ws = Arc::new(AsyncMutex::new(Workspace::<std::path::PathBuf, CrateHandle>::new(&workspace_path).await?));
+            let ws = Arc::new(AsyncMutex::new(Workspace::<PathBuf, CrateHandle>::new(&workspace_path).await?));
 
             info!("Starting readme updates for full workspace at {:?}", workspace_path);
             UpdateReadmeFiles::update_readme_files(ws.clone(), plant).await?;

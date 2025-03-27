@@ -66,6 +66,7 @@ ACTIVE_PACKAGE := workspacer-watch-and-reload
 #ACTIVE_PACKAGE := workspacer-workspace-mock
 #ACTIVE_PACKAGE := workspacer-publish
 ACTIVE_PACKAGE := workspacer-readme-writer
+ACTIVE_PACKAGE := workspacer-cli
 
 INDIVIDUAL_TEST := gather_leading_token_comments
 INDIVIDUAL_TEST := gather_leading_comment_lines
@@ -87,7 +88,7 @@ DEFAULT := test
 #DEFAULT := test_one
 #DEFAULT := test_file_one
 #DEFAULT := test_all
-DEFAULT := test_all_nofail
+#DEFAULT := test_all_nofail
 #DEFAULT := test_individual
 #DEFAULT := pin_wildcard_deps
 #DEFAULT := consolidate_crate_interface
@@ -115,7 +116,7 @@ readme_writer:
 	RUSTFLAGS=$(RUSTFLAGS) $(CARGO) $(RUN) --bin workspacer-readme-writer -- single-crate $(README_WRITE_CRATE)
 
 readme_writer_all:
-	RUSTFLAGS=$(RUSTFLAGS) $(CARGO) $(RUN) --bin workspacer-readme-writer -- workspace .
+	RUSTFLAGS=$(RUSTFLAGS) $(CARGO) $(RUN) --bin workspacer-readme-writer -- workspace ../batch-mode
 
 pin_wildcard_deps:
 	RUSTFLAGS=$(RUSTFLAGS) $(CARGO) $(RUN) --bin workspacer-pin-wildcard-deps $(FEATURES)
