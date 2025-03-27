@@ -61,7 +61,7 @@ where T: CreateLanguageModelQueryAtAgentCoordinate
 impl<T> ComputeLanguageModelCoreQuery for LanguageModelTokenExpander<T> 
 where T: CreateLanguageModelQueryAtAgentCoordinate
 {
-    type Seed  = CamelCaseTokenWithComment;
+    type Seed  = TokenPackagedForExpansion;
 
     fn compute_language_model_core_query(
         &self,

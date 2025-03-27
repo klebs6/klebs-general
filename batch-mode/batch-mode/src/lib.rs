@@ -17,3 +17,12 @@ pub use camel_case_token_with_comment::*;
 pub use save_load_traits::*;
 pub use save_load_derive::*;
 pub use language_model_type::*;
+
+pub use batch_mode_token_expansion_axis_derive::*;
+pub use ai_json_template::*;
+pub use ai_json_template_derive::*;
+pub use agent_coordinate::*;
+pub use batch_mode_token_expansion_step::*;
+pub use batch_mode_token_expansion_traits::*;
+pub use instructed_language_model_at_coordinate::*;
+pub use language_model_token_expander::*;

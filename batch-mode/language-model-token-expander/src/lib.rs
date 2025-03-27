@@ -3,3 +3,4 @@
 
 x!{language_model_token_expander}
 x!{errors}
+x!{token_packaged}

@@ -28,6 +28,8 @@ path = "../batch-mode-batch-workspace"
 path = "../batch-mode-batch-workspace-interface"
 [dependencies.batch-mode-process-response]
 path = "../batch-mode-process-response"
+[dependencies.batch-mode-token-expansion-traits]
+path = "../batch-mode-token-expansion-traits"
 [dependencies.camel-case-token-with-comment]
 path = "../camel-case-token-with-comment"
 [dependencies.instructed-language-model-at-coordinate]

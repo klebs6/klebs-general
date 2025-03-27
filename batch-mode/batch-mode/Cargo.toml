@@ -1,5 +1,30 @@
 [dependencies]
 structopt = "0.3.26"
+
+[dependencies.batch-mode-token-expansion-axis-derive]
+path = "../batch-mode-token-expansion-axis-derive"
+
+[dependencies.ai-json-template]
+path = "../ai-json-template"
+
+[dependencies.ai-json-template-derive]
+path = "../ai-json-template-derive"
+
+[dependencies.agent-coordinate]
+path = "../agent-coordinate"
+
+[dependencies.batch-mode-token-expansion-step]
+path = "../batch-mode-token-expansion-step"
+
+[dependencies.batch-mode-token-expansion-traits]
+path = "../batch-mode-token-expansion-traits"
+
+[dependencies.instructed-language-model-at-coordinate]
+path = "../instructed-language-model-at-coordinate"
+
+[dependencies.language-model-token-expander]
+path = "../language-model-token-expander"
+
 [dependencies.batch-mode-3p]
 path = "../batch-mode-3p"
 version = "0.2.0"

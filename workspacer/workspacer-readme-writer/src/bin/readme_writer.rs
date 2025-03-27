@@ -25,21 +25,18 @@ enum ReadmeWriterCommand {
         /// Path to the crate directory containing Cargo.toml
         #[structopt(parse(from_os_str))]
         crate_path: std::path::PathBuf,
-        plant:      bool,
     },
     /// Run on multiple crate paths
     MultiCrate {
         /// Paths to crate directories
         #[structopt(parse(from_os_str))]
         crate_paths: Vec<std::path::PathBuf>,
-        plant:       bool,
     },
     /// Run on a full workspace directory
     Workspace {
         /// Path to the workspace directory containing Cargo.toml(s)
         #[structopt(parse(from_os_str))]
         workspace_path: std::path::PathBuf,
-        plant:          bool,
     },
 }
 
@@ -48,12 +45,14 @@ enum ReadmeWriterCommand {
 pub async fn main() -> Result<(), AiReadmeWriterError> {
     configure_tracing();
 
+    let plant = false;
+
     // Parse the CLI arguments
     let args = ReadmeWriterCli::from_args();
     trace!("Parsed CLI arguments: {:?}", args);
 
     match args.command {
-        ReadmeWriterCommand::SingleCrate { crate_path, plant } => {
+        ReadmeWriterCommand::SingleCrate { crate_path } => {
             info!("readme-writer-cli: SingleCrate mode selected for path = {:?}", crate_path);
 
             // 1) Build a CrateHandle from the given path
@@ -68,7 +67,7 @@ pub async fn main() -> Result<(), AiReadmeWriterError> {
 
             info!("Done updating readme for single crate at {:?}", crate_path);
         }
-        ReadmeWriterCommand::MultiCrate { crate_paths, plant } => {
+        ReadmeWriterCommand::MultiCrate { crate_paths } => {
             info!("readme-writer-cli: MultiCrate mode for paths = {:?}", crate_paths);
 
             // For each path, do basically what we did above
@@ -83,7 +82,7 @@ pub async fn main() -> Result<(), AiReadmeWriterError> {
             }
             info!("Done updating readmes for all crates in MultiCrate mode.");
         }
-        ReadmeWriterCommand::Workspace { workspace_path, plant } => {
+        ReadmeWriterCommand::Workspace { workspace_path } => {
             info!("readme-writer-cli: Workspace mode selected for path = {:?}", workspace_path);
 
             // 1) Build a Workspace object (depending on your real code).
