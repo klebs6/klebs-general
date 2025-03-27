@@ -1,0 +1,7 @@
+[registry]
+default = "mock"
+
+[registries.mock]
+index = "http://127.0.0.1:8000/index"
+publish-verify = false
+

@@ -89,7 +89,7 @@ DEFAULT := readme_writer_all
 #DEFAULT := test_all
 #DEFAULT := test_all_nofail
 #DEFAULT := test_individual
-#DEFAULT := pin_wildcard_deps
+DEFAULT := pin_wildcard_deps
 #DEFAULT := consolidate_crate_interface
 #DEFAULT := ensure
 #DEFAULT := publish_public_crates_in_order
@@ -117,7 +117,7 @@ readme_writer:
 readme_writer_all:
 	RUSTFLAGS=$(RUSTFLAGS) $(CARGO) $(RUN) --bin workspacer-readme-writer -- workspace .
 
-pin_wildcard_dep:
+pin_wildcard_deps:
 	RUSTFLAGS=$(RUSTFLAGS) $(CARGO) $(RUN) --bin workspacer-pin-wildcard-deps $(FEATURES)
 
 run_workspacer:
