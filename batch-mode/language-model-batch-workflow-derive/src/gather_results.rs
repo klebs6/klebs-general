@@ -41,7 +41,7 @@ pub fn generate_impl_gather_results_trait(parsed: &LmbwParsedInput) -> TokenStre
                 let mut results = Vec::with_capacity(seeds.len());
 
                 for s in seeds {
-                    let path = s.target_path_for_ai_json_expansion(
+                    let path = s.target_path_for_ai_json_expansion_from_seed(
                         &target_dir, 
                         &ExpectedContentType::Json
                     );

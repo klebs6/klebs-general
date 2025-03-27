@@ -91,3 +91,38 @@ impl<T:Named> GetTargetPathForAIExpansion for T {
         target_dir.to_path_buf().join(filename)
     }
 }
+
+//-------------------------------------------------------
+pub trait HasAssociatedOutputName {
+    fn associated_output_name(&self) -> std::borrow::Cow<'_, str>;
+}
+
+pub trait GetTargetPathForAIExpansionFromSeed {
+
+    fn target_path_for_ai_json_expansion_from_seed(
+        &self, 
+        target_dir:            &Path,
+        expected_content_type: &ExpectedContentType,
+
+    ) -> PathBuf;
+}
+
+impl<T:Named+HasAssociatedOutputName> GetTargetPathForAIExpansionFromSeed for T {
+
+    fn target_path_for_ai_json_expansion_from_seed(
+        &self, 
+        target_dir:            &Path,
+        _expected_content_type: &ExpectedContentType,
+
+    ) -> PathBuf {
+
+        // Convert 'token_name' to snake_case
+        let snake_token_name = to_snake_case(&self.associated_output_name());
+
+        // Determine the output filename based on custom_id
+        // You can customize this as needed, e.g., using token names
+        let filename = format!("{}.json", snake_token_name);
+
+        target_dir.to_path_buf().join(filename)
+    }
+}

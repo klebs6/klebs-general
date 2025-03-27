@@ -25,7 +25,7 @@ where
 {
     pub async fn async_try_from<H>(
         handle: Arc<AsyncMutex<H>>,
-    ) -> Result<Self, ReadmeWriterExecutionError>
+    ) -> Result<Self, AiReadmeWriterError>
     where
         H: ReadmeWritingCrateHandle<P>, // the super-trait
     {
@@ -47,7 +47,6 @@ where
         let consolidated_crate_interface = guard
             .consolidate_crate_interface(&consolidation_opts)
             .await?;
-
 
         // 3) Now we do a short synchronous read from CargoToml (like get_package_authors),
         //    but we must not hold any lock across await, so keep it “direct.”
@@ -124,5 +123,14 @@ impl<P> Named for AiReadmeWriterRequest<P>
 {
     fn name(&self) -> std::borrow::Cow<'_, str> {
         std::borrow::Cow::Owned(format!("{}-ai-readme-request", self.crate_name))
+    }
+}
+
+impl<P> HasAssociatedOutputName for AiReadmeWriterRequest<P> 
+    where
+        P: AsRef<Path> + Send + Sync + 'static,
+{
+    fn associated_output_name(&self) -> std::borrow::Cow<'_, str> {
+        std::borrow::Cow::Owned(format!("{}-ai-generated-readme", self.crate_name()))
     }
 }

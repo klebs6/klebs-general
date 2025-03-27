@@ -17,7 +17,7 @@ pub trait ComputeSystemMessage {
 
 pub trait ComputeLanguageModelCoreQuery {
     /// The seed item type (e.g., AiTomlWriterRequest).
-    type Seed: Named;
+    type Seed: HasAssociatedOutputName + Named;
 
     /// Builds a single language model API request for a given seed item.
     /// The macro will call this once per seed item inside `compute_language_model_requests()`.
@@ -43,7 +43,7 @@ pub trait FinishProcessingUncompletedBatches {
 /// This is the trait we will typically need to implement manually
 pub trait ComputeLanguageModelRequests {
 
-    type Seed: Send + Sync;
+    type Seed: HasAssociatedOutputName + Send + Sync;
 
     /// Identify which new items need to be processed and
     /// build the requests.
@@ -129,7 +129,7 @@ pub trait LanguageModelBatchWorkflow<E: From<LanguageModelBatchCreationError>>:
 #[async_trait]
 pub trait LanguageModelBatchWorkflowGatherResults {
     type Error;
-    type Seed: Clone + Named;
+    type Seed: HasAssociatedOutputName + Clone + Named;
     type Output: LoadFromFile<Error = SaveLoadError>;
 
     /// Gathers AI-generated JSON outputs for the given seeds in the same order, 

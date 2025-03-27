@@ -53,8 +53,11 @@ impl RigorousJsonCommandBuilderStage {
                         - Read the description of each field. Use it, along with the content we sent you to generate an appropriate value for each.
                         - Ensure that each generated field optimally serves its desired purpose.
                         - Each item should be deep, detailed, and specific. Use optimally descriptive and useful language. Do not be too verbose.
+                        - In terms of the JSON format we would like you to provide, all schema items should live at the top level of the json object. 
+                          The object itself will be deserialied based on the schema. 
+                          The fields should not be nested under a parent named 'fields' or anything similar.
 
-                        Schema to Use:
+                        Here is the schema to Use:
 
                         {}",
                         T::to_template()

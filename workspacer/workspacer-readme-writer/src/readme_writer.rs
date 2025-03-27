@@ -18,6 +18,29 @@ pub struct AiReadmeWriter
     batch_workspace:       Arc<BatchWorkspace>,
 }
 
+impl AiReadmeWriter
+{
+    pub async fn default() -> Result<Self,AiReadmeWriterError> {
+        let readme_dir = WorkspacerDir::local().ensure_subdir_exists("readme-writer-workspace")?;
+        Ok(AiReadmeWriter::new(&readme_dir, LanguageModelType::Gpt4o).await?)
+    }
+
+    pub async fn new(
+        workspace_root:      impl AsRef<Path>,
+        language_model_type: LanguageModelType,
+
+    ) -> Result<Self,AiReadmeWriterError> {
+
+        let language_model_client: LanguageModelClientArc = OpenAIClientHandle::new();
+
+        Ok(Self {
+            language_model_client,
+            language_model_type,
+            batch_workspace: BatchWorkspace::new_in(workspace_root).await?,
+        })
+    }
+}
+
 impl ComputeSystemMessage for AiReadmeWriter
 {
     fn system_message() -> String {
@@ -91,23 +114,5 @@ impl ComputeLanguageModelCoreQuery for AiReadmeWriter
         }
 
         query
-    }
-}
-
-impl AiReadmeWriter
-{
-    pub async fn new(
-        workspace_root:      impl AsRef<Path>,
-        language_model_type: LanguageModelType,
-
-    ) -> Result<Self,LanguageModelBatchWorkflowError> {
-
-        let language_model_client: LanguageModelClientArc = OpenAIClientHandle::new();
-
-        Ok(Self {
-            language_model_client,
-            language_model_type,
-            batch_workspace: BatchWorkspace::new_in(workspace_root).await?,
-        })
     }
 }

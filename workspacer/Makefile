@@ -52,26 +52,20 @@ ACTIVE_PACKAGE := workspacer-register-internal-crate-in-prefix-group
 ACTIVE_PACKAGE := workspacer-check-publish-ready
 ACTIVE_PACKAGE := workspacer-add-internal-dep
 ACTIVE_PACKAGE := workspacer-name-all-files
-ACTIVE_PACKAGE := workspacer-readme-writer
 ACTIVE_PACKAGE := workspacer-watch-and-reload
-#ACTIVE_PACKAGE := workspacer-toml-mock
-#ACTIVE_PACKAGE := workspacer-crate-mock
-#ACTIVE_PACKAGE := workspacer-workspace-mock
-#ACTIVE_PACKAGE := workspacer-consolidate
-#ACTIVE_PACKAGE := workspacer-check-crates-io
-#ACTIVE_PACKAGE := workspacer-check-private
+#ACTIVE_PACKAGE := workspacer-add-new-crate-to-workspace
 #ACTIVE_PACKAGE := workspacer-bump
 #ACTIVE_PACKAGE := workspacer-check-crates-io
-
-ACTIVE_PACKAGE := workspacer-publish
-#ACTIVE_PACKAGE := workspacer-cratesio-mock
+#ACTIVE_PACKAGE := workspacer-check-private
 #ACTIVE_PACKAGE := workspacer-check-publish-ready
-
-#ACTIVE_PACKAGE := workspacer-add-new-crate-to-workspace
 #ACTIVE_PACKAGE := workspacer-config
-#ACTIVE_PACKAGE := workspacer-workspace-mock
+#ACTIVE_PACKAGE := workspacer-consolidate
 #ACTIVE_PACKAGE := workspacer-crate-mock
+#ACTIVE_PACKAGE := workspacer-cratesio-mock
 #ACTIVE_PACKAGE := workspacer-toml-mock
+#ACTIVE_PACKAGE := workspacer-workspace-mock
+#ACTIVE_PACKAGE := workspacer-publish
+ACTIVE_PACKAGE := workspacer-readme-writer
 
 INDIVIDUAL_TEST := gather_leading_token_comments
 INDIVIDUAL_TEST := gather_leading_comment_lines
@@ -87,7 +81,8 @@ CONSOLIDATE_CRATE := workspacer-toml
 
 #-----------------------------------------------------[this section lets us choose how we want to test]
 DEFAULT := test
-#DEFAULT := readme_writer
+DEFAULT := readme_writer
+DEFAULT := readme_writer_all
 #DEFAULT := test_file
 #DEFAULT := test_one
 #DEFAULT := test_file_one
@@ -120,7 +115,7 @@ readme_writer:
 	RUSTFLAGS=$(RUSTFLAGS) $(CARGO) $(RUN) --bin workspacer-readme-writer -- single-crate $(README_WRITE_CRATE)
 
 readme_writer_all:
-	RUSTFLAGS=$(RUSTFLAGS) $(CARGO) $(RUN) --bin workspacer-readme-writer -- workspace ../batch-mode
+	RUSTFLAGS=$(RUSTFLAGS) $(CARGO) $(RUN) --bin workspacer-readme-writer -- workspace .
 
 pin_wildcard_dep:
 	RUSTFLAGS=$(RUSTFLAGS) $(CARGO) $(RUN) --bin workspacer-pin-wildcard-deps $(FEATURES)

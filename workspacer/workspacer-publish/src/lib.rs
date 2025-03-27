@@ -1,128 +1,134 @@
 // ---------------- [ File: workspacer-publish/src/lib.rs ]
 #[macro_use] mod imports; use imports::*;
 
-x!{publish_public_crates_in_topological_order}
+x!{publish_topo}
 x!{try_publish_crate}
 
-// [File: workspacer-publish/src/tests_integration_with_mock_cratesio.rs]
 #[cfg(test)]
-mod test_integration_with_mock_cratesio {
+mod integration_with_mock_cratesio {
     use super::*;
+    use portpicker::pick_unused_port;
     use std::time::Duration;
     use std::thread;
-    use rocket::figment::Figment;
-    use rocket::figment::providers::{Format, Toml};
     use rocket::Config;
-    use portpicker::pick_unused_port;
-    use std::env;
-    use tracing::{trace, debug, info, warn, error};
-
-    // We'll import the mock crates.io server pieces here, but
-    // only in test mode so as not to interfere with normal runs:
-    #[allow(unused_imports)]
-    #[cfg(test)]
-    use workspacer_cratesio_mock::{
-        AppStateBuilder, MockCratesDb, publish_new, not_found
-    };
-
-    // We also bring in the standard test dependencies from rocket:
+    use rocket::figment::Figment;
+    use rocket::figment::providers::Format;
     use rocket::tokio::task::JoinHandle;
+    use tracing::{trace, debug, info, warn, error};
+    use std::process::Command;
+    use tempfile::tempdir;
 
-    /// This test module demonstrates how to spin up the
-    /// `workspacer-cratesio-mock` server on a random port and
-    /// then point our publish logic at it (so we never hit
-    /// the real crates.io during automated tests).
-    ///
-    /// We do this in such a way that normal usage of `cargo publish`
-    /// outside of tests is *not* affected. That is, the environment
-    /// variables and any special registry/index config are only
-    /// set within this test.
-    #[traced_test]
+    // We'll import the mock crates.io server from your "workspacer-cratesio-mock" crate:
+    #[allow(unused_imports)]
+    use workspacer_cratesio_mock::{
+        AppStateBuilder, MockCratesDb, not_found, publish_new,
+    };
+    use std::sync::Arc;
+    use tokio::sync::Mutex as AsyncMutex;
+
+    #[test]
     fn test_publish_against_mock_cratesio() {
-        // We'll run async code inside a blocking test by creating
-        // our own tokio runtime:
-        let rt = tokio::runtime::Runtime::new().unwrap();
+        // We'll do an actual "cargo publish --registry=mock" but set
+        // the env so that mock = "http://127.0.0.1:port/index".
 
-        // Execute the async test logic:
+        let rt = rocket::tokio::runtime::Runtime::new().unwrap();
         rt.block_on(async {
             trace!("Starting test_publish_against_mock_cratesio.");
 
-            // 1) Pick an unused port for the mock server:
+            // 1) pick a random port
             let port = pick_unused_port().expect("No free ports available");
-            info!("Picked unused port: {}", port);
+            info!("Mock server using port: {}", port);
 
-            // 2) Construct the mock server (Rocket) with that port:
+            // 2) build rocket config
             let rocket_config = Config {
                 port,
                 address: std::net::Ipv4Addr::LOCALHOST.into(),
                 ..Config::debug_default()
             };
 
+            // 3) create the in-memory DB state
             let state = AppStateBuilder::default()
                 .db(Arc::new(AsyncMutex::new(MockCratesDb::default())))
                 .build()
                 .unwrap();
 
+            // 4) build rocket instance
             let rocket_instance = rocket::custom(Figment::from(rocket_config))
                 .manage(state)
                 .mount("/", rocket::routes![publish_new])
                 .register("/", rocket::catchers![not_found]);
 
-            // 3) Launch in background:
-            debug!("Launching mock crates.io server in background");
+            // 5) launch in background
             let rocket_handle: JoinHandle<_> = tokio::spawn(async move {
                 if let Err(e) = rocket_instance.launch().await {
                     error!("Mock crates.io server failed to launch: {:?}", e);
                 }
             });
 
-            // Give Rocket a brief moment to bind the port:
+            // give rocket time
             thread::sleep(Duration::from_millis(250));
 
-            // 4) Override environment variables so our code under test
-            //    uses the mock server instead of real crates.io.
-            //    For instance, you might override your function that
-            //    does `is_crate_version_published_on_crates_io` or
-            //    set cargo registry index URLs. We'll show a simple approach:
-            let mock_api_url = format!("http://127.0.0.1:{}/api/v1", port);
-            info!("Mock server URL: {}", mock_api_url);
+            // 6) define the environment so `cargo publish --registry=mock`
+            //    uses `CARGO_REGISTRIES_MOCK_INDEX=http://127.0.0.1:PORT/index`
+            let index_url = format!("http://127.0.0.1:{}/index", port);
+            unsafe { std::env::set_var("CARGO_REGISTRIES_MOCK_INDEX", &index_url) };
 
-            // Suppose your code checks `CARGO_REGISTRIES_CRATES_IO_INDEX` or
-            // a custom env var `MOCK_CRATES_IO_URL`. We'll use a fictitious
-            // one here for illustration. Adjust to match your real usage.
-            let old_env = unsafe { env::var("MOCK_CRATES_IO_URL").ok() };
-            unsafe { env::set_var("MOCK_CRATES_IO_URL", &mock_api_url) };
+            // Optionally set "USE_MOCK_REGISTRY=1" if we want to 
+            // cause "cargo publish" calls in `try_publish` to do `--registry=mock`
+            unsafe { std::env::set_var("USE_MOCK_REGISTRY", "1") };
 
-            // 5) Now run the publish logic in your crate that should talk
-            //    to the mock instead of real crates.io. For demonstration,
-            //    we'll just call a function that might do `try_publish`.
-            //    In real usage, you'd call your actual code here:
-            let result = run_publish_logic_in_tests().await;
-            assert!(result.is_ok(), "Expected no errors during publish logic test");
+            // 7) create a local test crate
+            let tmp = tempdir().unwrap();
+            let crate_dir = tmp.path();
+            std::fs::write(
+                crate_dir.join("Cargo.toml"),
+                r#"[package]
+name = "test_integration_against_mock"
+version = "0.1.0"
+edition = "2021"
+authors = ["IntegrationTest"]
+license = "MIT"
+"#,
+            ).unwrap();
 
-            // Restore previous environment variable if it existed:
-            if let Some(val) = old_env {
-                unsafe { env::set_var("MOCK_CRATES_IO_URL", val) };
+            let src_dir = crate_dir.join("src");
+            std::fs::create_dir_all(&src_dir).unwrap();
+            std::fs::write(src_dir.join("lib.rs"), "// test lib").unwrap();
+
+            // 8) run cargo publish
+            let status = Command::new("cargo")
+                .current_dir(&crate_dir)
+                .arg("publish")
+                .arg("--allow-dirty")
+                .arg("--registry=mock")
+                .env_remove("CARGO_HOME") // optional
+                .status()
+                .expect("Failed to run cargo publish with mock registry");
+            
+            if !status.success() {
+                panic!("cargo publish failed with code {:?}", status.code());
             } else {
-                unsafe { env::remove_var("MOCK_CRATES_IO_URL") };
+                info!("Successfully published test crate to the mock registry!");
             }
 
-            // 6) Shut down the rocket server:
-            debug!("Shutting down mock crates.io server...");
-            rocket_handle.abort();
-        });
-    }
+            // 9) optionally do a second publish => should fail as "already exists"
+            let status2 = Command::new("cargo")
+                .current_dir(&crate_dir)
+                .arg("publish")
+                .arg("--allow-dirty")
+                .arg("--registry=mock")
+                .env_remove("CARGO_HOME")
+                .status()
+                .expect("Failed to run cargo publish (second time)");
+            // This second publish should fail with code != 0, 
+            // and the rocket logs would show "crate <name> already exists." 
+            info!("Second publish returned code={:?}", status2.code());
+            assert!(!status2.success());
 
-    /// Example async function that your tests might call,
-    /// pretending to run "try_publish" or similar. In a real
-    /// scenario, you'd have your crate's production code
-    /// that references the environment variable or uses
-    /// your "workspacer_check_crates_io" logic, etc.
-    async fn run_publish_logic_in_tests() -> Result<(), Box<dyn std::error::Error>> {
-        // For illustration: we just log a statement and succeed.
-        // In real usage, you'd call your workspace's publish code,
-        // which should now talk to the local mock server.
-        info!("Pretending to do a publish that hits our mock crates.io...");
-        Ok(())
+            // cleanup
+            rocket_handle.abort();
+            unsafe { std::env::remove_var("CARGO_REGISTRIES_MOCK_INDEX") };
+            unsafe { std::env::remove_var("USE_MOCK_REGISTRY") };
+        });
     }
 }

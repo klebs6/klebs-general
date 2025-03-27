@@ -38,7 +38,9 @@ pub fn generate_impl_language_model_batch_workflow(parsed: &LmbwParsedInput) -> 
     let model_type_fld = parsed.model_type_field().as_ref().unwrap();
 
     let compute_requests_impl = quote! {
+
         impl #impl_generics ComputeLanguageModelRequests for #struct_ident #ty_generics #where_clause {
+
             type Seed = <#struct_ident #ty_generics as ComputeLanguageModelCoreQuery>::Seed;
 
             fn compute_language_model_requests(

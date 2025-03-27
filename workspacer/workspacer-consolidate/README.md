@@ -1,62 +1,43 @@
 # workspacer-consolidate
 
-**workspacer-consolidate** is a utility crate that consolidates a Rust crate’s public interface into a single, unified structure. It scans the source files of a crate for public items—such as functions, structs, enums, traits, type aliases, and macros—and aggregates them into a comprehensive interface object. This makes it easier to analyze, document, or further process a crate’s public API.
+`workspacer-consolidate` is a Rust library for aggregating and managing complex crate interfaces with precision and efficiency. It provides utilities for collecting and structuring various coding elements, such as functions, structs, enums, and other constructs, into a comprehensive and organized interface.
 
 ## Features
 
-- **Consolidated Interface Extraction:**  
-  Uses asynchronous operations to read and parse source files, gathering all public API items into one consolidated interface.
-
-- **Async Parsing:**  
-  Leverages Tokio for non-blocking file access and parsing using a dedicated syntax module with support for edition 2024.
-
-- **Extensible Design:**  
-  Designed to integrate seamlessly with the rest of the Workspacer suite (such as workspacer_3p, workspacer_crate, workspacer_interface, and workspacer_syntax) while remaining focused on the interface consolidation task.
-
-- **Display-Friendly:**  
-  Implements the Display trait so that the consolidated interface can be easily formatted and printed, making it suitable for generating documentation or analysis reports.
-
-## Installation
-
-Add the following dependency to your `Cargo.toml`:
-
-```toml
-[dependencies]
-workspacer-consolidate = "0.1.0"
-```
+- **Consolidated Interfaces:** Merge and manage crate elements like functions, structs, enums, and traits into a single cohesive structure.
+- **Customization Options:** Utilize `ConsolidationOptions` for custom consolidation strategies, deciding which elements to include or omit.
+- **Attribute and Documentation Management:** Extract and unify documentation and attributes from code items for a consistent representation.
+- **Test Item Handling:** Flexibly include or exclude test items based on configuration, aiding in streamlined interface presentation.
+- **Trait and Module Management:** Seamlessly handle trait implementations and nested modules with robust management logic.
 
 ## Usage
 
-Below is a brief example of how you might use **workspacer-consolidate**:
+This crate allows developers to consolidate their crate's interface elements in a highly configurable manner. To achieve this, the `ConsolidateCrateInterface` trait can be implemented and executed asynchronously:
 
 ```rust
-use workspacer_consolidate::{ConsolidateCrateInterface, ConsolidatedCrateInterface};
-use workspacer_crate::CrateHandle;
-use std::path::PathBuf;
-use tokio;
-
-#[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    // Assume you have a CrateHandle for the crate you want to consolidate.
-    let crate_path = PathBuf::from("path/to/your/crate");
-    let crate_handle = CrateHandle::new(&crate_path).await?;
-
-    // Consolidate the crate's public interface.
-    let consolidated_interface = crate_handle.consolidate_crate_interface().await?;
-
-    // Print the consolidated interface.
-    println!("{}", consolidated_interface);
-
-    Ok(())
+#[async_trait]
+trait ConsolidateCrateInterface {
+    async fn consolidate_crate_interface(&self, options: &ConsolidationOptions) -> Result<ConsolidatedCrateInterface, CrateError>;
 }
 ```
 
-In this example, the crate’s public items are extracted and then printed using the Display implementation on the consolidated interface.
+The consolidation process aggregates different elements based on detailed settings provided through `ConsolidationOptions`. You can manipulate the inclusion of documentation, private items, test items, and function bodies. Here's a brief configuration example:
 
-## Contributing
+```rust
+let options = ConsolidationOptions::new()
+    .with_docs()
+    .with_private_items()
+    .with_fn_bodies();
+```
 
-Contributions are welcome! Please see the [repository](https://github.com/klebs6/klebs-general) for details on how to contribute and report issues.
+## Licensing
 
-## License
+This project is dual-licensed under the MIT and Apache-2.0 licenses.
 
-This project is dual-licensed under either the [MIT license](LICENSE-MIT) or the [Apache License, Version 2.0](LICENSE-APACHE), at your option.
+## Repository
+
+Code and contribution guidelines are available on [GitHub](https://github.com/klebs6/klebs-general).
+
+## Contributions
+
+We welcome community contributions and encourage participation of all forms. Kindly refer to the contribution guide in our GitHub repository.

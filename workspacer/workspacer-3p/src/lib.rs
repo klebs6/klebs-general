@@ -1,6 +1,7 @@
 // ---------------- [ File: workspacer-3p/src/lib.rs ]
 pub use rocket::{self,Request,http::Status,catch,post,data::{ToByteUnit,Data}};
 pub use portpicker;
+pub use std::os::unix::process::ExitStatusExt;
 pub use rocket::serde::{Serialize, Deserialize, json::Json};
 pub use std::io::Read;
 pub use std::path::{Path, PathBuf};

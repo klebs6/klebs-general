@@ -2,8 +2,9 @@
 crate::ix!();
 
 error_tree!{
-    pub enum ReadmeWriterExecutionError {
+    pub enum AiReadmeWriterError {
         LanguageModelBatchWorkflowError(LanguageModelBatchWorkflowError),
+        BatchWorkspaceError(BatchWorkspaceError),
         WorkspacerFallbackError(WorkspacerFallbackError),
         CrateError(CrateError),
         WorkspaceError(WorkspaceError),

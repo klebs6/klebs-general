@@ -9,7 +9,7 @@ pub trait CalculateUnseenInputs<T> {
     ) -> Vec<T>;
 }
 
-impl<T: GetTargetPathForAIExpansion + Clone + Display + Named> CalculateUnseenInputs<T> for BatchWorkspace {
+impl<T: GetTargetPathForAIExpansion + Clone + Debug + Display + Named> CalculateUnseenInputs<T> for BatchWorkspace {
 
     /// Internal helper. Identifies newly seen tokens.
     fn calculate_unseen_inputs(
@@ -21,6 +21,8 @@ impl<T: GetTargetPathForAIExpansion + Clone + Display + Named> CalculateUnseenIn
 
         let target_dir = self.target_dir();
 
+        trace!("In target_dir={}, calculating unseen inputs:", target_dir.display());
+
         let mut unseen: Vec<T> = Vec::new();
 
         for tok in inputs {
@@ -29,6 +31,8 @@ impl<T: GetTargetPathForAIExpansion + Clone + Display + Named> CalculateUnseenIn
                 &target_dir,
                 expected_content_type
             );
+
+            trace!("target_path={:?} for token={}", target_path, tok);
 
             if !target_path.exists() {
 
@@ -49,11 +53,7 @@ impl<T: GetTargetPathForAIExpansion + Clone + Display + Named> CalculateUnseenIn
             }
         }
 
-        info!("Unseen input tokens calculated:");
-
-        for token in &unseen {
-            info!("{}", token);
-        }
+        info!("Unseen input tokens calculated: {:#?}",unseen);
 
         unseen
     }

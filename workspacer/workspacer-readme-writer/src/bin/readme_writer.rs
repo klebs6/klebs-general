@@ -42,7 +42,7 @@ enum ReadmeWriterCommand {
 
 
 #[tokio::main]
-pub async fn main() -> Result<(), ReadmeWriterExecutionError> {
+pub async fn main() -> Result<(), AiReadmeWriterError> {
     configure_tracing();
 
     // Parse the CLI arguments
