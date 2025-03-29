@@ -4,7 +4,7 @@ crate::ix!();
 #[derive(Debug,Getters,LanguageModelBatchWorkflow)]
 #[getset(get = "pub")]
 #[batch_error_type(TokenExpanderError)]
-#[batch_json_output_format(E)]// TODO:
+#[batch_json_output_format = "E"]
 pub struct LanguageModelTokenExpander<E> 
 where E: ExpandedToken
        + DeserializeOwned

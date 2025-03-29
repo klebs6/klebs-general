@@ -9,24 +9,25 @@ pub fn parse_derive_input_for_lmbw(ast: &syn::DeriveInput) -> Result<LmbwParsedI
 
     // For the struct-level attribute #[batch_error_type(MyErr)].
     let mut custom_error_type: Option<syn::Type> = None;
-    // For optional #[batch_json_output_format(Foo)] => sets content type to JSON or a custom type param.
+    // For optional #[batch_json_output_format(...)], which may be a direct path or a string.
     let mut json_output_format_type: Option<syn::Type> = None;
 
     // We'll parse top-level attributes for batch_error_type and batch_json_output_format.
     for attr in &ast.attrs {
+        // Attempt to parse this attribute as normal meta
         if let Ok(meta) = attr.parse_meta() {
             let path_ident = meta.path().get_ident().map(|i| i.to_string());
-
             match (path_ident, meta) {
 
-                // ----------------------------------------
+                //------------------------------------------------------
                 // #[batch_error_type(MyErr)]
-                // ----------------------------------------
+                //------------------------------------------------------
                 (Some(name), syn::Meta::List(list)) if name == "batch_error_type" => {
-                    // Instead of `attr.parse_args::<syn::Type>()?`
-                    // we do that same approach (which is fine for error type)...
+                    // This is simpler — we can parse the inside as a normal syn::Type:
                     match attr.parse_args::<syn::Type>() {
-                        Ok(t) => custom_error_type = Some(t),
+                        Ok(t) => {
+                            custom_error_type = Some(t);
+                        }
                         Err(e) => {
                             return Err(syn::Error::new_spanned(
                                 &list,
@@ -36,16 +37,14 @@ pub fn parse_derive_input_for_lmbw(ast: &syn::DeriveInput) -> Result<LmbwParsedI
                     }
                 }
 
-                // ----------------------------------------
-                // #[batch_json_output_format(E)]
-                // where E might be a generic
-                // ----------------------------------------
+                //------------------------------------------------------
+                // #[batch_json_output_format(...)]
+                // Could be a direct path or a string literal.
+                //------------------------------------------------------
                 (Some(name), syn::Meta::List(list)) if name == "batch_json_output_format" => {
-                    // This time, we parse the raw token stream so we don't fail early.
-                    // *Then* we parse2(...) it into a syn::Type. 
-                    // This defers actual name resolution until after the struct generics.
+                    // We'll parse the raw token stream inside the parentheses.
                     let tokens: proc_macro2::TokenStream = match attr.parse_args() {
-                        Ok(toks) => toks,
+                        Ok(t) => t,
                         Err(e) => {
                             return Err(syn::Error::new_spanned(
                                 &list,
@@ -54,17 +53,42 @@ pub fn parse_derive_input_for_lmbw(ast: &syn::DeriveInput) -> Result<LmbwParsedI
                         }
                     };
 
-                    // Now parse that TokenStream into a Type
-                    match syn::parse2::<syn::Type>(tokens) {
+                    // Attempt to parse it as a syn::Type directly:
+                    match syn::parse2::<syn::Type>(tokens.clone()) {
                         Ok(ty) => {
+                            // Great, we have a direct type path (e.g. SomeCrate::Foo).
                             tracing::debug!("Got batch_json_output_format = {:?}", ty);
                             json_output_format_type = Some(ty);
-                        },
-                        Err(e) => {
-                            return Err(syn::Error::new_spanned(
-                                &list,
-                                format!("Could not parse type in #[batch_json_output_format(...)] attribute: {e}")
-                            ));
+                        }
+                        Err(_type_err) => {
+                            // Maybe it's a string literal, e.g. = "E".
+                            // So parse tokens as a Lit
+                            let lit_val: syn::Lit = match syn::parse2(tokens.clone()) {
+                                Ok(l) => l,
+                                Err(e2) => {
+                                    return Err(syn::Error::new_spanned(
+                                        &list,
+                                        format!("Could not parse as a type path nor a literal: {e2}")
+                                    ));
+                                }
+                            };
+
+                            // If it's a string literal, parse that as a type expression
+                            if let syn::Lit::Str(slit) = lit_val {
+                                let type_str = slit.value();
+                                let parsed_ty = syn::parse_str::<syn::Type>(&type_str)
+                                    .map_err(|_| syn::Error::new_spanned(
+                                        &list,
+                                        format!("Could not parse string literal \"{}\" as a type", type_str)
+                                    ))?;
+                                tracing::debug!("Got batch_json_output_format = \"{}\" => parsed as type {:?}", type_str, parsed_ty);
+                                json_output_format_type = Some(parsed_ty);
+                            } else {
+                                return Err(syn::Error::new_spanned(
+                                    &list,
+                                    "batch_json_output_format(...) was neither a valid type nor a \"string literal\""
+                                ));
+                            }
                         }
                     }
                 }
@@ -166,6 +190,7 @@ pub fn parse_derive_input_for_lmbw(ast: &syn::DeriveInput) -> Result<LmbwParsedI
 
     Ok(built)
 }
+
 
 // ===========================[ CHANGED ITEM #1 ]===========================
 // The entire pair of test functions in `test_parse_derive_input_for_lmbw`,
