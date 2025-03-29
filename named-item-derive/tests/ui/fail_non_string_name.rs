@@ -1,3 +1,4 @@
+// ---------------- [ File: tests/ui/fail_non_string_name.rs ]
 // named-item-derive/tests/trybuild/fail_non_string_name.rs
 
 #![allow(unused)]
@@ -10,4 +11,3 @@ pub struct WrongNameField {
 }
 
 fn main() {}
-

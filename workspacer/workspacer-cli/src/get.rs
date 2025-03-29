@@ -1,3 +1,4 @@
+// ---------------- [ File: workspacer-cli/src/get.rs ]
 crate::ix!();
 
 /// Subcommands for `ws get`
@@ -17,7 +18,7 @@ pub enum GetSubcommand {
 }
 
 impl GetSubcommand {
-    pub async fn run(&self) {
+    pub async fn run(&self) -> Result<(),WorkspaceError> {
         todo!();
     }
 }

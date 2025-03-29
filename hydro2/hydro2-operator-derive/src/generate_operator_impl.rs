@@ -27,7 +27,7 @@ pub fn generate_operator_impl(
 
     quote! {
         #[async_trait::async_trait]
-        impl #impl_generics Operator<#io_enum_ident #type_generics> for #struct_ident #type_generics
+        impl #impl_generics OperatorInterface<#io_enum_ident #type_generics> for #struct_ident #type_generics
         #where_clause
         {
             fn opcode(&self) -> std::sync::Arc<dyn OpCode> {
@@ -121,8 +121,8 @@ mod test_generate_operator_impl {
         debug!("impl_str: {:#?}", impl_str);
 
         // We expect an impl block containing:
-        //   impl <T> Operator<NoIOOperatorIO<T>> for NoIOOperator<T> { ... }
-        assert!(impl_str.contains("impl < T > Operator < NoIOOperatorIO < T > > for NoIOOperator < T >"));
+        //   impl <T> OperatorInterface<NoIOOperatorIO<T>> for NoIOOperator<T> { ... }
+        assert!(impl_str.contains("impl < T > OperatorInterface < NoIOOperatorIO < T > > for NoIOOperator < T >"));
         // input_count => 0
         assert!(impl_str.contains("fn input_count (& self) -> usize { 0usize }"));
         // output_count => 0

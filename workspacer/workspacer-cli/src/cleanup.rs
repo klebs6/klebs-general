@@ -1,20 +1,25 @@
+// ---------------- [ File: workspacer-cli/src/cleanup.rs ]
 crate::ix!();
 
-/// Cleanup the workspace or a single crate
+/// The top-level CleanupSubcommand has two variants:
+///  - **Crate** => `cleanup crate --crate <NAME>` => calls `cleanup_crate()` on that crate
+///  - **Workspace** => `cleanup workspace [--path <DIR>]` => calls `cleanup_workspace()` on the entire workspace
 #[derive(Debug, StructOpt)]
 pub enum CleanupSubcommand {
-    Crate {
-        #[structopt(long = "crate")]
-        crate_name: PathBuf,
-    },
-    Workspace {
-        #[structopt(long = "path")]
-        path: PathBuf,
-    },
+    /// Cleanup a single crate’s target/ directory, Cargo.lock, etc.
+    #[structopt(name = "crate")]
+    Crate(CleanupCrateCommand),
+
+    /// Cleanup the entire workspace’s top-level target/ and Cargo.lock
+    #[structopt(name = "workspace")]
+    Workspace(CleanupWorkspaceCommand),
 }
 
 impl CleanupSubcommand {
-    pub async fn run(&self) {
-        todo!();
+    pub async fn run(&self) -> Result<(), WorkspaceError> {
+        match self {
+            CleanupSubcommand::Crate(cmd) => cmd.run().await,
+            CleanupSubcommand::Workspace(cmd) => cmd.run().await,
+        }
     }
 }

@@ -1,3 +1,4 @@
+// ---------------- [ File: tests/ui/fail_missing_name_field.rs ]
 // named-item-derive/tests/trybuild/fail_missing_name_field.rs
 
 #![allow(unused)]
@@ -12,4 +13,3 @@ pub struct BadStruct {
 }
 
 fn main() {}
-

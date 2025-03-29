@@ -1,20 +1,21 @@
+// ---------------- [ File: workspacer-cli/src/format.rs ]
 crate::ix!();
 
 /// Format imports in all crates or a single crate
 #[derive(Debug, StructOpt)]
 pub enum FormatSubcommand {
-    Imports {
-        #[structopt(long = "crate")]
-        crate_name: PathBuf,
-    },
-    AllImports {
-        #[structopt(long = "path")]
-        workspace_path: PathBuf,
-    },
+    /// Format the imports in one specific crate
+    Imports(FormatImportsCommand),
+
+    /// Format the imports in all crates of this workspace
+    AllImports(FormatAllImportsCommand),
 }
 
 impl FormatSubcommand {
-    pub async fn run(&self) {
-        todo!();
+    pub async fn run(&self) -> Result<(), WorkspaceError> {
+        match self {
+            FormatSubcommand::Imports(cmd) => cmd.run().await,
+            FormatSubcommand::AllImports(cmd) => cmd.run().await,
+        }
     }
 }

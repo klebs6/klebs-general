@@ -1,3 +1,4 @@
+// ---------------- [ File: workspacer-cli/src/pin.rs ]
 crate::ix!();
 
 /// Pin wildcard dependencies in workspace or crate
@@ -14,7 +15,7 @@ pub enum PinSubcommand {
 }
 
 impl PinSubcommand {
-    pub async fn run(&self) {
+    pub async fn run(&self) -> Result<(),WorkspaceError> {
         todo!();
     }
 }

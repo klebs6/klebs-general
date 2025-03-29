@@ -1,4 +1,4 @@
-
+// ---------------- [ File: tests/ui_tests.rs ]
 // named-item-derive/tests/ui_tests.rs
 
 #[test]
@@ -15,4 +15,3 @@ fn ui() {
     t.pass("tests/ui/pass_basics.rs");
     t.pass("tests/ui/pass_generics_ok.rs");
 }
-

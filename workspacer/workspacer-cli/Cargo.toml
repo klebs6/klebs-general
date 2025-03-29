@@ -1,5 +1,11 @@
+[dependencies.structopt]
+workspace = true
 [dependencies.workspacer-3p]
 path = "../workspacer-3p"
+[dependencies.workspacer-errors]
+path = "../workspacer-errors"
+[dependencies.workspacer-export]
+path = "../workspacer-export"
 [package]
 edition = "2024"
 name = "workspacer-cli"

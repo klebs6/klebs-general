@@ -1,6 +1,7 @@
 // ---------------- [ File: src/imports.rs ]
 pub(crate) use derive_builder::Builder;
 pub(crate) use export_magic::*;
+pub(crate) use tracing::{trace,instrument,info,debug,warn,error};
 pub(crate) use getset::*;
 pub(crate) use hydro2_3p::*;
 pub(crate) use proc_macro2::Span;

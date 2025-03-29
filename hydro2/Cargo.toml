@@ -1,3 +1,54 @@
 [workspace]
 members = [ "hydro2-async-scheduler", "hydro2-basic-operators", "hydro2-mock", "hydro2-network", "hydro2-network-performance", "hydro2-network-wire-derive", "hydro2-operator", "hydro2-operator-derive", "hydro2-3p", "hydro2" ]
 resolver = "3"
+
+[workspace.dependencies]
+##json-repair             = { version = "*", path = "/Users/kleb/bethesda/work/repo/klebs-general/json-repair" }
+#Inflector                = "*"
+#ai-descriptor            = "0.9.0"
+#bytes                    = "*"
+#crossbeam                = "*"
+#delegate                 = "*"
+#error-tree               = { version = "*", path = "/Users/kleb/bethesda/work/repo/klebs-general/error-tree" }
+#float-ord                = "*"
+#indoc                    = "*"
+#json-repair              = "*"
+#json5                    = "*"
+#once_cell                = "*"
+#rand-construct           = "*"
+#regex                    = "*"
+#strsim                   = "0.10"
+#structured-language-form = "*"
+#strum                    = { version = "0.24", features = ["derive"] }
+#strum_macros             = "0.24"
+#tempfile                 = "*"
+#uuid                     = { version = "*", features = ["v4", "serde"] }
+async-trait               = "0.1.86"
+derive_builder            = "0.20.2"
+disable_macro             = "0.3.6"
+erased                    = "0.1.2"
+error-tree                = "0.6.0"
+export-magic              = "0.3.6"
+futures                   = "0.3"
+getset                    = "0.1.4"
+lazy_static               = "1.5.0"
+named-item                = "0.6.0"
+named-item-derive         = "0.2.0"
+num-traits                = "0.2.19"
+paste                     = "1.0.15"
+pbx                       = "0.1.0"
+proc-macro2               = "1.0"
+quote                     = "1.0"
+rand                      = "0.8.5"
+scan-crate-for-typedefs   = "0.8.1"
+serde                     = { version = "1.0", features = ["derive"] }
+serde_derive              = "1.0.217"
+serde_json                = "1.0"
+syn                       = { version = "2.0", features = [ "derive", "parsing", "extra-traits" ] }
+tokio                     = { version = "1", features = ["full"] }
+traced-test               = "1.0.2"
+tracing                   = { version = "0.1.40", features = ["log"] }
+tracing-setup             = "1.0.2"
+tracing-subscriber        = { version = "0.3", default-features = false, features = ["fmt", "std", "env-filter", "json"] }
+trybuild                  = "1.0.103"
+unsafe-erased             = "0.1.0"

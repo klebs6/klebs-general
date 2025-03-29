@@ -1,5 +1,7 @@
 // ---------------- [ File: workspacer/src/bin/workspacer.rs ]
 use workspacer_3p::*;
+use workspacer_cli::*;
+use workspacer_export::*;
 use workspacer::*;
 
 /// Top-level CLI for the `ws` command.
@@ -12,7 +14,6 @@ pub enum WsCli {
     CheckPublishReady { #[structopt(subcommand)] subcommand: CheckPublishReadySubcommand, } ,
     Cleanup           { #[structopt(subcommand)] subcommand: CleanupSubcommand,           } ,
     Coverage          { #[structopt(subcommand)] subcommand: CoverageSubcommand,          } ,
-    Describe          { #[structopt(subcommand)] subcommand: DescribeSubcommand,          } ,
     DetectCycles      { #[structopt(subcommand)] subcommand: DetectCyclesSubcommand,      } ,
     Document          { #[structopt(subcommand)] subcommand: DocumentSubcommand,          } ,
     Format            { #[structopt(subcommand)] subcommand: FormatSubcommand,            } ,
@@ -35,33 +36,34 @@ pub enum WsCli {
 }
 
 #[tokio::main]
-async fn main() {
+async fn main() -> Result<(),WorkspaceError> {
     match WsCli::from_args() {
-        WsCli::Add               { subcommand } => { subcommand.run() },
-        WsCli::Analyze           { subcommand } => { subcommand.run() },
-        WsCli::Bump              { subcommand } => { subcommand.run() },
-        WsCli::CheckPublishReady { subcommand } => { subcommand.run() },
-        WsCli::Cleanup           { subcommand } => { subcommand.run() },
-        WsCli::Coverage          { subcommand } => { subcommand.run() },
-        WsCli::Describe          { subcommand } => { subcommand.run() },
-        WsCli::DetectCycles      { subcommand } => { subcommand.run() },
-        WsCli::Document          { subcommand } => { subcommand.run() },
-        WsCli::Format            { subcommand } => { subcommand.run() },
-        WsCli::Get               { subcommand } => { subcommand.run() },
-        WsCli::Git               { subcommand } => { subcommand.run() },
-        WsCli::Info              { subcommand } => { subcommand.run() },
-        WsCli::Lint              { subcommand } => { subcommand.run() },
-        WsCli::Meta              { subcommand } => { subcommand.run() },
-        WsCli::Name              { subcommand } => { subcommand.run() },
-        WsCli::Organize          { subcommand } => { subcommand.run() },
-        WsCli::Pin               { subcommand } => { subcommand.run() },
-        WsCli::Publish           { subcommand } => { subcommand.run() },
-        WsCli::Register          { subcommand } => { subcommand.run() },
-        WsCli::Show              { subcommand } => { subcommand.run() },
-        WsCli::Tree              { subcommand } => { subcommand.run() },
-        WsCli::Upgrade           { subcommand } => { subcommand.run() },
-        WsCli::Validate          { subcommand } => { subcommand.run() },
-        WsCli::Watch             { subcommand } => { subcommand.run() },
-        WsCli::Write             { subcommand } => { subcommand.run() },
+        WsCli::Add               { subcommand } => { subcommand.run().await? },
+        WsCli::Analyze           { subcommand } => { subcommand.run().await? },
+        WsCli::Bump              { subcommand } => { subcommand.run().await? },
+        WsCli::CheckPublishReady { subcommand } => { subcommand.run().await? },
+        WsCli::Cleanup           { subcommand } => { subcommand.run().await? },
+        WsCli::Coverage          { subcommand } => { subcommand.run().await? },
+        WsCli::DetectCycles      { subcommand } => { subcommand.run().await? },
+        WsCli::Document          { subcommand } => { subcommand.run().await? },
+        WsCli::Format            { subcommand } => { subcommand.run().await? },
+        WsCli::Get               { subcommand } => { subcommand.run().await? },
+        WsCli::Git               { subcommand } => { subcommand.run().await? },
+        WsCli::Info              { subcommand } => { subcommand.run().await? },
+        WsCli::Lint              { subcommand } => { subcommand.run().await? },
+        WsCli::Meta              { subcommand } => { subcommand.run().await? },
+        WsCli::Name              { subcommand } => { subcommand.run().await? },
+        WsCli::Organize          { subcommand } => { subcommand.run().await? },
+        WsCli::Pin               { subcommand } => { subcommand.run().await? },
+        WsCli::Publish           { subcommand } => { subcommand.run().await? },
+        WsCli::Register          { subcommand } => { subcommand.run().await? },
+        WsCli::Show              { subcommand } => { subcommand.run().await? },
+        WsCli::Tree              { subcommand } => { subcommand.run().await? },
+        WsCli::Upgrade           { subcommand } => { subcommand.run().await? },
+        WsCli::Validate          { subcommand } => { subcommand.run().await? },
+        WsCli::Watch             { subcommand } => { subcommand.run().await? },
+        WsCli::Write             { subcommand } => { subcommand.run().await? },
     }
+
+    Ok(())
 }

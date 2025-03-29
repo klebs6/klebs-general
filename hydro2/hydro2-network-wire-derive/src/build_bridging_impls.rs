@@ -1,7 +1,7 @@
 // ---------------- [ File: src/build_bridging_impls.rs ]
 crate::ix!();
 
-/// Builds bridging code (`impl Operator<WireEnum> for FooOp<...>`) for each operator item.
+/// Builds bridging code (`impl OperatorInterface<WireEnum> for FooOp<...>`) for each operator item.
 /// Finalizes each `OperatorSpecItem` with the wire generics, then merges them and reconstructs
 /// angle brackets from `final_args()` instead of using the item’s `.path()` verbatim.
 ///
@@ -74,7 +74,7 @@ mod test_build_bridging_impls {
         let s0 = out[0].to_string();
         info!("test_build_bridging_impls_basic: out[0] = {}", s0);
         assert!(
-            s0.contains("impl < Z : SomeTrait > hydro2_operator :: Operator < MyWireIO < Z > > for AddOp < Z >"),
+            s0.contains("impl < Z : SomeTrait > hydro2_operator :: OperatorInterface < MyWireIO < Z > > for AddOp < Z >"),
             "Got: {}", s0
         );
     }
@@ -106,7 +106,7 @@ mod test_build_bridging_impls {
         let s = out[0].to_string();
         info!("test_single_op_no_generics: out[0] = {}", s);
         assert!(
-            s.contains("impl < X : SomeTrait > hydro2_operator :: Operator < EmptyWireIO < X > > for AddOp"),
+            s.contains("impl < X : SomeTrait > hydro2_operator :: OperatorInterface < EmptyWireIO < X > > for AddOp"),
             "Got: {}", s
         );
     }
@@ -128,7 +128,7 @@ mod test_build_bridging_impls {
         let s0 = out[0].to_string();
         info!("test_multiple_ops: out[0] = {}", s0);
         assert!(
-            s0.contains("impl < Z : SomeTrait > hydro2_operator :: Operator < MyWireIO < Z > > for AddOp < Z >"),
+            s0.contains("impl < Z : SomeTrait > hydro2_operator :: OperatorInterface < MyWireIO < Z > > for AddOp < Z >"),
             "Got: {}", s0
         );
 
@@ -172,7 +172,7 @@ mod test_build_bridging_impls {
 
         // We should see "impl < Z : AnotherTrait > ... for ConstantOp<Z>"
         assert!(
-            s.contains("impl < Z : AnotherTrait > hydro2_operator :: Operator < MyTestWireIO < Z > > for ConstantOp < Z >"),
+            s.contains("impl < Z : AnotherTrait > hydro2_operator :: OperatorInterface < MyTestWireIO < Z > > for ConstantOp < Z >"),
             "Got bridging snippet: {}", s
         );
     }

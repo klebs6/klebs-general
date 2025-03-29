@@ -8,46 +8,26 @@ readme      = "README.md"
 license-file = "OGPv1"
 
 [dependencies]
-##json-repair             = { version = "*", path = "/Users/kleb/bethesda/work/repo/klebs-general/json-repair" }
-#Inflector                = "*"
-#ai-descriptor            = "0.9.0"
-#bytes                    = "*"
-#crossbeam                = "*"
-#delegate                 = "*"
-#error-tree               = { version = "*", path = "/Users/kleb/bethesda/work/repo/klebs-general/error-tree" }
-#float-ord                = "*"
-#indoc                    = "*"
-#json-repair              = "*"
-#json5                    = "*"
-#once_cell                = "*"
-#rand-construct           = "*"
-#regex                    = "*"
-#strsim                   = "0.10"
-#structured-language-form = "*"
-#strum                    = { version = "0.24", features = ["derive"] }
-#strum_macros             = "0.24"
-#tempfile                 = "*"
-#uuid                     = { version = "*", features = ["v4", "serde"] }
-async-trait               = "0.1.86"
-derive_builder            = "0.20.2"
-disable_macro             = "0.3.6"
-error-tree                = "0.6.0"
-export-magic              = "0.3.6"
-futures                   = "0.3"
-getset                    = "0.1.4"
-named-item                = "0.6.0"
-named-item-derive         = "0.2.0"
-num-traits                = "0.2.19"
-serde                     = { version = "1.0", features = ["derive"] }
-serde_json                = "1.0"
-tokio                     = { version = "1", features = ["full"] }
-traced-test               = "1.0.2"
-tracing                   = { version = "0.1.40", features = ["log"] }
-tracing-setup             = "1.0.2"
-tracing-subscriber        = { version = "0.3", default-features = false, features = ["fmt", "std", "env-filter"] }
-lazy_static               = "1.5.0"
-pbx                       = "0.1.0"
-rand                      = "0.8.5"
+async-trait.workspace        = true
+derive_builder.workspace     = true
+disable_macro.workspace      = true
+error-tree.workspace         = true
+export-magic.workspace       = true
+futures.workspace            = true
+getset.workspace             = true
+named-item.workspace         = true
+named-item-derive.workspace  = true
+num-traits.workspace         = true
+serde.workspace              = true
+serde_json.workspace         = true
+tokio.workspace              = true
+traced-test.workspace        = true
+tracing.workspace            = true
+tracing-setup.workspace      = true
+tracing-subscriber.workspace = true
+lazy_static.workspace        = true
+pbx.workspace                = true
+rand.workspace               = true
 
 [build-dependencies]
-scan-crate-for-typedefs = "0.8.1"
+scan-crate-for-typedefs.workspace = true

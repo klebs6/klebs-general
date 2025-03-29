@@ -1,3 +1,4 @@
+// ---------------- [ File: workspacer-cli/src/watch.rs ]
 crate::ix!();
 
 /// Watch for changes
@@ -14,7 +15,7 @@ pub enum WatchSubcommand {
 }
 
 impl WatchSubcommand {
-    pub async fn run(&self) {
+    pub async fn run(&self) -> Result<(),WorkspaceError> {
         todo!();
     }
 }

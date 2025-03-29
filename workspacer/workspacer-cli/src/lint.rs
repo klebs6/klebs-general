@@ -1,3 +1,4 @@
+// ---------------- [ File: workspacer-cli/src/lint.rs ]
 crate::ix!();
 
 /// Lint the code
@@ -14,8 +15,7 @@ pub enum LintSubcommand {
 }
 
 impl LintSubcommand {
-    pub async fn run(&self) {
+    pub async fn run(&self) -> Result<(),WorkspaceError> {
         todo!();
     }
 }
-

@@ -18,7 +18,7 @@ This crate includes:
 ### Key Features
 
 1. **Operator Agnosticism**  
-   Each node references a generic `Operator<NetworkItem>`, enabling you to integrate any operator that implements the `Operator` trait.
+   Each node references a generic `OperatorInterface<NetworkItem>`, enabling you to integrate any operator that implements the `OperatorInterface` trait.
 
 2. **Wiring & Allocation**  
    The `wire_up_network` function dynamically allocates shared arcs (`Arc<AsyncRwLock<...>>`) for node outputs. Edges link those arcs to the downstream node’s inputs. This automatic wiring eliminates the need for manual buffer handling.

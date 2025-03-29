@@ -1,30 +1,40 @@
 // ---------------- [ File: src/language_model_token_expander.rs ]
 crate::ix!();
 
-/// The improved LanguageModelTokenExpander, now with no `pub` fields. Instead, we rely on
-/// `getset` to provide getters (and optionally setters) and `derive_builder` for
-/// constructing robustly. This struct implements `LanguageModelBatchWorkflow` to unify
-/// your batch processing logic under a trait-based approach.
-#[derive(Getters,LanguageModelBatchWorkflow)]
+#[derive(Debug,Getters,LanguageModelBatchWorkflow)]
 #[getset(get = "pub")]
 #[batch_error_type(TokenExpanderError)]
-pub struct LanguageModelTokenExpander<T: CreateLanguageModelQueryAtAgentCoordinate> {
+#[batch_json_output_format(E)]// TODO:
+pub struct LanguageModelTokenExpander<E> 
+where E: ExpandedToken
+       + DeserializeOwned
+       + Named
+       + AiJsonTemplate
+       + GetTargetPathForAIExpansion
+       + LoadFromFile<Error = SaveLoadError> + 'static,
+{
 
-    language_model_request_creator: Arc<T>,
+    language_model_request_creator: Arc<<E as ExpandedToken>::Expander>,
     agent_coordinate:               AgentCoordinate,
 
     #[batch_client]          client:                  Arc<dyn LanguageModelClientInterface<TokenExpanderError>>,
-    #[batch_workspace]       workspace:               Arc<BatchWorkspace>,
+    #[batch_workspace]       batch_workspace:         Arc<BatchWorkspace>,
     #[expected_content_type] expected_content_type:   ExpectedContentType,
     #[model_type]            language_model_type:     LanguageModelType,
 }
 
-impl<T> LanguageModelTokenExpander<T> 
-where T: CreateLanguageModelQueryAtAgentCoordinate
+impl<E> LanguageModelTokenExpander<E> 
+where E: ExpandedToken
+       + DeserializeOwned
+       + Named
+       + AiJsonTemplate
+       + GetTargetPathForAIExpansion
+       + LoadFromFile<Error = SaveLoadError> + 'static,
+
 {
     pub async fn new(
         product_root:                   impl AsRef<Path>,
-        language_model_request_creator: Arc<T>,
+        language_model_request_creator: Arc<<E as ExpandedToken>::Expander>,
         agent_coordinate:               AgentCoordinate,
         language_model_type:            LanguageModelType,
         expected_content_type:          ExpectedContentType,
@@ -39,15 +49,21 @@ where T: CreateLanguageModelQueryAtAgentCoordinate
             language_model_request_creator,
             agent_coordinate,
             client,
-            workspace:     BatchWorkspace::new_in(product_root).await?,
+            batch_workspace:     BatchWorkspace::new_in(product_root).await?,
             expected_content_type,
             language_model_type,
         })
     }
 }
 
-impl<T> ComputeSystemMessage for LanguageModelTokenExpander<T> 
-where T: CreateLanguageModelQueryAtAgentCoordinate
+impl<E> ComputeSystemMessage for LanguageModelTokenExpander<E> 
+where E: ExpandedToken
+       + DeserializeOwned
+       + Named
+       + AiJsonTemplate
+       + GetTargetPathForAIExpansion
+       + LoadFromFile<Error = SaveLoadError> + 'static,
+
 {
     fn system_message() -> String {
         //TODO: can make this better
@@ -58,8 +74,13 @@ where T: CreateLanguageModelQueryAtAgentCoordinate
 }
 
 /// Here we implement the trait that organizes all batch-processing stages.
-impl<T> ComputeLanguageModelCoreQuery for LanguageModelTokenExpander<T> 
-where T: CreateLanguageModelQueryAtAgentCoordinate
+impl<E> ComputeLanguageModelCoreQuery for LanguageModelTokenExpander<E> 
+where E: ExpandedToken
+       + DeserializeOwned
+       + Named
+       + AiJsonTemplate
+       + GetTargetPathForAIExpansion
+       + LoadFromFile<Error = SaveLoadError> + 'static,
 {
     type Seed  = TokenPackagedForExpansion;
 

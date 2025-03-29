@@ -1,16 +1,28 @@
+// ---------------- [ File: workspacer-cli/src/add.rs ]
 crate::ix!();
 
-/// Add a new crate by name
-#[derive(Debug, StructOpt)]
+#[derive(Debug,StructOpt)]
 pub enum AddSubcommand {
-    Crate {
-        #[structopt(long = "crate")]
-        crate_name: String,
-    },
+    /// Add a new crate to the workspace
+    #[structopt(name = "crate")]
+    Crate(AddCrateCommand),
+
+    /// Add an internal dependency (target-crate depends on dep-crate)
+    #[structopt(name = "internal-dep")]
+    InternalDep(AddInternalDepCommand),
 }
 
+/// Next, in your `AddSubcommand::run` method (where the lifetime error appeared),
+/// simply clone the `crate_name` to pass as owned `String` to the helper.
 impl AddSubcommand {
-    pub async fn run(&self) {
-        todo!();
+    pub async fn run(&self) -> Result<(), WorkspaceError> {
+        trace!("Entering AddSubcommand::run with {:?}", self);
+
+        match self {
+            AddSubcommand::Crate(cmd) => { cmd.run().await? }
+            AddSubcommand::InternalDep(cmd)  => { cmd.run().await? }
+        }
+
+        Ok(())
     }
 }

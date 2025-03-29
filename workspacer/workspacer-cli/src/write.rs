@@ -1,3 +1,4 @@
+// ---------------- [ File: workspacer-cli/src/write.rs ]
 crate::ix!();
 
 /// Write or update README files
@@ -14,7 +15,7 @@ pub enum WriteSubcommand {
 }
 
 impl WriteSubcommand {
-    pub async fn run(&self) {
+    pub async fn run(&self) -> Result<(),WorkspaceError> {
         todo!();
     }
 }

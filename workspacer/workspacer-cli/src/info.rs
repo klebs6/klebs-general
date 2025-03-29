@@ -1,3 +1,4 @@
+// ---------------- [ File: workspacer-cli/src/info.rs ]
 crate::ix!();
 
 /// Print general info about the workspace or crate
@@ -14,7 +15,7 @@ pub enum InfoSubcommand {
 }
 
 impl InfoSubcommand {
-    pub async fn run(&self) {
+    pub async fn run(&self) -> Result<(),WorkspaceError> {
         todo!();
     }
 }

@@ -76,19 +76,20 @@ pub fn derive_operator(input: RawTokenStream) -> RawTokenStream {
     let (impl_generics, type_generics, where_clause) = generics.split_for_impl();
 
     // Generate FooOpIO
-    let enum_def = generate_io_enum(
+    let enum_def = generate_io_enum_with_phantom(
         struct_ident,
         &operator_spec,
         uses_lifetime,
         &quote! { #impl_generics },
         &quote! { #type_generics },
         &quote! { #where_clause },
+        &generics,
     );
 
     // The enum ident is `FooOpIO`
     let io_enum_ident = Ident::new(&format!("{}IO", struct_ident), struct_span);
 
-    // Generate `impl Operator<StructIO> for Struct`
+    // Generate `impl OperatorInterface<StructIO> for Struct`
     let operator_impl = generate_operator_impl(
         struct_ident,
         &operator_spec,

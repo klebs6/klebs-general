@@ -1,3 +1,4 @@
+// ---------------- [ File: workspacer-cli/src/show.rs ]
 crate::ix!();
 
 /// Options for `ws show` (include or exclude certain items).
@@ -63,7 +64,7 @@ pub struct ShowSubcommand {
 }
 
 impl ShowSubcommand {
-    pub async fn run(&self) {
+    pub async fn run(&self) -> Result<(),WorkspaceError> {
         todo!();
     }
 }

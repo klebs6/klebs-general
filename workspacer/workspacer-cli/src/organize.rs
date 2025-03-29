@@ -1,3 +1,4 @@
+// ---------------- [ File: workspacer-cli/src/organize.rs ]
 crate::ix!();
 
 /// Organize the workspace or a single crate
@@ -14,7 +15,7 @@ pub enum OrganizeSubcommand {
 }
 
 impl OrganizeSubcommand {
-    pub async fn run(&self) {
+    pub async fn run(&self) -> Result<(),WorkspaceError> {
         todo!();
     }
 }

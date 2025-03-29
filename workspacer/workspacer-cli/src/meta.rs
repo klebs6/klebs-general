@@ -1,3 +1,4 @@
+// ---------------- [ File: workspacer-cli/src/meta.rs ]
 crate::ix!();
 
 /// Show cargo metadata
@@ -14,8 +15,7 @@ pub enum MetaSubcommand {
 }
 
 impl MetaSubcommand {
-    pub async fn run(&self) {
+    pub async fn run(&self) -> Result<(),WorkspaceError> {
         todo!();
     }
 }
-

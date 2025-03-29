@@ -16,7 +16,15 @@ proc-macro = true
 syn         = "2"
 quote       = "1"
 proc-macro2 = "1"
+export-magic = "*"
+getset = "*"
+derive_builder = "*"
 #named-item  = { version = "*", path = "../named-item" }
 named-item  = "0.6.0"
+tracing                   = { version = "0.1.40", features = ["log"] }
+tracing-subscriber        = { version = "0.3", default-features = false, features = ["fmt", "std", "env-filter", "json"] }
+tracing-setup             = "*"
+traced-test = "*"
+
 [dev-dependencies]
 trybuild = "1.0.101"

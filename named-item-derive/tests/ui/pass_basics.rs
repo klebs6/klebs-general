@@ -1,3 +1,4 @@
+// ---------------- [ File: tests/ui/pass_basics.rs ]
 use named_item_derive::NamedItem;
 use named_item::{
     Named, SetName, ResetName, NameHistory, NamedAlias, NameError, DefaultName

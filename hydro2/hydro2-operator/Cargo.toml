@@ -1,9 +1,9 @@
 [dependencies]
-async-trait       = "0.1.86"
-named-item        = "0.6.0"
-named-item-derive = "0.2.0"
-paste             = "1.0.15"
-unsafe-erased     = "0.1.0"
+async-trait.workspace       = true
+named-item.workspace        = true
+named-item-derive.workspace = true
+paste.workspace             = true
+unsafe-erased.workspace     = true
 
 [dependencies.hydro2-3p]
 path    = "../hydro2-3p"

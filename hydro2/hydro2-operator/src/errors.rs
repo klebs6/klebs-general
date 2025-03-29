@@ -64,6 +64,7 @@ error_tree!{
 #[derive(Debug,Clone,PartialEq,Eq,Hash)]
 pub enum OperatorFailureReason {
     Unknown,
+    Message(String),
 }
 
 /// A convenient result alias for network operations.

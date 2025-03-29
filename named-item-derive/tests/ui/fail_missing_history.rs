@@ -1,4 +1,4 @@
-
+// ---------------- [ File: tests/ui/fail_missing_history.rs ]
 // Should fail because `history="true"` but no name_history field is present
 
 use named_item_derive::NamedItem;
@@ -10,4 +10,3 @@ struct MissingHistoryField {
 }
 
 fn main() {}
-

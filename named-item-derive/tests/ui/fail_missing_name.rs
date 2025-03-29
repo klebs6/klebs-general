@@ -1,4 +1,4 @@
-
+// ---------------- [ File: tests/ui/fail_missing_name.rs ]
 // Should fail because there's no `name: String` field
 // We expect the macro to error out.
 
@@ -11,4 +11,3 @@ struct MissingNameField {
 }
 
 fn main() {}
-

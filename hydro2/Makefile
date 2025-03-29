@@ -21,7 +21,7 @@ ACTIVE_PACKAGE := hydro2
 #ACTIVE_PACKAGE := hydro2-network-performance
 #ACTIVE_PACKAGE := hydro2-network-wire-derive
 #ACTIVE_PACKAGE := hydro2-operator
-#ACTIVE_PACKAGE := hydro2-operator-derive
+ACTIVE_PACKAGE := hydro2-operator-derive
 #-----------------------------------------------------[]
 #INDIVIDUAL_TEST := test_build_network_io_enum
 INDIVIDUAL_TEST := test_extract_generics_from_path
@@ -44,7 +44,7 @@ DEFAULT := test
 #DEFAULT := test_file
 #DEFAULT := test_one
 #CEFAULT := test_file_one
-DEFAULT := test_all
+#DEFAULT := test_all
 #DEFAULT := run
 #DEFAULT := build
 

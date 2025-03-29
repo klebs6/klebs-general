@@ -11,7 +11,7 @@ From this specification, the macro generates:
 
 1. An `enum` (named `YourStructIO`) to represent each of the operator's input and output variants.
 2. Implementations of all required port traits (`PortTryFromN`, `PortTryIntoN`, etc.) for robust type conversions on each port.
-3. An implementation of the `Operator<YourStructIO>` trait itself, including an asynchronous `execute(...)` method that matches inputs, calls your specified function, and packages outputs into the appropriate enum variants.
+3. An implementation of the `OperatorInterface<YourStructIO>` trait itself, including an asynchronous `execute(...)` method that matches inputs, calls your specified function, and packages outputs into the appropriate enum variants.
 4. A hidden operator signature struct that implements `OperatorSignature`, mapping your input/output types to each port index.
 
 ### Core Use Cases
@@ -63,7 +63,7 @@ This macro invocation generates:
    - `PortTryFrom0<&[u8]>` for `MyCustomOperatorIO::Input0(...)`
    - `PortTryInto0<Vec<u8>>` for `MyCustomOperatorIO::Output0(...)`
    - And so on.
-3. `Operator<MyCustomOperatorIO>` trait impl for `MyCustomOperator`, mapping `execute([...])` to call `run_logic()`.
+3. `OperatorInterface<MyCustomOperatorIO>` trait impl for `MyCustomOperator`, mapping `execute([...])` to call `run_logic()`.
 
 All of these generated artifacts allow Hydro2’s runtime or other tooling to safely execute your operator within a multi-operator dataflow.
 

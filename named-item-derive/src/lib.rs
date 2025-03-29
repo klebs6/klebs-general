@@ -1,11 +1,38 @@
+// ---------------- [ File: src/lib.rs ]
 //! named-item-derive — a derive macro for implementing `Named`, `SetName`, etc.
 
-use proc_macro::TokenStream;
-use quote::quote;
-use syn::{
-    parse_macro_input, DeriveInput, Data, Fields, Error as SynError,
-    LitStr,
-};
+#[macro_use] mod imports; use imports::*;
+
+xp!{create_variant_pattern_and_bindings}
+xp!{ensure_aliases_field}
+xp!{ensure_aliases_field_exists}
+xp!{ensure_history_field_exists}
+xp!{ensure_name_field_exists}
+xp!{ensure_name_history_field}
+xp!{ensure_string_name_field}
+xp!{enum_arms}
+xp!{expand_enum_named_item}
+xp!{expand_struct_named_item}
+xp!{generate_alias_impl}
+xp!{generate_baseline_impl}
+xp!{generate_default_name_impl_for_enum}
+xp!{generate_name_history_impl_for_enum}
+xp!{generate_named_alias_impl_for_enum}
+xp!{generate_named_impl_for_enum}
+xp!{generate_reset_name_impl_for_enum}
+xp!{generate_set_name_impl_for_enum}
+xp!{generate_setname_impl}
+xp!{impl_named_item}
+xp!{named_item_config}
+xp!{parse_named_item_attrs}
+xp!{push_aliases_arms}
+xp!{push_history_arms}
+xp!{push_name_arm}
+xp!{push_set_name_arm}
+xp!{validate_and_build_enum_arms}
+xp!{validate_named_struct}
+xp!{validate_struct_fields}
+xp!{validate_variant_is_named}
 
 /// The attribute macro to derive Named, DefaultName, SetName, etc. behaviors.
 #[proc_macro_derive(NamedItem, attributes(named_item))]
@@ -26,246 +53,68 @@ pub fn derive_named_item(input: TokenStream) -> TokenStream {
     }
 }
 
-/// Configuration extracted from `#[named_item(...)]`.
-struct NamedItemConfig {
-    /// Optional default name if `default_name="foo"`.
-    default_name: Option<String>,
-    /// If `aliases="true"`, the struct must have `aliases: Vec<String>`.
-    aliases: bool,
-    /// If `default_aliases="foo,bar"`, we store them here.
-    default_aliases: Vec<String>,
-    /// If `history="true"`, the struct must have `name_history: Vec<String>`.
-    history: bool,
-}
+#[cfg(test)]
+mod test_named_expansion_subroutines {
+    use super::*;
 
-fn parse_named_item_attrs(ast: &DeriveInput) -> syn::Result<NamedItemConfig> {
-    let mut default_name = None;
-    let mut aliases = false;
-    let mut default_aliases = Vec::new();
-    let mut history = false;
+    #[traced_test]
+    fn test_expand_struct_named_item() {
+        // We'll simulate a struct with the required fields
+        let input: DeriveInput = parse_quote! {
+            struct TestStruct {
+                name: String,
+                name_history: Vec<String>,
+                aliases: Vec<String>,
+            }
+        };
 
-    for attr in &ast.attrs {
-        if attr.path().is_ident("named_item") {
-            // parse_nested_meta helps parse name="value" pairs
-            attr.parse_nested_meta(|meta| {
-                let p = &meta.path;
-                if p.is_ident("default_name") {
-                    let lit: LitStr = meta.value()?.parse()?;
-                    default_name = Some(lit.value());
-                } else if p.is_ident("aliases") {
-                    let lit: LitStr = meta.value()?.parse()?;
-                    aliases = lit.value().to_lowercase() == "true";
-                } else if p.is_ident("default_aliases") {
-                    let lit: LitStr = meta.value()?.parse()?;
-                    default_aliases = lit
-                        .value()
-                        .split(',')
-                        .filter(|tok| !tok.trim().is_empty())
-                        .map(|s| s.trim().to_string())
-                        .collect();
-                } else if p.is_ident("history") {
-                    let lit: LitStr = meta.value()?.parse()?;
-                    history = lit.value().to_lowercase() == "true";
-                }
-                Ok(())
-            })?;
-        }
+        let ds = match &input.data {
+            Data::Struct(ds) => ds,
+            _ => panic!("Expected a struct."),
+        };
+
+        let cfg = NamedItemConfig {
+            default_name: Some("HelloStruct".to_string()),
+            aliases: true,
+            default_aliases: vec!["foo".into(), "bar".into()],
+            history: true,
+        };
+
+        let expanded = expand_struct_named_item(&input, ds, &cfg)
+            .expect("expand_struct_named_item should succeed");
+        // Just do a sanity check that it contains references to our fallback name
+        let tokens_str = expanded.to_string();
+        assert!(tokens_str.contains("HelloStruct"));
     }
 
-    Ok(NamedItemConfig {
-        default_name,
-        aliases,
-        default_aliases,
-        history,
-    })
-}
+    #[traced_test]
+    fn test_expand_enum_named_item() {
+        // We'll simulate an enum with the required fields in variants
+        let input: DeriveInput = parse_quote! {
+            enum TestEnum {
+                VariantA { name: String, name_history: Vec<String>, aliases: Vec<String> },
+                VariantB { name: String, name_history: Vec<String>, aliases: Vec<String> },
+            }
+        };
 
-/// Generate the trait implementations for the given struct:
-/// - Named
-/// - DefaultName
-/// - ResetName
-/// - SetName
-/// - NameHistory (optionally)
-/// - NamedAlias (optionally)
-fn impl_named_item(ast: &DeriveInput, cfg: &NamedItemConfig) -> syn::Result<TokenStream> {
-    let struct_name = &ast.ident;
+        let de = match &input.data {
+            Data::Enum(de) => de,
+            _ => panic!("Expected an enum."),
+        };
 
-    // ### 1) Capture generics
-    let (impl_generics, ty_generics, where_clause) = ast.generics.split_for_impl();
+        let cfg = NamedItemConfig {
+            default_name: Some("HelloEnum".to_string()),
+            aliases: true,
+            default_aliases: vec!["alpha".into(), "beta".into()],
+            history: true,
+        };
 
-    // ### 2) We only support normal "struct { name: String, ... }"
-    let fields = match &ast.data {
-        Data::Struct(ds) => &ds.fields,
-        _ => {
-            return Err(SynError::new_spanned(
-                &ast.ident,
-                "NamedItem can only be derived on a struct.",
-            ));
-        }
-    };
-
-    let named_fields = match fields {
-        Fields::Named(f) => &f.named,
-        _ => {
-            return Err(SynError::new_spanned(
-                &ast.ident,
-                "NamedItem requires a struct with named fields.",
-            ));
-        }
-    };
-
-    // Must have `name: String`
-    let name_field = named_fields.iter().find(|field| {
-        field.ident.as_ref().map(|id| id == "name").unwrap_or(false)
-    });
-    if name_field.is_none() {
-        return Err(SynError::new_spanned(
-            &ast.ident,
-            "Struct must have `name: String`.",
-        ));
+        let expanded = expand_enum_named_item(&input, de, &cfg)
+            .expect("expand_enum_named_item should succeed");
+        let tokens_str = expanded.to_string();
+        assert!(tokens_str.contains("HelloEnum"));
+        // Check we have references to "VariantA" or "VariantB" in the expansions
+        assert!(tokens_str.contains("VariantA"));
+        assert!(tokens_str.contains("VariantB"));
     }
-    let name_ty = &name_field.unwrap().ty;
-    let is_string = match name_ty {
-        syn::Type::Path(tp) => {
-            tp.path.segments.last().map(|seg| seg.ident == "String").unwrap_or(false)
-        }
-        _ => false,
-    };
-    if !is_string {
-        return Err(SynError::new_spanned(
-            name_ty,
-            "`name` field must be `String`",
-        ));
-    }
-
-    // require name_history if history=true
-    if cfg.history {
-        let hist_field = named_fields.iter().find(|field| {
-            field.ident.as_ref().map(|id| id == "name_history").unwrap_or(false)
-        });
-        if hist_field.is_none() {
-            return Err(SynError::new_spanned(
-                &ast.ident,
-                "history=true but no `name_history: Vec<String>` field found.",
-            ));
-        }
-    }
-
-    // require aliases if aliases=true
-    if cfg.aliases {
-        let alias_field = named_fields.iter().find(|field| {
-            field.ident.as_ref().map(|id| id == "aliases").unwrap_or(false)
-        });
-        if alias_field.is_none() {
-            return Err(SynError::new_spanned(
-                &ast.ident,
-                "aliases=true but no `aliases: Vec<String>` field found.",
-            ));
-        }
-    }
-
-    // Fallback name if none is provided
-    let fallback_name = cfg.default_name.clone().unwrap_or_else(|| struct_name.to_string());
-
-    // ### 3) Generate the "baseline" Named, DefaultName, ResetName
-    let baseline_impl = quote! {
-        impl #impl_generics Named for #struct_name #ty_generics #where_clause {
-            fn name(&self) -> std::borrow::Cow<'_, str> {
-                std::borrow::Cow::from(&self.name)
-            }
-        }
-
-        impl #impl_generics DefaultName for #struct_name #ty_generics #where_clause {
-            fn default_name() -> std::borrow::Cow<'static, str> {
-                std::borrow::Cow::from(#fallback_name)
-            }
-        }
-
-        impl #impl_generics ResetName for #struct_name #ty_generics #where_clause {}
-    };
-
-    // ### 4) If we have history=true, we push to `name_history` each time we rename
-    let setname_impl = if cfg.history {
-        quote! {
-            impl #impl_generics SetName for #struct_name #ty_generics #where_clause {
-                fn set_name(&mut self, name: &str) -> Result<(), NameError> {
-                    // push history first
-                    self.name_history.push(name.to_string());
-
-                    // forbid empty if not default
-                    if name.is_empty() && name != &*Self::default_name() {
-                        return Err(NameError::EmptyName);
-                    }
-                    self.name = name.to_owned();
-                    Ok(())
-                }
-            }
-
-            impl #impl_generics NameHistory for #struct_name #ty_generics #where_clause {
-                fn add_name_to_history(&mut self, name: &str) {
-                    self.name_history.push(name.to_string());
-                }
-
-                fn name_history(&self) -> Vec<std::borrow::Cow<'_, str>> {
-                    self.name_history
-                        .iter()
-                        .map(|s| std::borrow::Cow::from(&s[..]))
-                        .collect()
-                }
-            }
-        }
-    } else {
-        quote! {
-            impl #impl_generics SetName for #struct_name #ty_generics #where_clause {
-                fn set_name(&mut self, name: &str) -> Result<(), NameError> {
-                    // forbid empty if not default
-                    if name.is_empty() && name != &*Self::default_name() {
-                        return Err(NameError::EmptyName);
-                    }
-                    self.name = name.to_owned();
-                    Ok(())
-                }
-            }
-        }
-    };
-
-    // ### 5) If aliases=true, implement NamedAlias
-    let alias_impl = if cfg.aliases {
-        let arr_tokens = cfg.default_aliases.iter().map(|s| quote! { #s.to_owned() });
-        quote! {
-            impl #impl_generics NamedAlias for #struct_name #ty_generics #where_clause {
-                fn add_alias(&mut self, alias: &str) {
-                    self.aliases.push(alias.to_string());
-                }
-                fn aliases(&self) -> Vec<std::borrow::Cow<'_, str>> {
-                    self.aliases
-                        .iter()
-                        .map(|s| std::borrow::Cow::from(&s[..]))
-                        .collect()
-                }
-                fn clear_aliases(&mut self) {
-                    self.aliases.clear();
-                }
-            }
-
-            impl #impl_generics #struct_name #ty_generics #where_clause {
-                pub fn default_aliases() -> Vec<std::borrow::Cow<'static, str>> {
-                    vec![
-                        #(std::borrow::Cow::from(#arr_tokens)),*
-                    ]
-                }
-            }
-        }
-    } else {
-        quote!()
-    };
-
-    // ### 6) Combine expansions
-    let expanded = quote! {
-        #baseline_impl
-        #setname_impl
-        #alias_impl
-    };
-
-    Ok(expanded.into())
 }

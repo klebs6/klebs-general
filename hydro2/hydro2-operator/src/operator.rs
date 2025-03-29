@@ -10,7 +10,7 @@ pub type NetworkNodeIoChannelWriteGuardArray<'a,NetworkItem> = [Option<AsyncRwLo
 /// Each operator is responsible for processing input buffers
 /// to produce output buffers.
 #[async_trait]
-pub trait Operator<NetworkItem>: Debug + Named + Send + Sync 
+pub trait OperatorInterface<NetworkItem>: Debug + Named + Send + Sync 
 where NetworkItem: Debug + Send + Sync
 {
     /// Returns the operation code, which can be used to inform
@@ -46,23 +46,24 @@ where NetworkItem: Debug + Send + Sync
     ) -> NetResult<()>;
 }
 
-/// A local trait to convert any `T` that implements `Operator` into `Arc<dyn Operator>`.
+/// A local trait to convert any `T` that implements `OperatorInterface` into `Arc<dyn
+/// OperatorInterface>`.
 pub trait IntoArcOperator<NetworkItem> {
-    fn into_arc_operator(self) -> Arc<dyn Operator<NetworkItem>>;
+    fn into_arc_operator(self) -> Arc<dyn OperatorInterface<NetworkItem>>;
 }
 
 impl<T,NetworkItem> IntoArcOperator<NetworkItem> for T
 where
-    T: Operator<NetworkItem> + 'static,
+    T: OperatorInterface<NetworkItem> + 'static,
     NetworkItem: Debug + Send + Sync,
 {
-    fn into_arc_operator(self) -> Arc<dyn Operator<NetworkItem>> {
+    fn into_arc_operator(self) -> Arc<dyn OperatorInterface<NetworkItem>> {
         Arc::new(self)
     }
 }
 
 /// The trait describing up to 4 inputs and 4 outputs for an operator.
-/// Each `#[derive(Operator)]` implementation will provide a hidden struct
+/// Each `#[derive(OperatorInterface)]` implementation will provide a hidden struct
 /// implementing these 8 associated types.
 pub trait OperatorSignature {
     type Input0; 

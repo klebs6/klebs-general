@@ -1,7 +1,7 @@
 // ---------------- [ File: src/build_single_operator_impl.rs ]
 crate::ix!();
 
-/// Builds bridging code (`impl Operator<WireEnum> for FooOp<...>`) for a single operator item.
+/// Builds bridging code (`impl OperatorInterface<WireEnum> for FooOp<...>`) for a single operator item.
 /// 
 /// - `network_wire_enum_ident`: the name of the wire enum (e.g. `MyWireIO`)
 /// - `op_item`: the operator spec item (already finalized with minted/reused parameters)
@@ -94,36 +94,36 @@ pub fn build_single_operator_impl(
 
             #[async_trait::async_trait]
             impl #impl_gen
-                hydro2_operator::Operator<#operator_trait_type>
+                hydro2_operator::OperatorInterface<#operator_trait_type>
                     for #base_ident #bridging_args
                         #wc_opt
                     {
                         fn opcode(&self) -> std::sync::Arc<dyn hydro2_operator::OpCode> {
-                            <Self as hydro2_operator::Operator<#bridging_path>>::opcode(self)
+                            <Self as hydro2_operator::OperatorInterface<#bridging_path>>::opcode(self)
                         }
 
                         fn input_count(&self) -> usize {
-                            <Self as hydro2_operator::Operator<#bridging_path>>::input_count(self)
+                            <Self as hydro2_operator::OperatorInterface<#bridging_path>>::input_count(self)
                         }
 
                         fn output_count(&self) -> usize {
-                            <Self as hydro2_operator::Operator<#bridging_path>>::output_count(self)
+                            <Self as hydro2_operator::OperatorInterface<#bridging_path>>::output_count(self)
                         }
 
                         fn input_port_type_str(&self, port: usize) -> Option<&'static str> {
-                            <Self as hydro2_operator::Operator<#bridging_path>>::input_port_type_str(self, port)
+                            <Self as hydro2_operator::OperatorInterface<#bridging_path>>::input_port_type_str(self, port)
                         }
 
                         fn output_port_type_str(&self, port: usize) -> Option<&'static str> {
-                            <Self as hydro2_operator::Operator<#bridging_path>>::output_port_type_str(self, port)
+                            <Self as hydro2_operator::OperatorInterface<#bridging_path>>::output_port_type_str(self, port)
                         }
 
                         fn input_port_connection_required(&self, port: usize) -> bool {
-                            <Self as hydro2_operator::Operator<#bridging_path>>::input_port_connection_required(self, port)
+                            <Self as hydro2_operator::OperatorInterface<#bridging_path>>::input_port_connection_required(self, port)
                         }
 
                         fn output_port_connection_required(&self, port: usize) -> bool {
-                            <Self as hydro2_operator::Operator<#bridging_path>>::output_port_connection_required(self, port)
+                            <Self as hydro2_operator::OperatorInterface<#bridging_path>>::output_port_connection_required(self, port)
                         }
 
                         async fn execute(
@@ -204,7 +204,7 @@ pub fn build_single_operator_impl(
                                 adapted_in[3].as_ref(),
                             ];
 
-                            <Self as hydro2_operator::Operator<#bridging_path>>::execute(
+                            <Self as hydro2_operator::OperatorInterface<#bridging_path>>::execute(
                                 self,
                                 adapted_in_refs,
                                 &mut adapted_out

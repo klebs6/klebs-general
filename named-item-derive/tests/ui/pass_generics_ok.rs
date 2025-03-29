@@ -1,3 +1,4 @@
+// ---------------- [ File: tests/ui/pass_generics_ok.rs ]
 // named-item-derive/tests/trybuild/pass_generics_ok.rs
 
 #![allow(unused)]
@@ -26,4 +27,3 @@ fn main() {
     x.set_name("bar").unwrap();
     assert_eq!(x.name(), "bar");
 }
-

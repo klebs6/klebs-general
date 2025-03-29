@@ -1,3 +1,4 @@
+// ---------------- [ File: tests/ui/fail_generics_not_used.rs ]
 // named-item-derive/tests/trybuild/fail_generics_not_used.rs
 
 #![allow(unused)]
@@ -13,4 +14,3 @@ pub struct UnusedGeneric<T> {
 }
 
 fn main() {}
-

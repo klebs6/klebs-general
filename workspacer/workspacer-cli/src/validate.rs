@@ -1,3 +1,4 @@
+// ---------------- [ File: workspacer-cli/src/validate.rs ]
 crate::ix!();
 
 /// Validate everything (or just one crate)
@@ -14,7 +15,7 @@ pub enum ValidateSubcommand {
 }
 
 impl ValidateSubcommand {
-    pub async fn run(&self) {
+    pub async fn run(&self) -> Result<(),WorkspaceError> {
         todo!();
     }
 }

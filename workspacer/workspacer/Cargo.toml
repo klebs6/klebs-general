@@ -1,97 +1,24 @@
-[dependencies]
-structopt.workspace = true
-
-[dependencies.generate-report-trait]
-path = "../generate-report-trait"
-version = "0.1.0"
-[dependencies.lightweight-command-runner]
-path = "../lightweight-command-runner"
-version = "0.1.0"
+[dependencies.structopt]
+workspace = true
 [dependencies.workspacer-3p]
 path = "../workspacer-3p"
 version = "0.5.0"
-[dependencies.workspacer-add-new-crate-to-workspace]
-path = "../workspacer-add-new-crate-to-workspace"
+[dependencies.workspacer-export]
+path = "../workspacer-export"
 version = "0.1.0"
-[dependencies.workspacer-analysis]
-path = "../workspacer-analysis"
-version = "0.1.0"
-[dependencies.workspacer-check-publish-ready]
-path = "../workspacer-check-publish-ready"
-version = "0.1.0"
-[dependencies.workspacer-cleanup]
-path = "../workspacer-cleanup"
-version = "0.1.0"
-[dependencies.workspacer-consolidate]
-path = "../workspacer-consolidate"
-version = "0.5.0"
-[dependencies.workspacer-crate]
-path = "../workspacer-crate"
-version = "0.5.0"
-[dependencies.workspacer-crate-interface]
-path = "../workspacer-crate-interface"
-version = "0.1.0"
-[dependencies.workspacer-detect-circular-deps]
-path = "../workspacer-detect-circular-deps"
-version = "0.1.0"
-[dependencies.workspacer-docs]
-path = "../workspacer-docs"
-version = "0.1.0"
-[dependencies.workspacer-errors]
-path = "../workspacer-errors"
-version = "0.1.0"
-[dependencies.workspacer-git]
-path = "../workspacer-git"
-version = "0.1.0"
-[dependencies.workspacer-interface]
-path = "../workspacer-interface"
-version = "0.5.0"
-[dependencies.workspacer-linting]
-path = "../workspacer-linting"
-version = "0.1.0"
-[dependencies.workspacer-metadata]
-path = "../workspacer-metadata"
-version = "0.1.0"
-[dependencies.workspacer-name-all-files]
-path = "../workspacer-name-all-files"
-version = "0.1.0"
-[dependencies.workspacer-pin]
-path = "../workspacer-pin"
-version = "0.1.0"
-[dependencies.workspacer-publish]
-path = "../workspacer-publish"
-version = "0.1.0"
-[dependencies.workspacer-rebuild-or-test]
-path = "../workspacer-rebuild-or-test"
-version = "0.1.0"
-[dependencies.workspacer-syntax]
-path = "../workspacer-syntax"
-version = "0.5.0"
-[dependencies.workspacer-test-coverage]
-path = "../workspacer-test-coverage"
-version = "0.1.0"
-[dependencies.workspacer-toml]
-path = "../workspacer-toml"
-version = "0.5.0"
-[dependencies.workspacer-watch-and-reload]
-path = "../workspacer-watch-and-reload"
-version = "0.1.0"
-[dependencies.workspacer-workspace]
-path = "../workspacer-workspace"
-version = "0.1.0"
-[dependencies.workspacer-workspace-interface]
-path = "../workspacer-workspace-interface"
-version = "0.1.0"
+[dependencies.workspacer-cli]
+path = "../workspacer-cli"
+
 [package]
 authors = [ "klebs tpk3.mx@gmail.com" ]
+categories = [ "development-tools", "rust-patterns", "project-management", "api-bindings", "library" ]
 description = "A Rust crate providing extended interfaces for workspaces and crates, facilitating modular and reusable code development."
 edition = "2024"
+keywords = [ "workspace", "crate", "interface", "development", "rust" ]
 license = "MIT OR Apache-2.0"
 name = "workspacer"
 repository = "https://github.com/klebs6/klebs-general"
 version = "0.6.0"
-keywords = ["workspace", "crate", "interface", "development", "rust"]
-categories = ["development-tools", "rust-patterns", "project-management", "api-bindings", "library"]
 [[bin]]
 name = "ws"
 path = "src/bin/workspacer.rs"

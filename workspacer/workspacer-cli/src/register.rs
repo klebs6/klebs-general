@@ -1,3 +1,4 @@
+// ---------------- [ File: workspacer-cli/src/register.rs ]
 crate::ix!();
 
 /// Register crate files in the internal database
@@ -14,7 +15,7 @@ pub enum RegisterSubcommand {
 }
 
 impl RegisterSubcommand {
-    pub async fn run(&self) {
+    pub async fn run(&self) -> Result<(),WorkspaceError> {
         todo!();
     }
 }

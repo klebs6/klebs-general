@@ -1,3 +1,4 @@
+// ---------------- [ File: workspacer-cli/src/git.rs ]
 crate::ix!();
 
 /// Subcommands for `ws git`
@@ -8,7 +9,7 @@ pub enum GitSubcommand {
 }
 
 impl GitSubcommand {
-    pub async fn run(&self) {
+    pub async fn run(&self) -> Result<(),WorkspaceError> {
         todo!();
     }
 }

@@ -1,3 +1,4 @@
+// ---------------- [ File: workspacer-cli/src/upgrade.rs ]
 crate::ix!();
 
 #[derive(Debug, StructOpt)]
@@ -63,7 +64,7 @@ pub enum UpgradeSubcommand {
 }
 
 impl UpgradeSubcommand {
-    pub async fn run(&self) {
+    pub async fn run(&self) -> Result<(),WorkspaceError> {
         todo!();
     }
 }

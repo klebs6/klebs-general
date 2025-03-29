@@ -1,12 +1,12 @@
 [dependencies]
-derive_builder     = "0.20.2"
-serde              = { version = "1.0.217", features = [ "derive" ] }
-serde_derive       = "1.0.217"
-serde_json         = "1.0.138"
-traced-test        = "1.0.2"
-tracing            = "0.1.41"
-tracing-setup      = "1.0.2"
-tracing-subscriber = { version = "0.3.19", features  = [ "env-filter", "json" ] }
+derive_builder.workspace     = true
+serde.workspace              = true
+serde_derive.workspace       = true
+serde_json.workspace         = true
+traced-test.workspace        = true
+tracing.workspace            = true
+tracing-setup.workspace      = true
+tracing-subscriber.workspace = true
 
 [dependencies.hydro2-3p]
 path    = "../hydro2-3p"

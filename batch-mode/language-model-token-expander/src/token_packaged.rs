@@ -1,7 +1,20 @@
+// ---------------- [ File: src/token_packaged.rs ]
 crate::ix!();
 
 #[derive(Clone,Debug)]
 pub struct TokenPackagedForExpansion(CamelCaseTokenWithComment);
+
+impl From<&CamelCaseTokenWithComment> for TokenPackagedForExpansion {
+    fn from(x: &CamelCaseTokenWithComment) -> Self {
+        Self(x.clone())
+    }
+}
+
+impl std::fmt::Display for TokenPackagedForExpansion {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f,"{}",self.0)
+    }
+}
 
 unsafe impl Send for TokenPackagedForExpansion {}
 unsafe impl Sync for TokenPackagedForExpansion {}

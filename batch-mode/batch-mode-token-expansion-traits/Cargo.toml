@@ -1,3 +1,5 @@
+[dependencies.ai-json-template]
+path = "../ai-json-template"
 [dependencies.batch-mode-3p]
 path = "../batch-mode-3p"
 [dependencies.camel-case-token-with-comment]

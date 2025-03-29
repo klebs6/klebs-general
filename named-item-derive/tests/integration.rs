@@ -1,5 +1,7 @@
+// ---------------- [ File: tests/integration.rs ]
 #![cfg(test)]
 
+use tracing::*;
 use named_item_derive::NamedItem;
 use named_item::{
     Named, SetName, ResetName, NamedAlias, NameHistory, NameError, DefaultName
@@ -350,4 +352,3 @@ fn test_multiple_sets_with_history() -> Result<(), NameError> {
 //---------------------------------------------------------------
 // END
 //---------------------------------------------------------------
-

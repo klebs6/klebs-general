@@ -1,7 +1,8 @@
 [dependencies]
-derive_builder = "0.20.2"
-named-item = "0.6.0"
-named-item-derive = "0.2.0"
+derive_builder.workspace    = true
+named-item.workspace        = true
+named-item-derive.workspace = true
+
 [dependencies.hydro2-3p]
 path = "../hydro2-3p"
 version = "0.1.0"

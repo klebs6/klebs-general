@@ -8,6 +8,49 @@ pub struct TestCoverageCommand {
 }
 
 impl TestCoverageCommand {
+    /// Additional method to run tarpaulin with `--package <crate_name>`
+    pub async fn run_with_package(workspace_path: &std::path::Path, crate_name: &str) 
+        -> Result<Self, TestCoverageError> 
+    {
+        let output = tokio::process::Command::new("cargo")
+            .arg("tarpaulin")
+            .arg("--out")
+            .arg("Json")
+            .arg("--package")
+            .arg(crate_name)
+            .arg("--quiet")
+            .current_dir(workspace_path)
+            .output()
+            .await
+            .map_err(|e| TestCoverageError::CommandError { io: e.into() })?;
+
+        let stdout = String::from_utf8_lossy(&output.stdout).to_string();
+        let stderr = String::from_utf8_lossy(&output.stderr).to_string();
+
+        info!("stdout (crate coverage): {}", stdout);
+        info!("stderr (crate coverage): {}", stderr);
+
+        if output.status.success() {
+            Ok(Self { stdout, stderr })
+        } else {
+            if stderr.contains("Test failed during run") {
+                error!("Test coverage run failed due to test failure for crate '{}'.", crate_name);
+                Err(TestCoverageError::TestFailure {
+                    stderr: Some(stderr),
+                    stdout: Some(stdout),
+                })
+            } else {
+                error!("Test coverage run failed for unknown reasons (crate='{}').", crate_name);
+                Err(TestCoverageError::UnknownError { 
+                    stdout: Some(stdout),
+                    stderr: Some(stderr),
+                })
+            }
+        }
+    }
+}
+
+impl TestCoverageCommand {
 
     // Add a method to access stdout
     pub fn stdout(&self) -> &str {

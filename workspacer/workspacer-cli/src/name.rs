@@ -1,3 +1,4 @@
+// ---------------- [ File: workspacer-cli/src/name.rs ]
 crate::ix!();
 
 #[derive(Debug, StructOpt)]
@@ -13,7 +14,7 @@ pub enum NameSubcommand {
 }
 
 impl NameSubcommand {
-    pub async fn run(&self) {
+    pub async fn run(&self) -> Result<(),WorkspaceError> {
         todo!();
     }
 }

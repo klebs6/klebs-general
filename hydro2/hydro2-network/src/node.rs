@@ -15,7 +15,7 @@ where NetworkItem: Debug + Send + Sync
     index: usize,
 
     /// The operator that this node executes.
-    operator: Arc<dyn Operator<NetworkItem>>,
+    operator: Arc<dyn OperatorInterface<NetworkItem>>,
 
     /// All input buffers required by this node.
     inputs:  NetworkNodeIoChannelArray<NetworkItem>,

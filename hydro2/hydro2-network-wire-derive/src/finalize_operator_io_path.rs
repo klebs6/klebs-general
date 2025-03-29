@@ -283,7 +283,7 @@ mod test_finalize_operator_io_path {
         let bridging_str = bridging_ts.to_string();
         info!("  bridging_str = {}", bridging_str);
         assert!(bridging_str.contains("impl < T , OpTy0 >"));
-        assert!(bridging_str.contains("Operator < MyWireIO < T > >"));
+        assert!(bridging_str.contains("OperatorInterface < MyWireIO < T > >"));
         assert!(bridging_str.contains("AddOp < OpTy0 >"));
         Ok(())
     }

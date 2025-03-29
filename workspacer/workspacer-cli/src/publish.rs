@@ -1,3 +1,4 @@
+// ---------------- [ File: workspacer-cli/src/publish.rs ]
 crate::ix!();
 
 /// Publish workspace or crate
@@ -14,7 +15,7 @@ pub enum PublishSubcommand {
 }
 
 impl PublishSubcommand {
-    pub async fn run(&self) {
+    pub async fn run(&self) -> Result<(),WorkspaceError> {
         todo!();
     }
 }

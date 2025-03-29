@@ -696,4 +696,3 @@ mod check_for_and_download_output_and_error_online_tests {
         info!("test_completed_with_both_output_and_error passed");
     }
 }
-

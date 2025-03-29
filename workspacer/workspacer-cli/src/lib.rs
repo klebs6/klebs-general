@@ -1,15 +1,36 @@
+// ---------------- [ File: workspacer-cli/src/lib.rs ]
 #[macro_use] mod imports; use imports::*;
 
 x!{add}
+x!{add_crate}
+x!{add_internal_dep}
+x!{run_with_workspace_and_crate_name}
+x!{run_with_workspace_and_two_crate_names}
+x!{run_with_workspace}
 x!{analyze}
+x!{analyze_crate}
+x!{analyze_workspace}
 x!{bump}
+x!{bump_workspace}
+x!{bump_crate_downstreams}
+x!{bump_single_crate}
+x!{bump_release_arg}
 x!{check_publish_ready}
+x!{check_publish_ready_crate}
+x!{check_publish_ready_workspace}
 x!{cleanup}
+x!{cleanup_crate}
+x!{cleanup_workspace}
 x!{coverage}
-x!{describe}
+x!{coverage_crate}
+x!{coverage_workspace}
 x!{detect_cycles}
+x!{detect_cycles_crate}
+x!{detect_cycles_workspace}
 x!{document}
 x!{format}
+x!{format_all_imports}
+x!{format_imports}
 x!{get}
 x!{git}
 x!{info}

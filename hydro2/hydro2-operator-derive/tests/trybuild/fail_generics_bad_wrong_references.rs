@@ -34,7 +34,7 @@ fn main() {
         data: 10, // forced to i32
         name: "bad".to_string()
     };
-    // The generated code might do something like `impl<S> Operator<MissingGenericIO> for MissingGeneric<S>` 
+    // The generated code might do something like `impl<S> OperatorInterface<MissingGenericIO> for MissingGeneric<S>` 
     // if the macro incorrectly omits <S> in the enum or impl.
 }
 

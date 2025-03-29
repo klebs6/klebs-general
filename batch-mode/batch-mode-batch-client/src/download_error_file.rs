@@ -290,4 +290,3 @@ mod download_error_file_tests {
         info!("test_download_error_file_io_write_error passed");
     }
 }
-

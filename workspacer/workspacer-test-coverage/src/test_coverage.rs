@@ -11,6 +11,40 @@ pub trait RunTestsWithCoverage {
         -> Result<Self::Report, Self::Error>;
 }
 
+// We'll show a naive approach: run "cargo tarpaulin --package crate_name" from the workspace root.
+// Then parse stdout => produce a TestCoverageReport
+//
+#[async_trait]
+impl RunTestsWithCoverage for CrateHandle {
+    type Report = TestCoverageReport;
+    type Error  = WorkspaceError;
+
+    async fn run_tests_with_coverage(&self) -> Result<Self::Report, Self::Error> {
+        let workspace_root = self
+            .root_dir_path_buf()
+            .parent()
+            .ok_or_else(|| {
+                // If the crate root is the workspace, you might do something else. 
+                // We'll do a naive approach for demonstration.
+                error!("Cannot get parent directory for crate_path={:?}", self.root_dir_path_buf());
+                WorkspaceError::IoError {
+                    io_error: std::sync::Arc::new(std::io::Error::new(
+                        std::io::ErrorKind::NotFound, 
+                        "No parent directory"
+                    )),
+                    context: "finding workspace root from crate path".to_string(),
+                }
+            })?
+            .to_path_buf();
+
+        // We'll run cargo tarpaulin with `--package crate_name`
+        let crate_name = self.name(); 
+        let coverage_cmd = TestCoverageCommand::run_with_package(&workspace_root, &crate_name).await?;
+        let report = coverage_cmd.generate_report()?;
+        Ok(report)
+    }
+}
+
 #[async_trait]
 impl<P,H:CrateHandleInterface<P>> RunTestsWithCoverage for Workspace<P,H> 
 where for<'async_trait> P: From<PathBuf> + AsRef<Path> + Send + Sync + 'async_trait
