@@ -5,3 +5,4 @@
 **/.DS_Store
 **/missing-types.txt
 **/rust-workspace-typemap.json
+**/tmp*
