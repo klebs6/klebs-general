@@ -2,9 +2,9 @@
 path = "../batch-mode-3p"
 version = "0.2.0"
 [dependencies]
-serde = { version = "1.0.218", features = [ "derive" ] }
-serde_derive = "1.0.218"
-serde_json = "1.0.139"
+serde.workspace = true
+serde_derive.workspace = true
+serde_json.workspace = true
 [package]
 edition = "2024"
 name = "batch-mode-batch-index"

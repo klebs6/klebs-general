@@ -1,5 +1,6 @@
 [dependencies]
-derive_builder = "0.20.2"
+derive_builder.workspace = true
+
 [dependencies.batch-mode-3p]
 path = "../batch-mode-3p"
 version = "0.2.0"
@@ -23,11 +24,12 @@ version = "0.2.0"
 [dependencies.batch-mode-json]
 path = "../batch-mode-json"
 version = "0.2.0"
+
 [package]
-authors = [ "klebs tpk3.mx@gmail.com" ]
+authors     = [ "klebs tpk3.mx@gmail.com" ]
 description = "Manages batch file triples (input, output, error, metadata) in batch processing systems, including file validation, error handling, and file movement."
-edition = "2024"
-license = "MIT"
-name = "batch-mode-batch-triple"
-repository = "https://github.com/klebs6/klebs-general"
-version = "0.2.0"
+edition     = "2024"
+license     = "MIT"
+name        = "batch-mode-batch-triple"
+repository  = "https://github.com/klebs6/klebs-general"
+version     = "0.2.0"

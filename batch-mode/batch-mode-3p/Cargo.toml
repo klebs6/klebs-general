@@ -8,49 +8,47 @@ license     = "MIT"
 repository  = "https://github.com/klebs6/klebs-general"
 
 [dependencies]
-pretty_assertions        = "1.4.1"
-async-openai             = "0.27.2"
-export-magic             = "0.3.6"
-uuid                     = { version = "1.14.0", features = ["v4", "serde"] }
-regex                    = "1.11.1"
-bytes                    = "1.10.0"
-tempfile                 = "3.17.1"
-serde                    = { version = "1.0", features = ["derive"] }
-serde_json               = "1.0"
-tokio                    = { version = "1", features = ["full"] }
-futures                  = "0.3"
-#error-tree              = { version = "*", path = "/Users/kleb/bethesda/work/repo/klebs-general/error-tree" }
-error-tree               = "0.6.0"
-disable_macro            = "0.3.6"
-async-trait              = "0.1.86"
-indoc                    = "2.0.5"
-Inflector                = "0.11.4"
-tracing                  = { version = "0.1.40", features = ["log"] }
-tracing-subscriber       = { version = "0.3", default-features = false, features = ["fmt", "std", "env-filter"] }
-delegate                 = "0.13.2"
-traced-test              = "1.0.2"
-tracing-setup            = "1.0.2"
-json5                    = "0.4.1"
-crossbeam                = "0.8.4"
-float-ord                = "0.3.2"
-num-traits               = "0.2.19"
-pbx                      = "0.1.0"
-#json-repair             = { version = "*", path = "/Users/kleb/bethesda/work/repo/klebs-general/json-repair" }
-json-repair              = "0.4.0"
-once_cell                = "1.20.3"
-strsim                   = "0.10"
-rand                     = "0.9.0"
-rand-construct           = "0.10.0"
-structopt                = "0.3.26"
-ai-descriptor            = "0.9.0"
-structured-language-form = "0.3.0"
-named-item               = "0.6.0"
-named-item-derive        = "0.2.0"
-getset                   = "0.1.4"
-derive_builder           = "0.20.2"
-strum                    = { version = "0.24", features = ["derive"] }
-strum_macros             = "0.24"
-lazy_static              = "1.5.0"
+pretty_assertions.workspace        = true
+async-openai.workspace             = true
+export-magic.workspace             = true
+uuid.workspace                     = true
+regex.workspace                    = true
+bytes.workspace                    = true
+tempfile.workspace                 = true
+serde.workspace                    = true
+serde_json.workspace               = true
+tokio.workspace                    = true
+futures.workspace                  = true
+error-tree.workspace               = true
+disable_macro.workspace            = true
+async-trait.workspace              = true
+indoc.workspace                    = true
+Inflector.workspace                = true
+tracing.workspace                  = true
+tracing-subscriber.workspace       = true
+delegate.workspace                 = true
+traced-test.workspace              = true
+tracing-setup.workspace            = true
+json5.workspace                    = true
+crossbeam.workspace                = true
+float-ord.workspace                = true
+num-traits.workspace               = true
+pbx.workspace                      = true
+json-repair.workspace              = true
+once_cell.workspace                = true
+strsim.workspace                   = true
+rand.workspace                     = true
+rand-construct.workspace           = true
+structopt.workspace                = true
+ai-descriptor.workspace            = true
+structured-language-form.workspace = true
+named-item.workspace               = true
+named-item-derive.workspace        = true
+getset.workspace                   = true
+derive_builder.workspace           = true
+strum.workspace                    = true
+strum_macros.workspace             = true
+lazy_static.workspace              = true
 
 [build-dependencies]
-scan-crate-for-typedefs = "0.8.1"
+scan-crate-for-typedefs.workspace  = true

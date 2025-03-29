@@ -1,24 +1,19 @@
 [dependencies]
-proc-macro2 = "1.0"
-quote = "1.0"
-getset = "0.1.5"
+proc-macro2.workspace  = true
+quote.workspace        = true
+getset.workspace       = true
+serde.workspace        = true
+serde_derive.workspace = true
+serde_json.workspace   = true
+syn.workspace          = true
+
 [dependencies.batch-mode-3p]
 path = "../batch-mode-3p"
-[dependencies.serde]
-features = [ "derive" ]
-version = "*"
-[dependencies.serde_derive]
-version = "*"
-[dependencies.serde_json]
-version = "*"
-[dependencies.syn]
-features = [ "derive", "parsing" ]
-version = "2.0"
 [dev-dependencies.batch-mode-token-expansion-traits]
 path = "../batch-mode-token-expansion-traits"
 
-[dev-dependencies.async-trait]
-version = "*"
+[dev-dependencies]
+async-trait.workspace = true
 
 [dev-dependencies.save-load-traits]
 path = "../save-load-traits"
@@ -28,16 +23,18 @@ path = "../save-load-derive"
 
 [features]
 default = [  ]
+
 [lib]
 proc-macro = true
+
 [package]
-authors = [ "klebs tpk3.mx@gmail.com" ]
-categories = [ "development-tools", "code-generation" ]
+authors     = [ "klebs tpk3.mx@gmail.com" ]
+categories  = [ "development-tools", "code-generation" ]
 description = "A procedural macro crate for deriving token expansion axes."
-edition = "2024"
-keywords = [ "token", "proc-macro", "axis", "expansion" ]
-license = "MIT"
-name = "batch-mode-token-expansion-axis-derive"
-readme = "README.md"
-repository = "https://github.com/klebs6/klebs-general"
-version = "0.1.0"
+edition     = "2024"
+keywords    = [ "token", "proc-macro", "axis", "expansion" ]
+license     = "MIT"
+name        = "batch-mode-token-expansion-axis-derive"
+readme      = "README.md"
+repository  = "https://github.com/klebs6/klebs-general"
+version     = "0.1.0"

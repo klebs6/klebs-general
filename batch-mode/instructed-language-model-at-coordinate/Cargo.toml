@@ -1,5 +1,6 @@
 [dependencies]
-derive_builder = "0.20.2"
+derive_builder.workspace = true
+
 [dependencies.agent-coordinate]
 path = "../agent-coordinate"
 [dependencies.batch-mode-3p]

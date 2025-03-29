@@ -21,18 +21,17 @@ path = "../save-load-traits"
 version = "0.2.0"
 
 [dependencies]
-derive_builder = "0.20.2"
-traced-test = "1.0.2"
-tracing = "0.1.41"
-tracing-setup = "1.0.2"
-tracing-subscriber = { version = "0.3.19", features = [ "env-filter", "json"] }
-
+derive_builder.workspace     = true
+traced-test.workspace        = true
+tracing.workspace            = true
+tracing-setup.workspace      = true
+tracing-subscriber.workspace = true
 
 [package]
-edition = "2024"
-name = "batch-mode-batch-workspace"
-version = "0.2.0"
+edition     = "2024"
+name        = "batch-mode-batch-workspace"
+version     = "0.2.0"
 description = "Manages batch processing workspaces, handling tasks like locating batch files, validating files, and managing batch indices."
-authors = ["klebs tpk3.mx@gmail.com"]
-license = "MIT"
-repository = "https://github.com/klebs6/klebs-general"
+authors     = ["klebs tpk3.mx@gmail.com"]
+license     = "MIT"
+repository  = "https://github.com/klebs6/klebs-general"

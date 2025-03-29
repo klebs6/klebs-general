@@ -1,123 +1,71 @@
 // ---------------- [ File: src/parse_derive_input_for_lmbw.rs ]
 crate::ix!();
 
-pub fn parse_derive_input_for_lmbw(ast: &syn::DeriveInput) -> Result<LmbwParsedInput, syn::Error> {
+pub fn parse_derive_input_for_lmbw(ast: &DeriveInput) -> Result<LmbwParsedInput, Error> {
     tracing::trace!("parse_derive_input_for_lmbw: start.");
 
     let struct_ident  = ast.ident.clone();
     let generics      = ast.generics.clone();
 
-    // For the struct-level attribute #[batch_error_type(MyErr)].
-    let mut custom_error_type: Option<syn::Type> = None;
-    // For optional #[batch_json_output_format(...)], which may be a direct path or a string.
-    let mut json_output_format_type: Option<syn::Type> = None;
+    // For the struct-level attribute `#[batch_error_type(...)]`.
+    let mut custom_error_type: Option<Type> = None;
+    // For optional `#[batch_json_output_format(...)]`
+    let mut json_output_format_type: Option<Type> = None;
 
-    // We'll parse top-level attributes for batch_error_type and batch_json_output_format.
+    // ----------------------------------------------
+    // 1) Scan top-level attributes for:
+    //    - `#[batch_error_type(...)]`
+    //    - `#[batch_json_output_format(...)]`
+    // ----------------------------------------------
     for attr in &ast.attrs {
-        // Attempt to parse this attribute as normal meta
-        if let Ok(meta) = attr.parse_meta() {
-            let path_ident = meta.path().get_ident().map(|i| i.to_string());
-            match (path_ident, meta) {
+        if attr.path().is_ident("batch_error_type") {
+            // e.g. `#[batch_error_type(MyErr)]`
+            let parsed_ty = attr.parse_args::<Type>()?;
+            custom_error_type = Some(parsed_ty);
 
-                //------------------------------------------------------
-                // #[batch_error_type(MyErr)]
-                //------------------------------------------------------
-                (Some(name), syn::Meta::List(list)) if name == "batch_error_type" => {
-                    // This is simpler — we can parse the inside as a normal syn::Type:
-                    match attr.parse_args::<syn::Type>() {
-                        Ok(t) => {
-                            custom_error_type = Some(t);
-                        }
-                        Err(e) => {
-                            return Err(syn::Error::new_spanned(
-                                &list,
-                                format!("Cannot parse #[batch_error_type(...)] attribute: {e}")
-                            ));
-                        }
-                    }
-                }
-
-                //------------------------------------------------------
-                // #[batch_json_output_format(...)]
-                // Could be a direct path or a string literal.
-                //------------------------------------------------------
-                (Some(name), syn::Meta::List(list)) if name == "batch_json_output_format" => {
-                    // We'll parse the raw token stream inside the parentheses.
-                    let tokens: proc_macro2::TokenStream = match attr.parse_args() {
-                        Ok(t) => t,
-                        Err(e) => {
-                            return Err(syn::Error::new_spanned(
-                                &list,
-                                format!("Cannot parse tokens for #[batch_json_output_format(...)] attribute: {e}")
-                            ));
-                        }
-                    };
-
-                    // Attempt to parse it as a syn::Type directly:
-                    match syn::parse2::<syn::Type>(tokens.clone()) {
-                        Ok(ty) => {
-                            // Great, we have a direct type path (e.g. SomeCrate::Foo).
-                            tracing::debug!("Got batch_json_output_format = {:?}", ty);
-                            json_output_format_type = Some(ty);
-                        }
-                        Err(_type_err) => {
-                            // Maybe it's a string literal, e.g. = "E".
-                            // So parse tokens as a Lit
-                            let lit_val: syn::Lit = match syn::parse2(tokens.clone()) {
-                                Ok(l) => l,
-                                Err(e2) => {
-                                    return Err(syn::Error::new_spanned(
-                                        &list,
-                                        format!("Could not parse as a type path nor a literal: {e2}")
-                                    ));
-                                }
-                            };
-
-                            // If it's a string literal, parse that as a type expression
-                            if let syn::Lit::Str(slit) = lit_val {
-                                let type_str = slit.value();
-                                let parsed_ty = syn::parse_str::<syn::Type>(&type_str)
-                                    .map_err(|_| syn::Error::new_spanned(
-                                        &list,
-                                        format!("Could not parse string literal \"{}\" as a type", type_str)
-                                    ))?;
-                                tracing::debug!("Got batch_json_output_format = \"{}\" => parsed as type {:?}", type_str, parsed_ty);
-                                json_output_format_type = Some(parsed_ty);
-                            } else {
-                                return Err(syn::Error::new_spanned(
-                                    &list,
-                                    "batch_json_output_format(...) was neither a valid type nor a \"string literal\""
-                                ));
-                            }
-                        }
-                    }
-                }
-
-                _ => {}
+        } else if attr.path().is_ident("batch_json_output_format") {
+            // e.g. `#[batch_json_output_format(MyConcreteOutput)]`
+            //
+            // If the user already specified it, that would be a conflict, 
+            // but typically you'd just overwrite. Or you can error out 
+            // if you want exactly one. We'll assume only one is allowed.
+            if json_output_format_type.is_some() {
+                return Err(Error::new_spanned(
+                    attr, 
+                    "Duplicate #[batch_json_output_format(...)] attribute found.",
+                ));
             }
+
+            let parsed_ty = attr.parse_args::<Type>()?;
+            json_output_format_type = Some(parsed_ty);
         }
     }
 
-    // Must be a named struct.
+    // ----------------------------------------------
+    // 2) Ensure this is a named struct, not an enum or tuple struct
+    // ----------------------------------------------
     let fields = match &ast.data {
         syn::Data::Struct(ds) => match &ds.fields {
             syn::Fields::Named(named) => &named.named,
             _ => {
-                return Err(syn::Error::new_spanned(
+                return Err(Error::new_spanned(
                     &ast.ident,
                     "LanguageModelBatchWorkflow derive only supports a named struct.",
                 ));
             }
         },
         _ => {
-            return Err(syn::Error::new_spanned(
+            return Err(Error::new_spanned(
                 &ast.ident,
-                "LanguageModelBatchWorkflow derive only supports a struct.",
+                "LanguageModelBatchWorkflow derive can only be used on a struct.",
             ));
         }
     };
 
-    // We'll gather known attributes from fields.
+    // ----------------------------------------------
+    // 3) Look for the required field attributes
+    //    `[batch_client]`, `[batch_workspace]`, `[model_type]`, etc.
+    // ----------------------------------------------
     let mut batch_client_field:    Option<syn::Ident> = None;
     let mut batch_workspace_field: Option<syn::Ident> = None;
     let mut model_type_field:      Option<syn::Ident> = None;
@@ -132,49 +80,51 @@ pub fn parse_derive_input_for_lmbw(ast: &syn::DeriveInput) -> Result<LmbwParsedI
         };
 
         for attr in &field.attrs {
-            if let Ok(syn::Meta::Path(path)) = attr.parse_meta() {
-                if path.is_ident("batch_client") {
-                    batch_client_field = Some(field_ident.clone());
-                } else if path.is_ident("batch_workspace") {
-                    batch_workspace_field = Some(field_ident.clone());
-                } else if path.is_ident("custom_process_batch_output_fn") {
-                    process_batch_output_fn_field = Some(field_ident.clone());
-                } else if path.is_ident("custom_process_batch_error_fn") {
-                    process_batch_error_fn_field = Some(field_ident.clone());
-                } else if path.is_ident("model_type") {
-                    model_type_field = Some(field_ident.clone());
-                }
+            if attr.path().is_ident("batch_client") {
+                batch_client_field = Some(field_ident.clone());
+            } else if attr.path().is_ident("batch_workspace") {
+                batch_workspace_field = Some(field_ident.clone());
+            } else if attr.path().is_ident("model_type") {
+                model_type_field = Some(field_ident.clone());
+            } else if attr.path().is_ident("custom_process_batch_output_fn") {
+                process_batch_output_fn_field = Some(field_ident.clone());
+            } else if attr.path().is_ident("custom_process_batch_error_fn") {
+                process_batch_error_fn_field = Some(field_ident.clone());
             }
         }
     }
 
-    // Check for required fields:
+    // ----------------------------------------------
+    // 4) Verify required fields exist
+    // ----------------------------------------------
     if batch_client_field.is_none() {
-        return Err(syn::Error::new_spanned(
+        return Err(Error::new_spanned(
             &ast.ident,
-            "Missing required `#[batch_client]` field."
+            "Missing required `#[batch_client]` field.",
         ));
     }
     if batch_workspace_field.is_none() {
-        return Err(syn::Error::new_spanned(
+        return Err(Error::new_spanned(
             &ast.ident,
-            "Missing required `#[batch_workspace]` field."
+            "Missing required `#[batch_workspace]` field.",
         ));
     }
     if model_type_field.is_none() {
-        return Err(syn::Error::new_spanned(
+        return Err(Error::new_spanned(
             &ast.ident,
-            "Missing required `#[model_type]` field."
+            "Missing required `#[model_type]` field.",
         ));
     }
     if custom_error_type.is_none() {
-        return Err(syn::Error::new_spanned(
+        return Err(Error::new_spanned(
             &ast.ident,
-            "Missing required `#[batch_error_type(...)]` attribute on the struct."
+            "Missing required `#[batch_error_type(...)]` attribute on the struct.",
         ));
     }
 
-    // Build the final object.
+    // ----------------------------------------------
+    // 5) Build LmbwParsedInput
+    // ----------------------------------------------
     let built = LmbwParsedInputBuilder::default()
         .struct_ident(struct_ident)
         .generics(generics)
@@ -186,11 +136,12 @@ pub fn parse_derive_input_for_lmbw(ast: &syn::DeriveInput) -> Result<LmbwParsedI
         .process_batch_output_fn_field(process_batch_output_fn_field)
         .process_batch_error_fn_field(process_batch_error_fn_field)
         .build()
-        .map_err(|e| syn::Error::new_spanned(&ast.ident, format!("Builder error: {e}")))?;
+        .map_err(|e| {
+            Error::new_spanned(&ast.ident, format!("Builder error: {e}"))
+        })?;
 
     Ok(built)
 }
-
 
 // ===========================[ CHANGED ITEM #1 ]===========================
 // The entire pair of test functions in `test_parse_derive_input_for_lmbw`,

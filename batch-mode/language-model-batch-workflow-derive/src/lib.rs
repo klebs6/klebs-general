@@ -30,6 +30,7 @@ xp!{gather_results}
         custom_process_batch_error_fn,
         expected_content_type,
         model_type,
+        batch_mode_json_output_format_is_the_first_generic,
         batch_error_type
     )
 )]

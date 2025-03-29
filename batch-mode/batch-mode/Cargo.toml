@@ -1,5 +1,5 @@
 [dependencies]
-structopt = "0.3.26"
+structopt.workspace = true
 
 [dependencies.batch-mode-token-expansion-axis-derive]
 path = "../batch-mode-token-expansion-axis-derive"

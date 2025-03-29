@@ -35,18 +35,17 @@ version = "0.1.0"
 [dependencies.save-load-traits]
 path = "../save-load-traits"
 version = "0.2.0"
-[dependencies.serde]
-features = [ "derive" ]
-version = "*"
-[dependencies.serde_derive]
-version = "*"
-[dependencies.serde_json]
-version = "*"
+
+[dependencies]
+serde.workspace        = true
+serde_derive.workspace = true
+serde_json.workspace   = true
+
 [package]
-authors = [ "klebs tpk3.mx@gmail.com" ]
+authors     = [ "klebs tpk3.mx@gmail.com" ]
 description = "Handles batch responses, errors, and JSON repairs in a batch processing system."
-edition = "2024"
-license = "MIT"
-name = "batch-mode-process-response"
-repository = "https://github.com/klebs6/klebs-general"
-version = "0.2.0"
+edition     = "2024"
+license     = "MIT"
+name        = "batch-mode-process-response"
+repository  = "https://github.com/klebs6/klebs-general"
+version     = "0.2.0"

@@ -1,6 +1,7 @@
 [dependencies]
-derive_builder = "0.20.2"
-getset = "0.1.5"
+derive_builder.workspace = true
+getset.workspace         = true
+
 [dependencies.batch-mode-3p]
 path = "../batch-mode-3p"
 version = "0.2.0"
@@ -10,11 +11,12 @@ version = "0.2.0"
 [dependencies.camel-case-token-with-comment]
 path = "../camel-case-token-with-comment"
 version = "0.2.0"
+
 [package]
-edition = "2024"
-name = "batch-mode-batch-workspace-interface"
-version = "0.2.0"
+edition     = "2024"
+name        = "batch-mode-batch-workspace-interface"
+version     = "0.2.0"
 description = "Defines traits for interacting with batch workspaces, including file paths and directories."
-authors = ["klebs tpk3.mx@gmail.com"]
-license = "MIT"
-repository = "https://github.com/klebs6/klebs-general"
+authors     = ["klebs tpk3.mx@gmail.com"]
+license     = "MIT"
+repository  = "https://github.com/klebs6/klebs-general"

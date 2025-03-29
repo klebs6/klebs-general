@@ -1,15 +1,13 @@
 [dependencies]
-indoc = "2.0.6"
-export-magic = "0.3.6"
+indoc.workspace        = true
+serde.workspace        = true
+serde_derive.workspace = true
+serde_json.workspace   = true
+export-magic.workspace = true
+
 [dependencies.save-load-traits]
 path = "../save-load-traits"
-[dependencies.serde]
-features = [ "derive" ]
-version = "1.0.218"
-[dependencies.serde_derive]
-version = "1.0.218"
-[dependencies.serde_json]
-version = "1.0.139"
+
 [package]
 authors = [ "klebs tpk3.mx@gmail.com" ]
 description = "Contains code we use for ai-assisted struct generation. Please also see the ai-json-template-derive crate for more information."

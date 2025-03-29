@@ -1,11 +1,18 @@
 [dependencies]
-derive_builder = "0.20.2"
+derive_builder.workspace     = true
+serde.workspace              = true
+serde_derive.workspace       = true
+serde_json.workspace         = true
+traced-test.workspace        = true
+tracing.workspace            = true
+tracing-setup.workspace      = true
+tracing-subscriber.workspace = true
+async-trait.workspace        = true
+
 [dependencies.ai-json-template]
 path = "../ai-json-template"
 [dependencies.ai-json-template-derive]
 path = "../ai-json-template-derive"
-[dependencies.async-trait]
-version = "0.1.86"
 [dependencies.batch-mode-3p]
 path = "../batch-mode-3p"
 [dependencies.batch-mode-batch-client]
@@ -32,24 +39,9 @@ path = "../batch-mode-process-response"
 path = "../language-model-type"
 [dependencies.save-load-traits]
 path = "../save-load-traits"
-[dependencies.serde]
-features = [ "derive" ]
-version = "1.0.218"
-[dependencies.serde_derive]
-version = "1.0.218"
-[dependencies.serde_json]
-version = "1.0.139"
-[dependencies.traced-test]
-version = "1.0.2"
-[dependencies.tracing]
-version = "0.1.41"
-[dependencies.tracing-setup]
-version = "1.0.2"
-[dependencies.tracing-subscriber]
-features = [ "env-filter", "json" ]
-version = "0.3.19"
+
 [package]
 description = "This crate provides a specialized approach to batch-based langauge model expansions and reconciling partial or incomplete batch states."
-edition = "2024"
-name = "batch-mode-batch-workflow"
-version = "0.1.0"
+edition     = "2024"
+name        = "batch-mode-batch-workflow"
+version     = "0.1.0"

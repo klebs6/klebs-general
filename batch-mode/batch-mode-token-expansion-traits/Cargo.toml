@@ -6,14 +6,15 @@ path = "../batch-mode-3p"
 path = "../camel-case-token-with-comment"
 [dependencies.save-load-traits]
 path = "../save-load-traits"
+
 [package]
-authors = [ "klebs tpk3.mx@gmail.com" ]
-categories = [ "text-processing", "api-bindings" ]
+authors     = [ "klebs tpk3.mx@gmail.com" ]
+categories  = [ "text-processing", "api-bindings" ]
 description = "Traits for describing distinct token expansion axes, used for instructing expansions in an LLM context."
-edition = "2024"
-keywords = [ "token", "axis", "expansion" ]
-license = "MIT"
-name = "batch-mode-token-expansion-traits"
-readme = "README.md"
-repository = "https://github.com/klebs6/klebs-general"
-version = "0.1.0"
+edition     = "2024"
+keywords    = [ "token", "axis", "expansion" ]
+license     = "MIT"
+name        = "batch-mode-token-expansion-traits"
+readme      = "README.md"
+repository  = "https://github.com/klebs6/klebs-general"
+version     = "0.1.0"

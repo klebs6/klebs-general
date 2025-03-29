@@ -1,7 +1,11 @@
+[dependencies]
+async-trait.workspace        = true
+tracing.workspace            = true
+tracing-setup.workspace      = true
+tracing-subscriber.workspace = true
+
 [dependencies.agent-coordinate]
 path = "../agent-coordinate"
-[dependencies.async-trait]
-version = "0.1.86"
 [dependencies.batch-mode-3p]
 path = "../batch-mode-3p"
 [dependencies.batch-mode-batch-client]
@@ -40,21 +44,15 @@ path = "../language-model-batch-workflow-derive"
 path = "../language-model-type"
 [dependencies.save-load-traits]
 path = "../save-load-traits"
-[dependencies.tracing]
-version = "0.1.41"
-[dependencies.tracing-setup]
-version = "1.0.2"
-[dependencies.tracing-subscriber]
-features = [ "env-filter", "json" ]
-version = "0.3.19"
+
 [package]
-authors = [ "klebs tpk3.mx@gmail.com" ]
-categories = [ "text-processing", "api-bindings" ]
+authors     = [ "klebs tpk3.mx@gmail.com" ]
+categories  = [ "text-processing", "api-bindings" ]
 description = "A crate for token expansion, leveraging batch workflows and language model APIs."
-edition = "2024"
-keywords = [ "token", "expansion", "batch", "workflow", "language-model" ]
-license = "MIT"
-name = "language-model-token-expander"
-readme = "README.md"
-repository = "https://github.com/klebs6/klebs-general"
-version = "0.1.0"
+edition     = "2024"
+keywords    = [ "token", "expansion", "batch", "workflow", "language-model" ]
+license     = "MIT"
+name        = "language-model-token-expander"
+readme      = "README.md"
+repository  = "https://github.com/klebs6/klebs-general"
+version     = "0.1.0"

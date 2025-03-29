@@ -6,6 +6,10 @@ pub(crate) use quote::{quote};
 
 pub(crate) use syn::{
     DeriveInput,
+    Lit, 
+    Type, 
+    Error,
+    GenericParam,
 };
 
 #[cfg(test)]

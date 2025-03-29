@@ -1,34 +1,26 @@
 // ---------------- [ File: src/finish_processing_uncompleted_batches.rs ]
 crate::ix!();
 
-/// Generate the `impl FinishProcessingUncompletedBatches` code.
 pub fn generate_impl_finish_processing_uncompleted_batches(parsed: &LmbwParsedInput) -> TokenStream2 {
     tracing::trace!("generate_impl_finish_processing_uncompleted_batches: start.");
 
-    let struct_ident = parsed.struct_ident();
-    let struct_name_str = struct_ident.to_string();
-
+    let struct_ident   = parsed.struct_ident();
+    let struct_name_str= struct_ident.to_string();
     let (impl_generics, ty_generics, where_clause) = parsed.generics().split_for_impl();
 
-    // The user’s custom error type (e.g. `MyErr`) or our fallback
+    // The user’s custom error type (e.g. `MyErr`) or fallback
     let error_type = match &parsed.custom_error_type() {
         Some(t) => quote! { #t },
         None    => quote! { TokenExpanderError },
     };
 
-    // The user's chosen JSON format type or fallback to CamelCaseTokenWithComment
+    // The user's chosen JSON format type or fallback
     let user_output_ty = match parsed.json_output_format_type() {
         Some(t) => quote! { #t },
         None    => quote! { CamelCaseTokenWithComment },
     };
 
-    // We create identifiers for the new bridging function + pointer
-    // specialized to this struct’s chosen type. For instance, if the
-    // struct is named `MyValidStruct`, we generate:
-    //   fn MyValidStruct_output_file_bridge_fn<'a>(...) -> ...
-    //   pub const MYVALIDSTRUCT_OUTPUT_FILE_BRIDGE: ...
-    //
-    // We'll do a simple transform to uppercase the struct name for the const.
+    // Generate ident for bridging fn and bridging const
     let bridge_fn_ident = syn::Ident::new(
         &format!("{}_output_file_bridge_fn", struct_name_str),
         struct_ident.span(),
@@ -38,24 +30,18 @@ pub fn generate_impl_finish_processing_uncompleted_batches(parsed: &LmbwParsedIn
         struct_ident.span(),
     );
 
-    // If the user gave us a custom bridging field via #[custom_process_batch_output_fn],
-    // we do not use the specialized function pointer. Instead, we reference that field.
     let output_fn_expr = if let Some(custom_out) = &parsed.process_batch_output_fn_field() {
         quote! { &self.#custom_out }
     } else {
-        // Otherwise, we pass `&MYSTRUCT_OUTPUT_FILE_BRIDGE`.
-        quote! { &#bridge_const_ident }
+        quote! { &Self::#bridge_const_ident }
     };
 
-    // If the user gave us a custom bridging field for error handling, use it;
-    // else fallback to PROCESS_ERROR_FILE_BRIDGE.
-    let error_fn_expr = if let Some(err_fn) = &parsed.process_batch_error_fn_field() {
-        quote! { &self.#err_fn }
+    let error_fn_expr = if let Some(custom_err) = &parsed.process_batch_error_fn_field() {
+        quote! { &self.#custom_err }
     } else {
         quote! { &PROCESS_ERROR_FILE_BRIDGE }
     };
 
-    // The expressions for `workspace` and `client` references
     let workspace_expr = if let Some(w) = &parsed.batch_workspace_field() {
         quote! { self.#w.clone() }
     } else {
@@ -67,30 +53,32 @@ pub fn generate_impl_finish_processing_uncompleted_batches(parsed: &LmbwParsedIn
         quote! { self.client() }
     };
 
-    // We generate code in two parts:
-    //   1) A specialized bridging function + const pointer: 
-    //      <StructName>_output_file_bridge_fn + <STRUCTNAME>_OUTPUT_FILE_BRIDGE
-    //   2) The `impl FinishProcessingUncompletedBatches for <Struct>` block
+    // 1) We define an inherent impl block for the struct, placing the bridging function
+    //    and bridging const inside it, so `E` is recognized:
+    let bridging_impl_block = quote! {
+        impl #impl_generics #struct_ident #ty_generics #where_clause {
+            /// A specialized bridging function for this struct, using `#user_output_ty`.
+            fn #bridge_fn_ident<'a>(
+                triple: &'a BatchFileTriple,
+                workspace: &'a (dyn BatchWorkspaceInterface + 'a),
+                ect: &'a ExpectedContentType,
+            ) -> ::std::pin::Pin<
+                Box<dyn ::std::future::Future<Output = Result<(), BatchOutputProcessingError>> + Send + 'a>
+            >
+            {
+                Box::pin(async move {
+                    process_output_file::<#user_output_ty>(triple, workspace, ect).await
+                })
+            }
 
-    let specialized_bridge_def = quote! {
-        /// A specialized bridging function for `#struct_ident`, using type
-        /// `#user_output_ty` for JSON expansions if needed.
-        fn #bridge_fn_ident<'a>(
-            triple: &'a BatchFileTriple,
-            workspace: &'a (dyn BatchWorkspaceInterface + 'a),
-            ect: &'a ExpectedContentType,
-        ) -> ::std::pin::Pin<Box<dyn ::std::future::Future<Output = Result<(), BatchOutputProcessingError>> + ::std::marker::Send + 'a>>
-        {
-            Box::pin(async move {
-                process_output_file::<#user_output_ty>(triple, workspace, ect).await
-            })
+            /// A public constant pointer to that bridging function, matching `BatchWorkflowProcessOutputFileFn`.
+            pub const #bridge_const_ident: BatchWorkflowProcessOutputFileFn =
+                Self::#bridge_fn_ident;
         }
-
-        /// A public constant pointer to that bridging function, matching `BatchWorkflowProcessOutputFileFn`.
-        pub const #bridge_const_ident: BatchWorkflowProcessOutputFileFn = #bridge_fn_ident;
     };
 
-    // The actual impl block
+    // 2) The `impl FinishProcessingUncompletedBatches` references either the custom field
+    //    or `Self::#bridge_const_ident`.
     let finish_impl = quote! {
         #[async_trait]
         impl #impl_generics FinishProcessingUncompletedBatches for #struct_ident #ty_generics #where_clause {
@@ -101,32 +89,37 @@ pub fn generate_impl_finish_processing_uncompleted_batches(parsed: &LmbwParsedIn
                 expected_content_type: &ExpectedContentType
             ) -> Result<(), Self::Error>
             {
-                info!("Finishing uncompleted batches if any remain for {}.", stringify!(#struct_ident));
+                info!(
+                    "Finishing uncompleted batches if any remain for {}.",
+                    stringify!(#struct_ident)
+                );
                 let workspace = #workspace_expr;
                 let language_model_client = #client_expr;
 
                 let mut batch_triples = workspace.clone().gather_all_batch_triples().await?;
-                info!("Reconciling unprocessed batch files in the work directory for {}.", stringify!(#struct_ident));
+                info!(
+                    "Reconciling unprocessed batch files in the work directory for {}.",
+                    stringify!(#struct_ident)
+                );
 
                 for triple in &mut batch_triples {
-                    triple.reconcile_unprocessed(
-                        &*language_model_client,
-                        expected_content_type,
-                        #output_fn_expr,
-                        #error_fn_expr
-                    ).await?;
+                    triple
+                        .reconcile_unprocessed(
+                            &*language_model_client,
+                            expected_content_type,
+                            #output_fn_expr,
+                            #error_fn_expr
+                        )
+                        .await?;
                 }
                 Ok(())
             }
         }
     };
 
-    // Combine them into one chunk of expanded code
+    // Combine them
     quote! {
-        // Specialized bridging items for #struct_ident:
-        #specialized_bridge_def
-
-        // The actual FinishProcessingUncompletedBatches impl:
+        #bridging_impl_block
         #finish_impl
     }
 }

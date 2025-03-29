@@ -1,33 +1,24 @@
 [dependencies]
-export-magic = "0.3.6"
-pretty_assertions  = "1.4.1"
-tempfile = "3.19.0"
-error-tree   = "0.6.0"
-json-repair  = "0.4.0"
-tokio        = { version = "1", features = ["full"] }
-[dependencies.serde]
-features = [ "derive" ]
-version = "*"
-[dependencies.serde_derive]
-version = "*"
-[dependencies.async-trait]
-version = "*"
-[dependencies.serde_json]
-version = "*"
-[dependencies.traced-test]
-version = "*"
-[dependencies.tracing]
-version = "*"
-[dependencies.tracing-setup]
-version = "*"
-[dependencies.tracing-subscriber]
-features = [ "env-filter", "json" ]
-version = "*"
+export-magic.workspace       = true
+pretty_assertions.workspace  = true
+tempfile.workspace           = true
+error-tree.workspace         = true
+json-repair.workspace        = true
+tokio.workspace              = true
+serde.workspace              = true
+serde_derive.workspace       = true
+async-trait.workspace        = true
+serde_json.workspace         = true
+traced-test.workspace        = true
+tracing.workspace            = true
+tracing-setup.workspace      = true
+tracing-subscriber.workspace = true
+
 [package]
-authors = [ "klebs tpk3.mx@gmail.com" ]
+authors     = [ "klebs tpk3.mx@gmail.com" ]
 description = "Provides traits for saving and loading objects asynchronously to and from files and directories."
-edition = "2024"
-license = "MIT"
-name = "save-load-traits"
-repository = "https://github.com/klebs6/klebs-general"
-version = "0.2.0"
+edition     = "2024"
+license     = "MIT"
+name        = "save-load-traits"
+repository  = "https://github.com/klebs6/klebs-general"
+version     = "0.2.0"
