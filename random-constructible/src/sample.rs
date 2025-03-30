@@ -1,3 +1,4 @@
+// ---------------- [ File: src/sample.rs ]
 crate::ix!();
 
 pub fn sample_variants_with_probabilities<K: Clone + Eq + Hash + Sized, RNG: Rng + ?Sized>(rng: &mut RNG, probs: &HashMap<K,f64>) 

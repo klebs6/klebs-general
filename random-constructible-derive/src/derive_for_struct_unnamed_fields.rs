@@ -1,3 +1,4 @@
+// ---------------- [ File: src/derive_for_struct_unnamed_fields.rs ]
 crate::ix!();
 
 pub fn derive_for_unnamed_fields(

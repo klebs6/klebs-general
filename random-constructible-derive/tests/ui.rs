@@ -1,3 +1,4 @@
+// ---------------- [ File: tests/ui.rs ]
 #[test]
 fn ui_tests() {
     let t = trybuild::TestCases::new();
@@ -10,4 +11,3 @@ fn ui_tests() {
     t.pass("tests/ui/06-option.rs");
     t.compile_fail("tests/ui/05-env-fail.rs");
 }
-

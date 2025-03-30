@@ -1,3 +1,4 @@
+// ---------------- [ File: src/generate_random_constructible_enum_impl.rs ]
 crate::ix!();
 
 /// Generates the implementation block for the `RandConstructEnum` trait.

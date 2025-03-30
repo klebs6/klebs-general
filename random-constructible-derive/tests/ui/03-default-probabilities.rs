@@ -1,3 +1,4 @@
+// ---------------- [ File: tests/ui/03-default-probabilities.rs ]
 extern crate random_constructible;
 extern crate random_constructible_derive;
 
@@ -20,5 +21,4 @@ fn main() {
     assert_eq!(map.get(&ProbabilityEnum::VariantY), Some(&3.0));
     assert_eq!(map.get(&ProbabilityEnum::VariantZ), Some(&1.0));
 }
-
 

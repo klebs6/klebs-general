@@ -1,3 +1,4 @@
+// ---------------- [ File: src/generate_match_arms.rs ]
 crate::ix!();
 
 /// Generates match arms for the `default_weight` function of an enum.

@@ -1,3 +1,4 @@
+// ---------------- [ File: src/lib.rs ]
 #![allow(unused_imports)]
 
 #[macro_use] mod imports; use imports::*;

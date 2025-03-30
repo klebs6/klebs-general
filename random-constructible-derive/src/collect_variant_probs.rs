@@ -1,3 +1,4 @@
+// ---------------- [ File: src/collect_variant_probs.rs ]
 crate::ix!();
 
 /// Collects variant identifiers, probabilities, and fields from the enum variants.

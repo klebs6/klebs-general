@@ -1,3 +1,4 @@
+// ---------------- [ File: src/extract_enum_variants.rs ]
 crate::ix!();
 
 pub fn extract_enum_variants(input: &syn::DeriveInput) 

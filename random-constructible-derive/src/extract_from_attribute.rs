@@ -1,3 +1,4 @@
+// ---------------- [ File: src/extract_from_attribute.rs ]
 crate::ix!();
 
 pub fn extract_probability_from_attribute(attr: &syn::Attribute) 

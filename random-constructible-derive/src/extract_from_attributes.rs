@@ -1,3 +1,4 @@
+// ---------------- [ File: src/extract_from_attributes.rs ]
 crate::ix!();
 
 pub fn extract_probability_from_attributes(attrs: &[syn::Attribute]) 
@@ -46,4 +47,3 @@ mod tests {
         assert_eq!(result, None);
     }
 }
-

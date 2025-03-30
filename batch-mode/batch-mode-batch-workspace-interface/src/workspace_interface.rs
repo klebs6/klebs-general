@@ -3,6 +3,9 @@ crate::ix!();
 
 pub trait BatchWorkspaceInterface
 : GetInputFilenameAtIndex
++ GetTargetDir
++ GetTargetDirectoryFiles
++ FindSimilarTargetPath
 + GetOutputFilenameAtIndex
 + GetErrorFilenameAtIndex
 + GetMetadataFilenameAtIndex
@@ -17,6 +20,50 @@ pub trait BatchWorkspaceInterface
 + GetTargetPath<Item = Arc<dyn GetTargetPathForAIExpansion + Send + Sync + 'static>>
 {}
 
+pub trait GetTargetDir {
+    fn get_target_dir(&self) -> PathBuf;
+}
+
+//--------------------------------------------------
+pub trait GetTargetDirectoryFiles {
+    fn get_target_directory_files(&self) -> Vec<PathBuf>;
+}
+
+impl<W> GetTargetDirectoryFiles for W 
+where W: GetTargetDir
+{
+    fn get_target_directory_files(&self) -> Vec<PathBuf> {
+        // Example implementation: scan the target directory for existing files
+        std::fs::read_dir(&self.get_target_dir())
+            .unwrap()
+            .filter_map(|entry| entry.ok().map(|e| e.path()))
+            .collect()
+    }
+}
+
+//--------------------------------------------------
+pub trait FindSimilarTargetPath {
+    fn find_similar_target_path(&self, target_path: &Path) -> Option<PathBuf>;
+}
+
+impl<W> FindSimilarTargetPath for W 
+where W: GetTargetDirectoryFiles
+{
+    fn find_similar_target_path(&self, target_path: &Path) -> Option<PathBuf> {
+
+        use strsim::levenshtein;
+
+        let existing_paths = self.get_target_directory_files();
+        let target_str     = target_path.to_string_lossy();
+
+        existing_paths
+            .iter()
+            .find(|&existing| levenshtein(&target_str, &existing.to_string_lossy()) <= 2)
+            .cloned()
+    }
+}
+
+//--------------------------------------------------
 pub trait GetInputFilenameAtIndex {
     fn input_filename(&self, batch_idx: &BatchIndex) -> PathBuf;
 

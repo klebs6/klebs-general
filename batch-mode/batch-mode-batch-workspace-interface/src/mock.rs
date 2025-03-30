@@ -207,6 +207,13 @@ impl GetTargetPath for MockBatchWorkspace {
 
 impl BatchWorkspaceInterface for MockBatchWorkspace {}
 
+impl GetTargetDir for MockBatchWorkspace {
+
+    fn get_target_dir(&self) -> PathBuf {
+        todo!()
+    }
+}
+
 #[cfg(test)]
 mod test_mock_workspace_ephemeral {
     use super::*;

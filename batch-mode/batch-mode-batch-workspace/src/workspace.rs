@@ -35,20 +35,13 @@ impl Eq for BatchWorkspace {}
 unsafe impl Send for BatchWorkspace {}
 unsafe impl Sync for BatchWorkspace {}
 
-impl BatchWorkspace {
-
-    pub fn find_similar_target_path(&self, target_path: &Path) -> Option<PathBuf> {
-
-        use strsim::levenshtein;
-
-        let existing_paths = self.get_target_directory_files();
-        let target_str     = target_path.to_string_lossy();
-
-        existing_paths
-            .iter()
-            .find(|&existing| levenshtein(&target_str, &existing.to_string_lossy()) <= 2)
-            .cloned()
+impl GetTargetDir for BatchWorkspace {
+    fn get_target_dir(&self) -> PathBuf {
+        self.target_dir().to_path_buf()
     }
+}
+
+impl BatchWorkspace {
 
     pub async fn find_existing_triple_with_given_index(
         self: Arc<BatchWorkspace>, 
@@ -163,14 +156,6 @@ impl BatchWorkspace {
         tokio::fs::create_dir_all(&self.failed_json_repairs_dir).await?;
         tokio::fs::create_dir_all(&self.failed_items_dir).await?;
         Ok(())
-    }
-
-    pub fn get_target_directory_files(&self) -> Vec<PathBuf> {
-        // Example implementation: scan the target directory for existing files
-        std::fs::read_dir(&self.target_dir)
-            .unwrap()
-            .filter_map(|entry| entry.ok().map(|e| e.path()))
-            .collect()
     }
 
     pub fn batch_expansion_error_log_filename(&self, batch_idx: &BatchIndex) -> PathBuf {

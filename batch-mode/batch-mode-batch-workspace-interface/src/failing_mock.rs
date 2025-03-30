@@ -5,6 +5,13 @@ crate::ix!();
 #[derive(Default, Debug)]
 pub struct FailingWorkspace {}
 
+impl GetTargetDir for FailingWorkspace {
+
+    fn get_target_dir(&self) -> PathBuf {
+        todo!()
+    }
+}
+
 impl GetInputFilenameAtIndex for FailingWorkspace {
     fn input_filename(&self, _batch_idx: &BatchIndex) -> PathBuf {
         PathBuf::from("/this/path/does/not/exist/any_input.json")

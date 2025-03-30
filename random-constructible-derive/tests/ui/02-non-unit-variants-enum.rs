@@ -1,3 +1,4 @@
+// ---------------- [ File: tests/ui/02-non-unit-variants-enum.rs ]
 extern crate random_constructible;
 extern crate random_constructible_derive;
 

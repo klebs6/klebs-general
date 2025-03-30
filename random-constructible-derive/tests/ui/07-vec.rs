@@ -1,3 +1,4 @@
+// ---------------- [ File: tests/ui/07-vec.rs ]
 use random_constructible::*;
 use random_constructible_derive::*;
 
@@ -31,4 +32,3 @@ pub struct MyStruct {
 }
 
 fn main() {}
-

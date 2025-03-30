@@ -1,3 +1,4 @@
+// ---------------- [ File: src/derive_for_struct.rs ]
 crate::ix!();
 
 pub fn derive_random_constructible_for_struct(input: &DeriveInput) -> TokenStream2 {

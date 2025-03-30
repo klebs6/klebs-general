@@ -1,3 +1,4 @@
+// ---------------- [ File: tests/ui/01-simple-enum.rs ]
 extern crate random_constructible;
 extern crate random_constructible_derive;
 
@@ -15,4 +16,3 @@ enum SimpleEnum {
 fn main() {
     let _ = SimpleEnum::random();
 }
-

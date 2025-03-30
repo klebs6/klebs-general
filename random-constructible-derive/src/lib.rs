@@ -1,8 +1,11 @@
+// ---------------- [ File: src/lib.rs ]
 #![allow(unused_imports)]
 extern crate proc_macro;
 
 #[macro_use] mod imports; use imports::*;
 
+xp!{parse_min_max}
+xp!{clamp_code}
 xp!{derive_for_enum}
 xp!{derive_for_struct}
 xp!{derive_for_unit_struct}

@@ -76,3 +76,8 @@ impl GetTargetPath for BadWorkspace {
 }
 
 impl BatchWorkspaceInterface for BadWorkspace {}
+impl GetTargetDir for BadWorkspace {
+    fn get_target_dir(&self) -> PathBuf {
+        todo!();
+    }
+}

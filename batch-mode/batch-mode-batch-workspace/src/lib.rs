@@ -8,6 +8,5 @@ x!{workspace}
 x!{errors}
 x!{gather_all_batch_files}
 x!{full_batch_workspace_interface}
-x!{calculate_unseen_inputs}
 x!{workspace_clone}
 x!{mock_bad}
