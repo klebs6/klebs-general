@@ -1,28 +1,28 @@
 // ---------------- [ File: workspacer-linting/src/linting.rs ]
 crate::ix!();
 
+/// The `RunLinting` trait remains the same.
 #[async_trait]
 pub trait RunLinting {
-
     type Report;
     type Error;
     async fn run_linting(&self) -> Result<Self::Report, Self::Error>;
 }
 
+/// Implementation for the entire workspace.
+/// (unchanged from your original approach).
 #[async_trait]
-impl<P,H:CrateHandleInterface<P>> RunLinting for Workspace<P,H> 
-where for<'async_trait> P: From<PathBuf> + AsRef<Path> + Send + Sync + 'async_trait
+impl<P, H> RunLinting for Workspace<P,H>
+where
+    H: CrateHandleInterface<P>,
+    for<'async_trait> P: From<PathBuf> + AsRef<Path> + Send + Sync + 'async_trait,
 {
-
     type Report = LintReport;
     type Error  = LintingError;
 
-    /// Runs cargo clippy to lint the workspace and collects the linting results.
     async fn run_linting(&self) -> Result<Self::Report, Self::Error> {
+        let workspace_path = self.as_ref(); 
 
-        let workspace_path = self.as_ref();  // Assuming `self.path()` returns the workspace root path.
-
-        // Run `cargo clippy` in the workspace directory, treating warnings as errors.
         let output = tokio::process::Command::new("cargo")
             .arg("clippy")
             .arg("--all-targets")
@@ -30,19 +30,75 @@ where for<'async_trait> P: From<PathBuf> + AsRef<Path> + Send + Sync + 'async_tr
             .arg("--quiet")
             .arg("--")
             .arg("-D")
-            .arg("warnings")  // Deny warnings to force failure on lint issues
+            .arg("warnings")
             .current_dir(workspace_path)
             .output()
             .await
-            .map_err(|e| LintingError::CommandError { io: e.into() })?;  // Handle any I/O error from the process execution.
+            .map_err(|e| LintingError::CommandError { io: e.into() })?;
 
-        // Capture the linting results in LintReport.
         let report = LintReport::from(output);
-
-        // If clippy failed, return an error.
         report.maybe_throw()?;
+        Ok(report)
+    }
+}
 
-        Ok(report)  // Return the linting report if successful.
+/// Now **do not** implement `RunLinting` in a generic way for all `C: CrateHandleInterface`.
+/// Instead, implement it for your **actual concrete crate type**—for example, `CrateHandle`.
+///
+/// That ensures there is no overlap with `Workspace<P,H>` in the compiler's eyes.
+///
+#[async_trait]
+impl RunLinting for CrateHandle {
+    type Report = LintReport;
+    type Error  = LintingError;
+
+    async fn run_linting(&self) -> Result<Self::Report, Self::Error> {
+        // 1) We lock CargoToml to find the actual `Cargo.toml` path
+        let cargo_toml_arc = self.cargo_toml_direct(); 
+        let cargo_toml_guard = cargo_toml_arc.lock().await;
+        let manifest_path = cargo_toml_guard.as_ref().to_path_buf();
+
+        // 2) Run cargo clippy with `--manifest-path` ...
+        let output = tokio::process::Command::new("cargo")
+            .arg("clippy")
+            .arg("--manifest-path")
+            .arg(&manifest_path)
+            .arg("--all-targets")
+            .arg("--message-format=short")
+            .arg("--quiet")
+            .arg("--")
+            .arg("-D")
+            .arg("warnings")
+            .output()
+            .await
+            .map_err(|io_err| {
+                error!(
+                    "Failed to spawn cargo clippy for crate='{}': {io_err}",
+                    self.name()
+                );
+                LintingError::CommandError { io: io_err.into() }
+            })?;
+
+        let report = LintReport::from(output);
+        if !report.success() {
+            warn!(
+                "Lint failed for crate='{}'. Stderr:\n{}",
+                self.name(),
+                report.stderr()
+            );
+            return Err(LintingError::UnknownError {
+                stderr: Some(report.stderr().to_owned()),
+                stdout: Some(report.stdout().to_owned()),
+            });
+        }
+
+        debug!(
+            "Lint successful for crate='{}' => {} bytes stdout, {} bytes stderr",
+            self.name(),
+            report.stdout().len(),
+            report.stderr().len()
+        );
+        Ok(report)
     }
 }
 

@@ -37,6 +37,7 @@ pub enum WsCli {
 
 #[tokio::main]
 async fn main() -> Result<(),WorkspaceError> {
+    configure_tracing!();
     match WsCli::from_args() {
         WsCli::Add               { subcommand } => { subcommand.run().await? },
         WsCli::Analyze           { subcommand } => { subcommand.run().await? },
