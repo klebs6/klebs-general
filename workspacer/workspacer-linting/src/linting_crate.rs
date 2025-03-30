@@ -9,7 +9,7 @@ where
     type Report = LintReport;
     type Error = LintingError;
 
-    async fn run_linting_crate(&self) -> Result<Self::Report, Self::Error> {
+    async fn run_linting(&self) -> Result<Self::Report, Self::Error> {
         // 1) Lock the CargoToml so we can locate the physical manifest path
         let cargo_toml_arc = self.cargo_toml();
         let cargo_toml_guard = cargo_toml_arc.lock().await;
@@ -62,4 +62,3 @@ where
         Ok(report)
     }
 }
-
