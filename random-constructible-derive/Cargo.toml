@@ -25,8 +25,8 @@ rand         = "0.8"
 export-magic = "0.3.6"
 itertools    = "0.13.0"
 traced-test               = "1.0.2"
-getset = "*"
-derive_builder = "*"
+getset = "0.1.5"
+derive_builder = "0.20.2"
 tracing                   = { version = "0.1.40", features = ["log"] }
 tracing-setup             = "1.0.2"
 tracing-subscriber        = { version = "0.3", default-features = false, features = ["fmt", "std", "env-filter", "json"] }
