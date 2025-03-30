@@ -3,3 +3,4 @@
 
 x!{lint_report}
 x!{linting}
+x!{linting_crate}

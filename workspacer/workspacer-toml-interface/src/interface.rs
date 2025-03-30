@@ -6,6 +6,7 @@ pub trait CargoTomlInterface
 + Send
 + Sync
 + Versioned<Error=CargoTomlError>
++ GetContent
 //+ PinWildcardDependencies<Error=CargoTomlError>
 + CheckRequiredFieldsForPublishing<Error=CargoTomlError>
 + CheckVersionValidityForPublishing<Error=CargoTomlError>
@@ -31,6 +32,10 @@ pub trait CargoTomlInterface
 + WriteDocumentBack<Error=CargoTomlError>
 + DocumentClone<Error=CargoTomlError>
 {}
+
+pub trait GetContent {
+    fn get_content(&self) -> &toml::Value;
+}
 
 #[async_trait]
 pub trait WriteDocumentBack {

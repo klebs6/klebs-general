@@ -6,6 +6,7 @@ pub use workspacer_add_internal_dep::*;
 pub use workspacer_analysis::*;
 pub use workspacer_bump::*;
 pub use workspacer_format_imports::*;
+pub use workspacer_lock::*;
 pub use workspacer_cleanup::*;
 pub use workspacer_consolidate::*;
 pub use workspacer_crate::*;

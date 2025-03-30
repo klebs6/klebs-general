@@ -12,6 +12,12 @@ pub struct CargoToml {
 
 impl CargoTomlInterface for CargoToml {}
 
+impl GetContent for CargoToml {
+    fn get_content(&self) -> &toml::Value {
+        self.content()
+    }
+}
+
 #[async_trait]
 impl SaveToDisk for CargoToml {
     type Error = CargoTomlError;

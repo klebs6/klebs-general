@@ -357,6 +357,7 @@ error_tree!{
     // Enum representing possible errors in the `workspace-detail` crate.
     #[derive(Clone)]
     pub enum WorkspaceError {
+        TomlSerErr(toml::ser::Error),
         SourceFileRegistrationError(SourceFileRegistrationError),
         CycleDetectedInWorkspaceDependencyGraph {
             cycle_node_id: NodeIndex,

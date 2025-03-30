@@ -32,6 +32,8 @@ x!{format}
 x!{format_all_imports}
 x!{format_imports}
 x!{get}
+x!{get_toml_section}
+x!{get_lock_versions}
 x!{git}
 x!{info}
 x!{lint}
