@@ -1,20 +1,34 @@
 [dependencies.batch-mode-3p]
 path = "../batch-mode-3p"
-version = "0.2.0"
+version = "0.2.1"
 
-[dependencies]
-serde.workspace        = true
-serde_derive.workspace = true
-serde_json.workspace   = true
+[dependencies.serde]
+workspace = true
+
+[dependencies.serde_derive]
+workspace = true
+
+[dependencies.serde_json]
+workspace = true
 
 [package]
-authors     = ["klebs tpk3.mx@gmail.com"]
-categories  = ["api-bindings", "development-tools", "parsing"]
+authors = ["klebs tpk3.mx@gmail.com"]
+categories = [
+    "api-bindings",
+    "development-tools",
+    "parsing",
+]
 description = "A Rust crate providing an enumeration for various language model types used in machine learning applications, enabling precise model specification through enums."
-edition     = "2024"
-keywords    = ["language-model", "gpt", "serde", "model-enum", "AI"]
-license     = "MIT"
-name        = "language-model-type"
-readme      = "README.md"
-repository  = "https://github.com/klebs6/klebs-general"
-version     = "0.1.0"
+edition = "2024"
+keywords = [
+    "language-model",
+    "gpt",
+    "serde",
+    "model-enum",
+    "AI",
+]
+license = "MIT"
+name = "language-model-type"
+readme = "README.md"
+repository = "https://github.com/klebs6/klebs-general"
+version = "0.1.1"

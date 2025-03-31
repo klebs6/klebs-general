@@ -1,30 +1,38 @@
-[dependencies]
-derive_builder.workspace = true
-getset.workspace = true
-
 [dependencies.batch-mode-3p]
 path = "../batch-mode-3p"
-version = "0.2.0"
+version = "0.2.1"
+
 [dependencies.batch-mode-batch-index]
 path = "../batch-mode-batch-index"
-version = "0.2.0"
+version = "0.2.1"
+
 [dependencies.batch-mode-batch-metadata]
 path = "../batch-mode-batch-metadata"
-version = "0.2.0"
+version = "0.2.1"
+
 [dependencies.batch-mode-batch-schema]
 path = "../batch-mode-batch-schema"
-version = "0.2.0"
+version = "0.2.1"
+
 [dependencies.batch-mode-batch-triple]
 path = "../batch-mode-batch-triple"
-version = "0.2.0"
+version = "0.2.1"
+
+[dependencies.derive_builder]
+workspace = true
+
+[dependencies.getset]
+workspace = true
+
 [dependencies.save-load-traits]
 path = "../save-load-traits"
-version = "0.2.0"
+version = "0.2.1"
+
 [package]
-authors = [ "klebs tpk3.mx@gmail.com" ]
+authors = ["klebs tpk3.mx@gmail.com"]
 description = "This crate provides a client for interacting with OpenAI's batch processing API, allowing you to manage and download batch files asynchronously. It offers functionality for managing batch statuses, uploading files, and retrieving results after batch processing."
 edition = "2024"
 license = "MIT"
 name = "batch-mode-batch-client"
 repository = "https://github.com/klebs6/klebs-general"
-version = "0.2.0"
+version = "0.2.1"

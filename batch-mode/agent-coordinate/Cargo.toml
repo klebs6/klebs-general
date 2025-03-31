@@ -1,20 +1,42 @@
-[dependencies]
-derive_builder.workspace     = true
-getset.workspace             = true
-traced-test.workspace        = true
-tracing.workspace            = true
-tracing-setup.workspace      = true
-tracing-subscriber.workspace = true
-
 [dependencies.batch-mode-3p]
 path = "../batch-mode-3p"
-version = "0.2.0"
+version = "0.2.1"
+
+[dependencies.derive_builder]
+workspace = true
+
+[dependencies.getset]
+workspace = true
+
+[dependencies.traced-test]
+workspace = true
+
+[dependencies.tracing]
+workspace = true
+
+[dependencies.tracing-setup]
+workspace = true
+
+[dependencies.tracing-subscriber]
+workspace = true
 
 [package]
-edition = "2024"
-name = "agent-coordinate"
-version = "0.1.0"
+categories = [
+    "data-structures",
+    "algorithms",
+    "simulation",
+    "mathematics",
+    "science",
+]
 description = "A Rust crate for defining and managing agent coordinates including locations and goals with flexible initialization options and dynamic state management."
-keywords = ["agent", "coordinate", "location", "goal", "state-management"]
-categories = ["data-structures", "algorithms", "simulation", "mathematics", "science"]
+edition = "2024"
+keywords = [
+    "agent",
+    "coordinate",
+    "location",
+    "goal",
+    "state-management",
+]
 license-file = "OGPv1"
+name = "agent-coordinate"
+version = "0.1.1"

@@ -1,54 +1,134 @@
+[build-dependencies.scan-crate-for-typedefs]
+workspace = true
+
+[dependencies.Inflector]
+workspace = true
+
+[dependencies.ai-descriptor]
+workspace = true
+
+[dependencies.async-openai]
+workspace = true
+
+[dependencies.async-trait]
+workspace = true
+
+[dependencies.bytes]
+workspace = true
+
+[dependencies.crossbeam]
+workspace = true
+
+[dependencies.delegate]
+workspace = true
+
+[dependencies.derive_builder]
+workspace = true
+
+[dependencies.disable_macro]
+workspace = true
+
+[dependencies.error-tree]
+workspace = true
+
+[dependencies.export-magic]
+workspace = true
+
+[dependencies.float-ord]
+workspace = true
+
+[dependencies.futures]
+workspace = true
+
+[dependencies.getset]
+workspace = true
+
+[dependencies.indoc]
+workspace = true
+
+[dependencies.json-repair]
+workspace = true
+
+[dependencies.json5]
+workspace = true
+
+[dependencies.lazy_static]
+workspace = true
+
+[dependencies.named-item]
+workspace = true
+
+[dependencies.named-item-derive]
+workspace = true
+
+[dependencies.num-traits]
+workspace = true
+
+[dependencies.once_cell]
+workspace = true
+
+[dependencies.pbx]
+workspace = true
+
+[dependencies.pretty_assertions]
+workspace = true
+
+[dependencies.rand]
+workspace = true
+
+[dependencies.rand-construct]
+workspace = true
+
+[dependencies.regex]
+workspace = true
+
+[dependencies.serde]
+workspace = true
+
+[dependencies.serde_json]
+workspace = true
+
+[dependencies.strsim]
+workspace = true
+
+[dependencies.structopt]
+workspace = true
+
+[dependencies.structured-language-form]
+workspace = true
+
+[dependencies.strum]
+workspace = true
+
+[dependencies.strum_macros]
+workspace = true
+
+[dependencies.tempfile]
+workspace = true
+
+[dependencies.tokio]
+workspace = true
+
+[dependencies.traced-test]
+workspace = true
+
+[dependencies.tracing]
+workspace = true
+
+[dependencies.tracing-setup]
+workspace = true
+
+[dependencies.tracing-subscriber]
+workspace = true
+
+[dependencies.uuid]
+workspace = true
+
 [package]
-name        = "batch-mode-3p"
-version     = "0.2.0"
-edition     = "2024"
+authors = ["klebs tpk3.mx@gmail.com"]
 description = "This crate contains the third party (3p) interface for the `batch-mode` crate ecosystem"
-authors     = ["klebs tpk3.mx@gmail.com"]
-license     = "MIT"
-repository  = "https://github.com/klebs6/klebs-general"
-
-[dependencies]
-pretty_assertions.workspace        = true
-async-openai.workspace             = true
-export-magic.workspace             = true
-uuid.workspace                     = true
-regex.workspace                    = true
-bytes.workspace                    = true
-tempfile.workspace                 = true
-serde.workspace                    = true
-serde_json.workspace               = true
-tokio.workspace                    = true
-futures.workspace                  = true
-error-tree.workspace               = true
-disable_macro.workspace            = true
-async-trait.workspace              = true
-indoc.workspace                    = true
-Inflector.workspace                = true
-tracing.workspace                  = true
-tracing-subscriber.workspace       = true
-delegate.workspace                 = true
-traced-test.workspace              = true
-tracing-setup.workspace            = true
-json5.workspace                    = true
-crossbeam.workspace                = true
-float-ord.workspace                = true
-num-traits.workspace               = true
-pbx.workspace                      = true
-json-repair.workspace              = true
-once_cell.workspace                = true
-strsim.workspace                   = true
-rand.workspace                     = true
-rand-construct.workspace           = true
-structopt.workspace                = true
-ai-descriptor.workspace            = true
-structured-language-form.workspace = true
-named-item.workspace               = true
-named-item-derive.workspace        = true
-getset.workspace                   = true
-derive_builder.workspace           = true
-strum.workspace                    = true
-strum_macros.workspace             = true
-lazy_static.workspace              = true
-
-[build-dependencies]
-scan-crate-for-typedefs.workspace  = true
+edition = "2024"
+license = "MIT"
+name = "batch-mode-3p"
+repository = "https://github.com/klebs6/klebs-general"
+version = "0.2.1"

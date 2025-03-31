@@ -1,24 +1,34 @@
 [dependencies.ai-json-template]
 path = "../ai-json-template"
-version = "0.1.0"
+version = "0.1.1"
+
 [dependencies.batch-mode-3p]
 path = "../batch-mode-3p"
-version = "0.2.0"
+version = "0.2.1"
+
 [dependencies.camel-case-token-with-comment]
 path = "../camel-case-token-with-comment"
-version = "0.2.0"
+version = "0.2.1"
+
 [dependencies.save-load-traits]
 path = "../save-load-traits"
-version = "0.2.0"
+version = "0.2.1"
 
 [package]
-authors     = [ "klebs tpk3.mx@gmail.com" ]
-categories  = [ "text-processing", "api-bindings" ]
+authors = ["klebs tpk3.mx@gmail.com"]
+categories = [
+    "text-processing",
+    "api-bindings",
+]
 description = "Traits for describing distinct token expansion axes, used for instructing expansions in an LLM context."
-edition     = "2024"
-keywords    = [ "token", "axis", "expansion" ]
+edition = "2024"
+keywords = [
+    "token",
+    "axis",
+    "expansion",
+]
 license-file = "OGPv1"
-name        = "batch-mode-token-expansion-traits"
-readme      = "README.md"
-repository  = "https://github.com/klebs6/klebs-general"
-version     = "0.1.0"
+name = "batch-mode-token-expansion-traits"
+readme = "README.md"
+repository = "https://github.com/klebs6/klebs-general"
+version = "0.1.1"

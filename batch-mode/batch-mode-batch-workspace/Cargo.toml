@@ -1,37 +1,51 @@
 [dependencies.batch-mode-3p]
 path = "../batch-mode-3p"
-version = "0.2.0"
+version = "0.2.1"
+
 [dependencies.batch-mode-batch-index]
 path = "../batch-mode-batch-index"
-version = "0.2.0"
+version = "0.2.1"
+
 [dependencies.batch-mode-batch-triple]
 path = "../batch-mode-batch-triple"
-version = "0.2.0"
-[dependencies.batch-mode-json]
-path = "../batch-mode-json"
-version = "0.2.0"
-[dependencies.camel-case-token-with-comment]
-path = "../camel-case-token-with-comment"
-version = "0.2.0"
+version = "0.2.1"
+
 [dependencies.batch-mode-batch-workspace-interface]
 path = "../batch-mode-batch-workspace-interface"
-version = "0.2.0"
+version = "0.2.1"
+
+[dependencies.batch-mode-json]
+path = "../batch-mode-json"
+version = "0.2.1"
+
+[dependencies.camel-case-token-with-comment]
+path = "../camel-case-token-with-comment"
+version = "0.2.1"
+
+[dependencies.derive_builder]
+workspace = true
+
 [dependencies.save-load-traits]
 path = "../save-load-traits"
-version = "0.2.0"
+version = "0.2.1"
 
-[dependencies]
-derive_builder.workspace     = true
-traced-test.workspace        = true
-tracing.workspace            = true
-tracing-setup.workspace      = true
-tracing-subscriber.workspace = true
+[dependencies.traced-test]
+workspace = true
+
+[dependencies.tracing]
+workspace = true
+
+[dependencies.tracing-setup]
+workspace = true
+
+[dependencies.tracing-subscriber]
+workspace = true
 
 [package]
-edition     = "2024"
-name        = "batch-mode-batch-workspace"
-version     = "0.2.0"
+authors = ["klebs tpk3.mx@gmail.com"]
 description = "Manages batch processing workspaces, handling tasks like locating batch files, validating files, and managing batch indices."
-authors     = ["klebs tpk3.mx@gmail.com"]
-license     = "MIT"
-repository  = "https://github.com/klebs6/klebs-general"
+edition = "2024"
+license = "MIT"
+name = "batch-mode-batch-workspace"
+repository = "https://github.com/klebs6/klebs-general"
+version = "0.2.1"

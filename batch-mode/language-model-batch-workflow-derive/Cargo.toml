@@ -1,50 +1,81 @@
-[dependencies]
-derive_builder.workspace     = true
-getset.workspace             = true
-export-magic.workspace       = true
-proc-macro2.workspace        = true
-quote.workspace              = true
-traced-test.workspace        = true
-tracing.workspace            = true
-syn.workspace                = true
-tracing-setup.workspace      = true
-tracing-subscriber.workspace = true
-
 [dependencies.batch-mode-3p]
 path = "../batch-mode-3p"
-version = "0.2.0"
+version = "0.2.1"
+
+[dependencies.derive_builder]
+workspace = true
+
+[dependencies.export-magic]
+workspace = true
+
+[dependencies.getset]
+workspace = true
+
+[dependencies.proc-macro2]
+workspace = true
+
+[dependencies.quote]
+workspace = true
 
 [dependencies.save-load-traits]
 path = "../save-load-traits"
-version = "0.2.0"
+version = "0.2.1"
 
-[dev-dependencies]
-trybuild.workspace    = true
-async-trait.workspace = true
-serde.workspace       = true
-serde_json.workspace  = true
+[dependencies.syn]
+workspace = true
+
+[dependencies.traced-test]
+workspace = true
+
+[dependencies.tracing]
+workspace = true
+
+[dependencies.tracing-setup]
+workspace = true
+
+[dependencies.tracing-subscriber]
+workspace = true
+
+[dev-dependencies.async-trait]
+workspace = true
+
+[dev-dependencies.batch-mode-batch-workflow]
+path = "../batch-mode-batch-workflow"
+version = "0.1.1"
+
+[dev-dependencies.batch-mode-batch-workspace-interface]
+path = "../batch-mode-batch-workspace-interface"
+version = "0.2.1"
+
+[dev-dependencies.camel-case-token-with-comment]
+path = "../camel-case-token-with-comment"
+version = "0.2.1"
+
+[dev-dependencies.serde]
+workspace = true
+
+[dev-dependencies.serde_json]
+workspace = true
+
+[dev-dependencies.trybuild]
+workspace = true
 
 [lib]
 proc-macro = true
 
 [package]
-authors     = ["klebs tpk3.mx@gmail.com"]
-categories  = ["development-tools"]
+authors = ["klebs tpk3.mx@gmail.com"]
+categories = ["development-tools"]
 description = "A procedural macro for deriving batch-oriented language model workflows using annotated client and workspace fields."
-edition     = "2024"
-keywords    = ["batch", "workflow", "proc-macro", "language-model"]
+edition = "2024"
+keywords = [
+    "batch",
+    "workflow",
+    "proc-macro",
+    "language-model",
+]
 license-file = "OGPv1"
-name        = "language-model-batch-workflow-derive"
-readme      = "README.md"
-repository  = "https://github.com/klebs6/klebs-general"
-version     = "0.1.0"
-
-[dev-dependencies.batch-mode-batch-workflow]
-path = "../batch-mode-batch-workflow"
-version = "0.1.0"
-[dev-dependencies.batch-mode-batch-workspace-interface]
-path = "../batch-mode-batch-workspace-interface"
-version = "0.2.0"
-[dev-dependencies.camel-case-token-with-comment]
-path = "../camel-case-token-with-comment"
-version = "0.2.0"
+name = "language-model-batch-workflow-derive"
+readme = "README.md"
+repository = "https://github.com/klebs6/klebs-general"
+version = "0.1.1"

@@ -1,53 +1,69 @@
 [dependencies.batch-mode-3p]
 path = "../batch-mode-3p"
-version = "0.2.0"
+version = "0.2.1"
+
 [dependencies.batch-mode-batch-executor]
 path = "../batch-mode-batch-executor"
-version = "0.2.0"
+version = "0.2.1"
+
 [dependencies.batch-mode-batch-index]
 path = "../batch-mode-batch-index"
-version = "0.2.0"
+version = "0.2.1"
+
 [dependencies.batch-mode-batch-reconciliation]
 path = "../batch-mode-batch-reconciliation"
-version = "0.2.0"
+version = "0.2.1"
+
 [dependencies.batch-mode-batch-schema]
 path = "../batch-mode-batch-schema"
-version = "0.2.0"
+version = "0.2.1"
+
 [dependencies.batch-mode-batch-scribe]
 path = "../batch-mode-batch-scribe"
-version = "0.1.4"
+version = "0.1.5"
+
 [dependencies.batch-mode-batch-triple]
 path = "../batch-mode-batch-triple"
-version = "0.2.0"
+version = "0.2.1"
+
 [dependencies.batch-mode-batch-workspace]
 path = "../batch-mode-batch-workspace"
-version = "0.2.0"
+version = "0.2.1"
+
 [dependencies.batch-mode-batch-workspace-interface]
 path = "../batch-mode-batch-workspace-interface"
-version = "0.2.0"
+version = "0.2.1"
+
 [dependencies.batch-mode-json]
 path = "../batch-mode-json"
-version = "0.2.0"
+version = "0.2.1"
+
 [dependencies.camel-case-token-with-comment]
 path = "../camel-case-token-with-comment"
-version = "0.2.0"
+version = "0.2.1"
+
 [dependencies.save-load-derive]
 path = "../save-load-derive"
-version = "0.1.0"
+version = "0.1.1"
+
 [dependencies.save-load-traits]
 path = "../save-load-traits"
-version = "0.2.0"
+version = "0.2.1"
 
-[dependencies]
-serde.workspace        = true
-serde_derive.workspace = true
-serde_json.workspace   = true
+[dependencies.serde]
+workspace = true
+
+[dependencies.serde_derive]
+workspace = true
+
+[dependencies.serde_json]
+workspace = true
 
 [package]
-authors     = [ "klebs tpk3.mx@gmail.com" ]
+authors = ["klebs tpk3.mx@gmail.com"]
 description = "Handles batch responses, errors, and JSON repairs in a batch processing system."
-edition     = "2024"
-license     = "MIT"
-name        = "batch-mode-process-response"
-repository  = "https://github.com/klebs6/klebs-general"
-version     = "0.2.0"
+edition = "2024"
+license = "MIT"
+name = "batch-mode-process-response"
+repository = "https://github.com/klebs6/klebs-general"
+version = "0.2.1"

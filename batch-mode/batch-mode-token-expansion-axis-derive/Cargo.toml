@@ -1,44 +1,62 @@
-[dependencies]
-proc-macro2.workspace  = true
-quote.workspace        = true
-getset.workspace       = true
-serde.workspace        = true
-serde_derive.workspace = true
-serde_json.workspace   = true
-syn.workspace          = true
-
 [dependencies.batch-mode-3p]
 path = "../batch-mode-3p"
-version = "0.2.0"
+version = "0.2.1"
+
+[dependencies.getset]
+workspace = true
+
+[dependencies.proc-macro2]
+workspace = true
+
+[dependencies.quote]
+workspace = true
+
+[dependencies.serde]
+workspace = true
+
+[dependencies.serde_derive]
+workspace = true
+
+[dependencies.serde_json]
+workspace = true
+
+[dependencies.syn]
+workspace = true
+
+[dev-dependencies.async-trait]
+workspace = true
+
 [dev-dependencies.batch-mode-token-expansion-traits]
 path = "../batch-mode-token-expansion-traits"
-version = "0.1.0"
-
-[dev-dependencies]
-async-trait.workspace = true
-
-[dev-dependencies.save-load-traits]
-path = "../save-load-traits"
-version = "0.2.0"
+version = "0.1.1"
 
 [dev-dependencies.save-load-derive]
 path = "../save-load-derive"
-version = "0.1.0"
+version = "0.1.1"
+
+[dev-dependencies.save-load-traits]
+path = "../save-load-traits"
+version = "0.2.1"
 
 [features]
-default = [  ]
+default = []
 
 [lib]
 proc-macro = true
 
 [package]
-authors     = [ "klebs tpk3.mx@gmail.com" ]
-categories  = ["development-tools"]
+authors = ["klebs tpk3.mx@gmail.com"]
+categories = ["development-tools"]
 description = "A procedural macro crate for deriving token expansion axes."
-edition     = "2024"
-keywords    = [ "token", "proc-macro", "axis", "expansion" ]
+edition = "2024"
+keywords = [
+    "token",
+    "proc-macro",
+    "axis",
+    "expansion",
+]
 license-file = "OGPv1"
-name        = "batch-mode-token-expansion-axis-derive"
-readme      = "README.md"
-repository  = "https://github.com/klebs6/klebs-general"
-version     = "0.1.0"
+name = "batch-mode-token-expansion-axis-derive"
+readme = "README.md"
+repository = "https://github.com/klebs6/klebs-general"
+version = "0.1.1"

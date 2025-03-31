@@ -1,31 +1,51 @@
-[dependencies]
-serde_derive.workspace       = true
-derive_builder.workspace     = true
-getset.workspace             = true
-serde_json.workspace         = true
-serde.workspace              = true
-tracing.workspace            = true
-tracing-setup.workspace      = true
-tracing-subscriber.workspace = true
-traced-test.workspace        = true
-
 [dependencies.batch-mode-3p]
 path = "../batch-mode-3p"
-version = "0.2.0"
+version = "0.2.1"
+
 [dependencies.batch-mode-batch-scribe]
 path = "../batch-mode-batch-scribe"
-version = "0.1.4"
+version = "0.1.5"
+
 [dependencies.batch-mode-json]
 path = "../batch-mode-json"
-version = "0.2.0"
+version = "0.2.1"
+
+[dependencies.derive_builder]
+workspace = true
+
+[dependencies.getset]
+workspace = true
+
 [dependencies.save-load-traits]
 path = "../save-load-traits"
-version = "0.2.0"
+version = "0.2.1"
+
+[dependencies.serde]
+workspace = true
+
+[dependencies.serde_derive]
+workspace = true
+
+[dependencies.serde_json]
+workspace = true
+
+[dependencies.traced-test]
+workspace = true
+
+[dependencies.tracing]
+workspace = true
+
+[dependencies.tracing-setup]
+workspace = true
+
+[dependencies.tracing-subscriber]
+workspace = true
+
 [package]
-authors = [ "klebs tpk3.mx@gmail.com" ]
+authors = ["klebs tpk3.mx@gmail.com"]
 description = "Defines the schema and structures for batch processing, including batch choices, message roles, error handling, and token management, with support for JSON deserialization and validation."
 edition = "2024"
 license = "MIT"
 name = "batch-mode-batch-schema"
 repository = "https://github.com/klebs6/klebs-general"
-version = "0.2.0"
+version = "0.2.1"

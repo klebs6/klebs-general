@@ -1,25 +1,32 @@
 [dependencies.batch-mode-3p]
 path = "../batch-mode-3p"
-version = "0.2.0"
+version = "0.2.1"
+
 [dependencies.batch-mode-batch-client]
 path = "../batch-mode-batch-client"
-version = "0.2.0"
+version = "0.2.1"
+
 [dependencies.batch-mode-batch-executor]
 path = "../batch-mode-batch-executor"
-version = "0.2.0"
+version = "0.2.1"
+
 [dependencies.batch-mode-batch-metadata]
 path = "../batch-mode-batch-metadata"
-version = "0.2.0"
+version = "0.2.1"
+
 [dependencies.batch-mode-batch-reconciliation]
 path = "../batch-mode-batch-reconciliation"
-version = "0.2.0"
+version = "0.2.1"
+
 [dependencies.batch-mode-batch-scribe]
 path = "../batch-mode-batch-scribe"
-version = "0.1.4"
+version = "0.1.5"
+
 [dependencies.batch-mode-batch-triple]
 path = "../batch-mode-batch-triple"
-version = "0.2.0"
+version = "0.2.1"
+
 [package]
 edition = "2024"
 name = "batch-mode-batch-error"
-version = "0.1.0"
+version = "0.1.1"

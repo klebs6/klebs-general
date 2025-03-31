@@ -1,15 +1,21 @@
 [dependencies.batch-mode-3p]
 path = "../batch-mode-3p"
-version = "0.2.0"
-[dependencies]
-serde.workspace = true
-serde_derive.workspace = true
-serde_json.workspace = true
+version = "0.2.1"
+
+[dependencies.serde]
+workspace = true
+
+[dependencies.serde_derive]
+workspace = true
+
+[dependencies.serde_json]
+workspace = true
+
 [package]
-edition = "2024"
-name = "batch-mode-batch-index"
-version = "0.2.0"
-description = "Provides utilities for managing batch indices and generating regex patterns for matching batch file names based on Usize or UUID identifiers."
 authors = ["klebs tpk3.mx@gmail.com"]
+description = "Provides utilities for managing batch indices and generating regex patterns for matching batch file names based on Usize or UUID identifiers."
+edition = "2024"
 license = "MIT"
+name = "batch-mode-batch-index"
 repository = "https://github.com/klebs6/klebs-general"
+version = "0.2.1"
