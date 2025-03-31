@@ -35,7 +35,7 @@ pub mod crate_handle_serde {
     {
         let field_clone = field.clone();
         
-        let helper = safe_run_async(async move {
+        let helper = sync_run_async(async move {
 
             let guard = field_clone.lock().await;
 

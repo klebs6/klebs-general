@@ -18,7 +18,7 @@ impl Named for CrateHandle {
         // Clone so the async closure can be 'static without borrowing &self.
         let cargo_toml_handle = self.cargo_toml_handle.clone();
 
-        let package_name = safe_run_async(async move {
+        let package_name = sync_run_async(async move {
             trace!("Locking cargo_toml_handle in async block");
             let guard = cargo_toml_handle.lock().await;
             let name = guard

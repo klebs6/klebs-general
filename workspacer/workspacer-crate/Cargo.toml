@@ -1,12 +1,16 @@
-[dependencies]
-derive_builder.workspace = true
-serde.workspace          = true
-serde_derive.workspace   = true
-serde_json.workspace     = true
-
+[dependencies.derive_builder]
+workspace = true
 [dependencies.get-file-size]
 path = "../get-file-size"
 version = "0.1.0"
+[dependencies.serde]
+workspace = true
+[dependencies.serde_derive]
+workspace = true
+[dependencies.serde_json]
+workspace = true
+[dependencies.sync-run-async]
+path = "../sync-run-async"
 [dependencies.workspacer-3p]
 path = "../workspacer-3p"
 version = "0.5.0"
@@ -30,11 +34,11 @@ path = "../workspacer-toml-interface"
 version = "0.1.0"
 [package]
 authors = [ "klebs tpk3.mx@gmail.com" ]
+categories = [ "development-tools", "asynchronous", "filesystem", "config", "parsing" ]
 description = "Efficient management of Rust workspaces with asynchronous operations, offering functionalities for crate initialization, integrity validation, version management, and serialization."
 edition = "2024"
+keywords = [ "workspace", "async", "crate management", "rust", "Cargo.toml" ]
 license = "MIT OR Apache-2.0"
 name = "workspacer-crate"
 repository = "https://github.com/klebs6/klebs-general"
 version = "0.5.0"
-keywords = ["workspace", "async", "crate management", "rust", "Cargo.toml"]
-categories = ["development-tools", "asynchronous", "filesystem", "config", "parsing"]

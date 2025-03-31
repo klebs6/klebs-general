@@ -10,17 +10,17 @@
 
 ## Usage
 ### Basic Usage
-To use `workspacer-3p`, simply call the `safe_run_async` function with your future:
+To use `workspacer-3p`, simply call the `sync_run_async` function with your future:
 
 ```rust
-use workspacer_3p::safe_run_async;
+use workspacer_3p::sync_run_async;
 
 async fn my_async_function() -> i32 {
     42
 }
 
 fn main() {
-    let result = safe_run_async(my_async_function());
+    let result = sync_run_async(my_async_function());
     println!("Result: {}", result);
 }
 ```
