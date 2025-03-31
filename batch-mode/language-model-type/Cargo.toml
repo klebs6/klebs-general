@@ -9,7 +9,7 @@ serde_json.workspace   = true
 
 [package]
 authors     = ["klebs tpk3.mx@gmail.com"]
-categories  = ["api-bindings", "development-tools", "serialization", "parsing"]
+categories  = ["api-bindings", "development-tools", "parsing"]
 description = "A Rust crate providing an enumeration for various language model types used in machine learning applications, enabling precise model specification through enums."
 edition     = "2024"
 keywords    = ["language-model", "gpt", "serde", "model-enum", "AI"]
