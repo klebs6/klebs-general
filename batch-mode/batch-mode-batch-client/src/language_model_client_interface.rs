@@ -1,4 +1,4 @@
-// ---------------- [ File: src/language_model_client_interface.rs ]
+// ---------------- [ File: batch-mode-batch-client/src/language_model_client_interface.rs ]
 crate::ix!();
 
 /*

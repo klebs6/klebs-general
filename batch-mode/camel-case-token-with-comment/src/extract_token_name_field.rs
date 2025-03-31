@@ -1,4 +1,4 @@
-// ---------------- [ File: src/extract_token_name_field.rs ]
+// ---------------- [ File: camel-case-token-with-comment/src/extract_token_name_field.rs ]
 crate::ix!();
 
 /// Extracts the "token_name" field from a JSON object.

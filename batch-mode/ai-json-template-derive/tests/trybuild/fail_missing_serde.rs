@@ -1,4 +1,4 @@
-// ---------------- [ File: tests/trybuild/fail_missing_serde.rs ]
+// ---------------- [ File: ai-json-template-derive/tests/trybuild/fail_missing_serde.rs ]
 // tests/trybuild-tests/fail_missing_serde.rs
 use ai_json_template_derive::*;
 use ai_json_template::*;

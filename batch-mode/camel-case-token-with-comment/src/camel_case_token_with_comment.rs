@@ -1,4 +1,4 @@
-// ---------------- [ File: src/camel_case_token_with_comment.rs ]
+// ---------------- [ File: camel-case-token-with-comment/src/camel_case_token_with_comment.rs ]
 crate::ix!();
 
 pub type TokenQuad = [CamelCaseTokenWithComment; 4];

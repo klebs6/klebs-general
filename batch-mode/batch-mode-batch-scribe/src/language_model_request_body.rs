@@ -1,4 +1,4 @@
-// ---------------- [ File: src/language_model_request_body.rs ]
+// ---------------- [ File: batch-mode-batch-scribe/src/language_model_request_body.rs ]
 crate::ix!();
 
 /// Body details of the API request.

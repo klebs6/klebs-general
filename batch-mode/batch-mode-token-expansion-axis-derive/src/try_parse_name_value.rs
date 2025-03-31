@@ -1,4 +1,4 @@
-// ---------------- [ File: src/try_parse_name_value.rs ]
+// ---------------- [ File: batch-mode-token-expansion-axis-derive/src/try_parse_name_value.rs ]
 crate::ix!();
 
 /// A small helper struct for `#[system_message_goal = "some text"]`.

@@ -1,4 +1,4 @@
-// ---------------- [ File: src/error_type.rs ]
+// ---------------- [ File: batch-mode-batch-schema/src/error_type.rs ]
 crate::ix!();
 
 #[derive(Debug,Clone,Eq,Hash)]

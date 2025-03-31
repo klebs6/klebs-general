@@ -1,4 +1,4 @@
-// ---------------- [ File: src/lmbw_parsed_input.rs ]
+// ---------------- [ File: language-model-batch-workflow-derive/src/lmbw_parsed_input.rs ]
 crate::ix!();
 
 #[derive(Builder, Getters)]

@@ -1,4 +1,4 @@
-// ---------------- [ File: src/message_role.rs ]
+// ---------------- [ File: batch-mode-batch-schema/src/message_role.rs ]
 crate::ix!();
 
 #[derive(Default,Debug,Clone,PartialEq,Eq,Hash)]

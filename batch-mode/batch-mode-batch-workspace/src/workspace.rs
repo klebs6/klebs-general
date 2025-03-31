@@ -1,4 +1,4 @@
-// ---------------- [ File: src/workspace.rs ]
+// ---------------- [ File: batch-mode-batch-workspace/src/workspace.rs ]
 crate::ix!();
 
 #[derive(Getters,Setters,Builder,Debug)]

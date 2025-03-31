@@ -1,4 +1,4 @@
-// ---------------- [ File: tests/trybuild/pass_valid_struct.rs ]
+// ---------------- [ File: language-model-batch-workflow-derive/tests/trybuild/pass_valid_struct.rs ]
 #![allow(unused_imports)]
 // ===========================[ CHANGED ITEM #1 ]===========================
 //

@@ -1,4 +1,4 @@
-// ---------------- [ File: src/execute_reconciliation_for_batch_triple.rs ]
+// ---------------- [ File: batch-mode-batch-reconciliation/src/execute_reconciliation_for_batch_triple.rs ]
 crate::ix!();
 
 #[async_trait]

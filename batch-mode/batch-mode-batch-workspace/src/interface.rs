@@ -1,4 +1,4 @@
-// ---------------- [ File: src/interface.rs ]
+// ---------------- [ File: batch-mode-batch-workspace/src/interface.rs ]
 crate::ix!();
 
 impl BatchWorkspaceInterface for BatchWorkspace {}

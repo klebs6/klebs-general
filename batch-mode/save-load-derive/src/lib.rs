@@ -1,4 +1,4 @@
-// ---------------- [ File: src/lib.rs ]
+// ---------------- [ File: save-load-derive/src/lib.rs ]
 use proc_macro::TokenStream;
 use quote::quote;
 use syn::{DeriveInput,parse_macro_input};

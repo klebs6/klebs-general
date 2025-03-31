@@ -1,4 +1,4 @@
-// ---------------- [ File: src/language_model_type.rs ]
+// ---------------- [ File: language-model-type/src/language_model_type.rs ]
 crate::ix!();
 
 /// Supported model types.

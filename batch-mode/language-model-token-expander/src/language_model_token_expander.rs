@@ -1,4 +1,4 @@
-// ---------------- [ File: src/language_model_token_expander.rs ]
+// ---------------- [ File: language-model-token-expander/src/language_model_token_expander.rs ]
 crate::ix!();
 
 #[derive(Debug,Getters,LanguageModelBatchWorkflow)]

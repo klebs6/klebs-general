@@ -1,4 +1,4 @@
-// ---------------- [ File: src/query_traits.rs ]
+// ---------------- [ File: batch-mode-token-expansion-traits/src/query_traits.rs ]
 crate::ix!();
 
 pub trait IntoLanguageModelQueryString {

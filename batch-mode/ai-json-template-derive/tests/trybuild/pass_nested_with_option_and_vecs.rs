@@ -1,4 +1,4 @@
-// ---------------- [ File: tests/trybuild/pass_nested_with_option_and_vecs.rs ]
+// ---------------- [ File: ai-json-template-derive/tests/trybuild/pass_nested_with_option_and_vecs.rs ]
 // ======================= File: tests/trybuild/pass_nested_with_option_and_vecs.rs =======================
 // Another nested struct scenario, this time with multiple Option and Vec fields at different levels.
 

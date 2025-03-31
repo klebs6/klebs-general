@@ -1,4 +1,4 @@
-// ---------------- [ File: src/language_model_api_url.rs ]
+// ---------------- [ File: batch-mode-batch-scribe/src/language_model_api_url.rs ]
 crate::ix!();
 
 /// Enumeration of API URLs.

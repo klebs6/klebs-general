@@ -1,4 +1,4 @@
-// ---------------- [ File: src/imports.rs ]
+// ---------------- [ File: batch-mode-batch-workflow/src/imports.rs ]
 pub(crate) use batch_mode_3p::*;
 pub(crate) use batch_mode_batch_reconciliation::*;
 pub(crate) use batch_mode_batch_scribe::*;

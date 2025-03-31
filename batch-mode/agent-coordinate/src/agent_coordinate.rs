@@ -1,4 +1,4 @@
-// ---------------- [ File: src/agent_coordinate.rs ]
+// ---------------- [ File: agent-coordinate/src/agent_coordinate.rs ]
 crate::ix!();
 
 #[derive(Clone, Debug, Getters, Builder)]

@@ -1,4 +1,4 @@
-// ---------------- [ File: src/process_error_file.rs ]
+// ---------------- [ File: batch-mode-process-response/src/process_error_file.rs ]
 crate::ix!();
 
 /**

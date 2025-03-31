@@ -1,4 +1,4 @@
-// ---------------- [ File: src/imports.rs ]
+// ---------------- [ File: batch-mode-token-expansion-axis-derive/src/imports.rs ]
 pub(crate) use batch_mode_3p::*;
 pub(crate) use proc_macro::TokenStream;
 pub(crate) use quote::{quote};

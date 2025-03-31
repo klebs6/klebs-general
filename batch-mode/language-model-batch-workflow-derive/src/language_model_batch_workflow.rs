@@ -1,4 +1,4 @@
-// ---------------- [ File: src/language_model_batch_workflow.rs ]
+// ---------------- [ File: language-model-batch-workflow-derive/src/language_model_batch_workflow.rs ]
 crate::ix!();
 
 /// This function has been updated so that the generated code correctly handles

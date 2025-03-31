@@ -1,4 +1,4 @@
-// ---------------- [ File: src/http_method.rs ]
+// ---------------- [ File: batch-mode-batch-scribe/src/http_method.rs ]
 crate::ix!();
 
 /// Enumeration of possible HTTP methods.

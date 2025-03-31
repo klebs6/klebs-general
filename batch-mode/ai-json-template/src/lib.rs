@@ -1,4 +1,4 @@
-// ---------------- [ File: src/lib.rs ]
+// ---------------- [ File: ai-json-template/src/lib.rs ]
 #[macro_use] mod imports; use imports::*;
 
 x!{ai_json_template}

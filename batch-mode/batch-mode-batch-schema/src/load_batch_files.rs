@@ -1,4 +1,4 @@
-// ---------------- [ File: src/load_batch_files.rs ]
+// ---------------- [ File: batch-mode-batch-schema/src/load_batch_files.rs ]
 crate::ix!();
 
 /**

@@ -1,4 +1,4 @@
-// ---------------- [ File: src/lib.rs ]
+// ---------------- [ File: batch-mode-token-expansion-axis-derive/src/lib.rs ]
 //! The `token-expander-axis-derive` crate defines the custom `#[derive(TokenExpansionAxis)]`
 //! procedural macro. It reads the enum, extracts the `#[system_message_goal("...")]`
 //! and `#[axis("axis_name" => "axis_description")]` attributes, and implements

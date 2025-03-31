@@ -1,4 +1,4 @@
-// ---------------- [ File: src/language_model_batch_workflow.rs ]
+// ---------------- [ File: batch-mode-batch-workflow/src/language_model_batch_workflow.rs ]
 crate::ix!();
 
 pub type LanguageModelClientArc = Arc<dyn LanguageModelClientInterface<LanguageModelBatchWorkflowError>>;

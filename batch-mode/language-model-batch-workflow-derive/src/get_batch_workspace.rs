@@ -1,4 +1,4 @@
-// ---------------- [ File: src/get_batch_workspace.rs ]
+// ---------------- [ File: language-model-batch-workflow-derive/src/get_batch_workspace.rs ]
 crate::ix!();
 
 pub fn generate_impl_get_batch_workspace(parsed: &LmbwParsedInput) -> TokenStream2 {

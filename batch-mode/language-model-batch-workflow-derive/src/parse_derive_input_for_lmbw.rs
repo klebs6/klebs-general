@@ -1,4 +1,4 @@
-// ---------------- [ File: src/parse_derive_input_for_lmbw.rs ]
+// ---------------- [ File: language-model-batch-workflow-derive/src/parse_derive_input_for_lmbw.rs ]
 crate::ix!();
 
 pub fn parse_derive_input_for_lmbw(ast: &DeriveInput) -> Result<LmbwParsedInput, Error> {

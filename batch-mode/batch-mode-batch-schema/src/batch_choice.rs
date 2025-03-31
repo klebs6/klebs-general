@@ -1,4 +1,4 @@
-// ---------------- [ File: src/batch_choice.rs ]
+// ---------------- [ File: batch-mode-batch-schema/src/batch_choice.rs ]
 crate::ix!();
 
 #[derive(Getters,Builder,Clone,Debug,Serialize)]

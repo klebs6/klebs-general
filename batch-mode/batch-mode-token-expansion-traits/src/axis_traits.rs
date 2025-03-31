@@ -1,4 +1,4 @@
-// ---------------- [ File: src/axis_traits.rs ]
+// ---------------- [ File: batch-mode-token-expansion-traits/src/axis_traits.rs ]
 crate::ix!();
 
 /// A trait that describes the name of an axis. Implementations usually

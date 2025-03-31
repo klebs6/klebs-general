@@ -1,4 +1,4 @@
-// ---------------- [ File: tests/trybuild/fail_unsupported_type.rs ]
+// ---------------- [ File: ai-json-template-derive/tests/trybuild/fail_unsupported_type.rs ]
 use ai_json_template_derive::*;
 use save_load_traits::*;
 use save_load_derive::*;

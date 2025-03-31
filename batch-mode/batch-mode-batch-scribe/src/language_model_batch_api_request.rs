@@ -1,4 +1,4 @@
-// ---------------- [ File: src/language_model_batch_api_request.rs ]
+// ---------------- [ File: batch-mode-batch-scribe/src/language_model_batch_api_request.rs ]
 /*!
   | basic example:
   | {

@@ -1,4 +1,4 @@
-// ---------------- [ File: src/token_packaged.rs ]
+// ---------------- [ File: language-model-token-expander/src/token_packaged.rs ]
 crate::ix!();
 
 #[derive(Clone,Debug)]

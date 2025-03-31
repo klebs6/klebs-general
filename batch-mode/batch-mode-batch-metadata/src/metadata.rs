@@ -1,4 +1,4 @@
-// ---------------- [ File: src/metadata.rs ]
+// ---------------- [ File: batch-mode-batch-metadata/src/metadata.rs ]
 crate::ix!();
 
 #[derive(Builder,Debug,Clone,Serialize,Deserialize)]

@@ -1,4 +1,4 @@
-// ---------------- [ File: tests/trybuild.rs ]
+// ---------------- [ File: ai-json-template-derive/tests/trybuild.rs ]
 // tests/trybuild.rs
 
 use tracing::*;

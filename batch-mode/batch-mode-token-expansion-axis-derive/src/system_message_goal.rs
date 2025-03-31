@@ -1,4 +1,4 @@
-// ---------------- [ File: src/system_message_goal.rs ]
+// ---------------- [ File: batch-mode-token-expansion-axis-derive/src/system_message_goal.rs ]
 crate::ix!();
 
 /// Attempts to parse `#[system_message_goal = "some text"]` or

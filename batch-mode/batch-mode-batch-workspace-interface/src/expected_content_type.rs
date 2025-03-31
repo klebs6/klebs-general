@@ -1,4 +1,4 @@
-// ---------------- [ File: src/expected_content_type.rs ]
+// ---------------- [ File: batch-mode-batch-workspace-interface/src/expected_content_type.rs ]
 crate::ix!();
 
 #[derive(Debug, Clone, Copy)]

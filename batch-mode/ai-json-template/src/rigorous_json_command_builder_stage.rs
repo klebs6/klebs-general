@@ -1,4 +1,4 @@
-// ---------------- [ File: src/rigorous_json_command_builder_stage.rs ]
+// ---------------- [ File: ai-json-template/src/rigorous_json_command_builder_stage.rs ]
 crate::ix!();
 
 pub enum RigorousJsonCommandBuilderStage {

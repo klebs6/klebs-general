@@ -1,4 +1,4 @@
-// ---------------- [ File: src/lib.rs ]
+// ---------------- [ File: batch-mode/src/lib.rs ]
 pub use batch_mode_batch_client::*;
 pub use batch_mode_batch_executor::*;
 pub use batch_mode_batch_index::*;

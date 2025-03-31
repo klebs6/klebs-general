@@ -1,4 +1,4 @@
-// ---------------- [ File: src/process_error_data.rs ]
+// ---------------- [ File: batch-mode-process-response/src/process_error_data.rs ]
 crate::ix!();
 
 pub async fn process_error_data(error_data: &BatchErrorData) 

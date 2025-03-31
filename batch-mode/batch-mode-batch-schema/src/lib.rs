@@ -1,4 +1,4 @@
-// ---------------- [ File: src/lib.rs ]
+// ---------------- [ File: batch-mode-batch-schema/src/lib.rs ]
 #[macro_use] mod imports; use imports::*;
 
 x!{batch_choice}

@@ -1,4 +1,4 @@
-// ---------------- [ File: src/get_system_message_at_agent_coordinate.rs ]
+// ---------------- [ File: instructed-language-model-at-coordinate/src/get_system_message_at_agent_coordinate.rs ]
 crate::ix!();
 
 pub trait GetSystemMessageAtAgentCoordinate {

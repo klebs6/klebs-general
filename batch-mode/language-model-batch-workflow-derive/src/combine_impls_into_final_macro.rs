@@ -1,4 +1,4 @@
-// ---------------- [ File: src/combine_impls_into_final_macro.rs ]
+// ---------------- [ File: language-model-batch-workflow-derive/src/combine_impls_into_final_macro.rs ]
 crate::ix!();
 
 /// Combine the various generated token streams into a final unified output.

@@ -1,4 +1,4 @@
-// ---------------- [ File: src/batch_success_response_body.rs ]
+// ---------------- [ File: batch-mode-batch-schema/src/batch_success_response_body.rs ]
 crate::ix!();
 
 #[derive(Builder,Getters,Clone,Debug,Serialize,Deserialize)]

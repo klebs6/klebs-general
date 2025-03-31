@@ -1,4 +1,4 @@
-// ---------------- [ File: src/batch_index_type.rs ]
+// ---------------- [ File: batch-mode-batch-index/src/batch_index_type.rs ]
 crate::ix!();
 
 #[derive(Copy,Clone,PartialEq,Eq,Hash)]

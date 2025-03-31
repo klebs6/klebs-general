@@ -1,4 +1,4 @@
-// ---------------- [ File: src/lib.rs ]
+// ---------------- [ File: instructed-language-model-at-coordinate/src/lib.rs ]
 #[macro_use] mod imports; use imports::*;
 
 x!{instructed_language_model_at_coordinate}

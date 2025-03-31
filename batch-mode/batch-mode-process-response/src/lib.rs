@@ -1,4 +1,4 @@
-// ---------------- [ File: src/lib.rs ]
+// ---------------- [ File: batch-mode-process-response/src/lib.rs ]
 #[macro_use] mod imports; use imports::*;
 
 x!{process_batch_output_and_errors}

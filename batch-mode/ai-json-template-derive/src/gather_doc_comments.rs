@@ -1,4 +1,4 @@
-// ---------------- [ File: src/gather_doc_comments.rs ]
+// ---------------- [ File: ai-json-template-derive/src/gather_doc_comments.rs ]
 crate::ix!();
 
 fn parse_doc_expr(expr: &Expr, lines: &mut Vec<String>) {

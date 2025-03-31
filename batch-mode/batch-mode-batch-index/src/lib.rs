@@ -1,4 +1,4 @@
-// ---------------- [ File: src/lib.rs ]
+// ---------------- [ File: batch-mode-batch-index/src/lib.rs ]
 #[macro_use] mod imports; use imports::*;
 
 x!{file_pattern}

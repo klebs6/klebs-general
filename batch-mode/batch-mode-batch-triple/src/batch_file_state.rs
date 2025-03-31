@@ -1,4 +1,4 @@
-// ---------------- [ File: src/batch_file_state.rs ]
+// ---------------- [ File: batch-mode-batch-triple/src/batch_file_state.rs ]
 crate::ix!();
 
 /// Represents the state of batch files based on the presence of input, output, and error files.

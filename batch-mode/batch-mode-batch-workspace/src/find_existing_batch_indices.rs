@@ -1,4 +1,4 @@
-// ---------------- [ File: src/find_existing_batch_indices.rs ]
+// ---------------- [ File: batch-mode-batch-workspace/src/find_existing_batch_indices.rs ]
 crate::ix!();
 
 // New pattern allowing optional suffix after the index:

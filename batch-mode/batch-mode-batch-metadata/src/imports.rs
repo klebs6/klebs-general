@@ -1,3 +1,3 @@
-// ---------------- [ File: src/imports.rs ]
+// ---------------- [ File: batch-mode-batch-metadata/src/imports.rs ]
 pub(crate) use batch_mode_3p::*;
 pub(crate) use save_load_traits::*;

@@ -1,4 +1,4 @@
-// ---------------- [ File: src/imports.rs ]
+// ---------------- [ File: ai-json-template-derive/src/imports.rs ]
 pub(crate) use proc_macro::TokenStream;
 pub(crate) use quote::{quote};
 pub(crate) use export_magic::*;

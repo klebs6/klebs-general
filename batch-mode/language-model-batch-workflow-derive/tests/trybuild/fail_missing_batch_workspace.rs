@@ -1,4 +1,4 @@
-// ---------------- [ File: tests/trybuild/fail_missing_batch_workspace.rs ]
+// ---------------- [ File: language-model-batch-workflow-derive/tests/trybuild/fail_missing_batch_workspace.rs ]
 //
 // Similarly, no `#[batch_workspace]` => compile-fail.
 

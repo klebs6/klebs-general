@@ -1,4 +1,4 @@
-// ---------------- [ File: src/get_batch_file_content.rs ]
+// ---------------- [ File: batch-mode-batch-client/src/get_batch_file_content.rs ]
 crate::ix!();
 
 #[async_trait]

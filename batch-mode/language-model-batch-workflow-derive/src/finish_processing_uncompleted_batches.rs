@@ -1,4 +1,4 @@
-// ---------------- [ File: src/finish_processing_uncompleted_batches.rs ]
+// ---------------- [ File: language-model-batch-workflow-derive/src/finish_processing_uncompleted_batches.rs ]
 crate::ix!();
 
 pub fn generate_impl_finish_processing_uncompleted_batches(parsed: &LmbwParsedInput) -> TokenStream2 {

@@ -1,4 +1,4 @@
-// ---------------- [ File: src/try_parse_parenthesized.rs ]
+// ---------------- [ File: batch-mode-token-expansion-axis-derive/src/try_parse_parenthesized.rs ]
 crate::ix!();
 
 /// A helper struct to parse `("some text")` inside the attribute.

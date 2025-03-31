@@ -1,4 +1,4 @@
-// ---------------- [ File: src/extract_json_from_possible_backticks_block.rs ]
+// ---------------- [ File: batch-mode-json/src/extract_json_from_possible_backticks_block.rs ]
 crate::ix!();
 
 /// Extracts JSON from a content string by removing surrounding ```json\n and \n``` markers if present,

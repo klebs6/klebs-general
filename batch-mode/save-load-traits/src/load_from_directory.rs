@@ -1,4 +1,4 @@
-// ---------------- [ File: src/load_from_directory.rs ]
+// ---------------- [ File: save-load-traits/src/load_from_directory.rs ]
 crate::ix!();
 
 /// Trait for loading objects from a directory asynchronously.

@@ -1,4 +1,4 @@
-// ---------------- [ File: tests/trybuild/fail_unnamed_struct.rs ]
+// ---------------- [ File: ai-json-template-derive/tests/trybuild/fail_unnamed_struct.rs ]
 // ======================= File: tests/trybuild/fail_unnamed_struct.rs =======================
 // A tuple/unnamed struct. The derive macro should fail with an error
 // because AiJsonTemplate only supports named structs.

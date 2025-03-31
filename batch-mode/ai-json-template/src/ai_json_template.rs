@@ -1,4 +1,4 @@
-// ---------------- [ File: src/ai_json_template.rs ]
+// ---------------- [ File: ai-json-template/src/ai_json_template.rs ]
 crate::ix!();
 
 /// The derived code implements `AiJsonTemplate` for each struct, letting you

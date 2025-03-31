@@ -1,4 +1,4 @@
-// ---------------- [ File: src/create_language_model_requests_at_agent_coordinate.rs ]
+// ---------------- [ File: instructed-language-model-at-coordinate/src/create_language_model_requests_at_agent_coordinate.rs ]
 crate::ix!();
 
 pub trait CreateLanguageModelQueryAtAgentCoordinate {

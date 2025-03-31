@@ -1,4 +1,4 @@
-// ---------------- [ File: src/get_language_model_client.rs ]
+// ---------------- [ File: language-model-batch-workflow-derive/src/get_language_model_client.rs ]
 crate::ix!();
 
 /// Generate `impl GetLanguageModelClient<E>`, using the user-specified error type

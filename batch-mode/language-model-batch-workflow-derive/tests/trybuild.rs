@@ -1,4 +1,4 @@
-// ---------------- [ File: tests/trybuild.rs ]
+// ---------------- [ File: language-model-batch-workflow-derive/tests/trybuild.rs ]
 //
 // This file is the *test harness* that gathers all the `.rs` test cases from the
 // `trybuild-tests/` folder and runs them. The `t.pass(...)` calls expect a .rs file

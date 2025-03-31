@@ -1,4 +1,4 @@
-// ---------------- [ File: tests/trybuild/pass_deeply_nested_struct.rs ]
+// ---------------- [ File: ai-json-template-derive/tests/trybuild/pass_deeply_nested_struct.rs ]
 #![allow(unused_imports)]
 // ======================= File: tests/trybuild/pass_deeply_nested_struct.rs =======================
 // Demonstrates multiple levels of nesting among structs, all deriving AiJsonTemplate.

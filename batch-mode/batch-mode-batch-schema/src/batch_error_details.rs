@@ -1,4 +1,4 @@
-// ---------------- [ File: src/batch_error_details.rs ]
+// ---------------- [ File: batch-mode-batch-schema/src/batch_error_details.rs ]
 crate::ix!();
 
 #[derive(Getters,Builder,Clone,Debug,Serialize,Deserialize)]

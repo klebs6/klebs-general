@@ -1,4 +1,4 @@
-// ---------------- [ File: src/batch_input_data.rs ]
+// ---------------- [ File: batch-mode-batch-schema/src/batch_input_data.rs ]
 crate::ix!();
 
 #[derive(Serialize,Deserialize,Builder,Getters,Clone,Debug)]

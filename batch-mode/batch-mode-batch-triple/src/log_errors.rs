@@ -1,4 +1,4 @@
-// ---------------- [ File: src/log_errors.rs ]
+// ---------------- [ File: batch-mode-batch-triple/src/log_errors.rs ]
 crate::ix!();
 
 impl BatchFileTriple {

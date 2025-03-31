@@ -1,4 +1,4 @@
-// ---------------- [ File: src/imports.rs ]
+// ---------------- [ File: batch-mode-batch-scribe/src/imports.rs ]
 pub(crate) use error_tree::*;
 pub(crate) use pretty_assertions::assert_eq as pretty_assert_eq;
 pub(crate) use tokio;

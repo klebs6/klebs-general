@@ -1,4 +1,4 @@
-// ---------------- [ File: src/reconcile_unprocessed.rs ]
+// ---------------- [ File: batch-mode-batch-reconciliation/src/reconcile_unprocessed.rs ]
 crate::ix!();
 
 /// Trait describing how a `BatchFileTriple` can be reconciled if unprocessed.

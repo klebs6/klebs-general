@@ -1,4 +1,4 @@
-// ---------------- [ File: src/lib.rs ]
+// ---------------- [ File: batch-mode-batch-client/src/lib.rs ]
 #![feature(trait_alias)]
 
 #[macro_use] mod imports; use imports::*;

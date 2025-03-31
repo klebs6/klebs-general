@@ -1,4 +1,4 @@
-// ---------------- [ File: src/lib.rs ]
+// ---------------- [ File: batch-mode-batch-workflow/src/lib.rs ]
 #[macro_use] mod imports; use imports::*;
 
 x!{language_model_batch_workflow}

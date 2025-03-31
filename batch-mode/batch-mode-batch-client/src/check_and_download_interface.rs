@@ -1,4 +1,4 @@
-// ---------------- [ File: src/check_and_download_interface.rs ]
+// ---------------- [ File: batch-mode-batch-client/src/check_and_download_interface.rs ]
 crate::ix!();
 
 #[async_trait]

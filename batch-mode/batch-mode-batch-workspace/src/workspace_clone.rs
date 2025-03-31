@@ -1,4 +1,4 @@
-// ---------------- [ File: src/workspace_clone.rs ]
+// ---------------- [ File: batch-mode-batch-workspace/src/workspace_clone.rs ]
 crate::ix!();
 
 pub trait DeepClone: Sized {

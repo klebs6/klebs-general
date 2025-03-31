@@ -1,4 +1,4 @@
-// ---------------- [ File: src/language_model_message_role.rs ]
+// ---------------- [ File: batch-mode-batch-scribe/src/language_model_message_role.rs ]
 crate::ix!();
 
 /// Enumeration of roles in a message.

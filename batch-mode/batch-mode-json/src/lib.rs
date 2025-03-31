@@ -1,4 +1,4 @@
-// ---------------- [ File: src/lib.rs ]
+// ---------------- [ File: batch-mode-json/src/lib.rs ]
 #[macro_use] mod imports; use imports::*;
 
 x!{extract_json_from_possible_backticks_block}

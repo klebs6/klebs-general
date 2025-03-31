@@ -1,4 +1,4 @@
-// ---------------- [ File: tests/trybuild/fail_nested_enum.rs ]
+// ---------------- [ File: ai-json-template-derive/tests/trybuild/fail_nested_enum.rs ]
 // ======================= File: tests/trybuild/fail_nested_enum.rs =======================
 // Tests a struct that nests an enum. The macro's logic (in this codebase) doesn't handle enums,
 // so it should fail.

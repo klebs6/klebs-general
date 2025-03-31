@@ -1,4 +1,4 @@
-// ---------------- [ File: tests/integration.rs ]
+// ---------------- [ File: ai-json-template-derive/tests/integration.rs ]
 // ======================= [COMPLETE NEW tests/integration.rs] =======================
 //
 // Key fixes to avoid the proc-macro re-export errors:

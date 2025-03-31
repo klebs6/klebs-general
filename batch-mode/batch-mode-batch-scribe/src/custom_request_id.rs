@@ -1,4 +1,4 @@
-// ---------------- [ File: src/custom_request_id.rs ]
+// ---------------- [ File: batch-mode-batch-scribe/src/custom_request_id.rs ]
 crate::ix!();
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]

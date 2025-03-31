@@ -1,4 +1,4 @@
-// ---------------- [ File: src/lib.rs ]
+// ---------------- [ File: language-model-batch-workflow-derive/src/lib.rs ]
 //! This module contains the procedural macro for deriving `LanguageModelBatchWorkflow`.
 //! We break down the macro into discrete subroutines for clearer testing and maintainability.
 //! Each subroutine has a corresponding test module that validates its behavior at an interface level.

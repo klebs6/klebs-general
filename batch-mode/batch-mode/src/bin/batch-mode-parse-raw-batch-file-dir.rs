@@ -1,4 +1,4 @@
-// ---------------- [ File: src/bin/batch-mode-parse-raw-batch-file-dir.rs ]
+// ---------------- [ File: batch-mode/src/bin/batch-mode-parse-raw-batch-file-dir.rs ]
 use structopt::StructOpt;
 use batch_mode::*;
 use batch_mode_3p::*;

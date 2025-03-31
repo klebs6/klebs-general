@@ -1,4 +1,4 @@
-// ---------------- [ File: src/classify_field_type.rs ]
+// ---------------- [ File: ai-json-template-derive/src/classify_field_type.rs ]
 crate::ix!();
 
 pub fn classify_field_type(ty: &syn::Type, doc_str: &str) -> Option<proc_macro2::TokenStream> {

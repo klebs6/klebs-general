@@ -1,4 +1,4 @@
-// ---------------- [ File: tests/trybuild/pass_named_struct.rs ]
+// ---------------- [ File: ai-json-template-derive/tests/trybuild/pass_named_struct.rs ]
 #![allow(unused_imports)]
 // ======================= File: tests/trybuild/pass_named_struct.rs =======================
 // A minimal named struct that should pass compilation with AiJsonTemplate derive.

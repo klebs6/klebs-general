@@ -1,4 +1,4 @@
-// ---------------- [ File: src/expander_traits.rs ]
+// ---------------- [ File: batch-mode-token-expansion-traits/src/expander_traits.rs ]
 crate::ix!();
 
 /// This trait we use as a generic expander of tokens. It leverages a collection of

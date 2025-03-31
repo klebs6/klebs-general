@@ -1,4 +1,4 @@
-// ---------------- [ File: src/mock.rs ]
+// ---------------- [ File: batch-mode-batch-triple/src/mock.rs ]
 crate::ix!();
 
 #[cfg(test)]

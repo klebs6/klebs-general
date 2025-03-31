@@ -1,4 +1,4 @@
-// ---------------- [ File: src/mock.rs ]
+// ---------------- [ File: batch-mode-batch-workspace-interface/src/mock.rs ]
 crate::ix!();
 
 /// A minimal item that could implement `GetTargetPathForAIExpansion`.

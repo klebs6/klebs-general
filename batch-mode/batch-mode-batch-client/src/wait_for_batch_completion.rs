@@ -1,4 +1,4 @@
-// ---------------- [ File: src/wait_for_batch_completion.rs ]
+// ---------------- [ File: batch-mode-batch-client/src/wait_for_batch_completion.rs ]
 crate::ix!();
 
 #[async_trait]

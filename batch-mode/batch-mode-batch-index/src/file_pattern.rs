@@ -1,4 +1,4 @@
-// ---------------- [ File: src/file_pattern.rs ]
+// ---------------- [ File: batch-mode-batch-index/src/file_pattern.rs ]
 crate::ix!();
 
 pub trait FilePattern {

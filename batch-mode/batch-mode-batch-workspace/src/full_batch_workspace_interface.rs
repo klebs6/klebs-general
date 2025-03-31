@@ -1,4 +1,4 @@
-// ---------------- [ File: src/full_batch_workspace_interface.rs ]
+// ---------------- [ File: batch-mode-batch-workspace/src/full_batch_workspace_interface.rs ]
 crate::ix!();
 
 #[async_trait]

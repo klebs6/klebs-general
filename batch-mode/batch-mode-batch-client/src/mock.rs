@@ -1,4 +1,4 @@
-// ---------------- [ File: src/mock.rs ]
+// ---------------- [ File: batch-mode-batch-client/src/mock.rs ]
 #![allow(unused_variables)]
 
 crate::ix!();

@@ -1,4 +1,4 @@
-// ---------------- [ File: src/batch_online_status.rs ]
+// ---------------- [ File: batch-mode-batch-client/src/batch_online_status.rs ]
 crate::ix!();
 
 #[derive(Debug,Copy,Clone,PartialEq,Eq)]

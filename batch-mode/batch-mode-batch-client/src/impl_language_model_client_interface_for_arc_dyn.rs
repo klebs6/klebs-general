@@ -1,4 +1,4 @@
-// ---------------- [ File: src/impl_language_model_client_interface_for_arc_dyn.rs ]
+// ---------------- [ File: batch-mode-batch-client/src/impl_language_model_client_interface_for_arc_dyn.rs ]
 crate::ix!();
 
 //-----------------------------------------[impl for dyn]

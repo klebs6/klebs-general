@@ -1,4 +1,4 @@
-// ---------------- [ File: src/send_sync.rs ]
+// ---------------- [ File: language-model-batch-workflow-derive/src/send_sync.rs ]
 crate::ix!();
 
 /// Generate `unsafe impl Send` and `unsafe impl Sync`.

@@ -1,4 +1,4 @@
-// ---------------- [ File: src/lib.rs ]
+// ---------------- [ File: batch-mode-batch-scribe/src/lib.rs ]
 #![allow(unused_imports)]
 
 #[macro_use] mod imports; use imports::*;

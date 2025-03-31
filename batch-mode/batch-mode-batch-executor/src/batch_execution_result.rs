@@ -1,4 +1,4 @@
-// ---------------- [ File: src/batch_execution_result.rs ]
+// ---------------- [ File: batch-mode-batch-executor/src/batch_execution_result.rs ]
 crate::ix!();
 
 #[derive(Builder,Debug,Getters)]

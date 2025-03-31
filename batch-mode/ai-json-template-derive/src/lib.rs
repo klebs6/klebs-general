@@ -1,4 +1,4 @@
-// ---------------- [ File: src/lib.rs ]
+// ---------------- [ File: ai-json-template-derive/src/lib.rs ]
 #[macro_use] mod imports; use imports::*;
 
 xp!{gather_doc_comments}

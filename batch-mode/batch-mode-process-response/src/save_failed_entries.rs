@@ -1,4 +1,4 @@
-// ---------------- [ File: src/save_failed_entries.rs ]
+// ---------------- [ File: batch-mode-process-response/src/save_failed_entries.rs ]
 crate::ix!();
 
 #[tracing::instrument(level="trace", skip_all)]

@@ -1,4 +1,4 @@
-// ---------------- [ File: src/bin/camel_case_token_file_difference.rs ]
+// ---------------- [ File: batch-mode/src/bin/camel_case_token_file_difference.rs ]
 use structopt::StructOpt;
 use batch_mode::*;
 use batch_mode_3p::*;

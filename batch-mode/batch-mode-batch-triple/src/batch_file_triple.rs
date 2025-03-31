@@ -1,4 +1,4 @@
-// ---------------- [ File: src/batch_file_triple.rs ]
+// ---------------- [ File: batch-mode-batch-triple/src/batch_file_triple.rs ]
 crate::ix!();
 
 /// Represents the batch files associated with a specific index.

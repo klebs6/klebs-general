@@ -1,4 +1,4 @@
-// ---------------- [ File: src/finish_reason.rs ]
+// ---------------- [ File: batch-mode-batch-schema/src/finish_reason.rs ]
 crate::ix!();
 
 #[derive(Default,Debug,Clone,PartialEq,Eq,Hash)]

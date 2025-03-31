@@ -1,4 +1,4 @@
-// ---------------- [ File: src/move_batch_files.rs ]
+// ---------------- [ File: batch-mode-batch-triple/src/move_batch_files.rs ]
 crate::ix!();
 
 impl BatchFileTriple {

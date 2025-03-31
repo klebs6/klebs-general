@@ -1,4 +1,4 @@
-// ---------------- [ File: src/write_json_to_file.rs ]
+// ---------------- [ File: batch-mode-json/src/write_json_to_file.rs ]
 crate::ix!();
 
 /// Writes serialized JSON content to a file asynchronously.

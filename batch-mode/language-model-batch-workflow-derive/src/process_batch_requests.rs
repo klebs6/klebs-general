@@ -1,4 +1,4 @@
-// ---------------- [ File: src/process_batch_requests.rs ]
+// ---------------- [ File: language-model-batch-workflow-derive/src/process_batch_requests.rs ]
 crate::ix!();
 
 /// Generate the `impl ProcessBatchRequests` code. We rely on:

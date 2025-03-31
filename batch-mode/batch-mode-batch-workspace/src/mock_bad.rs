@@ -1,4 +1,4 @@
-// ---------------- [ File: src/mock_bad.rs ]
+// ---------------- [ File: batch-mode-batch-workspace/src/mock_bad.rs ]
 crate::ix!();
 
 /// In “test_reconcile_unprocessed_input_error_but_mock_processing_fails_action,” 

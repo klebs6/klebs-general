@@ -1,4 +1,4 @@
-// ---------------- [ File: src/batch_index.rs ]
+// ---------------- [ File: batch-mode-batch-index/src/batch_index.rs ]
 crate::ix!();
 
 /// Represents the type of index found in the file names.

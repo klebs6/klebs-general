@@ -1,4 +1,4 @@
-// ---------------- [ File: src/batch_file_reconciliation_operation.rs ]
+// ---------------- [ File: batch-mode-batch-reconciliation/src/batch_file_reconciliation_operation.rs ]
 crate::ix!();
 
 #[derive(Debug,Copy,Clone,PartialEq,Eq,Hash)]

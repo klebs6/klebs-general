@@ -1,4 +1,4 @@
-// ---------------- [ File: src/ensure_input_matches_error.rs ]
+// ---------------- [ File: batch-mode-batch-triple/src/ensure_input_matches_error.rs ]
 crate::ix!();
 
 impl BatchFileTriple {

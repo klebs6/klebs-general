@@ -1,4 +1,4 @@
-// ---------------- [ File: src/check_batch_status_online.rs ]
+// ---------------- [ File: batch-mode-batch-client/src/check_batch_status_online.rs ]
 crate::ix!();
 
 // Now implement it for `BatchFileTriple`:

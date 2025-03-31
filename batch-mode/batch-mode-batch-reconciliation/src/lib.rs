@@ -1,4 +1,4 @@
-// ---------------- [ File: src/lib.rs ]
+// ---------------- [ File: batch-mode-batch-reconciliation/src/lib.rs ]
 #[macro_use] mod imports; use imports::*;
 
 x!{batch_file_reconciliation_recommended_course_of_action}

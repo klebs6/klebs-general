@@ -1,4 +1,4 @@
-// ---------------- [ File: tests/trybuild/fail_missing_batch_client.rs ]
+// ---------------- [ File: language-model-batch-workflow-derive/tests/trybuild/fail_missing_batch_client.rs ]
 //
 // Because the macro requires `#[batch_client]` on exactly one field, failing to provide it
 // should yield a compile error. The harness calls `t.compile_fail(...)`, expecting an error.

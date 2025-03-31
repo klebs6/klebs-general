@@ -1,4 +1,4 @@
-// ---------------- [ File: src/process_batch_output_and_errors.rs ]
+// ---------------- [ File: batch-mode-process-response/src/process_batch_output_and_errors.rs ]
 crate::ix!();
 
 /// We add `'static + Send + Sync` to `T`, so that storing it in an

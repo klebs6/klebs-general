@@ -1,4 +1,4 @@
-// ---------------- [ File: tests/trybuild/pass_complex_struct.rs ]
+// ---------------- [ File: ai-json-template-derive/tests/trybuild/pass_complex_struct.rs ]
 #![allow(unused_imports)]
 // ======================= File: tests/trybuild/pass_complex_struct.rs =======================
 // Demonstrates a named struct with multiple valid field types: String, Vec<String>, Option<String>,

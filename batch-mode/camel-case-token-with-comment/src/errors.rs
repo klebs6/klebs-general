@@ -1,4 +1,4 @@
-// ---------------- [ File: src/errors.rs ]
+// ---------------- [ File: camel-case-token-with-comment/src/errors.rs ]
 crate::ix!();
 
 error_tree!{

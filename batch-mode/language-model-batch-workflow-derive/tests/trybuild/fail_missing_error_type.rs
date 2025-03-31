@@ -1,4 +1,4 @@
-// ---------------- [ File: tests/trybuild/fail_missing_error_type.rs ]
+// ---------------- [ File: language-model-batch-workflow-derive/tests/trybuild/fail_missing_error_type.rs ]
 //
 // If the user does not provide `#[batch_error_type(...)]`, parse logic also fails.
 

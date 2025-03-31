@@ -1,4 +1,4 @@
-// ---------------- [ File: src/axis_attribute.rs ]
+// ---------------- [ File: batch-mode-token-expansion-axis-derive/src/axis_attribute.rs ]
 crate::ix!();
 
 /// Parse out `#[axis("axis_name => axis_description")]`.

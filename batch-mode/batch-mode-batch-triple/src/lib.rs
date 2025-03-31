@@ -1,4 +1,4 @@
-// ---------------- [ File: src/lib.rs ]
+// ---------------- [ File: batch-mode-batch-triple/src/lib.rs ]
 #[macro_use] mod imports; use imports::*;
 
 x!{ensure_input_matches_output_and_error}

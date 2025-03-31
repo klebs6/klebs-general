@@ -1,4 +1,4 @@
-// ---------------- [ File: src/batch_token_details.rs ]
+// ---------------- [ File: batch-mode-batch-schema/src/batch_token_details.rs ]
 crate::ix!();
 
 #[derive(Builder,Getters,Clone,Debug,Serialize,Deserialize)]

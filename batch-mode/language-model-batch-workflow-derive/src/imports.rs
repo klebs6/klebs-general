@@ -1,4 +1,4 @@
-// ---------------- [ File: src/imports.rs ]
+// ---------------- [ File: language-model-batch-workflow-derive/src/imports.rs ]
 pub(crate) use batch_mode_3p::*;
 pub(crate) use proc_macro::TokenStream;
 pub(crate) use proc_macro2::{TokenStream as TokenStream2};

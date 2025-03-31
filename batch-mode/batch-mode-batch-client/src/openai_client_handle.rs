@@ -1,4 +1,4 @@
-// ---------------- [ File: src/openai_client_handle.rs ]
+// ---------------- [ File: batch-mode-batch-client/src/openai_client_handle.rs ]
 crate::ix!();
 
 pub trait OpenAIConfigInterface = async_openai::config::Config;

@@ -1,4 +1,4 @@
-// ---------------- [ File: tests/trybuild/fail_enum.rs ]
+// ---------------- [ File: ai-json-template-derive/tests/trybuild/fail_enum.rs ]
 // ======================= File: tests/trybuild/fail_enum.rs =======================
 // The macro should fail on an enum, since AiJsonTemplate only supports named structs.
 

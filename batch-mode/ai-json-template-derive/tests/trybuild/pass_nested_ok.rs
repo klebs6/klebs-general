@@ -1,4 +1,4 @@
-// ---------------- [ File: tests/trybuild/pass_nested_ok.rs ]
+// ---------------- [ File: ai-json-template-derive/tests/trybuild/pass_nested_ok.rs ]
 #![allow(unused_imports)]
 use ai_json_template_derive::*;
 use ai_json_template::*;

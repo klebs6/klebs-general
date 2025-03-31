@@ -1,4 +1,4 @@
-// ---------------- [ File: src/workspace_interface.rs ]
+// ---------------- [ File: batch-mode-batch-workspace-interface/src/workspace_interface.rs ]
 crate::ix!();
 
 pub trait BatchWorkspaceInterface
