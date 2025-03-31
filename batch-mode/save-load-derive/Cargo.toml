@@ -1,5 +1,6 @@
 [dev-dependencies.save-load-traits]
 path = "../save-load-traits"
+version = "0.2.0"
 
 [lib]
 proc-macro = true

@@ -3,16 +3,22 @@ derive_builder.workspace = true
 
 [dependencies.agent-coordinate]
 path = "../agent-coordinate"
+version = "0.1.0"
 [dependencies.batch-mode-3p]
 path = "../batch-mode-3p"
+version = "0.2.0"
 [dependencies.batch-mode-batch-scribe]
 path = "../batch-mode-batch-scribe"
+version = "0.1.4"
 [dependencies.batch-mode-token-expansion-step]
 path = "../batch-mode-token-expansion-step"
+version = "0.1.0"
 [dependencies.batch-mode-token-expansion-traits]
 path = "../batch-mode-token-expansion-traits"
+version = "0.1.0"
 [dependencies.language-model-type]
 path = "../language-model-type"
+version = "0.1.0"
 [package]
 edition = "2024"
 name = "instructed-language-model-at-coordinate"

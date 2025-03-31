@@ -14,6 +14,7 @@ path = "../batch-mode-3p"
 version = "0.2.0"
 [dependencies.batch-mode-batch-scribe]
 path = "../batch-mode-batch-scribe"
+version = "0.1.4"
 [dependencies.batch-mode-json]
 path = "../batch-mode-json"
 version = "0.2.0"

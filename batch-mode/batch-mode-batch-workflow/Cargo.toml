@@ -11,34 +11,49 @@ async-trait.workspace        = true
 
 [dependencies.ai-json-template]
 path = "../ai-json-template"
+version = "0.1.0"
 [dependencies.ai-json-template-derive]
 path = "../ai-json-template-derive"
+version = "0.1.0"
 [dependencies.batch-mode-3p]
 path = "../batch-mode-3p"
+version = "0.2.0"
 [dependencies.batch-mode-batch-client]
 path = "../batch-mode-batch-client"
+version = "0.2.0"
 [dependencies.batch-mode-batch-executor]
 path = "../batch-mode-batch-executor"
+version = "0.2.0"
 [dependencies.batch-mode-batch-metadata]
 path = "../batch-mode-batch-metadata"
+version = "0.2.0"
 [dependencies.batch-mode-batch-reconciliation]
 path = "../batch-mode-batch-reconciliation"
+version = "0.2.0"
 [dependencies.batch-mode-batch-scribe]
 path = "../batch-mode-batch-scribe"
+version = "0.1.4"
 [dependencies.batch-mode-batch-triple]
 path = "../batch-mode-batch-triple"
+version = "0.2.0"
 [dependencies.batch-mode-batch-workspace]
 path = "../batch-mode-batch-workspace"
+version = "0.2.0"
 [dependencies.batch-mode-batch-workspace-interface]
 path = "../batch-mode-batch-workspace-interface"
+version = "0.2.0"
 [dependencies.batch-mode-json]
 path = "../batch-mode-json"
+version = "0.2.0"
 [dependencies.batch-mode-process-response]
 path = "../batch-mode-process-response"
+version = "0.2.0"
 [dependencies.language-model-type]
 path = "../language-model-type"
+version = "0.1.0"
 [dependencies.save-load-traits]
 path = "../save-load-traits"
+version = "0.2.0"
 
 [package]
 description = "This crate provides a specialized approach to batch-based langauge model expansions and reconciling partial or incomplete batch states."

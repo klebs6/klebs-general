@@ -15,11 +15,13 @@ path = "../batch-mode-batch-schema"
 version = "0.2.0"
 [dependencies.batch-mode-batch-scribe]
 path = "../batch-mode-batch-scribe"
+version = "0.1.4"
 [dependencies.batch-mode-batch-triple]
 path = "../batch-mode-batch-triple"
 version = "0.2.0"
 [dependencies.batch-mode-batch-workspace]
 path = "../batch-mode-batch-workspace"
+version = "0.2.0"
 [dependencies.batch-mode-batch-workspace-interface]
 path = "../batch-mode-batch-workspace-interface"
 version = "0.2.0"

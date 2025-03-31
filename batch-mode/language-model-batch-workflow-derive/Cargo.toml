@@ -12,9 +12,11 @@ tracing-subscriber.workspace = true
 
 [dependencies.batch-mode-3p]
 path = "../batch-mode-3p"
+version = "0.2.0"
 
 [dependencies.save-load-traits]
 path = "../save-load-traits"
+version = "0.2.0"
 
 [dev-dependencies]
 trybuild.workspace    = true
@@ -39,7 +41,10 @@ version     = "0.1.0"
 
 [dev-dependencies.batch-mode-batch-workflow]
 path = "../batch-mode-batch-workflow"
+version = "0.1.0"
 [dev-dependencies.batch-mode-batch-workspace-interface]
 path = "../batch-mode-batch-workspace-interface"
+version = "0.2.0"
 [dev-dependencies.camel-case-token-with-comment]
 path = "../camel-case-token-with-comment"
+version = "0.2.0"

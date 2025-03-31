@@ -7,6 +7,7 @@ path = "../batch-mode-3p"
 version = "0.2.0"
 [dependencies.batch-mode-batch-index]
 path = "../batch-mode-batch-index"
+version = "0.2.0"
 [dependencies.batch-mode-batch-metadata]
 path = "../batch-mode-batch-metadata"
 version = "0.2.0"

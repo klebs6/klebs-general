@@ -19,6 +19,7 @@ trybuild.workspace           = true
 
 [dev-dependencies.ai-json-template]
 path = "../ai-json-template"
+version = "0.1.0"
 [dev-dependencies.save-load-derive]
 path = "../save-load-derive"
 version = "0.1.0"

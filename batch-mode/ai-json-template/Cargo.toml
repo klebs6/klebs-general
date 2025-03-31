@@ -7,6 +7,7 @@ export-magic.workspace = true
 
 [dependencies.save-load-traits]
 path = "../save-load-traits"
+version = "0.2.0"
 
 [package]
 authors = [ "klebs tpk3.mx@gmail.com" ]

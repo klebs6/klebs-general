@@ -6,44 +6,64 @@ tracing-subscriber.workspace = true
 
 [dependencies.agent-coordinate]
 path = "../agent-coordinate"
+version = "0.1.0"
 [dependencies.batch-mode-3p]
 path = "../batch-mode-3p"
+version = "0.2.0"
 [dependencies.batch-mode-batch-client]
 path = "../batch-mode-batch-client"
+version = "0.2.0"
 [dependencies.batch-mode-batch-error]
 path = "../batch-mode-batch-error"
+version = "0.1.0"
 [dependencies.batch-mode-batch-executor]
 path = "../batch-mode-batch-executor"
+version = "0.2.0"
 [dependencies.batch-mode-batch-index]
 path = "../batch-mode-batch-index"
+version = "0.2.0"
 [dependencies.batch-mode-batch-metadata]
 path = "../batch-mode-batch-metadata"
+version = "0.2.0"
 [dependencies.batch-mode-batch-reconciliation]
 path = "../batch-mode-batch-reconciliation"
+version = "0.2.0"
 [dependencies.batch-mode-batch-scribe]
 path = "../batch-mode-batch-scribe"
+version = "0.1.4"
 [dependencies.batch-mode-batch-triple]
 path = "../batch-mode-batch-triple"
+version = "0.2.0"
 [dependencies.batch-mode-batch-workflow]
 path = "../batch-mode-batch-workflow"
+version = "0.1.0"
 [dependencies.batch-mode-batch-workspace]
 path = "../batch-mode-batch-workspace"
+version = "0.2.0"
 [dependencies.batch-mode-batch-workspace-interface]
 path = "../batch-mode-batch-workspace-interface"
+version = "0.2.0"
 [dependencies.batch-mode-process-response]
 path = "../batch-mode-process-response"
+version = "0.2.0"
 [dependencies.batch-mode-token-expansion-traits]
 path = "../batch-mode-token-expansion-traits"
+version = "0.1.0"
 [dependencies.camel-case-token-with-comment]
 path = "../camel-case-token-with-comment"
+version = "0.2.0"
 [dependencies.instructed-language-model-at-coordinate]
 path = "../instructed-language-model-at-coordinate"
+version = "0.1.0"
 [dependencies.language-model-batch-workflow-derive]
 path = "../language-model-batch-workflow-derive"
+version = "0.1.0"
 [dependencies.language-model-type]
 path = "../language-model-type"
+version = "0.1.0"
 [dependencies.save-load-traits]
 path = "../save-load-traits"
+version = "0.2.0"
 
 [package]
 authors     = [ "klebs tpk3.mx@gmail.com" ]

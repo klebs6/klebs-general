@@ -1,11 +1,15 @@
 [dependencies.ai-json-template]
 path = "../ai-json-template"
+version = "0.1.0"
 [dependencies.batch-mode-3p]
 path = "../batch-mode-3p"
+version = "0.2.0"
 [dependencies.camel-case-token-with-comment]
 path = "../camel-case-token-with-comment"
+version = "0.2.0"
 [dependencies.save-load-traits]
 path = "../save-load-traits"
+version = "0.2.0"
 
 [package]
 authors     = [ "klebs tpk3.mx@gmail.com" ]

@@ -3,27 +3,35 @@ structopt.workspace = true
 
 [dependencies.batch-mode-token-expansion-axis-derive]
 path = "../batch-mode-token-expansion-axis-derive"
+version = "0.1.0"
 
 [dependencies.ai-json-template]
 path = "../ai-json-template"
+version = "0.1.0"
 
 [dependencies.ai-json-template-derive]
 path = "../ai-json-template-derive"
+version = "0.1.0"
 
 [dependencies.agent-coordinate]
 path = "../agent-coordinate"
+version = "0.1.0"
 
 [dependencies.batch-mode-token-expansion-step]
 path = "../batch-mode-token-expansion-step"
+version = "0.1.0"
 
 [dependencies.batch-mode-token-expansion-traits]
 path = "../batch-mode-token-expansion-traits"
+version = "0.1.0"
 
 [dependencies.instructed-language-model-at-coordinate]
 path = "../instructed-language-model-at-coordinate"
+version = "0.1.0"
 
 [dependencies.language-model-token-expander]
 path = "../language-model-token-expander"
+version = "0.1.0"
 
 [dependencies.batch-mode-3p]
 path = "../batch-mode-3p"
@@ -48,6 +56,7 @@ path = "../batch-mode-batch-schema"
 version = "0.2.0"
 [dependencies.batch-mode-batch-scribe]
 path = "../batch-mode-batch-scribe"
+version = "0.1.4"
 [dependencies.batch-mode-batch-triple]
 path = "../batch-mode-batch-triple"
 version = "0.2.0"

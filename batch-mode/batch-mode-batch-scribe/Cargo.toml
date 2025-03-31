@@ -14,6 +14,7 @@ tracing-subscriber.workspace = true
 
 [dependencies.language-model-type]
 path = "../language-model-type"
+version = "0.1.0"
 
 [package]
 authors     = [ "klebs tpk3.mx@gmail.com" ]
