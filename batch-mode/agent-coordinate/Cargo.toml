@@ -14,3 +14,6 @@ version = "0.2.0"
 edition = "2024"
 name = "agent-coordinate"
 version = "0.1.0"
+description = "A Rust crate for defining and managing agent coordinates including locations and goals with flexible initialization options and dynamic state management."
+keywords = ["agent", "coordinate", "location", "goal", "state-management"]
+categories = ["data-structures", "algorithms", "simulation", "mathematics", "science"]

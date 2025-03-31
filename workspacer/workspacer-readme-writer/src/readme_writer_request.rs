@@ -29,7 +29,6 @@ where
     where
         H: ReadmeWritingCrateHandle<P>, // the super-trait
     {
-        
 
         // 2) We'll store it as Arc<dyn ReadmeWritingCrateHandle<P>>.
         let crate_handle_obj: Arc<AsyncMutex<dyn ReadmeWritingCrateHandle<P>>> = handle.clone();

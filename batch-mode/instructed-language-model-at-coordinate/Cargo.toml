@@ -23,3 +23,6 @@ version = "0.1.0"
 edition = "2024"
 name = "instructed-language-model-at-coordinate"
 version = "0.1.0"
+description = "A Rust library that facilitates precise instructional communication with Language Models by using agent coordinates, emphasizing structured JSON outputs and avoiding vague language."
+keywords = ["language-model", "coordinates", "instructions", "json-output", "precision"]
+categories = ["algorithms", "api-bindings", "parsing", "science", "data-structures"]

@@ -76,16 +76,19 @@ where
             let guard = workspace_arc.lock().await;
             let mut reqs = Vec::new();
             for item_arc in guard.crates() {
-                // Check the item’s readme:
-                let item_guard = item_arc.lock().await;
-                let maybe_readme = item_guard
-                    .readme_path()
-                    .await
-                    .map_err(AiReadmeWriterError::CrateError)?;
 
-                if maybe_readme.is_some() && !force {
-                    info!("Skipping crate at {:?} due to existing README.md (no --force)", item_guard.as_ref());
-                    continue;
+                {
+                    // Check the item’s readme:
+                    let item_guard = item_arc.lock().await;
+                    let maybe_readme = item_guard
+                        .readme_path()
+                        .await
+                        .map_err(AiReadmeWriterError::CrateError)?;
+
+                    if maybe_readme.is_some() && !force {
+                        info!("Skipping crate at {:?} due to existing README.md (no --force)", item_guard.as_ref());
+                        continue;
+                    }
                 }
 
                 // If no readme or we forced => we create a request
