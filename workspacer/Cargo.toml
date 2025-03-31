@@ -44,7 +44,7 @@ tracing = "0.1.40"
 which = "*"
 [workspace.dependencies.batch-mode]
 path = "../batch-mode/batch-mode"
-version = "*"
+version = "0.2.1"
 [workspace.dependencies.rocket]
 features = [ "json" ]
 version = "0.5.1"

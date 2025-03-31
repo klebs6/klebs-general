@@ -1,6 +1,9 @@
 [dependencies.export-magic]
 workspace = true
 
+[dependencies.traced-test]
+workspace = true
+
 [dependencies.tokio]
 workspace = true
 

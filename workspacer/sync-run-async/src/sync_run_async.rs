@@ -43,7 +43,6 @@ where
 #[cfg(test)]
 mod run_async_without_nested_runtime_tests {
     use super::*;
-    use traced_test::traced_test;
 
     /// Demonstrates that calling `sync_run_async` works even if
     /// not already in a runtime.
