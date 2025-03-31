@@ -90,3 +90,4 @@ description = "This crate provides a specialized approach to batch-based langaug
 edition = "2024"
 name = "batch-mode-batch-workflow"
 version = "0.1.1"
+license = "MIT"
