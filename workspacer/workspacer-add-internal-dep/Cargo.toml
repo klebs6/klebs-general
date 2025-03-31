@@ -10,16 +10,16 @@ version = "0.1.0"
 [dependencies.workspacer-errors]
 path = "../workspacer-errors"
 version = "0.1.0"
-[dev-dependencies.workspacer-mock]
-path = "../workspacer-mock"
-version = "0.5.0"
 [dependencies.workspacer-workspace]
 path = "../workspacer-workspace"
 version = "0.1.0"
+[dev-dependencies.workspacer-mock]
+path = "../workspacer-mock"
+version = "0.5.0"
 [package]
+categories = [ "development-tools", "rust-patterns", "concurrency", "asynchronous", "config" ]
+description = "Facilitates adding internal dependencies between crates within a Cargo workspace asynchronously with `toml_edit` for robust dependency management."
 edition = "2024"
+keywords = [ "workspace", "dependency", "cargo", "toml", "asynchronous" ]
 name = "workspacer-add-internal-dep"
 version = "0.1.0"
-description = "Facilitates adding internal dependencies between crates within a Cargo workspace asynchronously with `toml_edit` for robust dependency management."
-keywords = ["workspace", "dependency", "cargo", "toml", "asynchronous"]
-categories = ["development-tools", "rust-patterns", "concurrency", "asynchronous", "config"]

@@ -28,7 +28,7 @@ where
     ///
     async fn scan(&self) -> Result<Vec<PrefixGroup<P, H>>, Self::Error> {
         use std::collections::HashSet;
-        use tracing::{debug, info, trace};
+        use tracing::{debug, info};
 
         info!("Starting prefix group scan with 'longest facade' logic (Arc<AsyncMutex<H>> => Arc<H> snapshot).");
 

@@ -438,7 +438,7 @@ mod test_bump_crate_and_downstreams {
             tmp2
         );
 
-        let mut ws2 = Workspace::<PathBuf, CrateHandle>::new(&tmp2)
+        let ws2 = Workspace::<PathBuf, CrateHandle>::new(&tmp2)
             .await
             .expect("Failed to create Workspace from disk");
         trace!("Workspace created successfully");

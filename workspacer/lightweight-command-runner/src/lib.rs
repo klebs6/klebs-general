@@ -11,7 +11,7 @@ mod test_default_command_runner {
     async fn should_run_echo_command_successfully() {
         let runner = DefaultCommandRunner;
         // Use a cross-platform echo command.
-        let mut cmd = if cfg!(target_os = "windows") {
+        let cmd = if cfg!(target_os = "windows") {
             let mut c = Command::new("cmd");
             c.args(["/C", "echo hello"]);
             c

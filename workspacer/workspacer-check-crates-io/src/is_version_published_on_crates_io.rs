@@ -29,9 +29,9 @@ pub async fn is_crate_version_published_on_crates_io(
 #[cfg(test)]
 mod test_is_crate_version_published_on_crates_io {
     use super::*;
-    use std::sync::Arc;
+    
     use semver::Version;
-    use tokio::runtime::Runtime;
+    
 
     // If you want to test against the live crates.io, you can pick a crate & version
     // that you know definitely exists (e.g., "serde" at some stable version).

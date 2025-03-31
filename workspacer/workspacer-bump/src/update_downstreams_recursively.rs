@@ -39,7 +39,7 @@ where
             // 2) lock for short, synchronous update
             let changed = {
 
-                let mut h          = arc_crate.lock().await;
+                let h          = arc_crate.lock().await;
                 let toml           = h.cargo_toml();
                 let mut toml_guard = toml.lock().await;
 
@@ -57,7 +57,7 @@ where
 
                     let toml = crate_guard.cargo_toml();
 
-                    let mut toml_guard = toml.lock().await;
+                    let toml_guard = toml.lock().await;
 
                     toml_guard.save_to_disk().await?;
                 }

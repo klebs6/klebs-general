@@ -24,7 +24,7 @@ impl CommandRunner for DefaultCommandRunner {
 #[cfg(test)]
 mod test_command_runner {
     use super::*;
-    use std::process::Output;
+    
     use tokio::process::Command;
     use tokio::runtime::Runtime;
 
@@ -47,7 +47,7 @@ mod test_command_runner {
         rt.block_on(async {
             let runner = create_command_runner();
 
-            let mut cmd = if cfg!(windows) {
+            let cmd = if cfg!(windows) {
                 let mut c = Command::new("cmd");
                 c.arg("/C").arg("echo hello"); 
                 c
@@ -102,7 +102,7 @@ mod test_command_runner {
         rt.block_on(async {
             let runner = create_command_runner();
 
-            let mut cmd = if cfg!(windows) {
+            let cmd = if cfg!(windows) {
                 let mut c = Command::new("cmd");
                 c.arg("/C").arg("echo capture_this_stdout");
                 c
@@ -142,7 +142,7 @@ mod test_command_runner {
 
             // On Unix, `ls` a non-existent file typically prints to stderr.
             // On Windows, `dir` of a non-existent file also prints to stderr.
-            let mut cmd = if cfg!(windows) {
+            let cmd = if cfg!(windows) {
                 let mut c = Command::new("cmd");
                 c.arg("/C").arg("dir thisDirectoryDoesNotExist");
                 c

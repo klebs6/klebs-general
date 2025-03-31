@@ -13,12 +13,12 @@ mod test_publish_integration {
     use rocket::http::{ContentType, Status};
     use rocket::local::blocking::Client;
     use rocket::serde::json::serde_json;
-    use tracing::{trace, debug, info, warn, error};
+    use tracing::{trace, debug, info};
     use crate::app_state::AppStateBuilder;
     use crate::crates_db::MockCratesDb;
-    use crate::stored_crate::StoredCrate;
-    use getset::*;
-    use derive_builder::*;
+    
+    
+    
 
     // We stand up a fresh Rocket for each test to ensure 
     // we're truly testing the interface in isolation.

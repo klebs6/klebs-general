@@ -173,7 +173,7 @@ impl ValidateIntegrity for CrateHandle {
 
         // 1) Ensure Cargo.toml is readable & has a valid version (no `.expect(...)`!)
         let cargo_toml_arc = self.cargo_toml();
-        let mut ct_guard = cargo_toml_arc.lock().await;
+        let ct_guard = cargo_toml_arc.lock().await;
         match ct_guard.version() {
             Err(e) => {
                 error!("CrateHandle: cargo_toml.version() => encountered error: {:?}", e);

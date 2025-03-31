@@ -1,6 +1,7 @@
 [dependencies]
 structopt.workspace = true
 rocket.workspace = true
+disable_macro.workspace = true
 
 [dependencies.workspacer-3p]
 path = "../workspacer-3p"

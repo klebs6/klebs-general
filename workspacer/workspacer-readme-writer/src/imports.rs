@@ -8,6 +8,5 @@ pub(crate) use workspacer_crate_interface::*;
 pub(crate) use workspacer_errors::*;
 pub(crate) use workspacer_toml_interface::*;
 pub(crate) use workspacer_workspace::*;
-pub(crate) use ::serde::de::{Error as DeError};
 
 #[cfg(test)] pub(crate) use workspacer_mock::*;

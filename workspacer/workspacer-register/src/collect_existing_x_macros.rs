@@ -20,7 +20,7 @@ pub fn collect_existing_x_macros(parsed_file: &SourceFile) -> Vec<ExistingXMacro
             if leading_comments.is_empty() && macro_text.trim_start().starts_with("//") {
                 // We'll do a naive approach: take the lines from `macro_text` until the line with `x!{`,
                 // if they look like `// ...`.
-                let mut lines = macro_text.lines().collect::<Vec<_>>();
+                let lines = macro_text.lines().collect::<Vec<_>>();
                 if let Some(idx_x) = lines.iter().position(|ln| ln.contains("x!{")) {
                     let comment_part = &lines[0..idx_x];
                     // Filter to keep only lines that truly look like `// ...`.

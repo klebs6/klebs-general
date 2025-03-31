@@ -108,7 +108,7 @@ mod test_handle_path_change {
     impl CommandRunner for MockCommandRunner {
         fn run_command(
             &self,
-            mut cmd: tokio::process::Command,
+            cmd: tokio::process::Command,
         ) -> tokio::task::JoinHandle<Result<std::process::Output, std::io::Error>> {
             tokio::spawn(async move {
                 let _ = cmd;

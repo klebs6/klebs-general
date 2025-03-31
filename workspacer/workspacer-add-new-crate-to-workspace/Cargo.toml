@@ -29,9 +29,9 @@ version = "0.1.0"
 path = "../workspacer-workspace-interface"
 version = "0.1.0"
 [package]
+categories = [ "asynchronous", "development-tools", "algorithms", "project-management" ]
+description = "Automates the addition of new crates to a workspace, managing scaffolding, membership, and dependency registration with support for prefix groups."
 edition = "2024"
+keywords = [ "workspace", "crate-management", "asynchronous", "scaffolding", "automation" ]
 name = "workspacer-add-new-crate-to-workspace"
 version = "0.1.0"
-description = "Automates the addition of new crates to a workspace, managing scaffolding, membership, and dependency registration with support for prefix groups."
-keywords = ["workspace", "crate-management", "asynchronous", "scaffolding", "automation"]
-categories = ["asynchronous", "development-tools", "algorithms", "project-management"]

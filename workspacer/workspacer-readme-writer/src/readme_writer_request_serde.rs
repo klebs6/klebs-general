@@ -9,13 +9,12 @@ pub mod crate_handle_serde {
     // Bring in `Serialize` and `Deserialize` from the official crate rather than relying on
     // the overshadowed references.
     use ::serde::{Serialize, Deserialize};
-    use ::serde::ser::{Serializer, SerializeStruct};
-    use ::serde::de::{Deserializer, Visitor, Error as DeError, MapAccess};
+    use ::serde::ser::Serializer;
+    use ::serde::de::{Deserializer, Error as DeError};
 
     // Adjust these imports to your real crate paths:
     use super::{
         CrateHandle,
-        CrateError,
         supertrait::ReadmeWritingCrateHandle,
     };
 
@@ -75,7 +74,7 @@ pub mod crate_handle_serde {
 mod crate_handle_serde_tests {
     use super::*;
     use tracing::{trace, info, error};
-    use std::sync::Arc;
+    
     use semver::Version;
     use std::path::PathBuf;
 

@@ -17,12 +17,12 @@ version = "0.5.0"
 path = "../workspacer-workspace"
 version = "0.1.0"
 [package]
+categories = [ "development-tools", "asynchronous", "filesystem", "rust-patterns", "parsing" ]
+description = "Recursively scans directories for Rust source files, manages file markers, and integrates with workspace environments using asynchronous Rust."
 edition = "2024"
+keywords = [ "workspace", "file-management", "asynchronous", "rust", "files" ]
 name = "workspacer-name-all-files"
 version = "0.1.0"
-description = "Recursively scans directories for Rust source files, manages file markers, and integrates with workspace environments using asynchronous Rust."
-keywords = ["workspace", "file-management", "asynchronous", "rust", "files"]
-categories = ["development-tools", "asynchronous", "filesystem", "rust-patterns", "parsing"]
 [[bin]]
 name = "workspacer-name-all-files"
 path = "src/bin/name_all_files.rs"

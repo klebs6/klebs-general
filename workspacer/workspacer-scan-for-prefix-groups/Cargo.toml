@@ -1,6 +1,5 @@
-[dependencies]
-derive_builder.workspace = true
-
+[dependencies.derive_builder]
+workspace = true
 [dependencies.workspacer-3p]
 path = "../workspacer-3p"
 version = "0.5.0"
@@ -20,9 +19,9 @@ version = "0.5.0"
 path = "../workspacer-workspace"
 version = "0.1.0"
 [package]
+categories = [ "algorithms", "asynchronous", "development-tools", "programming", "workspace-management" ]
+description = "Provide utilities for creating cohesive prefix-based crate groups in a Rust workspace with asynchronous validation and scanning traits."
 edition = "2024"
+keywords = [ "async", "rust", "workspace", "crate", "cohesion" ]
 name = "workspacer-scan-for-prefix-groups"
 version = "0.1.0"
-description = "Provide utilities for creating cohesive prefix-based crate groups in a Rust workspace with asynchronous validation and scanning traits."
-keywords = ["async", "rust", "workspace", "crate", "cohesion"]
-categories = ["algorithms", "asynchronous", "development-tools", "programming", "workspace-management"]

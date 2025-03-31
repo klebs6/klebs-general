@@ -139,20 +139,20 @@ where
 #[cfg(test)]
 mod test_watch_and_reload {
     use super::*;
-    use notify::event::{Event, EventKind, ModifyKind, DataChange};
-    use tempfile::tempdir;
-    use tracing::{info, warn, error, debug};
-    use std::sync::Arc;
+    use notify::event::{EventKind, ModifyKind, DataChange};
+    
+    use tracing::{info, warn, error};
+    
     use std::os::unix::process::ExitStatusExt; // for from_raw(0)
     use tokio::sync::mpsc;
     use tokio::time::Duration;
     use workspacer_3p::tokio;
-    use workspacer_3p::tokio::fs;
-    use workspacer_3p::tokio::runtime::Runtime;
+    
+    
     use std::path::{Path, PathBuf};
     use notify::RecommendedWatcher;
-    use notify::RecursiveMode;
-    use async_channel::unbounded;
+    
+    
     use crate::CancellationToken;
     use lightweight_command_runner::CommandRunner;
     use std::process::Output;
@@ -205,7 +205,7 @@ mod test_watch_and_reload {
     impl CommandRunner for MockCommandRunner {
         fn run_command(
             &self,
-            mut cmd: tokio::process::Command,
+            cmd: tokio::process::Command,
         ) -> tokio::task::JoinHandle<Result<Output, std::io::Error>> {
             // For demonstration, pretend success
             tokio::spawn(async move {
@@ -230,8 +230,8 @@ mod test_watch_and_reload {
     async fn test_watch_and_reload_mock_events() {
         info!("Starting test_watch_and_reload_mock_events");
         let (notify_tx, notify_rx) = async_channel::unbounded::<notify::Result<notify::Event>>();
-        let mut watcher = {
-            use notify::Config;
+        let watcher = {
+            
             RecommendedWatcher::new(
                 move |_res| {
                     // do nothing, we feed events manually
@@ -329,8 +329,8 @@ mod test_watch_and_reload {
     async fn test_watch_and_reload_notify_error() {
         info!("Starting test_watch_and_reload_notify_error");
         let (notify_tx, notify_rx) = async_channel::unbounded::<notify::Result<notify::Event>>();
-        let mut watcher = {
-            use notify::Config;
+        let watcher = {
+            
             RecommendedWatcher::new(
                 move |_res| {
                     // do nothing
@@ -399,7 +399,7 @@ mod test_watch_and_reload {
 mod test_is_relevant_change {
     use super::*;
     use std::path::PathBuf;
-    use tracing::{info, warn, error, debug};
+    use tracing::info;
 
     // A local mock with an is_relevant_change method
     #[derive(Debug)]

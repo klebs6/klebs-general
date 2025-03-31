@@ -102,7 +102,7 @@ where
         // D) Finally save to disk outside the lock
         {
             let cargo_toml_arc = self.cargo_toml();
-            let mut guard = cargo_toml_arc.lock().await;
+            let guard = cargo_toml_arc.lock().await;
             guard.save_to_disk().await?;
         }
 

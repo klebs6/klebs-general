@@ -96,7 +96,7 @@ macro_rules! gen_bump_all_for_workspace {
 
                 // --- Second pass: rewrite dependencies
                 for arc_crate in self.crates() {
-                    let mut handle = arc_crate.lock().await;
+                    let handle = arc_crate.lock().await;
                     let crate_name = handle.name().to_string();
 
                     let cargo_toml_arc = handle.cargo_toml();

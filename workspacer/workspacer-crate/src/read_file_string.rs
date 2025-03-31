@@ -43,7 +43,7 @@ mod test_read_file_string {
     use tokio::fs::{create_dir_all, File};
     use tokio::io::AsyncWriteExt;
     use std::io::Write;
-    use std::sync::Arc;
+    
 
     // ------------------------------------------------------------------------
     // A minimal helper that implements `HasCargoTomlPathBuf` so we can create a CrateHandle.

@@ -2,7 +2,7 @@
 crate::ix!();
 
 pub fn has_cfg_test_attr(node: &SyntaxNode) -> bool {
-    use ra_ap_syntax::ast::{Attr, HasAttrs, PathSegment};
+    use ra_ap_syntax::ast::Attr;
     
     for child_attr in node.children().filter_map(Attr::cast) {
         if let Some(meta) = child_attr.meta() {

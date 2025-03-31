@@ -1,10 +1,8 @@
 // ---------------- [ File: workspacer-consolidate/src/bin/show_consolidated_crate_interface.rs ]
 use workspacer_3p::*;
-use structopt::*;
 use workspacer_errors::*;
 use workspacer_crate::*;
 use workspacer_consolidate::*;
-use workspacer_workspace::*;
 
 /// Command line interface for the show_consolidated-crate-interface program
 #[derive(StructOpt, Debug)]

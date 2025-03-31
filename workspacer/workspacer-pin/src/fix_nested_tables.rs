@@ -70,7 +70,7 @@ fn get_item_mut_by_path<'a>(
     root: &'a mut TeItem,
     path: &[String],
 ) -> Option<&'a mut TeItem> {
-    let mut current: *mut TeItem = root as *mut TeItem; 
+    let current: *mut TeItem = root as *mut TeItem; 
     // unsafe pointer approach to avoid repeated borrowing,
     // but we can do a safe approach if we carefully nest .get_mut calls.
 

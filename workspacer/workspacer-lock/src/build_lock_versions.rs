@@ -42,9 +42,9 @@ where
 #[cfg(test)]
 mod test_build_lock_versions {
     use super::*;
-    use std::collections::{BTreeMap, BTreeSet};
+    
     use std::path::{Path, PathBuf};
-    use tempfile::{tempdir, NamedTempFile};
+    use tempfile::tempdir;
     use tokio::fs::{create_dir, File};
     use tokio::io::AsyncWriteExt;
     use cargo_lock::Version;

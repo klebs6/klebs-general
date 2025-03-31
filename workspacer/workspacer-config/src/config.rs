@@ -47,7 +47,7 @@ mod tests {
     use super::*;
     use tempfile::tempdir;
     use std::io::Write;
-    use std::fs::{File, create_dir_all};
+    
 
     #[tokio::test]
     async fn test_local_ws_dir_and_config() {

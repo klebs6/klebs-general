@@ -452,6 +452,12 @@ impl GetCrateRepositoryLocationOrFallback for MockCargoToml {
 /// We're implementing the big aggregator trait.
 impl CargoTomlInterface for MockCargoToml {}
 
+impl GetContent for MockCargoToml {
+    fn get_content(&self) -> &toml::Value {
+        todo!();
+    }
+}
+
 #[async_trait]
 impl DocumentClone for MockCargoToml {
     type Error = CargoTomlError;

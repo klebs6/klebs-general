@@ -36,7 +36,7 @@ where
 #[cfg(test)]
 mod test_process_notify_event {
     use super::*;
-    use tracing::{info, error, debug};
+    use tracing::{info, error};
     use tokio::sync::mpsc;
     use std::os::unix::process::ExitStatusExt;
     use std::sync::Arc;
@@ -92,7 +92,7 @@ mod test_process_notify_event {
     impl CommandRunner for MockCommandRunner {
         fn run_command(
             &self,
-            mut cmd: tokio::process::Command,
+            cmd: tokio::process::Command,
         ) -> tokio::task::JoinHandle<Result<std::process::Output, std::io::Error>> {
             tokio::spawn(async move {
                 let _ = cmd;

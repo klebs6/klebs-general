@@ -65,6 +65,13 @@ pub struct MockCrateHandle {
     mock_cargo_toml: Arc<AsyncMutex<MockCargoToml>>,
 }
 
+#[async_trait]
+impl GetInternalDependencies for MockCrateHandle {
+    async fn internal_dependencies(&self) -> Result<Vec<String>, CrateError> {
+        todo!();
+    }
+}
+
 impl MockCrateHandle {
     /// A convenience constructor returning a "fully valid" mock crate:
     /// - Has a name "mock_crate"

@@ -24,9 +24,9 @@ where
 mod test_get_file_size {
     use super::*;
     use std::io::Write as IoWrite;
-    use std::path::{Path, PathBuf};
+    use std::path::PathBuf;
     use tempfile::{tempdir, NamedTempFile};
-    use tokio::fs::{File, create_dir};
+    use tokio::fs::create_dir;
     use tokio::io::AsyncWriteExt;
 
     /// Verify that `file_size()` returns 0 for an empty file.
