@@ -2,10 +2,13 @@
 workspace = true
 [dependencies.workspacer-3p]
 path = "../workspacer-3p"
+version = "0.5.0"
 [dependencies.workspacer-errors]
 path = "../workspacer-errors"
+version = "0.1.0"
 [dependencies.workspacer-export]
 path = "../workspacer-export"
+version = "0.1.0"
 [package]
 edition = "2024"
 name = "workspacer-cli"

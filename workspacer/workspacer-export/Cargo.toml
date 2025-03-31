@@ -9,6 +9,7 @@ path = "../workspacer-3p"
 version = "0.5.0"
 [dependencies.workspacer-add-internal-dep]
 path = "../workspacer-add-internal-dep"
+version = "0.1.0"
 [dependencies.workspacer-add-new-crate-to-workspace]
 path = "../workspacer-add-new-crate-to-workspace"
 version = "0.1.0"
@@ -17,6 +18,7 @@ path = "../workspacer-analysis"
 version = "0.1.0"
 [dependencies.workspacer-bump]
 path = "../workspacer-bump"
+version = "0.1.0"
 [dependencies.workspacer-check-publish-ready]
 path = "../workspacer-check-publish-ready"
 version = "0.1.0"
@@ -43,6 +45,7 @@ path = "../workspacer-errors"
 version = "0.1.0"
 [dependencies.workspacer-format-imports]
 path = "../workspacer-format-imports"
+version = "0.1.0"
 [dependencies.workspacer-git]
 path = "../workspacer-git"
 version = "0.1.0"
@@ -54,6 +57,7 @@ path = "../workspacer-linting"
 version = "0.1.0"
 [dependencies.workspacer-lock]
 path = "../workspacer-lock"
+version = "0.1.0"
 [dependencies.workspacer-metadata]
 path = "../workspacer-metadata"
 version = "0.1.0"
@@ -68,13 +72,16 @@ path = "../workspacer-publish"
 version = "0.1.0"
 [dependencies.workspacer-readme-writer]
 path = "../workspacer-readme-writer"
+version = "0.1.0"
 [dependencies.workspacer-rebuild-or-test]
 path = "../workspacer-rebuild-or-test"
 version = "0.1.0"
 [dependencies.workspacer-register]
 path = "../workspacer-register"
+version = "0.1.0"
 [dependencies.workspacer-register-internal-crate-in-prefix-group]
 path = "../workspacer-register-internal-crate-in-prefix-group"
+version = "0.1.0"
 [dependencies.workspacer-syntax]
 path = "../workspacer-syntax"
 version = "0.5.0"
@@ -86,6 +93,7 @@ path = "../workspacer-toml"
 version = "0.5.0"
 [dependencies.workspacer-tree]
 path = "../workspacer-tree"
+version = "0.1.0"
 [dependencies.workspacer-watch-and-reload]
 path = "../workspacer-watch-and-reload"
 version = "0.1.0"

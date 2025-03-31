@@ -10,6 +10,7 @@ path = "../workspacer-export"
 version = "0.1.0"
 [dependencies.workspacer-cli]
 path = "../workspacer-cli"
+version = "0.1.0"
 
 [package]
 authors = [ "klebs tpk3.mx@gmail.com" ]
