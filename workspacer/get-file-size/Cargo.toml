@@ -18,7 +18,6 @@ authors = ["klebs tpk3.mx@gmail.com"]
 categories = [
     "asynchronous",
     "filesystem",
-    "utilities",
     "development-tools",
 ]
 description = "Rust crate for asynchronous file size retrieval and line counting, utilizing the tokio runtime for non-blocking I/O operations."
