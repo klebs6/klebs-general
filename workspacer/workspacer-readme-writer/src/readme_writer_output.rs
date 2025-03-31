@@ -46,6 +46,7 @@ pub struct AiReadmeWriterDesiredOutput {
     ///
     /// The ONLY legal categoreis are:
     ///
+    ///```
     /// accessibility
     /// aerospace
     /// algorithms
@@ -101,6 +102,10 @@ pub struct AiReadmeWriterDesiredOutput {
     /// visualization
     /// wasm
     /// web-programming
+    /// ```
+    ///
+    /// DO NOT specify a category that is not on this list.
+    ///
     package_categories:  Vec<String>,
 }
 
