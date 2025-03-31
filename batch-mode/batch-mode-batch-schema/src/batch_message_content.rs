@@ -113,7 +113,7 @@ impl BatchMessageContent {
 #[cfg(test)]
 mod batch_message_content_tests {
     use super::*;
-    use serde_json::{Value as SerdeValue, json};
+    use serde_json::Value as SerdeValue;
 
     /// Verifies that valid JSON content is parsed successfully without attempting repair.
     #[traced_test]

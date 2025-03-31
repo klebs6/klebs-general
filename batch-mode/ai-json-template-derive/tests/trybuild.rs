@@ -1,7 +1,6 @@
 // ---------------- [ File: tests/trybuild.rs ]
 // tests/trybuild.rs
 
-use trybuild::TestCases;
 use tracing::*;
 
 #[test]

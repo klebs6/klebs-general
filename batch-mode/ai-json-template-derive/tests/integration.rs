@@ -38,7 +38,6 @@ use ai_json_template_derive::AiJsonTemplate;
 use ai_json_template::AiJsonTemplate as AiJsonTemplateTrait;
 
 // We also need `quote::ToTokens` so `.to_token_stream()` is in scope:
-use quote::ToTokens;
 
 use save_load_derive::*;
 use save_load_traits::*;

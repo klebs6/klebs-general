@@ -5,11 +5,9 @@ pub(crate) use proc_macro2::{TokenStream as TokenStream2};
 pub(crate) use quote::{quote};
 
 pub(crate) use syn::{
-    DeriveInput,
-    Lit, 
+    DeriveInput, 
     Type, 
     Error,
-    GenericParam,
 };
 
 #[cfg(test)]
