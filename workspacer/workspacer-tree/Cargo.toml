@@ -13,3 +13,6 @@ edition = "2024"
 name = "workspacer-tree"
 publish = [ "mock" ]
 version = "0.1.0"
+description = "A Rust crate to asynchronously build and render workspace dependency trees for Rust projects. It provides tools for managing and visualizing dependencies using graph-based approaches."
+keywords = ["rust", "dependency", "workspace", "async", "tree"]
+categories = ["development-tools", "algorithms", "asynchronous", "network-programming", "rendering"]

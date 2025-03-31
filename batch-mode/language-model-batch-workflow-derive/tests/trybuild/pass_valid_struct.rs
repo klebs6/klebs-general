@@ -52,9 +52,21 @@ impl ComputeSystemMessage for MyValidStruct {
     }
 }
 
-#[derive(NamedItem,Debug,Serialize,Deserialize)]
+#[derive(Clone,NamedItem,Debug,Serialize,Deserialize)]
 pub struct TestSeed {
     name: String,
+}
+
+impl HasAssociatedOutputName for TestSeed {
+    fn associated_output_name(&self) -> std::borrow::Cow<'_, str> {
+        todo!();
+    }
+}
+
+impl std::fmt::Display for TestSeed {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        todo!();
+    }
 }
 
 impl ComputeLanguageModelCoreQuery for MyValidStruct {

@@ -69,8 +69,8 @@ mod test_generate_impl_get_batch_workspace {
         // Now we expect an impl that supplies both the error type (MyErr) and
         // the input type (<Dummy as ComputeLanguageModelCoreQuery>::Seed).
         assert!(
-            code.contains("impl GetBatchWorkspace < MyErr , < Dummy as ComputeLanguageModelCoreQuery > :: Seed > for Dummy"),
-            "Should generate impl GetBatchWorkspace<MyErr, <Dummy as ComputeLanguageModelCoreQuery>::Seed> for Dummy."
+            code.contains("impl GetBatchWorkspace < BatchWorkspaceError , < Dummy as ComputeLanguageModelCoreQuery > :: Seed > for Dummy"),
+            "Should generate impl GetBatchWorkspace< BatchWorkspaceError, <Dummy as ComputeLanguageModelCoreQuery>::Seed> for Dummy."
         );
 
         // And it should clone the correct field.

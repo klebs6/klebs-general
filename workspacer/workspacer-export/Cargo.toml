@@ -100,3 +100,6 @@ edition = "2024"
 name = "workspacer-export"
 publish = [ "mock" ]
 version = "0.1.0"
+description = "Facilitates workspace management and exportation within Rust projects through extended interfaces."
+keywords = ["workspace", "export", "interface", "rust-crate", "development"]
+categories = ["development-tools", "rust-patterns", "project-management"]

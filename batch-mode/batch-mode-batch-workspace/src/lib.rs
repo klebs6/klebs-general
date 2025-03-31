@@ -10,3 +10,4 @@ x!{gather_all_batch_files}
 x!{full_batch_workspace_interface}
 x!{workspace_clone}
 x!{mock_bad}
+x!{calculate_unseen}

@@ -182,7 +182,7 @@ mod test_generate_impl_finish_processing_uncompleted_batches {
 
         // We now check for the local bridging function you inject:
         assert!(
-            code.contains("& DUMMY_OUTPUT_FILE_BRIDGE"),
+            code.contains("& Self :: DUMMY_OUTPUT_FILE_BRIDGE"),
             "Should fallback to a local bridging function for the output file."
         );
         assert!(

@@ -26,7 +26,6 @@ TEST_FILE  := tests/test_scale_layer.rs
 #ACTIVE_PACKAGE := batch-mode-batch-error
 #ACTIVE_PACKAGE := camel-case-token-with-comment
 #ACTIVE_PACKAGE := batch-mode-batch-workspace
-#ACTIVE_PACKAGE := batch-mode-batch-workflow
 #ACTIVE_PACKAGE := language-model-format-instructions
 #ACTIVE_PACKAGE := batch-mode-token-expansion-traits
 #ACTIVE_PACKAGE := batch-mode-token-expansion-step
@@ -45,8 +44,9 @@ ACTIVE_PACKAGE := batch-mode-process-response
 #ACTIVE_PACKAGE := save-load-traits
 #ACTIVE_PACKAGE := language-model-token-expander
 #ACTIVE_PACKAGE := batch-mode-batch-workspace-interface
-ACTIVE_PACKAGE := language-model-batch-workflow-derive
 ACTIVE_PACKAGE := language-model-token-expander
+ACTIVE_PACKAGE := batch-mode-batch-workflow
+ACTIVE_PACKAGE := language-model-batch-workflow-derive
 
 #-----------------------------------------------------[]
 #INDIVIDUAL_TEST := test_build_network_io_enum
@@ -56,7 +56,7 @@ DEFAULT := test
 #DEFAULT := test_file
 #DEFAULT := test_one
 #DEFAULT := test_file_one
-#DEFAULT := test_all
+DEFAULT := test_all
 #DEFAULT := run
 #DEFAULT := file_diff
 #DEFAULT := build

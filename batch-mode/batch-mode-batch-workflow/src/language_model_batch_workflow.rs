@@ -123,7 +123,6 @@ pub trait LanguageModelBatchWorkflow<E: From<LanguageModelBatchCreationError>>:
     }
 }
 
-
 /// This new trait is used to gather the final AI expansions from disk, 
 /// matching each seed item to its parsed output JSON.
 #[async_trait]

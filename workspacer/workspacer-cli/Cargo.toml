@@ -11,3 +11,6 @@ edition = "2024"
 name = "workspacer-cli"
 publish = [ "mock" ]
 version = "0.1.0"
+description = "A versatile command-line interface for Rust workspace management, providing comprehensive controls for crate analysis, import formatting, cleanup, dependency checks, and more."
+keywords = ["workspace", "crate", "cli", "automation", "rust"]
+categories = ["command-line-utilities", "development-tools", "parsing", "project-management", "code-quality"]
