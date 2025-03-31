@@ -42,7 +42,7 @@ where
             topo_order.len()
         );
 
-        for node_index in topo_order {
+        for node_index in topo_order.into_iter().rev() {
             let crate_node_name = dependency_graph
                 .node_weight(node_index)
                 .expect("Graph node weight not found");
