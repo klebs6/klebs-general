@@ -1,18 +1,36 @@
-[dependencies]
-serde.workspace        = true
-serde_derive.workspace = true
-serde_json.workspace   = true
+[dependencies.serde]
+workspace = true
+
+[dependencies.serde_derive]
+workspace = true
+
+[dependencies.serde_json]
+workspace = true
 
 [dependencies.workspacer-3p]
 path = "../workspacer-3p"
 version = "0.5.0"
+
 [dependencies.workspacer-errors]
 path = "../workspacer-errors"
 version = "0.1.0"
+
 [package]
-edition = "2024"
-name = "workspacer-toml-interface"
-version = "0.1.0"
+categories = [
+    "async",
+    "config",
+    "development-tools",
+    "rust-patterns",
+    "filesystem",
+]
 description = "workspacer-toml-interface provides a comprehensive interface for Cargo.toml manipulation, supporting versioning, dependency, and metadata management through synchronous and asynchronous Rust traits."
-keywords = ["Cargo.toml", "traits", "Rust", "workspace", "asynchronous"]
-categories = ["async", "config", "development-tools", "rust-patterns", "filesystem"]
+edition = "2024"
+keywords = [
+    "Cargo.toml",
+    "traits",
+    "Rust",
+    "workspace",
+    "asynchronous",
+]
+name = "workspacer-toml-interface"
+version = "0.1.1"

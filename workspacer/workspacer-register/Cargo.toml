@@ -1,34 +1,54 @@
-[dependencies]
-derive_builder.workspace = true
+[[bin]]
+name = "workspacer-ensure-all-source-files-are-registered"
+path = "src/bin/ensure_all_source_files_are_registered.rs"
+
+[dependencies.derive_builder]
+workspace = true
 
 [dependencies.workspacer-3p]
 path = "../workspacer-3p"
 version = "0.5.0"
+
 [dependencies.workspacer-crate]
 path = "../workspacer-crate"
 version = "0.5.0"
-[dependencies.workspacer-workspace]
-path = "../workspacer-workspace"
-version = "0.1.0"
+
 [dependencies.workspacer-crate-interface]
 path = "../workspacer-crate-interface"
 version = "0.1.0"
+
 [dependencies.workspacer-errors]
 path = "../workspacer-errors"
 version = "0.1.0"
+
 [dependencies.workspacer-git]
 path = "../workspacer-git"
 version = "0.1.0"
+
 [dependencies.workspacer-toml-interface]
 path = "../workspacer-toml-interface"
 version = "0.1.0"
-[package]
-edition = "2024"
-name = "workspacer-register"
+
+[dependencies.workspacer-workspace]
+path = "../workspacer-workspace"
 version = "0.1.0"
+
+[package]
+categories = [
+    "development-tools",
+    "parsing",
+    "asynchronous",
+    "compilation",
+    "utilities",
+]
 description = "Utility crate to ensure all source files are registered within a workspace, managing macro definitions and integration for seamless Rust project maintenance."
-keywords = ["macro", "workspace", "source-files", "register", "rust"]
-categories = ["development-tools", "parsing", "asynchronous", "compilation", "utilities"]
-[[bin]]
-path = "src/bin/ensure_all_source_files_are_registered.rs"
-name = "workspacer-ensure-all-source-files-are-registered"
+edition = "2024"
+keywords = [
+    "macro",
+    "workspace",
+    "source-files",
+    "register",
+    "rust",
+]
+name = "workspacer-register"
+version = "0.1.1"

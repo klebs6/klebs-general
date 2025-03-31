@@ -1,22 +1,39 @@
 [dependencies.workspacer-3p]
 path = "../workspacer-3p"
 version = "0.5.0"
+
 [dependencies.workspacer-crate]
 path = "../workspacer-crate"
 version = "0.5.0"
+
 [dependencies.workspacer-crate-interface]
 path = "../workspacer-crate-interface"
 version = "0.1.0"
+
 [dependencies.workspacer-errors]
 path = "../workspacer-errors"
 version = "0.1.0"
+
 [dependencies.workspacer-toml-interface]
 path = "../workspacer-toml-interface"
 version = "0.1.0"
+
 [package]
-edition = "2024"
-name = "workspacer-check-crates-io"
-version = "0.1.0"
+categories = [
+    "async",
+    "network-programming",
+    "development-tools",
+    "commands-line-utilities",
+    "web-programming",
+]
 description = "An asynchronous Rust crate offering verification of crate version publish status on crates.io, enhancing automated release workflows."
-keywords = ["crates.io", "version-check", "async", "publish", "validation"]
-categories = ["async", "network-programming", "development-tools", "commands-line-utilities", "web-programming"]
+edition = "2024"
+keywords = [
+    "crates.io",
+    "version-check",
+    "async",
+    "publish",
+    "validation",
+]
+name = "workspacer-check-crates-io"
+version = "0.1.1"

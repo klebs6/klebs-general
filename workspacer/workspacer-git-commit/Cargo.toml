@@ -1,10 +1,23 @@
 [dependencies.workspacer-3p]
 path = "../workspacer-3p"
 version = "0.5.0"
+
 [package]
-edition = "2024"
-name = "workspacer-git-commit"
-version = "0.1.0"
+categories = [
+    "version-control",
+    "utilities",
+    "software-development",
+    "development-tools",
+    "api-bindings",
+]
 description = "A Rust crate to streamline the creation and management of Git commits in applications, simplifying version control processes with easy-to-use abstractions."
-keywords = ["git", "commit", "version-control", "rust", "programmatic"]
-categories = ["version-control", "utilities", "software-development", "development-tools", "api-bindings"]
+edition = "2024"
+keywords = [
+    "git",
+    "commit",
+    "version-control",
+    "rust",
+    "programmatic",
+]
+name = "workspacer-git-commit"
+version = "0.1.1"

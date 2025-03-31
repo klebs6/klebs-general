@@ -1,10 +1,21 @@
 [dependencies.workspacer-3p]
 path = "../workspacer-3p"
 version = "0.5.0"
+
 [package]
-edition = "2024"
-name = "workspacer-register-crate-files"
-version = "0.1.0"
+categories = [
+    "development-tools",
+    "config",
+    "compilers",
+]
 description = "Facilitates the registration and management of crate files within a Rust workspace using Rust 2024."
-keywords = ["crate management", "workspace", "dependency resolution", "Rust 2024", "automation"]
-categories = ["development-tools", "config", "compilers"]
+edition = "2024"
+keywords = [
+    "crate management",
+    "workspace",
+    "dependency resolution",
+    "Rust 2024",
+    "automation",
+]
+name = "workspacer-register-crate-files"
+version = "0.1.1"

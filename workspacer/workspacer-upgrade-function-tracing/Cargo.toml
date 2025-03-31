@@ -1,10 +1,21 @@
 [dependencies.workspacer-3p]
 path = "../workspacer-3p"
 version = "0.5.0"
+
 [package]
-edition = "2024"
-name = "workspacer-upgrade-function-tracing"
-version = "0.1.0"
+categories = [
+    "development-tools",
+    "performance",
+    "visualization",
+]
 description = "Enhances workspace function tracing by capturing execution insights for performance and reliability improvements."
-keywords = ["rust", "tracing", "performance", "workspace", "analytics"]
-categories = ["development-tools", "performance", "visualization"]
+edition = "2024"
+keywords = [
+    "rust",
+    "tracing",
+    "performance",
+    "workspace",
+    "analytics",
+]
+name = "workspacer-upgrade-function-tracing"
+version = "0.1.1"

@@ -1,19 +1,35 @@
 [dependencies.workspacer-crate-interface]
 path = "../workspacer-crate-interface"
 version = "0.1.0"
+
 [dependencies.workspacer-errors]
 path = "../workspacer-errors"
 version = "0.1.0"
+
 [dependencies.workspacer-toml-interface]
 path = "../workspacer-toml-interface"
 version = "0.1.0"
+
 [dependencies.workspacer-workspace-interface]
 path = "../workspacer-workspace-interface"
 version = "0.1.0"
+
 [package]
-edition = "2024"
-name = "workspacer-interface"
-version = "0.5.0"
+categories = [
+    "development-tools",
+    "gui",
+    "window-management",
+    "api-bindings",
+    "data-structures",
+]
 description = "A comprehensive API for workspace management, offering customizable layouts and efficient task handling."
-keywords = ["workspace", "task-management", "layout", "API", "window-positioning"]
-categories = ["development-tools", "gui", "window-management", "api-bindings", "data-structures"]
+edition = "2024"
+keywords = [
+    "workspace",
+    "task-management",
+    "layout",
+    "API",
+    "window-positioning",
+]
+name = "workspacer-interface"
+version = "0.5.1"

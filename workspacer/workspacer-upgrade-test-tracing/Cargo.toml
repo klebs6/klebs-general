@@ -1,10 +1,23 @@
 [dependencies.workspacer-3p]
 path = "../workspacer-3p"
 version = "0.5.0"
+
 [package]
-edition = "2024"
-name = "workspacer-upgrade-test-tracing"
-version = "0.1.0"
+categories = [
+    "development-tools",
+    "concurrency",
+    "asynchronous",
+    "logging",
+    "performance",
+]
 description = "A tracing and diagnostic tool for monitoring workspace upgrade processes, leveraging Rust 2024 features for high efficiency and low-latency logging."
-keywords = ["tracing", "workspace", "upgrade", "diagnostics", "rust2024"]
-categories = ["development-tools", "concurrency", "asynchronous", "logging", "performance"]
+edition = "2024"
+keywords = [
+    "tracing",
+    "workspace",
+    "upgrade",
+    "diagnostics",
+    "rust2024",
+]
+name = "workspacer-upgrade-test-tracing"
+version = "0.1.1"

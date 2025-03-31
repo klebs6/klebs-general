@@ -1,22 +1,39 @@
 [dependencies.lightweight-command-runner]
 path = "../lightweight-command-runner"
 version = "0.1.0"
+
 [dependencies.workspacer-3p]
 path = "../workspacer-3p"
 version = "0.5.0"
+
 [dependencies.workspacer-crate-interface]
 path = "../workspacer-crate-interface"
 version = "0.1.0"
+
 [dependencies.workspacer-errors]
 path = "../workspacer-errors"
 version = "0.1.0"
+
 [dependencies.workspacer-toml-interface]
 path = "../workspacer-toml-interface"
 version = "0.1.0"
+
 [package]
-edition = "2024"
-name = "workspacer-workspace-interface"
-version = "0.1.0"
+categories = [
+    "concurrency",
+    "asynchronous",
+    "data-structures",
+    "network-programming",
+    "development-tools",
+]
 description = "A Rust crate offering asynchronous interfaces for sophisticated workspace and crate management, leveraging advanced concurrency and data handling patterns."
-keywords = ["workspace", "interface", "concurrency", "async", "management"]
-categories = ["concurrency", "asynchronous", "data-structures", "network-programming", "development-tools"]
+edition = "2024"
+keywords = [
+    "workspace",
+    "interface",
+    "concurrency",
+    "async",
+    "management",
+]
+name = "workspacer-workspace-interface"
+version = "0.1.1"
