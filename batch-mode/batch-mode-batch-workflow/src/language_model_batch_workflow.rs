@@ -1,6 +1,8 @@
 // ---------------- [ File: batch-mode-batch-workflow/src/language_model_batch_workflow.rs ]
 crate::ix!();
 
+pub type LanguageModelClientArc = Arc<dyn LanguageModelClientInterface<LanguageModelBatchWorkflowError>>;
+
 /// Two new traits that users must implement:
 /// 1) `ComputeSystemMessage` to provide a static or dynamic system message.
 /// 2) `ComputeLanguageModelCoreQuery` to build requests for each seed item.

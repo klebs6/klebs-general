@@ -1,8 +1,6 @@
 // ---------------- [ File: batch-mode-batch-client/src/language_model_client_interface.rs ]
 crate::ix!();
 
-pub type LanguageModelClientArc = Arc<dyn LanguageModelClientInterface<LanguageModelBatchWorkflowError>>;
-
 /*
    To make a trait object-safe, we cannot have any methods that use generics
    (`impl Trait` or a type parameter in the method signature). Previously,
