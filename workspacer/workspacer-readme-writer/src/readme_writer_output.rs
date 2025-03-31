@@ -44,7 +44,7 @@ pub struct AiReadmeWriterDesiredOutput {
     ///
     /// These categories should only be chosen from among the legal crates.io categories. 
     ///
-    /// The legal categoreis are:
+    /// The ONLY legal categoreis are:
     ///
     /// accessibility
     /// aerospace
