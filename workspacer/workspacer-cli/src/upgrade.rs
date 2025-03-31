@@ -65,6 +65,6 @@ pub enum UpgradeSubcommand {
 
 impl UpgradeSubcommand {
     pub async fn run(&self) -> Result<(),WorkspaceError> {
-        todo!();
+        todo!("ws upgrade: needs library implementation");
     }
 }

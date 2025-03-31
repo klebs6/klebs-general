@@ -28,7 +28,7 @@ members = [
     "language-model-token-expander", 
     "language-model-type", 
     "save-load-derive", 
-    "save-load-traits", 
+    "save-load-traits",
 ]
 
 resolver = "3"

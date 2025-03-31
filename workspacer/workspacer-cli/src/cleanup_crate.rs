@@ -1,3 +1,4 @@
+// ---------------- [ File: workspacer-cli/src/cleanup_crate.rs ]
 crate::ix!();
 
 /// For **Crate** subcommand usage: `ws cleanup crate --crate MY_CRATE [--workspace ...] [--skip-git-check]`

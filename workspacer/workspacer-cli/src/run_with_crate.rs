@@ -1,3 +1,4 @@
+// ---------------- [ File: workspacer-cli/src/run_with_crate.rs ]
 crate::ix!();
 
 /// This new helper function `run_with_crate` parallels the existing
@@ -22,14 +23,14 @@ where
     // Our closure (operation) must accept `&CrateHandle` and return
     // a `Future<Output=Result<R, WorkspaceError>>`.
     F: for<'a> FnOnce(
-            &'a CrateHandle,
+            &'a mut CrateHandle,
         ) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<R, WorkspaceError>> + Send + 'a>>
       + Send
       + 'static,
 {
     // 1) Create the CrateHandle from `crate_path`
     debug!("Creating CrateHandle from path='{}'", crate_path.display());
-    let handle = CrateHandle::new(&crate_path).await.map_err(|crate_err| {
+    let mut handle = CrateHandle::new(&crate_path).await.map_err(|crate_err| {
         error!(
             "Could not create CrateHandle from '{}': {:?}",
             crate_path.display(),
@@ -51,7 +52,7 @@ where
         crate_path.display()
     );
     let result = {
-        let future = operation(&handle);
+        let future = operation(&mut handle);
         future.await?
     };
 
@@ -67,4 +68,3 @@ where
     // 5) Return whatever the closure returned
     Ok(result)
 }
-

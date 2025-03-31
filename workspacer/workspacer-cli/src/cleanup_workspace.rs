@@ -1,3 +1,4 @@
+// ---------------- [ File: workspacer-cli/src/cleanup_workspace.rs ]
 crate::ix!();
 
 /// For **Workspace** subcommand usage: `ws cleanup workspace [--path ...] [--skip-git-check]`
@@ -30,4 +31,3 @@ impl CleanupWorkspaceCommand {
         ).await
     }
 }
-

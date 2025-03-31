@@ -1,3 +1,4 @@
+// ---------------- [ File: workspacer-cli/src/format_imports.rs ]
 crate::ix!();
 
 /// Subcommand data for `ws format imports --crate <crate_name> [--workspace <dir>] [--skip-git-check]`

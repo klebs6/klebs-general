@@ -359,6 +359,56 @@ impl AsRef<Path> for CrateHandle {
     }
 }
 
+// Implementation for `CrateHandle`. This is private, not re-exported.
+#[async_trait]
+impl GetInternalDependencies for CrateHandle {
+    async fn internal_dependencies(&self) -> Result<Vec<String>, CrateError> {
+        // 1) Lock the underlying CargoToml 
+        let cargo_arc = self.cargo_toml();
+        let cargo_guard = cargo_arc.lock().await;
+
+        // 2) Extract local path-based dependencies from the CargoToml
+        //    For example: 
+        //    [dependencies]
+        //    foo = { path = "../foo" }
+        // We take "foo" as the dependency name.
+        let mut results = Vec::new();
+
+        let empty = toml::value::Table::new();
+
+        let root_table = cargo_guard.get_content()
+            .as_table()
+            .unwrap_or_else(|| {
+                // If top-level is not a table => we skip or return an error
+                // For demonstration we do an empty table
+                // Or possibly: return Err(CrateError::...);
+                &empty
+            });
+
+        // We look up `[dependencies]`, `[dev-dependencies]`, `[build-dependencies]`
+        for deps_key in &["dependencies", "dev-dependencies", "build-dependencies"] {
+            if let Some(deps_val) = root_table.get(*deps_key).and_then(|v| v.as_table()) {
+                // Now iterate each key => sub-table or inline table
+                for (dep_name, dep_item) in deps_val.iter() {
+                    // If it is a table or inline table with "path" = "..." => that’s local
+                    if let Some(dep_tbl) = dep_item.as_table() {
+                        if dep_tbl.get("path").is_some() {
+                            // We consider this an internal dependency
+                            results.push(dep_name.to_string());
+                        }
+                    } 
+                    else if dep_item.is_str() {
+                        // If the user wrote `foo = "1.2.3"` => no path => not internal
+                    }
+                    // else: Possibly do more checks if you want
+                }
+            }
+        }
+
+        Ok(results)
+    }
+}
+
 #[cfg(test)]
 mod test_crate_handle {
     use super::*;

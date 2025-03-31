@@ -6,64 +6,104 @@ pub trait UpdateReadmeFiles {
     type Error;
 
     /// Orchestrates the steps to generate queries, call the AI, and update README(s).
-    async fn update_readme_files(handle: Arc<AsyncMutex<Self>>, plant: bool) -> Result<(), Self::Error>;
+    /// The `force` parameter means: if false, skip crates that already have a README file.
+    async fn update_readme_files(
+        handle: Arc<AsyncMutex<Self>>,
+        plant: bool,
+        force: bool
+    ) -> Result<(), Self::Error>;
 }
 
 #[async_trait]
 impl UpdateReadmeFiles for CrateHandle {
-
     type Error = AiReadmeWriterError;
 
-    async fn update_readme_files(crate_handle: Arc<AsyncMutex<Self>>, plant: bool) -> Result<(), Self::Error> {
+    async fn update_readme_files(
+        crate_handle: Arc<AsyncMutex<Self>>,
+        plant: bool,
+        force: bool
+    ) -> Result<(), Self::Error> 
+    {
+        trace!("Entering CrateHandle::update_readme_files(...) with plant={plant}, force={force}");
 
-        trace!("Entering CrateHandle::update_readme");
+        {
+            // Quickly check if a README.md already exists:
+            let guard = crate_handle.lock().await;
+            let maybe_readme = guard.readme_path().await.map_err(AiReadmeWriterError::CrateError)?;
 
+            if maybe_readme.is_some() && !force {
+                // We skip entirely:
+                info!(
+                    "Skipping crate at {:?} because README.md already exists and --force was not specified.",
+                    guard.as_ref()
+                );
+                return Ok(());  
+            }
+        }
+
+        // If we *don't* skip, do the actual AI steps as before:
         let mut writer = AiReadmeWriter::default().await?;
-
         let requests = vec![
             AiReadmeWriterRequest::<PathBuf>::async_try_from::<CrateHandle>(crate_handle).await?
         ];
 
-        execute_ai_readme_writer_requests(&mut writer,&requests,plant).await?;
+        execute_ai_readme_writer_requests(&mut writer, &requests, plant).await?;
 
-        info!("Exiting CrateHandle::update_readme with success");
-
+        info!("Exiting CrateHandle::update_readme_files(...) with success");
         Ok(())
     }
 }
 
 #[async_trait]
 impl<H> UpdateReadmeFiles for Workspace<PathBuf,H>
-where H: ReadmeWritingCrateHandle<PathBuf>,
+where
+    H: ReadmeWritingCrateHandle<PathBuf>,
 {
     type Error = AiReadmeWriterError;
 
-    async fn update_readme_files(workspace_handle: Arc<AsyncMutex<Self>>, plant: bool) -> Result<(), Self::Error> {
-
-        //TODO: we want to create a batch containing a request for each crate
-        // instead of a batch for each crate.
-        trace!("Entering Workspace update_readme");
+    async fn update_readme_files(
+        workspace_arc: Arc<AsyncMutex<Self>>,
+        plant: bool,
+        force: bool
+    ) -> Result<(), Self::Error> 
+    {
+        trace!("Entering Workspace update_readme_files(...) with plant={plant}, force={force}");
 
         let mut writer = AiReadmeWriter::default().await?;
 
+        // We'll build a `requests` Vec, but skip crates that already have a readme if `!force`.
         let requests = {
+            let guard = workspace_arc.lock().await;
+            let mut reqs = Vec::new();
+            for item_arc in guard.crates() {
+                // Check the item’s readme:
+                let item_guard = item_arc.lock().await;
+                let maybe_readme = item_guard
+                    .readme_path()
+                    .await
+                    .map_err(AiReadmeWriterError::CrateError)?;
 
-            let guard = workspace_handle.lock().await;
+                if maybe_readme.is_some() && !force {
+                    info!("Skipping crate at {:?} due to existing README.md (no --force)", item_guard.as_ref());
+                    continue;
+                }
 
-            let mut requests = Vec::new();
-
-            for item in guard.crates().iter() {
-                let request = AiReadmeWriterRequest::<PathBuf>::async_try_from::<H>(item.clone()).await?;
-                requests.push(request);
+                // If no readme or we forced => we create a request
+                let request = AiReadmeWriterRequest::<PathBuf>::async_try_from::<H>(item_arc.clone()).await?;
+                reqs.push(request);
             }
-
-            requests
+            reqs
         };
 
-        execute_ai_readme_writer_requests(&mut writer,&requests,plant).await?;
+        // If `requests` is empty, we simply do nothing (though we might want to log a message).
+        if requests.is_empty() {
+            info!("No crates need README generation (either they have READMEs or no crates at all).");
+            return Ok(());
+        }
 
-        info!("Exiting Workspace update_readme with success");
+        execute_ai_readme_writer_requests(&mut writer, &requests, plant).await?;
 
+        info!("Exiting Workspace update_readme_files(...) with success.");
         Ok(())
     }
 }

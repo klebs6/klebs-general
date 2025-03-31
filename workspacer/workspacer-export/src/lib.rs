@@ -1,10 +1,14 @@
 // ---------------- [ File: workspacer-export/src/lib.rs ]
 #[macro_use] mod imports; use imports::*;
 
+pub use lightweight_command_runner::*;
 pub use workspacer_add_new_crate_to_workspace::*;
+pub use workspacer_register::*;
+pub use workspacer_register_internal_crate_in_prefix_group::*;
 pub use workspacer_add_internal_dep::*;
 pub use workspacer_analysis::*;
 pub use workspacer_bump::*;
+pub use workspacer_tree::*;
 pub use workspacer_format_imports::*;
 pub use workspacer_lock::*;
 pub use workspacer_cleanup::*;
@@ -29,6 +33,7 @@ pub use workspacer_errors::*;
 pub use workspacer_workspace_interface::*;
 pub use workspacer_crate_interface::*;
 pub use workspacer_check_publish_ready::*;
+pub use workspacer_readme_writer::*;
 
 use std::path::{Path,PathBuf};
 

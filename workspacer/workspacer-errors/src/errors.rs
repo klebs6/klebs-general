@@ -226,6 +226,7 @@ error_tree!{
 
     #[derive(Clone)]
     pub enum CrateError {
+        CargoMetadataError(CargoMetadataError),
         CargoTomlIsLocked,
         CouldNotLockMockCargoTomlInVersion,
         CouldNotSetPackageVersionBecausePackageIsNotATable,

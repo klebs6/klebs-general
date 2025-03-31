@@ -1,3 +1,4 @@
+// ---------------- [ File: workspacer-cli/src/get_lock_versions.rs ]
 crate::ix!();
 
 /// This function handles the `lock-versions` logic:

@@ -16,6 +16,6 @@ pub enum OrganizeSubcommand {
 
 impl OrganizeSubcommand {
     pub async fn run(&self) -> Result<(),WorkspaceError> {
-        todo!();
+        todo!("ws organize: We haven't figured out what we want to do here yet");
     }
 }

@@ -1,3 +1,4 @@
+// ---------------- [ File: workspacer-cleanup/src/cleanup_crate.rs ]
 crate::ix!();
 
 // 1) Introduce a new trait for cleaning up a single crate:

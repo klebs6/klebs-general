@@ -1,3 +1,4 @@
+// ---------------- [ File: workspacer-cli/src/coverage_workspace.rs ]
 crate::ix!();
 
 /// Subcommand for `ws coverage workspace [--path ...] [--skip-git-check]`

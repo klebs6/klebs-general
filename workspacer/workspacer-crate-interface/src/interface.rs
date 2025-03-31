@@ -23,6 +23,7 @@ pub trait CrateHandleInterface<P>
 + AsRef<Path>
 + GatherBinTargetNames<Error=CrateError>
 + AsyncTryFrom<P,Error=CrateError>
++ GetInternalDependencies
 where
     for<'async_trait> 
     P
@@ -37,6 +38,15 @@ where
     : From<<P as HasCargoTomlPathBuf>::Error> 
     + From<<P as HasCargoTomlPathBufSync>::Error>,
 {}
+
+/// A private trait for gathering local (path-based) dependencies from a crate’s Cargo.toml.
+/// We do NOT expose it publicly — it remains internal. 
+#[async_trait]
+pub trait GetInternalDependencies {
+    /// Gathers all `[dependencies]` entries that have `path = "../some-other-crate"`.
+    /// Returns their **names** as used in the Cargo.toml `[dependencies]` table key.
+    async fn internal_dependencies(&self) -> Result<Vec<String>, CrateError>;
+}
 
 pub trait HasCargoToml {
 
