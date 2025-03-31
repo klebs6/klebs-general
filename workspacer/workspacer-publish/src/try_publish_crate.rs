@@ -12,7 +12,6 @@ impl TryPublish for CrateHandle {
     type Error = CrateError;
 
     async fn try_publish(&self, dry_run: bool) -> Result<(), Self::Error> {
-        use tracing::{trace, info, error, warn, debug};
 
         trace!("Entered CrateHandle::try_publish");
         let crate_name    = self.name();
@@ -49,7 +48,7 @@ impl TryPublish for CrateHandle {
 
         cmd.arg(format!("--package={}", crate_name));
 
-        debug!("Running: {:?}", cmd);
+        info!("Running: {:?}", cmd);
 
         let output = cmd.output().map_err(|io_err| {
             error!("IO error when spawning cargo publish: {}", io_err);
