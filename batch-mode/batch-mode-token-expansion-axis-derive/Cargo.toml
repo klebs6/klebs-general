@@ -33,7 +33,7 @@ proc-macro = true
 
 [package]
 authors     = [ "klebs tpk3.mx@gmail.com" ]
-categories  = [ "development-tools", "code-generation" ]
+categories  = ["development-tools"]
 description = "A procedural macro crate for deriving token expansion axes."
 edition     = "2024"
 keywords    = [ "token", "proc-macro", "axis", "expansion" ]

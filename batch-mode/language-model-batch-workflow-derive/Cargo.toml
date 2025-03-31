@@ -29,7 +29,7 @@ proc-macro = true
 
 [package]
 authors     = ["klebs tpk3.mx@gmail.com"]
-categories  = ["development-tools", "code-generation"]
+categories  = ["development-tools"]
 description = "A procedural macro for deriving batch-oriented language model workflows using annotated client and workspace fields."
 edition     = "2024"
 keywords    = ["batch", "workflow", "proc-macro", "language-model"]

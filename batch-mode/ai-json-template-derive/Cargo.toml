@@ -30,7 +30,7 @@ version = "0.2.0"
 proc-macro = true
 [package]
 authors = [ "klebs tpk3.mx@gmail.com" ]
-categories = [ "development-tools", "code-generation" ]
+categories = [ "development-tools" ]
 description = "A proc-macro crate for deriving AI-oriented JSON templates from Rust structs, capturing doc comments as instructions."
 edition = "2024"
 keywords = [ "AI", "json-schema", "template", "doc-comments" ]
