@@ -1,18 +1,18 @@
 [dependencies.workspacer-crate-interface]
 path = "../workspacer-crate-interface"
-version = "0.1.0"
+version = "0.1.1"
 
 [dependencies.workspacer-errors]
 path = "../workspacer-errors"
-version = "0.1.0"
+version = "0.1.1"
 
 [dependencies.workspacer-toml-interface]
 path = "../workspacer-toml-interface"
-version = "0.1.0"
+version = "0.1.2"
 
 [dependencies.workspacer-workspace-interface]
 path = "../workspacer-workspace-interface"
-version = "0.1.0"
+version = "0.1.2"
 
 [package]
 categories = [
@@ -32,4 +32,4 @@ keywords = [
     "window-positioning",
 ]
 name = "workspacer-interface"
-version = "0.5.1"
+version = "0.5.2"

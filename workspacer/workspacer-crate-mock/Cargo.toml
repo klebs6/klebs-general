@@ -1,33 +1,53 @@
-[package]
-edition = "2024"
-name    = "workspacer-crate-mock"
-version = "0.1.0"
-description = "Simulate Rust crate structures and behaviors without filesystem interference, via reproducible mock interfaces."
-keywords = ["rust", "crate", "mocking", "simulation", "testing"]
-categories = ["development-tools", "simulation", "filesystem", "testing", "mocking"]
+[dependencies.derive_builder]
+workspace = true
 
-[dependencies]
-derive_builder.workspace = true
-getset.workspace         = true
+[dependencies.getset]
+workspace = true
 
 [dependencies.workspacer-3p]
 path = "../workspacer-3p"
-version = "0.5.0"
-[dependencies.workspacer-errors]
-path = "../workspacer-errors"
-version = "0.1.0"
-[dependencies.workspacer-toml-mock]
-path = "../workspacer-toml-mock"
-version = "0.1.0"
-[dependencies.workspacer-toml-interface]
-path = "../workspacer-toml-interface"
-version = "0.1.0"
-[dependencies.workspacer-toml]
-path = "../workspacer-toml"
-version = "0.5.0"
+version = "0.5.1"
+
 [dependencies.workspacer-crate]
 path = "../workspacer-crate"
-version = "0.5.0"
+version = "0.5.1"
+
 [dependencies.workspacer-crate-interface]
 path = "../workspacer-crate-interface"
-version = "0.1.0"
+version = "0.1.1"
+
+[dependencies.workspacer-errors]
+path = "../workspacer-errors"
+version = "0.1.1"
+
+[dependencies.workspacer-toml]
+path = "../workspacer-toml"
+version = "0.5.1"
+
+[dependencies.workspacer-toml-interface]
+path = "../workspacer-toml-interface"
+version = "0.1.2"
+
+[dependencies.workspacer-toml-mock]
+path = "../workspacer-toml-mock"
+version = "0.1.1"
+
+[package]
+categories = [
+    "development-tools",
+    "simulation",
+    "filesystem",
+    "testing",
+    "mocking",
+]
+description = "Simulate Rust crate structures and behaviors without filesystem interference, via reproducible mock interfaces."
+edition = "2024"
+keywords = [
+    "rust",
+    "crate",
+    "mocking",
+    "simulation",
+    "testing",
+]
+name = "workspacer-crate-mock"
+version = "0.1.1"

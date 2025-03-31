@@ -1,10 +1,23 @@
 [dependencies.workspacer-3p]
 path = "../workspacer-3p"
-version = "0.5.0"
+version = "0.5.1"
+
 [package]
-edition = "2024"
-name = "workspacer-show"
-version = "0.1.0"
+categories = [
+    "visualization",
+    "development-tools",
+    "simulation",
+    "rendering",
+    "os",
+]
 description = "A Rust crate for managing and visualizing workspaces with dynamic visualization and manipulation capabilities, leveraging efficient algorithms for real-time rendering."
-keywords = ["workspace", "visualization", "real-time", "efficiency", "dynamic"]
-categories = ["visualization", "development-tools", "simulation", "rendering", "os"]
+edition = "2024"
+keywords = [
+    "workspace",
+    "visualization",
+    "real-time",
+    "efficiency",
+    "dynamic",
+]
+name = "workspacer-show"
+version = "0.1.1"

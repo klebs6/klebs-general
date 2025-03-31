@@ -1,25 +1,43 @@
 [dependencies.workspacer-3p]
 path = "../workspacer-3p"
-version = "0.5.0"
+version = "0.5.1"
+
 [dependencies.workspacer-crate]
 path = "../workspacer-crate"
-version = "0.5.0"
+version = "0.5.1"
+
 [dependencies.workspacer-crate-interface]
 path = "../workspacer-crate-interface"
-version = "0.1.0"
+version = "0.1.1"
+
 [dependencies.workspacer-errors]
 path = "../workspacer-errors"
-version = "0.1.0"
+version = "0.1.1"
+
 [dependencies.workspacer-workspace]
 path = "../workspacer-workspace"
-version = "0.1.0"
+version = "0.1.1"
+
 [dev-dependencies.workspacer-mock]
 path = "../workspacer-mock"
-version = "0.5.0"
+version = "0.5.1"
+
 [package]
-categories = [ "development-tools", "config", "concurrency", "asynchronous", "parsing" ]
+categories = [
+    "development-tools",
+    "config",
+    "concurrency",
+    "asynchronous",
+    "parsing",
+]
 description = "A Rust crate to register new internal crates in a prefix group, automating dependency and module adjustments within workspace structures."
 edition = "2024"
-keywords = [ "crates", "workspace", "dependency", "cargo", "automation" ]
+keywords = [
+    "crates",
+    "workspace",
+    "dependency",
+    "cargo",
+    "automation",
+]
 name = "workspacer-register-internal-crate-in-prefix-group"
-version = "0.1.0"
+version = "0.1.1"

@@ -1,19 +1,35 @@
 [dependencies.structopt]
 workspace = true
+
 [dependencies.workspacer-3p]
 path = "../workspacer-3p"
-version = "0.5.0"
+version = "0.5.1"
+
 [dependencies.workspacer-errors]
 path = "../workspacer-errors"
-version = "0.1.0"
+version = "0.1.1"
+
 [dependencies.workspacer-export]
 path = "../workspacer-export"
-version = "0.1.0"
+version = "0.1.1"
+
 [package]
-edition = "2024"
-name = "workspacer-cli"
-publish = [ "mock" ]
-version = "0.1.0"
+categories = [
+    "command-line-utilities",
+    "development-tools",
+    "parsing",
+    "project-management",
+    "code-quality",
+]
 description = "A versatile command-line interface for Rust workspace management, providing comprehensive controls for crate analysis, import formatting, cleanup, dependency checks, and more."
-keywords = ["workspace", "crate", "cli", "automation", "rust"]
-categories = ["command-line-utilities", "development-tools", "parsing", "project-management", "code-quality"]
+edition = "2024"
+keywords = [
+    "workspace",
+    "crate",
+    "cli",
+    "automation",
+    "rust",
+]
+name = "workspacer-cli"
+publish = ["mock"]
+version = "0.1.1"

@@ -1,33 +1,54 @@
 [dependencies.derive_builder]
 workspace = true
+
 [dependencies.generate-report-trait]
 path = "../generate-report-trait"
-version = "0.1.0"
+version = "0.1.1"
+
 [dependencies.lightweight-command-runner]
 path = "../lightweight-command-runner"
-version = "0.1.0"
+version = "0.1.2"
+
 [dependencies.workspacer-3p]
 path = "../workspacer-3p"
-version = "0.5.0"
+version = "0.5.1"
+
 [dependencies.workspacer-crate]
 path = "../workspacer-crate"
-version = "0.5.0"
+version = "0.5.1"
+
 [dependencies.workspacer-crate-interface]
 path = "../workspacer-crate-interface"
-version = "0.1.0"
+version = "0.1.1"
+
 [dependencies.workspacer-errors]
 path = "../workspacer-errors"
-version = "0.1.0"
+version = "0.1.1"
+
 [dependencies.workspacer-workspace-interface]
 path = "../workspacer-workspace-interface"
-version = "0.1.0"
+version = "0.1.2"
+
 [dev-dependencies.workspacer-mock]
 path = "../workspacer-mock"
-version = "0.5.0"
+version = "0.5.1"
+
 [package]
-categories = [ "development-tools", "asynchronous", "concurrency", "filesystem", "project-management" ]
+categories = [
+    "development-tools",
+    "asynchronous",
+    "concurrency",
+    "filesystem",
+    "project-management",
+]
 description = "Asynchronous Rust workspace management crate, facilitating crate discovery and manipulation in Rust workspaces with thread-safe operations."
 edition = "2024"
-keywords = [ "rust", "workspace", "asynchronous", "concurrency", "filesystem" ]
+keywords = [
+    "rust",
+    "workspace",
+    "asynchronous",
+    "concurrency",
+    "filesystem",
+]
 name = "workspacer-workspace"
-version = "0.1.0"
+version = "0.1.1"

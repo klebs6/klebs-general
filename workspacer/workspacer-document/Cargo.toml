@@ -1,10 +1,23 @@
 [dependencies.workspacer-3p]
 path = "../workspacer-3p"
-version = "0.5.0"
+version = "0.5.1"
+
 [package]
-edition = "2024"
-name = "workspacer-document"
-version = "0.1.0"
+categories = [
+    "data-structures",
+    "parsing",
+    "template-engine",
+    "development-tools",
+    "text-processing",
+]
 description = "A Rust library for parsing, organizing, and managing documents within multi-workspace environments. Optimized for speed and efficiency."
-keywords = ["document", "workspace", "parser", "optimization", "rust"]
-categories = ["data-structures", "parsing", "template-engine", "development-tools", "text-processing"]
+edition = "2024"
+keywords = [
+    "document",
+    "workspace",
+    "parser",
+    "optimization",
+    "rust",
+]
+name = "workspacer-document"
+version = "0.1.1"

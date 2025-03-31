@@ -1,28 +1,47 @@
 [dependencies.workspacer-3p]
 path = "../workspacer-3p"
-version = "0.5.0"
+version = "0.5.1"
+
 [dependencies.workspacer-crate]
 path = "../workspacer-crate"
-version = "0.5.0"
+version = "0.5.1"
+
 [dependencies.workspacer-crate-interface]
 path = "../workspacer-crate-interface"
-version = "0.1.0"
+version = "0.1.1"
+
 [dependencies.workspacer-errors]
 path = "../workspacer-errors"
-version = "0.1.0"
+version = "0.1.1"
+
 [dependencies.workspacer-metadata]
 path = "../workspacer-metadata"
-version = "0.1.0"
+version = "0.1.2"
+
 [dependencies.workspacer-mock]
 path = "../workspacer-mock"
-version = "0.5.0"
+version = "0.5.1"
+
 [dependencies.workspacer-workspace]
 path = "../workspacer-workspace"
-version = "0.1.0"
+version = "0.1.1"
+
 [package]
-categories = [ "development-tools", "parsing", "analysis", "dependency-management", "rust-patterns" ]
+categories = [
+    "development-tools",
+    "parsing",
+    "analysis",
+    "dependency-management",
+    "rust-patterns",
+]
 description = "A Rust crate to construct and analyze dependency trees within a workspace, identifying circular dependencies using cargo metadata."
 edition = "2024"
-keywords = [ "circular dependencies", "dependency tree", "rust workspace", "cargo metadata", "graph analysis" ]
+keywords = [
+    "circular dependencies",
+    "dependency tree",
+    "rust workspace",
+    "cargo metadata",
+    "graph analysis",
+]
 name = "workspacer-detect-circular-deps"
-version = "0.1.0"
+version = "0.1.1"

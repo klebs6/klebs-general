@@ -1,19 +1,35 @@
 [dependencies.workspacer-3p]
 path = "../workspacer-3p"
-version = "0.5.0"
+version = "0.5.1"
+
 [dependencies.workspacer-crate]
 path = "../workspacer-crate"
-version = "0.5.0"
+version = "0.5.1"
+
 [dependencies.workspacer-crate-interface]
 path = "../workspacer-crate-interface"
-version = "0.1.0"
+version = "0.1.1"
+
 [dependencies.workspacer-errors]
 path = "../workspacer-errors"
-version = "0.1.0"
+version = "0.1.1"
+
 [package]
-edition = "2024"
-name = "workspacer-check-private"
-version = "0.1.0"
+categories = [
+    "development-tools",
+    "asynchronous",
+    "config",
+    "rust-patterns",
+    "automation",
+]
 description = "Ensures that a Rust crate is not marked as private before cargo publish, leveraging the async programming capabilities of Rust 2024 edition."
-keywords = ["cargo", "publishing", "crate", "private", "asynchronous"]
-categories = ["development-tools", "asynchronous", "config", "rust-patterns", "automation"]
+edition = "2024"
+keywords = [
+    "cargo",
+    "publishing",
+    "crate",
+    "private",
+    "asynchronous",
+]
+name = "workspacer-check-private"
+version = "0.1.1"

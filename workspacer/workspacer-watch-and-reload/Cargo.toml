@@ -1,34 +1,34 @@
 [dependencies.lightweight-command-runner]
 path = "../lightweight-command-runner"
-version = "0.1.0"
+version = "0.1.2"
 
 [dependencies.workspacer-3p]
 path = "../workspacer-3p"
-version = "0.5.0"
+version = "0.5.1"
 
 [dependencies.workspacer-crate]
 path = "../workspacer-crate"
-version = "0.5.0"
+version = "0.5.1"
 
 [dependencies.workspacer-crate-interface]
 path = "../workspacer-crate-interface"
-version = "0.1.0"
+version = "0.1.1"
 
 [dependencies.workspacer-errors]
 path = "../workspacer-errors"
-version = "0.1.0"
+version = "0.1.1"
 
 [dependencies.workspacer-rebuild-or-test]
 path = "../workspacer-rebuild-or-test"
-version = "0.1.0"
+version = "0.1.1"
 
 [dependencies.workspacer-workspace]
 path = "../workspacer-workspace"
-version = "0.1.0"
+version = "0.1.1"
 
 [dev-dependencies.workspacer-mock]
 path = "../workspacer-mock"
-version = "0.5.0"
+version = "0.5.1"
 
 [package]
 categories = [
@@ -48,4 +48,4 @@ keywords = [
     "reload",
 ]
 name = "workspacer-watch-and-reload"
-version = "0.1.1"
+version = "0.1.2"

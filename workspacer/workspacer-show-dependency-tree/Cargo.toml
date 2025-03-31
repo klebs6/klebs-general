@@ -1,10 +1,23 @@
 [dependencies.workspacer-3p]
 path = "../workspacer-3p"
-version = "0.5.0"
+version = "0.5.1"
+
 [package]
-edition = "2024"
-name = "workspacer-show-dependency-tree"
-version = "0.1.0"
+categories = [
+    "development-tools",
+    "command-line-utilities",
+    "data-structures",
+    "parsing",
+    "network-programming",
+]
 description = "Displays an intuitive dependency tree for Rust workspaces, enhancing dependency management and project structure understanding."
-keywords = ["rust", "dependencies", "workspace", "visualization", "project-management"]
-categories = ["development-tools", "command-line-utilities", "data-structures", "parsing", "network-programming"]
+edition = "2024"
+keywords = [
+    "rust",
+    "dependencies",
+    "workspace",
+    "visualization",
+    "project-management",
+]
+name = "workspacer-show-dependency-tree"
+version = "0.1.1"

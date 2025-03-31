@@ -1,16 +1,30 @@
 [dependencies.get-file-size]
 path = "../get-file-size"
-version = "0.1.0"
+version = "0.1.1"
+
 [dependencies.workspacer-3p]
 path = "../workspacer-3p"
-version = "0.5.0"
+version = "0.5.1"
+
 [dependencies.workspacer-config]
 path = "../workspacer-config"
-version = "0.1.0"
+version = "0.1.1"
+
 [package]
-edition = "2024"
-name = "workspacer-errors"
-version = "0.1.0"
+categories = [
+    "asynchronous",
+    "concurrency",
+    "config",
+    "development-tools",
+]
 description = "The workspacer-errors crate provides error handling for asynchronous and I/O operations within the workspacer system, catering to robust error propagation and context attachment."
-keywords = ["error-handling", "async", "io-error", "tokio", "workspace"]
-categories = ["asynchronous", "concurrency", "config", "development-tools"]
+edition = "2024"
+keywords = [
+    "error-handling",
+    "async",
+    "io-error",
+    "tokio",
+    "workspace",
+]
+name = "workspacer-errors"
+version = "0.1.1"

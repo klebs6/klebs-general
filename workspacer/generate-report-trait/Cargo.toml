@@ -1,10 +1,20 @@
 [package]
-name        = "generate-report-trait"
-version     = "0.1.0"
-edition     = "2024"
-authors     = ["klebs tpk3.mx@gmail.com"]
-repository  = "https://github.com/klebs6/klebs-general"
+authors = ["klebs tpk3.mx@gmail.com"]
+categories = [
+    "development-tools",
+    "data-structures",
+    "parsing",
+]
 description = "A Rust crate defining a trait for generating reports with customizable output and error handling."
-license     = "MIT OR Apache-2.0"
-keywords = ["report", "trait", "generation", "interface", "error-handling"]
-categories = ["development-tools", "data-structures", "parsing"]
+edition = "2024"
+keywords = [
+    "report",
+    "trait",
+    "generation",
+    "interface",
+    "error-handling",
+]
+license = "MIT OR Apache-2.0"
+name = "generate-report-trait"
+repository = "https://github.com/klebs6/klebs-general"
+version = "0.1.1"

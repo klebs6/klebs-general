@@ -1,25 +1,42 @@
 [dependencies.workspacer-3p]
 path = "../workspacer-3p"
-version = "0.5.0"
+version = "0.5.1"
+
 [dependencies.workspacer-crate]
 path = "../workspacer-crate"
-version = "0.5.0"
+version = "0.5.1"
+
 [dependencies.workspacer-crate-interface]
 path = "../workspacer-crate-interface"
-version = "0.1.0"
+version = "0.1.1"
+
 [dependencies.workspacer-errors]
 path = "../workspacer-errors"
-version = "0.1.0"
+version = "0.1.1"
+
 [dependencies.workspacer-workspace]
 path = "../workspacer-workspace"
-version = "0.1.0"
+version = "0.1.1"
+
 [dependencies.workspacer-workspace-interface]
 path = "../workspacer-workspace-interface"
-version = "0.1.0"
+version = "0.1.2"
+
 [package]
-categories = [ "development-tools", "asynchronous", "filesystem", "utilities" ]
+categories = [
+    "development-tools",
+    "asynchronous",
+    "filesystem",
+    "utilities",
+]
 description = "A Rust crate for asynchronous cleanup of unnecessary files and directories in a workspace, maintaining development efficiency."
 edition = "2024"
-keywords = [ "rust", "workspace", "cleanup", "async", "filesystem" ]
+keywords = [
+    "rust",
+    "workspace",
+    "cleanup",
+    "async",
+    "filesystem",
+]
 name = "workspacer-cleanup"
-version = "0.1.0"
+version = "0.1.1"

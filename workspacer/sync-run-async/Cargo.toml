@@ -1,21 +1,31 @@
-[dependencies.workspacer-3p]
-path = "../workspacer-3p"
-
-[package]
-authors     = ["klebs tpk3.mx@gmail.com"]
-categories  = [ "concurrency", "asynchronous", "cross-platform", ]
-description = "This crate provides a way to synchronously run async code."
-edition     = "2024"
-keywords    = [ "async", "command-runner", "tokio", "cross-platform", "rust", ]
-license     = "MIT OR Apache-2.0"
-name        = "sync-run-async"
-publish     = [ "mock" ]
-repository  = "https://github.com/klebs6/klebs-general"
-version     = "0.1.0"
-
 [dependencies.export-magic]
 workspace = true
 
 [dependencies.tokio]
 workspace = true
 
+[dependencies.workspacer-3p]
+path = "../workspacer-3p"
+version = "0.5.1"
+
+[package]
+authors = ["klebs tpk3.mx@gmail.com"]
+categories = [
+    "concurrency",
+    "asynchronous",
+    "cross-platform",
+]
+description = "This crate provides a way to synchronously run async code."
+edition = "2024"
+keywords = [
+    "async",
+    "command-runner",
+    "tokio",
+    "cross-platform",
+    "rust",
+]
+license = "MIT OR Apache-2.0"
+name = "sync-run-async"
+publish = ["mock"]
+repository = "https://github.com/klebs6/klebs-general"
+version = "0.1.1"

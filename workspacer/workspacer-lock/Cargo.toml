@@ -1,13 +1,27 @@
 [dependencies.workspacer-3p]
 path = "../workspacer-3p"
-version = "0.5.0"
+version = "0.5.1"
+
 [dependencies.workspacer-errors]
 path = "../workspacer-errors"
-version = "0.1.0"
+version = "0.1.1"
+
 [package]
-edition = "2024"
-name = "workspacer-lock"
-version = "0.1.0"
+categories = [
+    "development-tools",
+    "parsing",
+    "data-structures",
+    "async",
+    "filesystem",
+]
 description = "Asynchronously reads `Cargo.lock` to map crates to versions, supporting dependency management in Rust projects with detailed error handling."
-keywords = ["Cargo.lock", "dependencies", "asynchronous", "versioning", "Rust"]
-categories = ["development-tools", "parsing", "data-structures", "async", "filesystem"]
+edition = "2024"
+keywords = [
+    "Cargo.lock",
+    "dependencies",
+    "asynchronous",
+    "versioning",
+    "Rust",
+]
+name = "workspacer-lock"
+version = "0.1.1"

@@ -1,37 +1,58 @@
 [dependencies.workspacer-3p]
 path = "../workspacer-3p"
-version = "0.5.0"
+version = "0.5.1"
+
 [dependencies.workspacer-add-internal-dep]
 path = "../workspacer-add-internal-dep"
-version = "0.1.0"
+version = "0.1.2"
+
 [dependencies.workspacer-crate]
 path = "../workspacer-crate"
-version = "0.5.0"
+version = "0.5.1"
+
 [dependencies.workspacer-crate-interface]
 path = "../workspacer-crate-interface"
-version = "0.1.0"
+version = "0.1.1"
+
 [dependencies.workspacer-errors]
 path = "../workspacer-errors"
-version = "0.1.0"
+version = "0.1.1"
+
 [dependencies.workspacer-mock]
 path = "../workspacer-mock"
-version = "0.5.0"
+version = "0.5.1"
+
 [dependencies.workspacer-register-internal-crate-in-prefix-group]
 path = "../workspacer-register-internal-crate-in-prefix-group"
-version = "0.1.0"
+version = "0.1.1"
+
 [dependencies.workspacer-scan-for-prefix-groups]
 path = "../workspacer-scan-for-prefix-groups"
-version = "0.1.0"
+version = "0.1.1"
+
 [dependencies.workspacer-workspace]
 path = "../workspacer-workspace"
-version = "0.1.0"
+version = "0.1.1"
+
 [dependencies.workspacer-workspace-interface]
 path = "../workspacer-workspace-interface"
-version = "0.1.0"
+version = "0.1.2"
+
 [package]
-categories = [ "asynchronous", "development-tools", "algorithms", "project-management" ]
+categories = [
+    "asynchronous",
+    "development-tools",
+    "algorithms",
+    "project-management",
+]
 description = "Automates the addition of new crates to a workspace, managing scaffolding, membership, and dependency registration with support for prefix groups."
 edition = "2024"
-keywords = [ "workspace", "crate-management", "asynchronous", "scaffolding", "automation" ]
+keywords = [
+    "workspace",
+    "crate-management",
+    "asynchronous",
+    "scaffolding",
+    "automation",
+]
 name = "workspacer-add-new-crate-to-workspace"
-version = "0.1.0"
+version = "0.1.1"

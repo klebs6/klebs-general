@@ -1,46 +1,46 @@
 [dependencies.workspacer-3p]
 path = "../workspacer-3p"
-version = "0.5.0"
+version = "0.5.1"
 
 [dependencies.workspacer-check-crates-io]
 path = "../workspacer-check-crates-io"
-version = "0.1.0"
+version = "0.1.2"
 
 [dependencies.workspacer-check-private]
 path = "../workspacer-check-private"
-version = "0.1.0"
+version = "0.1.1"
 
 [dependencies.workspacer-crate]
 path = "../workspacer-crate"
-version = "0.5.0"
+version = "0.5.1"
 
 [dependencies.workspacer-crate-interface]
 path = "../workspacer-crate-interface"
-version = "0.1.0"
+version = "0.1.1"
 
 [dependencies.workspacer-errors]
 path = "../workspacer-errors"
-version = "0.1.0"
+version = "0.1.1"
 
 [dependencies.workspacer-toml]
 path = "../workspacer-toml"
-version = "0.5.0"
+version = "0.5.1"
 
 [dependencies.workspacer-toml-interface]
 path = "../workspacer-toml-interface"
-version = "0.1.0"
+version = "0.1.2"
 
 [dependencies.workspacer-workspace]
 path = "../workspacer-workspace"
-version = "0.1.0"
+version = "0.1.1"
 
 [dependencies.workspacer-workspace-interface]
 path = "../workspacer-workspace-interface"
-version = "0.1.0"
+version = "0.1.2"
 
 [dev-dependencies.workspacer-mock]
 path = "../workspacer-mock"
-version = "0.5.0"
+version = "0.5.1"
 
 [package]
 categories = [
@@ -58,4 +58,4 @@ keywords = [
     "validation",
 ]
 name = "workspacer-check-publish-ready"
-version = "0.1.1"
+version = "0.1.2"

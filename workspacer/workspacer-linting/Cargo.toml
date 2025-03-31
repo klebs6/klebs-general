@@ -1,22 +1,39 @@
 [dependencies.workspacer-3p]
 path = "../workspacer-3p"
-version = "0.5.0"
+version = "0.5.1"
+
 [dependencies.workspacer-crate]
 path = "../workspacer-crate"
-version = "0.5.0"
+version = "0.5.1"
+
 [dependencies.workspacer-crate-interface]
 path = "../workspacer-crate-interface"
-version = "0.1.0"
+version = "0.1.1"
+
 [dependencies.workspacer-errors]
 path = "../workspacer-errors"
-version = "0.1.0"
+version = "0.1.1"
+
 [dependencies.workspacer-workspace]
 path = "../workspacer-workspace"
-version = "0.1.0"
+version = "0.1.1"
+
 [package]
-categories = [ "development-tools", "concurrency", "linting", "command-line-utilities", "asynchronous" ]
+categories = [
+    "development-tools",
+    "concurrency",
+    "linting",
+    "command-line-utilities",
+    "asynchronous",
+]
 description = "Async Rust crate for linting workspaces using cargo clippy, capturing detailed reports and converting them to structured errors."
 edition = "2024"
-keywords = [ "rust", "linting", "cargo", "clippy", "asynchronous" ]
+keywords = [
+    "rust",
+    "linting",
+    "cargo",
+    "clippy",
+    "asynchronous",
+]
 name = "workspacer-linting"
-version = "0.1.0"
+version = "0.1.1"

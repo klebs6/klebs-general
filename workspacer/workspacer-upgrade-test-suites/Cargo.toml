@@ -1,10 +1,21 @@
 [dependencies.workspacer-3p]
 path = "../workspacer-3p"
-version = "0.5.0"
+version = "0.5.1"
+
 [package]
-edition = "2024"
-name = "workspacer-upgrade-test-suites"
-version = "0.1.0"
+categories = [
+    "development-tools",
+    "rust-patterns",
+    "testing",
+]
 description = "A robust framework for testing upgrade paths in Rust workspaces, ensuring compatibility and reliability during version transitions."
-keywords = ["workspace", "upgrade", "testing", "compatibility", "automation"]
-categories = ["development-tools", "rust-patterns", "testing"]
+edition = "2024"
+keywords = [
+    "workspace",
+    "upgrade",
+    "testing",
+    "compatibility",
+    "automation",
+]
+name = "workspacer-upgrade-test-suites"
+version = "0.1.1"

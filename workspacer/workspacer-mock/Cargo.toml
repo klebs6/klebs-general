@@ -1,28 +1,45 @@
 [dependencies.get-file-size]
 path = "../get-file-size"
-version = "0.1.0"
+version = "0.1.1"
+
 [dependencies.workspacer-3p]
 path = "../workspacer-3p"
-version = "0.5.0"
+version = "0.5.1"
+
 [dependencies.workspacer-crate]
 path = "../workspacer-crate"
-version = "0.5.0"
+version = "0.5.1"
+
 [dependencies.workspacer-crate-interface]
 path = "../workspacer-crate-interface"
-version = "0.1.0"
+version = "0.1.1"
+
 [dependencies.workspacer-errors]
 path = "../workspacer-errors"
-version = "0.1.0"
+version = "0.1.1"
+
 [dependencies.workspacer-interface]
 path = "../workspacer-interface"
-version = "0.5.0"
+version = "0.5.2"
+
 [package]
-authors = [ "klebs tpk3.mx@gmail.com" ]
+authors = ["klebs tpk3.mx@gmail.com"]
+categories = [
+    "development-tools",
+    "testing",
+    "asynchronous",
+    "project-management",
+]
 description = "Asynchronous Rust crate for creating mock workspaces with customizable crate configurations and error simulation for testing."
 edition = "2024"
+keywords = [
+    "rust",
+    "workspace",
+    "mock",
+    "async",
+    "testing",
+]
 license = "MIT OR Apache-2.0"
 name = "workspacer-mock"
 repository = "https://github.com/klebs6/klebs-general"
-version = "0.5.0"
-keywords = ["rust", "workspace", "mock", "async", "testing"]
-categories = ["development-tools", "testing", "asynchronous", "project-management"]
+version = "0.5.1"

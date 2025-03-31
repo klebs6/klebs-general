@@ -1,19 +1,36 @@
-[dependencies]
-export-magic.workspace = true
-async-trait.workspace  = true
-error-tree.workspace   = true
-tokio.workspace        = true
+[dependencies.async-trait]
+workspace = true
 
-[dev-dependencies]
-tempfile.workspace = true
+[dependencies.error-tree]
+workspace = true
+
+[dependencies.export-magic]
+workspace = true
+
+[dependencies.tokio]
+workspace = true
+
+[dev-dependencies.tempfile]
+workspace = true
 
 [package]
-name        = "get-file-size"
-version     = "0.1.0"
-edition     = "2024"
-authors     = ["klebs tpk3.mx@gmail.com"]
-repository  = "https://github.com/klebs6/klebs-general"
+authors = ["klebs tpk3.mx@gmail.com"]
+categories = [
+    "asynchronous",
+    "filesystem",
+    "utilities",
+    "development-tools",
+]
 description = "Rust crate for asynchronous file size retrieval and line counting, utilizing the tokio runtime for non-blocking I/O operations."
-license     = "MIT OR Apache-2.0"
-keywords = ["asynchronous", "file size", "line counting", "tokio", "filesystem"]
-categories = ["asynchronous", "filesystem", "utilities", "development-tools"]
+edition = "2024"
+keywords = [
+    "asynchronous",
+    "file size",
+    "line counting",
+    "tokio",
+    "filesystem",
+]
+license = "MIT OR Apache-2.0"
+name = "get-file-size"
+repository = "https://github.com/klebs6/klebs-general"
+version = "0.1.1"

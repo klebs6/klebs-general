@@ -1,27 +1,44 @@
-[dependencies]
-tracing-setup.workspace = true
-structopt.workspace = true
-
-[dependencies.workspacer-3p]
-path = "../workspacer-3p"
-version = "0.5.0"
-[dependencies.workspacer-export]
-path = "../workspacer-export"
-version = "0.1.0"
-[dependencies.workspacer-cli]
-path = "../workspacer-cli"
-version = "0.1.0"
-
-[package]
-authors = [ "klebs tpk3.mx@gmail.com" ]
-categories = [ "development-tools", "rust-patterns", "project-management", "api-bindings", "library" ]
-description = "A Rust crate providing extended interfaces for workspaces and crates, facilitating modular and reusable code development."
-edition = "2024"
-keywords = [ "workspace", "crate", "interface", "development", "rust" ]
-license = "MIT OR Apache-2.0"
-name = "workspacer"
-repository = "https://github.com/klebs6/klebs-general"
-version = "0.6.0"
 [[bin]]
 name = "ws"
 path = "src/bin/workspacer.rs"
+
+[dependencies.structopt]
+workspace = true
+
+[dependencies.tracing-setup]
+workspace = true
+
+[dependencies.workspacer-3p]
+path = "../workspacer-3p"
+version = "0.5.1"
+
+[dependencies.workspacer-cli]
+path = "../workspacer-cli"
+version = "0.1.1"
+
+[dependencies.workspacer-export]
+path = "../workspacer-export"
+version = "0.1.1"
+
+[package]
+authors = ["klebs tpk3.mx@gmail.com"]
+categories = [
+    "development-tools",
+    "rust-patterns",
+    "project-management",
+    "api-bindings",
+    "library",
+]
+description = "A Rust crate providing extended interfaces for workspaces and crates, facilitating modular and reusable code development."
+edition = "2024"
+keywords = [
+    "workspace",
+    "crate",
+    "interface",
+    "development",
+    "rust",
+]
+license = "MIT OR Apache-2.0"
+name = "workspacer"
+repository = "https://github.com/klebs6/klebs-general"
+version = "0.6.1"

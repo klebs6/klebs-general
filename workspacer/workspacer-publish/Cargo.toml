@@ -1,56 +1,84 @@
-[dependencies]
-structopt.workspace = true
-rocket.workspace = true
-disable_macro.workspace = true
-
-[dependencies.workspacer-3p]
-path = "../workspacer-3p"
-version = "0.5.0"
-[dependencies.workspacer-check-crates-io]
-path = "../workspacer-check-crates-io"
-version = "0.1.0"
-[dependencies.workspacer-check-publish-ready]
-path = "../workspacer-check-publish-ready"
-version = "0.1.0"
-[dependencies.workspacer-crate]
-path = "../workspacer-crate"
-version = "0.5.0"
-[dependencies.workspacer-crate-interface]
-path = "../workspacer-crate-interface"
-version = "0.1.0"
-[dependencies.workspacer-detect-circular-deps]
-path = "../workspacer-detect-circular-deps"
-version = "0.1.0"
-[dependencies.workspacer-errors]
-path = "../workspacer-errors"
-version = "0.1.0"
-[dependencies.workspacer-git]
-path = "../workspacer-git"
-version = "0.1.0"
-[dependencies.workspacer-toml]
-path = "../workspacer-toml"
-version = "0.5.0"
-[dependencies.workspacer-toml-interface]
-path = "../workspacer-toml-interface"
-version = "0.1.0"
-[dependencies.workspacer-workspace]
-path = "../workspacer-workspace"
-version = "0.1.0"
-[dev-dependencies.workspacer-mock]
-path = "../workspacer-mock"
-version = "0.5.0"
-
-[dev-dependencies.workspacer-cratesio-mock]
-path = "../workspacer-cratesio-mock"
-version = "0.1.0"
-
-[package]
-edition = "2024"
-name = "workspacer-publish"
-version = "0.1.0"
-description = "Enables asynchronous publishing of Rust workspace packages, managing dependencies and registry configurations."
-keywords = ["rust", "publishing", "workspace", "asynchronous", "crates"]
-categories = ["development-tools", "asynchronous", "network-programming", "config", "command-line-utilities"]
 [[bin]]
 name = "workspacer-publish-public-crates-in-order"
 path = "src/bin/publish_public_crates_in_order.rs"
+
+[dependencies.disable_macro]
+workspace = true
+
+[dependencies.rocket]
+workspace = true
+
+[dependencies.structopt]
+workspace = true
+
+[dependencies.workspacer-3p]
+path = "../workspacer-3p"
+version = "0.5.1"
+
+[dependencies.workspacer-check-crates-io]
+path = "../workspacer-check-crates-io"
+version = "0.1.2"
+
+[dependencies.workspacer-check-publish-ready]
+path = "../workspacer-check-publish-ready"
+version = "0.1.2"
+
+[dependencies.workspacer-crate]
+path = "../workspacer-crate"
+version = "0.5.1"
+
+[dependencies.workspacer-crate-interface]
+path = "../workspacer-crate-interface"
+version = "0.1.1"
+
+[dependencies.workspacer-detect-circular-deps]
+path = "../workspacer-detect-circular-deps"
+version = "0.1.1"
+
+[dependencies.workspacer-errors]
+path = "../workspacer-errors"
+version = "0.1.1"
+
+[dependencies.workspacer-git]
+path = "../workspacer-git"
+version = "0.1.1"
+
+[dependencies.workspacer-toml]
+path = "../workspacer-toml"
+version = "0.5.1"
+
+[dependencies.workspacer-toml-interface]
+path = "../workspacer-toml-interface"
+version = "0.1.2"
+
+[dependencies.workspacer-workspace]
+path = "../workspacer-workspace"
+version = "0.1.1"
+
+[dev-dependencies.workspacer-cratesio-mock]
+path = "../workspacer-cratesio-mock"
+version = "0.1.2"
+
+[dev-dependencies.workspacer-mock]
+path = "../workspacer-mock"
+version = "0.5.1"
+
+[package]
+categories = [
+    "development-tools",
+    "asynchronous",
+    "network-programming",
+    "config",
+    "command-line-utilities",
+]
+description = "Enables asynchronous publishing of Rust workspace packages, managing dependencies and registry configurations."
+edition = "2024"
+keywords = [
+    "rust",
+    "publishing",
+    "workspace",
+    "asynchronous",
+    "crates",
+]
+name = "workspacer-publish"
+version = "0.1.1"

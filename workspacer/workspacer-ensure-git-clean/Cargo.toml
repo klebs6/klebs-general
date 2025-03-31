@@ -1,10 +1,23 @@
 [dependencies.workspacer-3p]
 path = "../workspacer-3p"
-version = "0.5.0"
+version = "0.5.1"
+
 [package]
-edition = "2024"
-name = "workspacer-ensure-git-clean"
-version = "0.1.0"
+categories = [
+    "development-tools",
+    "command-line-utilities",
+    "utilities",
+    "filesystem",
+    "config",
+]
 description = "Asserts and enforces a clean Git workspace state prior to critical operations."
-keywords = ["git", "workspace", "clean", "integrity", "automation"]
-categories = ["development-tools", "command-line-utilities", "utilities", "filesystem", "config"]
+edition = "2024"
+keywords = [
+    "git",
+    "workspace",
+    "clean",
+    "integrity",
+    "automation",
+]
+name = "workspacer-ensure-git-clean"
+version = "0.1.1"

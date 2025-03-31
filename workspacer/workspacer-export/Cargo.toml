@@ -1,113 +1,158 @@
 [dependencies.generate-report-trait]
 path = "../generate-report-trait"
-version = "0.1.0"
+version = "0.1.1"
+
 [dependencies.lightweight-command-runner]
 path = "../lightweight-command-runner"
-version = "0.1.0"
+version = "0.1.2"
+
 [dependencies.workspacer-3p]
 path = "../workspacer-3p"
-version = "0.5.0"
+version = "0.5.1"
+
 [dependencies.workspacer-add-internal-dep]
 path = "../workspacer-add-internal-dep"
-version = "0.1.0"
+version = "0.1.2"
+
 [dependencies.workspacer-add-new-crate-to-workspace]
 path = "../workspacer-add-new-crate-to-workspace"
-version = "0.1.0"
+version = "0.1.1"
+
 [dependencies.workspacer-analysis]
 path = "../workspacer-analysis"
-version = "0.1.0"
+version = "0.1.1"
+
 [dependencies.workspacer-bump]
 path = "../workspacer-bump"
-version = "0.1.0"
+version = "0.1.2"
+
 [dependencies.workspacer-check-publish-ready]
 path = "../workspacer-check-publish-ready"
-version = "0.1.0"
+version = "0.1.2"
+
 [dependencies.workspacer-cleanup]
 path = "../workspacer-cleanup"
-version = "0.1.0"
+version = "0.1.1"
+
 [dependencies.workspacer-consolidate]
 path = "../workspacer-consolidate"
-version = "0.5.0"
+version = "0.5.2"
+
 [dependencies.workspacer-crate]
 path = "../workspacer-crate"
-version = "0.5.0"
+version = "0.5.1"
+
 [dependencies.workspacer-crate-interface]
 path = "../workspacer-crate-interface"
-version = "0.1.0"
+version = "0.1.1"
+
 [dependencies.workspacer-detect-circular-deps]
 path = "../workspacer-detect-circular-deps"
-version = "0.1.0"
+version = "0.1.1"
+
 [dependencies.workspacer-docs]
 path = "../workspacer-docs"
-version = "0.1.0"
+version = "0.1.1"
+
 [dependencies.workspacer-errors]
 path = "../workspacer-errors"
-version = "0.1.0"
+version = "0.1.1"
+
 [dependencies.workspacer-format-imports]
 path = "../workspacer-format-imports"
-version = "0.1.0"
+version = "0.1.1"
+
 [dependencies.workspacer-git]
 path = "../workspacer-git"
-version = "0.1.0"
+version = "0.1.1"
+
 [dependencies.workspacer-interface]
 path = "../workspacer-interface"
-version = "0.5.0"
+version = "0.5.2"
+
 [dependencies.workspacer-linting]
 path = "../workspacer-linting"
-version = "0.1.0"
+version = "0.1.1"
+
 [dependencies.workspacer-lock]
 path = "../workspacer-lock"
-version = "0.1.0"
+version = "0.1.1"
+
 [dependencies.workspacer-metadata]
 path = "../workspacer-metadata"
-version = "0.1.0"
+version = "0.1.2"
+
 [dependencies.workspacer-name-all-files]
 path = "../workspacer-name-all-files"
-version = "0.1.0"
+version = "0.1.1"
+
 [dependencies.workspacer-pin]
 path = "../workspacer-pin"
-version = "0.1.0"
+version = "0.1.1"
+
 [dependencies.workspacer-publish]
 path = "../workspacer-publish"
-version = "0.1.0"
+version = "0.1.1"
+
 [dependencies.workspacer-readme-writer]
 path = "../workspacer-readme-writer"
-version = "0.1.0"
+version = "0.1.2"
+
 [dependencies.workspacer-rebuild-or-test]
 path = "../workspacer-rebuild-or-test"
-version = "0.1.0"
+version = "0.1.1"
+
 [dependencies.workspacer-register]
 path = "../workspacer-register"
-version = "0.1.0"
+version = "0.1.2"
+
 [dependencies.workspacer-register-internal-crate-in-prefix-group]
 path = "../workspacer-register-internal-crate-in-prefix-group"
-version = "0.1.0"
+version = "0.1.1"
+
 [dependencies.workspacer-syntax]
 path = "../workspacer-syntax"
-version = "0.5.0"
+version = "0.5.1"
+
 [dependencies.workspacer-test-coverage]
 path = "../workspacer-test-coverage"
-version = "0.1.0"
+version = "0.1.1"
+
 [dependencies.workspacer-toml]
 path = "../workspacer-toml"
-version = "0.5.0"
+version = "0.5.1"
+
 [dependencies.workspacer-tree]
 path = "../workspacer-tree"
-version = "0.1.0"
+version = "0.1.1"
+
 [dependencies.workspacer-watch-and-reload]
 path = "../workspacer-watch-and-reload"
-version = "0.1.0"
+version = "0.1.2"
+
 [dependencies.workspacer-workspace]
 path = "../workspacer-workspace"
-version = "0.1.0"
+version = "0.1.1"
+
 [dependencies.workspacer-workspace-interface]
 path = "../workspacer-workspace-interface"
-version = "0.1.0"
+version = "0.1.2"
+
 [package]
-edition = "2024"
-name = "workspacer-export"
-publish = [ "mock" ]
-version = "0.1.0"
+categories = [
+    "development-tools",
+    "rust-patterns",
+    "project-management",
+]
 description = "Facilitates workspace management and exportation within Rust projects through extended interfaces."
-keywords = ["workspace", "export", "interface", "rust-crate", "development"]
-categories = ["development-tools", "rust-patterns", "project-management"]
+edition = "2024"
+keywords = [
+    "workspace",
+    "export",
+    "interface",
+    "rust-crate",
+    "development",
+]
+name = "workspacer-export"
+publish = ["mock"]
+version = "0.1.1"

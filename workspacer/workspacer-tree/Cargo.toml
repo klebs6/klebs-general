@@ -1,23 +1,40 @@
 [dependencies.workspacer-3p]
 path = "../workspacer-3p"
-version = "0.5.0"
+version = "0.5.1"
+
 [dependencies.workspacer-crate]
 path = "../workspacer-crate"
-version = "0.5.0"
+version = "0.5.1"
+
 [dependencies.workspacer-crate-interface]
 path = "../workspacer-crate-interface"
-version = "0.1.0"
+version = "0.1.1"
+
 [dependencies.workspacer-errors]
 path = "../workspacer-errors"
-version = "0.1.0"
+version = "0.1.1"
+
 [dependencies.workspacer-workspace]
 path = "../workspacer-workspace"
-version = "0.1.0"
+version = "0.1.1"
+
 [package]
-edition = "2024"
-name = "workspacer-tree"
-publish = [ "mock" ]
-version = "0.1.0"
+categories = [
+    "development-tools",
+    "algorithms",
+    "asynchronous",
+    "network-programming",
+    "rendering",
+]
 description = "A Rust crate to asynchronously build and render workspace dependency trees for Rust projects. It provides tools for managing and visualizing dependencies using graph-based approaches."
-keywords = ["rust", "dependency", "workspace", "async", "tree"]
-categories = ["development-tools", "algorithms", "asynchronous", "network-programming", "rendering"]
+edition = "2024"
+keywords = [
+    "rust",
+    "dependency",
+    "workspace",
+    "async",
+    "tree",
+]
+name = "workspacer-tree"
+publish = ["mock"]
+version = "0.1.1"
