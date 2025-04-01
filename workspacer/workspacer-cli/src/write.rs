@@ -85,7 +85,9 @@ pub enum ReadmeWriterCommand {
 pub async fn main() -> Result<(), AiReadmeWriterError> {
     configure_tracing();
 
-    let args = ReadmeWriterCli::from_args();
+    let args   = ReadmeWriterCli::from_args();
+    let config = ReadmeWriterConfig::from(&args);
+
     trace!("Parsed CLI arguments: {:?}", args);
 
     match args.command {
@@ -99,7 +101,7 @@ pub async fn main() -> Result<(), AiReadmeWriterError> {
                 handle.clone(),
                 plant,
                 force,
-                &args
+                &config
             ).await?;
 
             info!("Done updating readme for single crate at {:?}", crate_path);
@@ -115,7 +117,7 @@ pub async fn main() -> Result<(), AiReadmeWriterError> {
                     handle.clone(),
                     plant,
                     force,
-                    &args
+                    &config
                 ).await?;
 
                 debug!("Finished readme updates for crate at {:?}", path);
@@ -134,7 +136,7 @@ pub async fn main() -> Result<(), AiReadmeWriterError> {
                 ws.clone(),
                 plant,
                 force,
-                &args
+                &config
             ).await?;
 
             info!("Done updating readmes for workspace at {:?}", workspace_path);

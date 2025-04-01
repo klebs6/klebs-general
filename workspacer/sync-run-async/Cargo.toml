@@ -16,7 +16,6 @@ authors = ["klebs tpk3.mx@gmail.com"]
 categories = [
     "concurrency",
     "asynchronous",
-    "cross-platform",
 ]
 description = "This crate provides a way to synchronously run async code."
 edition = "2024"
@@ -24,7 +23,6 @@ keywords = [
     "async",
     "command-runner",
     "tokio",
-    "cross-platform",
     "rust",
 ]
 license = "MIT OR Apache-2.0"

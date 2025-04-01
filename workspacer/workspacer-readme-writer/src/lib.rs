@@ -9,3 +9,4 @@ x!{update_readmes}
 x!{errors}
 x!{apply}
 x!{supertrait}
+x!{config}
