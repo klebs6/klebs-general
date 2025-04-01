@@ -2,8 +2,6 @@
 crate::ix!();
 
 /// A single fused enum with subcommands, each having **all** the config flags duplicated.
-/// This way, you can run `ws write single-crate ...` or `ws write workspace ...` etc.,
-/// all from one top-level enum. No nested subcommand layering is required.
 #[derive(StructOpt, Clone, Debug)]
 pub enum ReadmeWriterCli {
     /// Generate or update README for a single crate
@@ -112,55 +110,8 @@ pub enum ReadmeWriterCli {
     },
 }
 
-impl From<&ReadmeWriterCli> for ReadmeWriterConfig {
-    fn from(cli: &ReadmeWriterCli) -> Self {
-        trace!(
-            "Converting &ReadmeWriterCli to ReadmeWriterConfig with skip_docs={}, skip_fn_bodies={}, include_test_items={}, include_private_items={}, max_interface_length={:?}",
-            cli.skip_docs,
-            cli.skip_fn_bodies,
-            cli.include_test_items,
-            cli.include_private_items,
-            cli.max_interface_length
-        );
-
-        // If you have a builder, we can do:
-        ReadmeWriterConfigBuilder::default()
-            .skip_docs(cli.skip_docs)
-            .skip_fn_bodies(cli.skip_fn_bodies)
-            .include_test_items(cli.include_test_items)
-            .include_private_items(cli.include_private_items)
-            .max_interface_length(cli.max_interface_length)
-            .build()
-            .unwrap()
-    }
-}
-
-impl Into<ReadmeWriterConfig> for ReadmeWriterCli {
-    fn into(self) -> ReadmeWriterConfig {
-        trace!(
-            "Converting ReadmeWriterCli to ReadmeWriterConfig with: skip_docs={}, skip_fn_bodies={}, include_test_items={}, include_private_items={}, max_interface_length={:?}",
-            self.skip_docs,
-            self.skip_fn_bodies,
-            self.include_test_items,
-            self.include_private_items,
-            self.max_interface_length
-        );
-
-        ReadmeWriterConfigBuilder::default()
-            .skip_docs(self.skip_docs)
-            .skip_fn_bodies(self.skip_fn_bodies)
-            .include_test_items(self.include_test_items)
-            .include_private_items(self.include_private_items)
-            .max_interface_length(self.max_interface_length)
-            .build()
-            .unwrap()
-    }
-}
-
 impl ReadmeWriterCli {
     /// Runs the readme-writer logic for whichever subcommand was chosen.
-    /// This merges the config flags directly into each variant, so each
-    /// subcommand can be invoked with the same set of flags.
     pub async fn run(&self) -> Result<(), WorkspaceError> {
         match self {
             Self::SingleCrate {
@@ -173,6 +124,7 @@ impl ReadmeWriterCli {
                 plant,
                 force,
             } => {
+                // Build config from these fields:
                 let config = ReadmeWriterConfigBuilder::default()
                     .skip_docs(*skip_docs)
                     .skip_fn_bodies(*skip_fn_bodies)
@@ -183,11 +135,13 @@ impl ReadmeWriterCli {
                     .unwrap();
 
                 trace!(
-                    "readme-writer-cli: SingleCrate subcommand => path={:?}, plant={}, force={}, config={:?}",
+                    "SingleCrate => path={:?}, plant={}, force={}, config={:?}",
                     crate_path, plant, force, config
                 );
 
-                let handle = Arc::new(AsyncMutex::new(CrateHandle::new(&crate_path).await?));
+                let handle = Arc::new(AsyncMutex::new(
+                    CrateHandle::new(crate_path).await?
+                ));
                 UpdateReadmeFiles::update_readme_files(handle, *plant, *force, &config).await?;
                 info!("Done updating readme for single crate at {:?}", crate_path);
             }
@@ -212,16 +166,16 @@ impl ReadmeWriterCli {
                     .unwrap();
 
                 trace!(
-                    "readme-writer-cli: MultiCrate subcommand => paths={:?}, plant={}, force={}, config={:?}",
+                    "MultiCrate => paths={:?}, plant={}, force={}, config={:?}",
                     crate_paths, plant, force, config
                 );
 
                 for path in crate_paths {
-                    let path_buf = path.to_path_buf();
-                    debug!("Processing crate at {:?}", path_buf);
-                    let handle = Arc::new(AsyncMutex::new(CrateHandle::new(&path_buf).await?));
+                    let handle = Arc::new(AsyncMutex::new(
+                        CrateHandle::new(path).await?
+                    ));
                     UpdateReadmeFiles::update_readme_files(handle, *plant, *force, &config).await?;
-                    debug!("Finished readme updates for crate at {:?}", path_buf);
+                    debug!("Finished readme updates for crate at {:?}", path);
                 }
                 info!("Done updating readmes for all crates in MultiCrate mode.");
             }
@@ -246,12 +200,12 @@ impl ReadmeWriterCli {
                     .unwrap();
 
                 trace!(
-                    "readme-writer-cli: Workspace subcommand => path={:?}, plant={}, force={}, config={:?}",
+                    "Workspace => path={:?}, plant={}, force={}, config={:?}",
                     workspace_path, plant, force, config
                 );
 
                 let ws = Arc::new(AsyncMutex::new(
-                    Workspace::<PathBuf, CrateHandle>::new(&workspace_path).await?
+                    Workspace::<PathBuf, CrateHandle>::new(workspace_path).await?
                 ));
                 UpdateReadmeFiles::update_readme_files(ws, *plant, *force, &config).await?;
                 info!("Done updating readmes for entire workspace at {:?}", workspace_path);
