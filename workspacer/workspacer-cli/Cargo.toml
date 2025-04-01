@@ -31,5 +31,4 @@ keywords = [
     "rust",
 ]
 name = "workspacer-cli"
-publish = ["mock"]
 version = "0.1.1"

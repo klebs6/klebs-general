@@ -36,5 +36,4 @@ keywords = [
     "tree",
 ]
 name = "workspacer-tree"
-publish = ["mock"]
 version = "0.1.1"

@@ -29,6 +29,5 @@ keywords = [
 ]
 license = "MIT OR Apache-2.0"
 name = "sync-run-async"
-publish = ["mock"]
 repository = "https://github.com/klebs6/klebs-general"
 version = "0.1.1"

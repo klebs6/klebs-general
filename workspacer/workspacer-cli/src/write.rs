@@ -1,13 +1,49 @@
 // ---------------- [ File: workspacer-cli/src/write.rs ]
 crate::ix!();
 
-#[derive(Debug, StructOpt)]
-pub enum WriteSubcommand {
-    /// Write or update the README for a single crate
-    CrateReadme {
-        #[structopt(long = "crate")]
-        crate_name: PathBuf,
+/// Command-line interface for our "readme-writer" binary.
+/// It can operate on:
+/// 1) A single crate path
+/// 2) Multiple crate paths
+/// 3) A workspace path
+#[derive(StructOpt, Debug)]
+pub struct ReadmeWriterCli {
+    /// If set, do not include doc comments in the crate interface.
+    #[structopt(long = "skip-docs")]
+    skip_docs: bool,
 
+    /// If set, do not include function bodies in the crate interface.
+    #[structopt(long = "skip-fn-bodies")]
+    skip_fn_bodies: bool,
+
+    /// If set, include test items (`#[cfg(test)]`) in the crate interface.
+    #[structopt(long = "include-test-items")]
+    include_test_items: bool,
+
+    /// If set, include private (non-pub) items in the crate interface.
+    #[structopt(long = "include-private-items")]
+    include_private_items: bool,
+
+    /// If set, the crate interface text is truncated by removing doc comments and function
+    /// bodies if it exceeds this threshold. 
+    /// Otherwise, we attempt to gather the full interface.
+    #[structopt(long = "max-interface-length")]
+    max_interface_length: Option<usize>,
+
+    #[structopt(subcommand)]
+    command: ReadmeWriterCommand,
+}
+
+/// Subcommands for different ways of using the tool
+#[derive(StructOpt, Debug)]
+pub enum ReadmeWriterCommand {
+    /// Run on a single crate path
+    SingleCrate {
+        /// Path to the crate directory containing Cargo.toml
+        #[structopt(parse(from_os_str))]
+        crate_path: PathBuf,
+
+        /// If true, we write seeds to the filesystem and do not attempt to read expansions yet
         #[structopt(long = "plant")]
         plant: bool,
 
@@ -15,12 +51,27 @@ pub enum WriteSubcommand {
         #[structopt(long = "force")]
         force: bool,
     },
+    /// Run on multiple crate paths
+    MultiCrate {
+        /// Paths to crate directories
+        #[structopt(parse(from_os_str))]
+        crate_paths: Vec<PathBuf>,
 
-    /// Write or update the README for all crates in the workspace
-    AllReadmes {
-        #[structopt(long = "workspace")]
+        /// If true, we write seeds to the filesystem and do not attempt to read expansions yet
+        #[structopt(long = "plant")]
+        plant: bool,
+
+        /// Pass this to force re-writing an existing README
+        #[structopt(long = "force")]
+        force: bool,
+    },
+    /// Run on a full workspace directory
+    Workspace {
+        /// Path to the workspace directory containing Cargo.toml(s)
+        #[structopt(parse(from_os_str))]
         workspace_path: PathBuf,
 
+        /// If true, we write seeds to the filesystem and do not attempt to read expansions yet
         #[structopt(long = "plant")]
         plant: bool,
 
@@ -30,39 +81,66 @@ pub enum WriteSubcommand {
     },
 }
 
-impl WriteSubcommand {
-    pub async fn run(&self) -> Result<(), WorkspaceError> {
-        match self {
-            WriteSubcommand::CrateReadme { crate_name, plant, force } => {
-                // build crate handle
-                let handle = CrateHandle::new(crate_name)
-                    .await
-                    .map_err(WorkspaceError::CrateError)?;
-                let handle_arc = Arc::new(AsyncMutex::new(handle));
+#[tokio::main]
+pub async fn main() -> Result<(), AiReadmeWriterError> {
+    configure_tracing();
 
-                // Now call update_readme_files
-                UpdateReadmeFiles::update_readme_files(handle_arc, *plant, *force)
-                    .await
-                    .map_err(|ai_err: AiReadmeWriterError| {
-                        error!("AiReadmeWriterError={:#?}",ai_err);
-                        WorkspaceError::ReadmeWriteError(ReadmeWriteError::AiReadmeWriterError)
-                    })?;
-                Ok(())
+    let args = ReadmeWriterCli::from_args();
+    trace!("Parsed CLI arguments: {:?}", args);
+
+    match args.command {
+        ReadmeWriterCommand::SingleCrate { crate_path, plant, force } => {
+            info!("readme-writer-cli: SingleCrate mode selected for path = {:?}", crate_path);
+
+            let handle = Arc::new(AsyncMutex::new(CrateHandle::new(&crate_path).await?));
+            info!("Starting readme updates for single crate at {:?}", crate_path);
+
+            UpdateReadmeFiles::update_readme_files(
+                handle.clone(),
+                plant,
+                force,
+                &args
+            ).await?;
+
+            info!("Done updating readme for single crate at {:?}", crate_path);
+        }
+        ReadmeWriterCommand::MultiCrate { crate_paths, plant, force } => {
+            info!("readme-writer-cli: MultiCrate mode for paths = {:?}", crate_paths);
+
+            for path in crate_paths {
+                debug!("Processing crate at {:?}", path);
+                let handle = Arc::new(AsyncMutex::new(CrateHandle::new(&path).await?));
+
+                UpdateReadmeFiles::update_readme_files(
+                    handle.clone(),
+                    plant,
+                    force,
+                    &args
+                ).await?;
+
+                debug!("Finished readme updates for crate at {:?}", path);
             }
+            info!("Done updating readmes for all crates in MultiCrate mode.");
+        }
+        ReadmeWriterCommand::Workspace { workspace_path, plant, force } => {
+            info!("readme-writer-cli: Workspace mode selected for path = {:?}", workspace_path);
 
-            WriteSubcommand::AllReadmes { workspace_path, plant, force } => {
-                // build workspace
-                let ws = Workspace::<PathBuf, CrateHandle>::new(workspace_path).await?;
+            let ws = Arc::new(AsyncMutex::new(
+                Workspace::<PathBuf, CrateHandle>::new(&workspace_path).await?
+            ));
+            info!("Starting readme updates for full workspace at {:?}", workspace_path);
 
-                let ws_arc = Arc::new(AsyncMutex::new(ws));
-                UpdateReadmeFiles::update_readme_files(ws_arc, *plant, *force)
-                    .await
-                    .map_err(|ai_err: AiReadmeWriterError| {
-                        error!("AiReadmeWriterError={:#?}",ai_err);
-                        WorkspaceError::ReadmeWriteError(ReadmeWriteError::AiReadmeWriterError)
-                    })?;
-                Ok(())
-            }
+            UpdateReadmeFiles::update_readme_files(
+                ws.clone(),
+                plant,
+                force,
+                &args
+            ).await?;
+
+            info!("Done updating readmes for workspace at {:?}", workspace_path);
         }
     }
+
+    info!("All done with readme-writer-cli. Exiting successfully.");
+    Ok(())
 }

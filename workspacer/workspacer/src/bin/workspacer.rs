@@ -32,7 +32,7 @@ pub enum WsCli {
     Upgrade           { #[structopt(subcommand)] subcommand: UpgradeSubcommand,           } ,
     Validate          { #[structopt(subcommand)] subcommand: ValidateSubcommand,          } ,
     Watch             { #[structopt(subcommand)] subcommand: WatchSubcommand,             } ,
-    Write             { #[structopt(subcommand)] subcommand: WriteSubcommand,             } ,
+    Write             { #[structopt(subcommand)] subcommand: ReadmeWriterCli,             } ,
 }
 
 #[tokio::main]
