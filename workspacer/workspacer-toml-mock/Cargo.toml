@@ -31,7 +31,6 @@ edition = "2024"
 keywords = [
     "mock",
     "toml",
-    "Cargo.toml",
     "testing",
     "simulation",
 ]

@@ -38,8 +38,6 @@ categories = [
     "development-tools",
     "parsing",
     "asynchronous",
-    "compilation",
-    "utilities",
 ]
 description = "Utility crate to ensure all source files are registered within a workspace, managing macro definitions and integration for seamless Rust project maintenance."
 edition = "2024"

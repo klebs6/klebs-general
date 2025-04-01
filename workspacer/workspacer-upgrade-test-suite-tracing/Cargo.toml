@@ -5,10 +5,6 @@ version = "0.5.1"
 [package]
 categories = [
     "development-tools",
-    "testing",
-    "workspace",
-    "trace",
-    "debug",
 ]
 description = "Trace and validate upgrade processes in workspace-style Rust projects, providing detailed execution profiles for improved refactoring workflows."
 edition = "2024"

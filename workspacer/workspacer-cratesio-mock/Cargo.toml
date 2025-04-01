@@ -30,13 +30,11 @@ categories = [
     "database",
     "network-programming",
     "simulation",
-    "testing",
 ]
 description = "A mock in-memory interface for simulating crate publishing on crates.io, primarily aimed for testing environments."
 edition = "2024"
 keywords = [
     "mock",
-    "crates.io",
     "testing",
     "publishing",
     "simulation",

@@ -8,7 +8,6 @@ categories = [
     "concurrency",
     "config",
     "command-line-utilities",
-    "productivity",
 ]
 description = "A versatile crate for designing and managing workspace layouts, facilitating improved productivity and workflow optimization."
 edition = "2024"

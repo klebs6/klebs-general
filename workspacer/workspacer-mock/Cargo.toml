@@ -26,9 +26,7 @@ version = "0.5.2"
 authors = ["klebs tpk3.mx@gmail.com"]
 categories = [
     "development-tools",
-    "testing",
     "asynchronous",
-    "project-management",
 ]
 description = "Asynchronous Rust crate for creating mock workspaces with customizable crate configurations and error simulation for testing."
 edition = "2024"

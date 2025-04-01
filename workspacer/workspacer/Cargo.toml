@@ -25,9 +25,7 @@ authors = ["klebs tpk3.mx@gmail.com"]
 categories = [
     "development-tools",
     "rust-patterns",
-    "project-management",
     "api-bindings",
-    "library",
 ]
 description = "A Rust crate providing extended interfaces for workspaces and crates, facilitating modular and reusable code development."
 edition = "2024"

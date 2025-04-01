@@ -18,7 +18,6 @@ version = "0.1.1"
 categories = [
     "development-tools",
     "command-line-utilities",
-    "async-execution",
     "rust-patterns",
 ]
 description = "Provides an async interface to run `cargo doc` within Cargo workspaces, facilitating Rust documentation generation."

@@ -25,8 +25,6 @@ version = "0.1.1"
 categories = [
     "development-tools",
     "parsing",
-    "syntax",
-    "code-generation",
     "text-processing",
 ]
 description = "A Rust crate for parsing, sorting, and formatting import statements across crates and workspaces. Uses RA-AP-syntax to reorganize 'use' statements by prefix, sort them alphabetically, and preserve comments."

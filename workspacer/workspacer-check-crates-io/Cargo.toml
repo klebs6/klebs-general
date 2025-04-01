@@ -20,16 +20,13 @@ version = "0.1.2"
 
 [package]
 categories = [
-    "async",
     "network-programming",
     "development-tools",
-    "commands-line-utilities",
     "web-programming",
 ]
 description = "An asynchronous Rust crate offering verification of crate version publish status on crates.io, enhancing automated release workflows."
 edition = "2024"
 keywords = [
-    "crates.io",
     "version-check",
     "async",
     "publish",

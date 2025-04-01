@@ -7,16 +7,13 @@ categories = [
     "data-structures",
     "development-tools",
     "parsing",
-    "validation",
 ]
 description = "A high-performance Rust crate for validating structured data within workspaces, emphasizing schema enforcement and error diagnostics."
 edition = "2024"
 keywords = [
     "validation",
     "schema",
-    "data integrity",
     "workspace",
-    "data consistency",
 ]
 name = "workspacer-validate"
 version = "0.1.1"

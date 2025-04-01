@@ -12,7 +12,7 @@ version = "0.1.1"
 [dependencies.workspacer-prune-bad-category-slugs]
 path = "../workspacer-prune-bad-category-slugs"
 [package]
-categories = [ "command-line-utilities", "development-tools", "parsing", "project-management", "code-quality" ]
+categories = [ "command-line-utilities", "development-tools", "parsing"]
 description = "A versatile command-line interface for Rust workspace management, providing comprehensive controls for crate analysis, import formatting, cleanup, dependency checks, and more."
 edition = "2024"
 keywords = [ "workspace", "crate", "cli", "automation", "rust" ]

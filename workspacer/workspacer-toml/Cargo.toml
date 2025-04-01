@@ -42,7 +42,6 @@ categories = [
 description = "Efficiently manage and validate `Cargo.toml` files with field verification and asynchronous operations."
 edition = "2024"
 keywords = [
-    "Cargo.toml",
     "Rust",
     "validation",
     "TOML",

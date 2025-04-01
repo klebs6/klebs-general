@@ -4,9 +4,6 @@ version = "0.5.1"
 
 [package]
 categories = [
-    "version-control",
-    "utilities",
-    "software-development",
     "development-tools",
     "api-bindings",
 ]

@@ -10,7 +10,6 @@ authors = ["klebs tpk3.mx@gmail.com"]
 categories = [
     "parsing",
     "development-tools",
-    "code-generation",
 ]
 description = "Generate and rehydrate Rust code signatures from AST nodes, supporting functions, structs, enums, traits, type aliases, and macros."
 edition = "2024"

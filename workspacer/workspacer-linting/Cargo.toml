@@ -22,7 +22,6 @@ version = "0.1.1"
 categories = [
     "development-tools",
     "concurrency",
-    "linting",
     "command-line-utilities",
     "asynchronous",
 ]

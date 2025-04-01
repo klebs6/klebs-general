@@ -7,8 +7,6 @@ categories = [
     "development-tools",
     "concurrency",
     "asynchronous",
-    "logging",
-    "performance",
 ]
 description = "A tracing and diagnostic tool for monitoring workspace upgrade processes, leveraging Rust 2024 features for high efficiency and low-latency logging."
 edition = "2024"

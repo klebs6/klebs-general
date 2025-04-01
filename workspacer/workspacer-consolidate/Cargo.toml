@@ -51,7 +51,6 @@ categories = [
     "development-tools",
     "parsing",
     "asynchronous",
-    "code-generation",
     "api-bindings",
 ]
 description = "Asynchronously consolidate and introspect Rust crate interfaces, gathering typical items within a unified system for enhanced analysis and modification."

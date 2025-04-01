@@ -50,7 +50,6 @@ categories = [
     "simulation",
     "rust-patterns",
     "concurrency",
-    "testing",
 ]
 description = "A flexible mock framework to simulate and test Rust workspace environments, supporting various configurations for testing."
 edition = "2024"

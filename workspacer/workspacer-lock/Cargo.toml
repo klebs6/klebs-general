@@ -11,13 +11,11 @@ categories = [
     "development-tools",
     "parsing",
     "data-structures",
-    "async",
     "filesystem",
 ]
 description = "Asynchronously reads `Cargo.lock` to map crates to versions, supporting dependency management in Rust projects with detailed error handling."
 edition = "2024"
 keywords = [
-    "Cargo.lock",
     "dependencies",
     "asynchronous",
     "versioning",

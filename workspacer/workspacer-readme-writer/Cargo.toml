@@ -41,10 +41,10 @@ version = "0.1.1"
 path = "../workspacer-mock"
 version = "0.5.1"
 [package]
-categories = [ "development-tools", "rust-patterns", "language-bindings", "async-io", "no-std" ]
+categories = [ "development-tools", "rust-patterns", "no-std" ]
 description = "Automates the generation of README.md and Cargo.toml fields using AI to enhance documentation quality in Rust projects."
 edition = "2024"
-keywords = [ "README automation", "Rust crates", "AI-assisted documentation", "Cargo.toml management", "language models" ]
+keywords = []
 license = "MIT"
 name = "workspacer-readme-writer"
 version = "0.1.2"

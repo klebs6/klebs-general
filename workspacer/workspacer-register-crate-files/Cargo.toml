@@ -11,10 +11,7 @@ categories = [
 description = "Facilitates the registration and management of crate files within a Rust workspace using Rust 2024."
 edition = "2024"
 keywords = [
-    "crate management",
     "workspace",
-    "dependency resolution",
-    "Rust 2024",
     "automation",
 ]
 name = "workspacer-register-crate-files"

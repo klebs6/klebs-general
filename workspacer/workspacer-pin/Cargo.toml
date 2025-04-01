@@ -45,7 +45,6 @@ version = "0.1.2"
 [package]
 categories = [
     "development-tools",
-    "dependencies",
 ]
 description = "A Rust crate for pinning wildcard dependencies within workspaces using local versions or lockfile fallbacks, ensuring reliable and reproducible builds. Supports async operations and complex nested structures in `Cargo.toml`."
 edition = "2024"

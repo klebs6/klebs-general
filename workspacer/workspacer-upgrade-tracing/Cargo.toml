@@ -5,9 +5,6 @@ version = "0.5.1"
 [package]
 categories = [
     "development-tools",
-    "logging",
-    "debugging",
-    "data-analysis",
 ]
 description = "Enhances tracing and logging capabilities in workspacer applications."
 edition = "2024"

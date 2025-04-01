@@ -37,8 +37,6 @@ categories = [
     "development-tools",
     "simulation",
     "filesystem",
-    "testing",
-    "mocking",
 ]
 description = "Simulate Rust crate structures and behaviors without filesystem interference, via reproducible mock interfaces."
 edition = "2024"

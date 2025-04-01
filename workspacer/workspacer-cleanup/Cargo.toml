@@ -27,7 +27,6 @@ categories = [
     "development-tools",
     "asynchronous",
     "filesystem",
-    "utilities",
 ]
 description = "A Rust crate for asynchronous cleanup of unnecessary files and directories in a workspace, maintaining development efficiency."
 edition = "2024"

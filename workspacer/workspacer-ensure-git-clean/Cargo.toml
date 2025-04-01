@@ -6,7 +6,6 @@ version = "0.5.1"
 categories = [
     "development-tools",
     "command-line-utilities",
-    "utilities",
     "filesystem",
     "config",
 ]

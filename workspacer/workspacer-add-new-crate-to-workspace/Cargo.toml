@@ -43,7 +43,6 @@ categories = [
     "asynchronous",
     "development-tools",
     "algorithms",
-    "project-management",
 ]
 description = "Automates the addition of new crates to a workspace, managing scaffolding, membership, and dependency registration with support for prefix groups."
 edition = "2024"

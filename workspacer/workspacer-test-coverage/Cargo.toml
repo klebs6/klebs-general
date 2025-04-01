@@ -29,8 +29,6 @@ version = "0.1.2"
 [package]
 categories = [
     "development-tools",
-    "testing",
-    "automation",
     "command-line-utilities",
 ]
 description = "Facilitates test execution with code coverage gathering for cargo workspaces using cargo-tarpaulin."

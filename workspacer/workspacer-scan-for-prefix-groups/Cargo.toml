@@ -30,8 +30,6 @@ categories = [
     "algorithms",
     "asynchronous",
     "development-tools",
-    "programming",
-    "workspace-management",
 ]
 description = "Provide utilities for creating cohesive prefix-based crate groups in a Rust workspace with asynchronous validation and scanning traits."
 edition = "2024"

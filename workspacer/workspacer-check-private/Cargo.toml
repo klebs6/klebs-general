@@ -20,7 +20,6 @@ categories = [
     "asynchronous",
     "config",
     "rust-patterns",
-    "automation",
 ]
 description = "Ensures that a Rust crate is not marked as private before cargo publish, leveraging the async programming capabilities of Rust 2024 edition."
 edition = "2024"

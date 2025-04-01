@@ -60,9 +60,7 @@ edition = "2024"
 keywords = [
     "workspace",
     "async",
-    "crate management",
     "rust",
-    "Cargo.toml",
 ]
 license = "MIT OR Apache-2.0"
 name = "workspacer-crate"

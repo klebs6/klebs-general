@@ -33,7 +33,6 @@ version = "0.5.1"
 [package]
 categories = [
     "development-tools",
-    "async",
     "filesystem",
     "network-programming",
     "concurrency",

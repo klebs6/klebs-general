@@ -5,7 +5,6 @@ version = "0.5.1"
 [package]
 categories = [
     "development-tools",
-    "performance",
     "visualization",
 ]
 description = "Enhances workspace function tracing by capturing execution insights for performance and reliability improvements."
