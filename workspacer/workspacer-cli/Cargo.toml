@@ -1,35 +1,21 @@
 [dependencies.structopt]
 workspace = true
-
 [dependencies.workspacer-3p]
 path = "../workspacer-3p"
 version = "0.5.1"
-
 [dependencies.workspacer-errors]
 path = "../workspacer-errors"
 version = "0.1.1"
-
 [dependencies.workspacer-export]
 path = "../workspacer-export"
 version = "0.1.1"
-
+[dependencies.workspacer-prune-bad-category-slugs]
+path = "../workspacer-prune-bad-category-slugs"
 [package]
-categories = [
-    "command-line-utilities",
-    "development-tools",
-    "parsing",
-    "project-management",
-    "code-quality",
-]
+categories = [ "command-line-utilities", "development-tools", "parsing", "project-management", "code-quality" ]
 description = "A versatile command-line interface for Rust workspace management, providing comprehensive controls for crate analysis, import formatting, cleanup, dependency checks, and more."
 edition = "2024"
-keywords = [
-    "workspace",
-    "crate",
-    "cli",
-    "automation",
-    "rust",
-]
+keywords = [ "workspace", "crate", "cli", "automation", "rust" ]
+license = "MIT"
 name = "workspacer-cli"
 version = "0.1.1"
-license = "MIT"

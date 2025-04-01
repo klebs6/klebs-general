@@ -50,3 +50,4 @@ x!{upgrade}
 x!{validate}
 x!{watch}
 x!{write}
+x!{prune}

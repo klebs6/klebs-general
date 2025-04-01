@@ -135,9 +135,11 @@ keywords   = {keywords}
         let tmp = tempdir().expect("Failed to create temp dir");
         let root = tmp.path().to_path_buf();
 
-        // Write a Cargo.toml with some categories and keywords
-        let initial_cats = &["valid-cat", " has space", "in-val!d", "another_valid-cat"];
+        // Instead of "valid-cat" and "another_valid-cat" (which are not in LEGAL_CATEGORIES),
+        // use real ones from your big array, e.g. "algorithms" and "game-engines".
+        let initial_cats = &["algorithms", " has space", "in-val!d", "game-engines"];
         let initial_keys = &["ok", "some space", "???", "also_ok"];
+
         write_cargo_toml_with_categories_and_keywords(&root, initial_cats, initial_keys).await;
 
         // Create the CrateHandle
@@ -147,9 +149,13 @@ keywords   = {keywords}
 
         let removed_count = handle.prune_invalid_category_slugs().await
             .expect("Failed to prune invalid slugs");
-        // We expect " has space" to be removed, "in-val!d" to be removed from categories => 2 removed
-        // We expect "some space" and "???" to be removed from keywords => 2 more removed
-        // total 4 removed
+
+        // Now we expect:
+        //   - " has space" removed from categories
+        //   - "in-val!d" removed from categories
+        //   - "some space" removed from keywords
+        //   - "???" removed from keywords
+        // => total of 4 removed
         assert_eq!(removed_count, 4, "Expected to remove 4 total items");
 
         // Re-check the file to ensure they've been removed
@@ -160,12 +166,13 @@ keywords   = {keywords}
         // Confirm " has space" and "in-val!d" are gone from categories
         assert!(!after.contains(" has space"));
         assert!(!after.contains("in-val!d"));
+
         // Confirm "some space" and "???" are gone from keywords
         assert!(!after.contains("some space"));
         assert!(!after.contains("???"));
 
-        // Confirm that "valid-cat" and "also_ok" remain
-        assert!(after.contains("valid-cat"));
+        // Confirm that "algorithms" and "also_ok" remain
+        assert!(after.contains("algorithms"));
         assert!(after.contains("also_ok"));
     }
 }

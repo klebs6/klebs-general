@@ -33,6 +33,7 @@ pub enum WsCli {
     Validate          { #[structopt(subcommand)] subcommand: ValidateSubcommand,          } ,
     Watch             { #[structopt(subcommand)] subcommand: WatchSubcommand,             } ,
     Write             { #[structopt(subcommand)] subcommand: ReadmeWriterCli,             } ,
+    Prune             { #[structopt(subcommand)] subcommand: PruneSubcommand,             } ,
 }
 
 #[tokio::main]
@@ -64,6 +65,7 @@ async fn main() -> Result<(),WorkspaceError> {
         WsCli::Validate          { subcommand } => { subcommand.run().await? },
         WsCli::Watch             { subcommand } => { subcommand.run().await? },
         WsCli::Write             { subcommand } => { subcommand.run().await? },
+        WsCli::Prune             { subcommand } => { subcommand.run().await? },
     }
 
     Ok(())

@@ -4,11 +4,11 @@ crate::ix!();
 #[builder(setter(into))]
 #[getset(get="pub")]
 pub struct ReadmeWriterConfig {
-    skip_docs:             bool,
-    skip_fn_bodies:        bool,
-    include_test_items:    bool,
-    include_private_items: bool,
-    max_interface_length:  Option<usize>,
+    #[builder(default = "false")]      skip_docs:             bool,
+    #[builder(default = "false")]      skip_fn_bodies:        bool,
+    #[builder(default = "false")]      include_test_items:    bool,
+    #[builder(default = "false")]      include_private_items: bool,
+    #[builder(default = "Some(4096)")] max_interface_length:  Option<usize>,
 }
 
 impl Default for ReadmeWriterConfig {
