@@ -57,7 +57,7 @@ impl Into<ReadmeWriterConfig> for ReadmeWriterCli {
 }
 
 /// Subcommands for different ways of using the tool
-#[derive(StructOpt, Debug)]
+#[derive(StructOpt,Clone,Debug)]
 pub enum ReadmeWriterCommand {
     /// Run on a single crate path
     SingleCrate {
@@ -103,37 +103,20 @@ pub enum ReadmeWriterCommand {
     },
 }
 
-#[tokio::main]
-pub async fn main() -> Result<(), AiReadmeWriterError> {
-    configure_tracing();
+impl ReadmeWriterCli {
 
-    let args   = ReadmeWriterCli::from_args();
-    let config: ReadmeWriterConfig = args.clone().into();
+    pub async fn run(&self) -> Result<(), WorkspaceError> {
 
-    trace!("Parsed CLI arguments: {:?}", args);
+        let config: ReadmeWriterConfig = self.into();
 
-    match args.command {
-        ReadmeWriterCommand::SingleCrate { crate_path, plant, force } => {
-            info!("readme-writer-cli: SingleCrate mode selected for path = {:?}", crate_path);
+        trace!("Parsed CLI arguments: {:?}", self);
 
-            let handle = Arc::new(AsyncMutex::new(CrateHandle::new(&crate_path).await?));
-            info!("Starting readme updates for single crate at {:?}", crate_path);
+        match self.command {
+            ReadmeWriterCommand::SingleCrate { crate_path, plant, force } => {
+                info!("readme-writer-cli: SingleCrate mode selected for path = {:?}", crate_path);
 
-            UpdateReadmeFiles::update_readme_files(
-                handle.clone(),
-                plant,
-                force,
-                &config
-            ).await?;
-
-            info!("Done updating readme for single crate at {:?}", crate_path);
-        }
-        ReadmeWriterCommand::MultiCrate { crate_paths, plant, force } => {
-            info!("readme-writer-cli: MultiCrate mode for paths = {:?}", crate_paths);
-
-            for path in crate_paths {
-                debug!("Processing crate at {:?}", path);
-                let handle = Arc::new(AsyncMutex::new(CrateHandle::new(&path).await?));
+                let handle = Arc::new(AsyncMutex::new(CrateHandle::new(&crate_path).await?));
+                info!("Starting readme updates for single crate at {:?}", crate_path);
 
                 UpdateReadmeFiles::update_readme_files(
                     handle.clone(),
@@ -142,29 +125,46 @@ pub async fn main() -> Result<(), AiReadmeWriterError> {
                     &config
                 ).await?;
 
-                debug!("Finished readme updates for crate at {:?}", path);
+                info!("Done updating readme for single crate at {:?}", crate_path);
             }
-            info!("Done updating readmes for all crates in MultiCrate mode.");
+            ReadmeWriterCommand::MultiCrate { crate_paths, plant, force } => {
+                info!("readme-writer-cli: MultiCrate mode for paths = {:?}", crate_paths);
+
+                for path in crate_paths {
+                    debug!("Processing crate at {:?}", path);
+                    let handle = Arc::new(AsyncMutex::new(CrateHandle::new(&path).await?));
+
+                    UpdateReadmeFiles::update_readme_files(
+                        handle.clone(),
+                        plant,
+                        force,
+                        &config
+                    ).await?;
+
+                    debug!("Finished readme updates for crate at {:?}", path);
+                }
+                info!("Done updating readmes for all crates in MultiCrate mode.");
+            }
+            ReadmeWriterCommand::Workspace { workspace_path, plant, force } => {
+                info!("readme-writer-cli: Workspace mode selected for path = {:?}", workspace_path);
+
+                let ws = Arc::new(AsyncMutex::new(
+                        Workspace::<PathBuf, CrateHandle>::new(&workspace_path).await?
+                ));
+                info!("Starting readme updates for full workspace at {:?}", workspace_path);
+
+                UpdateReadmeFiles::update_readme_files(
+                    ws.clone(),
+                    plant,
+                    force,
+                    &config
+                ).await?;
+
+                info!("Done updating readmes for workspace at {:?}", workspace_path);
+            }
         }
-        ReadmeWriterCommand::Workspace { workspace_path, plant, force } => {
-            info!("readme-writer-cli: Workspace mode selected for path = {:?}", workspace_path);
 
-            let ws = Arc::new(AsyncMutex::new(
-                Workspace::<PathBuf, CrateHandle>::new(&workspace_path).await?
-            ));
-            info!("Starting readme updates for full workspace at {:?}", workspace_path);
-
-            UpdateReadmeFiles::update_readme_files(
-                ws.clone(),
-                plant,
-                force,
-                &config
-            ).await?;
-
-            info!("Done updating readmes for workspace at {:?}", workspace_path);
-        }
+        info!("All done with readme-writer-cli. Exiting successfully.");
+        Ok(())
     }
-
-    info!("All done with readme-writer-cli. Exiting successfully.");
-    Ok(())
 }

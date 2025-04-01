@@ -123,7 +123,7 @@ impl ApplyAiReadmeOutput for CrateHandle {
             pkg["keywords"] = toml_edit::Item::Value(toml_edit::Value::Array(kw_array));
 
             let mut cat_array = toml_edit::Array::default();
-            for cat in new_categories {
+            for cat in new_categories.iter().filter(|item| !ONLY_LEGAL_CATEGORIES.contains(item.as_str())) {
                 cat_array.push(toml_edit::Value::from(cat.as_str()));
             }
             pkg["categories"] = toml_edit::Item::Value(toml_edit::Value::Array(cat_array));

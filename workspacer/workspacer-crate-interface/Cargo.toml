@@ -25,15 +25,11 @@ categories = [
     "parsing",
     "filesystem",
     "network-programming",
-    "async",
 ]
 description = "A Rust library offering traits for interacting with crate files; enables asynchronous and synchronous operations on `Cargo.toml`, source, and test files."
 edition = "2024"
 keywords = [
-    "cargo",
-    "rust",
     "filesystem",
-    "asynchronous",
     "interface",
 ]
 name = "workspacer-crate-interface"
