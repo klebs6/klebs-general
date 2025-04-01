@@ -11,6 +11,7 @@ path = "../workspacer-export"
 version = "0.1.1"
 [dependencies.workspacer-prune-bad-category-slugs]
 path = "../workspacer-prune-bad-category-slugs"
+version = "0.1.0"
 [package]
 categories = [ "command-line-utilities", "development-tools", "parsing"]
 description = "A versatile command-line interface for Rust workspace management, providing comprehensive controls for crate analysis, import formatting, cleanup, dependency checks, and more."

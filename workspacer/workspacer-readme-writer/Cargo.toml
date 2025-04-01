@@ -31,6 +31,7 @@ path = "../workspacer-errors"
 version = "0.1.1"
 [dependencies.workspacer-prune-bad-category-slugs]
 path = "../workspacer-prune-bad-category-slugs"
+version = "0.1.0"
 [dependencies.workspacer-toml-interface]
 path = "../workspacer-toml-interface"
 version = "0.1.2"
