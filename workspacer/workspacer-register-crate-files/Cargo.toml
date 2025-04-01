@@ -19,3 +19,4 @@ keywords = [
 ]
 name = "workspacer-register-crate-files"
 version = "0.1.2"
+license = "MIT"

@@ -56,3 +56,4 @@ keywords = [
 ]
 name = "workspacer-add-new-crate-to-workspace"
 version = "0.1.1"
+license = "MIT"

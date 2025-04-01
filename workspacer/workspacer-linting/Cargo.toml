@@ -37,3 +37,4 @@ keywords = [
 ]
 name = "workspacer-linting"
 version = "0.1.1"
+license = "MIT"

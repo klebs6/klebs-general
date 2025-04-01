@@ -44,3 +44,4 @@ keywords = [
 ]
 name = "workspacer-scan-for-prefix-groups"
 version = "0.1.1"
+license = "MIT"

@@ -21,3 +21,4 @@ keywords = [
 ]
 name = "workspacer-upgrade-test"
 version = "0.1.2"
+license = "MIT"

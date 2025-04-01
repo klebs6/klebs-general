@@ -21,3 +21,4 @@ keywords = [
 ]
 name = "workspacer-show-dependency-tree"
 version = "0.1.1"
+license = "MIT"

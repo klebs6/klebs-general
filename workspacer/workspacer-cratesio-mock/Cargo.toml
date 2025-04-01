@@ -43,3 +43,4 @@ keywords = [
 ]
 name = "workspacer-cratesio-mock"
 version = "0.1.2"
+license = "MIT"

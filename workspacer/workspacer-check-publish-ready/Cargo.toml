@@ -59,3 +59,4 @@ keywords = [
 ]
 name = "workspacer-check-publish-ready"
 version = "0.1.2"
+license = "MIT"

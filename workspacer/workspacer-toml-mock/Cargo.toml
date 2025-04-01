@@ -37,3 +37,4 @@ keywords = [
 ]
 name = "workspacer-toml-mock"
 version = "0.1.1"
+license = "MIT"

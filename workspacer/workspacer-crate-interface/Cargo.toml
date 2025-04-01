@@ -38,3 +38,4 @@ keywords = [
 ]
 name = "workspacer-crate-interface"
 version = "0.1.1"
+license = "MIT"

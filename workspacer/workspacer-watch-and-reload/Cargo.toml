@@ -49,3 +49,4 @@ keywords = [
 ]
 name = "workspacer-watch-and-reload"
 version = "0.1.2"
+license = "MIT"

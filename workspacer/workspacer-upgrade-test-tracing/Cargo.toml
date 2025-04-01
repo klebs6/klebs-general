@@ -21,3 +21,4 @@ keywords = [
 ]
 name = "workspacer-upgrade-test-tracing"
 version = "0.1.2"
+license = "MIT"

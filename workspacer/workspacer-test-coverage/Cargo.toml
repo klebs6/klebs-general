@@ -44,3 +44,4 @@ keywords = [
 ]
 name = "workspacer-test-coverage"
 version = "0.1.1"
+license = "MIT"

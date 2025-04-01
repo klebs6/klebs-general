@@ -33,3 +33,4 @@ keywords = [
 ]
 name = "workspacer-check-private"
 version = "0.1.1"
+license = "MIT"

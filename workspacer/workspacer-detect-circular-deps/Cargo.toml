@@ -45,3 +45,4 @@ keywords = [
 ]
 name = "workspacer-detect-circular-deps"
 version = "0.1.1"
+license = "MIT"

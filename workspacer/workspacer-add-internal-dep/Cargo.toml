@@ -41,3 +41,4 @@ keywords = [
 ]
 name = "workspacer-add-internal-dep"
 version = "0.1.2"
+license = "MIT"

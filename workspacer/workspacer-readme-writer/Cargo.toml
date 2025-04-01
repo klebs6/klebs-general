@@ -76,3 +76,4 @@ keywords = [
 ]
 name = "workspacer-readme-writer"
 version = "0.1.2"
+license = "MIT"

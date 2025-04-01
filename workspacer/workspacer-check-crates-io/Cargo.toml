@@ -37,3 +37,4 @@ keywords = [
 ]
 name = "workspacer-check-crates-io"
 version = "0.1.2"
+license = "MIT"

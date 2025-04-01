@@ -41,3 +41,4 @@ keywords = [
 ]
 name = "workspacer-metadata"
 version = "0.1.2"
+license = "MIT"

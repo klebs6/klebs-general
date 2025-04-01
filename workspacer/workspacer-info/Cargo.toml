@@ -21,3 +21,4 @@ keywords = [
 ]
 name = "workspacer-info"
 version = "0.1.2"
+license = "MIT"
