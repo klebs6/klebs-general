@@ -6,7 +6,7 @@ crate::ix!();
 /// 1) A single crate path
 /// 2) Multiple crate paths
 /// 3) A workspace path
-#[derive(StructOpt, Debug)]
+#[derive(StructOpt,Clone,Debug)]
 pub struct ReadmeWriterCli {
     /// If set, do not include doc comments in the crate interface.
     #[structopt(long = "skip-docs")]
@@ -45,13 +45,14 @@ impl Into<ReadmeWriterConfig> for ReadmeWriterCli {
             self.max_interface_length
         );
 
-        ReadmeWriterConfig::new(
-            self.skip_docs,
-            self.skip_fn_bodies,
-            self.include_test_items,
-            self.include_private_items,
-            self.max_interface_length
-        )
+        ReadmeWriterConfigBuilder::default()
+            .skip_docs(self.skip_docs)
+            .skip_fn_bodies(self.skip_fn_bodies)
+            .include_test_items(self.include_test_items)
+            .include_private_items(self.include_private_items)
+            .max_interface_length(self.max_interface_length)
+            .build()
+            .unwrap()
     }
 }
 
@@ -107,7 +108,7 @@ pub async fn main() -> Result<(), AiReadmeWriterError> {
     configure_tracing();
 
     let args   = ReadmeWriterCli::from_args();
-    let config = ReadmeWriterConfig::from(&args);
+    let config: ReadmeWriterConfig = args.clone().into();
 
     trace!("Parsed CLI arguments: {:?}", args);
 

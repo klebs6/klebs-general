@@ -1,6 +1,7 @@
 crate::ix!();
 
-#[derive(Getters,Debug,Clone)]
+#[derive(Builder,Getters,Debug,Clone)]
+#[builder(setter(into))]
 #[getset(get="pub")]
 pub struct ReadmeWriterConfig {
     skip_docs:             bool,

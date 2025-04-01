@@ -17,7 +17,6 @@ version = "0.1.1"
 
 [package]
 categories = [
-    "async",
     "config",
     "development-tools",
     "rust-patterns",
@@ -27,9 +26,7 @@ description = "workspacer-toml-interface provides a comprehensive interface for 
 edition = "2024"
 keywords = [
     "traits",
-    "Rust",
     "workspace",
-    "asynchronous",
 ]
 name = "workspacer-toml-interface"
 version = "0.1.2"
