@@ -50,6 +50,8 @@ pub async fn main() -> Result<(), AiReadmeWriterError> {
     let args = ReadmeWriterCli::from_args();
     trace!("Parsed CLI arguments: {:?}", args);
 
+    let config = ReadmeWriterConfig::default();
+
     match args.command {
         ReadmeWriterCommand::SingleCrate { crate_path } => {
             info!("readme-writer-cli: SingleCrate mode selected for path = {:?}", crate_path);
@@ -62,7 +64,7 @@ pub async fn main() -> Result<(), AiReadmeWriterError> {
             info!("Starting readme updates for single crate at {:?}", crate_path);
 
             // The trait method from `UpdateReadmeFiles`
-            UpdateReadmeFiles::update_readme_files(handle.clone(), plant, force).await?;
+            UpdateReadmeFiles::update_readme_files(handle.clone(), plant, force,&config).await?;
 
             info!("Done updating readme for single crate at {:?}", crate_path);
         }
@@ -75,7 +77,7 @@ pub async fn main() -> Result<(), AiReadmeWriterError> {
 
                 let handle = Arc::new(AsyncMutex::new(CrateHandle::new(&path).await?));
 
-                UpdateReadmeFiles::update_readme_files(handle.clone(), plant, force).await?;
+                UpdateReadmeFiles::update_readme_files(handle.clone(), plant, force,&config).await?;
 
                 debug!("Finished readme updates for crate at {:?}", path);
             }
@@ -90,7 +92,7 @@ pub async fn main() -> Result<(), AiReadmeWriterError> {
             let ws = Arc::new(AsyncMutex::new(Workspace::<PathBuf, CrateHandle>::new(&workspace_path).await?));
 
             info!("Starting readme updates for full workspace at {:?}", workspace_path);
-            UpdateReadmeFiles::update_readme_files(ws.clone(), plant, force).await?;
+            UpdateReadmeFiles::update_readme_files(ws.clone(), plant, force,&config).await?;
 
             info!("Done updating readmes for workspace at {:?}", workspace_path);
         }

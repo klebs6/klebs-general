@@ -45,10 +45,10 @@ where
         if !config.skip_fn_bodies() {
             consolidation_opts = consolidation_opts.with_fn_bodies();
         }
-        if config.include_test_items() {
+        if *config.include_test_items() {
             consolidation_opts = consolidation_opts.with_test_items();
         }
-        if config.include_private_items() {
+        if *config.include_private_items() {
             consolidation_opts = consolidation_opts.with_private_items();
         }
 
@@ -75,7 +75,7 @@ where
 
         // 4) If there's a max length, check and fallback if needed
         if let Some(max_len) = config.max_interface_length() {
-            if cci_str.len() > max_len {
+            if cci_str.len() > *max_len {
                 warn!(
                     "Crate interface length {} exceeds max {}; applying fallback.",
                     cci_str.len(),
@@ -83,10 +83,10 @@ where
                 );
                 // fallback => skip docs + skip fn bodies, but preserve test/private toggles
                 let mut fallback_opts = ConsolidationOptions::new();
-                if config.include_test_items() {
+                if *config.include_test_items() {
                     fallback_opts = fallback_opts.with_test_items();
                 }
-                if config.include_private_items() {
+                if *config.include_private_items() {
                     fallback_opts = fallback_opts.with_private_items();
                 }
 

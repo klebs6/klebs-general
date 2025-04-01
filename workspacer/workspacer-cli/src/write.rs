@@ -34,6 +34,27 @@ pub struct ReadmeWriterCli {
     command: ReadmeWriterCommand,
 }
 
+impl Into<ReadmeWriterConfig> for ReadmeWriterCli {
+    fn into(self) -> ReadmeWriterConfig {
+        trace!(
+            "Converting ReadmeWriterCli to ReadmeWriterConfig with: skip_docs={}, skip_fn_bodies={}, include_test_items={}, include_private_items={}, max_interface_length={:?}",
+            self.skip_docs,
+            self.skip_fn_bodies,
+            self.include_test_items,
+            self.include_private_items,
+            self.max_interface_length
+        );
+
+        ReadmeWriterConfig::new(
+            self.skip_docs,
+            self.skip_fn_bodies,
+            self.include_test_items,
+            self.include_private_items,
+            self.max_interface_length
+        )
+    }
+}
+
 /// Subcommands for different ways of using the tool
 #[derive(StructOpt, Debug)]
 pub enum ReadmeWriterCommand {
