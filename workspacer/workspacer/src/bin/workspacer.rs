@@ -32,8 +32,10 @@ pub enum WsCli {
     Upgrade           { #[structopt(subcommand)] subcommand: UpgradeSubcommand,           } ,
     Validate          { #[structopt(subcommand)] subcommand: ValidateSubcommand,          } ,
     Watch             { #[structopt(subcommand)] subcommand: WatchSubcommand,             } ,
-    Write             { #[structopt(subcommand)] subcommand: ReadmeWriterCli,             } ,
     Prune             { #[structopt(subcommand)] subcommand: PruneSubcommand,             } ,
+
+    /// Generate or update README(s) using AI
+    Write(ReadmeWriterCli),
 }
 
 #[tokio::main]
@@ -64,8 +66,8 @@ async fn main() -> Result<(),WorkspaceError> {
         WsCli::Upgrade           { subcommand } => { subcommand.run().await? },
         WsCli::Validate          { subcommand } => { subcommand.run().await? },
         WsCli::Watch             { subcommand } => { subcommand.run().await? },
-        WsCli::Write             { subcommand } => { subcommand.run().await? },
         WsCli::Prune             { subcommand } => { subcommand.run().await? },
+        WsCli::Write(cmd) => { cmd.run().await? },
     }
 
     Ok(())

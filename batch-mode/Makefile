@@ -58,7 +58,7 @@ DEFAULT := test
 #DEFAULT := test_file_one
 #DEFAULT := test_all
 #DEFAULT := run
-#DEFAULT := file_diff
+DEFAULT := file_diff
 #DEFAULT := build
 
 default: $(DEFAULT)
