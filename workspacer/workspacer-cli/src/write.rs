@@ -137,13 +137,15 @@ impl ReadmeWriterCli {
             ReadmeWriterCommand::SingleCrate { crate_path, plant, force } => {
                 info!("readme-writer-cli: SingleCrate mode selected for path = {:?}", crate_path);
 
+                let crate_path = crate_path.to_path_buf();
+
                 let handle = Arc::new(AsyncMutex::new(CrateHandle::new(&crate_path).await?));
                 info!("Starting readme updates for single crate at {:?}", crate_path);
 
                 UpdateReadmeFiles::update_readme_files(
                     handle.clone(),
-                    plant,
-                    force,
+                    *plant,
+                    *force,
                     &config
                 ).await?;
 
@@ -153,13 +155,14 @@ impl ReadmeWriterCli {
                 info!("readme-writer-cli: MultiCrate mode for paths = {:?}", crate_paths);
 
                 for path in crate_paths {
+                    let path = path.to_path_buf();
                     debug!("Processing crate at {:?}", path);
                     let handle = Arc::new(AsyncMutex::new(CrateHandle::new(&path).await?));
 
                     UpdateReadmeFiles::update_readme_files(
                         handle.clone(),
-                        plant,
-                        force,
+                        *plant,
+                        *force,
                         &config
                     ).await?;
 
@@ -169,6 +172,7 @@ impl ReadmeWriterCli {
             }
             ReadmeWriterCommand::Workspace { workspace_path, plant, force } => {
                 info!("readme-writer-cli: Workspace mode selected for path = {:?}", workspace_path);
+                let workspace_path = workspace_path.to_path_buf();
 
                 let ws = Arc::new(AsyncMutex::new(
                         Workspace::<PathBuf, CrateHandle>::new(&workspace_path).await?
@@ -177,8 +181,8 @@ impl ReadmeWriterCli {
 
                 UpdateReadmeFiles::update_readme_files(
                     ws.clone(),
-                    plant,
-                    force,
+                    *plant,
+                    *force,
                     &config
                 ).await?;
 
