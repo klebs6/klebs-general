@@ -26,7 +26,6 @@ categories = [
 description = "workspacer-toml-interface provides a comprehensive interface for Cargo.toml manipulation, supporting versioning, dependency, and metadata management through synchronous and asynchronous Rust traits."
 edition = "2024"
 keywords = [
-    "Cargo.toml",
     "traits",
     "Rust",
     "workspace",
