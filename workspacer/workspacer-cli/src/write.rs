@@ -34,6 +34,28 @@ pub struct ReadmeWriterCli {
     command: ReadmeWriterCommand,
 }
 
+impl From<&ReadmeWriterCli> for ReadmeWriterConfig {
+    fn from(cli: &ReadmeWriterCli) -> Self {
+        trace!(
+            "Converting &ReadmeWriterCli to ReadmeWriterConfig with skip_docs={}, skip_fn_bodies={}, include_test_items={}, include_private_items={}, max_interface_length={:?}",
+            cli.skip_docs,
+            cli.skip_fn_bodies,
+            cli.include_test_items,
+            cli.include_private_items,
+            cli.max_interface_length
+        );
+
+        // If you have a builder, we can do:
+        ReadmeWriterConfigBuilder::default()
+            .skip_docs(cli.skip_docs)
+            .skip_fn_bodies(cli.skip_fn_bodies)
+            .include_test_items(cli.include_test_items)
+            .include_private_items(cli.include_private_items)
+            .max_interface_length(cli.max_interface_length)
+            .build()
+            .unwrap()
+    }
+}
 impl Into<ReadmeWriterConfig> for ReadmeWriterCli {
     fn into(self) -> ReadmeWriterConfig {
         trace!(
@@ -111,7 +133,7 @@ impl ReadmeWriterCli {
 
         trace!("Parsed CLI arguments: {:?}", self);
 
-        match self.command {
+        match &self.command {
             ReadmeWriterCommand::SingleCrate { crate_path, plant, force } => {
                 info!("readme-writer-cli: SingleCrate mode selected for path = {:?}", crate_path);
 

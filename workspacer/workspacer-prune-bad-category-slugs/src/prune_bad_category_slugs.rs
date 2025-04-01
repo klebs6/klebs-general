@@ -1,10 +1,5 @@
 crate::ix!();
 
-/// Trait for pruning invalid category slugs/keywords in a **single** crate-like object.
-/// The default `impl` below applies to any type that implements
-/// `CrateHandleInterface<P> + HasCargoToml + AsRef<Path>`, etc.
-/// 
-/// Returns the count of removed items.
 #[async_trait]
 pub trait PruneInvalidCategorySlugs {
     type Error;
@@ -13,30 +8,24 @@ pub trait PruneInvalidCategorySlugs {
 }
 
 #[async_trait]
-impl<P, T> PruneInvalidCategorySlugs for T
+impl<T> PruneInvalidCategorySlugs for T
 where
-    // `P` must meet the same bounds used by CrateHandleInterface, i.e. 
-    // from the workspace crate's constraints: P: From<PathBuf> + AsRef<Path> + Send + Sync ...
-    P: From<PathBuf> + AsRef<Path> + Send + Sync + 'static,
-
-    // T must be a "crate-like" type implementing the needed traits:
-    T: CrateHandleInterface<P>   // so we can do T::new(...) or T::validate_integrity etc.
-        + HasCargoToml           // we can call cargo_toml() to get the Arc<AsyncMutex<CargoTomlInterface>>
-        + AsRef<Path>            // so we can log its path
-        + std::fmt::Debug        // for debug logging
+    T: CrateHandleInterface<PathBuf> 
+        + HasCargoToml
+        + AsRef<Path>
+        + std::fmt::Debug
         + Send
-        + Sync,
+        + Sync
+        + 'static,
 {
     type Error = CrateError;
 
     async fn prune_invalid_category_slugs(&mut self) -> Result<usize, Self::Error> {
-        trace!("(Single crate) begin pruning invalid category slugs: {:?}", self);
+        trace!("(Single crate) begin: path={:?}", self.as_ref());
 
-        // 1) Lock the cargo_toml handle:
         let cargo_arc = self.cargo_toml();
         let mut cargo_guard = cargo_arc.lock().await;
 
-        // 2) Clone as a toml_edit::Document so we can mutate arrays:
         let mut doc = cargo_guard.document_clone().await?;
         let mut removed_count = 0_usize;
 
@@ -44,16 +33,16 @@ where
 
         if let Some(package_item) = doc.get_mut("package") {
             if let Some(pkg_table) = package_item.as_table_mut() {
-                // categories array
-                if let Some(categories_val) = pkg_table.get_mut("categories") {
-                    if let Some(arr) = categories_val.as_array_mut() {
+                // categories
+                if let Some(cats_val) = pkg_table.get_mut("categories") {
+                    if let Some(arr) = cats_val.as_array_mut() {
                         let mut i = 0;
                         while i < arr.len() {
                             if let Some(cat_str) = arr.get(i).and_then(|v| v.as_str()) {
-                                let is_allowed = ONLY_LEGAL_CATEGORIES.contains(&cat_str);
+                                let is_allowed = LEGAL_CATEGORIES.contains(&cat_str);
                                 let matches_pattern = re.is_match(cat_str);
                                 if !(is_allowed && matches_pattern) {
-                                    debug!("Removing invalid category '{cat_str}' from Cargo.toml");
+                                    debug!("Removing invalid category '{cat_str}'");
                                     arr.remove(i);
                                     removed_count += 1;
                                     continue;
@@ -63,15 +52,14 @@ where
                         }
                     }
                 }
-                // keywords array
-                if let Some(keywords_val) = pkg_table.get_mut("keywords") {
-                    if let Some(arr) = keywords_val.as_array_mut() {
+                // keywords
+                if let Some(keys_val) = pkg_table.get_mut("keywords") {
+                    if let Some(arr) = keys_val.as_array_mut() {
                         let mut i = 0;
                         while i < arr.len() {
                             if let Some(kw_str) = arr.get(i).and_then(|v| v.as_str()) {
-                                // remove if it fails the pattern or has spaces
                                 if !re.is_match(kw_str) || kw_str.contains(' ') {
-                                    debug!("Removing invalid keyword '{kw_str}' from Cargo.toml");
+                                    debug!("Removing invalid keyword '{kw_str}'");
                                     arr.remove(i);
                                     removed_count += 1;
                                     continue;
@@ -84,10 +72,8 @@ where
             }
         }
 
-        // 3) Write changes back to disk:
         cargo_guard.write_document_back(&doc).await?;
-
-        info!("(Single crate) prune done at path={:?}, removed_count={}", self.as_ref(), removed_count);
+        info!("(Single crate) done: removed_count={}", removed_count);
         Ok(removed_count)
     }
 }

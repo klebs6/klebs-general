@@ -118,12 +118,13 @@ impl ApplyAiReadmeOutput for CrateHandle {
 
             let mut kw_array = toml_edit::Array::default();
             for kw in new_keywords {
-                kw_array.push(toml_edit::Value::from(kw.as_str()));
+                let cleaned = clean_cratesio_keyword(&kw);
+                kw_array.push(toml_edit::Value::from(cleaned.as_str()));
             }
             pkg["keywords"] = toml_edit::Item::Value(toml_edit::Value::Array(kw_array));
 
             let mut cat_array = toml_edit::Array::default();
-            for cat in new_categories.iter().filter(|item| !ONLY_LEGAL_CATEGORIES.contains(item.as_str())) {
+            for cat in new_categories.iter().filter(|item| LEGAL_CATEGORIES.contains(&item.as_str())) {
                 cat_array.push(toml_edit::Value::from(cat.as_str()));
             }
             pkg["categories"] = toml_edit::Item::Value(toml_edit::Value::Array(cat_array));
