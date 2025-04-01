@@ -78,23 +78,29 @@ where
         let requests = {
             let guard = workspace_arc.lock().await;
             let mut reqs = Vec::new();
-            for item_arc in guard.crates() {
-                let item_guard = item_arc.lock().await;
-                let maybe_readme = item_guard
-                    .readme_path()
-                    .await
-                    .map_err(AiReadmeWriterError::CrateError)?;
 
-                if maybe_readme.is_some() && !force {
-                    info!(
-                        "Skipping crate at {:?} due to existing README.md (no --force)",
-                        item_guard.as_ref()
-                    );
+            for item_arc in guard.crates() {
+                // 1) Lock once to check if we should skip
+                let skip_this = {
+                    let item_guard = item_arc.lock().await;
+                    let maybe_readme = item_guard.readme_path().await?;
+                    // Evaluate skip logic
+                    if maybe_readme.is_some() && !force {
+                        true
+                    } else {
+                        false
+                    }
+                    // item_guard is dropped here
+                };
+
+                // 2) If skipping, continue
+                if skip_this {
+                    info!("Skipping crate because README already exists, no --force");
                     continue;
                 }
 
-                // If no readme or we forced => build the request
-                let request = AiReadmeWriterRequest::<PathBuf>::async_try_from::<H>(
+                // 3) Now create the request, which will lock item_arc internally without deadlock
+                let request = AiReadmeWriterRequest::async_try_from::<H>(
                     item_arc.clone(),
                     config
                 ).await?;

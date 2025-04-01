@@ -67,6 +67,7 @@ pub fn clean_cratesio_keyword(x: &str) -> String {
     let cleaned: String = x
         .chars()
         .filter(|c| c.is_ascii_alphanumeric())
+        .take(20)
         .collect::<String>()
         .to_lowercase();
 
