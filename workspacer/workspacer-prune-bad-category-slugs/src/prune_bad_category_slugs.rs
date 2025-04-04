@@ -58,7 +58,7 @@ where
                         let mut i = 0;
                         while i < arr.len() {
                             if let Some(kw_str) = arr.get(i).and_then(|v| v.as_str()) {
-                                if !re.is_match(kw_str) || kw_str.contains(' ') {
+                                if kw_str.len() > 19 || !re.is_match(kw_str) || kw_str.contains(' ') {
                                     debug!("Removing invalid keyword '{kw_str}'");
                                     arr.remove(i);
                                     removed_count += 1;
