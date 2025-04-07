@@ -4,6 +4,8 @@ crate::ix!();
 pub fn gather_fn_item(
     fn_ast:  &ast::Fn,
     options: &ConsolidationOptions,
+    file_path: &PathBuf,
+    crate_path: &PathBuf,
 ) -> CrateInterfaceItem<ast::Fn> {
 
     let docs = if *options.include_docs() {
@@ -38,7 +40,15 @@ pub fn gather_fn_item(
         }
     };
 
-    CrateInterfaceItem::new(fn_ast.clone(), docs, attributes, body_source, Some(options.clone()))
+    CrateInterfaceItem::new_with_paths(
+        fn_ast.clone(), 
+        docs, 
+        attributes, 
+        body_source, 
+        Some(options.clone()),
+        file_path.clone(),
+        crate_path.clone(),
+    )
 }
 
 #[cfg(test)]

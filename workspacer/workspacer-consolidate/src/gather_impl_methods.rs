@@ -7,6 +7,8 @@ crate::ix!();
 pub fn gather_impl_methods(
     impl_ast: &ast::Impl,
     options: &ConsolidationOptions,
+    file_path: &PathBuf,
+    crate_path: &PathBuf,
 ) -> Vec<CrateInterfaceItem<ast::Fn>> {
     let mut out = Vec::new();
 
@@ -15,7 +17,7 @@ pub fn gather_impl_methods(
             if let Some(fn_ast) = ast::Fn::cast(item.syntax().clone()) {
                 // We'll pass the `ast::Fn` object to a skip-check specialized for functions.
                 if !should_skip_item_fn(&fn_ast, options) {
-                    out.push(gather_fn_item(&fn_ast, options));
+                    out.push(gather_fn_item(&fn_ast, options,file_path,crate_path));
                 } else {
                     debug!(
                         "Skipping fn in impl: private/test/other => {:?}",
@@ -122,7 +124,7 @@ mod test_gather_impl_methods {
         let impl_ast = find_first_impl(&root).expect("Expected an impl block");
         let opts = default_options();
 
-        let fns = gather_impl_methods(&impl_ast, &opts);
+        let fns = gather_impl_methods(&impl_ast, &opts, file_path.clone(), crate_path.clone());
         assert!(fns.is_empty());
     }
 
@@ -138,7 +140,7 @@ mod test_gather_impl_methods {
         let impl_ast = find_first_impl(&root).expect("Expected an impl block");
         let opts = default_options();
 
-        let fns = gather_impl_methods(&impl_ast, &opts);
+        let fns = gather_impl_methods(&impl_ast, &opts, file_path.clone(), crate_path.clone());
         assert!(fns.is_empty());
     }
 
@@ -154,7 +156,7 @@ mod test_gather_impl_methods {
         let impl_ast = find_first_impl(&root).expect("impl block");
         let opts = default_options();
 
-        let fns = gather_impl_methods(&impl_ast, &opts);
+        let fns = gather_impl_methods(&impl_ast, &opts, file_path.clone(), crate_path.clone());
         assert_eq!(fns.len(), 2, "We expect 2 normal fns");
     }
 
@@ -172,7 +174,7 @@ mod test_gather_impl_methods {
         // We skip test => so we only keep normal_fn
         let opts = default_options();
 
-        let fns = gather_impl_methods(&impl_ast, &opts);
+        let fns = gather_impl_methods(&impl_ast, &opts, file_path.clone(), crate_path.clone());
         assert_eq!(fns.len(), 1, "Should skip test_fn");
     }
 
@@ -195,7 +197,7 @@ mod test_gather_impl_methods {
         let impl_ast = find_first_impl(&root).expect("impl block");
         let opts = default_options(); // skip test, skip #some_other_attr, keep private
 
-        let fns = gather_impl_methods(&impl_ast, &opts);
+        let fns = gather_impl_methods(&impl_ast, &opts, file_path.clone(), crate_path.clone());
 
         // We expect keep_me & also_keep_me => 2
         // skip_me_test => has #[cfg(test)], skip
@@ -217,7 +219,7 @@ mod test_gather_impl_methods {
         let impl_ast = find_first_impl(&root).expect("impl block");
 
         let opts = default_options(); // skip test => keep only trait_method
-        let fns = gather_impl_methods(&impl_ast, &opts);
+        let fns = gather_impl_methods(&impl_ast, &opts, file_path.clone(), crate_path.clone());
         assert_eq!(fns.len(), 1);
     }
 
@@ -230,7 +232,7 @@ mod test_gather_impl_methods {
         let impl_ast = find_first_impl(&root).expect("impl block");
         let opts = default_options();
 
-        let fns = gather_impl_methods(&impl_ast, &opts);
+        let fns = gather_impl_methods(&impl_ast, &opts, file_path.clone(), crate_path.clone());
         assert!(fns.is_empty());
     }
 }

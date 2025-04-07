@@ -1,4 +1,5 @@
 // ---------------- [ File: workspacer-3p/src/lib.rs ]
+pub use inflector::Inflector;
 pub use rocket::{self,Request,http::Status,catch,post,data::{ToByteUnit,Data}};
 pub use portpicker;
 pub use std::os::unix::process::ExitStatusExt;
@@ -45,7 +46,7 @@ pub use petgraph::visit::EdgeRef;
 pub use std::fmt::{self,Write,Display};
 pub use std::thread;
 pub use std::fmt::Result as FmtResult;
-pub use tracing::{self,info,trace,debug,error,warn};
+pub use tracing::{self,instrument,info,trace,debug,error,warn};
 pub use colored;
 pub use traced_test::traced_test;
 pub use tracing_setup::*;

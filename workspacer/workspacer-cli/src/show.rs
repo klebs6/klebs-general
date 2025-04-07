@@ -1,245 +1,299 @@
 // ---------------- [ File: workspacer-cli/src/show.rs ]
 crate::ix!();
 
-/// Options for `ws show` (include or exclude certain items).
-///
-/// Show consolidated interface with various filtering flags
 #[derive(Debug, StructOpt)]
-pub struct ShowSubcommand {
-    /// Path to the crate (or workspace root) you want to show.
-    #[structopt(long = "path", parse(from_os_str))]
-    pub path: Option<PathBuf>,
+pub enum ShowSubcommand {
+    /// Show info for a single crate only
+    #[structopt(name = "crate")]
+    Crate(ShowFlags),
 
-    /// Include private items
-    #[structopt(long = "include-private")]
-    pub include_private: bool,
+    /// Show info for a single crate plus its internal deps,
+    /// concatenating all consolidated interfaces into one final result
+    #[structopt(name = "crate-tree")]
+    CrateTree(ShowFlags),
 
-    /// Include doc items
-    #[structopt(long = "include-docs")]
-    pub include_docs: bool,
-
-    /// Include test items
-    #[structopt(long = "include-tests")]
-    pub include_tests: bool,
-
-    /// Include function bodies
-    #[structopt(long = "include-fn-bodies")]
-    pub include_fn_bodies: bool,
-
-    /// Include test function bodies
-    #[structopt(long = "include-test-bodies")]
-    pub include_test_bodies: bool,
-
-    /// Show only test items (skips non-test)
-    #[structopt(long = "just-tests")]
-    pub just_tests: bool,
-
-    /// Show only free functions (skips impls, structs, etc.)
-    #[structopt(long = "just-fns")]
-    pub just_fns: bool,
-
-    /// Show only impl blocks
-    #[structopt(long = "just-impls")]
-    pub just_impls: bool,
-
-    /// Show only traits
-    #[structopt(long = "just-traits")]
-    pub just_traits: bool,
-
-    /// Show only enums
-    #[structopt(long = "just-enums")]
-    pub just_enums: bool,
-
-    /// Show only structs
-    #[structopt(long = "just-structs")]
-    pub just_structs: bool,
-
-    /// Show only type aliases
-    #[structopt(long = "just-aliases")]
-    pub just_aliases: bool,
-
-    /// Show only ADTs (enums + structs)
-    #[structopt(long = "just-adts")]
-    pub just_adts: bool,
-
-    /// Show only macros
-    #[structopt(long = "just-macros")]
-    pub just_macros: bool,
-
-    /// If true, skip the "git clean" check
-    #[structopt(long = "skip-git-check")]
-    pub skip_git_check: bool,
+    /// Show info for the entire workspace
+    #[structopt(name = "workspace")]
+    Workspace(ShowFlags),
 }
 
 impl ShowSubcommand {
-
+    #[tracing::instrument(level = "trace", skip(self))]
     pub async fn run(&self) -> Result<(), WorkspaceError> {
-        // 1) Figure out the path to either a workspace or a single crate
-        let path = self.path.clone().unwrap_or_else(|| PathBuf::from("."));
+        trace!("Entering ShowSubcommand::run");
 
-        // 2) Attempt to build a `Workspace` from that path. If it fails with
-        //    `WorkspaceError::ActuallyInSingleCrate`, we switch to single-crate logic.
-        match Workspace::<PathBuf, CrateHandle>::new(&path).await {
-            Ok(workspace) => {
-                // This is a real workspace. Optionally do a git-clean check:
-                if !self.skip_git_check {
-                    workspace.ensure_git_clean().await?;
-                }
+        // We'll accumulate user-facing output here:
+        let mut output = String::new();
 
-                // Show consolidated interface for each crate in the workspace (or for the entire workspace).
-                // Typically you'd gather all crates, run .consolidate_crate_interface(...) on each,
-                // or unify them. For a “show” command, you might iterate:
-                for crate_handle in workspace.crates() {
-                    let mut guard = crate_handle.lock().await;
-                    let cci = guard.consolidate_crate_interface(&self.to_consolidation_opts())
-                                   .await
-                                   .map_err(|e| WorkspaceError::CrateError(e))?;
-                    println!("--- [Crate: {}] ---", guard.name());
-                    self.print_filtered(&cci);
+        match self {
+            ShowSubcommand::Crate(flags) => {
+                info!("User chose subcommand: ws show crate");
+                let path = flags.path().clone().unwrap_or_else(|| PathBuf::from("."));
+                trace!("Expecting single crate at {:?}", path);
+
+                match Workspace::<PathBuf, CrateHandle>::new(&path).await {
+                    Ok(_ws) => {
+                        let msg = format!(
+                            "Found a workspace at {:?}, but subcommand=Crate requires a single crate\n",
+                            path
+                        );
+                        error!("{}", msg.trim());
+                        return Err(WorkspaceError::InvalidWorkspace {
+                            invalid_workspace_path: path,
+                        });
+                    }
+                    Err(WorkspaceError::ActuallyInSingleCrate { path: single_crate_path }) => {
+                        trace!("Confirmed single crate at {:?}", single_crate_path);
+                        let mut single =
+                            CrateHandle::new(&path).await.map_err(WorkspaceError::CrateError)?;
+
+                        let main_cci = single
+                            .consolidate_crate_interface(&ConsolidationOptions::from(flags))
+                            .await
+                            .map_err(WorkspaceError::CrateError)?;
+
+                        let crate_name = single.name();
+                        let info_line = format!("--- [Crate: {}] ---\n", crate_name);
+                        info!("{}", info_line.trim());
+
+                        // Build the text
+                        let sub_out = flags.build_filtered_string(&main_cci, &crate_name);
+
+                        // If sub_out is empty or whitespace
+                        if sub_out.trim().is_empty() {
+                            if *flags.show_items_with_no_data() {
+                                // Then we show <no-data-for-crate>
+                                output.push_str(&info_line);
+                                output.push_str("<no-data-for-crate>\n\n");
+                            }
+                        } else {
+                            output.push_str(&info_line);
+                            output.push_str(&sub_out);
+                            output.push('\n');
+                        }
+                    }
+                    Err(e) => {
+                        error!("Could not interpret path {:?} as single crate: {:?}", path, e);
+                        return Err(e);
+                    }
                 }
             }
-            Err(WorkspaceError::ActuallyInSingleCrate { path: _single }) => {
-                // single-crate fallback
-                let mut single = CrateHandle::new(&path).await.map_err(WorkspaceError::CrateError)?;
-                if !self.skip_git_check {
-                    single.ensure_git_clean().await.map_err(WorkspaceError::GitError)?;
-                }
 
-                let cci = single.consolidate_crate_interface(&self.to_consolidation_opts())
-                    .await
-                    .map_err(WorkspaceError::CrateError)?;
-                self.print_filtered(&cci);
+            ShowSubcommand::CrateTree(flags) => {
+                info!("User chose subcommand: ws show crate-tree");
+                let path = flags.path().clone().unwrap_or_else(|| PathBuf::from("."));
+                trace!("Expecting single crate at {:?}", path);
+
+                match Workspace::<PathBuf, CrateHandle>::new(&path).await {
+                    Ok(_ws) => {
+                        let msg = format!(
+                            "Found a workspace at {:?}, but subcommand=CrateTree requires a single crate\n",
+                            path
+                        );
+                        error!("{}", msg.trim());
+                        return Err(WorkspaceError::InvalidWorkspace {
+                            invalid_workspace_path: path,
+                        });
+                    }
+                    Err(WorkspaceError::ActuallyInSingleCrate { path: single_crate_path }) => {
+                        trace!("Confirmed single crate at {:?}", single_crate_path);
+
+                        let mut main_crate =
+                            CrateHandle::new(&path).await.map_err(WorkspaceError::CrateError)?;
+
+                        let main_name = main_crate.name();
+                        let info_line = format!("--- [Root crate: {}] ---\n", main_name);
+                        info!("{}", info_line.trim());
+
+                        let mut combined_cci = main_crate
+                            .consolidate_crate_interface(&ConsolidationOptions::from(flags))
+                            .await
+                            .map_err(WorkspaceError::CrateError)?;
+
+                        let dep_names = main_crate
+                            .internal_dependencies()
+                            .await
+                            .map_err(WorkspaceError::CrateError)?;
+                        info!("Found {} internal deps in '{}': {:?}", dep_names.len(), main_name, dep_names);
+
+                        if *flags.merge_crates() {
+                            trace!("Merging internal crates into the main interface");
+                            for dep_name in dep_names {
+                                let dep_path = match main_crate.root_dir_path_buf().parent() {
+                                    Some(par) => par.join(&dep_name),
+                                    None => {
+                                        let msg = format!(
+                                            "Cannot find parent dir for main crate path: {:?}",
+                                            main_crate.root_dir_path_buf()
+                                        );
+                                        error!("{}", msg.trim());
+                                        return Err(WorkspaceError::InvalidWorkspace {
+                                            invalid_workspace_path: main_crate.root_dir_path_buf().clone(),
+                                        });
+                                    }
+                                };
+                                debug!("Attempting to load dep '{}' at {:?}", dep_name, dep_path);
+
+                                let mut dep_crate =
+                                    CrateHandle::new(&dep_path).await.map_err(WorkspaceError::CrateError)?;
+                                let dep_cci = dep_crate
+                                    .consolidate_crate_interface(&ConsolidationOptions::from(flags))
+                                    .await
+                                    .map_err(WorkspaceError::CrateError)?;
+
+                                merge_in_place(&mut combined_cci, &dep_cci);
+                                debug!("Merged interface for dep '{}' into combined_cci", dep_name);
+                            }
+
+                            // Build text for the merged interface
+                            let sub_out = flags.build_filtered_string(&combined_cci, "merged-many");
+                            if sub_out.trim().is_empty() {
+                                // Possibly no data after merging everything
+                                if *flags.show_items_with_no_data() {
+                                    output.push_str(&info_line);
+                                    output.push_str("<no-data-for-crate>\n\n");
+                                }
+                            } else {
+                                output.push_str(&info_line);
+                                output.push_str(&sub_out);
+                                output.push('\n');
+                            }
+                        } else {
+                            // Show main crate
+                            let main_out = flags.build_filtered_string(&combined_cci, &main_name);
+                            if main_out.trim().is_empty() {
+                                if *flags.show_items_with_no_data() {
+                                    output.push_str(&info_line);
+                                    output.push_str("<no-data-for-crate>\n\n");
+                                }
+                            } else {
+                                output.push_str(&info_line);
+                                output.push_str(&main_out);
+                                output.push('\n');
+                            }
+
+                            // Then each dep crate separately
+                            for dep_name in dep_names {
+                                let dep_path = match main_crate.root_dir_path_buf().parent() {
+                                    Some(par) => par.join(&dep_name),
+                                    None => {
+                                        let msg = format!(
+                                            "Cannot find parent dir for main crate path: {:?}",
+                                            main_crate.root_dir_path_buf()
+                                        );
+                                        error!("{}", msg.trim());
+                                        return Err(WorkspaceError::InvalidWorkspace {
+                                            invalid_workspace_path: main_crate.root_dir_path_buf().clone(),
+                                        });
+                                    }
+                                };
+                                debug!("Attempting to load dep '{}' at {:?}", dep_name, dep_path);
+
+                                let mut dep_crate =
+                                    CrateHandle::new(&dep_path).await.map_err(WorkspaceError::CrateError)?;
+                                let dep_cci = dep_crate
+                                    .consolidate_crate_interface(&ConsolidationOptions::from(flags))
+                                    .await
+                                    .map_err(WorkspaceError::CrateError)?;
+
+                                let dname = dep_crate.name();
+                                let dep_info_line = format!("--- [Dep crate: {}] ---\n", dname);
+                                info!("{}", dep_info_line.trim());
+
+                                let dep_out = flags.build_filtered_string(&dep_cci, &dname);
+                                if dep_out.trim().is_empty() {
+                                    if *flags.show_items_with_no_data() {
+                                        output.push_str(&dep_info_line);
+                                        output.push_str("<no-data-for-crate>\n\n");
+                                    }
+                                } else {
+                                    output.push_str(&dep_info_line);
+                                    output.push_str(&dep_out);
+                                    output.push('\n');
+                                }
+                            }
+                        }
+                    }
+                    Err(e) => {
+                        error!("Could not interpret path {:?} as single crate: {:?}", path, e);
+                        return Err(e);
+                    }
+                }
             }
-            Err(e) => {
-                // other workspace error
-                return Err(e);
+
+            ShowSubcommand::Workspace(flags) => {
+                info!("User chose subcommand: ws show workspace");
+                let path = flags.path().clone().unwrap_or_else(|| PathBuf::from("."));
+                trace!("Expecting workspace at {:?}", path);
+
+                match Workspace::<PathBuf, CrateHandle>::new(&path).await {
+                    Ok(workspace) => {
+                        trace!("Confirmed a valid workspace at {:?}", path);
+                        for crate_handle in workspace.crates() {
+                            let mut guard = crate_handle.lock().await;
+                            let cci = guard
+                                .consolidate_crate_interface(&ConsolidationOptions::from(flags))
+                                .await
+                                .map_err(WorkspaceError::CrateError)?;
+                            let cname = guard.name();
+                            let info_line = format!("--- [Crate: {}] ---\n", cname);
+                            info!("{}", info_line.trim());
+
+                            let sub_out = flags.build_filtered_string(&cci, &cname);
+                            if sub_out.trim().is_empty() {
+                                if *flags.show_items_with_no_data() {
+                                    output.push_str(&info_line);
+                                    output.push_str("<no-data-for-crate>\n\n");
+                                }
+                            } else {
+                                output.push_str(&info_line);
+                                output.push_str(&sub_out);
+                                output.push('\n');
+                            }
+                        }
+                    }
+                    Err(WorkspaceError::ActuallyInSingleCrate { path: single_crate_path }) => {
+                        let msg = format!(
+                            "Found a single crate at {:?}, but subcommand=Workspace requires a full workspace\n",
+                            single_crate_path
+                        );
+                        error!("{}", msg.trim());
+                        return Err(WorkspaceError::InvalidWorkspace {
+                            invalid_workspace_path: single_crate_path,
+                        });
+                    }
+                    Err(e) => {
+                        error!("Could not interpret path {:?} as a workspace: {:?}", path, e);
+                        return Err(e);
+                    }
+                }
             }
+        }
+
+        // Finally, if the entire 'output' is empty, we can show `<no-data>`.
+        // But only if show_items_with_no_data is set. Otherwise we skip entirely.
+        if output.trim().is_empty() {
+            if let Some(flags) = self.get_flags() {
+                // This is a trick: we can't do `self` is ShowFlags. But we know each variant
+                // has it. We define a small helper get_flags() that returns Option<&ShowFlags>.
+                if *flags.show_items_with_no_data() {
+                    println!("<no-data>");
+                }
+            }
+        } else {
+            // Print all of the user-facing text
+            println!("{}", output);
         }
 
         Ok(())
     }
 
-    /// Construct a `ConsolidationOptions` from the flags in `ShowSubcommand`.
-    fn to_consolidation_opts(&self) -> ConsolidationOptions {
-        let mut opts = ConsolidationOptions::new();
-
-        if self.include_docs {
-            opts = opts.with_docs();
+    /// Helper so we can get the ShowFlags no matter which variant we match.
+    fn get_flags(&self) -> Option<&ShowFlags> {
+        match self {
+            ShowSubcommand::Crate(f) => Some(f),
+            ShowSubcommand::CrateTree(f) => Some(f),
+            ShowSubcommand::Workspace(f) => Some(f),
         }
-        if self.include_private {
-            opts = opts.with_private_items();
-        }
-        if self.include_tests {
-            opts = opts.with_test_items();
-        }
-        if self.include_fn_bodies {
-            opts = opts.with_fn_bodies();
-        }
-        if self.include_test_bodies {
-            opts = opts.with_fn_bodies_in_tests();
-        }
-        if self.just_tests {
-            // If user wants only test items:
-            opts = opts.with_only_test_items();
-        }
-
-        // The sub-flags like `just_fns`, `just_structs`, etc., you might implement
-        // as “post-filtering” on the final `ConsolidatedCrateInterface` (since your
-        // library doesn’t directly have a `ConsolidationOptions` field for “just_fns”).
-        // We’ll handle those in `print_filtered` below.
-        
-        opts.validate();
-        opts
-    }
-
-    /// Print the resulting consolidated crate interface, applying post-filters
-    /// like `just_fns`, `just_impls`, `just_traits`, etc.
-    fn print_filtered(&self, cci: &ConsolidatedCrateInterface) {
-        // If the user asked for, say, `just_fns`, we print only cci.fns().
-        // Or if `just_enums`, we print only cci.enums(). etc.
-
-        if self.just_fns {
-            for (i, item) in cci.fns().iter().enumerate() {
-                println!("{}", item);
-                if i + 1 < cci.fns().len() {
-                    println!();
-                }
-            }
-            return;
-        }
-        if self.just_impls {
-            for (i, ib) in cci.impls().iter().enumerate() {
-                println!("{}", ib);
-                if i + 1 < cci.impls().len() {
-                    println!();
-                }
-            }
-            return;
-        }
-        if self.just_traits {
-            for (i, tr) in cci.traits().iter().enumerate() {
-                println!("{}", tr);
-                if i + 1 < cci.traits().len() {
-                    println!();
-                }
-            }
-            return;
-        }
-        if self.just_enums {
-            for (i, en) in cci.enums().iter().enumerate() {
-                println!("{}", en);
-                if i + 1 < cci.enums().len() {
-                    println!();
-                }
-            }
-            return;
-        }
-        if self.just_structs {
-            for (i, st) in cci.structs().iter().enumerate() {
-                println!("{}", st);
-                if i + 1 < cci.structs().len() {
-                    println!();
-                }
-            }
-            return;
-        }
-        if self.just_aliases {
-            for (i, ta) in cci.type_aliases().iter().enumerate() {
-                println!("{}", ta);
-                if i + 1 < cci.type_aliases().len() {
-                    println!();
-                }
-            }
-            return;
-        }
-        if self.just_adts {
-            // ADTs => enums + structs. We print them in whichever order you prefer.
-            let mut combined: Vec<String> = Vec::new();
-            for e in cci.enums() {
-                combined.push(format!("{}", e));
-            }
-            for s in cci.structs() {
-                combined.push(format!("{}", s));
-            }
-            for (i, out_str) in combined.iter().enumerate() {
-                println!("{}", out_str);
-                if i + 1 < combined.len() {
-                    println!();
-                }
-            }
-            return;
-        }
-        if self.just_macros {
-            for (i, mac) in cci.macros().iter().enumerate() {
-                println!("{}", mac);
-                if i + 1 < cci.macros().len() {
-                    println!();
-                }
-            }
-            return;
-        }
-
-        // Otherwise, print the entire consolidated interface as is:
-        println!("{}", cci);
     }
 }

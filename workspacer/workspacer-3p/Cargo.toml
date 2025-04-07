@@ -1,170 +1,81 @@
-[build-dependencies.scan-crate-for-typedefs]
-workspace = true
-
-[dependencies.async-channel]
-workspace = true
-
-[dependencies.async-trait]
-workspace = true
-
-[dependencies.async-try-from]
-workspace = true
-
-[dependencies.batch-mode]
-workspace = true
-
-[dependencies.cargo-lock]
-workspace = true
-
-[dependencies.cargo_metadata]
-workspace = true
-
-[dependencies.colored]
-workspace = true
-
-[dependencies.derive_builder]
-workspace = true
-
-[dependencies.dirs]
-workspace = true
-
-[dependencies.disable_macro]
-workspace = true
-
-[dependencies.error-tree]
-workspace = true
-
-[dependencies.export-magic]
-workspace = true
-
-[dependencies.futures]
-workspace = true
-
-[dependencies.getset]
-workspace = true
-
-[dependencies.indoc]
-workspace = true
-
-[dependencies.lazy_static]
-workspace = true
-
-[dependencies.mockall]
-workspace = true
-
-[dependencies.named-item]
-workspace = true
-
-[dependencies.named-item-derive]
-workspace = true
-
-[dependencies.notify]
-workspace = true
-
-[dependencies.pathdiff]
-workspace = true
-
-[dependencies.petgraph]
-workspace = true
-
-[dependencies.portpicker]
-workspace = true
-
-[dependencies.quickcheck]
-workspace = true
-
-[dependencies.ra_ap_syntax]
-workspace = true
-
-[dependencies.regex]
-workspace = true
-
-[dependencies.reqwest]
-workspace = true
-
-[dependencies.rocket]
-workspace = true
-
-[dependencies.scan-crate-for-typedefs]
-workspace = true
-
-[dependencies.semver]
-workspace = true
-
-[dependencies.serde]
-workspace = true
-
-[dependencies.serde_json]
-workspace = true
-
-[dependencies.structopt]
-workspace = true
-
-[dependencies.tempfile]
-workspace = true
-
-[dependencies.tokio]
-workspace = true
-
-[dependencies.tokio-stream]
-workspace = true
-
-[dependencies.tokio-util]
-workspace = true
-
-[dependencies.toml]
-workspace = true
-
-[dependencies.toml_edit]
-workspace = true
-
-[dependencies.traced-test]
-workspace = true
-
-[dependencies.tracing]
-workspace = true
-
-[dependencies.tracing-setup]
-workspace = true
-
-[dependencies.tracing-subscriber]
-workspace = true
-
-[dependencies.uuid]
-workspace = true
-
-[dependencies.which]
-workspace = true
-
-[dev-dependencies.indoc]
-workspace = true
-
-[dev-dependencies.mockall]
-workspace = true
-
-[dev-dependencies.quickcheck]
-workspace = true
 
 [package]
-authors = ["klebs tpk3.mx@gmail.com"]
+authors    = ["klebs tpk3.mx@gmail.com"]
 categories = [
     "asynchronous",
     "concurrency",
     "development-tools",
 ]
-description = "A utility crate that allows safe execution of async futures from sync contexts by leveraging existing or temporary Tokio runtimes. Ideal for scenarios where runtime nesting should be avoided."
+
+description   = "A utility crate that allows safe execution of async futures from sync contexts by leveraging existing or temporary Tokio runtimes. Ideal for scenarios where runtime nesting should be avoided."
 documentation = "https://docs.rs/workspacer"
-edition = "2024"
-homepage = "https://github.com/klebs6/klebs-general"
-keywords = [
+edition       = "2024"
+homepage      = "https://github.com/klebs6/klebs-general"
+keywords      = [
     "async",
     "tokio",
     "runtime",
     "synchronous",
     "futures",
 ]
-license = "MIT"
-name = "workspacer-3p"
-readme = "README.md"
+license    = "MIT"
+name       = "workspacer-3p"
+readme     = "README.md"
 repository = "https://github.com/klebs6/klebs-general"
-version = "0.5.1"
+version    = "0.5.1"
+
+[dependencies]
+async-channel.workspace           = true
+async-trait.workspace             = true
+async-try-from.workspace          = true
+batch-mode.workspace              = true
+cargo-lock.workspace              = true
+cargo_metadata.workspace          = true
+colored.workspace                 = true
+derive_builder.workspace          = true
+dirs.workspace                    = true
+disable_macro.workspace           = true
+error-tree.workspace              = true
+export-magic.workspace            = true
+futures.workspace                 = true
+getset.workspace                  = true
+indoc.workspace                   = true
+lazy_static.workspace             = true
+mockall.workspace                 = true
+named-item.workspace              = true
+named-item-derive.workspace       = true
+notify.workspace                  = true
+pathdiff.workspace                = true
+petgraph.workspace                = true
+portpicker.workspace              = true
+quickcheck.workspace              = true
+ra_ap_syntax.workspace            = true
+regex.workspace                   = true
+reqwest.workspace                 = true
+rocket.workspace                  = true
+scan-crate-for-typedefs.workspace = true
+semver.workspace                  = true
+serde.workspace                   = true
+serde_json.workspace              = true
+structopt.workspace               = true
+tempfile.workspace                = true
+tokio.workspace                   = true
+tokio-stream.workspace            = true
+tokio-util.workspace              = true
+toml.workspace                    = true
+toml_edit.workspace               = true
+traced-test.workspace             = true
+tracing.workspace                 = true
+tracing-setup.workspace           = true
+tracing-subscriber.workspace      = true
+uuid.workspace                    = true
+which.workspace                   = true
+Inflector.workspace               = true
+
+[dev-dependencies]
+indoc.workspace      = true
+mockall.workspace    = true
+quickcheck.workspace = true
+
+[build-dependencies]
+scan-crate-for-typedefs.workspace = true

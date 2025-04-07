@@ -10,12 +10,33 @@ pub struct ModuleInterface {
     attrs:    Option<String>,
     mod_name: String,
     items:    Vec<ConsolidatedItem>,
+
+    /// The file from which this mod was parsed
+    file_path: PathBuf,
+
+    /// The crate root path
+    crate_path: PathBuf,
 }
 
 impl ModuleInterface {
 
-    pub fn new(docs: Option<String>, attrs: Option<String>, mod_name: String) -> Self {
-        Self { docs, attrs, mod_name, items: vec![] }
+    pub fn new_with_paths(
+        docs:       Option<String>, 
+        attrs:      Option<String>, 
+        mod_name:   String,
+        file_path:  PathBuf,
+        crate_path: PathBuf,
+
+    ) -> Self {
+
+        Self { 
+            docs, 
+            attrs, 
+            mod_name, 
+            items: vec![] ,
+            file_path,
+            crate_path,
+        }
     }
 
     pub fn add_item(&mut self, item: ConsolidatedItem) {

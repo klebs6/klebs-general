@@ -134,7 +134,7 @@ where
             }
         }
 
-        let line_to_add = format!("pub(crate) use {}::*;\n", dep_key);
+        let line_to_add = format!("pub(crate) use {}::*;\n", dep_key.to_snake_case());
 
         // If it's already present, skip. Otherwise, append.
         if !existing_imports.contains(&line_to_add) {

@@ -9,15 +9,24 @@ pub struct ImplBlockInterface {
     signature_text: String,
     methods:        Vec<CrateInterfaceItem<ast::Fn>>,
     type_aliases:   Vec<CrateInterfaceItem<ast::TypeAlias>>,
+
+    /// The file from which this impl block was parsed, non-optional
+    file_path: PathBuf,
+
+    /// The crate path that owns this impl block
+    crate_path: PathBuf,
 }
 
 impl ImplBlockInterface {
-    pub fn new(
+
+    pub fn new_with_paths(
         docs:           Option<String>,
         attributes:     Option<String>,
         signature_text: String,
         methods:        Vec<CrateInterfaceItem<ast::Fn>>,
         type_aliases:   Vec<CrateInterfaceItem<ast::TypeAlias>>,
+        file_path:      PathBuf,
+        crate_path:     PathBuf,
     ) -> Self {
         Self {
             docs,
@@ -25,6 +34,8 @@ impl ImplBlockInterface {
             signature_text,
             methods,
             type_aliases,
+            file_path,
+            crate_path,
         }
     }
 }

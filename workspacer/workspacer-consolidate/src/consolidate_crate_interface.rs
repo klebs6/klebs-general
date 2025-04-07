@@ -12,41 +12,131 @@ pub trait ConsolidateCrateInterface {
 #[async_trait]
 impl<T> ConsolidateCrateInterface for T
 where
-    T
-    : ReadFileString 
-    + GetSourceFilesWithExclusions 
-    + Sync 
-    + Send,
+    T: ReadFileString + GetSourceFilesWithExclusions + Sync + Send + RootDirPathBuf,
 {
     async fn consolidate_crate_interface(
         &self,
         options: &ConsolidationOptions,
     ) -> Result<ConsolidatedCrateInterface, CrateError> {
-
         trace!("Consolidating crate interface.");
 
         let source_files = self.source_files_excluding(&[]).await?;
         let mut result = ConsolidatedCrateInterface::new();
 
+        // If your real type T has a method `root_dir_path_buf() -> PathBuf`, call it:
+        let crate_path = self.root_dir_path_buf(); // For example
+
         for file_path in source_files {
-            let code         = self.read_file_string(&file_path).await?;
+            let code = self.read_file_string(&file_path).await?;
             let parse_result = SourceFile::parse(&code, Edition::Edition2024);
-            let sf           = parse_result.tree();
-            let items        = gather_crate_items(&sf, options);
+            let sf = parse_result.tree();
+
+            let items = gather_crate_items(&sf, options, &file_path, &crate_path);
 
             for item in items {
                 match item {
-                    ConsolidatedItem::Fn(ci)        => result.add_fn(ci),
-                    ConsolidatedItem::Struct(ci)    => result.add_struct(ci),
-                    ConsolidatedItem::Enum(ci)      => result.add_enum(ci),
-                    ConsolidatedItem::Trait(ci)     => result.add_trait(ci),
-                    ConsolidatedItem::TypeAlias(ci) => result.add_type_alias(ci),
-                    ConsolidatedItem::Macro(ci)     => result.add_macro(ci),
-                    ConsolidatedItem::Module(mi)    => result.add_module(mi),
-                    ConsolidatedItem::ImplBlock(ib) => result.add_impl(ib),
-
+                    ConsolidatedItem::Fn(ci0) => {
+                        // Build a new one with the real path fields:
+                        let ci = CrateInterfaceItem::new_with_paths(
+                            ci0.item().as_ref().clone(), 
+                            ci0.docs().clone(),
+                            ci0.attributes().clone(),
+                            ci0.body_source().clone(),
+                            ci0.consolidation_options().clone(),
+                            file_path.clone(),
+                            crate_path.clone()
+                        );
+                        result.add_fn(ci);
+                    }
+                    ConsolidatedItem::Struct(ci0) => {
+                        let ci = CrateInterfaceItem::new_with_paths(
+                            ci0.item().as_ref().clone(),
+                            ci0.docs().clone(),
+                            ci0.attributes().clone(),
+                            ci0.body_source().clone(),
+                            ci0.consolidation_options().clone(),
+                            file_path.clone(),
+                            crate_path.clone()
+                        );
+                        result.add_struct(ci);
+                    }
+                    ConsolidatedItem::Enum(ci0) => {
+                        let ci = CrateInterfaceItem::new_with_paths(
+                            ci0.item().as_ref().clone(),
+                            ci0.docs().clone(),
+                            ci0.attributes().clone(),
+                            ci0.body_source().clone(),
+                            ci0.consolidation_options().clone(),
+                            file_path.clone(),
+                            crate_path.clone()
+                        );
+                        result.add_enum(ci);
+                    }
+                    ConsolidatedItem::Trait(ci0) => {
+                        let ci = CrateInterfaceItem::new_with_paths(
+                            ci0.item().as_ref().clone(),
+                            ci0.docs().clone(),
+                            ci0.attributes().clone(),
+                            ci0.body_source().clone(),
+                            ci0.consolidation_options().clone(),
+                            file_path.clone(),
+                            crate_path.clone()
+                        );
+                        result.add_trait(ci);
+                    }
+                    ConsolidatedItem::TypeAlias(ci0) => {
+                        let ci = CrateInterfaceItem::new_with_paths(
+                            ci0.item().as_ref().clone(),
+                            ci0.docs().clone(),
+                            ci0.attributes().clone(),
+                            ci0.body_source().clone(),
+                            ci0.consolidation_options().clone(),
+                            file_path.clone(),
+                            crate_path.clone()
+                        );
+                        result.add_type_alias(ci);
+                    }
+                    ConsolidatedItem::Macro(ci0) => {
+                        let ci = CrateInterfaceItem::new_with_paths(
+                            ci0.item().as_ref().clone(),
+                            ci0.docs().clone(),
+                            ci0.attributes().clone(),
+                            ci0.body_source().clone(),
+                            ci0.consolidation_options().clone(),
+                            file_path.clone(),
+                            crate_path.clone()
+                        );
+                        result.add_macro(ci);
+                    }
+                    ConsolidatedItem::ImplBlock(ib0) => {
+                        // We build a new `ImplBlockInterface` with the guaranteed paths:
+                        let ib = ImplBlockInterface::new_with_paths(
+                            ib0.docs().clone(),
+                            ib0.attributes().clone(),
+                            ib0.signature_text().clone(),
+                            ib0.methods().clone(),
+                            ib0.type_aliases().clone(),
+                            file_path.clone(),
+                            crate_path.clone()
+                        );
+                        result.add_impl(ib);
+                    }
+                    ConsolidatedItem::Module(mi0) => {
+                        let mut new_mod = ModuleInterface::new_with_paths(
+                            mi0.docs().clone(),
+                            mi0.attrs().clone(),
+                            mi0.mod_name().clone(),
+                            file_path.clone(),
+                            crate_path.clone()
+                        );
+                        // Copy items if they exist
+                        for sub_item in mi0.items().iter().cloned() {
+                            new_mod.add_item(sub_item);
+                        }
+                        result.add_module(new_mod);
+                    }
                     #[cfg(test)]
-                    ConsolidatedItem::MockTest(ib)  => unimplemented!(),
+                    ConsolidatedItem::MockTest(_) => { /* skip or handle test mock variant */ }
                 }
             }
         }

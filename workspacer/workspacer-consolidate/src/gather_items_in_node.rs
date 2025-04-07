@@ -6,7 +6,10 @@ crate::ix!();
 /// We'll check those first; if that fails, we fallback to iterating `.children()`.
 pub fn gather_items_in_node(
     parent_node: &SyntaxNode,
-    options: &ConsolidationOptions,
+    options:     &ConsolidationOptions,
+    file_path:   &PathBuf,
+    crate_path:  &PathBuf,
+
 ) -> Vec<ConsolidatedItem> {
 
     // Print the parent_node's first ~80 chars so we can see what snippet is being parsed:
@@ -32,7 +35,7 @@ pub fn gather_items_in_node(
             );
         }
         // Now actually process them
-        return gather_items_from_iter(all_items.into_iter(), options);
+        return gather_items_from_iter(all_items.into_iter(), options, file_path, crate_path);
     }
 
     // 2) Attempt `ItemList`
@@ -47,7 +50,7 @@ pub fn gather_items_in_node(
                 trim_to_60(it.syntax().text().to_string())
             );
         }
-        return gather_items_from_iter(all_items.into_iter(), options);
+        return gather_items_from_iter(all_items.into_iter(), options, file_path, crate_path);
     }
 
     // 3) Fallback: direct iteration over `parent_node.children()`.
@@ -81,10 +84,16 @@ pub fn gather_items_in_node(
                 .map(|n| n.text().to_string())
                 .unwrap_or("<unknown_mod>".to_owned());
 
-            let mut mod_iface = ModuleInterface::new(docs, attrs, mod_name);
+            let mut mod_iface = ModuleInterface::new_with_paths(
+                docs, 
+                attrs, 
+                mod_name,
+                file_path.clone(),
+                crate_path.clone(),
+            );
 
             if let Some(sub_item_list) = mod_ast.item_list() {
-                let sub_items = gather_items_in_node(sub_item_list.syntax(), options);
+                let sub_items = gather_items_in_node(sub_item_list.syntax(), options, file_path, crate_path);
                 for si in sub_items {
                     mod_iface.add_item(si);
                 }
@@ -100,10 +109,18 @@ pub fn gather_items_in_node(
             let docs  = None; // or extract_docs
             let attrs = None; // or gather_all_attrs
             let signature = generate_impl_signature(&impl_ast, docs.as_ref());
-            let methods = gather_impl_methods(&impl_ast, options);
-            let aliases = gather_assoc_type_aliases(&impl_ast, options);
+            let methods = gather_impl_methods(&impl_ast, options, file_path, crate_path);
+            let aliases = gather_assoc_type_aliases(&impl_ast, options, file_path, crate_path);
 
-            let ib = ImplBlockInterface::new(docs, attrs, signature, methods, aliases);
+            let ib = ImplBlockInterface::new_with_paths(
+                docs, 
+                attrs, 
+                signature, 
+                methods, 
+                aliases,
+                file_path.clone(),
+                crate_path.clone(),
+            );
             items.push(ConsolidatedItem::ImplBlock(ib));
 
         } else if let Some(fn_ast) = ast::Fn::cast(child.clone()) {
@@ -112,7 +129,7 @@ pub fn gather_items_in_node(
                 trace!("         [skipped by should_skip_item]");
                 continue;
             }
-            let ci = gather_fn_item(&fn_ast, options);
+            let ci = gather_fn_item(&fn_ast, options, file_path, crate_path);
             items.push(ConsolidatedItem::Fn(ci));
 
         } else if let Some(st_ast) = ast::Struct::cast(child.clone()) {
@@ -127,7 +144,15 @@ pub fn gather_items_in_node(
             };
             let attrs = gather_all_attrs(&child);
             items.push(ConsolidatedItem::Struct(
-                CrateInterfaceItem::new(st_ast, docs, attrs, None, Some(options.clone())),
+                    CrateInterfaceItem::new_with_paths(
+                        st_ast, 
+                        docs, 
+                        attrs, 
+                        None, 
+                        Some(options.clone()),
+                        file_path.clone(),
+                        crate_path.clone()
+                    ),
             ));
 
         } else if let Some(en_ast) = ast::Enum::cast(child.clone()) {
@@ -142,7 +167,15 @@ pub fn gather_items_in_node(
             };
             let attrs = gather_all_attrs(&child);
             items.push(ConsolidatedItem::Enum(
-                CrateInterfaceItem::new(en_ast, docs, attrs, None, Some(options.clone())),
+                    CrateInterfaceItem::new_with_paths(
+                        en_ast, 
+                        docs, 
+                        attrs, 
+                        None, 
+                        Some(options.clone()),
+                        file_path.clone(),
+                        crate_path.clone()
+                    ),
             ));
 
         } else if let Some(tr_ast) = ast::Trait::cast(child.clone()) {
@@ -157,7 +190,15 @@ pub fn gather_items_in_node(
             };
             let attrs = gather_all_attrs(&child);
             items.push(ConsolidatedItem::Trait(
-                CrateInterfaceItem::new(tr_ast, docs, attrs, None, Some(options.clone())),
+                    CrateInterfaceItem::new_with_paths(
+                        tr_ast, 
+                        docs, 
+                        attrs, 
+                        None, 
+                        Some(options.clone()),
+                        file_path.clone(),
+                        crate_path.clone()
+                    ),
             ));
 
         } else if let Some(ty_ast) = ast::TypeAlias::cast(child.clone()) {
@@ -172,7 +213,15 @@ pub fn gather_items_in_node(
             };
             let attrs = gather_all_attrs(&child);
             items.push(ConsolidatedItem::TypeAlias(
-                CrateInterfaceItem::new(ty_ast, docs, attrs, None, Some(options.clone())),
+                    CrateInterfaceItem::new_with_paths(
+                        ty_ast, 
+                        docs, 
+                        attrs, 
+                        None, 
+                        Some(options.clone()),
+                        file_path.clone(),
+                        crate_path.clone()
+                    ),
             ));
 
         } else if let Some(mac_ast) = ast::MacroRules::cast(child.clone()) {
@@ -187,7 +236,15 @@ pub fn gather_items_in_node(
             };
             let attrs = gather_all_attrs(&child);
             items.push(ConsolidatedItem::Macro(
-                CrateInterfaceItem::new(mac_ast, docs, attrs, None, Some(options.clone())),
+                    CrateInterfaceItem::new_with_paths(
+                        mac_ast, 
+                        docs, 
+                        attrs, 
+                        None, 
+                        Some(options.clone()),
+                        file_path.clone(),
+                        crate_path.clone()
+                    ),
             ));
 
         } else {
@@ -207,8 +264,12 @@ pub fn gather_items_in_node(
 /// We try each cast in turn, building the appropriate ConsolidatedItem.
 fn gather_items_from_iter(
     items_iter: impl Iterator<Item = ast::Item>,
-    options: &ConsolidationOptions,
+    options:    &ConsolidationOptions,
+    file_path:  &PathBuf,
+    crate_path: &PathBuf,
+
 ) -> Vec<ConsolidatedItem> {
+
     debug!("+++ gather_items_from_iter: scanning RA items +++");
     let mut out = Vec::new();
 
@@ -233,9 +294,17 @@ fn gather_items_from_iter(
                 .name()
                 .map(|n| n.text().to_string())
                 .unwrap_or_else(|| "<unknown_mod>".to_owned());
-            let mut mod_iface = ModuleInterface::new(docs, attrs, mod_name);
+
+            let mut mod_iface = ModuleInterface::new_with_paths(
+                docs, 
+                attrs, 
+                mod_name,
+                file_path.clone(),
+                crate_path.clone()
+            );
+
             if let Some(sub_item_list) = mod_ast.item_list() {
-                let sub_items = gather_items_in_node(sub_item_list.syntax(), options);
+                let sub_items = gather_items_in_node(sub_item_list.syntax(), options, file_path, crate_path);
                 for si in sub_items {
                     mod_iface.add_item(si);
                 }
@@ -251,9 +320,19 @@ fn gather_items_from_iter(
             let docs = None;
             let attrs = None;
             let signature = generate_impl_signature(&impl_ast, docs.as_ref());
-            let methods = gather_impl_methods(&impl_ast, options);
-            let aliases = gather_assoc_type_aliases(&impl_ast, options);
-            let ib = ImplBlockInterface::new(docs, attrs, signature, methods, aliases);
+            let methods = gather_impl_methods(&impl_ast, options, file_path, crate_path);
+            let aliases = gather_assoc_type_aliases(&impl_ast, options, file_path, crate_path);
+
+            let ib = ImplBlockInterface::new_with_paths(
+                docs, 
+                attrs, 
+                signature, 
+                methods, 
+                aliases,
+                file_path.clone(),
+                crate_path.clone()
+            );
+
             out.push(ConsolidatedItem::ImplBlock(ib));
 
         } else if let Some(fn_ast) = ast::Fn::cast(syn.clone()) {
@@ -262,7 +341,7 @@ fn gather_items_from_iter(
                 trace!("         [skipped by should_skip_item]");
                 continue;
             }
-            let ci = gather_fn_item(&fn_ast, options);
+            let ci = gather_fn_item(&fn_ast, options, file_path, crate_path);
             out.push(ConsolidatedItem::Fn(ci));
 
         } else if let Some(st_ast) = ast::Struct::cast(syn.clone()) {
@@ -277,7 +356,15 @@ fn gather_items_from_iter(
             };
             let attrs = gather_all_attrs(&syn);
             out.push(ConsolidatedItem::Struct(
-                CrateInterfaceItem::new(st_ast, docs, attrs, None, Some(options.clone())),
+                    CrateInterfaceItem::new_with_paths(
+                        st_ast, 
+                        docs, 
+                        attrs, 
+                        None, 
+                        Some(options.clone()),
+                        file_path.clone(),
+                        crate_path.clone()
+                    ),
             ));
 
         } else if let Some(en_ast) = ast::Enum::cast(syn.clone()) {
@@ -292,7 +379,15 @@ fn gather_items_from_iter(
             };
             let attrs = gather_all_attrs(&syn);
             out.push(ConsolidatedItem::Enum(
-                CrateInterfaceItem::new(en_ast, docs, attrs, None, Some(options.clone())),
+                    CrateInterfaceItem::new_with_paths(
+                        en_ast, 
+                        docs, 
+                        attrs, 
+                        None, 
+                        Some(options.clone()),
+                        file_path.clone(),
+                        crate_path.clone()
+                    ),
             ));
 
         } else if let Some(tr_ast) = ast::Trait::cast(syn.clone()) {
@@ -307,7 +402,15 @@ fn gather_items_from_iter(
             };
             let attrs = gather_all_attrs(&syn);
             out.push(ConsolidatedItem::Trait(
-                CrateInterfaceItem::new(tr_ast, docs, attrs, None, Some(options.clone())),
+                    CrateInterfaceItem::new_with_paths(
+                        tr_ast, 
+                        docs, 
+                        attrs, 
+                        None, 
+                        Some(options.clone()),
+                        file_path.clone(),
+                        crate_path.clone()
+                    ),
             ));
 
         } else if let Some(ty_ast) = ast::TypeAlias::cast(syn.clone()) {
@@ -322,7 +425,15 @@ fn gather_items_from_iter(
             };
             let attrs = gather_all_attrs(&syn);
             out.push(ConsolidatedItem::TypeAlias(
-                CrateInterfaceItem::new(ty_ast, docs, attrs, None, Some(options.clone())),
+                    CrateInterfaceItem::new_with_paths(
+                        ty_ast, 
+                        docs, 
+                        attrs, 
+                        None, 
+                        Some(options.clone()),
+                        file_path.clone(),
+                        crate_path.clone()
+                    ),
             ));
 
         } else if let Some(mac_ast) = ast::MacroRules::cast(syn.clone()) {
@@ -337,7 +448,15 @@ fn gather_items_from_iter(
             };
             let attrs = gather_all_attrs(&syn);
             out.push(ConsolidatedItem::Macro(
-                CrateInterfaceItem::new(mac_ast, docs, attrs, None, Some(options.clone())),
+                    CrateInterfaceItem::new_with_paths(
+                        mac_ast, 
+                        docs, 
+                        attrs, 
+                        None, 
+                        Some(options.clone()),
+                        file_path.clone(),
+                        crate_path.clone()
+                    ),
             ));
 
         } else {

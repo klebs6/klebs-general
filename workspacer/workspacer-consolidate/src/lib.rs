@@ -23,3 +23,4 @@ x!{consolidate_crate_interface}
 x!{module_interface}
 x!{consolidated_crate_interface}
 x!{trim_to_60}
+x!{merge}

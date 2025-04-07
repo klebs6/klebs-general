@@ -45,6 +45,7 @@ x!{pin}
 x!{publish}
 x!{register}
 x!{show}
+x!{show_flags}
 x!{tree}
 x!{upgrade}
 x!{validate}

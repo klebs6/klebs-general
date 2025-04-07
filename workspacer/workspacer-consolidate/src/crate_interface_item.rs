@@ -14,6 +14,12 @@ pub struct CrateInterfaceItem<T: GenerateSignature> {
     attributes:            Option<String>,
     body_source:           Option<String>,
     consolidation_options: Option<ConsolidationOptions>,
+
+    /// Always the file path from which this item was parsed
+    file_path: PathBuf,
+
+    /// Always the crate root path for the crate that owns this item
+    crate_path: PathBuf,
 }
 
 // Mark safe if T is safe:
@@ -28,12 +34,14 @@ impl<T: GenerateSignature> CrateInterfaceItem<T> {
     /// - We unify doc lines from both `docs` and doc lines from `attributes` (e.g. `#[doc="..."]` or triple-slash lines).
     /// - We keep “normal” attributes (e.g. `#[inline]`) in `attributes`, skipping doc lines from them.
     /// - `body_source`: optional function body text. If empty or `{}`, we treat it as no real body => in Display, we show `{ /* ... */ }`.
-    pub fn new(
+    pub fn new_with_paths(
         item: T,
         docs: Option<String>,
         attributes: Option<String>,
         body_source: Option<String>,
         consolidation_options: Option<ConsolidationOptions>,
+        file_path:  PathBuf,
+        crate_path: PathBuf,
     ) -> Self {
 
         // 1) Merge doc lines from base docs + doc lines hidden in raw_attrs
@@ -59,6 +67,8 @@ impl<T: GenerateSignature> CrateInterfaceItem<T> {
             attributes: filtered_attrs,
             body_source: final_body,
             consolidation_options,
+            file_path,
+            crate_path,
         }
     }
 
