@@ -1,66 +1,55 @@
 crate::ix!();
 
-#[async_trait]
-pub trait ShowAll {
+/// Subroutine for handling `ws show workspace` subcommand: multiple crates in a workspace.
+/// Prints each crate individually with a divider line.
+#[tracing::instrument(level = "trace", skip(flags))]
+pub async fn show_workspace(flags: &ShowFlags) -> Result<String, WorkspaceError> {
+    info!("User chose subcommand: ws show workspace");
+    let path = flags
+        .path()
+        .clone()
+        .unwrap_or_else(|| PathBuf::from("."));
+    debug!("Expecting workspace at {:?}", path);
 
-    type Error;
+    let mut output = String::new();
 
-    async fn show_all(&self, options: &ShowFlags) -> Result<String, Self::Error>;
-}
+    match Workspace::<PathBuf, CrateHandle>::new(&path).await {
+        Ok(workspace) => {
+            trace!("Confirmed a valid workspace at {:?}", path);
+            for crate_handle in workspace.crates() {
+                let mut guard = crate_handle.lock().await;
+                let cci = guard
+                    .consolidate_crate_interface(&ConsolidationOptions::from(flags))
+                    .await
+                    .map_err(WorkspaceError::CrateError)?;
+                let cname = guard.name();
+                let info_line = format!("// ---------------- [ File: {} ]\n", cname);
+                info!("{}", info_line.trim());
 
+                let sub_out = flags.build_filtered_string(&cci, &cname);
 
-#[async_trait]
-impl<P, H> ShowAll for Workspace<P, H>
-where
-    for<'a> P: From<PathBuf> + AsRef<Path> + Clone + Send + Sync + 'a,
-    for<'a> H: CrateHandleInterface<P> + ShowItem<Error = CrateError> + Send + Sync + 'a,
-{
-    type Error = WorkspaceError;
-
-    #[tracing::instrument(level = "trace", skip(self, options))]
-    async fn show_all(&self, options: &ShowFlags) -> Result<String, Self::Error> {
-        trace!("Entering ShowWorkspace::show_workspace at path={:?}", self.as_ref());
-
-        // We'll accumulate the final output across all crates
-        let mut output = String::new();
-
-        let crates_list = self.crates();
-        if crates_list.is_empty() && *options.show_items_with_no_data() {
-            return Ok("<no-data-for-crate>\n".to_string());
-        }
-
-        // For each crate:
-        for crate_arc in crates_list {
-            let mut guard = crate_arc.lock().await;
-            // Show the crate using the ShowCrate trait, but skip merge_crates logic 
-            // since we want each crate separate in a workspace scenario.
-            // We'll do a local copy of `options` with merge_crates=false forced if needed,
-            // because "workspace" subcommand in the old code never merges them.
-            let mut local_opts = options.clone();
-            // The old CLI code never merges all crates in a workspace, so we forcibly disable it:
-            local_opts.set_merge_crates(false);
-
-            let cci_str = guard.show(&local_opts).await.map_err(WorkspaceError::CrateError)?;
-            let crate_name = guard.name();
-            let info_line = format!("--- [Crate: {}] ---\n", crate_name);
-            info!("{}", info_line.trim());
-
-            if cci_str.trim().is_empty() {
-                if *options.show_items_with_no_data() {
+                if !sub_out.trim().is_empty() {
                     output.push_str(&info_line);
-                    output.push_str("<no-data-for-crate>\n\n");
+                    output.push_str(&sub_out);
+                    output.push('\n');
                 }
-            } else {
-                output.push_str(&info_line);
-                output.push_str(&cci_str);
-                output.push('\n');
             }
         }
-
-        if output.trim().is_empty() && *options.show_items_with_no_data() {
-            output = "<no-data>\n".to_string();
+        Err(WorkspaceError::ActuallyInSingleCrate { path: single_crate_path }) => {
+            let msg = format!(
+                "Found a single crate at {:?}, but subcommand=Workspace requires a full workspace\n",
+                single_crate_path
+            );
+            error!("{}", msg.trim());
+            return Err(WorkspaceError::InvalidWorkspace {
+                invalid_workspace_path: single_crate_path,
+            });
         }
-
-        Ok(output)
+        Err(e) => {
+            error!("Could not interpret path {:?} as a workspace: {:?}", path, e);
+            return Err(e);
+        }
     }
+
+    Ok(output)
 }

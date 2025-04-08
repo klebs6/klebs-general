@@ -1,3 +1,4 @@
+// ---------------- [ File: workspacer-show/src/show.rs ]
 crate::ix!();
 
 /// A trait for showing info about a single crate (which may also merge in its dependencies if configured).
@@ -73,12 +74,12 @@ CrateError: From<<T as AsyncTryFrom<PathBuf>>::Error>
                 merge_in_place(&mut base_cci, &dep_cci);
             }
 
-            let final_str = build_filtered_string(options, &base_cci, &self.name());
+            let final_str = options.build_filtered_string(&base_cci, &self.name());
             return Ok(final_str);
         }
 
         // If not merging crates, just return the string for the single crate's interface
-        let out_str = build_filtered_string(options, &base_cci, &self.name());
+        let out_str = options.build_filtered_string(&base_cci, &self.name());
         Ok(out_str)
     }
 }

@@ -5,6 +5,8 @@ workspacer-consolidate = { path = "../workspacer-consolidate" }
 workspacer-crate-interface = { path = "../workspacer-crate-interface" }
 workspacer-errors = { path = "../workspacer-errors" }
 workspacer-workspace = { path = "../workspacer-workspace" }
+workspacer-crate = { path = "../workspacer-crate" }
+workspacer-run = { path = "../workspacer-run" }
 
 [dependencies.workspacer-3p]
 path = "../workspacer-3p"

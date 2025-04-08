@@ -1,4 +1,3 @@
-
 // ---------------- [ File: workspacer-add-new-crate-to-workspace/src/imports.rs ]
 pub(crate) use workspacer_3p::*;
 pub(crate) use workspacer_add_internal_dep::*;

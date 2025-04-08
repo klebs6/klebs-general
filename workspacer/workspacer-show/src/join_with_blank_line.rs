@@ -1,3 +1,4 @@
+// ---------------- [ File: workspacer-show/src/join_with_blank_line.rs ]
 crate::ix!();
 
 /// Joins a list of strings with a blank line separating them.

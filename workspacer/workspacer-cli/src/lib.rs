@@ -4,10 +4,6 @@
 x!{add}
 x!{add_crate}
 x!{add_internal_dep}
-x!{run_with_workspace_and_crate_name}
-x!{run_with_workspace_and_two_crate_names}
-x!{run_with_workspace}
-x!{run_with_crate}
 x!{analyze}
 x!{analyze_crate}
 x!{analyze_workspace}

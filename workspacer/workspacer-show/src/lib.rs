@@ -6,5 +6,8 @@ x!{build_filtered_string}
 x!{build_output_for_items}
 x!{join_with_blank_line}
 x!{options}
-x!{show}
+x!{show_all}
+x!{show_crate_tree}
+x!{show_crate}
 x!{show_workspace}
+x!{show}

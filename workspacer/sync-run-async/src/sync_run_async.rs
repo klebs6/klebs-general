@@ -1,3 +1,4 @@
+// ---------------- [ File: sync-run-async/src/sync_run_async.rs ]
 crate::ix!();
 
 /// A minimal helper that runs an async future on an existing Tokio runtime if present,

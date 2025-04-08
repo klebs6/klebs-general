@@ -1,3 +1,4 @@
+// ---------------- [ File: workspacer-consolidate/src/merge.rs ]
 crate::ix!();
 
 /// A local helper to merge one crate interface into another in-place.

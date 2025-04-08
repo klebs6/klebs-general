@@ -1,3 +1,4 @@
+// ---------------- [ File: workspacer-tree/src/crate_info_for_name.rs ]
 crate::ix!();
 
 /// Utility: find the version/path for the given crate_name in our crate_info list.

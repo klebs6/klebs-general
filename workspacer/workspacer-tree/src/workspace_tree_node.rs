@@ -1,3 +1,4 @@
+// ---------------- [ File: workspacer-tree/src/workspace_tree_node.rs ]
 crate::ix!();
 
 #[derive(Debug)]

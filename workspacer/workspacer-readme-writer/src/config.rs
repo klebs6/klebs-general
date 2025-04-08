@@ -1,3 +1,4 @@
+// ---------------- [ File: workspacer-readme-writer/src/config.rs ]
 crate::ix!();
 
 #[derive(Builder,Getters,Debug,Clone)]

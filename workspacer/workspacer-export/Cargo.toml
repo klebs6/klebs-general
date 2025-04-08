@@ -1,5 +1,6 @@
 [dependencies]
 workspacer-show = { path = "../workspacer-show" }
+workspacer-run = { path = "../workspacer-run" }
 [dependencies.generate-report-trait]
 path = "../generate-report-trait"
 version = "0.1.1"

@@ -2,6 +2,7 @@
 structopt.workspace      = true
 derive_builder.workspace = true
 workspacer-show = { path = "../workspacer-show" }
+workspacer-run = { path = "../workspacer-run" }
 
 [dependencies.workspacer-3p]
 path = "../workspacer-3p"

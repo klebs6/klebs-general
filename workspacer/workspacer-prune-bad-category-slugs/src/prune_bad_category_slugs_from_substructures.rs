@@ -1,3 +1,4 @@
+// ---------------- [ File: workspacer-prune-bad-category-slugs/src/prune_bad_category_slugs_from_substructures.rs ]
 crate::ix!();
 
 #[async_trait]

@@ -18,116 +18,35 @@ pub enum ShowSubcommand {
 }
 
 impl ShowSubcommand {
+    /// Runs the show subcommand. We dispatch to one of the subroutines below, which replicate
+    /// the old CLI logic: 
+    /// - "crate" => single crate only 
+    /// - "crate-tree" => single crate plus all its internal deps, either merged or separate 
+    /// - "workspace" => entire workspace
     #[tracing::instrument(level = "trace", skip(self))]
     pub async fn run(&self) -> Result<(), WorkspaceError> {
         trace!("Entering ShowSubcommand::run");
-
-        let mut output = String::new();
+        let mut final_output = String::new();
 
         match self {
             ShowSubcommand::Crate(flags) => {
-                info!("User chose subcommand: ws show crate");
-                let path = flags.path().clone().unwrap_or_else(|| PathBuf::from("."));
-                debug!("Path for single crate = {:?}", path);
-
-                // We'll attempt to build a workspace first:
-                match Workspace::<PathBuf, CrateHandle>::new(&path).await {
-                    Ok(_ws) => {
-                        error!(
-                            "Found a workspace at {:?}, but subcommand=Crate requires a single crate",
-                            path
-                        );
-                        return Err(WorkspaceError::InvalidWorkspace {
-                            invalid_workspace_path: path,
-                        });
-                    }
-                    Err(WorkspaceError::ActuallyInSingleCrate { path: single_crate_path }) => {
-                        debug!("Confirmed single crate at {:?}", single_crate_path);
-
-                        let mut handle = CrateHandle::new(&path).await?;
-
-                        let cci_str = handle.show(&flags).await?;
-
-                        if cci_str.trim().is_empty() && *flags.show_items_with_no_data() {
-                            output.push_str("<no-data>\n");
-                        } else {
-                            output.push_str(&cci_str);
-                        }
-                    }
-                    Err(e) => {
-                        error!("Could not interpret path {:?} as single crate: {:?}", path, e);
-                        return Err(e);
-                    }
-                }
+                let out = show_crate(flags).await?;
+                final_output.push_str(&out);
             }
             ShowSubcommand::CrateTree(flags) => {
-                info!("User chose subcommand: ws show crate-tree");
-                let path = flags.path().clone().unwrap_or_else(|| PathBuf::from("."));
-                debug!("Path for single crate-tree = {:?}", path);
-
-                match Workspace::<PathBuf, CrateHandle>::new(&path).await {
-                    Ok(_ws) => {
-                        error!(
-                            "Found a workspace at {:?}, but subcommand=CrateTree requires a single crate",
-                            path
-                        );
-                        return Err(WorkspaceError::InvalidWorkspace {
-                            invalid_workspace_path: path,
-                        });
-                    }
-                    Err(WorkspaceError::ActuallyInSingleCrate { path: single_crate_path }) => {
-                        debug!("Confirmed single crate at {:?}", single_crate_path);
-                        let mut handle = CrateHandle::new(&path).await?;
-                        let cci_str = handle.show(&flags).await?;
-
-                        if cci_str.trim().is_empty() && *flags.show_items_with_no_data() {
-                            output.push_str("<no-data>\n");
-                        } else {
-                            output.push_str(&cci_str);
-                        }
-                    }
-                    Err(e) => {
-                        error!("Could not interpret path {:?} as single crate: {:?}", path, e);
-                        return Err(e);
-                    }
-                }
+                let out = show_crate_tree(flags).await?;
+                final_output.push_str(&out);
             }
             ShowSubcommand::Workspace(flags) => {
-                info!("User chose subcommand: ws show workspace");
-                let path = flags.path().clone().unwrap_or_else(|| PathBuf::from("."));
-                debug!("Path for workspace = {:?}", path);
-
-                match Workspace::<PathBuf, CrateHandle>::new(&path).await {
-                    Ok(workspace) => {
-                        debug!("Confirmed a valid workspace at {:?}", path);
-                        let ws_str = workspace.show_all(&flags).await?;
-                        if ws_str.trim().is_empty() && *flags.show_items_with_no_data() {
-                            output.push_str("<no-data>\n");
-                        } else {
-                            output.push_str(&ws_str);
-                        }
-                    }
-                    Err(WorkspaceError::ActuallyInSingleCrate { path: single_crate_path }) => {
-                        error!(
-                            "Found a single crate at {:?}, but subcommand=Workspace requires a full workspace",
-                            single_crate_path
-                        );
-                        return Err(WorkspaceError::InvalidWorkspace {
-                            invalid_workspace_path: single_crate_path,
-                        });
-                    }
-                    Err(e) => {
-                        error!("Could not interpret path {:?} as a workspace: {:?}", path, e);
-                        return Err(e);
-                    }
-                }
+                let out = show_workspace(flags).await?;
+                final_output.push_str(&out);
             }
         }
 
-        if output.trim().is_empty() {
+        if final_output.trim().is_empty() {
             trace!("No data produced in ShowSubcommand::run");
         } else {
-            println!("{}", output);
+            println!("{}", final_output);
         }
 
         Ok(())

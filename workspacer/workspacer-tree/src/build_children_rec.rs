@@ -1,3 +1,4 @@
+// ---------------- [ File: workspacer-tree/src/build_children_rec.rs ]
 crate::ix!();
 
 /// Recursively build child nodes up to `max_levels`.

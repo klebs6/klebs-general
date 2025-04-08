@@ -71,6 +71,7 @@ ACTIVE_PACKAGE := workspacer-crate-mock
 ACTIVE_PACKAGE := workspacer-publish
 ACTIVE_PACKAGE := workspacer-readme-writer
 ACTIVE_PACKAGE := workspacer-cli
+ACTIVE_PACKAGE := workspacer-topo
 
 INDIVIDUAL_TEST := gather_leading_token_comments
 INDIVIDUAL_TEST := gather_leading_comment_lines

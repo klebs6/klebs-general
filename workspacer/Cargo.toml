@@ -69,7 +69,7 @@ members  = [
     "workspacer-tree", 
     "sync-run-async", 
     "workspacer-prune-bad-category-slugs" 
-]
+, "workspacer-run", "workspacer-topo"]
 resolver = "3"
 
 [workspace.dependencies]

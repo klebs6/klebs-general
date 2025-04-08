@@ -1,3 +1,4 @@
+// ---------------- [ File: workspacer-prune-bad-category-slugs/src/only_legal_categories.rs ]
 crate::ix!();
 
 pub const LEGAL_CATEGORIES: &[&'static str] = &[

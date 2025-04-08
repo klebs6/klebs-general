@@ -1,0 +1,21 @@
+[package]
+name = "workspacer-topo"
+version = "0.1.0"
+authors = ["YourName <you@example.com>"]
+license = "MIT"
+edition = "2024"
+description = "todo: write a description here"
+
+# keywords = []
+# categories = []
+
+[dependencies]
+workspacer-3p = { path = "../workspacer-3p" }
+derive_builder.workspace = true
+getset.workspace = true
+workspacer-workspace = { path = "../workspacer-workspace" }
+workspacer-errors = { path = "../workspacer-errors" }
+workspacer-crate = { path = "../workspacer-crate" }
+workspacer-workspace-mock = { path = "../workspacer-workspace-mock" }
+workspacer-interface = { path = "../workspacer-interface" }
+workspacer-detect-circular-deps = { path = "../workspacer-detect-circular-deps" }

@@ -41,7 +41,7 @@ pub use indoc::{formatdoc,indoc};
 pub use std::process::Stdio;
 pub use cargo_metadata::PackageId;
 pub use petgraph::{self,Graph,graph::{DiGraph, NodeIndex}};
-pub use petgraph::algo::tarjan_scc;
+pub use petgraph::algo::{Cycle,toposort,tarjan_scc};
 pub use petgraph::visit::EdgeRef;
 pub use std::fmt::{self,Write,Display};
 pub use std::thread;

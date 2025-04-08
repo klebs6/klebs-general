@@ -2,6 +2,10 @@
 name = "ws"
 path = "src/bin/workspacer.rs"
 
+[dependencies]
+workspacer-run = { path = "../workspacer-run" }
+workspacer-topo = { path = "../workspacer-topo" }
+
 [dependencies.structopt]
 workspace = true
 

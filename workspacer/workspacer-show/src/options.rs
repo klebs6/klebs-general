@@ -1,3 +1,4 @@
+// ---------------- [ File: workspacer-show/src/options.rs ]
 crate::ix!();
 
 /// Extended ShowFlags with a new `show_items_with_no_data` flag.
