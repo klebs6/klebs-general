@@ -50,7 +50,7 @@ where for<'async_trait> P: From<PathBuf> + AsRef<Path> + Send + Sync + 'async_tr
             }
         }
 
-        println!("dependency tree: {:#?}", graph);
+        info!("dependency tree: {:#?}", graph);
 
         Ok(graph)
     }

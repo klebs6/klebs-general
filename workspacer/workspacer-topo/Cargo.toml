@@ -10,14 +10,14 @@ description = "todo: write a description here"
 # categories = []
 
 [dependencies]
-workspacer-3p = { path = "../workspacer-3p" }
-derive_builder.workspace = true
-getset.workspace = true
-workspacer-workspace = { path = "../workspacer-workspace" }
-workspacer-errors = { path = "../workspacer-errors" }
-workspacer-crate = { path = "../workspacer-crate" }
-workspacer-workspace-mock = { path = "../workspacer-workspace-mock" }
-workspacer-interface = { path = "../workspacer-interface" }
+workspacer-3p                   = { path = "../workspacer-3p" }
+derive_builder.workspace        = true
+getset.workspace                = true
+workspacer-workspace            = { path = "../workspacer-workspace" }
+workspacer-errors               = { path = "../workspacer-errors" }
+workspacer-crate                = { path = "../workspacer-crate" }
+workspacer-workspace-mock       = { path = "../workspacer-workspace-mock" }
+workspacer-interface            = { path = "../workspacer-interface" }
 workspacer-detect-circular-deps = { path = "../workspacer-detect-circular-deps" }
-workspacer-crate-mock = { path = "../workspacer-crate-mock" }
-workspacer-mock = { path = "../workspacer-mock" }
+workspacer-crate-mock           = { path = "../workspacer-crate-mock" }
+workspacer-mock                 = { path = "../workspacer-mock" }
