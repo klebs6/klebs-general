@@ -20,7 +20,7 @@ pub fn build_filtered_string(
         && cci.modules().is_empty();
 
     if crate_is_empty {
-        if options.show_items_with_no_data() {
+        if *options.show_items_with_no_data() {
             return "<no-data-for-crate>\n".to_string();
         } else {
             return String::new();
@@ -28,31 +28,31 @@ pub fn build_filtered_string(
     }
 
     // If we want to group by file, do it:
-    if options.group_by_file() {
+    if *options.group_by_file() {
         return build_filtered_grouped_by_file_string(options, cci);
     }
 
     // If the user wants only certain categories, we do that.
     // (Replicates the old show sub-filters.)
-    if options.just_fns() {
+    if *options.just_fns() {
         return build_output_for_items(cci.fns(), options);
     }
-    if options.just_impls() {
+    if *options.just_impls() {
         return build_output_for_items(cci.impls(), options);
     }
-    if options.just_traits() {
+    if *options.just_traits() {
         return build_output_for_items(cci.traits(), options);
     }
-    if options.just_enums() {
+    if *options.just_enums() {
         return build_output_for_items(cci.enums(), options);
     }
-    if options.just_structs() {
+    if *options.just_structs() {
         return build_output_for_items(cci.structs(), options);
     }
-    if options.just_aliases() {
+    if *options.just_aliases() {
         return build_output_for_items(cci.type_aliases(), options);
     }
-    if options.just_adts() {
+    if *options.just_adts() {
         let mut combined = Vec::new();
         for e in cci.enums() {
             combined.push(format!("{}", e));
@@ -60,18 +60,18 @@ pub fn build_filtered_string(
         for s in cci.structs() {
             combined.push(format!("{}", s));
         }
-        if combined.is_empty() && options.show_items_with_no_data() {
+        if combined.is_empty() && *options.show_items_with_no_data() {
             return "<no-data-for-crate>\n".to_string();
         }
         return join_with_blank_line(combined);
     }
-    if options.just_macros() {
+    if *options.just_macros() {
         return build_output_for_items(cci.macros(), options);
     }
 
     // Otherwise, print the entire consolidated interface in one go
     let all = format!("{}", cci);
-    if all.trim().is_empty() && options.show_items_with_no_data() {
+    if all.trim().is_empty() && *options.show_items_with_no_data() {
         return "<no-data-for-crate>\n".to_string();
     }
     all

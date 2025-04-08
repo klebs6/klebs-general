@@ -44,7 +44,7 @@ pub fn build_filtered_grouped_by_file_string(options: &ShowFlags, cci: &Consolid
     }
 
     if items_by_file.is_empty() {
-        if options.show_items_with_no_data() {
+        if *options.show_items_with_no_data() {
             return "<no-data-for-crate>\n".to_string();
         } else {
             return String::new();
@@ -58,7 +58,7 @@ pub fn build_filtered_grouped_by_file_string(options: &ShowFlags, cci: &Consolid
     for (i, fpath) in file_paths.iter().enumerate() {
         let items = items_by_file.get(fpath).unwrap();
         if items.is_empty() {
-            if options.show_items_with_no_data() {
+            if *options.show_items_with_no_data() {
                 out.push_str(&format!("--- [File: {}] ---\n", fpath.display()));
                 out.push_str("<no-data-for-file>\n\n");
             }

@@ -27,7 +27,7 @@ impl ShowSubcommand {
         match self {
             ShowSubcommand::Crate(flags) => {
                 info!("User chose subcommand: ws show crate");
-                let path = flags.path.clone().unwrap_or_else(|| PathBuf::from("."));
+                let path = flags.path().clone().unwrap_or_else(|| PathBuf::from("."));
                 debug!("Path for single crate = {:?}", path);
 
                 // We'll attempt to build a workspace first:
@@ -44,16 +44,11 @@ impl ShowSubcommand {
                     Err(WorkspaceError::ActuallyInSingleCrate { path: single_crate_path }) => {
                         debug!("Confirmed single crate at {:?}", single_crate_path);
 
-                        let mut handle = CrateHandle::new(&path)
-                            .await
-                            .map_err(WorkspaceError::CrateError)?;
-                        let show_opts = flags_to_show_options(flags, false); // merge_crates = false
-                        let cci_str = handle
-                            .show_crate(&show_opts)
-                            .await
-                            .map_err(WorkspaceError::CrateError)?;
+                        let mut handle = CrateHandle::new(&path).await?;
 
-                        if cci_str.trim().is_empty() && show_opts.show_items_with_no_data() {
+                        let cci_str = handle.show(&flags).await?;
+
+                        if cci_str.trim().is_empty() && *flags.show_items_with_no_data() {
                             output.push_str("<no-data>\n");
                         } else {
                             output.push_str(&cci_str);
@@ -67,7 +62,7 @@ impl ShowSubcommand {
             }
             ShowSubcommand::CrateTree(flags) => {
                 info!("User chose subcommand: ws show crate-tree");
-                let path = flags.path.clone().unwrap_or_else(|| PathBuf::from("."));
+                let path = flags.path().clone().unwrap_or_else(|| PathBuf::from("."));
                 debug!("Path for single crate-tree = {:?}", path);
 
                 match Workspace::<PathBuf, CrateHandle>::new(&path).await {
@@ -82,16 +77,10 @@ impl ShowSubcommand {
                     }
                     Err(WorkspaceError::ActuallyInSingleCrate { path: single_crate_path }) => {
                         debug!("Confirmed single crate at {:?}", single_crate_path);
-                        let mut handle = CrateHandle::new(&path)
-                            .await
-                            .map_err(WorkspaceError::CrateError)?;
-                        let show_opts = flags_to_show_options(flags, true); // merge_crates = true
-                        let cci_str = handle
-                            .show_crate(&show_opts)
-                            .await
-                            .map_err(WorkspaceError::CrateError)?;
+                        let mut handle = CrateHandle::new(&path).await?;
+                        let cci_str = handle.show(&flags).await?;
 
-                        if cci_str.trim().is_empty() && show_opts.show_items_with_no_data() {
+                        if cci_str.trim().is_empty() && *flags.show_items_with_no_data() {
                             output.push_str("<no-data>\n");
                         } else {
                             output.push_str(&cci_str);
@@ -105,15 +94,14 @@ impl ShowSubcommand {
             }
             ShowSubcommand::Workspace(flags) => {
                 info!("User chose subcommand: ws show workspace");
-                let path = flags.path.clone().unwrap_or_else(|| PathBuf::from("."));
+                let path = flags.path().clone().unwrap_or_else(|| PathBuf::from("."));
                 debug!("Path for workspace = {:?}", path);
 
                 match Workspace::<PathBuf, CrateHandle>::new(&path).await {
                     Ok(workspace) => {
                         debug!("Confirmed a valid workspace at {:?}", path);
-                        let show_opts = flags_to_show_options(flags, false);
-                        let ws_str = workspace.show_workspace(&show_opts).await?;
-                        if ws_str.trim().is_empty() && show_opts.show_items_with_no_data() {
+                        let ws_str = workspace.show_all(&flags).await?;
+                        if ws_str.trim().is_empty() && *flags.show_items_with_no_data() {
                             output.push_str("<no-data>\n");
                         } else {
                             output.push_str(&ws_str);

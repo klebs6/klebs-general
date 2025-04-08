@@ -2,7 +2,8 @@ crate::ix!();
 
 /// A trait for showing info about a single crate (which may also merge in its dependencies if configured).
 #[async_trait]
-pub trait Show {
+pub trait ShowItem {
+
     type Error;
 
     /// Render crate info (and optional crate-tree info) to a textual output.
@@ -10,12 +11,19 @@ pub trait Show {
 }
 
 #[async_trait]
-impl Show for T 
+impl<T> ShowItem for T 
 where T
 : ConsolidateCrateInterface 
 + GetInternalDependencies
-+ NamedItem
++ Named
 + RootDirPathBuf
++ AsyncTryFrom<PathBuf>
++ Send
++ Sync
++ AsRef<Path>,
+
+CrateError: From<<T as AsyncTryFrom<PathBuf>>::Error>
+
 {
     type Error = CrateError;
 
@@ -26,15 +34,16 @@ where T
         // 1) Validate if it’s actually a single-crate or part of a workspace:
         //    We'll do that logic at a higher level if needed. Here, we assume it's valid.
 
+        let consolidation_options: ConsolidationOptions = options.into();
+
         // 2) Build the consolidated interface for this crate
-        let mut base_cci = consolidate_crate_interface(
-            self,
-            &build_consolidation_options(options),
+        let mut base_cci = self.consolidate_crate_interface(
+            &consolidation_options,
         )
         .await?;
 
         // 3) If we also want to merge in internal deps, do that
-        if options.merge_crates() {
+        if *options.merge_crates() {
             let dep_names = self.internal_dependencies().await?;
             info!(
                 "Found {} internal deps in '{}': {:?}",
@@ -56,10 +65,9 @@ where T
                 debug!("Loading dep '{}' from path {:?}", dep_name, dep_path);
 
                 // Build a transient CrateHandle to consolidate
-                let mut dep_handle = CrateHandle::new(&dep_path).await?;
-                let dep_cci = consolidate_crate_interface(
-                    &mut dep_handle,
-                    &build_consolidation_options(options),
+                let mut dep_handle = T::new(&dep_path).await?;
+                let dep_cci = dep_handle.consolidate_crate_interface(
+                    &consolidation_options,
                 )
                 .await?;
                 merge_in_place(&mut base_cci, &dep_cci);

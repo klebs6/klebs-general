@@ -5,9 +5,9 @@ crate::ix!();
 /// - `<no-data-for-crate>` if a crate is empty
 /// - `<no-data-for-file>` if a file grouping is empty (though in the current approach, we never track truly empty files)
 /// - `<no-data>` if the entire final output is empty
-#[derive(StructOpt,MutGetters,Getters,Builder,Debug)]
+#[derive(Clone,StructOpt,Setters,MutGetters,Getters,Builder,Debug)]
 #[builder(setter(into))]
-#[getset(get="pub",get_mut="pub")]
+#[getset(get="pub",get_mut="pub",set="pub")]
 pub struct ShowFlags {
     /// Path to the crate (or workspace root) you want to show.
     #[structopt(long = "path", parse(from_os_str))]
@@ -84,50 +84,26 @@ pub struct ShowFlags {
     show_items_with_no_data: bool,
 }
 
-impl Default for ShowFlagsBuilder {
-    fn default() -> Self {
-        let mut b = ShowFlagsBuilder::empty();
-        b.include_private(false)
-            .include_docs(false)
-            .include_tests(false)
-            .include_fn_bodies(false)
-            .include_test_bodies(false)
-            .just_tests(false)
-            .just_fns(false)
-            .just_impls(false)
-            .just_traits(false)
-            .just_enums(false)
-            .just_structs(false)
-            .just_aliases(false)
-            .just_adts(false)
-            .just_macros(false)
-            .group_by_file(false)
-            .merge_crates(false)
-            .show_items_with_no_data(false);
-        b
-    }
-}
-
 impl From<&ShowFlags> for ConsolidationOptions {
     /// Helper to map ShowFlags into a `ConsolidationOptions`.
     fn from(opts: &ShowFlags) -> ConsolidationOptions {
         let mut c = ConsolidationOptions::new();
-        if opts.include_docs() {
+        if *opts.include_docs() {
             c = c.with_docs();
         }
-        if opts.include_private() {
+        if *opts.include_private() {
             c = c.with_private_items();
         }
-        if opts.include_tests() {
+        if *opts.include_tests() {
             c = c.with_test_items();
         }
-        if opts.include_fn_bodies() {
+        if *opts.include_fn_bodies() {
             c = c.with_fn_bodies();
         }
-        if opts.include_test_bodies() {
+        if *opts.include_test_bodies() {
             c = c.with_fn_bodies_in_tests();
         }
-        if opts.just_tests() {
+        if *opts.just_tests() {
             c = c.with_only_test_items();
         }
         c.validate();

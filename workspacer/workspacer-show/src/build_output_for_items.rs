@@ -5,7 +5,7 @@ pub fn build_output_for_items<T>(items: &[T], options: &ShowFlags) -> String
 where
     T: std::fmt::Display,
 {
-    if items.is_empty() && options.show_items_with_no_data() {
+    if items.is_empty() && *options.show_items_with_no_data() {
         return "<no-data-for-crate>\n".to_string();
     }
     let mut lines = Vec::new();
