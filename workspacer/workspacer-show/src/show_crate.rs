@@ -1,3 +1,4 @@
+// ---------------- [ File: workspacer-show/src/show_crate.rs ]
 crate::ix!();
 
 /// Subroutine for handling `ws show crate` subcommand: single crate only.

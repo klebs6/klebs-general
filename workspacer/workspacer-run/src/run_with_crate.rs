@@ -1,4 +1,4 @@
-// ---------------- [ File: workspacer-cli/src/run_with_crate.rs ]
+// ---------------- [ File: workspacer-run/src/run_with_crate.rs ]
 crate::ix!();
 
 /// This new helper function `run_with_crate` parallels the existing

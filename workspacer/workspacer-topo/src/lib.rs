@@ -1,3 +1,4 @@
+// ---------------- [ File: workspacer-topo/src/lib.rs ]
 // workspacer-topo/src/lib.rs
 //
 // This shows how to invert the design so that:
@@ -35,3 +36,5 @@ x!{layered_subgraph_internal}
 x!{layered_topologcal_sort}
 x!{topological_sort_internal_deps}
 x!{traits}
+x!{add_crate_and_deps}
+x!{mock}

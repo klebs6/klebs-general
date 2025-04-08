@@ -1,3 +1,4 @@
+// ---------------- [ File: workspacer-show/src/show_crate_tree.rs ]
 crate::ix!();
 
 /// Subroutine for handling `ws show crate-tree` subcommand: single crate plus its internal dependencies.

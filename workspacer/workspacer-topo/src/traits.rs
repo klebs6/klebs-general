@@ -1,3 +1,4 @@
+// ---------------- [ File: workspacer-topo/src/traits.rs ]
 crate::ix!();
 
 /// Trait for a simple, flat, topological ordering of *all* crates in the target.
@@ -18,19 +19,17 @@ pub trait LayeredTopologicalSort {
     ) -> Result<Vec<Vec<String>>, WorkspaceError>;
 }
 
-/// Trait for focusing on a single crate (or crate handle):
+/// Trait for focusing on a single crate/workspace:
 /// produce the subgraph of internal dependencies that lead up to the focus,
 /// then return either a flat or layered topological ordering.
 #[async_trait]
 pub trait FocusCrateTopologicalSort {
-    /// Return a flat topological list of all crates leading up to `focus_crate_name`.
     async fn topological_order_upto_crate(
         &self,
         config: &TopologicalSortConfig,
         focus_crate_name: &str
     ) -> Result<Vec<String>, WorkspaceError>;
 
-    /// Return a layered topological grouping of all crates leading up to `focus_crate_name`.
     async fn layered_topological_order_upto_crate(
         &self,
         config: &TopologicalSortConfig,
@@ -38,15 +37,17 @@ pub trait FocusCrateTopologicalSort {
     ) -> Result<Vec<Vec<String>>, WorkspaceError>;
 }
 
-/// Similar trait but specifically for calling on a single `CrateHandle`.
-/// If we want to do "topological_sort_internal_deps", we interpret `self` as the "focus crate".
+/// Trait specifically for a single `CrateHandle`.
+/// "topological_sort_internal_deps" => interpret `self` as the "focus crate".
 #[async_trait]
 pub trait TopologicalSortInternalDeps {
+    /// Returns a flat topological ordering of all internal dependencies leading up to (and including) this crate.
     async fn topological_sort_internal_deps(
         &self,
         config: &TopologicalSortConfig
     ) -> Result<Vec<String>, WorkspaceError>;
 
+    /// Returns a layered topological ordering of all internal dependencies up to this crate.
     async fn layered_topological_order_upto_self(
         &self,
         config: &TopologicalSortConfig

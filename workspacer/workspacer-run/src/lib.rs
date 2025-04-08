@@ -1,3 +1,4 @@
+// ---------------- [ File: workspacer-run/src/lib.rs ]
 #[macro_use] mod imports; use imports::*;
 
 x!{run_with_workspace_and_crate_name}

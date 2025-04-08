@@ -60,6 +60,7 @@ pub enum WsCliSubcommand {
     Watch             { #[structopt(subcommand)] subcommand: WatchSubcommand,             } ,
     Prune             { #[structopt(subcommand)] subcommand: PruneSubcommand,             } ,
     Show              { #[structopt(subcommand)] subcommand: ShowSubcommand,              } ,
+    Topo              { #[structopt(subcommand)] subcommand: TopoSubcommand,              } ,
 
     /// Generate or update README(s) using AI
     Write(ReadmeWriterCli),
@@ -94,6 +95,7 @@ impl WsCliSubcommand {
             WsCliSubcommand::Watch             { subcommand } => { subcommand.run().await },
             WsCliSubcommand::Prune             { subcommand } => { subcommand.run().await },
             WsCliSubcommand::Show              { subcommand } => { subcommand.run().await },
+            WsCliSubcommand::Topo              { subcommand } => { subcommand.run().await },
 
             WsCliSubcommand::Write(cmd) => { cmd.run().await },
             WsCliSubcommand::Tree(cmd)  => { cmd.run().await },

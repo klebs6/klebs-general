@@ -34,6 +34,7 @@ pub use workspacer_workspace_interface::*;
 pub use workspacer_crate_interface::*;
 pub use workspacer_check_publish_ready::*;
 pub use workspacer_readme_writer::*;
+pub use workspacer_topo::*;
 
 use std::path::{Path,PathBuf};
 

@@ -1,3 +1,4 @@
+// ---------------- [ File: workspacer-show/src/show_workspace.rs ]
 crate::ix!();
 
 /// Subroutine for handling `ws show workspace` subcommand: multiple crates in a workspace.

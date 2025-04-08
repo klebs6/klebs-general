@@ -47,3 +47,4 @@ x!{validate}
 x!{watch}
 x!{write}
 x!{prune}
+x!{topo}

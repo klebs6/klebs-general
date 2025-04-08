@@ -2,7 +2,7 @@
 crate::ix!();
 
 /// Configuration for creating a mock crate in the workspace.
-#[derive(Debug)]
+#[derive(Clone,Debug)]
 pub struct CrateConfig {
     name:           String,
     add_readme:     bool,

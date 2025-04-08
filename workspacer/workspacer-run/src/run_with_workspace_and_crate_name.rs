@@ -1,4 +1,4 @@
-// ---------------- [ File: workspacer-cli/src/run_with_workspace_and_crate_name.rs ]
+// ---------------- [ File: workspacer-run/src/run_with_workspace_and_crate_name.rs ]
 crate::ix!();
 
 /// **Key idea**: Use a higher-ranked trait bound (HRTB) so that the closure

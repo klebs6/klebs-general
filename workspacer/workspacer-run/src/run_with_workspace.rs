@@ -1,4 +1,4 @@
-// ---------------- [ File: workspacer-cli/src/run_with_workspace.rs ]
+// ---------------- [ File: workspacer-run/src/run_with_workspace.rs ]
 crate::ix!();
 
 /// This helper is analogous to `run_with_workspace_and_crate_name`, but it only loads

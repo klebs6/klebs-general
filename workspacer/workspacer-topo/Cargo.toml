@@ -19,3 +19,5 @@ workspacer-crate = { path = "../workspacer-crate" }
 workspacer-workspace-mock = { path = "../workspacer-workspace-mock" }
 workspacer-interface = { path = "../workspacer-interface" }
 workspacer-detect-circular-deps = { path = "../workspacer-detect-circular-deps" }
+workspacer-crate-mock = { path = "../workspacer-crate-mock" }
+workspacer-mock = { path = "../workspacer-mock" }

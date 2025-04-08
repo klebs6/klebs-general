@@ -1,4 +1,4 @@
-// ---------------- [ File: workspacer-cli/src/run_with_workspace_and_two_crate_names.rs ]
+// ---------------- [ File: workspacer-run/src/run_with_workspace_and_two_crate_names.rs ]
 crate::ix!();
 
 /// 2) We define a new helper function that is basically the same pattern as
