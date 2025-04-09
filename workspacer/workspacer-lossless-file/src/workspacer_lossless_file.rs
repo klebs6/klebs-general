@@ -141,14 +141,14 @@ impl LosslessFile {
         }
 
         // Sort & build layout
-        items.sort_by_key(|li| item_start(&li.item));
+        items.sort_by_key(|li| li.item.item_start());
         inters.sort_by_key(|si| si.text_range().start());
 
         let mut layout = Vec::new();
         let mut i_idx  = 0;
         let mut s_idx  = 0;
         while i_idx < items.len() || s_idx < inters.len() {
-            let off_item = items.get(i_idx).map(|li| item_start(&li.item));
+            let off_item = items.get(i_idx).map(|li| li.item.item_start());
             let off_seg  = inters.get(s_idx).map(|si| si.text_range().start());
             match (off_item, off_seg) {
                 (Some(io), Some(so)) => {
@@ -201,21 +201,6 @@ impl LosslessFile {
             }
         }
         buf
-    }
-}
-
-/// Helper to get the start offset from a `ConsolidatedItem`.
-fn item_start(ci: &ConsolidatedItem) -> TextSize {
-    match ci {
-        ConsolidatedItem::Fn(f)         => f.text_range().start(),
-        ConsolidatedItem::Struct(s)     => s.text_range().start(),
-        ConsolidatedItem::Enum(e)       => e.text_range().start(),
-        ConsolidatedItem::Trait(t)      => t.text_range().start(),
-        ConsolidatedItem::TypeAlias(ta) => ta.text_range().start(),
-        ConsolidatedItem::Macro(m)      => m.text_range().start(),
-        ConsolidatedItem::ImplBlock(i)  => i.text_range().start(),
-        ConsolidatedItem::Module(mo)    => mo.text_range().start(),
-        ConsolidatedItem::MockTest(_)   => TextSize::from(0),
     }
 }
 

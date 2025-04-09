@@ -34,3 +34,21 @@ impl fmt::Display for ConsolidatedItem {
         }
     }
 }
+
+impl ConsolidatedItem {
+
+    /// Helper to get the start offset from a `ConsolidatedItem`.
+    pub fn item_start(&self) -> TextSize {
+        match self {
+            ConsolidatedItem::Fn(f)         => f.text_range().start(),
+            ConsolidatedItem::Struct(s)     => s.text_range().start(),
+            ConsolidatedItem::Enum(e)       => e.text_range().start(),
+            ConsolidatedItem::Trait(t)      => t.text_range().start(),
+            ConsolidatedItem::TypeAlias(ta) => ta.text_range().start(),
+            ConsolidatedItem::Macro(m)      => m.text_range().start(),
+            ConsolidatedItem::ImplBlock(i)  => i.text_range().start(),
+            ConsolidatedItem::Module(mo)    => mo.text_range().start(),
+            ConsolidatedItem::MockTest(_)   => TextSize::from(0),
+        }
+    }
+}

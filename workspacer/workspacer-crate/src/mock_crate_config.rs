@@ -2,27 +2,19 @@
 crate::ix!();
 
 /// Configuration for creating a mock crate in the workspace.
-#[derive(Clone,Debug)]
+#[derive(Getters,Clone,Debug)]
+#[getset(get="pub")]
 pub struct CrateConfig {
     name:           String,
     add_readme:     bool,
     add_src_files:  bool,
     add_test_files: bool,
+
+    /// (new) Optionally store custom content to write into `src/main.rs`
+    src_file_content: Option<String>,
 }
 
 impl CrateConfig {
-
-    pub fn add_readme(&self) -> bool {
-        self.add_readme
-    }
-
-    pub fn add_src_files(&self) -> bool {
-        self.add_src_files
-    }
-
-    pub fn add_test_files(&self) -> bool {
-        self.add_test_files
-    }
 
     /// Create a new CrateConfig with the given crate name.
     pub fn new(name: &str) -> Self {
@@ -31,7 +23,15 @@ impl CrateConfig {
             add_readme: false,
             add_src_files: false,
             add_test_files: false,
+            src_file_content: None,
         }
+    }
+
+    /// (new) Provide custom Rust code for src/main.rs
+    pub fn with_src_files_content<S: Into<String>>(mut self, content: S) -> Self {
+        self.add_src_files = true;        // also mark that we do want a src
+        self.src_file_content = Some(content.into());
+        self
     }
 
     /// Set whether to add a README.md file.
@@ -50,11 +50,6 @@ impl CrateConfig {
     pub fn with_test_files(mut self) -> Self {
         self.add_test_files = true;
         self
-    }
-
-    /// Accessor to get the crate name.
-    pub fn name(&self) -> &str {
-        &self.name
     }
 
     /// Accessor to check if README.md is to be added.

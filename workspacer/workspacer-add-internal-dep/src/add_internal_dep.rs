@@ -93,7 +93,7 @@ where
                 }
             })?;
 
-        let dep_key = dep_crate.name();
+        let dep_key = dep_crate.name().to_kebab_case();
         debug!("Adding dependency under [dependencies] with key = {:?}", dep_key);
 
         // Ensure we have a [dependencies] table
@@ -238,7 +238,7 @@ mod test_add_internal_dependency {
             "Should contain a [dependencies] section"
         );
         assert!(
-            updated_toml_a.contains("crateB = { path = "),
+            updated_toml_a.contains("crate-b = { path = "),
             "Should contain a path-based dependency entry for crateB"
         );
 
@@ -250,8 +250,8 @@ mod test_add_internal_dependency {
         debug!("Updated imports.rs:\n{}", imports_contents);
 
         assert!(
-            imports_contents.contains("pub(crate) use crateB::*;"),
-            "Should have appended `pub(crate) use crateB::*;` line to imports.rs"
+            imports_contents.contains("pub(crate) use crate_b::*;"),
+            "Should have appended `pub(crate) use crate_b::*;` line to imports.rs"
         );
 
         info!("test_add_internal_dependency_happy_path passed");
