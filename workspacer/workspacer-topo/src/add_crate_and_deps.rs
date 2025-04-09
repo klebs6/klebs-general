@@ -1,3 +1,4 @@
+// ---------------- [ File: workspacer-topo/src/add_crate_and_deps.rs ]
 crate::ix!();
 
 /// Minimal BFS-based function that adds `crate_handle` and all its internal dependencies

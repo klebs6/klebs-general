@@ -1,3 +1,4 @@
+// ---------------- [ File: workspacer-organize/src/organize.rs ]
 crate::ix!();
 
 /// Organize a set of `LosslessFile` inputs into a mapping of `(filename -> file_content)`.

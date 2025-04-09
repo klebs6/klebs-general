@@ -1,4 +1,4 @@
-// ---------------- [ File: workspacer-consolidate/src/interstitial_segments.rs ]
+// ---------------- [ File: workspacer-consolidate/src/interstitial_segment.rs ]
 crate::ix!();
 
 #[derive(Builder,Setters,Getters,Debug,Clone)]

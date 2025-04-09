@@ -1,3 +1,4 @@
+// ---------------- [ File: workspacer-lossless-file/src/workspacer_lossless_file.rs ]
 crate::ix!();
 
 /// A “lossless” representation of an entire Rust file, preserving all
