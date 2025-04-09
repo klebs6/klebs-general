@@ -278,7 +278,7 @@ mod test_impl_block_interface_real {
         let impl_ast = parse_first_impl(snippet)
             .expect("Expected to parse an impl block from snippet");
 
-        debug!("impl_ast = {:#?}", impl_ast);
+        //debug!("impl_ast = {:#?}", impl_ast);
 
         // Must enable docs + fn bodies:
         let options = ConsolidationOptions::new()
@@ -289,37 +289,39 @@ mod test_impl_block_interface_real {
 
         let docs  = extract_docs(impl_ast.syntax());
 
-        debug!("docs = {:#?}", docs);
+        //debug!("docs = {:#?}", docs);
 
         let attrs = gather_all_attrs(impl_ast.syntax());
 
-        debug!("attrs = {:#?}", attrs);
+        //debug!("attrs = {:#?}", attrs);
 
         // Produce "impl CrateHandle"
         let raw_sig = generate_impl_signature(&impl_ast, docs.as_ref());
 
-        debug!("raw_sig = {:#?}", raw_sig);
+        //debug!("raw_sig = {:#?}", raw_sig);
 
         // Insert a newline between "impl CrateHandle" and "{", to match the test's expected format:
         let final_sig = raw_sig.replacen("{", "\n{", 1);
 
-        debug!("final_sig = {:#?}", final_sig);
+        //debug!("final_sig = {:#?}", final_sig);
 
         // Gather methods & type aliases
         let methods = gather_impl_methods(&impl_ast, &options, &PathBuf::from("FAKE"), &PathBuf::from("FAKE"));
 
-        debug!("methods = {:#?}", methods);
+        //debug!("methods = {:#?}", methods);
 
         let aliases = gather_assoc_type_aliases(&impl_ast, &options, &PathBuf::from("FAKE"), &PathBuf::from("FAKE"));
 
-        debug!("aliases = {:#?}", aliases);
+        //debug!("aliases = {:#?}", aliases);
 
         let ib = ImplBlockInterface::new_for_test(docs, attrs, final_sig, methods, aliases);
 
-        debug!("ib = {:#?}", ib);
+        //debug!("ib = {:#?}", ib);
 
         let actual_output = format!("{}", ib);
 
+        //WARNING: dont touch this! or your tests will break and you will be sad
+        //
         // The "expected" text includes the entire body and exact spacing
         let expected_output = indoc! {r#"
             impl CrateHandle {
@@ -335,15 +337,15 @@ mod test_impl_block_interface_real {
                             + Send 
                             + Sync
                             + 'async_trait,
-
+                
                             CrateError
                                 : From<<P as HasCargoTomlPathBuf>::Error> 
                                 + From<<P as HasCargoTomlPathBufSync>::Error>
                 {
                     let cargo_toml_path = crate_path.cargo_toml_path_buf_sync()?;
-
+                
                     let cargo_toml_handle = Arc::new(AsyncMutex::new(CargoToml::new_sync(cargo_toml_path)?));
-
+                
                     Ok(Self {
                         cargo_toml_handle,
                         crate_path: crate_path.as_ref().to_path_buf(),
