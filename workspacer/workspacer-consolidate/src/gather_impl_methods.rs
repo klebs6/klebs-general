@@ -5,11 +5,13 @@ crate::ix!();
 /// `should_skip_item_fn` determines should be skipped (e.g., private methods,
 /// test methods if not `.include_test_items()`, or with `#[some_other_attr]`, etc.).
 pub fn gather_impl_methods(
-    impl_ast: &ast::Impl,
-    options: &ConsolidationOptions,
-    file_path: &PathBuf,
+    impl_ast:   &ast::Impl,
+    options:    &ConsolidationOptions,
+    file_path:  &PathBuf,
     crate_path: &PathBuf,
+
 ) -> Vec<CrateInterfaceItem<ast::Fn>> {
+
     let mut out = Vec::new();
 
     if let Some(assoc_items) = impl_ast.assoc_item_list() {
@@ -124,7 +126,10 @@ mod test_gather_impl_methods {
         let impl_ast = find_first_impl(&root).expect("Expected an impl block");
         let opts = default_options();
 
-        let fns = gather_impl_methods(&impl_ast, &opts, file_path.clone(), crate_path.clone());
+        let file_path = PathBuf::from("TEST_ONLY_file_path.rs");
+        let crate_path = PathBuf::from("TEST_ONLY_crate_path");
+
+        let fns = gather_impl_methods(&impl_ast, &opts, &file_path, &crate_path);
         assert!(fns.is_empty());
     }
 
@@ -140,7 +145,10 @@ mod test_gather_impl_methods {
         let impl_ast = find_first_impl(&root).expect("Expected an impl block");
         let opts = default_options();
 
-        let fns = gather_impl_methods(&impl_ast, &opts, file_path.clone(), crate_path.clone());
+        let file_path = PathBuf::from("TEST_ONLY_file_path.rs");
+        let crate_path = PathBuf::from("TEST_ONLY_crate_path");
+
+        let fns = gather_impl_methods(&impl_ast, &opts, &file_path, &crate_path);
         assert!(fns.is_empty());
     }
 
@@ -156,7 +164,10 @@ mod test_gather_impl_methods {
         let impl_ast = find_first_impl(&root).expect("impl block");
         let opts = default_options();
 
-        let fns = gather_impl_methods(&impl_ast, &opts, file_path.clone(), crate_path.clone());
+        let file_path = PathBuf::from("TEST_ONLY_file_path.rs");
+        let crate_path = PathBuf::from("TEST_ONLY_crate_path");
+
+        let fns = gather_impl_methods(&impl_ast, &opts, &file_path, &crate_path);
         assert_eq!(fns.len(), 2, "We expect 2 normal fns");
     }
 
@@ -174,7 +185,10 @@ mod test_gather_impl_methods {
         // We skip test => so we only keep normal_fn
         let opts = default_options();
 
-        let fns = gather_impl_methods(&impl_ast, &opts, file_path.clone(), crate_path.clone());
+        let file_path = PathBuf::from("TEST_ONLY_file_path.rs");
+        let crate_path = PathBuf::from("TEST_ONLY_crate_path");
+
+        let fns = gather_impl_methods(&impl_ast, &opts, &file_path, &crate_path);
         assert_eq!(fns.len(), 1, "Should skip test_fn");
     }
 
@@ -197,7 +211,10 @@ mod test_gather_impl_methods {
         let impl_ast = find_first_impl(&root).expect("impl block");
         let opts = default_options(); // skip test, skip #some_other_attr, keep private
 
-        let fns = gather_impl_methods(&impl_ast, &opts, file_path.clone(), crate_path.clone());
+        let file_path = PathBuf::from("TEST_ONLY_file_path.rs");
+        let crate_path = PathBuf::from("TEST_ONLY_crate_path");
+
+        let fns = gather_impl_methods(&impl_ast, &opts, &file_path, &crate_path);
 
         // We expect keep_me & also_keep_me => 2
         // skip_me_test => has #[cfg(test)], skip
@@ -218,8 +235,11 @@ mod test_gather_impl_methods {
         let root = parse_source(snippet);
         let impl_ast = find_first_impl(&root).expect("impl block");
 
+        let file_path = PathBuf::from("TEST_ONLY_file_path.rs");
+        let crate_path = PathBuf::from("TEST_ONLY_crate_path");
+
         let opts = default_options(); // skip test => keep only trait_method
-        let fns = gather_impl_methods(&impl_ast, &opts, file_path.clone(), crate_path.clone());
+        let fns = gather_impl_methods(&impl_ast, &opts, &file_path, &crate_path);
         assert_eq!(fns.len(), 1);
     }
 
@@ -232,7 +252,10 @@ mod test_gather_impl_methods {
         let impl_ast = find_first_impl(&root).expect("impl block");
         let opts = default_options();
 
-        let fns = gather_impl_methods(&impl_ast, &opts, file_path.clone(), crate_path.clone());
+        let file_path = PathBuf::from("TEST_ONLY_file_path.rs");
+        let crate_path = PathBuf::from("TEST_ONLY_crate_path");
+
+        let fns = gather_impl_methods(&impl_ast, &opts, &file_path, &crate_path);
         assert!(fns.is_empty());
     }
 }

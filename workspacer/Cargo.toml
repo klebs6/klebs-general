@@ -69,10 +69,11 @@ members  = [
     "workspacer-tree", 
     "sync-run-async", 
     "workspacer-prune-bad-category-slugs" 
-, "workspacer-run", "workspacer-topo"]
+, "workspacer-run", "workspacer-topo", "workspacer-lossless-file"]
 resolver = "3"
 
 [workspace.dependencies]
+text-size               = { version = "*", features = [ "serde" ] }
 Inflector               = "*"
 async-channel           = "2.3.1"
 async-trait             = "0.1.83"

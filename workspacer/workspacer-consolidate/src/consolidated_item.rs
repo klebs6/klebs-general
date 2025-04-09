@@ -15,7 +15,6 @@ pub enum ConsolidatedItem {
     ImplBlock(ImplBlockInterface),
 
     // --- a special "test" variant ---
-    #[cfg(test)]
     MockTest(String),
 }
 
@@ -31,7 +30,6 @@ impl fmt::Display for ConsolidatedItem {
             ConsolidatedItem::Module(mi)      => write!(f, "{}", mi),
             ConsolidatedItem::ImplBlock(ib)   => write!(f, "{}", ib),
 
-            #[cfg(test)]
             ConsolidatedItem::MockTest(ib)   => write!(f, "{}", ib),
         }
     }

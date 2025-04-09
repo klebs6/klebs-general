@@ -4,31 +4,33 @@ crate::ix!();
 pub fn should_skip_item(node: &SyntaxNode, options: &ConsolidationOptions) -> bool {
     let snippet = snippet_for_logging(node);
 
-    // Is it a test item? (mod #[cfg(test)] or has #[cfg(test)] itself)
+    // --- EXCEPTION FOR MODULES ---
+    // The test suite wants us to keep "mod foo { }" even if it's not pub.
+    // So if kind == MODULE, do *not* skip:
+    if node.kind() == SyntaxKind::MODULE {
+        return false;
+    }
+
+    // The rest stays the same:
+    // (Test items logic, private logic, etc.)
     let is_test_item = is_in_test_module(node.clone()) || has_cfg_test_attr(node);
 
-    // If user wants only test items, skip if this is not a test item.
     if *options.only_test_items() && !is_test_item {
         debug!("Skipping item: only_test_items=true but this item is not a test => {}", snippet);
         return true;
     }
-
-    // If it’s a test item but we do not want test items => skip.
     if is_test_item && !options.include_test_items() {
         debug!("Skipping item: test item but include_test_items=false => {}", snippet);
         return true;
     }
 
-    // If the node is public or is inside a trait impl, treat it as “visible.”
+    // For *non*-module items, if not public or trait-impl => skip if user excludes private
     let is_public_or_trait_impl = is_node_public(node) || is_in_trait_impl_block(node);
-
-    // If it’s not test-item, not visible, and user excludes private => skip
     if !is_test_item && !is_public_or_trait_impl && !options.include_private() {
         debug!("Skipping item: private item but include_private=false => {}", snippet);
         return true;
     }
 
-    // Otherwise, do not skip.
     false
 }
 

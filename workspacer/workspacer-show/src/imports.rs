@@ -6,3 +6,4 @@ pub(crate) use workspacer_errors::*;
 pub(crate) use workspacer_workspace::*;
 pub(crate) use workspacer_crate::*;
 pub(crate) use workspacer_run::*;
+pub(crate) use workspacer_mock::*;

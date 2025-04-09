@@ -71,6 +71,7 @@ tracing-subscriber.workspace      = true
 uuid.workspace                    = true
 which.workspace                   = true
 Inflector.workspace               = true
+text-size.workspace               = true
 
 [dev-dependencies]
 indoc.workspace      = true

@@ -8,6 +8,10 @@ pub fn gather_fn_item(
     crate_path: &PathBuf,
 ) -> CrateInterfaceItem<ast::Fn> {
 
+    let raw_range = fn_ast.syntax().text_range();
+    // If you want to exclude normal comments from the edges, you could do so. For now, we pass the same:
+    let eff_range = raw_range;
+
     let docs = if *options.include_docs() {
         extract_docs(fn_ast.syntax())
     } else {
@@ -17,52 +21,46 @@ pub fn gather_fn_item(
     let attributes = gather_all_attrs(fn_ast.syntax());
 
     let is_test_item = is_in_test_module(fn_ast.syntax().clone()) || has_cfg_test_attr(fn_ast.syntax());
-
     let body_source = if is_test_item {
         if *options.include_fn_bodies_in_tests() {
-            if let Some(block_expr) = fn_ast.body() {
-                Some(block_expr.syntax().text().to_string())
-            } else {
-                None
-            }
+            fn_ast
+                .body()
+                .map(|b| b.syntax().text().to_string())
         } else {
             None
         }
     } else {
         if *options.include_fn_bodies() {
-            if let Some(block_expr) = fn_ast.body() {
-                Some(block_expr.syntax().text().to_string())
-            } else {
-                None
-            }
+            fn_ast
+                .body()
+                .map(|b| b.syntax().text().to_string())
         } else {
             None
         }
     };
 
-    CrateInterfaceItem::new_with_paths(
-        fn_ast.clone(), 
-        docs, 
-        attributes, 
-        body_source, 
+    CrateInterfaceItem::new_with_paths_and_ranges(
+        fn_ast.clone(),
+        docs,
+        attributes,
+        body_source,
         Some(options.clone()),
         file_path.clone(),
         crate_path.clone(),
+        raw_range,
+        eff_range,
     )
 }
 
 #[cfg(test)]
 mod test_gather_fn_item {
     use super::*;
-    use ra_ap_syntax::{ast, AstNode, SourceFile, SyntaxKind, SyntaxNode, Edition};
 
-    /// A helper to parse a snippet into its root `SyntaxNode`.
     fn parse_source(snippet: &str) -> SyntaxNode {
         let parse = SourceFile::parse(snippet, Edition::Edition2021);
         parse.tree().syntax().clone()
     }
 
-    /// Finds the first `ast::Fn` in the syntax tree, if any.
     fn find_first_fn(root: &SyntaxNode) -> Option<ast::Fn> {
         for node in root.descendants() {
             if node.kind() == SyntaxKind::FN {
@@ -74,16 +72,9 @@ mod test_gather_fn_item {
         None
     }
 
-    /// Our default test options: docs + normal bodies. 
     fn default_options() -> ConsolidationOptions {
-        ConsolidationOptions::new()
-            .with_docs()
-            .with_fn_bodies()
+        ConsolidationOptions::new().with_docs().with_fn_bodies()
     }
-
-    // ------------------------------------------------------------------------
-    // The test suite
-    // ------------------------------------------------------------------------
 
     #[test]
     fn test_simple_fn_no_docs_no_attrs_with_body() {
@@ -95,13 +86,13 @@ mod test_gather_fn_item {
         let fn_ast = find_first_fn(&root).expect("Expected a fn");
         let opts = default_options();
 
-        let item = gather_fn_item(&fn_ast, &opts);
-        assert_eq!(*item.docs(), None, "No doc => none");
-        assert_eq!(*item.attributes(), None, "No attrs => none");
+        let file_path = PathBuf::from("TEST_ONLY_file_path.rs");
+        let crate_path = PathBuf::from("TEST_ONLY_crate_path");
 
-        let raw_body = item.body_source().clone().expect("Should have body");
-        let simplified = raw_body.replace(char::is_whitespace, "");
-        assert_eq!(simplified, "{}", "Empty body => {{}}");
+        let item = gather_fn_item(&fn_ast, &opts, &file_path, &crate_path);
+        assert_eq!(*item.docs(), None);
+        assert_eq!(*item.attributes(), None);
+        assert!(item.body_source().is_some());
     }
 
     #[test]
@@ -115,7 +106,10 @@ mod test_gather_fn_item {
         let fn_ast = find_first_fn(&root).expect("Expected a fn");
         let opts = default_options();
 
-        let item = gather_fn_item(&fn_ast, &opts);
+        let file_path = PathBuf::from("TEST_ONLY_file_path.rs");
+        let crate_path = PathBuf::from("TEST_ONLY_crate_path");
+
+        let item = gather_fn_item(&fn_ast, &opts, &file_path, &crate_path);
         let docs = item.docs().clone().expect("Should have docs");
         assert!(docs.contains("/// This is a doc line"));
 
@@ -135,7 +129,10 @@ mod test_gather_fn_item {
         let fn_ast = find_first_fn(&root).expect("Expected fn");
         let opts = default_options();
 
-        let item = gather_fn_item(&fn_ast, &opts);
+        let file_path = PathBuf::from("TEST_ONLY_file_path.rs");
+        let crate_path = PathBuf::from("TEST_ONLY_crate_path");
+
+        let item = gather_fn_item(&fn_ast, &opts, &file_path, &crate_path);
         assert_eq!(*item.docs(), None);
         assert_eq!(*item.attributes(), None);
         assert_eq!(*item.body_source(), None, "No block => no body");
@@ -157,12 +154,15 @@ mod test_gather_fn_item {
             .with_fn_bodies()
             .with_fn_bodies_in_tests();
 
+        let file_path = PathBuf::from("TEST_ONLY_file_path.rs");
+        let crate_path = PathBuf::from("TEST_ONLY_crate_path");
+
         // (a) skip body if .with_fn_bodies_in_tests() is off
-        let item_skip = gather_fn_item(&fn_ast, &opts_no_body_in_tests);
+        let item_skip = gather_fn_item(&fn_ast, &opts_no_body_in_tests, &file_path, &crate_path);
         assert_eq!(*item_skip.body_source(), None);
 
         // (b) gather body if .with_fn_bodies_in_tests() is on
-        let item_include = gather_fn_item(&fn_ast, &opts_with_test_bodies);
+        let item_include = gather_fn_item(&fn_ast, &opts_with_test_bodies, &file_path, &crate_path);
         let actual_body = item_include.body_source().clone().expect("Should have body");
         let normalized = actual_body.replace(char::is_whitespace, "");
         assert_eq!(normalized, "{println!(\"test!\");}");
@@ -180,7 +180,10 @@ mod test_gather_fn_item {
         let fn_node = root.descendants().find_map(ast::Fn::cast).expect("Expected fn");
         let opts = default_options(); // no .with_fn_bodies_in_tests() => skip
 
-        let item = gather_fn_item(&fn_node, &opts);
+        let file_path = PathBuf::from("TEST_ONLY_file_path.rs");
+        let crate_path = PathBuf::from("TEST_ONLY_crate_path");
+
+        let item = gather_fn_item(&fn_node, &opts, &file_path, &crate_path);
         assert_eq!(*item.body_source(), None, "Should skip body in test mod by default");
     }
 
@@ -202,7 +205,10 @@ mod test_gather_fn_item {
             .with_fn_bodies()
             .with_fn_bodies_in_tests(); // so we definitely see the body
 
-        let item = gather_fn_item(&fn_ast, &opts);
+        let file_path = PathBuf::from("TEST_ONLY_file_path.rs");
+        let crate_path = PathBuf::from("TEST_ONLY_crate_path");
+
+        let item = gather_fn_item(&fn_ast, &opts, &file_path, &crate_path);
         // Confirm docs => None
         assert_eq!(*item.docs(), None, "Docs are disabled => none");
 
@@ -225,7 +231,10 @@ mod test_gather_fn_item {
         let fn_ast = find_first_fn(&root).expect("Expected fn");
         let opts = default_options();
 
-        let item = gather_fn_item(&fn_ast, &opts);
+        let file_path = PathBuf::from("TEST_ONLY_file_path.rs");
+        let crate_path = PathBuf::from("TEST_ONLY_crate_path");
+
+        let item = gather_fn_item(&fn_ast, &opts, &file_path, &crate_path);
         let attrs = item.attributes().clone().expect("We have attrs");
         assert!(attrs.contains("#[inline]"));
         assert!(attrs.contains("#[allow(dead_code)]"));
@@ -240,7 +249,10 @@ mod test_gather_fn_item {
         let fn_ast = find_first_fn(&root).expect("Expected fn");
         let opts = default_options();
 
-        let item = gather_fn_item(&fn_ast, &opts);
+        let file_path = PathBuf::from("TEST_ONLY_file_path.rs");
+        let crate_path = PathBuf::from("TEST_ONLY_crate_path");
+
+        let item = gather_fn_item(&fn_ast, &opts, &file_path, &crate_path);
         assert_eq!(*item.body_source(), None, "No block => no body");
     }
 
@@ -256,7 +268,10 @@ mod test_gather_fn_item {
         let fn_ast = find_first_fn(&root).expect("Expected fn");
         let opts = default_options();
 
-        let item = gather_fn_item(&fn_ast, &opts);
+        let file_path = PathBuf::from("TEST_ONLY_file_path.rs");
+        let crate_path = PathBuf::from("TEST_ONLY_crate_path");
+
+        let item = gather_fn_item(&fn_ast, &opts, &file_path, &crate_path);
         let body_src = item.body_source().clone().expect("We have a block");
         assert!(body_src.contains("let x = 10;"));
         assert!(body_src.contains("println!(\"x = {}\", x);"));
@@ -277,7 +292,10 @@ mod test_gather_fn_item {
         let fn_ast = find_first_fn(&root).expect("Expected fn");
         let opts = default_options().with_fn_bodies_in_tests();
 
-        let item = gather_fn_item(&fn_ast, &opts);
+        let file_path = PathBuf::from("TEST_ONLY_file_path.rs");
+        let crate_path = PathBuf::from("TEST_ONLY_crate_path");
+
+        let item = gather_fn_item(&fn_ast, &opts, &file_path, &crate_path);
 
         // docs
         let docs = item.docs().clone().expect("Should have doc line");

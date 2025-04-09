@@ -30,7 +30,7 @@ CrateError: From<<T as AsyncTryFrom<PathBuf>>::Error>
 
     #[tracing::instrument(level = "trace", skip(self, options))]
     async fn show(&self, options: &ShowFlags) -> Result<String, Self::Error> {
-        trace!("Entering ShowCrate::show_crate for CrateHandle at {:?}", self.as_ref());
+        trace!("Entering ShowCrate::show for CrateHandle at {:?}", self.as_ref());
 
         // 1) Validate if it’s actually a single-crate or part of a workspace:
         //    We'll do that logic at a higher level if needed. Here, we assume it's valid.
@@ -109,13 +109,13 @@ version = "0.1.0"
         // Build CrateHandle
         let mut ch = CrateHandle::new(&root).await.unwrap();
 
-        let opts = ShowFlagsBuilder::new()
+        let opts = ShowFlagsBuilder::default()
             .show_items_with_no_data(true)
             .merge_crates(false)
             .build()
             .unwrap();
-        let result_str = ch.show_crate(&opts).await.unwrap();
-        debug!("show_crate output = {}", result_str);
+        let result_str = ch.show(&opts).await.unwrap();
+        debug!("show output = {}", result_str);
 
         // The consolidated interface is likely empty, so we expect <no-data-for-crate>
         assert!(
@@ -143,11 +143,11 @@ members=[]
         let ws = Workspace::<PathBuf, CrateHandle>::new(&root)
             .await
             .expect("Should parse an empty workspace");
-        let opts = ShowFlagsBuilder::new()
+        let opts = ShowFlagsBuilder::default()
             .show_items_with_no_data(true)
             .build()
             .unwrap();
-        let result_str = ws.show_workspace(&opts).await.unwrap();
+        let result_str = ws.show_all(&opts).await.unwrap();
         debug!("show_workspace output = {}", result_str);
         assert!(
             result_str.contains("<no-data-for-crate>"),
@@ -169,11 +169,11 @@ members=[]
         let ws = Workspace::<PathBuf, CrateHandle>::new(&path)
             .await
             .expect("Should parse multi-crate workspace");
-        let opts = ShowFlagsBuilder::new()
+        let opts = ShowFlagsBuilder::default()
             .show_items_with_no_data(false)
             .build()
             .unwrap();
-        let result_str = ws.show_workspace(&opts).await.unwrap();
+        let result_str = ws.show_all(&opts).await.unwrap();
         debug!("show_workspace output:\n{}", result_str);
         // We expect to see something about crate_a and crate_b (though actual contents might be minimal)
         assert!(result_str.contains("crate_a") && result_str.contains("crate_b"),
@@ -221,13 +221,13 @@ version = "0.2.3"
 
         // 3) Build a CrateHandle for main_crate
         let mut ch = CrateHandle::new(&main_crate).await.unwrap();
-        let opts = ShowFlagsBuilder::new()
+        let opts = ShowFlagsBuilder::default()
             .merge_crates(true)
             .build()
             .unwrap();
 
-        let result_str = ch.show_crate(&opts).await.unwrap();
-        debug!("show_crate merged output:\n{}", result_str);
+        let result_str = ch.show(&opts).await.unwrap();
+        debug!("show merged output:\n{}", result_str);
         // We expect to see references to "main_crate" and "dep_crate"
         // because we merged them
         assert!(

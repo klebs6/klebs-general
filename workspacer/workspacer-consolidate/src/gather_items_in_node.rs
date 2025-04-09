@@ -4,6 +4,15 @@ crate::ix!();
 /// Gathers Rust items (fn, struct, enum, mod, trait, etc.) from `parent_node`.
 /// In older RA versions, top-level items appear in a `SourceFile` or `ItemList`.
 /// We'll check those first; if that fails, we fallback to iterating `.children()`.
+///
+/// **Note**: By default, ra_ap_syntax might parse leading/trailing line comments
+/// (which are *not* doc comments) as part of an item's syntax node text.
+/// But in our usage, we want such "normal" line comments to appear as interstitial
+/// (outside the item). So after we cast the item (e.g. `ast::Fn`), we compute
+/// an **adjusted range** that excludes any leading/trailing non-doc comments/whitespace,
+/// so those appear in interstitial segments instead of being lumped into the item range.
+///
+/// That logic is in `compute_item_range_excluding_normal_comments(..)`.
 pub fn gather_items_in_node(
     parent_node: &SyntaxNode,
     options:     &ConsolidationOptions,
@@ -12,29 +21,20 @@ pub fn gather_items_in_node(
 
 ) -> Vec<ConsolidatedItem> {
 
-    // Print the parent_node's first ~80 chars so we can see what snippet is being parsed:
-    let node_text = parent_node.text().to_string();
-    let preview = if node_text.len() > 80 {
-        format!("{}...", &node_text[..77])
-    } else {
-        node_text.clone()
-    };
-    debug!("=== gather_items_in_node: Node preview = {:?} ===", preview);
+    debug!("=== gather_items_in_node: Node preview = {:?} ===",
+           trim_to_60(parent_node.text().to_string()));
 
     // 1) Attempt to parse as `SourceFile`
     if let Some(sf) = ast::SourceFile::cast(parent_node.clone()) {
         let items_iter = sf.items();
-        // We'll collect them in a vector just to debug their count:
         let all_items: Vec<_> = items_iter.collect();
         trace!(">>> recognized SourceFile => found {} top-level items", all_items.len());
         for (i, it) in all_items.iter().enumerate() {
             let k = it.syntax().kind();
             trace!("    item #{}: kind={:?}, text={:?}",
-                i, k,
-                trim_to_60(it.syntax().text().to_string())
-            );
+                   i, k,
+                   trim_to_60(it.syntax().text().to_string()));
         }
-        // Now actually process them
         return gather_items_from_iter(all_items.into_iter(), options, file_path, crate_path);
     }
 
@@ -46,16 +46,13 @@ pub fn gather_items_in_node(
         for (i, it) in all_items.iter().enumerate() {
             let k = it.syntax().kind();
             trace!("    item #{}: kind={:?}, text={:?}",
-                i, k,
-                trim_to_60(it.syntax().text().to_string())
-            );
+                   i, k,
+                   trim_to_60(it.syntax().text().to_string()));
         }
         return gather_items_from_iter(all_items.into_iter(), options, file_path, crate_path);
     }
 
-    // 3) Fallback: direct iteration over `parent_node.children()`.
-    //    This is rarely needed for top-level items if the snippet is well-formed,
-    //    but it might matter for nested scopes or partial code.
+    // 3) fallback
     debug!(">>> fallback: direct children => checking .kind() of each child");
     let mut items = Vec::new();
     let mut count_children = 0;
@@ -65,190 +62,8 @@ pub fn gather_items_in_node(
         let short_txt = trim_to_60(child.text().to_string());
         trace!("   - fallback child #{} => kind={:?}, text={:?}", count_children, k, short_txt);
 
-        // Attempt the same item logic:
-        if let Some(mod_ast) = ast::Module::cast(child.clone()) {
-            trace!("       => recognized ast::Module");
-            if should_skip_item(&child, options) {
-                trace!("         [skipped by should_skip_item]");
-                continue;
-            }
-            let docs = if *options.include_docs() {
-                extract_docs(&child)
-            } else {
-                None
-            };
-            let attrs = gather_all_attrs(&child);
-
-            let mod_name = mod_ast
-                .name()
-                .map(|n| n.text().to_string())
-                .unwrap_or("<unknown_mod>".to_owned());
-
-            let mut mod_iface = ModuleInterface::new_with_paths(
-                docs, 
-                attrs, 
-                mod_name,
-                file_path.clone(),
-                crate_path.clone(),
-            );
-
-            if let Some(sub_item_list) = mod_ast.item_list() {
-                let sub_items = gather_items_in_node(sub_item_list.syntax(), options, file_path, crate_path);
-                for si in sub_items {
-                    mod_iface.add_item(si);
-                }
-            }
-            items.push(ConsolidatedItem::Module(mod_iface));
-
-        } else if let Some(impl_ast) = ast::Impl::cast(child.clone()) {
-            trace!("       => recognized ast::Impl");
-            if should_skip_impl(&impl_ast, options) {
-                trace!("         [skipped by should_skip_impl]");
-                continue;
-            }
-            let docs  = None; // or extract_docs
-            let attrs = None; // or gather_all_attrs
-            let signature = generate_impl_signature(&impl_ast, docs.as_ref());
-            let methods = gather_impl_methods(&impl_ast, options, file_path, crate_path);
-            let aliases = gather_assoc_type_aliases(&impl_ast, options, file_path, crate_path);
-
-            let ib = ImplBlockInterface::new_with_paths(
-                docs, 
-                attrs, 
-                signature, 
-                methods, 
-                aliases,
-                file_path.clone(),
-                crate_path.clone(),
-            );
-            items.push(ConsolidatedItem::ImplBlock(ib));
-
-        } else if let Some(fn_ast) = ast::Fn::cast(child.clone()) {
-            trace!("       => recognized ast::Fn");
-            if should_skip_item(&child, options) {
-                trace!("         [skipped by should_skip_item]");
-                continue;
-            }
-            let ci = gather_fn_item(&fn_ast, options, file_path, crate_path);
-            items.push(ConsolidatedItem::Fn(ci));
-
-        } else if let Some(st_ast) = ast::Struct::cast(child.clone()) {
-            trace!("       => recognized ast::Struct");
-            if should_skip_item(&child, options) {
-                continue;
-            }
-            let docs = if *options.include_docs() {
-                extract_docs(&child)
-            } else {
-                None
-            };
-            let attrs = gather_all_attrs(&child);
-            items.push(ConsolidatedItem::Struct(
-                    CrateInterfaceItem::new_with_paths(
-                        st_ast, 
-                        docs, 
-                        attrs, 
-                        None, 
-                        Some(options.clone()),
-                        file_path.clone(),
-                        crate_path.clone()
-                    ),
-            ));
-
-        } else if let Some(en_ast) = ast::Enum::cast(child.clone()) {
-            trace!("       => recognized ast::Enum");
-            if should_skip_item(&child, options) {
-                continue;
-            }
-            let docs = if *options.include_docs() {
-                extract_docs(&child)
-            } else {
-                None
-            };
-            let attrs = gather_all_attrs(&child);
-            items.push(ConsolidatedItem::Enum(
-                    CrateInterfaceItem::new_with_paths(
-                        en_ast, 
-                        docs, 
-                        attrs, 
-                        None, 
-                        Some(options.clone()),
-                        file_path.clone(),
-                        crate_path.clone()
-                    ),
-            ));
-
-        } else if let Some(tr_ast) = ast::Trait::cast(child.clone()) {
-            trace!("       => recognized ast::Trait");
-            if should_skip_item(&child, options) {
-                continue;
-            }
-            let docs = if *options.include_docs() {
-                extract_docs(&child)
-            } else {
-                None
-            };
-            let attrs = gather_all_attrs(&child);
-            items.push(ConsolidatedItem::Trait(
-                    CrateInterfaceItem::new_with_paths(
-                        tr_ast, 
-                        docs, 
-                        attrs, 
-                        None, 
-                        Some(options.clone()),
-                        file_path.clone(),
-                        crate_path.clone()
-                    ),
-            ));
-
-        } else if let Some(ty_ast) = ast::TypeAlias::cast(child.clone()) {
-            trace!("       => recognized ast::TypeAlias");
-            if should_skip_item(&child, options) {
-                continue;
-            }
-            let docs = if *options.include_docs() {
-                extract_docs(&child)
-            } else {
-                None
-            };
-            let attrs = gather_all_attrs(&child);
-            items.push(ConsolidatedItem::TypeAlias(
-                    CrateInterfaceItem::new_with_paths(
-                        ty_ast, 
-                        docs, 
-                        attrs, 
-                        None, 
-                        Some(options.clone()),
-                        file_path.clone(),
-                        crate_path.clone()
-                    ),
-            ));
-
-        } else if let Some(mac_ast) = ast::MacroRules::cast(child.clone()) {
-            trace!("       => recognized ast::MacroRules");
-            if should_skip_item(&child, options) {
-                continue;
-            }
-            let docs = if *options.include_docs() {
-                extract_docs(&child)
-            } else {
-                None
-            };
-            let attrs = gather_all_attrs(&child);
-            items.push(ConsolidatedItem::Macro(
-                    CrateInterfaceItem::new_with_paths(
-                        mac_ast, 
-                        docs, 
-                        attrs, 
-                        None, 
-                        Some(options.clone()),
-                        file_path.clone(),
-                        crate_path.clone()
-                    ),
-            ));
-
-        } else {
-            trace!("       => no recognized item cast");
+        if let Some(ci) = try_cast_and_build_item(&child, options, file_path, crate_path) {
+            items.push(ci);
         }
     }
 
@@ -260,14 +75,11 @@ pub fn gather_items_in_node(
     items
 }
 
-/// Called by gather_items_in_node to process each `ast::Item`.
-/// We try each cast in turn, building the appropriate ConsolidatedItem.
 fn gather_items_from_iter(
     items_iter: impl Iterator<Item = ast::Item>,
     options:    &ConsolidationOptions,
     file_path:  &PathBuf,
     crate_path: &PathBuf,
-
 ) -> Vec<ConsolidatedItem> {
 
     debug!("+++ gather_items_from_iter: scanning RA items +++");
@@ -278,194 +90,274 @@ fn gather_items_from_iter(
         let short_txt = trim_to_60(syn.text().to_string());
         trace!("   item #{} => kind={:?}, text={:?}", idx, syn.kind(), short_txt);
 
-        if let Some(mod_ast) = ast::Module::cast(syn.clone()) {
-            trace!("       => recognized ast::Module");
-            if should_skip_item(&syn, options) {
-                trace!("         [skipped by should_skip_item]");
-                continue;
-            }
-            let docs = if *options.include_docs() {
-                extract_docs(&syn)
-            } else {
-                None
-            };
-            let attrs = gather_all_attrs(&syn);
-            let mod_name = mod_ast
-                .name()
-                .map(|n| n.text().to_string())
-                .unwrap_or_else(|| "<unknown_mod>".to_owned());
-
-            let mut mod_iface = ModuleInterface::new_with_paths(
-                docs, 
-                attrs, 
-                mod_name,
-                file_path.clone(),
-                crate_path.clone()
-            );
-
-            if let Some(sub_item_list) = mod_ast.item_list() {
-                let sub_items = gather_items_in_node(sub_item_list.syntax(), options, file_path, crate_path);
-                for si in sub_items {
-                    mod_iface.add_item(si);
-                }
-            }
-            out.push(ConsolidatedItem::Module(mod_iface));
-
-        } else if let Some(impl_ast) = ast::Impl::cast(syn.clone()) {
-            trace!("       => recognized ast::Impl");
-            if should_skip_impl(&impl_ast, options) {
-                trace!("         [skipped by should_skip_impl]");
-                continue;
-            }
-            let docs = None;
-            let attrs = None;
-            let signature = generate_impl_signature(&impl_ast, docs.as_ref());
-            let methods = gather_impl_methods(&impl_ast, options, file_path, crate_path);
-            let aliases = gather_assoc_type_aliases(&impl_ast, options, file_path, crate_path);
-
-            let ib = ImplBlockInterface::new_with_paths(
-                docs, 
-                attrs, 
-                signature, 
-                methods, 
-                aliases,
-                file_path.clone(),
-                crate_path.clone()
-            );
-
-            out.push(ConsolidatedItem::ImplBlock(ib));
-
-        } else if let Some(fn_ast) = ast::Fn::cast(syn.clone()) {
-            trace!("       => recognized ast::Fn");
-            if should_skip_item(&syn, options) {
-                trace!("         [skipped by should_skip_item]");
-                continue;
-            }
-            let ci = gather_fn_item(&fn_ast, options, file_path, crate_path);
-            out.push(ConsolidatedItem::Fn(ci));
-
-        } else if let Some(st_ast) = ast::Struct::cast(syn.clone()) {
-            trace!("       => recognized ast::Struct");
-            if should_skip_item(&syn, options) {
-                continue;
-            }
-            let docs = if *options.include_docs() {
-                extract_docs(&syn)
-            } else {
-                None
-            };
-            let attrs = gather_all_attrs(&syn);
-            out.push(ConsolidatedItem::Struct(
-                    CrateInterfaceItem::new_with_paths(
-                        st_ast, 
-                        docs, 
-                        attrs, 
-                        None, 
-                        Some(options.clone()),
-                        file_path.clone(),
-                        crate_path.clone()
-                    ),
-            ));
-
-        } else if let Some(en_ast) = ast::Enum::cast(syn.clone()) {
-            trace!("       => recognized ast::Enum");
-            if should_skip_item(&syn, options) {
-                continue;
-            }
-            let docs = if *options.include_docs() {
-                extract_docs(&syn)
-            } else {
-                None
-            };
-            let attrs = gather_all_attrs(&syn);
-            out.push(ConsolidatedItem::Enum(
-                    CrateInterfaceItem::new_with_paths(
-                        en_ast, 
-                        docs, 
-                        attrs, 
-                        None, 
-                        Some(options.clone()),
-                        file_path.clone(),
-                        crate_path.clone()
-                    ),
-            ));
-
-        } else if let Some(tr_ast) = ast::Trait::cast(syn.clone()) {
-            trace!("       => recognized ast::Trait");
-            if should_skip_item(&syn, options) {
-                continue;
-            }
-            let docs = if *options.include_docs() {
-                extract_docs(&syn)
-            } else {
-                None
-            };
-            let attrs = gather_all_attrs(&syn);
-            out.push(ConsolidatedItem::Trait(
-                    CrateInterfaceItem::new_with_paths(
-                        tr_ast, 
-                        docs, 
-                        attrs, 
-                        None, 
-                        Some(options.clone()),
-                        file_path.clone(),
-                        crate_path.clone()
-                    ),
-            ));
-
-        } else if let Some(ty_ast) = ast::TypeAlias::cast(syn.clone()) {
-            trace!("       => recognized ast::TypeAlias");
-            if should_skip_item(&syn, options) {
-                continue;
-            }
-            let docs = if *options.include_docs() {
-                extract_docs(&syn)
-            } else {
-                None
-            };
-            let attrs = gather_all_attrs(&syn);
-            out.push(ConsolidatedItem::TypeAlias(
-                    CrateInterfaceItem::new_with_paths(
-                        ty_ast, 
-                        docs, 
-                        attrs, 
-                        None, 
-                        Some(options.clone()),
-                        file_path.clone(),
-                        crate_path.clone()
-                    ),
-            ));
-
-        } else if let Some(mac_ast) = ast::MacroRules::cast(syn.clone()) {
-            trace!("       => recognized ast::MacroRules");
-            if should_skip_item(&syn, options) {
-                continue;
-            }
-            let docs = if *options.include_docs() {
-                extract_docs(&syn)
-            } else {
-                None
-            };
-            let attrs = gather_all_attrs(&syn);
-            out.push(ConsolidatedItem::Macro(
-                    CrateInterfaceItem::new_with_paths(
-                        mac_ast, 
-                        docs, 
-                        attrs, 
-                        None, 
-                        Some(options.clone()),
-                        file_path.clone(),
-                        crate_path.clone()
-                    ),
-            ));
-
-        } else {
-            trace!("       => no recognized item cast for this item");
+        if let Some(ci) = try_cast_and_build_item(&syn, options, file_path, crate_path) {
+            out.push(ci);
         }
     }
 
     debug!("+++ gather_items_from_iter => total recognized items: {} +++\n", out.len());
     out
+}
+
+fn try_cast_and_build_item(
+    node: &SyntaxNode,
+    options: &ConsolidationOptions,
+    file_path: &PathBuf,
+    crate_path: &PathBuf,
+) -> Option<ConsolidatedItem> {
+    use ra_ap_syntax::ast;
+
+    // example for impl
+    if let Some(impl_ast) = ast::Impl::cast(node.clone()) {
+        if should_skip_impl(&impl_ast, options) {
+            return None;
+        }
+        let raw_range = impl_ast.syntax().text_range();
+        let eff_range = compute_effective_range(impl_ast.syntax());  // <--- important!
+
+        let docs    = if *options.include_docs() { extract_docs(node) } else { None };
+        let attrs   = gather_all_attrs(node);
+        let sig     = generate_impl_signature(&impl_ast, docs.as_ref());
+        let methods = gather_impl_methods(&impl_ast, options, file_path, crate_path);
+        let aliases = gather_assoc_type_aliases(&impl_ast, options, file_path, crate_path);
+
+        let ib = ImplBlockInterface::new_with_paths_and_range(
+            docs,
+            attrs,
+            sig,
+            methods,
+            aliases,
+            file_path.clone(),
+            crate_path.clone(),
+            raw_range,
+            eff_range,  // pass the trimmed range
+        );
+        return Some(ConsolidatedItem::ImplBlock(ib));
+    }
+
+    if let Some(mod_ast) = ast::Module::cast(node.clone()) {
+        if should_skip_item(node, options) {
+            return None;
+        }
+        let raw_range = mod_ast.syntax().text_range();
+        let eff_range = compute_effective_range(mod_ast.syntax());  // <--- also do it here
+
+        let docs = if *options.include_docs() {
+            extract_docs(node)
+        } else {
+            None
+        };
+        let attrs   = gather_all_attrs(node);
+        let modname = mod_ast.name().map(|n| n.text().to_string()).unwrap_or("<unknown>".to_string());
+
+        let mut mi = ModuleInterface::new_with_paths_and_range(
+            docs,
+            attrs,
+            modname,
+            file_path.clone(),
+            crate_path.clone(),
+            raw_range,
+            eff_range,
+        );
+        // gather sub-items if inline ...
+        return Some(ConsolidatedItem::Module(mi));
+    }
+
+    // --- MacroRules ---
+    if let Some(mac_ast) = ast::MacroRules::cast(node.clone()) {
+        if should_skip_item(node, options) {
+            return None;
+        }
+        let raw_range = mac_ast.syntax().text_range();
+        let eff_range = compute_effective_range(mac_ast.syntax());
+
+        let docs = if *options.include_docs() { extract_docs(node) } else { None };
+        let attrs = gather_all_attrs(node);
+
+        let ci = CrateInterfaceItem::new_with_paths_and_ranges(
+            mac_ast,
+            docs,
+            attrs,
+            None,
+            Some(options.clone()),
+            file_path.clone(),
+            crate_path.clone(),
+            raw_range,
+            eff_range,
+        );
+        return Some(ConsolidatedItem::Macro(ci));
+    }
+
+    // --- Fn ---
+    if let Some(fn_ast) = ast::Fn::cast(node.clone()) {
+        if should_skip_item(node, options) {
+            return None;
+        }
+
+        // skip incomplete
+        let param_list = fn_ast.param_list()?;
+        let ptxt = param_list.syntax().text().to_string();
+        if !ptxt.contains(')') {
+            return None;
+        }
+
+        let raw_range = fn_ast.syntax().text_range();
+        let eff_range = compute_effective_range(fn_ast.syntax());
+
+        let docs = if *options.include_docs() {
+            extract_docs(fn_ast.syntax())
+        } else {
+            None
+        };
+        let attributes = gather_all_attrs(fn_ast.syntax());
+        let is_test_item = is_in_test_module(fn_ast.syntax().clone()) || has_cfg_test_attr(fn_ast.syntax());
+        let body_source = if is_test_item {
+            if *options.include_fn_bodies_in_tests() {
+                fn_ast.body().map(|b| b.syntax().text().to_string())
+            } else {
+                None
+            }
+        } else if *options.include_fn_bodies() {
+            fn_ast.body().map(|b| b.syntax().text().to_string())
+        } else {
+            None
+        };
+
+        let ci = CrateInterfaceItem::new_with_paths_and_ranges(
+            fn_ast,
+            docs,
+            attributes,
+            body_source,
+            Some(options.clone()),
+            file_path.clone(),
+            crate_path.clone(),
+            raw_range,
+            eff_range,
+        );
+        return Some(ConsolidatedItem::Fn(ci));
+    }
+
+    // --- Struct ---
+    if let Some(st_ast) = ast::Struct::cast(node.clone()) {
+        if should_skip_item(node, options) {
+            return None;
+        }
+        let raw_range = st_ast.syntax().text_range();
+        let eff_range = compute_effective_range(st_ast.syntax());
+
+        let docs = if *options.include_docs() {
+            extract_docs(st_ast.syntax())
+        } else {
+            None
+        };
+        let attrs = gather_all_attrs(st_ast.syntax());
+        let ci = CrateInterfaceItem::new_with_paths_and_ranges(
+            st_ast,
+            docs,
+            attrs,
+            None,
+            Some(options.clone()),
+            file_path.clone(),
+            crate_path.clone(),
+            raw_range,
+            eff_range,
+        );
+        return Some(ConsolidatedItem::Struct(ci));
+    }
+
+    // --- Enum ---
+    if let Some(en_ast) = ast::Enum::cast(node.clone()) {
+        if should_skip_item(node, options) {
+            return None;
+        }
+        let raw_range = en_ast.syntax().text_range();
+        let eff_range = compute_effective_range(en_ast.syntax());
+
+        let docs = if *options.include_docs() {
+            extract_docs(en_ast.syntax())
+        } else {
+            None
+        };
+        let attrs = gather_all_attrs(en_ast.syntax());
+        let ci = CrateInterfaceItem::new_with_paths_and_ranges(
+            en_ast,
+            docs,
+            attrs,
+            None,
+            Some(options.clone()),
+            file_path.clone(),
+            crate_path.clone(),
+            raw_range,
+            eff_range,
+        );
+        return Some(ConsolidatedItem::Enum(ci));
+    }
+
+    // --- Trait ---
+    if let Some(tr_ast) = ast::Trait::cast(node.clone()) {
+        if should_skip_item(node, options) {
+            return None;
+        }
+        let raw_range = tr_ast.syntax().text_range();
+        let eff_range = compute_effective_range(tr_ast.syntax());
+
+        let docs = if *options.include_docs() {
+            extract_docs(tr_ast.syntax())
+        } else {
+            None
+        };
+        let attrs = gather_all_attrs(tr_ast.syntax());
+        let ci = CrateInterfaceItem::new_with_paths_and_ranges(
+            tr_ast,
+            docs,
+            attrs,
+            None,
+            Some(options.clone()),
+            file_path.clone(),
+            crate_path.clone(),
+            raw_range,
+            eff_range,
+        );
+        return Some(ConsolidatedItem::Trait(ci));
+    }
+
+    // --- TypeAlias ---
+    if let Some(ty_ast) = ast::TypeAlias::cast(node.clone()) {
+        if should_skip_item(node, options) {
+            return None;
+        }
+        let raw_range = ty_ast.syntax().text_range();
+        let eff_range = compute_effective_range(ty_ast.syntax());
+
+        let docs = if *options.include_docs() {
+            extract_docs(ty_ast.syntax())
+        } else {
+            None
+        };
+        let attrs = gather_all_attrs(ty_ast.syntax());
+        let ci = CrateInterfaceItem::new_with_paths_and_ranges(
+            ty_ast,
+            docs,
+            attrs,
+            None,
+            Some(options.clone()),
+            file_path.clone(),
+            crate_path.clone(),
+            raw_range,
+            eff_range,
+        );
+        return Some(ConsolidatedItem::TypeAlias(ci));
+    }
+
+    None
+}
+
+fn should_skip_item(node: &SyntaxNode, options: &ConsolidationOptions) -> bool {
+    skip_checks::should_skip_item(node, options)
+}
+
+fn should_skip_impl(impl_ast: &ast::Impl, options: &ConsolidationOptions) -> bool {
+    skip_checks::should_skip_impl(impl_ast, options)
 }
 
 // A test suite for the `gather_items_in_node` function, which inspects the children
@@ -516,7 +408,11 @@ mod test_gather_items_in_node {
         "#;
         let root_node = parse_source(snippet);
         let opts = default_options();
-        let items = gather_items_in_node(&root_node, &opts);
+
+        let file_path = PathBuf::from("TEST_ONLY_file_path.rs");
+        let crate_path = PathBuf::from("TEST_ONLY_crate_path");
+
+        let items = gather_items_in_node(&root_node, &opts, &file_path, &crate_path);
         assert_eq!(items.len(), 0, "No items expected in an empty source");
     }
 
@@ -537,7 +433,10 @@ mod test_gather_items_in_node {
         let root_node = parse_source(snippet);
         let opts = default_options();
 
-        let items = gather_items_in_node(&root_node, &opts);
+        let file_path = PathBuf::from("TEST_ONLY_file_path.rs");
+        let crate_path = PathBuf::from("TEST_ONLY_crate_path");
+
+        let items = gather_items_in_node(&root_node, &opts, &file_path, &crate_path);
         assert_eq!(items.len(), 1, "Expected exactly one top-level item (the module)");
         match &items[0] {
             ConsolidatedItem::Module(mod_iface) => {
@@ -562,7 +461,11 @@ mod test_gather_items_in_node {
         "#;
         let root_node = parse_source(snippet);
         let opts = default_options();
-        let items = gather_items_in_node(&root_node, &opts);
+
+        let file_path = PathBuf::from("TEST_ONLY_file_path.rs");
+        let crate_path = PathBuf::from("TEST_ONLY_crate_path");
+
+        let items = gather_items_in_node(&root_node, &opts, &file_path, &crate_path);
 
         // We expect 4 items: Fn, Struct, Enum, Trait
         assert_eq!(items.len(), 4);
@@ -587,7 +490,10 @@ mod test_gather_items_in_node {
         let root_node = parse_source(snippet);
         let opts = default_options();
 
-        let items = gather_items_in_node(&root_node, &opts);
+        let file_path = PathBuf::from("TEST_ONLY_file_path.rs");
+        let crate_path = PathBuf::from("TEST_ONLY_crate_path");
+
+        let items = gather_items_in_node(&root_node, &opts, &file_path, &crate_path);
         // We expect exactly one impl block item
         assert_eq!(items.len(), 1);
         match &items[0] {
@@ -617,8 +523,11 @@ mod test_gather_items_in_node {
             .with_docs()           // If the test wants doc coverage
             // .with_private_items() is **not** called => we skip private
             ;
+
+        let file_path = PathBuf::from("TEST_ONLY_file_path.rs");
+        let crate_path = PathBuf::from("TEST_ONLY_crate_path");
         
-        let items = gather_items_in_node(&root_node, &opts);
+        let items = gather_items_in_node(&root_node, &opts, &file_path, &crate_path);
 
         // Now we expect only the public function
         assert_eq!(items.len(), 1);
@@ -650,9 +559,11 @@ mod test_gather_items_in_node {
 
             pub struct TopStruct;
         "#;
+        let file_path = PathBuf::from("TEST_ONLY_file_path.rs");
+        let crate_path = PathBuf::from("TEST_ONLY_crate_path");
         let root_node = parse_source(snippet);
         let opts = default_options();
-        let items = gather_items_in_node(&root_node, &opts);
+        let items = gather_items_in_node(&root_node, &opts, &file_path, &crate_path);
 
         // We expect 3 items in top-level: macro_rules, module, struct
         assert_eq!(items.len(), 3);
@@ -676,11 +587,13 @@ mod test_gather_items_in_node {
             /// This is struct docs
             struct DocStruct;
         "#;
+        let file_path = PathBuf::from("TEST_ONLY_file_path.rs");
+        let crate_path = PathBuf::from("TEST_ONLY_crate_path");
         let root_node = parse_source(snippet);
         let mut opts = default_options(); 
         opts = opts.with_docs(); // ensure docs are gathered
 
-        let items = gather_items_in_node(&root_node, &opts);
+        let items = gather_items_in_node(&root_node, &opts, &file_path, &crate_path);
         assert_eq!(items.len(), 2, "Should have a function and a struct item");
         match (&items[0], &items[1]) {
             (ConsolidatedItem::Fn(fn_item), ConsolidatedItem::Struct(st_item)) => {
@@ -701,13 +614,15 @@ mod test_gather_items_in_node {
             /// Should skip me
             fn skip_docs_func() {}
         "#;
+        let file_path = PathBuf::from("TEST_ONLY_file_path.rs");
+        let crate_path = PathBuf::from("TEST_ONLY_crate_path");
         let root_node = parse_source(snippet);
         // We do *not* call .with_docs(), so doc lines are not captured,
         // **but** we DO call .with_private_items() so we do NOT skip it for being private.
         let opts = ConsolidationOptions::new()
             .with_private_items(); 
 
-        let items = gather_items_in_node(&root_node, &opts);
+        let items = gather_items_in_node(&root_node, &opts, &file_path, &crate_path);
 
         assert_eq!(items.len(), 1, "Should still gather the function item");
         match &items[0] {
@@ -728,9 +643,11 @@ mod test_gather_items_in_node {
             type AliasA = u32;
             enum MyEnum { Variant1, Variant2 }
         "#;
+        let file_path = PathBuf::from("TEST_ONLY_file_path.rs");
+        let crate_path = PathBuf::from("TEST_ONLY_crate_path");
         let root_node = parse_source(snippet);
         let opts = default_options();
-        let items = gather_items_in_node(&root_node, &opts);
+        let items = gather_items_in_node(&root_node, &opts, &file_path, &crate_path);
 
         assert_eq!(items.len(), 2, "One type alias, one enum");
         match (&items[0], &items[1]) {
@@ -757,6 +674,8 @@ mod test_gather_items_in_node {
                 // ...
             }
         "#;
+        let file_path = PathBuf::from("TEST_ONLY_file_path.rs");
+        let crate_path = PathBuf::from("TEST_ONLY_crate_path");
         let root_node = parse_source(snippet);
         let mut opts = default_options();
         // Suppose we skip #[cfg(test)] items, or private items, etc.
@@ -764,7 +683,7 @@ mod test_gather_items_in_node {
         // We'll just demonstrate a scenario:
         // opts = opts.with_skip_cfg_test(); // hypothetical
 
-        let items = gather_items_in_node(&root_node, &opts);
+        let items = gather_items_in_node(&root_node, &opts, &file_path, &crate_path);
 
         // Possibly we get normal_fn, macro, trait, mod sub
         // test_fn might be skipped. Or not, depending on your logic.

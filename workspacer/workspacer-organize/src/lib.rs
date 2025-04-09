@@ -1,4 +1,4 @@
 // ---------------- [ File: workspacer-organize/src/lib.rs ]
-#[macro_use] mod imports; 
+#[macro_use] mod imports; use imports::*;
 
-//x!{modfile}
+x!{organize}

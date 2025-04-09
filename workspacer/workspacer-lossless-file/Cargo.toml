@@ -1,0 +1,15 @@
+[package]
+name = "workspacer-lossless-file"
+version = "0.1.0"
+authors = ["YourName <you@example.com>"]
+license = "MIT"
+edition = "2024"
+description = "todo: write a description here"
+
+# keywords = []
+# categories = []
+
+[dependencies]
+workspacer-3p = { path = "../workspacer-3p" }
+workspacer-syntax = { path = "../workspacer-syntax" }
+workspacer-consolidate = { path = "../workspacer-consolidate" }

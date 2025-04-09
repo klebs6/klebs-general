@@ -3,10 +3,21 @@ crate::ix!();
 
 /// A single top-level item (fn, struct, etc.), with docs, attributes, and an optional body.
 ///
-/// `T` must implement `GenerateSignature` so we can produce something like "fn name()" or
-/// "struct Name" for display.
-#[derive(Builder,Getters, Debug, Clone)]
-#[getset(get="pub")]
+/// T must implement `GenerateSignature` so we can produce something like `fn name()` or
+/// `struct Name` for display.
+/// 
+/// **Important**: We store *two* ranges:
+/// 1. `raw_syntax_range`: the **full** range from RA’s syntax node (this exactly matches
+///    `node.syntax().text_range()`).
+/// 2. `effective_item_range`: a **trimmed** range that excludes leading/trailing normal comments
+///    and whitespace (but keeps doc comments). We use this for computing interstitial segments.
+/// 
+/// Many tests (like `test_text_range` in your suite) compare `raw_syntax_range` to the node’s actual
+/// `text_range()` to confirm no mismatch. Meanwhile, the interstitial logic uses `effective_item_range`
+/// to ensure normal line/block comments on the edges appear in interstitial segments instead of
+/// being “inside” the item.
+#[derive(Builder,Setters,Getters,Debug,Clone)]
+#[getset(get="pub",set="pub")]
 #[builder(setter(into))]
 pub struct CrateInterfaceItem<T: GenerateSignature> {
     item:                  Arc<T>,
@@ -15,11 +26,21 @@ pub struct CrateInterfaceItem<T: GenerateSignature> {
     body_source:           Option<String>,
     consolidation_options: Option<ConsolidationOptions>,
 
-    /// Always the file path from which this item was parsed
+    /// The file path from which this item was parsed
     file_path: PathBuf,
 
-    /// Always the crate root path for the crate that owns this item
+    /// The crate root path for the crate that owns this item
     crate_path: PathBuf,
+
+    /// The **full** syntax node range, exactly matching RA’s node range.
+    /// Many tests expect this to match `node.text_range()`.
+    raw_syntax_range: TextRange,
+
+    /// A **trimmed** range that excludes leading/trailing normal line comments,
+    /// block comments, and whitespace—but keeps doc comments. We use this
+    /// for interstitial segment calculations, so “normal” comments appear
+    /// in the leftover text.
+    effective_item_range: TextRange,
 }
 
 // Mark safe if T is safe:
@@ -28,27 +49,51 @@ unsafe impl<T: GenerateSignature> Sync for CrateInterfaceItem<T> {}
 
 impl<T: GenerateSignature> CrateInterfaceItem<T> {
 
-    /// Creates a new `CrateInterfaceItem`.
-    /// - `docs`: doc lines (triple-slash or so) gleaned from the code
-    /// - `attributes`: raw `#[...]` lines
-    /// - We unify doc lines from both `docs` and doc lines from `attributes` (e.g. `#[doc="..."]` or triple-slash lines).
-    /// - We keep “normal” attributes (e.g. `#[inline]`) in `attributes`, skipping doc lines from them.
-    /// - `body_source`: optional function body text. If empty or `{}`, we treat it as no real body => in Display, we show `{ /* ... */ }`.
-    pub fn new_with_paths(
-        item: T,
-        docs: Option<String>,
-        attributes: Option<String>,
-        body_source: Option<String>,
+    /// A test-only convenience constructor that fills in dummy file paths,
+    /// zero-length text ranges, and sets both `raw_syntax_range` and `effective_item_range`
+    /// to the same zero-range. This helps older unit tests that don’t specify ranges.
+    #[cfg(test)]
+    pub fn new_for_test(
+        item:                  T,
+        docs:                  Option<String>,
+        attributes:            Option<String>,
+        body_source:           Option<String>,
         consolidation_options: Option<ConsolidationOptions>,
-        file_path:  PathBuf,
-        crate_path: PathBuf,
     ) -> Self {
+        CrateInterfaceItem::new_with_paths_and_ranges(
+            item,
+            docs,
+            attributes,
+            body_source,
+            consolidation_options,
+            PathBuf::from("TEST_ONLY_file_path.rs"),
+            PathBuf::from("TEST_ONLY_crate_path"),
+            TextRange::new(TextSize::from(0), TextSize::from(0)),  // raw
+            TextRange::new(TextSize::from(0), TextSize::from(0)),  // effective
+        )
+    }
 
-        // 1) Merge doc lines from base docs + doc lines hidden in raw_attrs
+    /// Creates a new `CrateInterfaceItem` with *both* a `raw_syntax_range` and
+    /// an `effective_item_range`. Usually:
+    /// - `raw_syntax_range` = exactly the RA node’s `text_range()`.
+    /// - `effective_item_range` = maybe the same as `raw_syntax_range` or a
+    ///   “trimmed” version that excludes normal (non-doc) line/block comments
+    ///   from edges.
+    pub fn new_with_paths_and_ranges(
+        item:                   T,
+        docs:                   Option<String>,
+        attributes:             Option<String>,
+        body_source:            Option<String>,
+        consolidation_options:  Option<ConsolidationOptions>,
+        file_path:              PathBuf,
+        crate_path:             PathBuf,
+        raw_syntax_range:       TextRange,
+        effective_item_range:   TextRange,
+    ) -> Self {
+        // 1) Possibly unify doc lines from base docs + doc lines hidden in raw_attrs
         let (unified_docs, filtered_attrs) = Self::merge_docs_and_filter_attrs(docs, attributes);
 
-        // 2) Possibly unify or transform the body if empty or just "{}"
-        //    We treat that as no real body => display => `{ /* ... */ }`.
+        // 2) Possibly unify or transform the body if it’s empty or just "{}"
         let final_body = match body_source {
             Some(s) => {
                 let trimmed = s.trim();
@@ -69,6 +114,8 @@ impl<T: GenerateSignature> CrateInterfaceItem<T> {
             consolidation_options,
             file_path,
             crate_path,
+            raw_syntax_range,
+            effective_item_range,
         }
     }
 
@@ -77,9 +124,7 @@ impl<T: GenerateSignature> CrateInterfaceItem<T> {
     /// - If a line in `raw_attrs` starts with `///`, we treat it as a doc line.
     /// - All other lines remain as “normal attributes.”
     ///
-    /// Returns `(final_docs, final_attrs)`:
-    /// - `final_docs` = Some(...) if non-empty
-    /// - `final_attrs` = Some(...) if any normal attributes remain
+    /// Returns `(final_docs, final_attrs)`.
     fn merge_docs_and_filter_attrs(
         base_docs: Option<String>,
         raw_attrs: Option<String>,
@@ -98,7 +143,6 @@ impl<T: GenerateSignature> CrateInterfaceItem<T> {
                     }
                 } else {
                     // If the line is empty or just whitespace, you might decide if you want it or not
-                    // For now, let's keep it if it’s truly unique.
                     if seen_docs.insert(line.to_string()) {
                         final_docs.push(line.to_string());
                     }
@@ -112,10 +156,7 @@ impl<T: GenerateSignature> CrateInterfaceItem<T> {
         if let Some(attr_text) = raw_attrs {
             for line in attr_text.lines() {
                 let trimmed = line.trim_start();
-                if trimmed.starts_with("#[doc")
-                    || trimmed.starts_with("#![doc")
-                {
-                    // parse the quoted doc string => `/// <content>`
+                if trimmed.starts_with("#[doc") || trimmed.starts_with("#![doc") {
                     if let Some(doc_str) = Self::extract_doc_string_from_attr(trimmed) {
                         let doc_line = format!("/// {}", doc_str);
                         if seen_docs.insert(doc_line.clone()) {
@@ -123,7 +164,6 @@ impl<T: GenerateSignature> CrateInterfaceItem<T> {
                         }
                     }
                 } else if trimmed.starts_with("///") {
-                    // triple-slash doc
                     if seen_docs.insert(trimmed.to_string()) {
                         final_docs.push(trimmed.to_string());
                     }
@@ -134,7 +174,6 @@ impl<T: GenerateSignature> CrateInterfaceItem<T> {
             }
         }
 
-        // Now convert `final_docs` Vec<String> back to a single string
         let final_docs_str = if final_docs.is_empty() {
             None
         } else {
@@ -151,20 +190,11 @@ impl<T: GenerateSignature> CrateInterfaceItem<T> {
     }
 
     /// Extracts the substring in quotes from an attribute line like `#[doc = "some text"]` or `#[doc="something"]`.
-    /// Returns Some(...) if found, else None.
     fn extract_doc_string_from_attr(line: &str) -> Option<String> {
-        // naive parse: find the first double-quote after '='
-        // then the last double-quote before the trailing ']'.
-        // We skip advanced edge cases for the tests' sake.
-
-        // e.g. #[doc = "another doc line"]
-        // or #[doc="yet another line"]
         let trimmed = line.trim_end().trim_end_matches(']');
         if let Some(eq_idx) = trimmed.find('=') {
-            // look for the first quote after eq_idx
             if let Some(start_quote) = trimmed[eq_idx..].find('"') {
                 let start = eq_idx + start_quote + 1; // skip the quote
-                // find next quote after that
                 if let Some(end_quote) = trimmed[start..].find('"') {
                     let end = start + end_quote;
                     return Some(trimmed[start..end].to_string());
@@ -208,13 +238,10 @@ impl<T: GenerateSignature> fmt::Display for CrateInterfaceItem<T> {
         if signature.contains("fn ") && !signature.contains("trait") {
             // If we have a real body_source:
             if let Some(ref body_text) = self.body_source {
-                // parse lines, remove leading/trailing braces, re-indent
                 let lines: Vec<_> = body_text.lines().map(|l| l.to_string()).collect();
                 if lines.is_empty() {
-                    // no lines => treat as empty => do "{}"
                     writeln!(f, " {{}}")?;
                 } else {
-                    // remove first/last brace if present
                     let mut content_lines = lines.clone();
                     let first_trim = content_lines.first().map(|s| s.trim());
                     if first_trim == Some("{") {
@@ -226,7 +253,6 @@ impl<T: GenerateSignature> fmt::Display for CrateInterfaceItem<T> {
                     }
 
                     if content_lines.is_empty() {
-                        // it was just "{}"
                         writeln!(f, " {{}}")?;
                     } else {
                         writeln!(f, " {{")?;
@@ -249,7 +275,6 @@ impl<T: GenerateSignature> fmt::Display for CrateInterfaceItem<T> {
                     }
                 }
             } else {
-                // No real body => show an empty body
                 writeln!(f, " {{}}")?;
             }
         } else {
@@ -260,6 +285,29 @@ impl<T: GenerateSignature> fmt::Display for CrateInterfaceItem<T> {
         Ok(())
     }
 }
+
+impl<T: GenerateSignature> CrateInterfaceItem<T> {
+    /// This is the “official” accessor for the RA node range,
+    /// used by `test_text_range` etc. We do **not** trim comments here.
+    /// 
+    /// So if you need the untrimmed range to compare with RA,
+    /// call `ci.raw_syntax_range()`.
+    /// 
+    /// If you want the trimmed range for interstitial logic,
+    /// call `ci.effective_item_range()`.
+    pub fn text_range(&self) -> &TextRange {
+        &self.raw_syntax_range
+    }
+
+    /// This is the accessor for the “trimmed” range that excludes normal
+    /// line comments at the edges. Interstitial logic uses this one to
+    /// unify coverage.
+    pub fn effective_range(&self) -> &TextRange {
+        &self.effective_item_range
+    }
+}
+
+
 
 /// Count leading spaces in a line
 fn leading_spaces(line: &str) -> usize {
@@ -292,7 +340,7 @@ mod test_crate_interface_item {
         let mock = MockItem {
             signature: "fn no_docs_or_attrs()".to_string(),
         };
-        let ci = CrateInterfaceItem::new(mock, None, None, None, None);
+        let ci = CrateInterfaceItem::new_for_test(mock, None, None, None, None);
 
         // Display => "fn no_docs_or_attrs() { /* ... */ }"
         let display_str = format!("{}", ci);
@@ -305,7 +353,7 @@ mod test_crate_interface_item {
             signature: "fn doc_test()".to_string(),
         };
         let docs = Some("/// Doc line one\n/// Doc line two".to_string());
-        let ci = CrateInterfaceItem::new(mock, docs.clone(), None, None, None);
+        let ci = CrateInterfaceItem::new_for_test(mock, docs.clone(), None, None, None);
 
         let display_str = format!("{}", ci);
         assert!(display_str.contains("/// Doc line one"));
@@ -328,7 +376,7 @@ r#"#[doc = "another doc line"]
 /// some inline doc"#.to_string()
         );
 
-        let ci = CrateInterfaceItem::new(mock, base_docs, raw_attrs, None, None);
+        let ci = CrateInterfaceItem::new_for_test(mock, base_docs, raw_attrs, None, None);
 
         // We expect doc lines => "/// existing doc line", "/// another doc line", "/// yet another line", "/// some inline doc"
         let final_docs = ci.docs().as_ref().expect("Should have doc lines");
@@ -362,7 +410,7 @@ r#"#[doc = "another doc line"]
         };
         let body_source = Some("{}".to_string());
 
-        let ci = CrateInterfaceItem::new(mock, None, None, body_source, None);
+        let ci = CrateInterfaceItem::new_for_test(mock, None, None, body_source, None);
         let display_str = format!("{}", ci);
         assert!(display_str.contains("fn empty_body()"));
     }
@@ -391,7 +439,7 @@ r#"{
 }"#.to_string()
         );
 
-        let ci = CrateInterfaceItem::new(mock, docs, raw_attrs, body_source, None);
+        let ci = CrateInterfaceItem::new_for_test(mock, docs, raw_attrs, body_source, None);
 
         // final docs => 5 lines:
         // 1) "/// doc line from code"
@@ -431,7 +479,7 @@ r#"{
         let mock = MockItem {
             signature: "struct Foo".into(),
         };
-        let ci = CrateInterfaceItem::new(
+        let ci = CrateInterfaceItem::new_for_test(
             mock,
             Some("/// doc for Foo".into()),
             Some("#[derive(Debug)]".into()),
@@ -452,7 +500,7 @@ r#"{
         let mock = MockItem {
             signature: "impl MyTrait for MyType".into(),
         };
-        let ci = CrateInterfaceItem::new(
+        let ci = CrateInterfaceItem::new_for_test(
             mock,
             Some("// doc for impl".into()),
             Some("#[some_attr]".into()),
@@ -480,7 +528,7 @@ r#"{
     println!("x = {}", x);
 }"#.to_string()
         );
-        let ci = CrateInterfaceItem::new(mock, None, None, body_source, None);
+        let ci = CrateInterfaceItem::new_for_test(mock, None, None, body_source, None);
         let display_str = format!("{}", ci);
         assert!(display_str.contains("fn multiline() {"));
         assert!(display_str.contains("let x = 10;"));
@@ -513,7 +561,7 @@ r#"{
             signature: "fn example_signature() -> i32".to_string(),
         };
 
-        let original = CrateInterfaceItem::new(
+        let original = CrateInterfaceItem::new_for_test(
             mock,
             Some("/// doc lines".to_string()),
             Some("#[inline]\n#[another_attr]".to_string()),

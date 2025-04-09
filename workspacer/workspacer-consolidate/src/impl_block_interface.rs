@@ -10,16 +10,23 @@ pub struct ImplBlockInterface {
     methods:        Vec<CrateInterfaceItem<ast::Fn>>,
     type_aliases:   Vec<CrateInterfaceItem<ast::TypeAlias>>,
 
-    /// The file from which this impl block was parsed, non-optional
+    /// The file from which this impl block was parsed
     file_path: PathBuf,
 
     /// The crate path that owns this impl block
     crate_path: PathBuf,
+
+    /// The raw (untrimmed) range. Many tests expect to confirm it 
+    /// matches the node’s actual text_range().
+    raw_range: TextRange,
+
+    /// The *trimmed* range, excluding leading/trailing normal comments 
+    /// & whitespace. We'll use this in gather_interstitial_segments.
+    effective_range: TextRange,
 }
 
 impl ImplBlockInterface {
-
-    pub fn new_with_paths(
+    pub fn new_with_paths_and_range(
         docs:           Option<String>,
         attributes:     Option<String>,
         signature_text: String,
@@ -27,6 +34,8 @@ impl ImplBlockInterface {
         type_aliases:   Vec<CrateInterfaceItem<ast::TypeAlias>>,
         file_path:      PathBuf,
         crate_path:     PathBuf,
+        raw_range:      TextRange,
+        effective_range: TextRange,
     ) -> Self {
         Self {
             docs,
@@ -36,66 +45,70 @@ impl ImplBlockInterface {
             type_aliases,
             file_path,
             crate_path,
+            raw_range,
+            effective_range,
         }
+    }
+
+    #[cfg(test)]
+    pub fn new_for_test(
+        docs: Option<String>,
+        attributes: Option<String>,
+        signature_text: String,
+        methods: Vec<CrateInterfaceItem<ast::Fn>>,
+        type_aliases: Vec<CrateInterfaceItem<ast::TypeAlias>>,
+    ) -> Self {
+        Self::new_with_paths_and_range(
+            docs,
+            attributes,
+            signature_text,
+            methods,
+            type_aliases,
+            PathBuf::from("TEST_ONLY_file_path.rs"),
+            PathBuf::from("TEST_ONLY_crate_path"),
+            TextRange::new(0.into(), 0.into()),
+            TextRange::new(0.into(), 0.into()),
+        )
+    }
+
+    /// For interstitial logic, we want the *trimmed* range:
+    pub fn text_range(&self) -> &TextRange {
+        &self.effective_range
     }
 }
 
 impl fmt::Display for ImplBlockInterface {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        // 1) Print doc lines (if any), one per line:
         if let Some(ref docs) = self.docs {
             for line in docs.lines() {
                 writeln!(f, "{}", line)?;
             }
         }
-
-        // 2) Print attributes (if any), one per line:
         if let Some(ref attrs) = self.attributes {
             for line in attrs.lines() {
                 writeln!(f, "{}", line)?;
             }
         }
-
-        // 3) Trim any trailing spaces from the signature to avoid double-spaces.
-        //    Then print "impl Something for T {" on one line
         let sig = self.signature_text.trim_end();
-
-        // If no items, use one-line form:
         if self.methods.is_empty() && self.type_aliases.is_empty() {
             write!(f, "{} {{}}", sig)?;
             return Ok(());
         }
-
-        // multi-line form:
         writeln!(f, "{} {{", sig)?;
-        // If no items, use one-line form: "impl X for Y {}"
-        if self.methods.is_empty() && self.type_aliases.is_empty() {
-            write!(f, "{} {{}}", sig)?;
-            return Ok(());
-        }
-
-        // 4) Per test `test_impl_block_interface_real_code`, the order must be
-        //    (a) methods first, then (b) type aliases. Also remove any trailing newline from item lines,
-        //    and do not add extra newlines between them.
 
         for ta in &self.type_aliases {
-            let item_str = format!("{}", ta);
-            for line in item_str.lines() {
+            let txt = format!("{}", ta);
+            for line in txt.lines() {
+                writeln!(f, "    {}", line)?;
+            }
+        }
+        for m in &self.methods {
+            let txt = format!("{}", m);
+            for line in txt.lines() {
                 writeln!(f, "    {}", line)?;
             }
         }
 
-        for m in &self.methods {
-            let item_str = format!("{}", m);
-            for line in item_str.lines() {
-                // Remove any "/* ... */" placeholders, if you do that in your real code:
-                // (If not needed, remove this replacement step.)
-                let cleaned = line.replace("{ /* ... */ }", "{}");
-                writeln!(f, "    {}", cleaned)?;
-            }
-        }
-
-        // 5) Close brace with no trailing newline
         write!(f, "}}")?;
         Ok(())
     }
@@ -146,7 +159,7 @@ mod test_impl_block_interface_real {
                         };
                         let attrs = gather_all_attrs(&child);
                         // We don't set body_source in this example
-                        let fn_item = crate::crate_interface_item::CrateInterfaceItem::new(
+                        let fn_item = CrateInterfaceItem::new_for_test(
                             fn_ast,
                             docs,
                             attrs,
@@ -178,7 +191,7 @@ mod test_impl_block_interface_real {
                             None
                         };
                         let attrs = gather_all_attrs(&child);
-                        let alias_item = crate::crate_interface_item::CrateInterfaceItem::new(
+                        let alias_item = CrateInterfaceItem::new_for_test(
                             ty_ast,
                             docs,
                             attrs,
@@ -243,7 +256,7 @@ mod test_impl_block_interface_real {
         let aliases = gather_type_aliases(&impl_ast, &options);
 
         // Finally build the real ImplBlockInterface
-        let ib = ImplBlockInterface::new(docs, attrs, signature, methods, aliases);
+        let ib = ImplBlockInterface::new_for_test(docs, attrs, signature, methods, aliases);
 
         // Format and compare with expected
         let output = format!("{}", ib);
@@ -271,7 +284,7 @@ mod test_impl_block_interface_real {
         let methods = gather_methods(&impl_ast, &options);
         let aliases = gather_type_aliases(&impl_ast, &options);
 
-        let ib = ImplBlockInterface::new(docs, attrs, signature, methods, aliases);
+        let ib = ImplBlockInterface::new_for_test(docs, attrs, signature, methods, aliases);
         let output = format!("{}", ib);
 
         // No items => "impl EmptyTrait for Unit {}"

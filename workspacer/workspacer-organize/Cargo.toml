@@ -1,3 +1,16 @@
+[dependencies]
+workspacer-topo = { path = "../workspacer-topo" }
+workspacer-mock = { path = "../workspacer-mock" }
+workspacer-workspace-mock = { path = "../workspacer-workspace-mock" }
+workspacer-crate-mock = { path = "../workspacer-crate-mock" }
+workspacer-crate-interface = { path = "../workspacer-crate-interface" }
+workspacer-workspace-interface = { path = "../workspacer-workspace-interface" }
+workspacer-workspace = { path = "../workspacer-workspace" }
+workspacer-crate = { path = "../workspacer-crate" }
+workspacer-name-all-files = { path = "../workspacer-name-all-files" }
+workspacer-register-crate-files = { path = "../workspacer-register-crate-files" }
+workspacer-format-imports = { path = "../workspacer-format-imports" }
+workspacer-lossless-file = { path = "../workspacer-lossless-file" }
 [dependencies.workspacer-3p]
 path = "../workspacer-3p"
 version = "0.5.1"

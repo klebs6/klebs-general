@@ -15,6 +15,13 @@ pub fn gather_assoc_type_aliases(
         for item in assoc_items.assoc_items() {
             if let Some(ty_alias) = ast::TypeAlias::cast(item.syntax().clone()) {
                 if !crate::skip_checks::should_skip_item(ty_alias.syntax(), options) {
+
+                    let raw_range = ty_alias.syntax().text_range();
+                    // For now, we pass the same range for both raw & effective. If you
+                    // want to exclude leading/trailing normal comments, you can compute
+                    // a trimmed range. We'll keep it simple here:
+                    let eff_range = raw_range;
+
                     let docs = if *options.include_docs() {
                         extract_docs(ty_alias.syntax())
                     } else {
@@ -22,7 +29,7 @@ pub fn gather_assoc_type_aliases(
                     };
                     let attrs = gather_all_attrs(ty_alias.syntax());
                     
-                    out.push(CrateInterfaceItem::new_with_paths(
+                    out.push(CrateInterfaceItem::new_with_paths_and_ranges(
                         ty_alias,
                         docs,
                         attrs,
@@ -30,6 +37,8 @@ pub fn gather_assoc_type_aliases(
                         Some(options.clone()),
                         file_path.clone(),
                         crate_path.clone(),
+                        raw_range,
+                        eff_range,
                     ));
                 } else {
                     info!("Skipping type_alias in impl: either test item or private item was disallowed");
@@ -72,7 +81,6 @@ mod test_gather_assoc_type_aliases {
 
     #[test]
     fn test_impl_with_no_items() {
-        // Trait + empty impl => no items
         let snippet = r#"
             trait MyTrait {}
             impl MyTrait for MyStruct {
@@ -83,7 +91,10 @@ mod test_gather_assoc_type_aliases {
         let impl_ast = find_first_impl(&root).expect("Expected an impl block");
         let opts = default_options();
 
-        let aliases = gather_assoc_type_aliases(&impl_ast, &opts);
+        let file_path = PathBuf::from("TEST_ONLY_file_path.rs");
+        let crate_path = PathBuf::from("TEST_ONLY_crate_path");
+
+        let aliases = gather_assoc_type_aliases(&impl_ast, &opts, &file_path, &crate_path);
         assert!(aliases.is_empty(), "No items => no type aliases");
     }
 
@@ -101,7 +112,10 @@ mod test_gather_assoc_type_aliases {
         let impl_ast = find_first_impl(&root).expect("Expected impl");
         let opts = default_options();
 
-        let aliases = gather_assoc_type_aliases(&impl_ast, &opts);
+        let file_path = PathBuf::from("TEST_ONLY_file_path.rs");
+        let crate_path = PathBuf::from("TEST_ONLY_crate_path");
+
+        let aliases = gather_assoc_type_aliases(&impl_ast, &opts, &file_path, &crate_path);
         assert!(aliases.is_empty(), "No type aliases => empty");
     }
 
@@ -118,7 +132,10 @@ mod test_gather_assoc_type_aliases {
         let impl_ast = find_first_impl(&root).expect("Expected impl");
         let opts = default_options();
 
-        let aliases = gather_assoc_type_aliases(&impl_ast, &opts);
+        let file_path = PathBuf::from("TEST_ONLY_file_path.rs");
+        let crate_path = PathBuf::from("TEST_ONLY_crate_path");
+
+        let aliases = gather_assoc_type_aliases(&impl_ast, &opts, &file_path, &crate_path);
         assert_eq!(aliases.len(), 1, "One type alias in the impl block");
         let alias_item = &aliases[0];
         assert_eq!(*alias_item.docs(), None, "No doc comment by default");
@@ -142,7 +159,10 @@ mod test_gather_assoc_type_aliases {
         let impl_ast = find_first_impl(&root).expect("Expected impl");
         let opts = default_options();
 
-        let aliases = gather_assoc_type_aliases(&impl_ast, &opts);
+        let file_path = PathBuf::from("TEST_ONLY_file_path.rs");
+        let crate_path = PathBuf::from("TEST_ONLY_crate_path");
+
+        let aliases = gather_assoc_type_aliases(&impl_ast, &opts, &file_path, &crate_path);
         assert_eq!(aliases.len(), 2, "Should gather two type aliases");
     }
 
@@ -170,7 +190,10 @@ mod test_gather_assoc_type_aliases {
         let mut opts = ConsolidationOptions::new().with_docs();
         // e.g. if you have `opts = opts.without_test_items()` or no `.with_test_items()`
 
-        let aliases = gather_assoc_type_aliases(&impl_ast, &opts);
+        let file_path = PathBuf::from("TEST_ONLY_file_path.rs");
+        let crate_path = PathBuf::from("TEST_ONLY_crate_path");
+
+        let aliases = gather_assoc_type_aliases(&impl_ast, &opts, &file_path, &crate_path);
         // We expect only the normal one if `#[cfg(test)]` is excluded
         assert_eq!(aliases.len(), 1, "Skipped the #[cfg(test)] alias, kept normal");
     }
@@ -190,7 +213,10 @@ mod test_gather_assoc_type_aliases {
         let impl_ast = find_first_impl(&root).expect("Expected impl");
         let opts = default_options();
 
-        let aliases = gather_assoc_type_aliases(&impl_ast, &opts);
+        let file_path = PathBuf::from("TEST_ONLY_file_path.rs");
+        let crate_path = PathBuf::from("TEST_ONLY_crate_path");
+
+        let aliases = gather_assoc_type_aliases(&impl_ast, &opts, &file_path, &crate_path);
         assert_eq!(aliases.len(), 1, "One alias present");
         let alias_item = &aliases[0];
 
@@ -217,7 +243,10 @@ mod test_gather_assoc_type_aliases {
         let impl_ast = find_first_impl(&root).expect("Expected impl");
         let opts = ConsolidationOptions::new(); // no .with_docs()
 
-        let aliases = gather_assoc_type_aliases(&impl_ast, &opts);
+        let file_path = PathBuf::from("TEST_ONLY_file_path.rs");
+        let crate_path = PathBuf::from("TEST_ONLY_crate_path");
+
+        let aliases = gather_assoc_type_aliases(&impl_ast, &opts, &file_path, &crate_path);
         assert_eq!(aliases.len(), 1, "One type alias");
         let alias_item = &aliases[0];
         assert_eq!(*alias_item.docs(), None, "Docs are disabled => docs None");
@@ -234,7 +263,10 @@ mod test_gather_assoc_type_aliases {
         let impl_ast = find_first_impl(&root).expect("Expected impl block");
         let opts = default_options();
 
-        let aliases = gather_assoc_type_aliases(&impl_ast, &opts);
+        let file_path = PathBuf::from("TEST_ONLY_file_path.rs");
+        let crate_path = PathBuf::from("TEST_ONLY_crate_path");
+
+        let aliases = gather_assoc_type_aliases(&impl_ast, &opts, &file_path, &crate_path);
         assert!(aliases.is_empty(), "No assoc_item_list => no aliases");
     }
 
@@ -255,7 +287,10 @@ mod test_gather_assoc_type_aliases {
         let impl_ast = find_first_impl(&root).expect("Expected impl block");
         let opts = default_options();
 
-        let aliases = gather_assoc_type_aliases(&impl_ast, &opts);
+        let file_path = PathBuf::from("TEST_ONLY_file_path.rs");
+        let crate_path = PathBuf::from("TEST_ONLY_crate_path");
+
+        let aliases = gather_assoc_type_aliases(&impl_ast, &opts, &file_path, &crate_path);
         assert_eq!(aliases.len(), 2, "We have two type aliases in the trait impl");
     }
 
@@ -292,7 +327,10 @@ mod test_gather_assoc_type_aliases {
         // e.g. no `.with_test_items()`
         // or some skip logic in should_skip_item that excludes them
 
-        let aliases = gather_assoc_type_aliases(&impl_ast, &opts);
+        let file_path = PathBuf::from("TEST_ONLY_file_path.rs");
+        let crate_path = PathBuf::from("TEST_ONLY_crate_path");
+
+        let aliases = gather_assoc_type_aliases(&impl_ast, &opts, &file_path, &crate_path);
         // Expect to keep A & C, skip B & D
         assert_eq!(aliases.len(), 2, "Kept 2 (A,C), skipped 2 test items (B,D)");
         let doc_a = aliases[0].docs().clone().unwrap_or_default();
