@@ -1,47 +1,72 @@
 // ---------------- [ File: workspacer-consolidate/src/gather_fn_item.rs ]
 crate::ix!();
 
+#[tracing::instrument(level = "trace", skip_all)]
 pub fn gather_fn_item(
     fn_ast:  &ast::Fn,
     options: &ConsolidationOptions,
     file_path: &PathBuf,
     crate_path: &PathBuf,
 ) -> CrateInterfaceItem<ast::Fn> {
+    trace!("Entering gather_fn_item; fn snippet = {:?}", snippet_for_logging(fn_ast.syntax()));
 
-    let raw_range = fn_ast.syntax().text_range();
-    // If you want to exclude normal comments from the edges, you could do so. For now, we pass the same:
-    let eff_range = raw_range;
-
-    let docs = if *options.include_docs() {
+    // 1) Possibly gather doc lines
+    let direct_docs = if *options.include_docs() {
         extract_docs(fn_ast.syntax())
     } else {
         None
     };
 
+    // 2) Gather attributes
     let attributes = gather_all_attrs(fn_ast.syntax());
 
+    // 3) Decide if we want the function body
     let is_test_item = is_in_test_module(fn_ast.syntax().clone()) || has_cfg_test_attr(fn_ast.syntax());
-    let body_source = if is_test_item {
-        if *options.include_fn_bodies_in_tests() {
-            fn_ast
-                .body()
-                .map(|b| b.syntax().text().to_string())
-        } else {
-            None
-        }
+    let include_body = if is_test_item {
+        *options.include_fn_bodies_in_tests()
     } else {
-        if *options.include_fn_bodies() {
-            fn_ast
-                .body()
-                .map(|b| b.syntax().text().to_string())
-        } else {
-            None
-        }
+        *options.include_fn_bodies()
     };
+
+    // 4) If we do want a body, either `fn_ast.body()` or a fallback.
+    //
+    //    Some RA parse scenarios (especially with multi-line `where` clauses)
+    //    can produce a “body” node that is actually empty or missing the real statements.
+    //    In that case, we also attempt `fallback_extract_fn_body(fn_ast)` if the parsed body
+    //    looks suspiciously empty (`"{}"`).
+    let mut body_source = None;
+    if include_body {
+        let parsed_body = fn_ast.body().map(|b| b.syntax().text().to_string());
+        let final_body = match parsed_body {
+            Some(ref bstr) if bstr.trim() == "{}" => {
+                trace!("Parsed body is just an empty block => try fallback_extract_fn_body");
+                fallback_extract_fn_body(fn_ast)
+            }
+            Some(non_empty) => {
+                trace!("Parsed body is non-empty; using raw text from fn_ast.body() {:#?}", non_empty);
+                Some(non_empty)
+            }
+            None => {
+                trace!("fn_ast.body() is None => attempt fallback_extract_fn_body(fn_ast)");
+                fallback_extract_fn_body(fn_ast)
+            }
+        };
+        body_source = final_body;
+    }
+
+    // 5) Build final CrateInterfaceItem using raw + effective range
+    let raw_range = fn_ast.syntax().text_range();
+    let eff_range = compute_effective_range(fn_ast.syntax());
+
+    trace!(
+        "Constructing CrateInterfaceItem<ast::Fn> with raw_range={:?}, effective_range={:?}",
+        raw_range,
+        eff_range
+    );
 
     CrateInterfaceItem::new_with_paths_and_ranges(
         fn_ast.clone(),
-        docs,
+        direct_docs,
         attributes,
         body_source,
         Some(options.clone()),
@@ -50,6 +75,114 @@ pub fn gather_fn_item(
         raw_range,
         eff_range,
     )
+}
+
+/// Allow scanning **any** amount of whitespace (including multiple newlines & indentation)
+/// as we go upward from `node.first_token()`, attaching consecutive `///` or `//!` lines.
+/// Stops only if we encounter non‐doc comments or other tokens.
+#[tracing::instrument(level = "trace", skip(node))]
+fn gather_preceding_doc_comments(node: &SyntaxNode) -> Option<String> {
+    let first_token = node.first_token()?;
+    let mut lines = Vec::new();
+    let mut tok_opt = first_token.prev_token();
+
+    while let Some(tok) = tok_opt {
+        match tok.kind() {
+            SyntaxKind::WHITESPACE => {
+                // Just skip whitespace and keep going. We don’t break on multiple newlines anymore.
+            }
+            SyntaxKind::COMMENT => {
+                let text = tok.text().trim_start();
+                if text.starts_with("///") || text.starts_with("//!") {
+                    lines.push(text.to_string());
+                } else {
+                    // normal // comment => break
+                    break;
+                }
+            }
+            _ => {
+                // any other token => stop
+                break;
+            }
+        }
+        tok_opt = tok.prev_token();
+    }
+
+    if lines.is_empty() {
+        None
+    } else {
+        lines.reverse();
+        Some(lines.join("\n"))
+    }
+}
+
+/// If `fn_ast.body()` is None, try to extract the function body manually
+/// by scanning the text after the param list / where clause and looking
+/// for the first `{ ... }` or `= expr;`.
+#[tracing::instrument(level = "trace", skip(fn_ast))]
+fn fallback_extract_fn_body(fn_ast: &ast::Fn) -> Option<String> {
+    let full_fn_text = fn_ast.syntax().text().to_string();
+    trace!("fallback_extract_fn_body => raw fn text:\n{full_fn_text}");
+
+    // 1) Find the offset after the parameter list / return type / where clause
+    let mut start_search = 0usize;
+
+    if let Some(plist) = fn_ast.param_list() {
+        start_search = start_search.max(plist.syntax().text_range().end().into());
+    }
+    if let Some(ret) = fn_ast.ret_type() {
+        start_search = start_search.max(ret.syntax().text_range().end().into());
+    }
+    if let Some(wc) = fn_ast.where_clause() {
+        start_search = start_search.max(wc.syntax().text_range().end().into());
+    }
+
+    let tail = &full_fn_text.get(start_search..)?;
+    trace!("fn body fallback: searching tail:\n{tail}");
+
+    // 2) Attempt to find the first '{' and match braces
+    if let Some(open_brace_pos) = tail.find('{') {
+        let offset_in_full = start_search + open_brace_pos;
+        let mut brace_stack = 0usize;
+        let mut start_idx = None;
+        let mut end_idx = None;
+
+        for (i, ch) in full_fn_text.char_indices().skip(offset_in_full) {
+            match ch {
+                '{' => {
+                    if brace_stack == 0 {
+                        start_idx = Some(i);
+                    }
+                    brace_stack += 1;
+                }
+                '}' => {
+                    brace_stack = brace_stack.saturating_sub(1);
+                    if brace_stack == 0 {
+                        end_idx = Some(i + 1);
+                        break;
+                    }
+                }
+                _ => {}
+            }
+        }
+        if let (Some(s), Some(e)) = (start_idx, end_idx) {
+            return Some(full_fn_text[s..e].to_string());
+        }
+    }
+
+    // 3) If no '{...}' block, check if this is `= expr;`
+    if let Some(eq_pos) = tail.find('=') {
+        let tail2 = &tail[eq_pos..];
+        if let Some(semicol_pos) = tail2.find(';') {
+            let snippet = &tail[(eq_pos)..(eq_pos + semicol_pos + 1)];
+            // skip if it is "=>"
+            if !snippet.contains("=>") {
+                return Some(snippet.to_string());
+            }
+        }
+    }
+
+    None
 }
 
 #[cfg(test)]

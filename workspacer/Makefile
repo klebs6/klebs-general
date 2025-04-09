@@ -69,11 +69,12 @@ ACTIVE_PACKAGE := workspacer-crate-mock
 ACTIVE_PACKAGE := workspacer-publish
 ACTIVE_PACKAGE := workspacer-readme-writer
 ACTIVE_PACKAGE := workspacer-cli
-ACTIVE_PACKAGE := workspacer-consolidate
 ACTIVE_PACKAGE := workspacer-lossless-file
 ACTIVE_PACKAGE := workspacer-add-internal-dep
 ACTIVE_PACKAGE := workspacer-show
 ACTIVE_PACKAGE := workspacer-tree
+ACTIVE_PACKAGE := workspacer-consolidate
+#ACTIVE_PACKAGE := workspacer-organize
 #ACTIVE_PACKAGE := workspacer-topo
 
 INDIVIDUAL_TEST := gather_leading_token_comments

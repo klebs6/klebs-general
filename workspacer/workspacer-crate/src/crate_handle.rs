@@ -150,7 +150,7 @@ impl CrateHandle
 
         CrateError
             : From<<P as HasCargoTomlPathBuf>::Error> 
-            + From<<P as HasCargoTomlPathBufSync>::Error>,
+            + From<<P as HasCargoTomlPathBufSync>::Error>
     {
 
         let cargo_toml_path = crate_path.cargo_toml_path_buf_sync()?;

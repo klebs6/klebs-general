@@ -205,84 +205,262 @@ impl<T: GenerateSignature> CrateInterfaceItem<T> {
     }
 }
 
-impl<T: GenerateSignature> fmt::Display for CrateInterfaceItem<T> {
+impl<T: GenerateSignature> std::fmt::Display for CrateInterfaceItem<T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        trace!("Entering CrateInterfaceItem::fmt for signature: {:?}", self.item.generate_signature());
 
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        // Helper to remove matching outer braces from a snippet.
+        fn strip_outer_braces(text: &str) -> String {
+            let trimmed = text.trim_end();
+            if trimmed.starts_with('{') && trimmed.ends_with('}') {
+                trimmed[1..trimmed.len() - 1].to_string()
+            } else {
+                trimmed.to_string()
+            }
+        }
+
+        // A helper that:
+        //   1) Finds the minimum leading spaces across all non-blank lines.
+        //   2) Removes exactly that many leading spaces from each line.
+        fn dedent_all(lines: &[&str]) -> Vec<String> {
+            let mut min_indent = usize::MAX;
+            for line in lines {
+                let trimmed = line.trim_end();
+                if !trimmed.is_empty() {
+                    let lead = crate::leading_spaces(line);
+                    if lead < min_indent {
+                        min_indent = lead;
+                    }
+                }
+            }
+            if min_indent == usize::MAX {
+                // Means all lines were blank, so do nothing special
+                min_indent = 0;
+            }
+
+            lines
+                .iter()
+                .map(|line| {
+                    let trimmed = line.trim_end();
+                    if trimmed.is_empty() {
+                        "".to_string()
+                    } else {
+                        // Remove `min_indent` worth of leading spaces
+                        line[min_indent..].to_string()
+                    }
+                })
+                .collect()
+        }
+
+        // For where-clauses that appear inline after `-> Type`, split them onto a new line.
+        fn rewrite_where_lines(signature: &str) -> String {
+            if !signature.contains(" where") {
+                return signature.to_string();
+            }
+            let mut out = String::new();
+            let mut i = 0;
+            let chars: Vec<_> = signature.chars().collect();
+            while i < chars.len() {
+                if i + 5 < chars.len() && &chars[i..i+5] == [' ', 'w', 'h', 'e', 'r'] {
+                    if i+6 < chars.len() && chars[i+5] == 'e' && chars[i+6].is_whitespace() {
+                        // Found " where "
+                        if i > 0 && chars[i-1] != '\n' {
+                            out.push('\n');
+                        }
+                        out.push_str("where");
+                        i += 6; 
+                        continue;
+                    }
+                }
+                out.push(chars[i]);
+                i += 1;
+            }
+            out
+        }
+
+        // -------------------------------------------------------------------
         // 1) Print doc lines
+        // -------------------------------------------------------------------
         if let Some(docs) = &self.docs {
             for line in docs.lines() {
                 writeln!(f, "{}", line)?;
             }
         }
 
-        // 2) Print normal attributes
+        // -------------------------------------------------------------------
+        // 2) Print attributes
+        // -------------------------------------------------------------------
         if let Some(attrs) = &self.attributes {
             for line in attrs.lines() {
                 writeln!(f, "{}", line)?;
             }
         }
 
-        // 3) Print the signature (no braces for fn).
+        // -------------------------------------------------------------------
+        // 3) Generate the signature (omitting doc lines inside it)
+        // -------------------------------------------------------------------
         let signature = match &self.consolidation_options {
             Some(opts) => {
-                let mut sig_opts: SignatureOptions = opts.into();
-                sig_opts.set_include_docs(false); // we already did
+                let mut sig_opts = SignatureOptions::from(opts.into());
+                sig_opts.set_include_docs(false);
                 self.item.generate_signature_with_opts(&sig_opts)
-            },
+            }
             None => self.item.generate_signature(),
         };
 
-        write!(f, "{}", signature)?;
+        // -------------------------------------------------------------------
+        // 4) Check if it looks like a function signature
+        // -------------------------------------------------------------------
+        let is_likely_fn = signature.contains("fn ");
+        if !is_likely_fn {
+            // Not a function => just print the signature lines verbatim
+            for line in signature.lines() {
+                writeln!(f, "{}", line)?;
+            }
+            return Ok(());
+        }
 
-        // 4) If it's a function, handle body:
-        if signature.contains("fn ") && !signature.contains("trait") {
-            // If we have a real body_source:
-            if let Some(ref body_text) = self.body_source {
-                let lines: Vec<_> = body_text.lines().map(|l| l.to_string()).collect();
-                if lines.is_empty() {
+        // For function: see if it has multi-line structure
+        let sig_lines: Vec<&str> = signature.lines().collect();
+        let has_where = signature.contains("\nwhere")
+            || signature.contains("\n    where")
+            || signature.contains(" where ")
+            || signature.contains(")where")
+            || signature.contains(")\nwhere");
+        let force_multiline = has_where || sig_lines.len() > 1;
+
+        // -------------------------------------------------------------------
+        // 5) Function printing
+        // -------------------------------------------------------------------
+        if !force_multiline && sig_lines.len() == 1 {
+            // Single-line signature => "fn foo() { ... }"
+            write!(f, "{}", sig_lines[0].trim_end())?;
+            // Now handle the body
+            if let Some(body_text) = &self.body_source {
+                let inner = strip_outer_braces(body_text.trim());
+                if inner.is_empty() {
+                    // Means body is "{}" or empty
                     writeln!(f, " {{}}")?;
                 } else {
-                    let mut content_lines = lines.clone();
-                    let first_trim = content_lines.first().map(|s| s.trim());
-                    if first_trim == Some("{") {
-                        content_lines.remove(0);
-                    }
-                    let last_trim = content_lines.last().map(|s| s.trim());
-                    if last_trim == Some("}") {
-                        content_lines.pop();
-                    }
-
-                    if content_lines.is_empty() {
-                        writeln!(f, " {{}}")?;
-                    } else {
-                        writeln!(f, " {{")?;
-                        let min_indent = content_lines
-                            .iter()
-                            .filter(|l| !l.trim().is_empty())
-                            .map(|l| leading_spaces(l))
-                            .min()
-                            .unwrap_or(0);
-
-                        for line in content_lines {
-                            if line.trim().is_empty() {
-                                writeln!(f)?;
-                            } else {
-                                let reduced = line.chars().skip(min_indent).collect::<String>();
-                                writeln!(f, "    {}", reduced)?;
-                            }
+                    writeln!(f, " {{")?;
+                    let raw_body_lines: Vec<&str> = inner.lines().collect();
+                    let dedented_body = dedent_all(&raw_body_lines);
+                    for line in dedented_body {
+                        if line.is_empty() {
+                            writeln!(f)?;
+                        } else {
+                            writeln!(f, "    {}", line)?;
                         }
-                        writeln!(f, "}}")?;
                     }
+                    writeln!(f, "}}")?;
                 }
             } else {
+                // No body => empty braces
                 writeln!(f, " {{}}")?;
             }
         } else {
-            // not a function => just end with newline
-            writeln!(f)?;
+            // Multi-line signature scenario
+            let mut processed = rewrite_where_lines(&signature);
+            let mut sig_raw_lines: Vec<&str> = processed.lines().collect();
+
+            // We'll dedent the entire signature, then re-indent line #1 with 0,
+            // and subsequent lines with 4 spaces. This yields standard "Rust style"
+            // indentation for where-clauses etc.
+            let dedented_sig = dedent_all(&sig_raw_lines);
+            // Now the first line is dedented fully, subsequent lines we prefix 4 spaces
+            let mut final_sig_lines = Vec::new();
+            if !dedented_sig.is_empty() {
+                final_sig_lines.push(dedented_sig[0].clone());
+            }
+            for line in dedented_sig.iter().skip(1) {
+                if line.trim().is_empty() {
+                    final_sig_lines.push("".to_string());
+                } else {
+                    final_sig_lines.push(format!("    {}", line));
+                }
+            }
+
+            // Print them
+            for line in &final_sig_lines {
+                writeln!(f, "{}", line)?;
+            }
+
+            // Now the body
+            if let Some(body_text) = &self.body_source {
+                let trimmed_body = body_text.trim();
+                let no_braces = strip_outer_braces(trimmed_body);
+
+                if no_braces.is_empty() {
+                    writeln!(f, "{{}}")?;
+                } else {
+                    writeln!(f, "{{")?;
+                    // Remove any leading/trailing empty lines, then dedent, then reindent
+                    let raw_body_lines: Vec<&str> = no_braces.lines().collect();
+                    let mut start_idx = 0;
+                    while start_idx < raw_body_lines.len() && raw_body_lines[start_idx].trim().is_empty() {
+                        start_idx += 1;
+                    }
+                    let mut end_idx = raw_body_lines.len();
+                    while end_idx > start_idx && raw_body_lines[end_idx - 1].trim().is_empty() {
+                        end_idx -= 1;
+                    }
+
+                    let block_segment = &raw_body_lines[start_idx..end_idx];
+                    let ded_body = dedent_all(block_segment);
+                    for line in ded_body {
+                        if line.is_empty() {
+                            writeln!(f)?;
+                        } else {
+                            writeln!(f, "    {}", line)?;
+                        }
+                    }
+                    writeln!(f, "}}")?;
+                }
+            } else {
+                writeln!(f, "{{}}")?;
+            }
         }
 
         Ok(())
+    }
+}
+
+/// Same helper as before, rewriting " where" to a newline if needed.
+fn rewrite_where_lines(signature: &str) -> String {
+    if !signature.contains(" where") {
+        return signature.to_string();
+    }
+
+    let mut out = String::new();
+    let mut i = 0;
+    let chars: Vec<_> = signature.chars().collect();
+    while i < chars.len() {
+        if i + 5 < chars.len() && &chars[i..i+5] == [' ', 'w', 'h', 'e', 'r'] {
+            if i+6 < chars.len() && chars[i+5] == 'e' && chars[i+6].is_whitespace() {
+                // found " where "
+                // if previous char wasn't newline, insert newline
+                if i > 0 && chars[i-1] != '\n' {
+                    out.push('\n');
+                }
+                out.push_str("where");
+                i += 6;
+                continue;
+            }
+        }
+        out.push(chars[i]);
+        i += 1;
+    }
+    out
+}
+
+/// Removes the outer braces from a block text, if present.
+#[tracing::instrument(level = "trace", skip(text))]
+fn strip_outer_braces(text: &str) -> String {
+    let trimmed = text.trim_end();
+    if trimmed.starts_with('{') && trimmed.ends_with('}') {
+        trimmed[1..trimmed.len() - 1].to_string()
+    } else {
+        trimmed.to_string()
     }
 }
 
@@ -523,13 +701,15 @@ r#"{
             signature: "fn multiline()".into(),
         };
         let body_source = Some(
-r#"{
-    let x = 10;
-    println!("x = {}", x);
-}"#.to_string()
+    r#"{
+        let x = 10;
+        println!("x = {}", x);
+    }"#.to_string()
         );
         let ci = CrateInterfaceItem::new_for_test(mock, None, None, body_source, None);
+
         let display_str = format!("{}", ci);
+        // The test asserts these two lines exist literally:
         assert!(display_str.contains("fn multiline() {"));
         assert!(display_str.contains("let x = 10;"));
         assert!(display_str.contains("println!(\"x = {}\", x);"));
@@ -586,3 +766,5 @@ r#"{
         );
     }
 }
+
+

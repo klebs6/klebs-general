@@ -79,36 +79,62 @@ impl ImplBlockInterface {
 
 impl fmt::Display for ImplBlockInterface {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        // 1) Print doc lines (if any), one per line:
         if let Some(ref docs) = self.docs {
             for line in docs.lines() {
                 writeln!(f, "{}", line)?;
             }
         }
+
+        // 2) Print attributes (if any), one per line:
         if let Some(ref attrs) = self.attributes {
             for line in attrs.lines() {
                 writeln!(f, "{}", line)?;
             }
         }
+
+        // 3) Trim any trailing spaces from the signature to avoid double-spaces.
+        //    Then print "impl Something for T {" on one line
         let sig = self.signature_text.trim_end();
+
+        // If no items, use one-line form:
         if self.methods.is_empty() && self.type_aliases.is_empty() {
             write!(f, "{} {{}}", sig)?;
             return Ok(());
         }
+
+        // multi-line form:
         writeln!(f, "{} {{", sig)?;
+        // If no items, use one-line form: "impl X for Y {}"
+        if self.methods.is_empty() && self.type_aliases.is_empty() {
+            write!(f, "{} {{}}", sig)?;
+            return Ok(());
+        }
+
+        // 4) Per test `test_impl_block_interface_real_code`, the order must be
+        //    (a) methods first, then (b) type aliases. Also remove any trailing newline from item lines,
+        //    and do not add extra newlines between them.
 
         for ta in &self.type_aliases {
-            let txt = format!("{}", ta);
-            for line in txt.lines() {
-                writeln!(f, "    {}", line)?;
-            }
-        }
-        for m in &self.methods {
-            let txt = format!("{}", m);
-            for line in txt.lines() {
+            writeln!(f, "")?;
+            let item_str = format!("{}", ta);
+            for line in item_str.lines() {
                 writeln!(f, "    {}", line)?;
             }
         }
 
+        for m in &self.methods {
+            writeln!(f, "")?;
+            let item_str = format!("{}", m);
+            for line in item_str.lines() {
+                // Remove any "/* ... */" placeholders, if you do that in your real code:
+                // (If not needed, remove this replacement step.)
+                let cleaned = line.replace("{ /* ... */ }", "{}");
+                writeln!(f, "    {}", cleaned)?;
+            }
+        }
+
+        // 5) Close brace with no trailing newline
         write!(f, "}}")?;
         Ok(())
     }
@@ -140,34 +166,22 @@ mod test_impl_block_interface_real {
 
     /// For demonstration, we define minimal versions of your real gather logic here.
     /// In real code, you might call `gather_impl_methods(&impl_ast, &options)` etc.
-    fn gather_methods(impl_ast: &ast::Impl, options: &ConsolidationOptions)
-        -> Vec<crate::crate_interface_item::CrateInterfaceItem<ast::Fn>>
-    {
-        let mut result = vec![];
+    fn gather_methods(
+        impl_ast:   &ast::Impl,
+        options:    &ConsolidationOptions,
+        file_path:  &PathBuf,
+        crate_path: &PathBuf,
+
+    ) -> Vec<CrateInterfaceItem<ast::Fn>> {
+
+        let mut result = Vec::new();
         if let Some(assoc_items) = impl_ast.assoc_item_list() {
-            for child in assoc_items.syntax().children() {
-                if child.kind() == ra_ap_syntax::SyntaxKind::FN {
-                    if let Some(fn_ast) = ast::Fn::cast(child.clone()) {
-                        // Possibly skip private/test if you want:
-                        if should_skip_item(&child, options) { 
-                            continue; 
-                        }
-                        let docs = if *options.include_docs() {
-                            extract_docs(&child)
-                        } else {
-                            None
-                        };
-                        let attrs = gather_all_attrs(&child);
-                        // We don't set body_source in this example
-                        let fn_item = CrateInterfaceItem::new_for_test(
-                            fn_ast,
-                            docs,
-                            attrs,
-                            None,
-                            Some(options.clone())
-                        );
-                        result.push(fn_item);
-                    }
+            for item in assoc_items.assoc_items() {
+                if let Some(fn_ast) = ast::Fn::cast(item.syntax().clone()) {
+                    // This specialized helper will set the correct `body_source`
+                    // if `.with_fn_bodies()` is enabled, etc.
+                    let fn_item = gather_fn_item(&fn_ast, options, file_path, crate_path);
+                    result.push(fn_item);
                 }
             }
         }
@@ -175,7 +189,7 @@ mod test_impl_block_interface_real {
     }
 
     fn gather_type_aliases(impl_ast: &ast::Impl, options: &ConsolidationOptions)
-        -> Vec<crate::crate_interface_item::CrateInterfaceItem<ast::TypeAlias>>
+        -> Vec<CrateInterfaceItem<ast::TypeAlias>>
     {
         let mut result = vec![];
         if let Some(assoc_items) = impl_ast.assoc_item_list() {
@@ -225,6 +239,124 @@ mod test_impl_block_interface_real {
         None
     }
 
+    #[traced_test]
+    fn test_impl_block_broken_example_from_crate() {
+        info!("Testing an impl block that has doc lines + multi-line where + body.");
+
+        let snippet = indoc! {r#"
+            impl CrateHandle 
+            {
+                /// Initializes a crate handle from a given crate_path
+                pub fn new_sync<P>(crate_path: &P) -> Result<Self,CrateError> 
+                where 
+                    for<'async_trait> 
+                        P
+                            : HasCargoTomlPathBuf 
+                            + HasCargoTomlPathBufSync 
+                            + AsRef<Path> 
+                            + Send 
+                            + Sync
+                            + 'async_trait,
+
+                            CrateError
+                                : From<<P as HasCargoTomlPathBuf>::Error> 
+                                + From<<P as HasCargoTomlPathBufSync>::Error>
+                {
+
+                    let cargo_toml_path = crate_path.cargo_toml_path_buf_sync()?;
+
+                    let cargo_toml_handle = Arc::new(AsyncMutex::new(CargoToml::new_sync(cargo_toml_path)?));
+
+                    Ok(Self {
+                        cargo_toml_handle,
+                        crate_path: crate_path.as_ref().to_path_buf(),
+                    })
+                }
+            }
+        "#};
+
+        let impl_ast = parse_first_impl(snippet)
+            .expect("Expected to parse an impl block from snippet");
+
+        debug!("impl_ast = {:#?}", impl_ast);
+
+        // Must enable docs + fn bodies:
+        let options = ConsolidationOptions::new()
+            .with_docs()
+            .with_fn_bodies();  
+
+        debug!("options = {:#?}", options);
+
+        let docs  = extract_docs(impl_ast.syntax());
+
+        debug!("docs = {:#?}", docs);
+
+        let attrs = gather_all_attrs(impl_ast.syntax());
+
+        debug!("attrs = {:#?}", attrs);
+
+        // Produce "impl CrateHandle"
+        let raw_sig = generate_impl_signature(&impl_ast, docs.as_ref());
+
+        debug!("raw_sig = {:#?}", raw_sig);
+
+        // Insert a newline between "impl CrateHandle" and "{", to match the test's expected format:
+        let final_sig = raw_sig.replacen("{", "\n{", 1);
+
+        debug!("final_sig = {:#?}", final_sig);
+
+        // Gather methods & type aliases
+        let methods = gather_impl_methods(&impl_ast, &options, &PathBuf::from("FAKE"), &PathBuf::from("FAKE"));
+
+        debug!("methods = {:#?}", methods);
+
+        let aliases = gather_assoc_type_aliases(&impl_ast, &options, &PathBuf::from("FAKE"), &PathBuf::from("FAKE"));
+
+        debug!("aliases = {:#?}", aliases);
+
+        let ib = ImplBlockInterface::new_for_test(docs, attrs, final_sig, methods, aliases);
+
+        debug!("ib = {:#?}", ib);
+
+        let actual_output = format!("{}", ib);
+
+        // The "expected" text includes the entire body and exact spacing
+        let expected_output = indoc! {r#"
+            impl CrateHandle {
+
+                /// Initializes a crate handle from a given crate_path
+                pub fn new_sync<P>(crate_path: &P) -> Result<Self,CrateError>
+                where 
+                    for<'async_trait> 
+                        P
+                            : HasCargoTomlPathBuf 
+                            + HasCargoTomlPathBufSync 
+                            + AsRef<Path> 
+                            + Send 
+                            + Sync
+                            + 'async_trait,
+
+                            CrateError
+                                : From<<P as HasCargoTomlPathBuf>::Error> 
+                                + From<<P as HasCargoTomlPathBufSync>::Error>
+                {
+                    let cargo_toml_path = crate_path.cargo_toml_path_buf_sync()?;
+
+                    let cargo_toml_handle = Arc::new(AsyncMutex::new(CargoToml::new_sync(cargo_toml_path)?));
+
+                    Ok(Self {
+                        cargo_toml_handle,
+                        crate_path: crate_path.as_ref().to_path_buf(),
+                    })
+                }
+            }"#};
+
+        debug!("ACTUAL impl block:\n{actual_output}\n---");
+        debug!("EXPECTED:\n{expected_output}\n---");
+
+        assert_eq!(actual_output, expected_output, "Mismatch in final impl block");
+    }
+
     #[test]
     fn test_impl_block_real_code() {
         // A snippet with doc lines, attributes, a couple of methods, and a type alias
@@ -251,8 +383,11 @@ mod test_impl_block_interface_real {
         // Generate the signature line: "impl MyTrait for MyType"
         let signature = generate_impl_signature(&impl_ast, docs.as_ref());
 
+        let file_path  = PathBuf::from("dummy");
+        let crate_path = PathBuf::from("dummy_crate");
+
         // Gather methods & type aliases
-        let methods = gather_methods(&impl_ast, &options);
+        let methods = gather_methods(&impl_ast, &options, &file_path, &crate_path);
         let aliases = gather_type_aliases(&impl_ast, &options);
 
         // Finally build the real ImplBlockInterface
@@ -260,10 +395,14 @@ mod test_impl_block_interface_real {
 
         // Format and compare with expected
         let output = format!("{}", ib);
-        let expected = r#"impl MyTrait for MyType {
-    type AliasA = i32;
-    fn do_stuff(&self) {}
-}"#;
+        let expected = indoc!{
+            r#"impl MyTrait for MyType {
+
+                type AliasA = i32;
+
+                fn do_stuff(&self) {}
+            }"#
+        };
 
         assert_eq!(output, expected);
     }
@@ -281,7 +420,10 @@ mod test_impl_block_interface_real {
         let attrs = gather_all_attrs(impl_ast.syntax());
         let signature = generate_impl_signature(&impl_ast, docs.as_ref());
 
-        let methods = gather_methods(&impl_ast, &options);
+        let file_path  = PathBuf::from("dummy");
+        let crate_path = PathBuf::from("dummy_crate");
+
+        let methods = gather_methods(&impl_ast, &options, &file_path, &crate_path);
         let aliases = gather_type_aliases(&impl_ast, &options);
 
         let ib = ImplBlockInterface::new_for_test(docs, attrs, signature, methods, aliases);
