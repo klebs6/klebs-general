@@ -9,7 +9,6 @@ pub trait ShowAll {
     async fn show_all(&self, options: &ShowFlags) -> Result<String, Self::Error>;
 }
 
-
 #[async_trait]
 impl<P, H> ShowAll for Workspace<P, H>
 where

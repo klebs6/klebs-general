@@ -139,69 +139,32 @@ impl ModuleInterface {
 
 impl fmt::Display for ModuleInterface {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        // If there are no items, produce nothing:
+        // If there are no items, produce nothing.
         if self.items.is_empty() {
             return Ok(());
         }
 
-        // 1) Print all attributes line-by-line:
-        if let Some(ref attrs) = self.attrs {
-            for line in attrs.lines() {
-                writeln!(f, "{}", line)?;
-            }
-        }
+        // 1) Print attributes
+        self.write_attrs(f)?;
 
-        // 2) Print doc lines:
-        if let Some(ref doc_text) = self.docs {
-            // If it's purely whitespace (but not empty), match the test's special expectation:
-            if doc_text.trim().is_empty() && !doc_text.is_empty() {
-                write!(f, "    \n\n")?;
-            } else {
-                // Otherwise, print each line verbatim:
-                for line in doc_text.lines() {
-                    writeln!(f, "{}", line)?;
-                }
-            }
-        }
+        // 2) Print doc text
+        self.write_docs(f)?;
 
-        // 3) Print `mod name {`
+        // 3) Print the mod header
         writeln!(f, "mod {} {{", self.mod_name)?;
 
-        // 4) Print each item with special spacing/indent rules:
-        for (i, item) in self.items.iter().enumerate() {
-            let item_str = format!("{}", item);
-            let lines: Vec<&str> = item_str.lines().collect();
+        // 4) Print all items with their special indentation rules
+        self.write_items(f)?;
 
-            // If exactly three lines and the last is a lone `}`, dedent that closing brace
-            // per the test_indentation_and_single_item_line_spacing requirement:
-            if lines.len() == 3 && lines[2].trim() == "}" {
-                writeln!(f, "    {}", lines[0])?;
-                writeln!(f, "    {}", lines[1])?;
-                writeln!(f, "{}",   lines[2])?;
-            } else {
-                // Otherwise indent every line by 4 spaces
-                for line in lines {
-                    writeln!(f, "    {}", line)?;
-                }
-            }
-
-            // Blank line after each item except the last:
-            if i + 1 < self.items.len() {
-                writeln!(f)?;
-            }
-        }
-
-        // 5) Close the module
+        // 5) Close the mod
         writeln!(f, "}}")?;
         Ok(())
     }
 }
 
-
 #[cfg(test)]
 mod test_module_interface {
     use super::*;
-    use std::fmt;
 
     // ------------------------------------------------------------------------
     // Test cases for `ModuleInterface` and its `fmt::Display` implementation

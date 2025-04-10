@@ -1,18 +1,17 @@
 // ---------------- [ File: workspacer-consolidate/src/has_cfg_test_attr.rs ]
 crate::ix!();
 
-pub fn has_cfg_test_attr(node: &SyntaxNode) -> bool {
-    use ra_ap_syntax::ast::Attr;
+pub fn has_cfg_test_attr(node: &ra_ap_syntax::SyntaxNode) -> bool {
     
-    for child_attr in node.children().filter_map(Attr::cast) {
+    // We check *each* #[...] attribute on this node.
+    for child_attr in node.children().filter_map(ast::Attr::cast) {
+        // 1) If it’s `#[cfg(test)]`, as before:
         if let Some(meta) = child_attr.meta() {
-            // Instead of checking `path_node.syntax().text().to_string().contains("cfg")`,
-            // we retrieve the actual `PathSegment` and confirm the segment's name is exactly "cfg".
             if let Some(path_node) = meta.path() {
                 if let Some(segment) = path_node.segment() {
                     if let Some(name_ref) = segment.name_ref() {
                         if name_ref.text() == "cfg" {
-                            // Now confirm the token_tree contains "test".
+                            // Now confirm the token_tree has "test"
                             let tokens = meta.token_tree().map(|tt| tt.to_string()).unwrap_or_default();
                             if tokens.contains("test") {
                                 return true;
@@ -22,7 +21,17 @@ pub fn has_cfg_test_attr(node: &SyntaxNode) -> bool {
                 }
             }
         }
+        
+        // 2) NEW: also treat a literal `#[test]` as test item
+        //    (This picks up simple “#[test] fn mytest() {}”).
+        let text = child_attr.syntax().text().to_string();
+        // Trim whitespace / newlines from a multiline attribute if needed
+        let cleaned = text.replace('\n', " ").replace('\r', "");
+        if cleaned.contains("#[test]") {
+            return true;
+        }
     }
+    
     false
 }
 

@@ -26,6 +26,8 @@ x!{trim_to_60}
 x!{merge}
 x!{interstitial_segment}
 x!{compute_effective_range}
+x!{rewrite_where_lines}
+x!{guess_is_function}
 
 #[cfg(test)]
 mod test_text_range {

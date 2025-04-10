@@ -47,6 +47,273 @@ pub struct CrateInterfaceItem<T: GenerateSignature> {
 unsafe impl<T: GenerateSignature> Send for CrateInterfaceItem<T> {}
 unsafe impl<T: GenerateSignature> Sync for CrateInterfaceItem<T> {}
 
+/// The main `Display` impl. We do NOT require `T: AstNode` anymore, just `T: GenerateSignature + MaybeHasSyntaxKind`.
+/// That way, real AST items have a `.syntax_kind()`, but test mocks that produce function-like signatures can still see their body displayed.
+impl<T> std::fmt::Display for CrateInterfaceItem<T>
+where
+    T: GenerateSignature + MaybeHasSyntaxKind,
+{
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        trace!(
+            "Entering CrateInterfaceItem::fmt; signature = {:?}",
+            self.item.generate_signature()
+        );
+
+        /// Removes outer braces `{ ... }` from a block snippet, if present.
+        fn strip_outer_braces(s: &str) -> String {
+            let t = s.trim_end();
+            if t.starts_with('{') && t.ends_with('}') {
+                t[1..t.len() - 1].to_string()
+            } else {
+                t.to_string()
+            }
+        }
+
+        /// Counts how many leading spaces a line has.
+        fn leading_spaces(line: &str) -> usize {
+            line.chars().take_while(|&c| c == ' ').count()
+        }
+
+        /// Dedent all lines by removing the minimum leading spaces among non-blank lines.
+        fn dedent_all(lines: &[&str]) -> Vec<String> {
+            let mut min_indent = usize::MAX;
+            for line in lines {
+                let trimmed = line.trim_end();
+                if !trimmed.is_empty() {
+                    let lead = leading_spaces(line);
+                    if lead < min_indent {
+                        min_indent = lead;
+                    }
+                }
+            }
+            if min_indent == usize::MAX {
+                min_indent = 0; // all lines blank
+            }
+            lines
+                .iter()
+                .map(|line| {
+                    if line.trim().is_empty() {
+                        "".to_string()
+                    } else {
+                        line[min_indent..].to_string()
+                    }
+                })
+                .collect()
+        }
+
+        /// We insert a newline before a top-level `where` if it is not obviously inside a comment.
+        #[tracing::instrument(level = "trace", skip(signature))]
+        fn rewrite_where_lines(signature: &str) -> String {
+            if !signature.contains(" where") {
+                return signature.to_string();
+            }
+
+            let mut out_lines = Vec::new();
+            for line in signature.lines() {
+                if !line.contains(" where") {
+                    out_lines.push(line.to_string());
+                    continue;
+                }
+                let mut result_line = String::new();
+                let chars: Vec<_> = line.chars().collect();
+                let mut i = 0;
+
+                while i < chars.len() {
+                    if i + 5 < chars.len() && &chars[i..i+5] == [' ', 'w', 'h', 'e', 'r'] {
+                        if i + 6 < chars.len() && chars[i+5] == 'e' && chars[i+6].is_whitespace() {
+                            // Found " where ". Check if it's inside a comment prefix like "//" or "/*"
+                            let prefix = &line[..i];
+                            let in_comment = prefix.contains("//") || prefix.contains("/*");
+                            if in_comment {
+                                // Just copy the rest and break
+                                result_line.push_str(&line[i..]);
+                                break;
+                            } else {
+                                // Insert a newline before 'where'
+                                if !result_line.is_empty() && !result_line.ends_with('\n') {
+                                    result_line.push('\n');
+                                }
+                                result_line.push_str("where");
+                                i += 6;
+                                continue;
+                            }
+                        }
+                    }
+                    result_line.push(chars[i]);
+                    i += 1;
+                }
+                out_lines.push(result_line);
+            }
+            out_lines.join("\n")
+        }
+
+        /// Remove leading blank lines, trailing blank lines, and collapse consecutive
+        /// blank lines into a single blank line.
+        fn normalize_blank_lines<'a>(lines: &'a [&'a str]) -> Vec<&'a str> {
+            let mut start = 0;
+            while start < lines.len() && lines[start].trim().is_empty() {
+                start += 1;
+            }
+            let mut end = lines.len();
+            while end > start && lines[end - 1].trim().is_empty() {
+                end -= 1;
+            }
+            let slice = &lines[start..end];
+
+            let mut result = Vec::new();
+            let mut in_blank_run = false;
+            for &line in slice {
+                if line.trim().is_empty() {
+                    if !in_blank_run {
+                        result.push(line);
+                        in_blank_run = true;
+                    }
+                } else {
+                    in_blank_run = false;
+                    result.push(line);
+                }
+            }
+            result
+        }
+
+        // ---------------------------------------------------------------
+        // 1) Print doc lines
+        // ---------------------------------------------------------------
+        if let Some(docs) = &self.docs {
+            for line in docs.lines() {
+                writeln!(f, "{}", line)?;
+            }
+        }
+
+        // ---------------------------------------------------------------
+        // 2) Print normal attributes
+        // ---------------------------------------------------------------
+        if let Some(attrs) = &self.attributes {
+            for line in attrs.lines() {
+                writeln!(f, "{}", line)?;
+            }
+        }
+
+        // ---------------------------------------------------------------
+        // 3) Generate signature (without doc lines)
+        // ---------------------------------------------------------------
+        let signature = match &self.consolidation_options {
+            Some(opts) => {
+                let mut sig_opts = SignatureOptions::from(opts.into());
+                sig_opts.set_include_docs(false);
+                self.item.generate_signature_with_opts(&sig_opts)
+            }
+            None => self.item.generate_signature(),
+        };
+
+        // ---------------------------------------------------------------
+        // 4) Decide if we treat this as a function
+        // ---------------------------------------------------------------
+        let is_fn = guess_is_function(&(*self.item), &signature);
+
+        // If not a function, just print the signature lines and return
+        if !is_fn {
+            for line in signature.lines() {
+                writeln!(f, "{}", line)?;
+            }
+            return Ok(());
+        }
+
+        // ---------------------------------------------------------------
+        // 5) It's a function => decide single-line or multi-line
+        // ---------------------------------------------------------------
+        let sig_lines: Vec<&str> = signature.lines().collect();
+        let has_where = signature.contains(" where ")
+            || signature.contains("\nwhere")
+            || signature.contains("\n    where")
+            || signature.contains(")\nwhere")
+            || signature.contains(")where");
+        let force_multiline = has_where || sig_lines.len() > 1;
+
+        // Single-line function?
+        if !force_multiline && sig_lines.len() == 1 {
+            write!(f, "{}", sig_lines[0].trim_end())?;
+            // If there's a body_source, print it
+            if let Some(body) = &self.body_source {
+                let body_inner = strip_outer_braces(body.trim());
+                if body_inner.is_empty() {
+                    writeln!(f, " {{}}")?;
+                } else {
+                    writeln!(f, " {{")?;
+                    let raw_body_lines: Vec<&str> = body_inner.lines().collect();
+                    let collapsed = normalize_blank_lines(&raw_body_lines);
+                    let ded = dedent_all(&collapsed);
+                    for line in ded {
+                        if line.is_empty() {
+                            writeln!(f)?;
+                        } else {
+                            writeln!(f, "    {}", line)?;
+                        }
+                    }
+                    writeln!(f, "}}")?;
+                }
+            } else {
+                writeln!(f, " {{}}")?;
+            }
+            return Ok(());
+        }
+
+        // ---------------------------------------------------------------
+        // 6) Multi-line function signature
+        // ---------------------------------------------------------------
+        let rewritten = rewrite_where_lines(&signature);
+        let sig_raw: Vec<&str> = rewritten.lines().collect();
+        if sig_raw.len() == 1 {
+            // If rewriting ended up single-line, just print that
+            writeln!(f, "{}", sig_raw[0])?;
+        } else {
+            let ded = dedent_all(&sig_raw);
+            let mut result_lines = Vec::new();
+            if !ded.is_empty() {
+                result_lines.push(ded[0].clone());
+            }
+            // Try removing 4 spaces so `where` lines up under fn
+            for line in ded.iter().skip(1) {
+                let lead = leading_spaces(line);
+                let keep = if lead >= 4 { lead - 4 } else { 0 };
+                let remainder = &line[lead..];
+                result_lines.push(format!("{}{}", " ".repeat(keep), remainder));
+            }
+            for line in &result_lines {
+                writeln!(f, "{}", line)?;
+            }
+        }
+
+        // ---------------------------------------------------------------
+        // 7) Print the function body
+        // ---------------------------------------------------------------
+        if let Some(body) = &self.body_source {
+            let trimmed = body.trim();
+            let inside = strip_outer_braces(trimmed);
+            if inside.is_empty() {
+                writeln!(f, "{{}}")?;
+            } else {
+                writeln!(f, "{{")?;
+                let raw_body_lines: Vec<&str> = inside.lines().collect();
+                let collapsed = normalize_blank_lines(&raw_body_lines);
+                let ded = dedent_all(&collapsed);
+                for line in ded {
+                    if line.is_empty() {
+                        writeln!(f)?;
+                    } else {
+                        writeln!(f, "    {}", line)?;
+                    }
+                }
+                writeln!(f, "}}")?;
+            }
+        } else {
+            writeln!(f, "{{}}")?;
+        }
+
+        Ok(())
+    }
+}
+
 impl<T: GenerateSignature> CrateInterfaceItem<T> {
 
     /// A test-only convenience constructor that fills in dummy file paths,
@@ -205,299 +472,6 @@ impl<T: GenerateSignature> CrateInterfaceItem<T> {
     }
 }
 
-impl<T: GenerateSignature> std::fmt::Display for CrateInterfaceItem<T> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        trace!("Entering CrateInterfaceItem::fmt for signature: {:?}", self.item.generate_signature());
-
-        /// Removes outer braces `{ ... }` from a block snippet, if present.
-        fn strip_outer_braces(s: &str) -> String {
-            let t = s.trim_end();
-            if t.starts_with('{') && t.ends_with('}') {
-                t[1..t.len() - 1].to_string()
-            } else {
-                t.to_string()
-            }
-        }
-
-        /// Counts how many leading spaces a line has.
-        fn leading_spaces(line: &str) -> usize {
-            line.chars().take_while(|&c| c == ' ').count()
-        }
-
-        /// Dedent all lines by removing the minimum leading spaces among
-        /// non-blank lines.
-        fn dedent_all(lines: &[&str]) -> Vec<String> {
-            let mut min_indent = usize::MAX;
-            for line in lines {
-                let trimmed = line.trim_end();
-                if !trimmed.is_empty() {
-                    let lead = leading_spaces(line);
-                    if lead < min_indent {
-                        min_indent = lead;
-                    }
-                }
-            }
-            if min_indent == usize::MAX {
-                min_indent = 0; // all lines blank
-            }
-            lines
-                .iter()
-                .map(|line| {
-                    if line.trim().is_empty() {
-                        "".to_string()
-                    } else {
-                        line[min_indent..].to_string()
-                    }
-                })
-                .collect()
-        }
-
-        /// Rewrite " where" => newline + "where" to isolate the where-clause.
-        fn rewrite_where_lines(signature: &str) -> String {
-            if !signature.contains(" where") {
-                return signature.to_string();
-            }
-            let mut out = String::new();
-            let chars: Vec<_> = signature.chars().collect();
-            let mut i = 0;
-            while i < chars.len() {
-                if i + 5 < chars.len() && &chars[i..i+5] == [' ', 'w', 'h', 'e', 'r'] {
-                    if i + 6 < chars.len() && chars[i+5] == 'e' && chars[i+6].is_whitespace() {
-                        // found " where "
-                        if i > 0 && chars[i-1] != '\n' {
-                            out.push('\n');
-                        }
-                        out.push_str("where");
-                        i += 6; // skip " where"
-                        continue;
-                    }
-                }
-                out.push(chars[i]);
-                i += 1;
-            }
-            out
-        }
-
-        /// Remove leading blank lines, trailing blank lines, and collapse consecutive
-        /// blank lines into a single blank line. This helps match the user's expected
-        /// spacing exactly.
-        fn normalize_blank_lines<'a>(lines: &'a [&'a str]) -> Vec<&'a str> {
-            // 1) Remove leading blank lines
-            let mut start = 0;
-            while start < lines.len() && lines[start].trim().is_empty() {
-                start += 1;
-            }
-            // 2) Remove trailing blank lines
-            let mut end = lines.len();
-            while end > start && lines[end - 1].trim().is_empty() {
-                end -= 1;
-            }
-            let slice = &lines[start..end];
-
-            // 3) Collapse consecutive blank lines
-            let mut result = Vec::new();
-            let mut in_blank_run = false;
-            for &line in slice {
-                if line.trim().is_empty() {
-                    if !in_blank_run {
-                        // first blank line in a run => keep exactly one
-                        result.push(line);
-                        in_blank_run = true;
-                    } else {
-                        // skip extra blank lines
-                    }
-                } else {
-                    in_blank_run = false;
-                    result.push(line);
-                }
-            }
-            result
-        }
-
-        // -------------------------------------------------------------------------
-        // 1) Print doc lines
-        // -------------------------------------------------------------------------
-        if let Some(docs) = &self.docs {
-            for line in docs.lines() {
-                writeln!(f, "{}", line)?;
-            }
-        }
-
-        // -------------------------------------------------------------------------
-        // 2) Print normal attributes (#[inline], etc.)
-        // -------------------------------------------------------------------------
-        if let Some(attrs) = &self.attributes {
-            for line in attrs.lines() {
-                writeln!(f, "{}", line)?;
-            }
-        }
-
-        // -------------------------------------------------------------------------
-        // 3) Generate signature (ignore doc lines inside it)
-        // -------------------------------------------------------------------------
-        let signature = match &self.consolidation_options {
-            Some(opts) => {
-                let mut sig_opts = SignatureOptions::from(opts.into());
-                sig_opts.set_include_docs(false);
-                self.item.generate_signature_with_opts(&sig_opts)
-            }
-            None => self.item.generate_signature(),
-        };
-
-        // -------------------------------------------------------------------------
-        // 4) Check if it's likely a function
-        // -------------------------------------------------------------------------
-        let is_fn = signature.contains("fn ");
-        if !is_fn {
-            // Not a function => just print the signature lines as-is
-            for line in signature.lines() {
-                writeln!(f, "{}", line)?;
-            }
-            return Ok(());
-        }
-
-        let sig_lines: Vec<&str> = signature.lines().collect();
-        let has_where = signature.contains("\nwhere")
-            || signature.contains("\n    where")
-            || signature.contains(" where ")
-            || signature.contains(")\nwhere")
-            || signature.contains(")where");
-        let force_multiline = has_where || sig_lines.len() > 1;
-
-        // -------------------------------------------------------------------------
-        // 5) Single-line fn => "fn name() {}"
-        // -------------------------------------------------------------------------
-        if !force_multiline && sig_lines.len() == 1 {
-            // Just print the one-liner
-            write!(f, "{}", sig_lines[0].trim_end())?;
-            // Then the body
-            if let Some(body) = &self.body_source {
-                let body_inner = strip_outer_braces(body.trim());
-                if body_inner.is_empty() {
-                    writeln!(f, " {{}}")?;
-                } else {
-                    writeln!(f, " {{")?;
-                    let raw_body_lines: Vec<&str> = body_inner.lines().collect();
-                    let collapsed = normalize_blank_lines(&raw_body_lines);
-                    let ded = dedent_all(&collapsed);
-                    for line in ded {
-                        if line.is_empty() {
-                            writeln!(f)?;
-                        } else {
-                            writeln!(f, "    {}", line)?;
-                        }
-                    }
-                    writeln!(f, "}}")?;
-                }
-            } else {
-                writeln!(f, " {{}}")?;
-            }
-            return Ok(());
-        }
-
-        // -------------------------------------------------------------------------
-        // 6) Multi-line function signature
-        // -------------------------------------------------------------------------
-        let rewritten = rewrite_where_lines(&signature);
-        let sig_raw: Vec<&str> = rewritten.lines().collect();
-        if sig_raw.len() == 1 {
-            // If rewriting ended up single-line after all, print it
-            writeln!(f, "{}", sig_raw[0])?;
-        } else {
-            let ded = dedent_all(&sig_raw);
-
-            // We'll produce final lines with minimal indentation for the first line,
-            // and we shift subsequent lines if needed. The user specifically wants
-            // the `where` aligned exactly under the `pub fn`, so we remove an extra
-            // 4 spaces from subsequent lines if they have them.
-            let mut result_lines = Vec::new();
-            if !ded.is_empty() {
-                result_lines.push(ded[0].clone()); // first line unchanged
-            }
-            for line in ded.iter().skip(1) {
-                // If line starts with >=4 spaces, remove 4. This helps line up the `where`:
-                let lead = leading_spaces(line);
-                let keep = if lead >= 4 { lead - 4 } else { 0 };
-                let remainder = &line[lead..];
-                let new_line = format!("{}{}", " ".repeat(keep), remainder);
-                result_lines.push(new_line);
-            }
-
-            for line in &result_lines {
-                writeln!(f, "{}", line)?;
-            }
-        }
-
-        // -------------------------------------------------------------------------
-        // 7) Print the function body in multi-line scenario
-        // -------------------------------------------------------------------------
-        if let Some(body) = &self.body_source {
-            let trimmed = body.trim();
-            let inside = strip_outer_braces(trimmed);
-            if inside.is_empty() {
-                writeln!(f, "{{}}")?;
-            } else {
-                writeln!(f, "{{")?;
-                let raw_body_lines: Vec<&str> = inside.lines().collect();
-                // normalize blank lines
-                let collapsed = normalize_blank_lines(&raw_body_lines);
-                let ded = dedent_all(&collapsed);
-                for line in ded {
-                    if line.is_empty() {
-                        writeln!(f)?;
-                    } else {
-                        writeln!(f, "    {}", line)?;
-                    }
-                }
-                writeln!(f, "}}")?;
-            }
-        } else {
-            writeln!(f, "{{}}")?;
-        }
-
-        Ok(())
-    }
-}
-
-/// Same helper as before, rewriting " where" to a newline if needed.
-fn rewrite_where_lines(signature: &str) -> String {
-    if !signature.contains(" where") {
-        return signature.to_string();
-    }
-
-    let mut out = String::new();
-    let mut i = 0;
-    let chars: Vec<_> = signature.chars().collect();
-    while i < chars.len() {
-        if i + 5 < chars.len() && &chars[i..i+5] == [' ', 'w', 'h', 'e', 'r'] {
-            if i+6 < chars.len() && chars[i+5] == 'e' && chars[i+6].is_whitespace() {
-                // found " where "
-                // if previous char wasn't newline, insert newline
-                if i > 0 && chars[i-1] != '\n' {
-                    out.push('\n');
-                }
-                out.push_str("where");
-                i += 6;
-                continue;
-            }
-        }
-        out.push(chars[i]);
-        i += 1;
-    }
-    out
-}
-
-/// Removes the outer braces from a block text, if present.
-#[tracing::instrument(level = "trace", skip(text))]
-fn strip_outer_braces(text: &str) -> String {
-    let trimmed = text.trim_end();
-    if trimmed.starts_with('{') && trimmed.ends_with('}') {
-        trimmed[1..trimmed.len() - 1].to_string()
-    } else {
-        trimmed.to_string()
-    }
-}
-
 impl<T: GenerateSignature> CrateInterfaceItem<T> {
     /// This is the “official” accessor for the RA node range,
     /// used by `test_text_range` etc. We do **not** trim comments here.
@@ -519,8 +493,6 @@ impl<T: GenerateSignature> CrateInterfaceItem<T> {
     }
 }
 
-
-
 /// Count leading spaces in a line
 fn leading_spaces(line: &str) -> usize {
     line.chars().take_while(|&c| c == ' ').count()
@@ -536,6 +508,15 @@ mod test_crate_interface_item {
     struct MockItem {
         signature: String,
     }
+
+    // If you have a mock item type that doesn't implement AstNode (like test_crate_interface_item::MockItem),
+    // just return None. Then the Display logic won't attempt to interpret it as a function.
+    impl MaybeHasSyntaxKind for MockItem {
+        fn syntax_kind(&self) -> Option<SyntaxKind> {
+            None
+        }
+    }
+
     impl GenerateSignature for MockItem {
         fn generate_signature(&self) -> String {
             self.signature.clone()
@@ -547,7 +528,7 @@ mod test_crate_interface_item {
 
     // Now we reproduce your failing tests + others:
 
-    #[test]
+    #[traced_test]
     fn test_no_docs_no_attrs_no_body() {
         let mock = MockItem {
             signature: "fn no_docs_or_attrs()".to_string(),
@@ -559,7 +540,7 @@ mod test_crate_interface_item {
         assert!(display_str.contains("fn no_docs_or_attrs()"));
     }
 
-    #[test]
+    #[traced_test]
     fn test_docs_no_attrs_no_body() {
         let mock = MockItem {
             signature: "fn doc_test()".to_string(),
@@ -573,7 +554,7 @@ mod test_crate_interface_item {
         assert!(display_str.contains("fn doc_test()"));
     }
 
-    #[test]
+    #[traced_test]
     fn test_merge_doc_attrs_with_attributes() {
         let mock = MockItem {
             signature: "fn attr_merge()".to_string(),
@@ -615,7 +596,7 @@ r#"#[doc = "another doc line"]
         assert!(display_str.contains("fn attr_merge()"));
     }
 
-    #[test]
+    #[traced_test]
     fn test_empty_body_source() {
         let mock = MockItem {
             signature: "fn empty_body()".to_string(),
@@ -627,7 +608,7 @@ r#"#[doc = "another doc line"]
         assert!(display_str.contains("fn empty_body()"));
     }
 
-    #[test]
+    #[traced_test]
     fn test_complex_scenario() {
         let mock = MockItem {
             signature: "fn complex()".to_string(),
@@ -675,6 +656,7 @@ r#"{
 
         // The display => doc lines, then 2 attrs, then "fn complex() { <body> }"
         let display_str = format!("{}", ci);
+        info!("display_str = {}", display_str);
         assert!(display_str.contains("/// doc line from code"));
         assert!(display_str.contains("/// another doc line"));
         assert!(display_str.contains("/// doc from attr"));
@@ -686,7 +668,7 @@ r#"{
         assert!(display_str.contains("let value = 42;"));
     }
 
-    #[test]
+    #[traced_test]
     fn test_non_function_signature_struct() {
         let mock = MockItem {
             signature: "struct Foo".into(),
@@ -707,7 +689,7 @@ r#"{
         assert_eq!(lines.len(), 3);
     }
 
-    #[test]
+    #[traced_test]
     fn test_item_not_fn_but_has_body_source() {
         let mock = MockItem {
             signature: "impl MyTrait for MyType".into(),
@@ -729,7 +711,7 @@ r#"{
         assert_eq!(lines.len(), 3);
     }
 
-    #[test]
+    #[traced_test]
     fn test_fn_body_display_multiline_block() {
         let mock = MockItem {
             signature: "fn multiline()".into(),
@@ -743,6 +725,7 @@ r#"{
         let ci = CrateInterfaceItem::new_for_test(mock, None, None, body_source, None);
 
         let display_str = format!("{}", ci);
+        info!("display_str = {}", display_str);
         // The test asserts these two lines exist literally:
         assert!(display_str.contains("fn multiline() {"));
         assert!(display_str.contains("let x = 10;"));
@@ -800,4 +783,3 @@ r#"{
         );
     }
 }
-

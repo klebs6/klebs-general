@@ -13,3 +13,4 @@ x!{generate_struct_signature}
 x!{signature_options}
 x!{rehydrate}
 x!{rehydrate_nodes}
+x!{maybe_has_syntax_kind}

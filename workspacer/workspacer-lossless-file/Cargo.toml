@@ -11,5 +11,4 @@ description = "todo: write a description here"
 
 [dependencies]
 workspacer-3p = { path = "../workspacer-3p" }
-workspacer-syntax = { path = "../workspacer-syntax" }
 workspacer-consolidate = { path = "../workspacer-consolidate" }
