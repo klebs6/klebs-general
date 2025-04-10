@@ -327,20 +327,19 @@ mod test_impl_block_interface_real {
             impl CrateHandle {
 
                 /// Initializes a crate handle from a given crate_path
-                pub fn new_sync<P>(crate_path: &P) -> Result<Self,CrateError>
-                where 
-                    for<'async_trait> 
-                        P
-                            : HasCargoTomlPathBuf 
-                            + HasCargoTomlPathBufSync 
-                            + AsRef<Path> 
-                            + Send 
-                            + Sync
-                            + 'async_trait,
+                pub fn new_sync<P>(crate_path: &P) -> Result<Self,CrateError> where 
+                        for<'async_trait> 
+                            P
+                                : HasCargoTomlPathBuf 
+                                + HasCargoTomlPathBufSync 
+                                + AsRef<Path> 
+                                + Send 
+                                + Sync
+                                + 'async_trait,
                 
-                            CrateError
-                                : From<<P as HasCargoTomlPathBuf>::Error> 
-                                + From<<P as HasCargoTomlPathBufSync>::Error>
+                                CrateError
+                                    : From<<P as HasCargoTomlPathBuf>::Error> 
+                                    + From<<P as HasCargoTomlPathBufSync>::Error>
                 {
                     let cargo_toml_path = crate_path.cargo_toml_path_buf_sync()?;
                 

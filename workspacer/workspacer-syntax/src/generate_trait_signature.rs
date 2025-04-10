@@ -35,12 +35,14 @@ impl GenerateSignature for ast::Trait {
             trace!("Trait generics: {:?}", generics);
         }
 
+        /*
         // 2) If we're *not* fully expanding, just produce a placeholder:
+        // we typically never want to do this
         if !*opts.fully_expand() {
             trace!("Not fully expanding trait items; returning short signature");
             return format!("{}trait {}{} {{ /* trait items here */ }}", vis, name, generics);
         }
-
+        */
 
         // 3) If we *are* fully expanding, gather the trait's associated items:
         let mut lines = Vec::new();

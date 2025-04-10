@@ -1,16 +1,24 @@
 // ---------------- [ File: workspacer-consolidate/src/gather_module.rs ]
 crate::ix!();
 
+/// Gathers an inline `mod foo { ... }` node into a `ModuleInterface`, recursing to collect items.
+///
+/// If the module is marked `#[cfg(test)]` (or we discover it's inside a test module),
+/// we respect `ConsolidationOptions` (`include_test_items` / `only_test_items`) to decide skipping or not.
 pub fn gather_module(
     module_ast: &ast::Module,
     options:    &ConsolidationOptions,
     file_path:  &PathBuf,
-    crate_path: &PathBuf,
+    crate_path: &PathBuf
 ) -> Option<ModuleInterface> {
-    if skip_checks::should_skip_item(module_ast.syntax(), options) {
+    use crate::skip_checks::should_skip_item;
+
+    // 1) If skip logic says to skip, we bail out
+    if should_skip_item(module_ast.syntax(), options) {
         return None;
     }
 
+    // 2) Gather doc lines + normal `#[...]` attrs
     let docs = if *options.include_docs() {
         extract_docs(module_ast.syntax())
     } else {
@@ -23,9 +31,11 @@ pub fn gather_module(
         .map(|n| n.text().to_string())
         .unwrap_or_else(|| "<unknown_module>".to_string());
 
+    // 3) Compute raw + effective range
     let raw_range = module_ast.syntax().text_range();
     let eff_range = compute_effective_range(module_ast.syntax());
 
+    // 4) Create the ModuleInterface
     let mut mod_interface = ModuleInterface::new_with_paths_and_range(
         docs,
         attrs,
@@ -36,76 +46,21 @@ pub fn gather_module(
         eff_range,
     );
 
-    // If it's inline => gather children
+    // 5) If it's an **inline** module => gather items from the braces using our main gather function
     if let Some(item_list) = module_ast.item_list() {
-        for child in item_list.syntax().descendants() {
-            if child.parent().map(|p| p == *item_list.syntax()).unwrap_or(false) {
-                match child.kind() {
-                    SyntaxKind::FN => {
-                        if !skip_checks::should_skip_item(&child, options) {
-                            if let Some(fn_ast) = ast::Fn::cast(child.clone()) {
-                                let docs = if *options.include_docs() {
-                                    extract_docs(fn_ast.syntax())
-                                } else {
-                                    None
-                                };
-                                let attrs = gather_all_attrs(fn_ast.syntax());
-                                let rng = fn_ast.syntax().text_range();
-                                mod_interface.add_item(ConsolidatedItem::Fn(
-                                    CrateInterfaceItem::new_with_paths_and_ranges(
-                                        fn_ast,
-                                        docs,
-                                        attrs,
-                                        None,
-                                        Some(options.clone()),
-                                        file_path.clone(),
-                                        crate_path.clone(),
-                                        rng,
-                                        rng,
-                                    )
-                                ));
-                            }
-                        }
-                    }
 
-                    SyntaxKind::STRUCT => {
-                        if !skip_checks::should_skip_item(&child, options) {
-                            if let Some(st_ast) = ast::Struct::cast(child.clone()) {
-                                let docs = if *options.include_docs() {
-                                    extract_docs(st_ast.syntax())
-                                } else {
-                                    None
-                                };
-                                let attrs = gather_all_attrs(st_ast.syntax());
-                                let rng = st_ast.syntax().text_range();
-                                mod_interface.add_item(ConsolidatedItem::Struct(
-                                    CrateInterfaceItem::new_with_paths_and_ranges(
-                                        st_ast,
-                                        docs,
-                                        attrs,
-                                        None,
-                                        Some(options.clone()),
-                                        file_path.clone(),
-                                        crate_path.clone(),
-                                        rng,
-                                        rng,
-                                    )
-                                ));
-                            }
-                        }
-                    }
+        debug!(
+            ?module_ast, 
+            "Found inline module with braces; now gathering sub-items from its item_list"
+        );
 
-                    SyntaxKind::MODULE => {
-                        if let Some(mod_ast) = ast::Module::cast(child.clone()) {
-                            if let Some(nested_mod) = gather_module(&mod_ast, options, file_path, crate_path) {
-                                mod_interface.add_item(ConsolidatedItem::Module(nested_mod));
-                            }
-                        }
-                    }
+        // Instead of manually matching FN/STRUCT/MODULE, we call gather_items_in_node, which
+        // recurses similarly to top-level, capturing test items, nested mods, etc.
+        let sub_items = gather_items_in_node(item_list.syntax(), options, file_path, crate_path);
 
-                    _ => {}
-                }
-            }
+        // Then attach those items to the module
+        for si in sub_items {
+            mod_interface.add_item(si);
         }
     }
 

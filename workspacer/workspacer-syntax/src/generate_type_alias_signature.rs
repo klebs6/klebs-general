@@ -30,15 +30,7 @@ impl GenerateSignature for ast::TypeAlias {
             .map(|g| g.syntax().text().to_string())
             .unwrap_or_default();
 
-        let where_clause_raw = self
-            .where_clause()
-            .map(|wc| wc.syntax().text().to_string())
-            .unwrap_or_default();
-        let where_clause = if where_clause_raw.is_empty() {
-            "".to_string()
-        } else {
-            format!(" {}", where_clause_raw)
-        };
+        let where_clause = full_clean_where_clause(&self.where_clause());
 
         let visibility = self
             .visibility()

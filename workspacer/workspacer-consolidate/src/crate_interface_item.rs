@@ -48,7 +48,8 @@ unsafe impl<T: GenerateSignature> Send for CrateInterfaceItem<T> {}
 unsafe impl<T: GenerateSignature> Sync for CrateInterfaceItem<T> {}
 
 /// The main `Display` impl. We do NOT require `T: AstNode` anymore, just `T: GenerateSignature + MaybeHasSyntaxKind`.
-/// That way, real AST items have a `.syntax_kind()`, but test mocks that produce function-like signatures can still see their body displayed.
+/// That way, real AST items have a `.syntax_kind()`, but test mocks that produce function-like signatures can still
+/// see their body displayed.
 impl<T> std::fmt::Display for CrateInterfaceItem<T>
 where
     T: GenerateSignature + MaybeHasSyntaxKind,
@@ -74,8 +75,15 @@ where
             line.chars().take_while(|&c| c == ' ').count()
         }
 
-        /// Dedent all lines by removing the minimum leading spaces among non-blank lines.
-        fn dedent_all(lines: &[&str]) -> Vec<String> {
+        /// Dedent all lines by removing the minimum leading spaces among non-blank lines,
+        /// but only if `do_dedent` is true. Otherwise returns them unchanged.
+        fn conditional_dedent_all(lines: &[&str], do_dedent: bool) -> Vec<String> {
+            if !do_dedent {
+                // Just convert them to owned Strings without changing indentation
+                return lines.iter().map(|l| l.to_string()).collect();
+            }
+
+            // Normal dedent logic
             let mut min_indent = usize::MAX;
             for line in lines {
                 let trimmed = line.trim_end();
@@ -99,52 +107,6 @@ where
                     }
                 })
                 .collect()
-        }
-
-        /// We insert a newline before a top-level `where` if it is not obviously inside a comment.
-        #[tracing::instrument(level = "trace", skip(signature))]
-        fn rewrite_where_lines(signature: &str) -> String {
-            if !signature.contains(" where") {
-                return signature.to_string();
-            }
-
-            let mut out_lines = Vec::new();
-            for line in signature.lines() {
-                if !line.contains(" where") {
-                    out_lines.push(line.to_string());
-                    continue;
-                }
-                let mut result_line = String::new();
-                let chars: Vec<_> = line.chars().collect();
-                let mut i = 0;
-
-                while i < chars.len() {
-                    if i + 5 < chars.len() && &chars[i..i+5] == [' ', 'w', 'h', 'e', 'r'] {
-                        if i + 6 < chars.len() && chars[i+5] == 'e' && chars[i+6].is_whitespace() {
-                            // Found " where ". Check if it's inside a comment prefix like "//" or "/*"
-                            let prefix = &line[..i];
-                            let in_comment = prefix.contains("//") || prefix.contains("/*");
-                            if in_comment {
-                                // Just copy the rest and break
-                                result_line.push_str(&line[i..]);
-                                break;
-                            } else {
-                                // Insert a newline before 'where'
-                                if !result_line.is_empty() && !result_line.ends_with('\n') {
-                                    result_line.push('\n');
-                                }
-                                result_line.push_str("where");
-                                i += 6;
-                                continue;
-                            }
-                        }
-                    }
-                    result_line.push(chars[i]);
-                    i += 1;
-                }
-                out_lines.push(result_line);
-            }
-            out_lines.join("\n")
         }
 
         /// Remove leading blank lines, trailing blank lines, and collapse consecutive
@@ -177,7 +139,7 @@ where
         }
 
         // ---------------------------------------------------------------
-        // 1) Print doc lines
+        // 1) Print doc lines (unmodified)
         // ---------------------------------------------------------------
         if let Some(docs) = &self.docs {
             for line in docs.lines() {
@@ -186,7 +148,7 @@ where
         }
 
         // ---------------------------------------------------------------
-        // 2) Print normal attributes
+        // 2) Print normal attributes (unmodified)
         // ---------------------------------------------------------------
         if let Some(attrs) = &self.attributes {
             for line in attrs.lines() {
@@ -195,7 +157,7 @@ where
         }
 
         // ---------------------------------------------------------------
-        // 3) Generate signature (without doc lines)
+        // 3) Generate signature (disabling doc lines in the signature if set)
         // ---------------------------------------------------------------
         let signature = match &self.consolidation_options {
             Some(opts) => {
@@ -207,11 +169,11 @@ where
         };
 
         // ---------------------------------------------------------------
-        // 4) Decide if we treat this as a function
+        // 4) Check if it's a function
         // ---------------------------------------------------------------
         let is_fn = guess_is_function(&(*self.item), &signature);
 
-        // If not a function, just print the signature lines and return
+        // If not a function, just print the signature and return
         if !is_fn {
             for line in signature.lines() {
                 writeln!(f, "{}", line)?;
@@ -220,29 +182,37 @@ where
         }
 
         // ---------------------------------------------------------------
-        // 5) It's a function => decide single-line or multi-line
+        // 5) Single-line vs multi-line function logic
         // ---------------------------------------------------------------
         let sig_lines: Vec<&str> = signature.lines().collect();
+
         let has_where = signature.contains(" where ")
             || signature.contains("\nwhere")
             || signature.contains("\n    where")
             || signature.contains(")\nwhere")
             || signature.contains(")where");
+
         let force_multiline = has_where || sig_lines.len() > 1;
 
-        // Single-line function?
+        // Attempt single-line?
         if !force_multiline && sig_lines.len() == 1 {
+            // single-line signature
             write!(f, "{}", sig_lines[0].trim_end())?;
-            // If there's a body_source, print it
+
+            // If there's a body, dedent it
             if let Some(body) = &self.body_source {
                 let body_inner = strip_outer_braces(body.trim());
                 if body_inner.is_empty() {
                     writeln!(f, " {{}}")?;
                 } else {
                     writeln!(f, " {{")?;
+
                     let raw_body_lines: Vec<&str> = body_inner.lines().collect();
                     let collapsed = normalize_blank_lines(&raw_body_lines);
-                    let ded = dedent_all(&collapsed);
+
+                    // For the body, we do want dedent
+                    let ded = conditional_dedent_all(&collapsed, true);
+
                     for line in ded {
                         if line.is_empty() {
                             writeln!(f)?;
@@ -259,33 +229,17 @@ where
         }
 
         // ---------------------------------------------------------------
-        // 6) Multi-line function signature
+        // 6) Multi-line function signature printing
         // ---------------------------------------------------------------
-        let rewritten = rewrite_where_lines(&signature);
-        let sig_raw: Vec<&str> = rewritten.lines().collect();
-        if sig_raw.len() == 1 {
-            // If rewriting ended up single-line, just print that
-            writeln!(f, "{}", sig_raw[0])?;
-        } else {
-            let ded = dedent_all(&sig_raw);
-            let mut result_lines = Vec::new();
-            if !ded.is_empty() {
-                result_lines.push(ded[0].clone());
-            }
-            // Try removing 4 spaces so `where` lines up under fn
-            for line in ded.iter().skip(1) {
-                let lead = leading_spaces(line);
-                let keep = if lead >= 4 { lead - 4 } else { 0 };
-                let remainder = &line[lead..];
-                result_lines.push(format!("{}{}", " ".repeat(keep), remainder));
-            }
-            for line in &result_lines {
-                writeln!(f, "{}", line)?;
-            }
+        let do_dedent_for_signature = false;
+        let sig_dedented = conditional_dedent_all(&sig_lines, do_dedent_for_signature);
+
+        for line in &sig_dedented {
+            writeln!(f, "{}", line)?;
         }
 
         // ---------------------------------------------------------------
-        // 7) Print the function body
+        // 7) Print the function body (if any), dedented
         // ---------------------------------------------------------------
         if let Some(body) = &self.body_source {
             let trimmed = body.trim();
@@ -294,9 +248,13 @@ where
                 writeln!(f, "{{}}")?;
             } else {
                 writeln!(f, "{{")?;
+
                 let raw_body_lines: Vec<&str> = inside.lines().collect();
                 let collapsed = normalize_blank_lines(&raw_body_lines);
-                let ded = dedent_all(&collapsed);
+
+                let do_dedent_for_body = true;
+                let ded = conditional_dedent_all(&collapsed, do_dedent_for_body);
+
                 for line in ded {
                     if line.is_empty() {
                         writeln!(f)?;

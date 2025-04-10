@@ -30,7 +30,8 @@ CrateError: From<<T as AsyncTryFrom<PathBuf>>::Error>
 
     #[tracing::instrument(level = "trace", skip(self, options))]
     async fn show(&self, options: &ShowFlags) -> Result<String, Self::Error> {
-        trace!("Entering ShowCrate::show for CrateHandle at {:?}", self.as_ref());
+
+        trace!("Entering ShowCrate::show for CrateHandle at {:?} with options={:#?}", self.as_ref(), options);
 
         // 1) Validate if it’s actually a single-crate or part of a workspace:
         //    We'll do that logic at a higher level if needed. Here, we assume it's valid.

@@ -127,6 +127,7 @@ pub fn snippet_for_logging(node: &SyntaxNode) -> String {
 
 #[cfg(test)]
 mod test_should_skip_item_exhaustive {
+
     use super::*;
 
     /// Parse the provided Rust snippet into a `SyntaxNode`. We choose the first item or block we find

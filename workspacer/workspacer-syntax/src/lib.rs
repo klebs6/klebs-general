@@ -14,3 +14,4 @@ x!{signature_options}
 x!{rehydrate}
 x!{rehydrate_nodes}
 x!{maybe_has_syntax_kind}
+x!{clean_where_clause}

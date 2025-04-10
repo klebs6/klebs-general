@@ -3,11 +3,13 @@ crate::ix!();
 
 #[tracing::instrument(level = "trace", skip_all)]
 pub fn gather_fn_item(
-    fn_ast:  &ast::Fn,
-    options: &ConsolidationOptions,
-    file_path: &PathBuf,
+    fn_ast:     &ast::Fn,
+    options:    &ConsolidationOptions,
+    file_path:  &PathBuf,
     crate_path: &PathBuf,
+
 ) -> CrateInterfaceItem<ast::Fn> {
+
     trace!("Entering gather_fn_item; fn snippet = {:?}", snippet_for_logging(fn_ast.syntax()));
 
     // 1) Possibly gather doc lines

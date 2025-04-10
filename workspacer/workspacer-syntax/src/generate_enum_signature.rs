@@ -31,18 +31,10 @@ impl GenerateSignature for ast::Enum {
             .map(|g| g.syntax().text().to_string())
             .unwrap_or_default();
 
-        let where_clause_raw = self
-            .where_clause()
-            .map(|wc| wc.syntax().text().to_string())
-            .unwrap_or_default();
-        let where_clause = if where_clause_raw.is_empty() {
-            "".to_string()
-        } else {
-            format!(" {}", where_clause_raw)
-        };
+        let where_clause = full_clean_where_clause(&self.where_clause());
 
         // If fully_expand, we gather actual variants:
-        let variants_text = if *opts.fully_expand() {
+        let variants_text = {
             if let Some(variant_list) = self.variant_list() {
                 let items: Vec<String> = variant_list
                     .variants()
@@ -83,8 +75,6 @@ impl GenerateSignature for ast::Enum {
             } else {
                 ";".to_string()
             }
-        } else {
-            "{ /* variants omitted */ }".to_string()
         };
 
         let core = format!(

@@ -31,14 +31,12 @@ pub fn generate_impl_signature(impl_ast: &ast::Impl, docs: Option<&String>) -> S
         .generic_param_list()
         .map(|gp| gp.syntax().text().to_string())
         .unwrap_or_default();
-    let raw_where = impl_ast
-        .where_clause()
-        .map(|wc| wc.syntax().text().to_string())
-        .unwrap_or_default();
+
     let raw_trait = impl_ast
         .trait_()
         .map(|tr| tr.syntax().text().to_string())
         .unwrap_or_default();
+
     let raw_self_ty = impl_ast
         .self_ty()
         .map(|ty| ty.syntax().text().to_string())
@@ -47,16 +45,14 @@ pub fn generate_impl_signature(impl_ast: &ast::Impl, docs: Option<&String>) -> S
     debug!("raw_generics = {:?}", raw_generics);
     debug!("raw_trait    = {:?}", raw_trait);
     debug!("raw_self_ty  = {:?}", raw_self_ty);
-    debug!("raw_where    = {:?}", raw_where);
 
     // ----------------------------------------------------------------------
-    // 4) Flatten whitespace in each piece
+    // 4) Flatten whitespace in each piece, EXCEPT we remove comments first for `where`:
     // ----------------------------------------------------------------------
-    let generics = flatten_whitespace(&raw_generics);
+    let generics       = flatten_whitespace(&raw_generics);
     let mut trait_part = flatten_whitespace(&raw_trait);
-    let where_clause = flatten_whitespace(&raw_where);
+
     let mut self_ty = if raw_self_ty.is_empty() {
-        // If truly no self_ty => "???"
         "???".to_owned()
     } else {
         flatten_whitespace(&raw_self_ty)
@@ -65,24 +61,20 @@ pub fn generate_impl_signature(impl_ast: &ast::Impl, docs: Option<&String>) -> S
     debug!("flattened generics = {:?}", generics);
     debug!("flattened trait    = {:?}", trait_part);
     debug!("flattened self_ty  = {:?}", self_ty);
-    debug!("flattened where    = {:?}", where_clause);
 
     // ----------------------------------------------------------------------
     // 5) Clean up the where clause (remove trailing commas, skip if it's just "where")
     // ----------------------------------------------------------------------
-    let where_clause = clean_where_clause(&where_clause);
-    debug!("cleaned where_clause = {:?}", where_clause);
+    let where_clause = full_clean_where_clause(&impl_ast.where_clause());
 
     // ----------------------------------------------------------------------
-    // 6) Check if the snippet is obviously incomplete, e.g. it literally ends with "for"
-    //    but the parser gave us trait_part="", self_ty="SomeTrait".
-    //    In that scenario we forcibly set self_ty="???" to match the test expectation.
+    // 6) Check snippet for "impl Foo for"
     // ----------------------------------------------------------------------
     let trimmed_node = node_text.trim_end();
     if trimmed_node.ends_with("for") {
         debug!("Detected snippet ending in 'for'. Overriding self_ty to '???'");
         self_ty = "???".to_owned();
-        trait_part = flatten_whitespace(""); // i.e. we ignore the originally empty trait
+        trait_part = flatten_whitespace("");
     }
 
     // ----------------------------------------------------------------------
@@ -95,7 +87,7 @@ pub fn generate_impl_signature(impl_ast: &ast::Impl, docs: Option<&String>) -> S
     }
     signature.push(' ');
 
-    // If self_ty is ???, we skip any leftover "for" in trait_part if present
+    // If self_ty is ???, skip leftover 'for' text
     if self_ty == "???" {
         debug!("self_ty=??? => trait_part was {:?}", trait_part);
         let trait_part_stripped = trait_part.trim_end_matches("for").trim();
@@ -133,26 +125,6 @@ pub fn generate_impl_signature(impl_ast: &ast::Impl, docs: Option<&String>) -> S
     debug!("FINAL OUTPUT = {:?}", final_output);
     debug!("=== generate_impl_signature END ===");
     final_output
-}
-
-/// Splits on all whitespace and rejoins with one space, trimming.
-fn flatten_whitespace(text: &str) -> String {
-    let tokens: Vec<_> = text.split_whitespace().collect();
-    tokens.join(" ")
-}
-
-/// Removes trailing commas from a `where` clause flattened to one line.
-/// If it's just "where", we remove it entirely.
-fn clean_where_clause(text: &str) -> String {
-    if !text.starts_with("where") {
-        return text.to_string();
-    }
-    let trimmed = text.trim_end_matches(',').trim();
-    if trimmed == "where" {
-        "".to_string()
-    } else {
-        trimmed.to_string()
-    }
 }
 
 // A test suite for the `generate_impl_signature` function. We rely on
@@ -340,7 +312,8 @@ mod test_generate_impl_signature {
         // Typically: doc lines + newline + "impl<T, U> SomeTrait<T, U> for (T, U) where T: Debug, U: Clone"
         let expected = r#"/// This is a doc
 /// Another line
-impl<T, U> SomeTrait<T, U> for (T, U) where T: Debug, U: Clone"#;
+impl<T, U> SomeTrait<T, U> for (T, U) where T: Debug,
+                  U: Clone"#;
         assert_eq!(result, expected);
     }
 }

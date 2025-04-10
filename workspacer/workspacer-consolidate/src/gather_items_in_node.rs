@@ -136,31 +136,8 @@ fn try_cast_and_build_item(
     }
 
     if let Some(mod_ast) = ast::Module::cast(node.clone()) {
-        if should_skip_item(node, options) {
-            return None;
-        }
-        let raw_range = mod_ast.syntax().text_range();
-        let eff_range = compute_effective_range(mod_ast.syntax());  // <--- also do it here
-
-        let docs = if *options.include_docs() {
-            extract_docs(node)
-        } else {
-            None
-        };
-        let attrs   = gather_all_attrs(node);
-        let modname = mod_ast.name().map(|n| n.text().to_string()).unwrap_or("<unknown>".to_string());
-
-        let mut mi = ModuleInterface::new_with_paths_and_range(
-            docs,
-            attrs,
-            modname,
-            file_path.clone(),
-            crate_path.clone(),
-            raw_range,
-            eff_range,
-        );
-        // gather sub-items if inline ...
-        return Some(ConsolidatedItem::Module(mi));
+        return gather_module(&mod_ast, options, file_path, crate_path)
+            .map(ConsolidatedItem::Module);
     }
 
     // --- MacroRules ---

@@ -35,7 +35,7 @@ impl ModuleInterface {
         raw_range:  TextRange,
         effective_range: TextRange,
     ) -> Self {
-        Self {
+        let x = Self {
             docs, 
             attrs, 
             mod_name, 
@@ -44,7 +44,9 @@ impl ModuleInterface {
             crate_path,
             raw_range,
             effective_range,
-        }
+        };
+        trace!("created ModuleInterface: {:#?}", x);
+        x
     }
 
     #[cfg(test)]
@@ -138,6 +140,7 @@ impl ModuleInterface {
 }
 
 impl fmt::Display for ModuleInterface {
+
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         // If there are no items, produce nothing.
         if self.items.is_empty() {

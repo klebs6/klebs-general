@@ -50,33 +50,38 @@ impl GenerateSignature for ast::Fn {
             .map(|gp| gp.syntax().text().to_string())
             .unwrap_or_default();
 
-        // 4) Parameter list
-        let mut param_texts = Vec::new();
+        // 4) Gather parameter entries (including self)
+        let mut param_entries = Vec::new();
         if let Some(plist) = self.param_list() {
             debug!(?plist, "Found param_list for fn");
+
+            // Possibly handle "self"
             if let Some(sp) = plist.self_param() {
-                let has_amp = sp.amp_token().is_some();  
+                let has_amp = sp.amp_token().is_some();
                 let has_mut = sp.mut_token().is_some();
                 let lifetime_str = sp
                     .lifetime()
                     .map(|lt| lt.syntax().text().to_string())
                     .unwrap_or_default();
 
-                let mut pieces = String::new();
+                let mut name_part = String::new();
                 if has_amp {
-                    pieces.push('&');
+                    name_part.push('&');
                     if !lifetime_str.is_empty() {
-                        pieces.push_str(&lifetime_str);
-                        pieces.push(' ');
+                        name_part.push_str(&lifetime_str);
+                        name_part.push(' ');
                     }
                 }
                 if has_mut {
-                    pieces.push_str("mut ");
+                    name_part.push_str("mut ");
                 }
-                pieces.push_str("self");
-                param_texts.push(pieces.trim_end().to_string());
+                name_part.push_str("self");
+
+                // For "self", treat it as name="self", type="".
+                param_entries.push((name_part.trim_end().to_string(), "".to_string()));
             }
 
+            // The rest of the param_list
             for param in plist.params() {
                 if let Some(normal) = ast::Param::cast(param.syntax().clone()) {
                     let pat_str = normal
@@ -87,21 +92,23 @@ impl GenerateSignature for ast::Fn {
                         .ty()
                         .map(|t| t.syntax().text().to_string())
                         .unwrap_or_default();
+
                     if !pat_str.is_empty() && !ty_str.is_empty() {
-                        param_texts.push(format!("{}: {}", pat_str, ty_str));
+                        param_entries.push((pat_str, ty_str));
                     } else if !ty_str.is_empty() {
-                        param_texts.push(ty_str);
+                        param_entries.push((ty_str, "".to_string()));
                     } else if !pat_str.is_empty() {
-                        param_texts.push(pat_str);
+                        param_entries.push((pat_str, "".to_string()));
                     } else {
-                        param_texts.push("<unknown_param>".to_string());
+                        param_entries.push(("<unknown_param>".to_string(), "".to_string()));
                     }
                 } else {
-                    param_texts.push("<unrecognized_param>".to_string());
+                    param_entries.push(("<unrecognized_param>".to_string(), "".to_string()));
                 }
             }
         }
-        let params_str = param_texts.join(", ");
+
+        let param_count = param_entries.len();
 
         // 5) Return type
         let ret_str = if let Some(ret_type) = self.ret_type() {
@@ -115,20 +122,110 @@ impl GenerateSignature for ast::Fn {
         };
 
         // 6) Where clause
-        let where_str = if let Some(wc) = self.where_clause() {
-            format!(" {}", wc.syntax().text())
+        let where_str = full_clean_where_clause(&self.where_clause());
+
+        // 7) Build final lines
+        //    We'll produce something like:
+        //
+        //    <docs?>
+        //    pub async fn name<T>(...) -> ...
+        //    or multiline version, but with the opening "(" on the same line as "name<T>"
+
+        // Prefix = "pub async fn name<T>"
+        let prefix_line = format!("{vis_str}{async_str}{fn_keyword} {name_str}{generic_params}");
+
+        // If we have <= 3 parameters, do a single-line param string:
+        let multiline: bool = param_count > 3;
+
+        let mut param_str = String::new();
+        if param_count == 0 {
+            // no params => "()"
+            param_str.push_str("()");
+        } else if !multiline {
+            // single-line approach
+            let joined: Vec<String> = param_entries
+                .iter()
+                .map(|(n, t)| {
+                    if t.is_empty() {
+                        n.to_string()
+                    } else {
+                        format!("{}: {}", n, t)
+                    }
+                })
+                .collect();
+            param_str.push('(');
+            param_str.push_str(&joined.join(", "));
+            param_str.push(')');
         } else {
-            "".to_string()
+            // multiline approach => align
+            // 1) find longest name part
+            let max_name_len = param_entries
+                .iter()
+                .map(|(n, _)| n.len())
+                .max()
+                .unwrap_or(0);
+
+            // open paren on the same line
+            param_str.push('(');
+
+            // next lines for each param
+            for (i, (name_part, ty_part)) in param_entries.iter().enumerate() {
+                param_str.push('\n');
+                // indent 4 spaces
+                param_str.push_str("    ");
+                let spacing_needed = max_name_len.saturating_sub(name_part.len());
+                if ty_part.is_empty() {
+                    // e.g. "self"
+                    param_str.push_str(name_part);
+                    // trailing comma
+                    if i + 1 < param_count {
+                        param_str.push(',');
+                    }
+                } else {
+                    // e.g. "name: Type"
+                    param_str.push_str(name_part);
+                    param_str.push_str(": ");
+                    param_str.push_str(&" ".repeat(spacing_needed));
+                    param_str.push_str(ty_part);
+                    // trailing comma
+                    if i + 1 < param_count {
+                        param_str.push(',');
+                    }
+                }
+            }
+            param_str.push('\n');
+            param_str.push(')');
+        }
+
+        // If we have a where clause, attach it after ret_str
+        // So e.g. " -> i32 where T: Debug"
+        let suffix = if !where_str.is_empty() {
+            format!("{ret_str}{where_str}")
+        } else {
+            ret_str
         };
 
-        // 7) Build signature line ***WITHOUT*** appending braces.
-        //    (We let CrateInterfaceItem<T> decide how to handle the body.)
-        let raw_sig = format!(
-            "{vis_str}{async_str}{fn_keyword} {name_str}{generic_params}({params_str}){ret_str}{where_str}"
-        );
+        // If multiline, we typically place suffix on the same line as ")"
+        // but we ended up with no trailing place. Let's see:
+        // We'll build the final line: param_str + suffix
+        let final_func_line = if multiline {
+            // Insert suffix right after the closing parenthesis
+            // Possibly check if param_str ends with ')' or not
+            if suffix.trim().is_empty() {
+                param_str
+            } else {
+                format!("{param_str}{suffix}")
+            }
+        } else {
+            // single-line => e.g. "(self, x: i32) -> i32 where T: Debug"
+            format!("{}{}", param_str, suffix)
+        };
+
+        // Combine everything. If user wants a semicolon appended, do so:
+        let raw_sig = format!("{prefix_line}{final_func_line}");
 
         let combined = match opts.add_semicolon() {
-            true  => format!("{doc_text}{raw_sig};"),
+            true => format!("{doc_text}{raw_sig};"),
             false => format!("{doc_text}{raw_sig}"),
         };
 

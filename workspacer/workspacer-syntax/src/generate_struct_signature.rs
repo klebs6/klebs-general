@@ -31,19 +31,10 @@ impl GenerateSignature for ast::Struct {
             .map(|g| g.syntax().text().to_string())
             .unwrap_or_default();
 
-        // We add a space before the "where_clause" if it's non-empty:
-        let raw_where = self
-            .where_clause()
-            .map(|wc| wc.syntax().text().to_string())
-            .unwrap_or_default();
-        let where_clause = if raw_where.is_empty() {
-            "".to_string()
-        } else {
-            format!(" {}", raw_where)
-        };
+        let where_clause = full_clean_where_clause(&self.where_clause());
 
         // If fully_expand is true, gather and align the actual fields; otherwise, we display a placeholder.
-        let fields_text = if *opts.fully_expand() {
+        let fields_text = {
             if let Some(fl) = self.field_list() {
                 match fl {
                     ast::FieldList::RecordFieldList(rfl) => {
@@ -57,12 +48,9 @@ impl GenerateSignature for ast::Struct {
                 // no fields => e.g. `struct Foo;`
                 ";".to_string()
             }
-        } else {
-            // minimal or placeholder approach
-            "{ /* fields omitted */ }".to_string()
         };
 
-        let core = format!("{vis_str}struct {name_str}{generic_params_raw}{where_clause} {fields_text}");
+        let core = format!("{vis_str}struct {name_str}{generic_params_raw} {where_clause} {fields_text}");
 
         let final_sig = format!("{doc_text}{core}");
         post_process_spacing(&final_sig)
@@ -70,7 +58,7 @@ impl GenerateSignature for ast::Struct {
 }
 
 /// Aligns record fields so that field names and colons line up in a neat column:
-/// ```
+/// ```ignore
 /// {
 ///     path:                    Option<PathBuf>,
 ///     include_private:         bool,
@@ -119,7 +107,7 @@ fn align_record_fields(rfl: &ast::RecordFieldList) -> String {
 }
 
 /// Aligns tuple fields so that the entire `vis + type` is lined up in a neat column. For example:
-/// ```
+/// ```ignore
 /// (
 ///     pub(in xyz) i32,
 ///     bool,
