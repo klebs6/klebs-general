@@ -10,6 +10,7 @@ pub struct ConsolidatedCrateInterface {
     traits:       Vec<CrateInterfaceItem<ast::Trait>>,
     type_aliases: Vec<CrateInterfaceItem<ast::TypeAlias>>,
     macros:       Vec<CrateInterfaceItem<ast::MacroRules>>,
+    macro_calls:  Vec<CrateInterfaceItem<ast::MacroCall>>,
     impls:        Vec<ImplBlockInterface>,
     modules:      Vec<ModuleInterface>,
 }
@@ -19,6 +20,7 @@ unsafe impl Sync for ConsolidatedCrateInterface {}
 
 impl fmt::Display for ConsolidatedCrateInterface {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+
         macro_rules! print_items {
             ($vec:expr, $f:expr) => {
                 for (i, item) in $vec.iter().enumerate() {
@@ -34,6 +36,7 @@ impl fmt::Display for ConsolidatedCrateInterface {
         print_items!(self.traits, f);
         print_items!(self.type_aliases, f);
         print_items!(self.macros, f);
+        print_items!(self.macro_calls, f);
         print_items!(self.structs, f);
         print_items!(self.fns, f);
         print_items!(self.impls, f);
@@ -52,6 +55,7 @@ impl ConsolidatedCrateInterface {
             traits:       vec![],
             type_aliases: vec![],
             macros:       vec![],
+            macro_calls:  vec![],
             impls:        vec![],
             modules:      vec![],
         }
@@ -63,6 +67,7 @@ impl ConsolidatedCrateInterface {
     pub fn add_trait(&mut self, item: CrateInterfaceItem<ast::Trait>) { self.traits.push(item); }
     pub fn add_type_alias(&mut self, item: CrateInterfaceItem<ast::TypeAlias>) { self.type_aliases.push(item); }
     pub fn add_macro(&mut self, item: CrateInterfaceItem<ast::MacroRules>) { self.macros.push(item); }
+    pub fn add_macro_call(&mut self, item: CrateInterfaceItem<ast::MacroCall>) { self.macro_calls.push(item); }
     pub fn add_impl(&mut self, ib: ImplBlockInterface) { self.impls.push(ib); }
     pub fn add_module(&mut self, ib: ModuleInterface) { self.modules.push(ib); }
 }

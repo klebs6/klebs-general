@@ -41,6 +41,7 @@ pub fn gather_interstitial_segments(
             ConsolidatedItem::Trait(ci)     => *ci.effective_range(),
             ConsolidatedItem::TypeAlias(ci) => *ci.effective_range(),
             ConsolidatedItem::Macro(ci)     => *ci.effective_range(),
+            ConsolidatedItem::MacroCall(ci) => *ci.effective_range(),
             ConsolidatedItem::ImplBlock(ib) => *ib.text_range(),
             ConsolidatedItem::Module(mo)    => *mo.text_range(),
             ConsolidatedItem::MockTest(_)   => continue,

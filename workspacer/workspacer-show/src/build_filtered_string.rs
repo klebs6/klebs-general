@@ -19,6 +19,7 @@ impl ShowFlags {
             && cci.traits().is_empty()
             && cci.type_aliases().is_empty()
             && cci.macros().is_empty()
+            && cci.macro_calls().is_empty()
             && cci.impls().is_empty()
             && cci.modules().is_empty();
 

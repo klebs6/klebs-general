@@ -77,6 +77,7 @@ impl LosslessFile {
                 ConsolidatedItem::Trait(ci)     => ci.effective_range(),
                 ConsolidatedItem::TypeAlias(ci) => ci.effective_range(),
                 ConsolidatedItem::Macro(ci)     => ci.effective_range(),
+                ConsolidatedItem::MacroCall(ci) => ci.effective_range(),
                 ConsolidatedItem::ImplBlock(ib) => ib.text_range(),
                 ConsolidatedItem::Module(mi)    => mi.text_range(),
                 ConsolidatedItem::MockTest(_)   => &TextRange::empty(0.into()),

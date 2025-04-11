@@ -12,6 +12,7 @@ pub fn post_process_spacing(signature: &str) -> String {
 pub struct FnSignatureGenerator(ast::Fn);
 
 impl GenerateSignature for ast::Fn {
+
     fn generate_signature_with_opts(&self, opts: &SignatureOptions) -> String {
         use tracing::{debug, trace};
 
@@ -200,7 +201,7 @@ impl GenerateSignature for ast::Fn {
         // If we have a where clause, attach it after ret_str
         // So e.g. " -> i32 where T: Debug"
         let suffix = if !where_str.is_empty() {
-            format!("{ret_str}{where_str}")
+            format!("{ret_str} {where_str}")
         } else {
             ret_str
         };

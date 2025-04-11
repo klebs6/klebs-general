@@ -37,6 +37,12 @@ impl ShowFlags {
             let p = mac_item.file_path().clone();
             push_item(&mut items_by_file, &p, ConsolidatedItem::Macro(mac_item.clone()));
         }
+
+        for macro_call in cci.macro_calls() {
+            let p = macro_call.file_path().clone();
+            push_item(&mut items_by_file, &p, ConsolidatedItem::MacroCall(macro_call.clone()));
+        }
+
         for ib in cci.impls() {
             let p = ib.file_path().clone();
             push_item(&mut items_by_file, &p, ConsolidatedItem::ImplBlock(ib.clone()));

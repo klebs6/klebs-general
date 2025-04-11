@@ -113,6 +113,19 @@ where
                             *ci0.effective_range(),
                         ));
                     }
+                    ConsolidatedItem::MacroCall(ci0) => {
+                        result.add_macro_call(CrateInterfaceItem::new_with_paths_and_ranges(
+                                ci0.item().as_ref().clone(),
+                                ci0.docs().clone(),
+                                ci0.attributes().clone(),
+                                ci0.body_source().clone(),
+                                ci0.consolidation_options().clone(),
+                                file_path.clone(),
+                                crate_path.clone(),
+                                *ci0.text_range(),
+                                *ci0.effective_range(),
+                        ));
+                    }
                     ConsolidatedItem::ImplBlock(ib0) => {
                         // Now pass both raw_range and effective_range
                         result.add_impl(

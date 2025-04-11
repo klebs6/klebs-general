@@ -1,6 +1,7 @@
 // ---------------- [ File: workspacer-consolidate/src/compute_effective_range.rs ]
 crate::ix!();
 
+
 /// Returns a `TextRange` for `node` excluding any leading/trailing
 /// **normal** comments and whitespace. Doc comments (///, //!,
 /// /**, /*! etc.) remain inside. Normal `//` or `/* ... */` is trimmed.

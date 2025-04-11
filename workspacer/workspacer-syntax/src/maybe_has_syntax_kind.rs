@@ -22,6 +22,12 @@ impl MaybeHasSyntaxKind for ast::MacroRules {
     }
 }
 
+impl MaybeHasSyntaxKind for ast::MacroCall {
+    fn syntax_kind(&self) -> Option<SyntaxKind> {
+        Some(self.syntax().kind())
+    }
+}
+
 impl MaybeHasSyntaxKind for ast::Struct {
     fn syntax_kind(&self) -> Option<SyntaxKind> {
         Some(self.syntax().kind())

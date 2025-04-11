@@ -21,12 +21,18 @@ impl GenerateSignature for ast::MacroRules {
             .map(|n| n.to_string())
             .unwrap_or_else(|| "<unknown_macro>".to_string());
 
-        // If fully_expand = true, we might try to show the macro body.
-        // For demonstration, let's just do a partial or placeholder expansion.
         let body_text = if *opts.fully_expand() {
-            "{ /* macro body here */ }"
+            trace!("Fully expanding macro body");
+            if let Some(tt) = self.token_tree() {
+                let body_str = tt.syntax().text().to_string();
+                debug!("Macro body content: {}", body_str);
+                format!("{{ {body_str} }}")
+            } else {
+                warn!("No macro token tree found");
+                "{ /* macro body not available */ }".to_string()
+            }
         } else {
-            "{ /* macro body omitted */ }"
+            "{ /* macro body omitted */ }".to_string()
         };
 
         let core = format!("macro_rules! {name} {body_text}");

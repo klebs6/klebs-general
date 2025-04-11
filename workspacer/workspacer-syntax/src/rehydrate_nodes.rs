@@ -43,6 +43,13 @@ impl RehydrateFromSignature for ast::MacroRules {
     }
 }
 
+impl RehydrateFromSignature for ast::MacroCall {
+    #[tracing::instrument(level = "trace", skip(signature_source))]
+    fn rehydrate_from_signature(signature_source: &str) -> Option<Self> {
+        parse_exact_one_top_level_item_of_type(signature_source)
+    }
+}
+
 /// Attempts to parse `signature_source` as **exactly one** top-level item of type `T`.
 ///
 /// **Checks**:

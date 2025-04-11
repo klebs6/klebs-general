@@ -5,6 +5,7 @@ crate::ix!();
 pub struct EnumSignatureGenerator(ast::Enum);
 
 impl GenerateSignature for ast::Enum {
+
     fn generate_signature_with_opts(&self, opts: &SignatureOptions) -> String {
         trace!("Generating signature for ast::Enum with opts: {:?}", opts);
 

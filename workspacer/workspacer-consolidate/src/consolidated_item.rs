@@ -11,6 +11,7 @@ pub enum ConsolidatedItem {
     Trait(CrateInterfaceItem<ast::Trait>),
     TypeAlias(CrateInterfaceItem<ast::TypeAlias>),
     Macro(CrateInterfaceItem<ast::MacroRules>),
+    MacroCall(CrateInterfaceItem<ast::MacroCall>),
     Module(ModuleInterface),
     ImplBlock(ImplBlockInterface),
 
@@ -27,6 +28,7 @@ impl fmt::Display for ConsolidatedItem {
             ConsolidatedItem::Trait(item)     => write!(f, "{}", item),
             ConsolidatedItem::TypeAlias(item) => write!(f, "{}", item),
             ConsolidatedItem::Macro(item)     => write!(f, "{}", item),
+            ConsolidatedItem::MacroCall(item)  => write!(f, "{}", item),
             ConsolidatedItem::Module(mi)      => write!(f, "{}", mi),
             ConsolidatedItem::ImplBlock(ib)   => write!(f, "{}", ib),
 
@@ -46,6 +48,7 @@ impl ConsolidatedItem {
             ConsolidatedItem::Trait(t)      => t.text_range().start(),
             ConsolidatedItem::TypeAlias(ta) => ta.text_range().start(),
             ConsolidatedItem::Macro(m)      => m.text_range().start(),
+            ConsolidatedItem::MacroCall(m)  => m.text_range().start(),
             ConsolidatedItem::ImplBlock(i)  => i.text_range().start(),
             ConsolidatedItem::Module(mo)    => mo.text_range().start(),
             ConsolidatedItem::MockTest(_)   => TextSize::from(0),

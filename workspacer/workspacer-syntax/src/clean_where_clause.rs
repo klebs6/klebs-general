@@ -1,7 +1,6 @@
 crate::ix!();
 
 pub fn full_clean_where_clause(x: &Option<ast::WhereClause>) -> String {
-
     // 6) Where clause
     let raw_where    = x
         .clone()

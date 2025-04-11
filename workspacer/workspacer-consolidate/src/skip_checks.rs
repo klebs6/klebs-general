@@ -5,67 +5,65 @@ crate::ix!();
 pub fn should_skip_item(node: &SyntaxNode, options: &ConsolidationOptions) -> bool {
     trace!("Entered should_skip_item for snippet={}", snippet_for_logging(node));
 
-    // 0) If this is a `mod` item, we currently do NOT enforce "pub" vs. "private" at all.
-    //    Many user tests rely on collecting all modules by default, even if they're private.
-    //    So we skip the normal private checks if `node` is SyntaxKind::MODULE.
-    if node.kind() == SyntaxKind::MODULE {
-        trace!("Item is a module => we do NOT skip it for being private, continuing with test checks only.");
-        // Check test conditions only:
-        let is_test_item = is_in_test_module(node.clone()) || has_cfg_test_attr(node);
+    // 1) Check if it’s a test item (#[cfg(test)] or #[test]) or is inside a test module
+    let is_test_item = is_in_test_module(node.clone()) || has_cfg_test_attr(node);
 
-        // If the user wants only test items, skip if it's NOT a test item:
-        if *options.only_test_items() && !is_test_item {
+    // 2) If it’s a test item, do we keep it or skip it?
+    if is_test_item {
+        // If user does NOT want test items => skip
+        if !options.include_test_items() {
             debug!(
-                "Skipping module: only_test_items=true but not a test item => snippet={}",
+                "Skipping item: it is test, but include_test_items=false => snippet={}",
                 snippet_for_logging(node)
             );
             return true;
         }
-        // If it IS a test item but user isn't including test items => skip
-        if is_test_item && !options.include_test_items() {
-            debug!(
-                "Skipping module: it is a test module but include_test_items=false => snippet={}",
-                snippet_for_logging(node)
-            );
-            return true;
-        }
-        // Otherwise, do not skip modules:
-        trace!("Not skipping module => snippet={}", snippet_for_logging(node));
+        // Otherwise, we keep it. (No pub check, so private test is included if test items are on.)
+        trace!("Not skipping test item => snippet={}", snippet_for_logging(node));
         return false;
     }
 
-    // 1) Determine if this is a test item (#[cfg(test)] / #[test] / or in a test module)
-    let is_test_item = is_in_test_module(node.clone()) || has_cfg_test_attr(node);
-
-    // 2) If user wants *only* test items, skip all non-test
-    if *options.only_test_items() && !is_test_item {
+    // 3) If not a test item, but user only wants test items => skip all non‐test
+    if *options.only_test_items() {
         debug!(
-            "Skipping item: only_test_items=true but item is not a test item => snippet={}",
+            "Skipping item: only_test_items=true but this item is not test => snippet={}",
             snippet_for_logging(node)
         );
         return true;
     }
 
-    // 3) If this *is* a test item, skip it if user isn't including test items
-    if is_test_item && !options.include_test_items() {
+    // 4) For some item kinds, we ignore “pub,” always keep them:
+    match node.kind() {
+        SyntaxKind::MODULE
+        | SyntaxKind::MACRO_RULES
+        | SyntaxKind::MACRO_CALL
+        | SyntaxKind::TRAIT
+        | SyntaxKind::ENUM
+        | SyntaxKind::TYPE_ALIAS => {
+            // Always keep these, unless test logic above already said skip
+            trace!(
+                "Allowing item kind={:?} without pub => snippet={}",
+                node.kind(),
+                snippet_for_logging(node)
+            );
+            return false;
+        }
+        _ => {
+            // e.g. FN, STRUCT, IMPL, CONST, etc. => require pub if user didn’t enable private
+        }
+    }
+
+    // 5) If we get here => it’s a “pub vs. private” kind (e.g. fn or struct).
+    //    If user wants private items, we keep it. Otherwise skip if not public:
+    if !is_node_public(node) && !options.include_private() {
         debug!(
-            "Skipping item: it is a test item but include_test_items=false => snippet={}",
+            "Skipping item: private item, user did not ask for private => snippet={}",
             snippet_for_logging(node)
         );
         return true;
     }
 
-    // 4) If it's not a test item, we check if it's private in a non-trait-impl context
-    //    and user did NOT ask for private => skip
-    if !is_test_item && !is_node_public(node) && !is_in_trait_impl_block(node) && !options.include_private() {
-        debug!(
-            "Skipping item: private item but user did not ask for private => snippet={}",
-            snippet_for_logging(node)
-        );
-        return true;
-    }
-
-    // Otherwise, do not skip
+    // Otherwise do not skip
     trace!("Not skipping item => snippet={}", snippet_for_logging(node));
     false
 }

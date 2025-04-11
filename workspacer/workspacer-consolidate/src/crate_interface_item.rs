@@ -47,9 +47,6 @@ pub struct CrateInterfaceItem<T: GenerateSignature> {
 unsafe impl<T: GenerateSignature> Send for CrateInterfaceItem<T> {}
 unsafe impl<T: GenerateSignature> Sync for CrateInterfaceItem<T> {}
 
-/// The main `Display` impl. We do NOT require `T: AstNode` anymore, just `T: GenerateSignature + MaybeHasSyntaxKind`.
-/// That way, real AST items have a `.syntax_kind()`, but test mocks that produce function-like signatures can still
-/// see their body displayed.
 impl<T> std::fmt::Display for CrateInterfaceItem<T>
 where
     T: GenerateSignature + MaybeHasSyntaxKind,
@@ -82,7 +79,6 @@ where
                 // Just convert them to owned Strings without changing indentation
                 return lines.iter().map(|l| l.to_string()).collect();
             }
-
             // Normal dedent logic
             let mut min_indent = usize::MAX;
             for line in lines {
@@ -168,12 +164,36 @@ where
             None => self.item.generate_signature(),
         };
 
+        // 3.1) Check if this is a macro
+        let kind = self.item.syntax_kind(); // from MaybeHasSyntaxKind
+        let is_macro = matches!(
+            kind,
+            Some(SyntaxKind::MACRO_CALL | SyntaxKind::MACRO_RULES)
+        );
+
         // ---------------------------------------------------------------
-        // 4) Check if it's a function
+        // 4) If it's a macro, just print the entire `body_source` if present
+        // ---------------------------------------------------------------
+        if is_macro {
+            if let Some(full_text) = &self.body_source {
+                // The user wants the entire macro call, e.g., `error_tree! { ... }`
+                // Possibly dedent or other transformations; here we just print verbatim:
+                writeln!(f, "{}", full_text)?;
+            } else {
+                // fallback: just the signature lines
+                for line in signature.lines() {
+                    writeln!(f, "{}", line)?;
+                }
+            }
+            return Ok(());
+        }
+
+        // ---------------------------------------------------------------
+        // 5) Check if it's a function
         // ---------------------------------------------------------------
         let is_fn = guess_is_function(&(*self.item), &signature);
 
-        // If not a function, just print the signature and return
+        // If not a function => just print the signature lines & done
         if !is_fn {
             for line in signature.lines() {
                 writeln!(f, "{}", line)?;
@@ -182,7 +202,7 @@ where
         }
 
         // ---------------------------------------------------------------
-        // 5) Single-line vs multi-line function logic
+        // 6) Single-line vs multi-line function logic
         // ---------------------------------------------------------------
         let sig_lines: Vec<&str> = signature.lines().collect();
 
@@ -229,17 +249,16 @@ where
         }
 
         // ---------------------------------------------------------------
-        // 6) Multi-line function signature printing
+        // 7) Multi-line function signature printing
         // ---------------------------------------------------------------
         let do_dedent_for_signature = false;
         let sig_dedented = conditional_dedent_all(&sig_lines, do_dedent_for_signature);
-
         for line in &sig_dedented {
             writeln!(f, "{}", line)?;
         }
 
         // ---------------------------------------------------------------
-        // 7) Print the function body (if any), dedented
+        // 8) Print the function body (if any), dedented
         // ---------------------------------------------------------------
         if let Some(body) = &self.body_source {
             let trimmed = body.trim();

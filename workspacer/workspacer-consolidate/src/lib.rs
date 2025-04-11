@@ -1,32 +1,42 @@
 // ---------------- [ File: workspacer-consolidate/src/lib.rs ]
 #[macro_use] mod imports; use imports::*;
 
-x!{crate_interface_item}
+x!{compute_effective_range}
+x!{consolidate_crate_interface}
+x!{consolidated_crate_interface}
+x!{consolidated_item}
+x!{consolidation_options}
 x!{crate_interface_item_serde}
-x!{merge_doc_attrs}
-x!{gather_impl_methods}
-x!{impl_block_interface}
-x!{generate_impl_signature}
-x!{gather_assoc_type_aliases}
+x!{crate_interface_item}
 x!{gather_all_attrs}
-x!{skip_checks}
+x!{gather_assoc_type_aliases}
+x!{gather_crate_items}
 x!{gather_fn_item}
+x!{gather_impl_methods}
+x!{gather_items_in_node}
+x!{gather_module}
+x!{generate_impl_signature}
+x!{guess_is_function}
+x!{has_cfg_test_attr}
+x!{impl_block_interface}
+x!{interstitial_segment}
 x!{is_in_test_module}
 x!{leading_spaces}
-x!{gather_items_in_node}
-x!{gather_crate_items}
-x!{gather_module}
-x!{consolidated_item}
-x!{has_cfg_test_attr}
-x!{consolidation_options}
-x!{consolidate_crate_interface}
-x!{module_interface}
-x!{consolidated_crate_interface}
-x!{trim_to_60}
+x!{maybe_build_enum}
+x!{maybe_build_function}
+x!{maybe_build_impl_block_node}
+x!{maybe_build_macro_call}
+x!{maybe_build_macro_rules}
+x!{maybe_build_module}
+x!{maybe_build_struct}
+x!{maybe_build_trait}
+x!{maybe_build_type_alias}
+x!{merge_doc_attrs}
 x!{merge}
-x!{interstitial_segment}
-x!{compute_effective_range}
-x!{guess_is_function}
+x!{module_interface}
+x!{skip_checks}
+x!{trim_to_60}
+x!{try_cast_and_build_item}
 
 #[cfg(test)]
 mod test_text_range {
