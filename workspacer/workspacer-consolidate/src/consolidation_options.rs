@@ -42,6 +42,14 @@ impl ConsolidationOptions {
         opts
     }
 
+    pub fn with_tests_disabled(mut self) -> Self {
+        // Turn off the flags controlling test items:
+        self.include_test_items         = false;
+        self.only_test_items            = false; // in case that was on
+        self.include_fn_bodies_in_tests = false;
+        self
+    }
+
     /// Turn on doc comment extraction (`include_docs = true`).
     pub fn with_docs(mut self) -> Self {
         self.include_docs = true;

@@ -32,52 +32,55 @@ impl ShowFlags {
         }
 
         // If we want to group by file, do it:
-        if *self.group_by_file() {
-            return self.build_filtered_grouped_by_file_string(cci);
-        }
+        if *self.group_by_syntax_kind() {
 
-        // If the user wants only certain categories, we do that.
-        // (Replicates the old show sub-filters.)
-        if *self.just_fns() {
-            return self.build_output_for_items(cci.fns());
-        }
-        if *self.just_impls() {
-            return self.build_output_for_items(cci.impls());
-        }
-        if *self.just_traits() {
-            return self.build_output_for_items(cci.traits());
-        }
-        if *self.just_enums() {
-            return self.build_output_for_items(cci.enums());
-        }
-        if *self.just_structs() {
-            return self.build_output_for_items(cci.structs());
-        }
-        if *self.just_aliases() {
-            return self.build_output_for_items(cci.type_aliases());
-        }
-        if *self.just_adts() {
-            let mut combined = Vec::new();
-            for e in cci.enums() {
-                combined.push(format!("{}", e));
+            // If the user wants only certain categories, we do that.
+            // (Replicates the old show sub-filters.)
+            if *self.just_fns() {
+                return self.build_output_for_items(cci.fns());
             }
-            for s in cci.structs() {
-                combined.push(format!("{}", s));
+            if *self.just_impls() {
+                return self.build_output_for_items(cci.impls());
             }
-            if combined.is_empty() && *self.show_items_with_no_data() {
+            if *self.just_traits() {
+                return self.build_output_for_items(cci.traits());
+            }
+            if *self.just_enums() {
+                return self.build_output_for_items(cci.enums());
+            }
+            if *self.just_structs() {
+                return self.build_output_for_items(cci.structs());
+            }
+            if *self.just_aliases() {
+                return self.build_output_for_items(cci.type_aliases());
+            }
+            if *self.just_adts() {
+                let mut combined = Vec::new();
+                for e in cci.enums() {
+                    combined.push(format!("{}", e));
+                }
+                for s in cci.structs() {
+                    combined.push(format!("{}", s));
+                }
+                if combined.is_empty() && *self.show_items_with_no_data() {
+                    return "<no-data-for-crate>\n".to_string();
+                }
+                return join_with_blank_line(combined);
+            }
+            if *self.just_macros() {
+                return self.build_output_for_items(cci.macros());
+            }
+
+            // Otherwise, print the entire consolidated interface in one go
+            let all = format!("{}", cci);
+            if all.trim().is_empty() && *self.show_items_with_no_data() {
                 return "<no-data-for-crate>\n".to_string();
             }
-            return join_with_blank_line(combined);
-        }
-        if *self.just_macros() {
-            return self.build_output_for_items(cci.macros());
-        }
+            all
 
-        // Otherwise, print the entire consolidated interface in one go
-        let all = format!("{}", cci);
-        if all.trim().is_empty() && *self.show_items_with_no_data() {
-            return "<no-data-for-crate>\n".to_string();
+        } else {
+
+            self.build_filtered_grouped_by_file_string(cci)
         }
-        all
     }
 }

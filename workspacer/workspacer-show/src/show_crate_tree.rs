@@ -75,7 +75,7 @@ pub async fn show_crate_tree(flags: &ShowFlags) -> Result<String, WorkspaceError
                     let mut dep_crate =
                         CrateHandle::new(&dep_path).await.map_err(WorkspaceError::CrateError)?;
                     let dep_cci = dep_crate
-                        .consolidate_crate_interface(&ConsolidationOptions::from(flags))
+                        .consolidate_crate_interface(&flags.crate_dependency_consolidation_options())
                         .await
                         .map_err(WorkspaceError::CrateError)?;
                     merge_in_place(&mut combined_cci, &dep_cci);
@@ -119,7 +119,7 @@ pub async fn show_crate_tree(flags: &ShowFlags) -> Result<String, WorkspaceError
                     let mut dep_crate =
                         CrateHandle::new(&dep_path).await.map_err(WorkspaceError::CrateError)?;
                     let dep_cci = dep_crate
-                        .consolidate_crate_interface(&ConsolidationOptions::from(flags))
+                        .consolidate_crate_interface(&flags.crate_dependency_consolidation_options())
                         .await
                         .map_err(WorkspaceError::CrateError)?;
 

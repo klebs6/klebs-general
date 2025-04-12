@@ -57,83 +57,6 @@ where
             self.item.generate_signature()
         );
 
-        /// Removes outer braces `{ ... }` from a block snippet, if present.
-        fn strip_outer_braces(s: &str) -> String {
-            let t = s.trim_end();
-            if t.starts_with('{') && t.ends_with('}') {
-                t[1..t.len() - 1].to_string()
-            } else {
-                t.to_string()
-            }
-        }
-
-        /// Counts how many leading spaces a line has.
-        fn leading_spaces(line: &str) -> usize {
-            line.chars().take_while(|&c| c == ' ').count()
-        }
-
-        /// Dedent all lines by removing the minimum leading spaces among non-blank lines,
-        /// but only if `do_dedent` is true. Otherwise returns them unchanged.
-        fn conditional_dedent_all(lines: &[&str], do_dedent: bool) -> Vec<String> {
-            if !do_dedent {
-                // Just convert them to owned Strings without changing indentation
-                return lines.iter().map(|l| l.to_string()).collect();
-            }
-            // Normal dedent logic
-            let mut min_indent = usize::MAX;
-            for line in lines {
-                let trimmed = line.trim_end();
-                if !trimmed.is_empty() {
-                    let lead = leading_spaces(line);
-                    if lead < min_indent {
-                        min_indent = lead;
-                    }
-                }
-            }
-            if min_indent == usize::MAX {
-                min_indent = 0; // all lines blank
-            }
-            lines
-                .iter()
-                .map(|line| {
-                    if line.trim().is_empty() {
-                        "".to_string()
-                    } else {
-                        line[min_indent..].to_string()
-                    }
-                })
-                .collect()
-        }
-
-        /// Remove leading blank lines, trailing blank lines, and collapse consecutive
-        /// blank lines into a single blank line.
-        fn normalize_blank_lines<'a>(lines: &'a [&'a str]) -> Vec<&'a str> {
-            let mut start = 0;
-            while start < lines.len() && lines[start].trim().is_empty() {
-                start += 1;
-            }
-            let mut end = lines.len();
-            while end > start && lines[end - 1].trim().is_empty() {
-                end -= 1;
-            }
-            let slice = &lines[start..end];
-
-            let mut result = Vec::new();
-            let mut in_blank_run = false;
-            for &line in slice {
-                if line.trim().is_empty() {
-                    if !in_blank_run {
-                        result.push(line);
-                        in_blank_run = true;
-                    }
-                } else {
-                    in_blank_run = false;
-                    result.push(line);
-                }
-            }
-            result
-        }
-
         // ---------------------------------------------------------------
         // 1) Print doc lines (unmodified)
         // ---------------------------------------------------------------
@@ -204,7 +127,7 @@ where
         // ---------------------------------------------------------------
         // 6) Single-line vs multi-line function logic
         // ---------------------------------------------------------------
-        let sig_lines: Vec<&str> = signature.lines().collect();
+        let sig_lines: Vec<String> = signature.lines().map(|x| x.to_string()).collect();
 
         let has_where = signature.contains(" where ")
             || signature.contains("\nwhere")

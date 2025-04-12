@@ -6,67 +6,85 @@ pub fn maybe_build_macro_call(
     file_path: &PathBuf,
     crate_path: &PathBuf,
 ) -> Option<ConsolidatedItem> {
-    trace!(
-        "maybe_build_macro_call: Entering with node.kind = {:?}",
-        node.kind()
-    );
+    trace!("maybe_build_macro_call: Entering with node.kind = {:?}", node.kind());
 
+    // 1) Attempt to cast to a MacroCall
     let mac_call = match ast::MacroCall::cast(node.clone()) {
-        Some(m) => {
-            trace!("maybe_build_macro_call: Successfully cast node to MacroCall");
-            m
-        },
+        Some(m) => m,
         None => {
-            trace!("maybe_build_macro_call: Failed to cast node as MacroCall, returning None");
+            trace!("maybe_build_macro_call: Not a MacroCall => returning None");
             return None;
         }
     };
 
+    // 2) Apply normal skip logic (e.g. private/test checks)
     if should_skip_item(node, options) {
-        trace!("maybe_build_macro_call: should_skip_item returned true, skipping macro call");
+        trace!("maybe_build_macro_call: should_skip_item => skipping macro call");
         return None;
     }
 
+    // 3) Inspect the macro path in the RA AST to decide if we want to skip
+    //    “crate::ix!” or “x!”
+    //    a) If the path is exactly `[ "crate", "ix" ]`
+    //    b) If the path is exactly `[ "x" ]`
+    if is_undesired_macro_call(&mac_call) {
+        trace!("maybe_build_macro_call: recognized undesired macro => skipping");
+        return None;
+    }
+
+    // 4) Gather doc + attributes + raw text
     let syntax = mac_call.syntax();
     let raw_range = syntax.text_range();
-    trace!("maybe_build_macro_call: raw_range = {:?}", raw_range);
-
     let eff_range = compute_effective_range(syntax);
-    trace!("maybe_build_macro_call: effective_range = {:?}", eff_range);
 
     let docs = if *options.include_docs() {
-        let extracted = extract_docs(syntax);
-        trace!("maybe_build_macro_call: Extracted docs: {:?}", extracted);
-        extracted
+        extract_docs(syntax)
     } else {
-        trace!("maybe_build_macro_call: include_docs is false, docs set to None");
         None
     };
-
     let attrs = gather_all_attrs(syntax);
-    trace!("maybe_build_macro_call: Gathered attributes: {:?}", attrs);
 
-    // Capture the entire macro call text
     let full_text = syntax.text().to_string();
-    trace!(
-        "maybe_build_macro_call: Captured full macro call text ({} characters)",
-        full_text.len()
-    );
 
+    // 5) Build the normal macro call item
     let ci = CrateInterfaceItem::new_with_paths_and_ranges(
         mac_call,
         docs,
         attrs,
-        Some(full_text), // store the entire macro call text
+        Some(full_text),
         Some(options.clone()),
         file_path.clone(),
         crate_path.clone(),
         raw_range,
         eff_range,
     );
-    trace!("maybe_build_macro_call: Constructed CrateInterfaceItem for macro call");
 
     Some(ConsolidatedItem::MacroCall(ci))
+}
+
+/// Returns `true` if the macro call's path is `crate::ix` or `x`.
+/// Otherwise returns `false`.
+fn is_undesired_macro_call(mac_call: &ast::MacroCall) -> bool {
+    // Get the path. If None => no segments => definitely not matching "crate::ix" or "x".
+    let path = match mac_call.path() {
+        Some(p) => p,
+        None => return false,
+    };
+
+    // Gather path segments into a Vec<String>, e.g. for `crate::ix!()` => ["crate", "ix"]
+    let segments: Vec<String> = path
+        .segments()
+        .filter_map(|seg| seg.name_ref().map(|nr| nr.text().to_string()))
+        .collect();
+
+    // Then we compare:
+    //    a) If segments == ["crate", "ix"] => skip
+    //    b) If segments == ["x"] => skip
+    match segments.as_slice() {
+        [v0, v1] if *v0 == "crate" && *v1 == "ix" => true,
+        [v0] if *v0 == "x" => true,
+        _ => false,
+    }
 }
 
 #[cfg(test)]

@@ -2,6 +2,7 @@
 #[macro_use] mod imports; use imports::*;
 
 x!{compute_effective_range}
+x!{formatting}
 x!{consolidate_crate_interface}
 x!{consolidated_crate_interface}
 x!{consolidated_item}
