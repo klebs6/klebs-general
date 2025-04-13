@@ -5,6 +5,7 @@ path = "src/bin/workspacer.rs"
 [dependencies]
 workspacer-run = { path = "../workspacer-run" }
 workspacer-lossless-file = { path = "../workspacer-lossless-file" }
+workspacer-file-filter = { path = "../workspacer-file-filter" }
 
 [dependencies.structopt]
 workspace = true
