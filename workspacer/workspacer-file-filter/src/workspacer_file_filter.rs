@@ -1,3 +1,4 @@
+// ---------------- [ File: workspacer-file-filter/src/workspacer_file_filter.rs ]
 crate::ix!();
 
 #[derive(Builder,Getters,LanguageModelBatchWorkflow)]
@@ -21,7 +22,7 @@ impl AiFileFilter
 {
     pub async fn default() -> Result<Self,AiFileFilterError> {
         let readme_dir = WorkspacerDir::local().ensure_subdir_exists("file-filter-workspace")?;
-        Ok(AiFileFilter::new(&readme_dir, LanguageModelType::Gpt4o).await?)
+        Ok(AiFileFilter::new(&readme_dir, LanguageModelType::Gpt4_5Preview).await?)
     }
 
     pub async fn new(
@@ -48,9 +49,9 @@ impl ComputeSystemMessage for AiFileFilter
 
             For each file provided, you'll receive:
 
-            The original text content
+            1) Clear instructions detailing how to filter, modify, or rewrite the provided content.
 
-            Clear instructions detailing how to filter, modify, or rewrite it
+            2) The original text content itself.
 
             Please produce the modified text exactly as instructed, without additional commentary or explanation.
         "#}
@@ -66,20 +67,13 @@ impl ComputeLanguageModelCoreQuery for AiFileFilter
         input:           &Self::Seed
     ) -> String {
 
-        let file_path    = input.file_path().as_ref().display().to_string();
         let orig_text    = input.original_text();
         let instructions = input.user_instructions();
 
         formatdoc! {
             r#"
-            We have a file at path: {file_path}.
-            The file's original text is:
             {orig_text}
-
-            The user instructions are:
             {instructions}
-
-            Please provide the updated content below. 
             "#
         }
     }

@@ -1,3 +1,4 @@
+// ---------------- [ File: workspacer-consolidate/src/maybe_build_struct.rs ]
 crate::ix!();
 
 pub fn maybe_build_struct(

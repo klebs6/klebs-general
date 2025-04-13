@@ -1,3 +1,4 @@
+// ---------------- [ File: workspacer-consolidate/src/guess_is_function.rs ]
 crate::ix!();
 
 /// A small helper to decide if a `CrateInterfaceItem<T>` should be rendered as a function.

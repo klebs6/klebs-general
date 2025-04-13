@@ -1,3 +1,4 @@
+// ---------------- [ File: workspacer-consolidate/src/maybe_build_macro_rules.rs ]
 crate::ix!();
 
 pub fn maybe_build_macro_rules(

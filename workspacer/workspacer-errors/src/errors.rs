@@ -420,6 +420,7 @@ error_tree!{
         WorkspaceNotReadyForCargoPublish,
         FileWatchError,
         TestTimeout,
+        FileFilterError,
         MockBuildTestFailedWithStatus {
             status: std::process::ExitStatus,
         },

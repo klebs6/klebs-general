@@ -6,8 +6,22 @@ license = "MIT"
 edition = "2024"
 description = "todo: write a description here"
 
-# keywords = []
-# categories = []
-
 [dependencies]
-workspacer-3p = { path = "../workspacer-3p" }
+derive_builder.workspace = true
+serde.workspace          = true
+serde_derive.workspace   = true
+serde_json.workspace     = true
+structopt.workspace      = true
+
+[dependencies.sync-run-async]
+path = "../sync-run-async"
+version = "0.1.1"
+[dependencies.workspacer-3p]
+path = "../workspacer-3p"
+version = "0.5.1"
+[dependencies.workspacer-config]
+path = "../workspacer-config"
+version = "0.1.1"
+[dependencies.workspacer-errors]
+path = "../workspacer-errors"
+version = "0.1.1"

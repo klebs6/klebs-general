@@ -1,3 +1,4 @@
+// ---------------- [ File: workspacer-file-filter/src/workspacer_file_filter_config.rs ]
 crate::ix!();
 
 #[derive(Builder,Getters,Debug,Clone)]

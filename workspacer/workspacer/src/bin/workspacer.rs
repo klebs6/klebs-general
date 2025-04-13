@@ -63,6 +63,7 @@ pub enum WsCliSubcommand {
 
     Topo(TopoSubcommand),
     Write(ReadmeWriterCli),
+    Filter(FileFilterCli),
     Tree(TreeSubcommand),
 }
 
@@ -95,9 +96,10 @@ impl WsCliSubcommand {
             WsCliSubcommand::Prune             { subcommand } => { subcommand.run().await },
             WsCliSubcommand::Show              { subcommand } => { subcommand.run().await },
 
-            WsCliSubcommand::Topo(cmd) => { cmd.run().await },
-            WsCliSubcommand::Write(cmd) => { cmd.run().await },
-            WsCliSubcommand::Tree(cmd)  => { cmd.run().await },
+            WsCliSubcommand::Topo(cmd)   => { cmd.run().await },
+            WsCliSubcommand::Write(cmd)  => { cmd.run().await },
+            WsCliSubcommand::Filter(cmd) => { cmd.run().await },
+            WsCliSubcommand::Tree(cmd)   => { cmd.run().await },
         }
     }
 }

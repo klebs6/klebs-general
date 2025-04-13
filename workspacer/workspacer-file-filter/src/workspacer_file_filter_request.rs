@@ -1,3 +1,4 @@
+// ---------------- [ File: workspacer-file-filter/src/workspacer_file_filter_request.rs ]
 crate::ix!();
 
 #[derive(Serialize, Deserialize, Debug, Builder, Getters, Clone)]
@@ -5,29 +6,27 @@ crate::ix!();
 #[getset(get = "pub")]
 pub struct AiFileFilterRequest<P>
 where
-    P: AsRef<Path> + Send + Sync + 'static,
+    P: AsRef<Path> + std::fmt::Debug + Send + Sync + 'static
 {
-    // The path to the actual file we want to filter:
-    file_path: P,
-
-    // The original content from that file:
-    original_text: String,
-
-    // Possibly other context info or config:
-    // e.g. "some user instructions" that we embed
+    file_path:         P,
+    original_text:     String,
     user_instructions: String,
 }
 
 impl<P> AiFileFilterRequest<P>
 where
-    P: AsRef<Path> + Send + Sync + 'static,
+    P: AsRef<Path> + std::fmt::Debug + Send + Sync + 'static,
 {
-    #[tracing::instrument(level = "trace", skip(config))]
+    pub fn snake_path_stem(&self) -> String {
+        filename_to_snake(&self.file_path)
+    }
+
     pub async fn async_try_from_path(
-        file_path: P,
+        file_path:         P,
         user_instructions: &str,
-        config: &FileFilterConfig,
-    ) -> Result<Self, AiFileFilterError> {
+        config:            &FileFilterConfig,
+    ) -> Result<Self, AiFileFilterError>
+    {
         trace!("Building AiFileFilterRequest from path={:?}", file_path.as_ref());
 
         // 1) Check if file exists
@@ -39,7 +38,7 @@ where
             }
         })?;
 
-        // If there's a max size, check it
+        // 2) If there's a max size, check it
         if let Some(max_sz) = config.max_file_size_bytes() {
             if metadata.len() > *max_sz {
                 warn!(
@@ -47,12 +46,10 @@ where
                     metadata.len(),
                     max_sz
                 );
-                // For demonstration, let's proceed anyway,
-                // or you can do a fallback approach here if you want
             }
         }
 
-        // 2) Read the file content
+        // 3) Read the file content
         let content = tokio::fs::read_to_string(&file_path).await.map_err(|io_err| {
             AiFileFilterError::IoError {
                 io_error: std::sync::Arc::new(io_err),
@@ -60,7 +57,7 @@ where
             }
         })?;
 
-        // 3) Build the request
+        // 4) Build the request
         Ok(Self {
             file_path,
             original_text: content,
@@ -71,7 +68,7 @@ where
 
 impl<P> std::fmt::Display for AiFileFilterRequest<P>
 where
-    P: AsRef<Path> + Send + Sync + 'static,
+    P: AsRef<Path> + std::fmt::Debug + Send + Sync + 'static,
 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
@@ -79,5 +76,25 @@ where
             "AiFileFilterRequest for path: {}",
             self.file_path.as_ref().display()
         )
+    }
+}
+
+impl<P> Named for AiFileFilterRequest<P>
+where
+    P: AsRef<Path> + std::fmt::Debug + Send + Sync + 'static,
+{
+    fn name(&self) -> std::borrow::Cow<'_, str> {
+        // Provide any naming scheme you like:
+        std::borrow::Cow::Owned(format!("file_filter_request_{}", self.snake_path_stem()))
+    }
+}
+
+impl<P> HasAssociatedOutputName for AiFileFilterRequest<P>
+where
+    P: AsRef<Path> + std::fmt::Debug + Send + Sync + 'static,
+{
+    fn associated_output_name(&self) -> std::borrow::Cow<'_, str> {
+        // Provide a stable "base name" so the .json expansion can be recognized:
+        std::borrow::Cow::Owned(format!("filtered_{}", self.snake_path_stem()))
     }
 }

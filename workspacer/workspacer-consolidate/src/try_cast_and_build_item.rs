@@ -1,3 +1,4 @@
+// ---------------- [ File: workspacer-consolidate/src/try_cast_and_build_item.rs ]
 crate::ix!();
 
 /// The top-level aggregator that tries each “maybe_build_*” helper in sequence.

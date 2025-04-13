@@ -48,3 +48,4 @@ x!{watch}
 x!{write}
 x!{prune}
 x!{topo}
+x!{file_filter}

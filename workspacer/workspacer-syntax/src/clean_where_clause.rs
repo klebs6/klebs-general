@@ -1,3 +1,4 @@
+// ---------------- [ File: workspacer-syntax/src/clean_where_clause.rs ]
 crate::ix!();
 
 pub fn full_clean_where_clause(x: &Option<ast::WhereClause>) -> String {

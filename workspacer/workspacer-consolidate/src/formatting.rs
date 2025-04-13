@@ -1,3 +1,4 @@
+// ---------------- [ File: workspacer-consolidate/src/formatting.rs ]
 crate::ix!();
 
 /// 1) *Strip* out `{ ... }` if the entire snippet is enclosed in them.

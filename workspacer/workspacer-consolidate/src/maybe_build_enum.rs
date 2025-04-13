@@ -1,3 +1,4 @@
+// ---------------- [ File: workspacer-consolidate/src/maybe_build_enum.rs ]
 crate::ix!();
 
 pub fn maybe_build_enum(
