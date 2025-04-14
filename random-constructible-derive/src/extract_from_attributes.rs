@@ -1,4 +1,4 @@
-// ---------------- [ File: src/extract_from_attributes.rs ]
+// ---------------- [ File: random-constructible-derive/src/extract_from_attributes.rs ]
 crate::ix!();
 
 pub fn extract_probability_from_attributes(attrs: &[syn::Attribute]) 

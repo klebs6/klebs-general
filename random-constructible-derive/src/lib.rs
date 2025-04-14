@@ -1,4 +1,4 @@
-// ---------------- [ File: src/lib.rs ]
+// ---------------- [ File: random-constructible-derive/src/lib.rs ]
 #![allow(unused_imports)]
 extern crate proc_macro;
 

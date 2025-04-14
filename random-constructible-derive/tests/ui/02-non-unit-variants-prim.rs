@@ -1,4 +1,4 @@
-// ---------------- [ File: tests/ui/02-non-unit-variants-prim.rs ]
+// ---------------- [ File: random-constructible-derive/tests/ui/02-non-unit-variants-prim.rs ]
 extern crate random_constructible;
 extern crate random_constructible_derive;
 

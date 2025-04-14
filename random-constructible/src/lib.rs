@@ -1,4 +1,4 @@
-// ---------------- [ File: src/lib.rs ]
+// ---------------- [ File: random-constructible/src/lib.rs ]
 #![allow(unused_imports)]
 
 #[macro_use] mod imports; use imports::*;
@@ -79,6 +79,20 @@ mod tests {
         assert_eq!(ManualTestEnum::VariantX.default_weight(), 2.0);
         assert_eq!(ManualTestEnum::VariantY.default_weight(), 3.0);
         assert_eq!(ManualTestEnum::VariantZ.default_weight(), 5.0);
+    }
+
+    #[test]
+    fn test_manual_random_with_rngcore() {
+        use rand_core::RngCore; // <— we’ll demonstrate using RngCore directly
+        // Example using rand_core directly
+        let mut rng = rand_chacha::ChaCha8Rng::seed_from_u64(42);
+        let mut counts = HashMap::new();
+
+        for _ in 0..10000 {
+            let variant = ManualTestEnum::random_with_rng(&mut rng);
+            *counts.entry(variant).or_insert(0) += 1;
+        }
+        // ...
     }
 
     #[test]

@@ -1,4 +1,4 @@
-// ---------------- [ File: src/rand_construct_env.rs ]
+// ---------------- [ File: random-constructible/src/rand_construct_env.rs ]
 crate::ix!();
 
 pub trait RandConstructEnvironment {

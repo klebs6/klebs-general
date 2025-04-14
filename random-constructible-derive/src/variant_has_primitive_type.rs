@@ -1,4 +1,4 @@
-// ---------------- [ File: src/variant_has_primitive_type.rs ]
+// ---------------- [ File: random-constructible-derive/src/variant_has_primitive_type.rs ]
 crate::ix!();
 
 // Function to check if any variant has a primitive type field

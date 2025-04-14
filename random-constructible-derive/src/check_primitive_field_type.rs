@@ -1,4 +1,4 @@
-// ---------------- [ File: src/check_primitive_field_type.rs ]
+// ---------------- [ File: random-constructible-derive/src/check_primitive_field_type.rs ]
 crate::ix!();
 
 // Function to check if a type is a primitive type

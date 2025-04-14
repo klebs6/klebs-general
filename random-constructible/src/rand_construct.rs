@@ -1,14 +1,15 @@
-// ---------------- [ File: src/rand_construct.rs ]
+// ---------------- [ File: random-constructible/src/rand_construct.rs ]
 crate::ix!();
 
 pub trait RandConstruct {
     fn random() -> Self;
     fn uniform() -> Self;
-    fn random_with_rng<R: Rng + ?Sized>(rng: &mut R) -> Self;
+    fn random_with_rng<R: RngCore + ?Sized>(rng: &mut R) -> Self;
 }
 
-impl<E: RandConstructEnum> RandConstruct for E {
+use crate::rand_construct_enum::RandConstructEnum;
 
+impl<E: RandConstructEnum> RandConstruct for E {
     fn random() -> Self {
         <Self as RandConstructEnum>::random_variant()
     }
@@ -17,7 +18,7 @@ impl<E: RandConstructEnum> RandConstruct for E {
         <Self as RandConstructEnum>::uniform_variant()
     }
 
-    fn random_with_rng<R: Rng + ?Sized>(rng: &mut R) -> Self {
+    fn random_with_rng<R: RngCore + ?Sized>(rng: &mut R) -> Self {
         <Self as RandConstructEnum>::random_enum_value_with_rng(rng)
     }
 }
