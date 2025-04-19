@@ -1,8 +1,9 @@
+// ---------------- [ File: ai-descriptor-derive/src/impl_item_feature.rs ]
 crate::ix!();
 
 pub(crate) fn impl_item_feature(input: &DeriveInput) -> TokenStream2 {
     match &input.data {
-        Data::Enum(data_enum) => impl_item_feature_enum(input, data_enum),
+        Data::Enum(data_enum)     => impl_item_feature_enum(input, data_enum),
         Data::Struct(data_struct) => impl_item_feature_struct(input, data_struct),
         _ => {
             Error::new_spanned(input.ident.clone(), "ItemFeature can only be derived for enums and structs")

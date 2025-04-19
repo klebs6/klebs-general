@@ -32,6 +32,9 @@ pub enum FileFilterCli {
         /// Optional max file size in bytes (default ~512k).
         #[structopt(long)]
         max_file_size_bytes: Option<u64>,
+
+        #[structopt(long)]
+        language_model_type: Option<LanguageModelType>,
     },
 }
 
@@ -47,7 +50,13 @@ impl FileFilterCli {
                 plant,
                 skip_git_check,
                 max_file_size_bytes,
+                language_model_type,
             } => {
+
+                let model_type = language_model_type.unwrap_or_else(|| {
+                    LanguageModelType::Gpt4_5Preview
+                });
+
                 // 1) Detect single crate vs. workspace
                 let detect_path = path.as_deref().unwrap_or_else(|| {
                     // fallback to current dir if none provided
@@ -86,6 +95,7 @@ impl FileFilterCli {
                 info!("Filtering text for files listed in {}", file_list.display());
 
                 apply_text_filter_to_files(
+                    &model_type,
                     file_list,
                     &instructions_content,
                     *plant,

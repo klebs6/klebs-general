@@ -1,3 +1,4 @@
+// ---------------- [ File: ai-descriptor-derive/src/get_option_inner_type.rs ]
 crate::ix!();
 
 pub(crate) fn get_option_inner_type(ty: &Type) -> &Type {
@@ -65,4 +66,3 @@ mod tests {
         assert_eq!(inner_ty.to_token_stream().to_string(), expected_ty.to_token_stream().to_string());
     }
 }
-

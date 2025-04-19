@@ -1,5 +1,5 @@
 error: Variants must be unit variants with #[ai("...")] or single-field tuple variants wrapping a type that implements ItemFeature
- --> tests/ui/compile_fail/item_feature_invalid_variant.rs:9:5
-  |
-9 |     Complex { a: String, b: i32 }, // Invalid variant type
-  |     ^^^^^^^
+  --> tests/ui/compile_fail/item_feature_invalid_variant.rs:10:5
+   |
+10 |     Complex { a: String, b: i32 }, // Invalid variant type
+   |     ^^^^^^^

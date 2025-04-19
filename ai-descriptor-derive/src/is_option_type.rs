@@ -1,3 +1,4 @@
+// ---------------- [ File: ai-descriptor-derive/src/is_option_type.rs ]
 crate::ix!();
 
 pub(crate) fn is_option_type(ty: &Type) -> bool {
@@ -50,4 +51,3 @@ mod tests {
         assert_eq!(is_option_type(&ty), true);
     }
 }
-

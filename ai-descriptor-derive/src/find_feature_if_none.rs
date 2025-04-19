@@ -1,3 +1,4 @@
+// ---------------- [ File: ai-descriptor-derive/src/find_feature_if_none.rs ]
 crate::ix!();
 
 pub(crate) fn find_feature_if_none(attrs: &[Attribute]) -> Option<String> {
@@ -77,4 +78,3 @@ mod tests {
         assert_eq!(find_feature_if_none(&attrs), Some("First match".to_string()));
     }
 }
-

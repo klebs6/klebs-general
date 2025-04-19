@@ -2,6 +2,7 @@
 crate::ix!();
 
 pub async fn apply_text_filter_to_files(
+    model_type:        &LanguageModelType,
     list_path:         impl AsRef<Path>,
     user_instructions: &str,
     plant:             bool,
@@ -100,7 +101,7 @@ pub async fn apply_text_filter_to_files(
     }
 
     // 6) Acquire the AiFileFilter object and process
-    let mut writer = AiFileFilter::default().await?;
+    let mut writer = AiFileFilter::with_model(model_type).await?;
     execute_ai_file_filter_requests(&mut writer, &requests, plant).await?;
 
     info!("apply_text_filter_to_files completed successfully.");

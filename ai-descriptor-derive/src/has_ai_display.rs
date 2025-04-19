@@ -1,3 +1,4 @@
+// ---------------- [ File: ai-descriptor-derive/src/has_ai_display.rs ]
 crate::ix!();
 
 pub(crate) fn has_ai_display(attrs: &[Attribute]) -> bool {

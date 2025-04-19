@@ -1,3 +1,4 @@
+// ---------------- [ File: ai-descriptor-derive/src/impl_item_feature_struct.rs ]
 crate::ix!();
 
 pub(crate) fn impl_item_feature_struct(input: &DeriveInput, data: &DataStruct) -> TokenStream2 {

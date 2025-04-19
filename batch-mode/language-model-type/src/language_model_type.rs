@@ -49,7 +49,17 @@ pub mod model_type {
         D: Deserializer<'de>,
     {
         let s: String = Deserialize::deserialize(deserializer)?;
-        match s.as_ref() {
+        tracing::debug!("Deserializing LanguageModelType from input string: {}", s);
+        LanguageModelType::from_str(&s).map_err(serde::de::Error::custom)
+    }
+}
+
+impl std::str::FromStr for LanguageModelType {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        tracing::debug!("Attempting to parse LanguageModelType from string: {}", s);
+        match s {
             "gpt-3.5-turbo"   => Ok(LanguageModelType::Gpt3_5Turbo),
             "gpt-4o"          => Ok(LanguageModelType::Gpt4o),
             "gpt-4o-mini"     => Ok(LanguageModelType::Gpt4oMini),
@@ -59,7 +69,10 @@ pub mod model_type {
             "o1"              => Ok(LanguageModelType::O1),
             "o1-pro"          => Ok(LanguageModelType::O1Pro),
             "gpt-4.5-preview" => Ok(LanguageModelType::Gpt4_5Preview),
-            _                 => Err(serde::de::Error::custom("unknown model type")),
+            other => {
+                tracing::error!("Failed to parse LanguageModelType from input string: {}", other);
+                Err(format!("unknown model type: {}", other))
+            }
         }
     }
 }

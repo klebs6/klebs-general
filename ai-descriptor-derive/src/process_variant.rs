@@ -1,3 +1,4 @@
+// ---------------- [ File: ai-descriptor-derive/src/process_variant.rs ]
 crate::ix!();
 
 pub(crate) fn process_variant(variant: &Variant) -> Result<TokenStream2, TokenStream2> {

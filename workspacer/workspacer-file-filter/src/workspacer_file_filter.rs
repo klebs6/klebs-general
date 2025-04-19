@@ -25,6 +25,11 @@ impl AiFileFilter
         Ok(AiFileFilter::new(&readme_dir, LanguageModelType::Gpt4_5Preview).await?)
     }
 
+    pub async fn with_model(model_type: &LanguageModelType) -> Result<Self,AiFileFilterError> {
+        let readme_dir = WorkspacerDir::local().ensure_subdir_exists("file-filter-workspace")?;
+        Ok(AiFileFilter::new(&readme_dir, *model_type).await?)
+    }
+
     pub async fn new(
         workspace_root:      impl AsRef<Path>,
         language_model_type: LanguageModelType,

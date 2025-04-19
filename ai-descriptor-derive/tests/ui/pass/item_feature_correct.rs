@@ -1,3 +1,4 @@
+// ---------------- [ File: ai-descriptor-derive/tests/ui/pass/item_feature_correct.rs ]
 use ai_descriptor_derive::*;
 use ai_descriptor_trait::*;
 use std::borrow::Cow;
@@ -20,4 +21,3 @@ impl ItemFeature for HealingEffect {
 }
 
 fn main() {}
-
