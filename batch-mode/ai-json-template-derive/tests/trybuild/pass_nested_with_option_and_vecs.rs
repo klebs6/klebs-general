@@ -3,6 +3,7 @@
 // Another nested struct scenario, this time with multiple Option and Vec fields at different levels.
 
 #![allow(dead_code)]
+#![allow(unused_imports)]
 
 use ai_json_template_derive::*;
 use ai_json_template::*;

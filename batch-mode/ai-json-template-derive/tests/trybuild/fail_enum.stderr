@@ -1,8 +1,0 @@
-error: AiJsonTemplate derive only supports a named struct.
-  --> tests/trybuild/fail_enum.rs:14:1
-   |
-14 | / enum FailEnum {
-15 | |     VariantOne,
-16 | |     VariantTwo,
-17 | | }
-   | |_^

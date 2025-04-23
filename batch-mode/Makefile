@@ -15,8 +15,6 @@ FEATURES := --features ""
 TEST_FILE  := tests/test_scale_layer.rs
 
 #ACTIVE_PACKAGE := agent-coordinate
-#ACTIVE_PACKAGE := ai-json-template
-#ACTIVE_PACKAGE := ai-json-template-derive
 #ACTIVE_PACKAGE := batch-mode
 #ACTIVE_PACKAGE := batch-mode-3p
 #ACTIVE_PACKAGE := batch-mode-batch-index
@@ -47,6 +45,8 @@ ACTIVE_PACKAGE := batch-mode-process-response
 ACTIVE_PACKAGE := language-model-token-expander
 ACTIVE_PACKAGE := language-model-batch-workflow-derive
 ACTIVE_PACKAGE := batch-mode-batch-workflow
+ACTIVE_PACKAGE := ai-json-template
+ACTIVE_PACKAGE := ai-json-template-derive
 
 #-----------------------------------------------------[]
 #INDIVIDUAL_TEST := test_build_network_io_enum
@@ -58,7 +58,7 @@ DEFAULT := test
 #DEFAULT := test_file_one
 #DEFAULT := test_all
 #DEFAULT := run
-DEFAULT := file_diff
+#DEFAULT := file_diff
 #DEFAULT := build
 
 default: $(DEFAULT)

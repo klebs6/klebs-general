@@ -1,39 +1,31 @@
 error: Only support unary struct!
-  --> tests/trybuild/fail_unnamed_struct.rs:16:57
+  --> tests/trybuild/fail_unnamed_struct.rs:17:57
    |
-16 | #[derive(SaveLoad,Clone, Debug, Serialize, Deserialize, Getters, Setters, Builder)]
+17 | #[derive(SaveLoad,Clone, Debug, Serialize, Deserialize, Getters, Setters, Builder)]
    |                                                         ^^^^^^^
    |
    = note: this error originates in the derive macro `Getters` (in Nightly builds, run with -Z macro-backtrace for more info)
 
 error: Only support unary struct!
-  --> tests/trybuild/fail_unnamed_struct.rs:16:66
+  --> tests/trybuild/fail_unnamed_struct.rs:17:66
    |
-16 | #[derive(SaveLoad,Clone, Debug, Serialize, Deserialize, Getters, Setters, Builder)]
+17 | #[derive(SaveLoad,Clone, Debug, Serialize, Deserialize, Getters, Setters, Builder)]
    |                                                                  ^^^^^^^
    |
    = note: this error originates in the derive macro `Setters` (in Nightly builds, run with -Z macro-backtrace for more info)
 
 error: Unsupported shape `unnamed fields`. Expected named fields.
-  --> tests/trybuild/fail_unnamed_struct.rs:16:75
+  --> tests/trybuild/fail_unnamed_struct.rs:17:75
    |
-16 | #[derive(SaveLoad,Clone, Debug, Serialize, Deserialize, Getters, Setters, Builder)]
+17 | #[derive(SaveLoad,Clone, Debug, Serialize, Deserialize, Getters, Setters, Builder)]
    |                                                                           ^^^^^^^
    |
    = note: this error originates in the derive macro `Builder` (in Nightly builds, run with -Z macro-backtrace for more info)
 
-error: AiJsonTemplate derive only supports a named struct.
-  --> tests/trybuild/fail_unnamed_struct.rs:18:1
+error: AiJsonTemplate derive only supports a struct with named fields or an enum with all unit variants.
+  --> tests/trybuild/fail_unnamed_struct.rs:19:1
    |
-18 | / #[getset(get = "pub", set = "pub")]
-19 | | #[builder(setter(into))]
-20 | | struct FailUnnamedStruct(String, i32);
+19 | / #[getset(get = "pub", set = "pub")]
+20 | | #[builder(setter(into))]
+21 | | struct FailUnnamedStruct(String, i32);
    | |______________________________________^
-
-warning: unused import: `ai_json_template::*`
- --> tests/trybuild/fail_unnamed_struct.rs:9:5
-  |
-9 | use ai_json_template::*;
-  |     ^^^^^^^^^^^^^^^^^^^
-  |
-  = note: `#[warn(unused_imports)]` on by default

@@ -4,6 +4,7 @@
 // so it should fail.
 
 #![allow(dead_code)]
+#![allow(unused_imports)]
 
 use ai_json_template_derive::*;
 use ai_json_template::*;

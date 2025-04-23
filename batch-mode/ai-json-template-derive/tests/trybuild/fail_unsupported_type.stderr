@@ -1,5 +1,0 @@
-error: Unsupported field type for AiJsonTemplate: i32
-  --> tests/trybuild/fail_unsupported_type.rs:10:13
-   |
-10 |     number: i32,
-   |             ^^^
