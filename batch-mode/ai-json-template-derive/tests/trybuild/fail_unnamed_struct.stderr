@@ -22,7 +22,7 @@ error: Unsupported shape `unnamed fields`. Expected named fields.
    |
    = note: this error originates in the derive macro `Builder` (in Nightly builds, run with -Z macro-backtrace for more info)
 
-error: AiJsonTemplate derive only supports a struct with named fields or an enum with all unit variants.
+error: AiJsonTemplate derive only supports named fields for structs (or handle your tuple struct in the enum logic).
   --> tests/trybuild/fail_unnamed_struct.rs:19:1
    |
 19 | / #[getset(get = "pub", set = "pub")]

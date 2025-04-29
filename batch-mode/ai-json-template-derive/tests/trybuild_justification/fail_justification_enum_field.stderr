@@ -1,0 +1,72 @@
+error[E0412]: cannot find type `BadEnumJustification` in this scope
+  --> tests/trybuild_justification/fail_justification_enum_field.rs:30:11
+   |
+30 |     data: BadEnum,
+   |           ^^^^^^^ not found in this scope
+
+error[E0412]: cannot find type `BadEnumJustification` in this scope
+  --> tests/trybuild_justification/fail_justification_enum_field.rs:30:11
+   |
+30 |     data: BadEnum,
+   |           ^^^^^^^ not found in this scope
+   |
+help: you might be missing a type parameter
+   |
+31 | }<BadEnumJustification>
+   |  ++++++++++++++++++++++
+
+error[E0412]: cannot find type `BadEnumConfidence` in this scope
+  --> tests/trybuild_justification/fail_justification_enum_field.rs:30:11
+   |
+30 |     data: BadEnum,
+   |           ^^^^^^^ not found in this scope
+
+error[E0412]: cannot find type `BadEnumConfidence` in this scope
+  --> tests/trybuild_justification/fail_justification_enum_field.rs:30:11
+   |
+30 |     data: BadEnum,
+   |           ^^^^^^^ not found in this scope
+   |
+help: you might be missing a type parameter
+   |
+31 | }<BadEnumConfidence>
+   |  +++++++++++++++++++
+
+error[E0277]: the trait bound `BadEnum: ai_json_template::AiJsonTemplate` is not satisfied
+  --> tests/trybuild_justification/fail_justification_enum_field.rs:30:11
+   |
+30 |     data: BadEnum,
+   |           ^^^^^^^ the trait `ai_json_template::AiJsonTemplate` is not implemented for `BadEnum`
+   |
+   = help: the trait `ai_json_template::AiJsonTemplate` is implemented for `ContainsEnum`
+
+error[E0277]: the trait bound `ContainsEnum: Default` is not satisfied
+  --> tests/trybuild_justification/fail_justification_enum_field.rs:25:26
+   |
+25 | #[derive(AiJsonTemplate, AiJsonTemplateWithJustification)]
+   |                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `Default` is not implemented for `ContainsEnum`
+
+error[E0369]: binary operation `==` cannot be applied to type `ContainsEnum`
+  --> tests/trybuild_justification/fail_justification_enum_field.rs:25:26
+   |
+25 | #[derive(AiJsonTemplate, AiJsonTemplateWithJustification)]
+   |                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+note: an implementation of `PartialEq` might be missing for `ContainsEnum`
+  --> tests/trybuild_justification/fail_justification_enum_field.rs:28:1
+   |
+28 | struct ContainsEnum {
+   | ^^^^^^^^^^^^^^^^^^^ must implement `PartialEq`
+help: consider annotating `ContainsEnum` with `#[derive(PartialEq)]`
+   |
+28 + #[derive(PartialEq)]
+29 | struct ContainsEnum {
+   |
+
+error[E0277]: the trait bound `BadEnum: ai_json_template::AiJsonTemplateWithJustification` is not satisfied
+  --> tests/trybuild_justification/fail_justification_enum_field.rs:30:11
+   |
+30 |     data: BadEnum,
+   |           ^^^^^^^ the trait `ai_json_template::AiJsonTemplateWithJustification` is not implemented for `BadEnum`
+   |
+   = help: the trait `ai_json_template::AiJsonTemplateWithJustification` is implemented for `ContainsEnum`

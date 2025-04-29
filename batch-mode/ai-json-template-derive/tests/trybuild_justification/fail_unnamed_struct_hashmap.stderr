@@ -1,0 +1,23 @@
+error: AiJsonTemplate derive only supports named fields for structs (or handle your tuple struct in the enum logic).
+  --> tests/trybuild_justification/fail_unnamed_struct_hashmap.rs:14:1
+   |
+14 | / /// A tuple struct => should fail
+15 | | #[derive(
+16 | |     SaveLoad,
+17 | |     Debug,
+...  |
+23 | | )]
+24 | | struct TupleStructMap(HashMap<String, bool>);
+   | |_____________________________________________^
+
+error: AiJsonTemplateWithJustification only supports named fields for structs.
+  --> tests/trybuild_justification/fail_unnamed_struct_hashmap.rs:14:1
+   |
+14 | / /// A tuple struct => should fail
+15 | | #[derive(
+16 | |     SaveLoad,
+17 | |     Debug,
+...  |
+23 | | )]
+24 | | struct TupleStructMap(HashMap<String, bool>);
+   | |_____________________________________________^

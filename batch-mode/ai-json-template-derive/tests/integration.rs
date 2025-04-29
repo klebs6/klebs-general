@@ -1,4 +1,6 @@
 // ---------------- [ File: ai-json-template-derive/tests/integration.rs ]
+#![allow(dead_code)]
+#![allow(unused_imports)]
 // ======================= [COMPLETE NEW tests/integration.rs] =======================
 //
 // Key fixes to avoid the proc-macro re-export errors:
@@ -24,7 +26,7 @@
 // but still testing the expansions via direct usage of `#[derive(AiJsonTemplate)]` on local structs.
 
 use pretty_assertions::assert_eq as pretty_assert_eq;
-use tracing::*;
+use tracing::{info,warn,error,trace,debug};
 use getset::*;
 use derive_builder::*;
 use traced_test::*;

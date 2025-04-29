@@ -71,7 +71,7 @@ structopt                = "0.3.26"
 structured-language-form = "0.3.0"
 strum_macros             = "0.24"
 tempfile                 = "3.17.1"
-traced-test              = "1.0.2"
+traced-test              = "*"
 tracing-setup            = "1.0.2"
 trybuild                 = "1.0.104"
 

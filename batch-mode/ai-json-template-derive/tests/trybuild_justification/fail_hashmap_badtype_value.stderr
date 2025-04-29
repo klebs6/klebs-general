@@ -1,0 +1,206 @@
+error: Type HashMap < u8, BadType > is not supported by AiJsonTemplateWithJustification
+  --> tests/trybuild_justification/fail_hashmap_badtype_value.rs:25:5
+   |
+25 |     AiJsonTemplateWithJustification,
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+   = note: this error originates in the derive macro `AiJsonTemplateWithJustification` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0277]: `BadType` doesn't implement `std::fmt::Debug`
+  --> tests/trybuild_justification/fail_hashmap_badtype_value.rs:28:5
+   |
+19 |     Debug,
+   |     ----- in this derive macro expansion
+...
+28 |     my_map: HashMap<u8, BadType>,
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `BadType` cannot be formatted using `{:?}`
+   |
+   = help: the trait `std::fmt::Debug` is not implemented for `BadType`
+   = note: add `#[derive(Debug)]` to `BadType` or manually `impl std::fmt::Debug for BadType`
+   = help: the trait `std::fmt::Debug` is implemented for `HashMap<K, V, S>`
+help: consider annotating `BadType` with `#[derive(Debug)]`
+   |
+15 + #[derive(Debug)]
+16 | struct BadType;
+   |
+
+error[E0277]: the trait bound `BadType: Clone` is not satisfied
+  --> tests/trybuild_justification/fail_hashmap_badtype_value.rs:28:5
+   |
+20 |     Clone,
+   |     ----- in this derive macro expansion
+...
+28 |     my_map: HashMap<u8, BadType>,
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `Clone` is not implemented for `BadType`
+   |
+   = note: required for `HashMap<u8, BadType>` to implement `Clone`
+help: consider annotating `BadType` with `#[derive(Clone)]`
+   |
+15 + #[derive(Clone)]
+16 | struct BadType;
+   |
+
+error[E0369]: binary operation `==` cannot be applied to type `HashMap<u8, BadType>`
+  --> tests/trybuild_justification/fail_hashmap_badtype_value.rs:28:5
+   |
+21 |     PartialEq,
+   |     --------- in this derive macro expansion
+...
+28 |     my_map: HashMap<u8, BadType>,
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+note: an implementation of `PartialEq` might be missing for `BadType`
+  --> tests/trybuild_justification/fail_hashmap_badtype_value.rs:15:1
+   |
+15 | struct BadType;
+   | ^^^^^^^^^^^^^^ must implement `PartialEq`
+help: consider annotating `BadType` with `#[derive(PartialEq)]`
+   |
+15 + #[derive(PartialEq)]
+16 | struct BadType;
+   |
+
+error[E0277]: the trait bound `BadType: Serialize` is not satisfied
+  --> tests/trybuild_justification/fail_hashmap_badtype_value.rs:22:5
+   |
+22 |     Serialize,
+   |     ^^^^^^^^^ the trait `Serialize` is not implemented for `BadType`
+...
+28 |     my_map: HashMap<u8, BadType>,
+   |     ---------------------------- required by a bound introduced by this call
+   |
+   = note: for local types consider adding `#[derive(serde::Serialize)]` to your `BadType` type
+   = note: for types from other crates check whether the crate offers a `serde` feature flag
+   = help: the following other types implement trait `Serialize`:
+             &'a T
+             &'a mut T
+             ()
+             (T,)
+             (T0, T1)
+             (T0, T1, T2)
+             (T0, T1, T2, T3)
+             (T0, T1, T2, T3, T4)
+           and $N others
+   = note: required for `HashMap<u8, BadType>` to implement `Serialize`
+note: required by a bound in `_::_serde::ser::SerializeStruct::serialize_field`
+  --> $CARGO/serde-1.0.219/src/ser/mod.rs
+   |
+   |     fn serialize_field<T>(&mut self, key: &'static str, value: &T) -> Result<(), Self::Error>
+   |        --------------- required by a bound in this associated function
+   |     where
+   |         T: ?Sized + Serialize;
+   |                     ^^^^^^^^^ required by this bound in `SerializeStruct::serialize_field`
+   = note: this error originates in the derive macro `Serialize` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0277]: the trait bound `BadType: Deserialize<'_>` is not satisfied
+  --> tests/trybuild_justification/fail_hashmap_badtype_value.rs:28:13
+   |
+28 |     my_map: HashMap<u8, BadType>,
+   |             ^^^^^^^^^^^^^^^^^^^^ the trait `Deserialize<'_>` is not implemented for `BadType`
+   |
+   = note: for local types consider adding `#[derive(serde::Deserialize)]` to your `BadType` type
+   = note: for types from other crates check whether the crate offers a `serde` feature flag
+   = help: the following other types implement trait `Deserialize<'de>`:
+             &'a Path
+             &'a [u8]
+             &'a str
+             ()
+             (T,)
+             (T0, T1)
+             (T0, T1, T2)
+             (T0, T1, T2, T3)
+           and $N others
+   = note: required for `HashMap<u8, BadType>` to implement `Deserialize<'_>`
+note: required by a bound in `next_element`
+  --> $CARGO/serde-1.0.219/src/de/mod.rs
+   |
+   |     fn next_element<T>(&mut self) -> Result<Option<T>, Self::Error>
+   |        ------------ required by a bound in this associated function
+   |     where
+   |         T: Deserialize<'de>,
+   |            ^^^^^^^^^^^^^^^^ required by this bound in `SeqAccess::next_element`
+
+error[E0277]: the trait bound `BadType: Deserialize<'_>` is not satisfied
+  --> tests/trybuild_justification/fail_hashmap_badtype_value.rs:28:13
+   |
+28 |     my_map: HashMap<u8, BadType>,
+   |             ^^^^^^^^^^^^^^^^^^^^ the trait `Deserialize<'_>` is not implemented for `BadType`
+   |
+   = note: for local types consider adding `#[derive(serde::Deserialize)]` to your `BadType` type
+   = note: for types from other crates check whether the crate offers a `serde` feature flag
+   = help: the following other types implement trait `Deserialize<'de>`:
+             &'a Path
+             &'a [u8]
+             &'a str
+             ()
+             (T,)
+             (T0, T1)
+             (T0, T1, T2)
+             (T0, T1, T2, T3)
+           and $N others
+   = note: required for `HashMap<u8, BadType>` to implement `Deserialize<'_>`
+note: required by a bound in `next_value`
+  --> $CARGO/serde-1.0.219/src/de/mod.rs
+   |
+   |     fn next_value<V>(&mut self) -> Result<V, Self::Error>
+   |        ---------- required by a bound in this associated function
+   |     where
+   |         V: Deserialize<'de>,
+   |            ^^^^^^^^^^^^^^^^ required by this bound in `MapAccess::next_value`
+
+error[E0277]: the trait bound `BadType: Deserialize<'_>` is not satisfied
+  --> tests/trybuild_justification/fail_hashmap_badtype_value.rs:23:5
+   |
+23 |     Deserialize,
+   |     ^^^^^^^^^^^ the trait `Deserialize<'_>` is not implemented for `BadType`
+   |
+   = note: for local types consider adding `#[derive(serde::Deserialize)]` to your `BadType` type
+   = note: for types from other crates check whether the crate offers a `serde` feature flag
+   = help: the following other types implement trait `Deserialize<'de>`:
+             &'a Path
+             &'a [u8]
+             &'a str
+             ()
+             (T,)
+             (T0, T1)
+             (T0, T1, T2)
+             (T0, T1, T2, T3)
+           and $N others
+   = note: required for `HashMap<u8, BadType>` to implement `Deserialize<'_>`
+note: required by a bound in `_::_serde::__private::de::missing_field`
+  --> $CARGO/serde-1.0.219/src/private/de.rs
+   |
+   | pub fn missing_field<'de, V, E>(field: &'static str) -> Result<V, E>
+   |        ------------- required by a bound in this function
+   | where
+   |     V: Deserialize<'de>,
+   |        ^^^^^^^^^^^^^^^^ required by this bound in `missing_field`
+   = note: this error originates in the derive macro `Deserialize` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0277]: the trait bound `BadType: ai_json_template::AiJsonTemplate` is not satisfied
+  --> tests/trybuild_justification/fail_hashmap_badtype_value.rs:28:25
+   |
+28 |     my_map: HashMap<u8, BadType>,
+   |                         ^^^^^^^ the trait `ai_json_template::AiJsonTemplate` is not implemented for `BadType`
+   |
+   = help: the trait `ai_json_template::AiJsonTemplate` is implemented for `MapWithBadValue`
+
+error[E0277]: the trait bound `MapWithBadValue: Default` is not satisfied
+  --> tests/trybuild_justification/fail_hashmap_badtype_value.rs:25:5
+   |
+25 |     AiJsonTemplateWithJustification,
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `Default` is not implemented for `MapWithBadValue`
+   |
+help: consider annotating `MapWithBadValue` with `#[derive(Default)]`
+   |
+27 + #[derive(Default)]
+28 | struct MapWithBadValue {
+   |
+
+error[E0277]: the trait bound `BadType: ai_json_template::AiJsonTemplateWithJustification` is not satisfied
+  --> tests/trybuild_justification/fail_hashmap_badtype_value.rs:28:25
+   |
+28 |     my_map: HashMap<u8, BadType>,
+   |                         ^^^^^^^ the trait `ai_json_template::AiJsonTemplateWithJustification` is not implemented for `BadType`
+   |
+   = help: the trait `ai_json_template::AiJsonTemplateWithJustification` is implemented for `MapWithBadValue`

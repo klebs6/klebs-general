@@ -1,7 +1,9 @@
 // ---------------- [ File: ai-json-template-derive/tests/trybuild.rs ]
+#![allow(dead_code)]
+#![allow(unused_imports)]
 // tests/trybuild.rs
 
-use tracing::*;
+use tracing::{info,warn,error,trace,debug};
 
 #[test]
 fn compile_tests() {

@@ -11,13 +11,12 @@ pub struct CommaSeparatedExpressions {
 
 impl Parse for CommaSeparatedExpressions {
     fn parse(input: ParseStream) -> syn::Result<Self> {
-        trace!("Starting to parse comma-separated expressions.");
+        tracing::trace!("Starting to parse comma-separated expressions.");
         let expressions = Punctuated::<Expr, Token![,]>::parse_terminated(input)?;
         debug!("Successfully parsed {} expression(s).", expressions.len());
         Ok(CommaSeparatedExpressions { expressions })
     }
 }
-
 
 #[cfg(test)]
 mod validate_comma_separated_expressions {

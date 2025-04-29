@@ -1,55 +1,12 @@
 // ---------------- [ File: ai-json-template-derive/src/gather_doc_comments.rs ]
 crate::ix!();
 
-fn parse_doc_expr(expr: &Expr, lines: &mut Vec<String>) {
-    trace!("parse_doc_expr: analyzing expr = {:?}", expr);
-
-    match expr {
-        // e.g. "some doc" => a literal string
-        Expr::Lit(ExprLit {
-            lit: Lit::Str(s), ..
-        }) => {
-            debug!("Found string literal: {:?}", s.value());
-            lines.push(s.value());
-        }
-
-        // e.g. foo("some doc") => a function call
-        Expr::Call(ExprCall { func: _, args, .. }) => {
-            trace!("Found a call expression, will parse function + args");
-            // The function might be an ident like `three(...)`
-            // We'll collect any string-literal arguments it has.
-            for arg in args {
-                parse_doc_expr(arg, lines);
-            }
-            // We do not parse `func` for strings, because the user’s tests show
-            // doc(three("value3")) => "three" is an identifier; the string is in the args.
-        }
-
-        // e.g. one = "some doc" => an assignment expression
-        Expr::Assign(ExprAssign { right, .. }) => {
-            trace!("Found assignment expr => parse the right side");
-            parse_doc_expr(right, lines);
-        }
-
-        // e.g. parentheses around something: ( "some doc" )
-        Expr::Paren(ExprParen { expr: inner, .. }) => {
-            trace!("Found parentheses => parse inside");
-            parse_doc_expr(inner, lines);
-        }
-
-        // For anything else, we simply skip. e.g. numeric, ident alone, etc.
-        _ => {
-            trace!("Skipping non-string expression: {:?}", expr);
-        }
-    }
-}
-
 pub fn gather_doc_comments(attrs: &[Attribute]) -> Vec<String> {
     info!("Starting gather_doc_comments on {} attributes", attrs.len());
     let mut lines = Vec::new();
 
     for attr in attrs {
-        trace!("Examining attribute: {:?}", attr);
+        tracing::trace!("Examining attribute: {:?}", attr);
 
         // We only care about `#[doc(...)]` or `#[doc = ...]`.
         if !attr.path().is_ident("doc") {
@@ -74,7 +31,7 @@ pub fn gather_doc_comments(attrs: &[Attribute]) -> Vec<String> {
 
             // `#[doc(...)]` => Could be e.g. doc("some doc") or doc(one="1", two("2")) etc.
             Meta::List(MetaList { tokens, .. }) => {
-                trace!("Found list style doc => parsing comma-separated expressions");
+                tracing::trace!("Found list style doc => parsing comma-separated expressions");
                 match parse2::<CommaSeparatedExpressions>(tokens.clone()) {
                     Ok(cse) => {
                         for expr in cse.expressions() {
@@ -89,12 +46,12 @@ pub fn gather_doc_comments(attrs: &[Attribute]) -> Vec<String> {
 
             // Just `#[doc]` (no tokens) => skip
             Meta::Path(_) => {
-                trace!("Found bare path doc => ignoring");
+                tracing::trace!("Found bare path doc => ignoring");
             }
         }
     }
 
-    trace!("Completed gather_doc_comments with lines: {:?}", lines);
+    tracing::trace!("Completed gather_doc_comments with lines: {:?}", lines);
     lines
 }
 
