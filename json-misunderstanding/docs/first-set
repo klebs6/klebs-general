@@ -1,0 +1,204 @@
+Here’s a comprehensive, actionable starting list of common misunderstandings
+frequently encountered when language models emit JSON structures, particularly
+when schemas become complex or data-heavy:
+
+---
+
+### Initial List of JSON "Misunderstandings":
+
+**1. Map–Vector Confusion**
+- **Expected:**  
+  ```json
+  [{"name": "A", "descriptor": "D1", "timestamp": 123}]
+  ```
+- **Misunderstood as:**  
+  ```json
+  {"A": {"descriptor": "D1", "timestamp": 123}}
+  ```
+
+---
+
+**2. Nested Vector Flattening**
+- **Expected:**  
+  ```json
+  [["a", "b"], ["c", "d"]]
+  ```
+- **Misunderstood as:**  
+  ```json
+  ["a", "b", "c", "d"]
+  ```
+
+---
+
+**3. Single-element Vector Omission**
+- **Expected:**  
+  ```json
+  [{"id": 1, "value": "X"}]
+  ```
+- **Misunderstood as:**  
+  ```json
+  {"id": 1, "value": "X"}
+  ```
+
+---
+
+**4. Vector as Map of Indices**
+- **Expected:**  
+  ```json
+  ["A", "B", "C"]
+  ```
+- **Misunderstood as:**  
+  ```json
+  {"0": "A", "1": "B", "2": "C"}
+  ```
+
+---
+
+**5. Boolean Strings**
+- **Expected:**  
+  ```json
+  {"active": true, "verified": false}
+  ```
+- **Misunderstood as:**  
+  ```json
+  {"active": "true", "verified": "false"}
+  ```
+
+---
+
+**6. Numeric Strings**
+- **Expected:**  
+  ```json
+  {"id": 42, "score": 7.5}
+  ```
+- **Misunderstood as:**  
+  ```json
+  {"id": "42", "score": "7.5"}
+  ```
+
+---
+
+**7. Missing Wrapper Object**
+- **Expected:**  
+  ```json
+  {"data": {"items": [...], "count": 3}}
+  ```
+- **Misunderstood as:**  
+  ```json
+  {"items": [...], "count": 3}
+  ```
+
+---
+
+**8. Unnecessary Additional Nesting**
+- **Expected:**  
+  ```json
+  {"results": [{"id": 1}, {"id": 2}]}
+  ```
+- **Misunderstood as:**  
+  ```json
+  {"results": {"items": [{"id": 1}, {"id": 2}]}}
+  ```
+
+---
+
+**9. Flattened Key-Value Pairs**
+- **Expected:**  
+  ```json
+  {"settings": {"resolution": "high", "quality": "max"}}
+  ```
+- **Misunderstood as:**  
+  ```json
+  {"resolution": "high", "quality": "max"}
+  ```
+
+---
+
+**10. Array-Wrapped Single Objects**
+- **Expected:**  
+  ```json
+  {"user": {"name": "Alice", "id": 101}}
+  ```
+- **Misunderstood as:**  
+  ```json
+  {"user": [{"name": "Alice", "id": 101}]}
+  ```
+
+---
+
+**11. Key-name Misalignment (Similar Semantic Meaning)**
+- **Expected:**  
+  ```json
+  {"description": "An example."}
+  ```
+- **Misunderstood as:**  
+  ```json
+  {"descriptor": "An example."}
+  ```
+
+---
+
+**12. Timestamp Misformatting**
+- **Expected:** (Epoch timestamp as integer)
+  ```json
+  {"timestamp": 1714435254}
+  ```
+- **Misunderstood as:** (ISO-formatted string)
+  ```json
+  {"timestamp": "2025-04-29T12:00:54Z"}
+  ```
+
+---
+
+**13. Null Value Misplacement**
+- **Expected:**  
+  ```json
+  {"name": "Sample", "details": null}
+  ```
+- **Misunderstood as:**  
+  ```json
+  {"name": "Sample", "details": "null"}
+  ```
+
+---
+
+**14. Singleton Array instead of Object**
+- **Expected:**  
+  ```json
+  {"user": {"id": 1, "name": "Bob"}}
+  ```
+- **Misunderstood as:**  
+  ```json
+  {"user": [{"id": 1, "name": "Bob"}]}
+  ```
+
+---
+
+**15. Reversed Map Structure**
+- **Expected:**  
+  ```json
+  {"A": 1, "B": 2, "C": 3}
+  ```
+- **Misunderstood as:**  
+  ```json
+  [{"key": "A", "value": 1}, {"key": "B", "value": 2}, {"key": "C", "value": 3}]
+  ```
+
+---
+
+### Rationale for Choosing These Misunderstandings:
+- Each scenario represents common mistakes language models make with complicated schemas.
+- Includes frequent confusions around arrays, maps, scalar types, nesting, and subtle variations in data representation.
+- Realistic, derived from practical experience handling language-model outputs.
+
+---
+
+### Next Steps to Implement:
+- Develop explicit handling logic for each scenario.
+- Write robust unit and integration tests targeting each misunderstanding.
+- Establish clear interfaces to correct and standardize these common deviations.
+
+This set should serve as a strong initial reference point for implementing the
+`json-misunderstanding` crate. Let me know if you want to refine or add more
+details to any of these scenarios!
+

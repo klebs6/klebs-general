@@ -1,0 +1,316 @@
+### **Misunderstanding 31: Complex Enum with Confidence (Variant Representation Misunderstanding)**
+
+- **Expected**: Only the selected enum variant, clearly represented as a single selection with confidence.
+  
+  ```json
+  "complexity": {
+      "variant": "Balanced",
+      "confidence": 1.0,
+      "justification": "We aim to maintain sufficient detail without overwhelming new learners."
+  }
+  ```
+
+- **Misunderstood as**: All enum variants listed, each with its own confidence score, even if not selected.
+
+  ```json
+  "complexity": {
+      "type": "complex_enum",
+      "enum_name": "ConfigurationComplexity",
+      "has_justification": true,
+      "variants": [
+          {"variant_name": "Simple", "variant_confidence": 0.0, "variant_justification": "..."},
+          {"variant_name": "Balanced", "variant_confidence": 1.0, "variant_justification": "..."},
+          {"variant_name": "Complex", "variant_confidence": 0.0, "variant_justification": "..."}
+      ]
+  }
+  ```
+
+---
+
+### **Misunderstanding 32: Unit Enum Variants Wrapped as Objects**
+
+- **Expected**:  
+  ```json
+  "ordering": "DifficultyAscending"
+  ```
+
+- **Misunderstood as**: A full list of unit variants represented as objects with confidence, justifications, and metadata:
+
+  ```json
+  "ordering": {
+      "type": "complex_enum",
+      "enum_name": "SubBranchOrdering",
+      "variants": [
+          {"variant_name": "None", ...},
+          {"variant_name": "DifficultyAscending", "variant_confidence": 1.0, ...},
+          {"variant_name": "Random", ...}
+      ]
+  }
+  ```
+
+---
+
+### **Misunderstanding 33: Misinterpretation of Optional Fields (Null vs. Omitted)**
+
+- **Expected** (clearly omitting optional fields):
+  ```json
+  {
+      "aggregator_depth_limit": null
+  }
+  ```
+
+- **Misunderstood as** (explicitly providing numeric defaults or always setting optional fields):
+  ```json
+  {
+      "aggregator_depth_limit": 3
+  }
+  ```
+
+---
+
+### **Misunderstanding 34: Over-nesting Simple Scalars (Scalar Nesting)**
+
+- **Expected** (scalar fields):
+  ```json
+  {
+      "breadth": 8
+  }
+  ```
+
+- **Misunderstood as** (scalar wrapped unnecessarily):
+  ```json
+  {
+      "breadth": {"value": 8}
+  }
+  ```
+
+*(Not directly occurring in your example, but a frequent misunderstanding worth including explicitly.)*
+
+---
+
+### **Misunderstanding 35: Redundant Enum Metadata**
+
+- **Expected** (clean and minimal):
+  ```json
+  "capstone_mode": "Probabilistic"
+  ```
+
+- **Misunderstood as** (nested structure with all variants documented):
+  ```json
+  "capstone": {
+      "mode": {
+          "variants": [
+              {"variant_name": "Off", "variant_confidence": 0.0, ...},
+              {"variant_name": "Single", "variant_confidence": 0.0, ...},
+              {"variant_name": "Probabilistic", "variant_confidence": 1.0, ...}
+          ]
+      }
+  }
+  ```
+
+---
+
+### **Misunderstanding 36: Justification and Confidence Fields Redundantly Nested**
+
+- **Expected** (confidence and justification directly alongside field):
+  ```json
+  "aggregator_preference": 0.4,
+  "aggregator_preference_confidence": 0.9,
+  "aggregator_preference_justification": "..."
+  ```
+
+- **Misunderstood as** (justification and confidence nested in another object):
+  ```json
+  "aggregator_preference": {
+      "value": 0.4,
+      "confidence": 0.9,
+      "justification": "..."
+  }
+  ```
+
+---
+
+### **Misunderstanding 37: Array Field Length Misinterpretation**
+
+- **Expected**: Array length exactly matches "depth":
+  ```json
+  "density_per_level": [9, 9, 9, 10, 12]
+  ```
+
+- **Misunderstood as**: Array length differs from "depth" (too short or too long):
+  ```json
+  "density_per_level": [9, 9, 9]
+  ```
+
+---
+
+### **Misunderstanding 38: Incorrect Use of "type" Metadata**
+
+- **Expected**: JSON only includes domain data, no metadata types.
+- **Misunderstood as**: Including explicit `"type": "struct"` or `"type": "complex_enum"` metadata in returned data:
+  ```json
+  "weighted_branching": {
+      "type": "struct",
+      "struct_name": "WeightedBranchingConfiguration",
+      ...
+  }
+  ```
+
+---
+
+### **Misunderstanding 39: Enum Variants Represented as an Array Instead of a Single Selection**
+
+- **Expected** (single selected variant clearly represented):
+  ```json
+  "tree_expansion_policy": {
+      "WeightedWithLimits": { ... }
+  }
+  ```
+
+- **Misunderstood as** (multiple variants listed with confidence):
+  ```json
+  "tree_expansion_policy": {
+      "type": "complex_enum",
+      "variants": [
+          {"variant_name": "Simple", "variant_confidence": 0.0},
+          {"variant_name": "WeightedWithLimits", "variant_confidence": 1.0, "fields": { ... }},
+          ...
+      ]
+  }
+  ```
+
+---
+
+### **Misunderstanding 40: Confidence Scores on Non-selected Variants**
+
+- **Expected**: Only selected variants have confidence scores.
+- **Misunderstood as**: All variants (even non-selected) receive confidence scores (often 0.0):
+  ```json
+  {"variant_name": "Off", "variant_confidence": 0.0}
+  ```
+
+
+### **Misunderstanding 41: Unused Probabilistic Fields Explicitly Set to Zero**
+- **Expected:** Omit the field entirely when not applicable.
+- **Misunderstood as:**  
+  ```json
+  "probability": 0.0,
+  "probability_confidence": 0.0,
+  "probability_justification": "Since we're using Single mode, the probabilistic aspect is unused, so we set this to 0."
+  ```
+- **Explanation:**  
+  Fields irrelevant in the current enum variant (e.g., `probability` when mode is "Single") should be omitted, not explicitly zeroed.
+
+---
+
+### **Misunderstanding 42: Redundant Justification for Null/Unused fields**
+- **Expected:** Omit justification for unused/null fields.
+- **Misunderstood as:**  
+  ```json
+  "dispatch_depth_limit": null,
+  "dispatch_depth_limit_confidence": 0.4,
+  "dispatch_depth_limit_justification": "We do not separately constrain dispatch nodes; WeightedWithLimits will guide usage at deeper levels as needed."
+  ```
+- **Explanation:**  
+  If a field is intentionally omitted or null due to another structure managing it, repeating justifications is redundant.
+
+---
+
+### **Misunderstanding 43: Confidence Scores Provided for Explicitly Null or Omitted Fields**
+- **Expected:** Omit confidence scores if the field itself is null or unused.
+- **Misunderstood as:**  
+  ```json
+  "leaf_min_depth": null,
+  "leaf_min_depth_confidence": 0.3,
+  "leaf_min_depth_justification": "Because WeightedWithLimits specifies leaf_min_depth, we do not separately define it here."
+  ```
+- **Explanation:**  
+  Confidence scores for fields explicitly omitted (managed elsewhere) add no value and confuse the data structure.
+
+---
+
+### **Misunderstanding 44: Enum with Partial (but incorrect) Simplification**
+- **Expected:** Either fully simplified enum representation or fully expanded form (correctly).
+- **Misunderstood as:**  
+  ```json
+  "complexity": {
+      "variant_name": "Balanced",
+      "variant_type": "unit",
+      "variant_confidence": 0.9,
+      "variant_justification": "..."
+  }
+  ```
+- **Explanation:**  
+  Inconsistently mixing simplified selection (`variant_name`) with expanded fields like `variant_confidence` and `variant_type` creates ambiguity. Either fully simplify (`"complexity": "Balanced"`) or fully expand clearly and consistently.
+
+---
+
+### **Misunderstanding 45: Inconsistent Nested Variant Type**
+- **Expected:** Enum variants clearly typed or not typed at all.
+- **Misunderstood as:**  
+  ```json
+  "ordering": {
+      "variant_name": "DifficultyDescending",
+      "variant_type": "unit",
+      "variant_confidence": 0.7,
+      "variant_justification": "..."
+  }
+  ```
+- **Explanation:**  
+  Providing `variant_type` as metadata for simple enum selections (e.g., "unit") is unnecessary and introduces confusion.
+
+---
+
+### **Misunderstanding 46: Justification and Confidence on the Struct Level Itself**
+- **Expected:** Field-level justification and confidence only.
+- **Misunderstood as:** Including struct-level confidence (`"capstone_confidence"`) and justification (`"capstone_justification"`) outside individual fields:
+  ```json
+  "capstone_confidence": 0.8,
+  "capstone_justification": "Including a single capstone is beneficial..."
+  ```
+- **Explanation:**  
+  Struct-level confidence and justification duplicate or generalize information already specifically provided at fields, leading to redundancy.
+
+---
+
+### **Misunderstanding 47: Confidence and Justification at Multiple Levels Redundantly**
+- **Expected:** Single level of confidence/justification per semantic choice.
+- **Misunderstood as:** Nested multiple layers of confidence/justification:
+  ```json
+  "tree_expansion_policy_confidence": 0.9,
+  "tree_expansion_policy_justification": "...",
+  "tree_expansion_policy": {
+      "variant_confidence": 0.9,
+      "variant_justification": "...",
+      "fields": {
+          "aggregator_max_depth_confidence": 0.75,
+          "aggregator_max_depth_justification": "..."
+      }
+  }
+  ```
+- **Explanation:**  
+  Multiple nested justifications/confidence scores become overly verbose, confusing the clear single-level intention behind the choice.
+
+
+### **Misunderstanding 48: Including “generation_instructions” and Other Schema Metadata in Final Output**
+
+- **Observed**:  
+  Each field is returned as an object with keys like `"generation_instructions"`, `"required"`, `"type"`, plus a nested `"value"`. For example:
+  ```json
+  "aggregator_depth_limit": {
+      "generation_instructions": "...",
+      "required": false,
+      "type": "number",
+      "value": null
+  }
+  ```
+- **Expected** (if we want purely final data):  
+  ```json
+  "aggregator_depth_limit": null
+  ```
+  or *omitted entirely* if optional is set to `None`.
+
+- **Explanation**:  
+  In production usage, the final JSON typically contains just the resolved values.  Including “schema hints” (`generation_instructions`, `required`, `type`, etc.) is extraneous. Those instructions belong to the schema or the generation prompt layer, not the final data. This is effectively “leaking” the behind-the-scenes prompt or schema design into the returned JSON.
+
+
