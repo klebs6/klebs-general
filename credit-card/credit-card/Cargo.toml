@@ -10,5 +10,14 @@ description = "todo: write a description here"
 # categories = []
 
 [dependencies]
-tktax-money.workspace = true
-export-magic.workspace = true
+tktax-money.workspace        = true
+export-magic.workspace       = true
+getset.workspace             = true
+serde.workspace              = true
+tokio.workspace              = true
+uuid.workspace               = true
+derive_builder.workspace     = true
+error-tree.workspace         = true
+tracing-setup.workspace      = true
+tracing.workspace            = true
+tracing-subscriber.workspace = true

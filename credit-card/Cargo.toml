@@ -4,3 +4,12 @@ members = ["credit-card"]
 [workspace.dependencies]
 tktax-money = "*"
 export-magic = "*"
+getset = "*"
+derive_builder = "*"
+error-tree = "*"
+tracing-setup            = "1.0.2"
+tracing                  = { version = "0.1.40", features = ["log"] }
+tracing-subscriber       = { version = "0.3",    features = ["fmt", "std", "env-filter"], default-features = false }
+uuid                     = { version = "1.14.0", features = ["v4", "serde"] }
+tokio                    = { version = "1",      features = ["full"] }
+serde                    = { version = "1.0",    features = ["derive"] }
