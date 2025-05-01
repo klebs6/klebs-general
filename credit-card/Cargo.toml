@@ -1,2 +1,6 @@
 [workspace]
-members = []
+members = ["credit-card"]
+
+[workspace.dependencies]
+tktax-money = "*"
+export-magic = "*"
