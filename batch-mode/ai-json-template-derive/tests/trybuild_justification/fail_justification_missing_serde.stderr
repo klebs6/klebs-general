@@ -78,6 +78,7 @@ error[E0277]: the trait bound `MissingSerdeField: SaveToFile` is not satisfied
 19 | struct MissingSerdeField {
    |        ^^^^^^^^^^^^^^^^^ the trait `SaveToFile` is not implemented for `MissingSerdeField`
    |
+   = help: the trait `SaveToFile` is implemented for `Vec<std::string::String>`
 note: required by a bound in `ai_json_template::AiJsonTemplate`
   --> $WORKSPACE/ai-json-template/src/ai_json_template.rs
    |
@@ -93,6 +94,7 @@ error[E0277]: the trait bound `MissingSerdeField: LoadFromFile` is not satisfied
 19 | struct MissingSerdeField {
    |        ^^^^^^^^^^^^^^^^^ the trait `LoadFromFile` is not implemented for `MissingSerdeField`
    |
+   = help: the trait `LoadFromFile` is implemented for `Vec<std::string::String>`
 note: required by a bound in `ai_json_template::AiJsonTemplate`
   --> $WORKSPACE/ai-json-template/src/ai_json_template.rs
    |
@@ -158,8 +160,7 @@ error[E0277]: the trait bound `MissingSerdeField: SaveToFile` is not satisfied
 19 | struct MissingSerdeField {
    |        ^^^^^^^^^^^^^^^^^ the trait `SaveToFile` is not implemented for `MissingSerdeField`
    |
-   = help: the trait `ai_json_template::AiJsonTemplate` is not implemented for `MissingSerdeField`
-           but trait `AiJsonTemplate` is implemented for it
+   = help: the trait `SaveToFile` is implemented for `Vec<std::string::String>`
    = note: required for `MissingSerdeField` to implement `ai_json_template::AiJsonTemplate`
 note: required by a bound in `ai_json_template::AiJsonTemplateWithJustification`
   --> $WORKSPACE/ai-json-template/src/ai_json_template.rs
@@ -173,8 +174,7 @@ error[E0277]: the trait bound `MissingSerdeField: LoadFromFile` is not satisfied
 19 | struct MissingSerdeField {
    |        ^^^^^^^^^^^^^^^^^ the trait `LoadFromFile` is not implemented for `MissingSerdeField`
    |
-   = help: the trait `ai_json_template::AiJsonTemplate` is not implemented for `MissingSerdeField`
-           but trait `AiJsonTemplate` is implemented for it
+   = help: the trait `LoadFromFile` is implemented for `Vec<std::string::String>`
    = note: required for `MissingSerdeField` to implement `ai_json_template::AiJsonTemplate`
 note: required by a bound in `ai_json_template::AiJsonTemplateWithJustification`
   --> $WORKSPACE/ai-json-template/src/ai_json_template.rs

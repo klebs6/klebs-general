@@ -4,4 +4,6 @@ error[E0277]: the trait bound `InnerEnum: ai_json_template::AiJsonTemplate` is n
 29 |     something: InnerEnum,
    |                ^^^^^^^^^ the trait `ai_json_template::AiJsonTemplate` is not implemented for `InnerEnum`
    |
-   = help: the trait `ai_json_template::AiJsonTemplate` is implemented for `FailNestedEnum`
+   = help: the following other types implement trait `ai_json_template::AiJsonTemplate`:
+             FailNestedEnum
+             Vec<std::string::String>

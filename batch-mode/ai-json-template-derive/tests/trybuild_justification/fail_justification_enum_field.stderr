@@ -38,7 +38,9 @@ error[E0277]: the trait bound `BadEnum: ai_json_template::AiJsonTemplate` is not
 30 |     data: BadEnum,
    |           ^^^^^^^ the trait `ai_json_template::AiJsonTemplate` is not implemented for `BadEnum`
    |
-   = help: the trait `ai_json_template::AiJsonTemplate` is implemented for `ContainsEnum`
+   = help: the following other types implement trait `ai_json_template::AiJsonTemplate`:
+             ContainsEnum
+             Vec<std::string::String>
 
 error[E0277]: the trait bound `ContainsEnum: Default` is not satisfied
   --> tests/trybuild_justification/fail_justification_enum_field.rs:25:26
@@ -69,4 +71,6 @@ error[E0277]: the trait bound `BadEnum: ai_json_template::AiJsonTemplateWithJust
 30 |     data: BadEnum,
    |           ^^^^^^^ the trait `ai_json_template::AiJsonTemplateWithJustification` is not implemented for `BadEnum`
    |
-   = help: the trait `ai_json_template::AiJsonTemplateWithJustification` is implemented for `ContainsEnum`
+   = help: the following other types implement trait `ai_json_template::AiJsonTemplateWithJustification`:
+             ContainsEnum
+             Vec<std::string::String>

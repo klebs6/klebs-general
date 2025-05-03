@@ -11,7 +11,7 @@ crate::ix!();
 ///
 pub fn gather_item_accessors(
     named_fields: &syn::FieldsNamed,
-    original_type_ident: &syn::Ident,
+    _original_type_ident: &syn::Ident,
     field_mappings: &[FieldJustConfMapping],
 ) -> (
     Vec<proc_macro2::TokenStream>, // item field accessors

@@ -1,18 +1,44 @@
 // ---------------- [ File: ai-json-template-derive/src/is_builtin_scalar.rs ]
 crate::ix!();
 
-/// Stub: bool, numeric, string => "basic"
+/// Checks if this type is a recognized "builtin scalar" like bool/numeric/String or
+/// a known alias for String (e.g. LeafName, LeafDescriptor).
+///
+/// We do this by parsing the final path segment. If it matches one of our known
+/// built-in or alias names, we return true.
 pub fn is_builtin_scalar(ty: &syn::Type) -> bool {
-    // e.g. if type is bool, or i32, or u8, or f32, or String => return true
-    // You can replicate your earlier checks from `classify_field_type`.
-    let s = quote!(#ty).to_string();
-    matches!(s.as_str(),
-        "bool"
-        | "i8" | "i16" | "i32" | "i64"
-        | "u8" | "u16" | "u32" | "u64"
-        | "f32" | "f64"
-        | "String"
-    )
+    // A small set of known aliases for "String"
+    const ALIAS_FOR_STRING: &[&str] = &[
+        "String",
+        "LeafName",
+        "LeafDescriptor",
+        "LeafHolderName",
+    ];
+
+    if let syn::Type::Path(tp) = ty {
+        // If there's exactly one path segment, we check if it's in the known set:
+        if tp.path.segments.len() == 1 {
+            let seg = &tp.path.segments[0];
+            let ident_str = seg.ident.to_string();
+
+            // Check if it's a known built-in numeric
+            if matches!(ident_str.as_str(),
+                "bool"
+                | "i8" | "i16" | "i32" | "i64"
+                | "u8" | "u16" | "u32" | "u64"
+                | "f32" | "f64")
+            {
+                return true;
+            }
+
+            // Check if it's in ALIAS_FOR_STRING => treat as "String"
+            if ALIAS_FOR_STRING.contains(&ident_str.as_str()) {
+                return true;
+            }
+        }
+    }
+
+    false
 }
 
 // ----------------------------------------------------------------------
