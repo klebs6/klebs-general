@@ -281,26 +281,33 @@ pub fn derive_ai_json_template(input: TokenStream) -> TokenStream {
 pub fn derive_ai_json_template_with_justification(input: TokenStream) -> TokenStream {
     use syn::{parse_macro_input, DeriveInput, Data, Fields, spanned::Spanned};
 
-    // Parse the user's derive input
     let ast = parse_macro_input!(input as DeriveInput);
     let span = ast.span();
     let ty_ident = &ast.ident;
+    let type_name_str = ty_ident.to_string();
 
-    // Gather doc comments from the container itself into one string
     let container_docs_vec = gather_doc_comments(&ast.attrs);
     let container_docs_str = container_docs_vec.join("\n");
     tracing::trace!("Deriving AiJsonTemplateWithJustification for {}", ty_ident);
 
+    // We'll append disclaimers at the container level as well:
+    let disclaimers = "\nIMPORTANT:\n\
+        - Provide all justification/confidence fields with correct data.\n\
+        - Numeric fields must be real JSON numbers (no quotes), typically in [0..1] if it is a confidence.\n\
+        - For optional fields, either fill them or set them to null.\n\
+        - If this is an enum, pick exactly one variant. Justify that choice.\n\
+        - Return strictly one JSON object with no extra keys.\n";
+
+    let container_docs_enhanced = format!("{}\n{}", container_docs_str, disclaimers);
+
     let mut output_ts = proc_macro2::TokenStream::new();
 
     match &ast.data {
-        // ------------------------------------------------------------------------------
-        // 1) Named Struct
-        // ------------------------------------------------------------------------------
+        // Named structs
         Data::Struct(data_struct) => {
             match &data_struct.fields {
                 syn::Fields::Named(named_fields) => {
-                    // Generate Justification & Confidence structs, plus a Justified wrapper
+                    // same logic as existing: create Justification & Confidence structs, plus the wrapper
                     let justification_ident = syn::Ident::new(
                         &format!("{}Justification", ty_ident),
                         span
@@ -314,7 +321,6 @@ pub fn derive_ai_json_template_with_justification(input: TokenStream) -> TokenSt
                         span
                     );
 
-                    // Gather expansions for each field's justification/confidence
                     let mut just_fields = Vec::new();
                     let mut conf_fields = Vec::new();
                     let mut errs = quote::quote!();
@@ -345,7 +351,6 @@ pub fn derive_ai_json_template_with_justification(input: TokenStream) -> TokenSt
                             #(#conf_fields),*
                         }
                     };
-
                     let justified_struct = quote::quote! {
                         #[derive(Builder, Debug, Default, Clone, PartialEq, Serialize, Deserialize, Getters, Setters)]
                         #[builder(setter(into))]
@@ -367,7 +372,6 @@ pub fn derive_ai_json_template_with_justification(input: TokenStream) -> TokenSt
                         }
                     };
 
-                    // Accessor impls for item, justification, confidence
                     let (item_acc, just_acc, conf_acc) =
                         gather_item_accessors(named_fields, ty_ident, &field_mappings);
 
@@ -379,33 +383,30 @@ pub fn derive_ai_json_template_with_justification(input: TokenStream) -> TokenSt
                         }
                     };
 
-                    // Build to_template_with_justification logic
+                    // For the container-level disclaimers:
+                    let container_msg = format!(
+                        "{}\n(This struct has justification & confidence for each field. Fill them carefully, set numeric fields as real JSON numbers, etc.)",
+                        container_docs_enhanced
+                    );
+
+                    // We'll build the to_template_with_justification similarly to original
                     let mut field_inits = Vec::new();
                     for field in &named_fields.named {
-                        let field_ident = match &field.ident {
-                            Some(id) => id,
-                            None => continue,
-                        };
+                        let field_ident = field.ident.as_ref().unwrap();
                         let doc_str = gather_doc_comments(&field.attrs).join("\n");
                         let field_name_str = field_ident.to_string();
 
+                        // logic from classify_field_type_for_child
                         let is_required = extract_option_inner(&field.ty).is_none();
                         let skip_self_just = is_justification_disabled_for_field(field);
                         let skip_child_just = skip_self_just || is_justification_disabled_for_inner(field);
 
-                        // If child is custom, call its justification or fallback
-                        if let Some(expr) = classify_field_type_for_child(
-                            &field.ty,
-                            &doc_str,
-                            is_required,
-                            skip_child_just
-                        ) {
+                        if let Some(expr) = classify_field_type_for_child(&field.ty, &doc_str, is_required, skip_child_just) {
                             field_inits.push(quote::quote! {
                                 map.insert(#field_name_str.to_string(), #expr);
                             });
                         }
 
-                        // If not skipping self justification => placeholders
                         if !skip_self_just {
                             field_inits.push(quote::quote! {
                                 let justify_key = format!("{}_justification", #field_name_str);
@@ -417,7 +418,7 @@ pub fn derive_ai_json_template_with_justification(input: TokenStream) -> TokenSt
                                 just_obj.insert(
                                     "generation_instructions".to_string(),
                                     serde_json::Value::String(
-                                        format!("Explain or justify your choice for the field '{}'", #field_name_str)
+                                        format!("Explain or justify your choice for the field '{}'. Must be a non-empty string.", #field_name_str)
                                     )
                                 );
                                 map.insert(justify_key, serde_json::Value::Object(just_obj));
@@ -428,7 +429,7 @@ pub fn derive_ai_json_template_with_justification(input: TokenStream) -> TokenSt
                                 conf_obj.insert(
                                     "generation_instructions".to_string(),
                                     serde_json::Value::String(
-                                        format!("Confidence in '{}', in [0..1]", #field_name_str)
+                                        format!("Confidence in '{}', as a real JSON number in [0..1].", #field_name_str)
                                     )
                                 );
                                 map.insert(conf_key, serde_json::Value::Object(conf_obj));
@@ -442,11 +443,9 @@ pub fn derive_ai_json_template_with_justification(input: TokenStream) -> TokenSt
                                 tracing::trace!("AiJsonTemplateWithJustification::to_template_with_justification for struct {}", stringify!(#ty_ident));
 
                                 let mut root = serde_json::Map::new();
-                                root.insert("struct_docs".to_string(), serde_json::Value::String(#container_docs_str.to_string()));
+                                root.insert("struct_docs".to_string(), serde_json::Value::String(#container_msg.to_string()));
                                 root.insert("struct_name".to_string(), serde_json::Value::String(stringify!(#ty_ident).to_string()));
                                 root.insert("type".to_string(), serde_json::Value::String("struct".to_string()));
-
-                                // Mark that we have justification
                                 root.insert("has_justification".to_string(), serde_json::Value::Bool(true));
 
                                 let mut map = serde_json::Map::new();
@@ -474,13 +473,8 @@ pub fn derive_ai_json_template_with_justification(input: TokenStream) -> TokenSt
             }
         },
 
-        // ------------------------------------------------------------------------------
-        // 2) Enums
-        // ------------------------------------------------------------------------------
+        // Enums
         syn::Data::Enum(data_enum) => {
-            let type_name_str = ty_ident.to_string();
-
-            // Generate EnumNameJustification / EnumNameConfidence / JustifiedEnumName
             let justification_ident = syn::Ident::new(
                 &format!("{}Justification", ty_ident),
                 span
@@ -494,7 +488,7 @@ pub fn derive_ai_json_template_with_justification(input: TokenStream) -> TokenSt
                 span
             );
 
-            // Minimal approach for these two structs
+            // Minimal approach => a single textual justification and single numeric confidence
             let enum_just_struct = quote::quote! {
                 #[derive(Builder, Debug, Clone, PartialEq, Default, Serialize, Deserialize, Getters, Setters)]
                 #[builder(setter(into))]
@@ -536,11 +530,11 @@ pub fn derive_ai_json_template_with_justification(input: TokenStream) -> TokenSt
             output_ts.extend(enum_conf_struct);
             output_ts.extend(justified_enum);
 
-            // Now build expansions for each variant
-            let variant_exprs: Vec<_> = data_enum.variants.iter().map(|var| {
+            // Next, the expansions for each variant in to_template_with_justification
+            let mut variant_exprs = Vec::new();
+            for var in &data_enum.variants {
                 let var_name_str = var.ident.to_string();
                 let var_docs = gather_doc_comments(&var.attrs).join("\n");
-
                 let skip_self_just = is_justification_disabled_for_variant(var);
                 let skip_child_just = skip_self_just || is_justification_disabled_for_inner_variant(var);
 
@@ -550,13 +544,8 @@ pub fn derive_ai_json_template_with_justification(input: TokenStream) -> TokenSt
                     syn::Fields::Unnamed(_) => "tuple_variant",
                 };
 
-                // Build expansions for the variant's fields
-                let fields_expansion = match &var.fields {
-                    syn::Fields::Unit => {
-                        quote::quote! {
-                            serde_json::Value::Object(serde_json::Map::new())
-                        }
-                    }
+                let fields_insertion = match &var.fields {
+                    syn::Fields::Unit => quote::quote! {},
                     syn::Fields::Named(named) => {
                         let mut field_inits = Vec::new();
                         for field in &named.named {
@@ -564,16 +553,10 @@ pub fn derive_ai_json_template_with_justification(input: TokenStream) -> TokenSt
                             let fname = field_ident.to_string();
                             let doc_str = gather_doc_comments(&field.attrs).join("\n");
                             let is_required = extract_option_inner(&field.ty).is_none();
-
                             let skip_f_self = is_justification_disabled_for_field(field);
-                            let skip_f_child = skip_f_self || is_justification_disabled_for_inner(field);
+                            let skip_f_child = skip_f_self || skip_child_just;
 
-                            if let Some(expr) = classify_field_type_for_child(
-                                &field.ty,
-                                &doc_str,
-                                is_required,
-                                skip_f_child
-                            ) {
+                            if let Some(expr) = classify_field_type_for_child(&field.ty, &doc_str, is_required, skip_f_child) {
                                 field_inits.push(quote::quote! {
                                     map.insert(#fname.to_string(), #expr);
                                 });
@@ -589,7 +572,7 @@ pub fn derive_ai_json_template_with_justification(input: TokenStream) -> TokenSt
                                     just_obj.insert("required".to_string(), serde_json::Value::Bool(true));
                                     just_obj.insert("generation_instructions".to_string(),
                                         serde_json::Value::String(
-                                            format!("Explain or justify your choice for the field '{}'", #fname)
+                                            format!("Explain or justify your choice for the field '{}'. Non-empty string required.", #fname)
                                         )
                                     );
                                     map.insert(justify_key, serde_json::Value::Object(just_obj));
@@ -599,7 +582,7 @@ pub fn derive_ai_json_template_with_justification(input: TokenStream) -> TokenSt
                                     conf_obj.insert("required".to_string(), serde_json::Value::Bool(true));
                                     conf_obj.insert("generation_instructions".to_string(),
                                         serde_json::Value::String(
-                                            format!("Confidence in '{}', in [0..1]", #fname)
+                                            format!("Confidence in '{}', as a real JSON number in [0..1].", #fname)
                                         )
                                     );
                                     map.insert(conf_key, serde_json::Value::Object(conf_obj));
@@ -607,108 +590,57 @@ pub fn derive_ai_json_template_with_justification(input: TokenStream) -> TokenSt
                             }
                         }
                         quote::quote! {
-                            {
-                                let mut map = serde_json::Map::new();
-                                #(#field_inits)*
-                                serde_json::Value::Object(map)
-                            }
+                            let mut map = serde_json::Map::new();
+                            #(#field_inits)*
+                            variant_map.insert("fields".to_string(), serde_json::Value::Object(map));
                         }
                     }
                     syn::Fields::Unnamed(unnamed) => {
-                        let total_unnamed = unnamed.unnamed.len();
-
-                        // If there's exactly 1 field, let's treat it more simply:
-                        //  - We won't generate "field_0_justification" placeholders.
-                        //  - We'll place the child's snippet directly under "fields" to reduce noise.
-                        if total_unnamed == 1 {
-                            let field = &unnamed.unnamed[0];
+                        let mut field_inits = Vec::new();
+                        for (i, field) in unnamed.unnamed.iter().enumerate() {
+                            let fname = format!("field_{}", i);
                             let doc_str = gather_doc_comments(&field.attrs).join("\n");
                             let is_required = extract_option_inner(&field.ty).is_none();
                             let skip_f_self = is_justification_disabled_for_field(field);
                             let skip_f_child = skip_f_self || skip_child_just;
 
-                            if let Some(expr) = classify_field_type_for_child(
-                                &field.ty,
-                                &doc_str,
-                                is_required,
-                                skip_f_child
-                            ) {
-                                // Just return that expression as the entire "fields" object
-                                // i.e. the variant_map will do variant_map.insert("fields", <the snippet>)
-                                quote::quote! {
-                                    #expr
-                                }
-                            } else {
-                                // fallback => empty object
-                                quote::quote! {
-                                    serde_json::Value::Object(serde_json::Map::new())
-                                }
+                            if let Some(expr) = classify_field_type_for_child(&field.ty, &doc_str, is_required, skip_f_child) {
+                                field_inits.push(quote::quote! {
+                                    map.insert(#fname.to_string(), #expr);
+                                });
                             }
-                        } else {
-                            // multiple unnamed fields => standard approach with field_0, field_1, etc.
-                            let mut field_inits = Vec::new();
-                            for (i, field) in unnamed.unnamed.iter().enumerate() {
-                                let fkey = format!("field_{}", i);
-                                let doc_str = gather_doc_comments(&field.attrs).join("\n");
-                                let is_required = extract_option_inner(&field.ty).is_none();
-                                let skip_f_self = is_justification_disabled_for_field(field);
-                                let skip_f_child = skip_f_self || skip_child_just;
+                            if !skip_f_self {
+                                field_inits.push(quote::quote! {
+                                    let justify_key = format!("{}_justification", #fname);
+                                    let conf_key    = format!("{}_confidence", #fname);
 
-                                if let Some(expr) = classify_field_type_for_child(
-                                    &field.ty,
-                                    &doc_str,
-                                    is_required,
-                                    skip_f_child
-                                ) {
-                                    field_inits.push(quote::quote! {
-                                        map.insert(#fkey.to_string(), #expr);
-                                    });
-                                }
-                                if !skip_f_self {
-                                    field_inits.push(quote::quote! {
-                                        let justify_key = format!("{}_justification", #fkey);
-                                        let conf_key    = format!("{}_confidence", #fkey);
+                                    let mut just_obj = serde_json::Map::new();
+                                    just_obj.insert("type".to_string(), serde_json::Value::String("string".to_string()));
+                                    just_obj.insert("required".to_string(), serde_json::Value::Bool(true));
+                                    just_obj.insert("generation_instructions".to_string(),
+                                        serde_json::Value::String(
+                                            format!("Explain or justify your choice for the field '{}'. Non-empty string required.", #fname)
+                                        )
+                                    );
+                                    map.insert(justify_key, serde_json::Value::Object(just_obj));
 
-                                        let mut just_obj = serde_json::Map::new();
-                                        just_obj.insert("type".to_string(), serde_json::Value::String("string".to_string()));
-                                        just_obj.insert("required".to_string(), serde_json::Value::Bool(true));
-                                        just_obj.insert("generation_instructions".to_string(),
-                                            serde_json::Value::String(
-                                                format!("Explain or justify your choice for the field '{}'", #fkey)
-                                            )
-                                        );
-                                        map.insert(justify_key, serde_json::Value::Object(just_obj));
-
-                                        let mut conf_obj = serde_json::Map::new();
-                                        conf_obj.insert("type".to_string(), serde_json::Value::String("number".to_string()));
-                                        conf_obj.insert("required".to_string(), serde_json::Value::Bool(true));
-                                        conf_obj.insert("generation_instructions".to_string(),
-                                            serde_json::Value::String(
-                                                format!("Confidence in '{}', in [0..1]", #fkey)
-                                            )
-                                        );
-                                        map.insert(conf_key, serde_json::Value::Object(conf_obj));
-                                    });
-                                }
-                            }
-                            quote::quote! {
-                                {
-                                    let mut map = serde_json::Map::new();
-                                    #(#field_inits)*
-                                    serde_json::Value::Object(map)
-                                }
+                                    let mut conf_obj = serde_json::Map::new();
+                                    conf_obj.insert("type".to_string(), serde_json::Value::String("number".to_string()));
+                                    conf_obj.insert("required".to_string(), serde_json::Value::Bool(true));
+                                    conf_obj.insert("generation_instructions".to_string(),
+                                        serde_json::Value::String(
+                                            format!("Confidence in '{}', as a real JSON number in [0..1].", #fname)
+                                        )
+                                    );
+                                    map.insert(conf_key, serde_json::Value::Object(conf_obj));
+                                });
                             }
                         }
-                    }
-                };
-
-                // If it's a unit variant => no "fields" insertion
-                let is_unit = matches!(var.fields, syn::Fields::Unit);
-                let fields_insertion = if is_unit {
-                    quote::quote! {}
-                } else {
-                    quote::quote! {
-                        variant_map.insert("fields".to_string(), #fields_expansion);
+                        quote::quote! {
+                            let mut map = serde_json::Map::new();
+                            #(#field_inits)*
+                            variant_map.insert("fields".to_string(), serde_json::Value::Object(map));
+                        }
                     }
                 };
 
@@ -719,7 +651,7 @@ pub fn derive_ai_json_template_with_justification(input: TokenStream) -> TokenSt
                         j_obj.insert("required".to_string(), serde_json::Value::Bool(true));
                         j_obj.insert("generation_instructions".to_string(),
                             serde_json::Value::String(
-                                format!("Explain your choice for variant '{}'", #var_name_str)
+                                format!("Explain your choice for variant '{}'. Non-empty justification string required.", #var_name_str)
                             )
                         );
                         variant_map.insert("variant_justification".to_string(), serde_json::Value::Object(j_obj));
@@ -729,7 +661,7 @@ pub fn derive_ai_json_template_with_justification(input: TokenStream) -> TokenSt
                         c_obj.insert("required".to_string(), serde_json::Value::Bool(true));
                         c_obj.insert("generation_instructions".to_string(),
                             serde_json::Value::String(
-                                format!("Confidence in choosing variant '{}', in [0..1]", #var_name_str)
+                                format!("Confidence in choosing variant '{}', as a real JSON number in [0..1].", #var_name_str)
                             )
                         );
                         variant_map.insert("variant_confidence".to_string(), serde_json::Value::Object(c_obj));
@@ -738,7 +670,7 @@ pub fn derive_ai_json_template_with_justification(input: TokenStream) -> TokenSt
                     quote::quote! {}
                 };
 
-                quote::quote! {
+                let expr = quote! {
                     {
                         let mut variant_map = serde_json::Map::new();
                         variant_map.insert("variant_name".to_string(), serde_json::Value::String(#var_name_str.to_string()));
@@ -749,8 +681,9 @@ pub fn derive_ai_json_template_with_justification(input: TokenStream) -> TokenSt
                         #variant_just_conf
                         serde_json::Value::Object(variant_map)
                     }
-                }
-            }).collect();
+                };
+                variant_exprs.push(expr);
+            }
 
             let expanded = quote::quote! {
                 impl AiJsonTemplateWithJustification for #ty_ident {
@@ -764,8 +697,16 @@ pub fn derive_ai_json_template_with_justification(input: TokenStream) -> TokenSt
                             serde_json::Map::new()
                         };
 
-                        // Mark that this enum has justification
+                        // Insert disclaimers
                         root_map.insert("has_justification".to_string(), serde_json::Value::Bool(true));
+                        let doc_plus = format!("{}\n(This enum has justification. Choose exactly one variant. Do not mention unselected variants. Provide numeric fields as real JSON numbers, etc.)", #container_docs_enhanced);
+                        if root_map.contains_key("enum_docs") {
+                            if let Some(serde_json::Value::String(sdoc)) = root_map.get_mut("enum_docs") {
+                                *sdoc = format!("{}\n{}", *sdoc, doc_plus);
+                            }
+                        } else {
+                            root_map.insert("enum_docs".to_string(), serde_json::Value::String(doc_plus));
+                        }
 
                         let variants_vec = vec![ #(#variant_exprs),* ];
                         root_map.insert("variants".to_string(), serde_json::Value::Array(variants_vec));
@@ -774,13 +715,10 @@ pub fn derive_ai_json_template_with_justification(input: TokenStream) -> TokenSt
                     }
                 }
             };
-
             output_ts.extend(expanded);
         },
 
-        // ------------------------------------------------------------------------------
-        // 3) Union => not supported
-        // ------------------------------------------------------------------------------
+        // Union => not supported
         syn::Data::Union(_) => {
             let e = syn::Error::new(
                 span,
