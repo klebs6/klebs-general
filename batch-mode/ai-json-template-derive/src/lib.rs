@@ -47,16 +47,24 @@ pub fn derive_ai_json_template(input: TokenStream) -> TokenStream {
     // Gather doc comments from the container itself
     let container_docs_vec = gather_doc_comments(&ast.attrs);
     let container_docs_str = container_docs_vec.join("\n");
-    tracing::trace!("Doc comments (container-level) => {:?}", container_docs_vec);
+
+    // We'll append a universal disclaimer for the container-level doc as well:
+    let container_docs_with_disclaimer = format!(
+        "{}\n\nIMPORTANT:\n\
+         - Return exactly one JSON object, no extra keys.\n\
+         - If optional fields are not used, set them to null.\n\
+         - For an enum, pick exactly one variant.\n\
+         - Provide numeric fields as real JSON numbers (not strings).\n\
+         - Provide justification strings as non-empty.\n\
+         ",
+        container_docs_str
+    );
 
     match &ast.data {
         // ----------------- Named Struct Path -----------------
         Data::Struct(ds) => {
-            tracing::trace!("Found a struct => verifying named fields or error out if not named.");
-
             match &ds.fields {
                 Fields::Named(named_fields) => {
-                    // Same logic as before for named structs
                     let mut field_inits = Vec::new();
                     for field in &named_fields.named {
                         let field_ident = match &field.ident {
@@ -72,11 +80,9 @@ pub fn derive_ai_json_template(input: TokenStream) -> TokenStream {
 
                         let field_name_str = field_ident.to_string();
                         let field_docs = gather_doc_comments(&field.attrs).join("\n");
-                        tracing::trace!("Analyzing field `{}` => docs: {:?}", field_name_str, field_docs);
-
                         let ty = &field.ty;
+
                         if let Some(expr) = classify_field_type(ty, &field_docs) {
-                            tracing::trace!("Successfully classified field type => generating snippet for {}", field_name_str);
                             field_inits.push(quote! {
                                 map.insert(#field_name_str.to_string(), #expr);
                             });
@@ -84,7 +90,6 @@ pub fn derive_ai_json_template(input: TokenStream) -> TokenStream {
                             let type_q = quote!(#ty).to_string();
                             let err_msg = format!("Unsupported field type for AiJsonTemplate: {}", type_q);
                             let err = syn::Error::new(ty.span(), &err_msg);
-                            tracing::trace!("ERROR: {}", &err_msg);
                             return err.to_compile_error().into();
                         }
                     }
@@ -95,7 +100,8 @@ pub fn derive_ai_json_template(input: TokenStream) -> TokenStream {
                                 tracing::trace!("AiJsonTemplate::to_template for named struct {}", #type_name_str);
 
                                 let mut root = serde_json::Map::new();
-                                root.insert("struct_docs".to_string(), serde_json::Value::String(#container_docs_str.to_string()));
+                                // Include our container docs plus disclaimers
+                                root.insert("struct_docs".to_string(), serde_json::Value::String(#container_docs_with_disclaimer.to_string()));
                                 root.insert("struct_name".to_string(), serde_json::Value::String(#type_name_str.to_string()));
                                 root.insert("type".to_string(), serde_json::Value::String("struct".to_string()));
 
@@ -107,40 +113,28 @@ pub fn derive_ai_json_template(input: TokenStream) -> TokenStream {
                             }
                         }
                     };
-                    tracing::trace!("Exiting AiJsonTemplate for named struct {}", type_name_str);
                     expanded.into()
                 },
-
-                // If the struct is not `Fields::Named`, produce an error. 
-                // (If you want to support tuple structs, you can adapt similarly to how we handle 
-                //  tuple variants below.)
                 _ => {
                     let err = syn::Error::new(
                         span,
-                        "AiJsonTemplate derive only supports named fields for structs (or handle your tuple struct in the enum logic)."
+                        "AiJsonTemplate derive only supports named fields for structs. Tuple/unnamed not supported here."
                     );
-                    tracing::trace!("Encountered non-named fields => error");
                     err.to_compile_error().into()
                 }
             }
         },
 
-        // ----------------- Enum Path: can have any style of variants -----------------
+        // ----------------- Enum Path -----------------
         Data::Enum(data_enum) => {
-            tracing::trace!("Found an enum => generating template for each variant (unit, struct, or tuple).");
-
-            // We’ll accumulate each variant’s JSON object
+            // We'll gather a snippet for each variant
             let mut variant_exprs = Vec::new();
-
             for var in &data_enum.variants {
                 let var_name_str = var.ident.to_string();
                 let var_docs = gather_doc_comments(&var.attrs).join("\n");
-                tracing::trace!("Enum variant {} => doc lines: {:?}", var_name_str, var_docs);
 
                 match &var.fields {
-                    // ------ Unit variant ------
                     Fields::Unit => {
-                        tracing::trace!("Variant {} is unit => building minimal schema", var_name_str);
                         let expr = quote! {
                             {
                                 let mut variant_map = serde_json::Map::new();
@@ -152,21 +146,15 @@ pub fn derive_ai_json_template(input: TokenStream) -> TokenStream {
                         };
                         variant_exprs.push(expr);
                     }
-
-                    // ------ Struct variant (named fields) ------
                     Fields::Named(named_fields) => {
-                        tracing::trace!("Variant {} is a struct variant => gather fields", var_name_str);
-
-                        // For each field, create a schema entry
                         let mut field_inits = Vec::new();
                         for field in &named_fields.named {
-                            let field_ident = field.ident.as_ref().unwrap(); // safe because Named
+                            let field_ident = field.ident.as_ref().unwrap();
                             let field_name_str = field_ident.to_string();
-                            let field_docs = gather_doc_comments(&field.attrs).join("\n");
-                            tracing::trace!("  analyzing field `{}` => docs: {:?}", field_name_str, field_docs);
-
+                            let fd = gather_doc_comments(&field.attrs).join("\n");
                             let ty = &field.ty;
-                            if let Some(expr) = classify_field_type(ty, &field_docs) {
+
+                            if let Some(expr) = classify_field_type(ty, &fd) {
                                 field_inits.push(quote! {
                                     map.insert(#field_name_str.to_string(), #expr);
                                 });
@@ -174,7 +162,6 @@ pub fn derive_ai_json_template(input: TokenStream) -> TokenStream {
                                 let type_q = quote!(#ty).to_string();
                                 let err_msg = format!("Unsupported field type in enum variant {}: {}", var_name_str, type_q);
                                 let err = syn::Error::new(ty.span(), &err_msg);
-                                tracing::trace!("ERROR: {}", &err_msg);
                                 return err.to_compile_error().into();
                             }
                         }
@@ -186,7 +173,6 @@ pub fn derive_ai_json_template(input: TokenStream) -> TokenStream {
                                 variant_map.insert("variant_docs".to_string(), serde_json::Value::String(#var_docs.to_string()));
                                 variant_map.insert("variant_type".to_string(), serde_json::Value::String("struct_variant".to_string()));
 
-                                // build "fields" object
                                 let mut map = serde_json::Map::new();
                                 #(#field_inits)*
 
@@ -196,19 +182,14 @@ pub fn derive_ai_json_template(input: TokenStream) -> TokenStream {
                         };
                         variant_exprs.push(expr);
                     }
-
-                    // ------ Tuple variant (unnamed fields) ------
                     Fields::Unnamed(unnamed_fields) => {
-                        tracing::trace!("Variant {} is a tuple variant => gather fields by index", var_name_str);
-
-                        // For each field, create a schema entry keyed by index
-                        // e.g. field_0, field_1
                         let mut field_inits = Vec::new();
                         for (i, field) in unnamed_fields.unnamed.iter().enumerate() {
-                            let field_docs = gather_doc_comments(&field.attrs).join("\n");
                             let field_key = format!("field_{}", i);
+                            let fd = gather_doc_comments(&field.attrs).join("\n");
                             let ty = &field.ty;
-                            if let Some(expr) = classify_field_type(ty, &field_docs) {
+
+                            if let Some(expr) = classify_field_type(ty, &fd) {
                                 field_inits.push(quote! {
                                     map.insert(#field_key.to_string(), #expr);
                                 });
@@ -216,7 +197,6 @@ pub fn derive_ai_json_template(input: TokenStream) -> TokenStream {
                                 let type_q = quote!(#ty).to_string();
                                 let err_msg = format!("Unsupported field type in tuple variant {}: {}", var_name_str, type_q);
                                 let err = syn::Error::new(ty.span(), &err_msg);
-                                tracing::trace!("ERROR: {}", &err_msg);
                                 return err.to_compile_error().into();
                             }
                         }
@@ -240,16 +220,20 @@ pub fn derive_ai_json_template(input: TokenStream) -> TokenStream {
                 }
             }
 
-            // Finally, generate the overall enum template
             let expanded = quote! {
                 impl AiJsonTemplate for #type_ident {
                     fn to_template() -> serde_json::Value {
                         tracing::trace!("AiJsonTemplate::to_template for enum {}", #type_name_str);
 
                         let mut root = serde_json::Map::new();
-                        root.insert("enum_docs".to_string(), serde_json::Value::String(#container_docs_str.to_string()));
+                        // Insert disclaimers about picking exactly one variant, numeric fields, etc.
+                        let disclaimers = format!(
+                            "{}\n\nIMPORTANT:\n- This is an enum. You must choose exactly one variant.\n- Do not fill in multiple variants.\n- Numeric fields must be real JSON numbers.\n- If optional, use null if not used.\n- No extraneous keys.\n",
+                            #container_docs_with_disclaimer
+                        );
+
+                        root.insert("enum_docs".to_string(), serde_json::Value::String(disclaimers));
                         root.insert("enum_name".to_string(), serde_json::Value::String(#type_name_str.to_string()));
-                        // We use "type":"complex_enum" to indicate it may have struct/tuple/unit variants
                         root.insert("type".to_string(), serde_json::Value::String("complex_enum".to_string()));
 
                         let variants_array = serde_json::Value::Array(vec![
@@ -261,17 +245,15 @@ pub fn derive_ai_json_template(input: TokenStream) -> TokenStream {
                     }
                 }
             };
-            tracing::trace!("Exiting AiJsonTemplate for enum {}", type_name_str);
             expanded.into()
         },
 
-        // ----------------- Union => not supported -----------------
+        // ----------------- Union => not supported
         Data::Union(_) => {
             let err = syn::Error::new(
                 span,
                 "AiJsonTemplate derive does not support unions."
             );
-            tracing::trace!("ERROR: Attempted to derive on a union => not supported.");
             err.to_compile_error().into()
         }
     }
