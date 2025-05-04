@@ -6,4 +6,6 @@ error[E0277]: the trait bound `InnerEnum: ai_json_template::AiJsonTemplate` is n
    |
    = help: the following other types implement trait `ai_json_template::AiJsonTemplate`:
              FailNestedEnum
-             Vec<std::string::String>
+             HashMap<K, V>
+             Vec<T>
+             std::string::String

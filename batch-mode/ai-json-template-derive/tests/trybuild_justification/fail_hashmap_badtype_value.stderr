@@ -184,8 +184,10 @@ error[E0277]: the trait bound `BadType: ai_json_template::AiJsonTemplate` is not
    |                         ^^^^^^^ the trait `ai_json_template::AiJsonTemplate` is not implemented for `BadType`
    |
    = help: the following other types implement trait `ai_json_template::AiJsonTemplate`:
+             HashMap<K, V>
              MapWithBadValue
-             Vec<std::string::String>
+             Vec<T>
+             std::string::String
 
 error[E0277]: the trait bound `MapWithBadValue: Default` is not satisfied
   --> tests/trybuild_justification/fail_hashmap_badtype_value.rs:25:5
@@ -206,5 +208,6 @@ error[E0277]: the trait bound `BadType: ai_json_template::AiJsonTemplateWithJust
    |                         ^^^^^^^ the trait `ai_json_template::AiJsonTemplateWithJustification` is not implemented for `BadType`
    |
    = help: the following other types implement trait `ai_json_template::AiJsonTemplateWithJustification`:
+             HashMap<K, V>
              MapWithBadValue
-             Vec<std::string::String>
+             Vec<T>
