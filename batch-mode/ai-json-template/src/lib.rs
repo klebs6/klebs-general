@@ -6,3 +6,4 @@ x!{ai_json_template_for_vec}
 x!{ai_json_template_for_string}
 x!{ai_json_template_for_hashmap}
 x!{rigorous_json_command_builder_stage}
+x!{rigorous_json_command_builder}

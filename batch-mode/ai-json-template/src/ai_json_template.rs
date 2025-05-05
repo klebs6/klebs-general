@@ -21,5 +21,6 @@ pub trait AiJsonTemplate
 /// Extended trait that demands both a normal `AiJsonTemplate` and
 /// a `...Justification` structure for *nested* usage.
 pub trait AiJsonTemplateWithJustification: AiJsonTemplate {
+
     fn to_template_with_justification() -> serde_json::Value;
 }

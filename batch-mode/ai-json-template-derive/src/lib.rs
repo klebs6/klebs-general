@@ -48,18 +48,6 @@ pub fn derive_ai_json_template(input: TokenStream) -> TokenStream {
     let container_docs_vec = gather_doc_comments(&ast.attrs);
     let container_docs_str = container_docs_vec.join("\n");
 
-    // We'll append a universal disclaimer for the container-level doc as well:
-    let container_docs_with_disclaimer = format!(
-        "{}\n\nIMPORTANT:\n\
-         - Return exactly one JSON object, no extra keys.\n\
-         - If optional fields are not used, set them to null.\n\
-         - For an enum, pick exactly one variant.\n\
-         - Provide numeric fields as real JSON numbers (not strings).\n\
-         - Provide justification strings as non-empty.\n\
-         ",
-        container_docs_str
-    );
-
     match &ast.data {
         // ----------------- Named Struct Path -----------------
         Data::Struct(ds) => {
@@ -101,7 +89,7 @@ pub fn derive_ai_json_template(input: TokenStream) -> TokenStream {
 
                                 let mut root = serde_json::Map::new();
                                 // Include our container docs plus disclaimers
-                                root.insert("struct_docs".to_string(), serde_json::Value::String(#container_docs_with_disclaimer.to_string()));
+                                root.insert("struct_docs".to_string(), serde_json::Value::String(#container_docs_str.to_string()));
                                 root.insert("struct_name".to_string(), serde_json::Value::String(#type_name_str.to_string()));
                                 root.insert("type".to_string(), serde_json::Value::String("struct".to_string()));
 
@@ -226,13 +214,8 @@ pub fn derive_ai_json_template(input: TokenStream) -> TokenStream {
                         tracing::trace!("AiJsonTemplate::to_template for enum {}", #type_name_str);
 
                         let mut root = serde_json::Map::new();
-                        // Insert disclaimers about picking exactly one variant, numeric fields, etc.
-                        let disclaimers = format!(
-                            "{}\n\nIMPORTANT:\n- This is an enum. You must choose exactly one variant.\n- Do not fill in multiple variants.\n- Numeric fields must be real JSON numbers.\n- If optional, use null if not used.\n- No extraneous keys.\n",
-                            #container_docs_with_disclaimer
-                        );
 
-                        root.insert("enum_docs".to_string(), serde_json::Value::String(disclaimers));
+                        root.insert("enum_docs".to_string(), serde_json::Value::String(#container_docs_str.to_string()));
                         root.insert("enum_name".to_string(), serde_json::Value::String(#type_name_str.to_string()));
                         root.insert("type".to_string(), serde_json::Value::String("complex_enum".to_string()));
 
@@ -272,16 +255,6 @@ pub fn derive_ai_json_template_with_justification(input: TokenStream) -> TokenSt
     let container_docs_str = container_docs_vec.join("\n");
     tracing::trace!("Deriving AiJsonTemplateWithJustification for {}", ty_ident);
 
-    // We'll append disclaimers at the container level as well:
-    let disclaimers = "\nIMPORTANT:\n\
-        - Provide all justification/confidence fields with correct data.\n\
-        - Numeric fields must be real JSON numbers (no quotes), typically in [0..1] if it is a confidence.\n\
-        - For optional fields, either fill them or set them to null.\n\
-        - If this is an enum, pick exactly one variant. Justify that choice.\n\
-        - Return strictly one JSON object with no extra keys.\n";
-
-    let container_docs_enhanced = format!("{}\n{}", container_docs_str, disclaimers);
-
     let mut output_ts = proc_macro2::TokenStream::new();
 
     match &ast.data {
@@ -303,15 +276,15 @@ pub fn derive_ai_json_template_with_justification(input: TokenStream) -> TokenSt
                         span
                     );
 
-                    let mut just_fields = Vec::new();
-                    let mut conf_fields = Vec::new();
+                    let mut justification_struct_fields = Vec::new();
+                    let mut confidence_struct_fields = Vec::new();
                     let mut errs = quote::quote!();
                     let mut field_mappings = Vec::new();
 
                     gather_justification_and_confidence_fields(
                         named_fields,
-                        &mut just_fields,
-                        &mut conf_fields,
+                        &mut justification_struct_fields,
+                        &mut confidence_struct_fields,
                         &mut errs,
                         &mut field_mappings,
                     );
@@ -322,7 +295,7 @@ pub fn derive_ai_json_template_with_justification(input: TokenStream) -> TokenSt
                         #[builder(setter(into))]
                         #[getset(get="pub", set="pub")]
                         pub struct #justification_ident {
-                            #(#just_fields),*
+                            #(#justification_struct_fields),*
                         }
                     };
                     let confidence_struct = quote::quote! {
@@ -330,7 +303,7 @@ pub fn derive_ai_json_template_with_justification(input: TokenStream) -> TokenSt
                         #[builder(setter(into))]
                         #[getset(get="pub", set="pub")]
                         pub struct #confidence_ident {
-                            #(#conf_fields),*
+                            #(#confidence_struct_fields),*
                         }
                     };
                     let justified_struct = quote::quote! {
@@ -368,7 +341,7 @@ pub fn derive_ai_json_template_with_justification(input: TokenStream) -> TokenSt
                     // For the container-level disclaimers:
                     let container_msg = format!(
                         "{}\n(This struct has justification & confidence for each field. Fill them carefully, set numeric fields as real JSON numbers, etc.)",
-                        container_docs_enhanced
+                        container_docs_str
                     );
 
                     // We'll build the to_template_with_justification similarly to original
@@ -681,7 +654,7 @@ pub fn derive_ai_json_template_with_justification(input: TokenStream) -> TokenSt
 
                         // Insert disclaimers
                         root_map.insert("has_justification".to_string(), serde_json::Value::Bool(true));
-                        let doc_plus = format!("{}\n(This enum has justification. Choose exactly one variant. Do not mention unselected variants. Provide numeric fields as real JSON numbers, etc.)", #container_docs_enhanced);
+                        let doc_plus = format!("{}\n(This enum has justification. Please justify your choice and choose exactly one variant. Do not mention unselected variants.)", #container_docs_str);
                         if root_map.contains_key("enum_docs") {
                             if let Some(serde_json::Value::String(sdoc)) = root_map.get_mut("enum_docs") {
                                 *sdoc = format!("{}\n{}", *sdoc, doc_plus);

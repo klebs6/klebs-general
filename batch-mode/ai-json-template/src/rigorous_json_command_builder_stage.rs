@@ -11,16 +11,6 @@ pub enum RigorousJsonCommandBuilderStage {
 
 impl RigorousJsonCommandBuilderStage {
 
-    pub fn get_all<T:AiJsonTemplate>() -> String {
-        let stages = Self::all();
-        let mut x = String::new();
-        for stage in stages {
-            x.push_str(&stage.ai_instructions::<T>());
-            x.push_str("\n");
-        }
-        x
-    }
-
     pub fn all() -> Vec<Self> {
         vec![
             RigorousJsonCommandBuilderStage::ExtractAndCleanData,
@@ -41,7 +31,7 @@ impl RigorousJsonCommandBuilderStage {
         }
     }
 
-    pub fn ai_instructions<T:AiJsonTemplate>(&self) -> String {
+    pub fn ai_instructions(&self, schema_template: &serde_json::Value) -> String {
         match self {
             RigorousJsonCommandBuilderStage::ExtractAndCleanData => "Carefully read and parse the information we sent you.".to_string(),
             RigorousJsonCommandBuilderStage::GenerateResponseViaTheSchema => {
@@ -53,19 +43,22 @@ impl RigorousJsonCommandBuilderStage {
                         - Read the description of each field. Use it, along with the content we sent you to generate an appropriate value for each.
                         - Ensure that each generated field optimally serves its desired purpose.
                         - Each item should be deep, detailed, and specific. Use optimally descriptive and useful language. Do not be too verbose.
-                        - In terms of the JSON format we would like you to provide, all schema items should live at the top level of the json object. 
-                          The object itself will be deserialied based on the schema. 
-                          The fields should not be nested under a parent named 'fields' or anything similar.
+                        - Do not add any extra keys to the generated object. Generate precisely what we ask of you: no more, no less.
+                        - If we ask you to generate an enum, pick *exactly one variant*. Do not generate any information for the unselected variants.
+                        - Provide numeric fields as real JSON numbers (not strings).
+                        - If we ask to you generate an optional field, either fill it or set it to null.
+                        - In terms of the JSON format we would like you to provide, the object itself will be deserialied based on the schema. 
+                        - We begin exactly at the top: the data should not be nested under a parent named 'fields' or anything similar.
 
                         Here is the schema to Use:
 
                         {}",
-                        T::to_template()
+                        schema_template
                 }
             },
             RigorousJsonCommandBuilderStage::OptimizeContent => formatdoc!{
                 "
-                    Rephrase Entries:
+                    Entry phrasing:
 
                     - Ensure entries are concise and focused.
                     - Ensure there are no vague phrases (e.g., avoid starting with \"Illustrates the something something...\"; instead, use direct details like \"The hanging green vines on the garden wall\").

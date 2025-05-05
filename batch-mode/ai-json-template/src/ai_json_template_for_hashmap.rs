@@ -163,4 +163,3 @@ mod test_hashmap_k_v {
         assert!(vv_template.is_object(), "V justification must be object for the schema");
     }
 }
-
