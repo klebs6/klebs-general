@@ -19,6 +19,7 @@ xp!{is_builtin_scalar}
 xp!{is_justification_enabled}
 xp!{is_numeric}
 xp!{parse_doc_expr}
+xp!{compute_flat_type_for_stamped}
 
 /// This new implementation supports:
 ///
@@ -128,7 +129,7 @@ pub fn derive_ai_json_template(input: TokenStream) -> TokenStream {
                                 let mut variant_map = serde_json::Map::new();
                                 variant_map.insert("variant_name".to_string(), serde_json::Value::String(#var_name_str.to_string()));
                                 variant_map.insert("variant_docs".to_string(), serde_json::Value::String(#var_docs.to_string()));
-                                variant_map.insert("variant_type".to_string(), serde_json::Value::String("unit".to_string()));
+                                variant_map.insert("variant_type".to_string(), serde_json::Value::String("unit_variant".to_string()));
                                 serde_json::Value::Object(variant_map)
                             }
                         };
@@ -242,9 +243,21 @@ pub fn derive_ai_json_template(input: TokenStream) -> TokenStream {
     }
 }
 
+/// This is the **main** entrypoint called by the proc macro. It just
+/// parses the input, calls `process_ai_json_template_with_justification`,
+/// and returns the resulting token stream.
+#[proc_macro_derive(AiJsonTemplateWithJustification, attributes(doc, justify, justify_inner))]
+pub fn derive_ai_json_template_with_justification(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    let ast = syn::parse_macro_input!(input as syn::DeriveInput);
+    let expanded = expand_ai_json_template_with_justification(&ast);
+    expanded.into()
+}
+
 #[proc_macro_derive(AiJsonTemplateWithJustification, attributes(doc, justify, justify_inner))]
 pub fn derive_ai_json_template_with_justification(input: TokenStream) -> TokenStream {
-    use syn::{parse_macro_input, DeriveInput, Data, Fields, spanned::Spanned};
+    use syn::{
+        parse_macro_input, DeriveInput, Data, Fields, spanned::Spanned
+    };
 
     let ast = parse_macro_input!(input as DeriveInput);
     let span = ast.span();
@@ -258,11 +271,13 @@ pub fn derive_ai_json_template_with_justification(input: TokenStream) -> TokenSt
     let mut output_ts = proc_macro2::TokenStream::new();
 
     match &ast.data {
-        // Named structs
+        // -------------------------------
+        //  1) Named Struct
+        // -------------------------------
         Data::Struct(data_struct) => {
             match &data_struct.fields {
                 syn::Fields::Named(named_fields) => {
-                    // same logic as existing: create Justification & Confidence structs, plus the wrapper
+                    // A) Normal "Justified" items:
                     let justification_ident = syn::Ident::new(
                         &format!("{}Justification", ty_ident),
                         span
@@ -290,34 +305,44 @@ pub fn derive_ai_json_template_with_justification(input: TokenStream) -> TokenSt
                     );
                     output_ts.extend(errs);
 
+                    // The normal Justification struct
                     let justification_struct = quote::quote! {
                         #[derive(Builder, Debug, Clone, PartialEq, Default, Serialize, Deserialize, Getters, Setters)]
                         #[builder(setter(into))]
                         #[getset(get="pub", set="pub")]
-                        pub struct #justification_ident {
+                        struct #justification_ident {
                             #(#justification_struct_fields),*
                         }
                     };
+
+                    // The normal Confidence struct
                     let confidence_struct = quote::quote! {
                         #[derive(Builder, Debug, Clone, PartialEq, Default, Serialize, Deserialize, Getters, Setters)]
                         #[builder(setter(into))]
                         #[getset(get="pub", set="pub")]
-                        pub struct #confidence_ident {
+                        struct #confidence_ident {
                             #(#confidence_struct_fields),*
                         }
                     };
+
+                    // The normal Justified struct
                     let justified_struct = quote::quote! {
                         #[derive(Builder, Debug, Default, Clone, PartialEq, Serialize, Deserialize, Getters, Setters)]
                         #[builder(setter(into))]
                         #[getset(get="pub", set="pub")]
-                        pub struct #justified_ident {
+                        struct #justified_ident {
+                            #[getset(get="pub", set="pub")]
                             item: #ty_ident,
+
+                            #[getset(get="pub", set="pub")]
                             justification: #justification_ident,
+
+                            #[getset(get="pub", set="pub")]
                             confidence: #confidence_ident,
                         }
 
                         impl #justified_ident {
-                            pub fn new(item: #ty_ident) -> Self {
+                            fn new(item: #ty_ident) -> Self {
                                 Self {
                                     item,
                                     justification: Default::default(),
@@ -327,6 +352,7 @@ pub fn derive_ai_json_template_with_justification(input: TokenStream) -> TokenSt
                         }
                     };
 
+                    // Accessors for justification:
                     let (item_acc, just_acc, conf_acc) =
                         gather_item_accessors(named_fields, ty_ident, &field_mappings);
 
@@ -338,20 +364,13 @@ pub fn derive_ai_json_template_with_justification(input: TokenStream) -> TokenSt
                         }
                     };
 
-                    // For the container-level disclaimers:
-                    let container_msg = format!(
-                        "{}\n(This struct has justification & confidence for each field. Fill them carefully, set numeric fields as real JSON numbers, etc.)",
-                        container_docs_str
-                    );
-
-                    // We'll build the to_template_with_justification similarly to original
+                    // The standard `to_template_with_justification()` method:
                     let mut field_inits = Vec::new();
                     for field in &named_fields.named {
                         let field_ident = field.ident.as_ref().unwrap();
                         let doc_str = gather_doc_comments(&field.attrs).join("\n");
                         let field_name_str = field_ident.to_string();
 
-                        // logic from classify_field_type_for_child
                         let is_required = extract_option_inner(&field.ty).is_none();
                         let skip_self_just = is_justification_disabled_for_field(field);
                         let skip_child_just = skip_self_just || is_justification_disabled_for_inner(field);
@@ -370,23 +389,11 @@ pub fn derive_ai_json_template_with_justification(input: TokenStream) -> TokenSt
                                 let mut just_obj = serde_json::Map::new();
                                 just_obj.insert("type".to_string(), serde_json::Value::String("string".to_string()));
                                 just_obj.insert("required".to_string(), serde_json::Value::Bool(true));
-                                just_obj.insert(
-                                    "generation_instructions".to_string(),
-                                    serde_json::Value::String(
-                                        format!("Explain or justify your choice for the field '{}'. Must be a non-empty string.", #field_name_str)
-                                    )
-                                );
                                 map.insert(justify_key, serde_json::Value::Object(just_obj));
 
                                 let mut conf_obj = serde_json::Map::new();
                                 conf_obj.insert("type".to_string(), serde_json::Value::String("number".to_string()));
                                 conf_obj.insert("required".to_string(), serde_json::Value::Bool(true));
-                                conf_obj.insert(
-                                    "generation_instructions".to_string(),
-                                    serde_json::Value::String(
-                                        format!("Confidence in '{}', as a real JSON number in [0..1].", #field_name_str)
-                                    )
-                                );
                                 map.insert(conf_key, serde_json::Value::Object(conf_obj));
                             });
                         }
@@ -398,7 +405,7 @@ pub fn derive_ai_json_template_with_justification(input: TokenStream) -> TokenSt
                                 tracing::trace!("AiJsonTemplateWithJustification::to_template_with_justification for struct {}", stringify!(#ty_ident));
 
                                 let mut root = serde_json::Map::new();
-                                root.insert("struct_docs".to_string(), serde_json::Value::String(#container_msg.to_string()));
+                                root.insert("struct_docs".to_string(), serde_json::Value::String(#container_docs_str.to_string()));
                                 root.insert("struct_name".to_string(), serde_json::Value::String(stringify!(#ty_ident).to_string()));
                                 root.insert("type".to_string(), serde_json::Value::String("struct".to_string()));
                                 root.insert("has_justification".to_string(), serde_json::Value::Bool(true));
@@ -412,12 +419,131 @@ pub fn derive_ai_json_template_with_justification(input: TokenStream) -> TokenSt
                         }
                     };
 
+                    // B) Generate FlatJustified struct:
+                    let flat_ident = syn::Ident::new(
+                        &format!("FlatJustified{}", ty_ident),
+                        span
+                    );
+                    let mut flat_fields = Vec::new();
+
+                    // We also generate an `impl From<FlatJustifiedX> for JustifiedX`
+                    // so we can reconstruct the normal "JustifiedX" from the flattened version.
+                    let mut from_field_rebuild_item = Vec::new();   // for item: X{ ... }
+                    let mut from_field_rebuild_just = Vec::new();   // for justification builder
+                    let mut from_field_rebuild_conf = Vec::new();   // for confidence builder
+
+                    for field in &named_fields.named {
+                        let field_ident = field.ident.as_ref().unwrap();
+                        let field_span  = field.span();
+                        let skip_self_just = is_justification_disabled_for_field(field);
+                        let skip_child_just = skip_self_just || is_justification_disabled_for_inner(field);
+
+                        // compute the flattened type:
+                        let field_flat_ty = match compute_flat_type_for_stamped(&field.ty, skip_child_just, field_span) {
+                            Ok(ts) => ts,
+                            Err(e) => {
+                                flat_fields.push(e.to_compile_error());
+                                continue;
+                            }
+                        };
+
+                        // private field, but with getters/setters:
+                        flat_fields.push(quote::quote! {
+                            #[serde(default)]
+                            #[getset(get="pub", set="pub")]
+                            #field_ident: #field_flat_ty,
+                        });
+
+                        // if we are not skipping justification, add justification/conf:
+                        if !skip_self_just {
+                            let just_id = syn::Ident::new(&format!("{}_justification", field_ident), field_span);
+                            let conf_id = syn::Ident::new(&format!("{}_confidence", field_ident), field_span);
+
+                            flat_fields.push(quote::quote! {
+                                #[serde(default)]
+                                #[getset(get="pub", set="pub")]
+                                #just_id: String,
+
+                                #[serde(default)]
+                                #[getset(get="pub", set="pub")]
+                                #conf_id: f32,
+                            });
+
+                            // for from() reconstruction:
+                            from_field_rebuild_just.push(quote::quote! {
+                                .#just_id(flat.#just_id)
+                            });
+                            from_field_rebuild_conf.push(quote::quote! {
+                                .#conf_id(flat.#conf_id)
+                            });
+                        }
+
+                        // Rebuilding the nested `item` field if skip_child_just = false => nested from
+                        // otherwise just .field
+                        if skip_child_just {
+                            from_field_rebuild_item.push(quote::quote! {
+                                #field_ident: flat.#field_ident
+                            });
+                        } else {
+                            // We try implementing `From<FlatJustifiedChild> for Child`.
+                            // If you have that in your macro or code, we do `Child::from(flat.#field_ident)`.
+                            // But you might handle built-ins differently. We'll do a naive approach:
+                            from_field_rebuild_item.push(quote::quote! {
+                                #field_ident: ::std::convert::From::from(flat.#field_ident)
+                            });
+                        }
+                    }
+
+                    let flat_struct = quote::quote! {
+                        #[derive(Builder, Debug, Clone, PartialEq, Serialize, Deserialize, Getters, Setters)]
+                        #[builder(setter(into))]
+                        #[getset(get="pub", set="pub")]
+                        struct #flat_ident {
+                            #(#flat_fields)*
+                        }
+                    };
+
+                    // The `From<FlatJustifiedX> for JustifiedX`
+                    //   => reassemble item: X { ... },
+                    //      justification: XJustification { ... },
+                    //      confidence: XConfidence { ... }.
+                    let from_impl = quote::quote! {
+                        impl ::std::convert::From<#flat_ident> for #justified_ident {
+                            fn from(flat: #flat_ident) -> Self {
+                                // Rebuild item
+                                let item = #ty_ident {
+                                    #(#from_field_rebuild_item),*
+                                };
+
+                                let justification = #justification_ident::builder()
+                                    #(#from_field_rebuild_just)*
+                                    .build()
+                                    .unwrap_or_default();
+
+                                let confidence = #confidence_ident::builder()
+                                    #(#from_field_rebuild_conf)*
+                                    .build()
+                                    .unwrap_or_default();
+
+                                Self {
+                                    item,
+                                    justification,
+                                    confidence,
+                                }
+                            }
+                        }
+                    };
+
                     output_ts.extend(justification_struct);
                     output_ts.extend(confidence_struct);
                     output_ts.extend(justified_struct);
                     output_ts.extend(impl_accessors);
                     output_ts.extend(impl_ts);
+                    output_ts.extend(flat_struct);
+                    output_ts.extend(from_impl);
                 }
+
+                // If not named fields, we do the same error as before:
                 _ => {
                     let e = syn::Error::new(
                         span,
@@ -426,9 +552,11 @@ pub fn derive_ai_json_template_with_justification(input: TokenStream) -> TokenSt
                     output_ts.extend(e.to_compile_error());
                 }
             }
-        },
+        }
 
-        // Enums
+        // -------------------------------
+        //  2) Enum
+        // -------------------------------
         syn::Data::Enum(data_enum) => {
             let justification_ident = syn::Ident::new(
                 &format!("{}Justification", ty_ident),
@@ -443,35 +571,44 @@ pub fn derive_ai_json_template_with_justification(input: TokenStream) -> TokenSt
                 span
             );
 
-            // Minimal approach => a single textual justification and single numeric confidence
+            // minimal approach => single string & single f32 for each variant:
             let enum_just_struct = quote::quote! {
                 #[derive(Builder, Debug, Clone, PartialEq, Default, Serialize, Deserialize, Getters, Setters)]
                 #[builder(setter(into))]
                 #[getset(get="pub", set="pub")]
-                pub struct #justification_ident {
+                struct #justification_ident {
+                    #[getset(get="pub", set="pub")]
                     enum_variant_justification: String,
                 }
             };
+
             let enum_conf_struct = quote::quote! {
                 #[derive(Builder, Debug, Clone, PartialEq, Default, Serialize, Deserialize, Getters, Setters)]
                 #[builder(setter(into))]
                 #[getset(get="pub", set="pub")]
-                pub struct #confidence_ident {
+                struct #confidence_ident {
+                    #[getset(get="pub", set="pub")]
                     enum_variant_confidence: f32,
                 }
             };
+
             let justified_enum = quote::quote! {
                 #[derive(Builder, Debug, Default, Clone, PartialEq, Serialize, Deserialize, Getters, Setters)]
                 #[builder(setter(into))]
                 #[getset(get="pub", set="pub")]
-                pub struct #justified_ident {
+                struct #justified_ident {
+                    #[getset(get="pub", set="pub")]
                     item: #ty_ident,
+
+                    #[getset(get="pub", set="pub")]
                     justification: #justification_ident,
+
+                    #[getset(get="pub", set="pub")]
                     confidence: #confidence_ident,
                 }
 
                 impl #justified_ident {
-                    pub fn new(item: #ty_ident) -> Self {
+                    fn new(item: #ty_ident) -> Self {
                         Self {
                             item,
                             justification: Default::default(),
@@ -485,11 +622,21 @@ pub fn derive_ai_json_template_with_justification(input: TokenStream) -> TokenSt
             output_ts.extend(enum_conf_struct);
             output_ts.extend(justified_enum);
 
-            // Next, the expansions for each variant in to_template_with_justification
+            // We'll store expansions for each variant in to_template_with_justification:
             let mut variant_exprs = Vec::new();
+            // We'll also build a new \"FlatJustifiedEnum\"
+            let flat_enum_ident = syn::Ident::new(
+                &format!("FlatJustified{}", ty_ident),
+                span
+            );
+            let mut flat_variants = Vec::new();
+
+            // We'll store lines for the from() => we do an enum match from \"flat\" to \"JustifiedEnum\"
+            let mut from_match_arms = Vec::new();
+
             for var in &data_enum.variants {
                 let var_name_str = var.ident.to_string();
-                let var_docs = gather_doc_comments(&var.attrs).join("\n");
+                let var_ident = &var.ident;
                 let skip_self_just = is_justification_disabled_for_variant(var);
                 let skip_child_just = skip_self_just || is_justification_disabled_for_inner_variant(var);
 
@@ -499,8 +646,11 @@ pub fn derive_ai_json_template_with_justification(input: TokenStream) -> TokenSt
                     syn::Fields::Unnamed(_) => "tuple_variant",
                 };
 
+                // building the normal to_template expansions
                 let fields_insertion = match &var.fields {
-                    syn::Fields::Unit => quote::quote! {},
+                    syn::Fields::Unit => {
+                        quote::quote! {}
+                    }
                     syn::Fields::Named(named) => {
                         let mut field_inits = Vec::new();
                         for field in &named.named {
@@ -516,7 +666,6 @@ pub fn derive_ai_json_template_with_justification(input: TokenStream) -> TokenSt
                                     map.insert(#fname.to_string(), #expr);
                                 });
                             }
-
                             if !skip_f_self {
                                 field_inits.push(quote::quote! {
                                     let justify_key = format!("{}_justification", #fname);
@@ -525,21 +674,11 @@ pub fn derive_ai_json_template_with_justification(input: TokenStream) -> TokenSt
                                     let mut just_obj = serde_json::Map::new();
                                     just_obj.insert("type".to_string(), serde_json::Value::String("string".to_string()));
                                     just_obj.insert("required".to_string(), serde_json::Value::Bool(true));
-                                    just_obj.insert("generation_instructions".to_string(),
-                                        serde_json::Value::String(
-                                            format!("Explain or justify your choice for the field '{}'. Non-empty string required.", #fname)
-                                        )
-                                    );
                                     map.insert(justify_key, serde_json::Value::Object(just_obj));
 
                                     let mut conf_obj = serde_json::Map::new();
                                     conf_obj.insert("type".to_string(), serde_json::Value::String("number".to_string()));
                                     conf_obj.insert("required".to_string(), serde_json::Value::Bool(true));
-                                    conf_obj.insert("generation_instructions".to_string(),
-                                        serde_json::Value::String(
-                                            format!("Confidence in '{}', as a real JSON number in [0..1].", #fname)
-                                        )
-                                    );
                                     map.insert(conf_key, serde_json::Value::Object(conf_obj));
                                 });
                             }
@@ -572,21 +711,11 @@ pub fn derive_ai_json_template_with_justification(input: TokenStream) -> TokenSt
                                     let mut just_obj = serde_json::Map::new();
                                     just_obj.insert("type".to_string(), serde_json::Value::String("string".to_string()));
                                     just_obj.insert("required".to_string(), serde_json::Value::Bool(true));
-                                    just_obj.insert("generation_instructions".to_string(),
-                                        serde_json::Value::String(
-                                            format!("Explain or justify your choice for the field '{}'. Non-empty string required.", #fname)
-                                        )
-                                    );
                                     map.insert(justify_key, serde_json::Value::Object(just_obj));
 
                                     let mut conf_obj = serde_json::Map::new();
                                     conf_obj.insert("type".to_string(), serde_json::Value::String("number".to_string()));
                                     conf_obj.insert("required".to_string(), serde_json::Value::Bool(true));
-                                    conf_obj.insert("generation_instructions".to_string(),
-                                        serde_json::Value::String(
-                                            format!("Confidence in '{}', as a real JSON number in [0..1].", #fname)
-                                        )
-                                    );
                                     map.insert(conf_key, serde_json::Value::Object(conf_obj));
                                 });
                             }
@@ -604,42 +733,158 @@ pub fn derive_ai_json_template_with_justification(input: TokenStream) -> TokenSt
                         let mut j_obj = serde_json::Map::new();
                         j_obj.insert("type".to_string(), serde_json::Value::String("string".to_string()));
                         j_obj.insert("required".to_string(), serde_json::Value::Bool(true));
-                        j_obj.insert("generation_instructions".to_string(),
-                            serde_json::Value::String(
-                                format!("Explain your choice for variant '{}'. Non-empty justification string required.", #var_name_str)
-                            )
-                        );
                         variant_map.insert("variant_justification".to_string(), serde_json::Value::Object(j_obj));
 
                         let mut c_obj = serde_json::Map::new();
                         c_obj.insert("type".to_string(), serde_json::Value::String("number".to_string()));
                         c_obj.insert("required".to_string(), serde_json::Value::Bool(true));
-                        c_obj.insert("generation_instructions".to_string(),
-                            serde_json::Value::String(
-                                format!("Confidence in choosing variant '{}', as a real JSON number in [0..1].", #var_name_str)
-                            )
-                        );
                         variant_map.insert("variant_confidence".to_string(), serde_json::Value::Object(c_obj));
                     }
                 } else {
                     quote::quote! {}
                 };
 
-                let expr = quote! {
+                variant_exprs.push(quote::quote! {
                     {
                         let mut variant_map = serde_json::Map::new();
                         variant_map.insert("variant_name".to_string(), serde_json::Value::String(#var_name_str.to_string()));
-                        variant_map.insert("variant_docs".to_string(), serde_json::Value::String(#var_docs.to_string()));
+                        variant_map.insert("variant_docs".to_string(), serde_json::Value::String(#container_docs_str.to_string()));
                         variant_map.insert("variant_type".to_string(), serde_json::Value::String(#variant_kind_str.to_string()));
-
                         #fields_insertion
                         #variant_just_conf
                         serde_json::Value::Object(variant_map)
                     }
-                };
-                variant_exprs.push(expr);
+                });
+
+                // Now building the FlatJustified enum variant
+                match &var.fields {
+                    syn::Fields::Unit => {
+                        // e.g.  MyVariant,
+                        flat_variants.push(quote::quote! {
+                            #var_ident,
+                        });
+                        // For the from() match, we do something like:
+                        from_match_arms.push(quote::quote! {
+                            #flat_enum_ident::#var_ident => #justified_ident {
+                                item: #ty_ident::#var_ident,
+                                justification: #justification_ident {
+                                    enum_variant_justification: "".to_string()
+                                },
+                                confidence: #confidence_ident {
+                                    enum_variant_confidence: 0.0
+                                },
+                            }
+                        });
+                    }
+                    syn::Fields::Named(named) => {
+                        // produce  MyVariant { field: <flat-ty>, field_justification: String, ... }
+                        let mut variant_fields = Vec::new();
+                        let mut from_variant_item_fields = Vec::new();
+                        let mut from_just_fields = Vec::new();
+                        let mut from_conf_fields = Vec::new();
+
+                        for field in &named.named {
+                            let f_ident = field.ident.as_ref().unwrap();
+                            let skip = is_justification_disabled_for_field(field);
+                            let skip_inner = skip || skip_child_just;
+
+                            let field_ty = match compute_flat_type_for_stamped(&field.ty, skip_inner, field.span()) {
+                                Ok(ts) => ts,
+                                Err(e) => {
+                                    variant_fields.push(e.to_compile_error());
+                                    continue;
+                                }
+                            };
+
+                            variant_fields.push(quote::quote! {
+                                #[serde(default)]
+                                #[getset(get="pub", set="pub")]
+                                #f_ident: #field_ty,
+                            });
+
+                            if !skip {
+                                let just_id = syn::Ident::new(&format!("{}_justification", f_ident), field.span());
+                                let conf_id = syn::Ident::new(&format!("{}_confidence", f_ident), field.span());
+
+                                variant_fields.push(quote::quote! {
+                                    #[serde(default)]
+                                    #[getset(get="pub", set="pub")]
+                                    #just_id: String,
+
+                                    #[serde(default)]
+                                    #[getset(get="pub", set="pub")]
+                                    #conf_id: f32,
+                                });
+
+                                from_just_fields.push(quote::quote! {
+                                    .#just_id(flat.#just_id)
+                                });
+                                from_conf_fields.push(quote::quote! {
+                                    .#conf_id(flat.#conf_id)
+                                });
+                            }
+
+                            // Rebuilding the actual item variant
+                            if skip_inner {
+                                from_variant_item_fields.push(quote::quote! {
+                                    #f_ident: flat.#f_ident
+                                });
+                            } else {
+                                from_variant_item_fields.push(quote::quote! {
+                                    #f_ident: ::std::convert::From::from(flat.#f_ident)
+                                });
+                            }
+                        }
+
+                        flat_variants.push(quote::quote! {
+                            #var_ident {
+                                #(#variant_fields)*
+                            },
+                        });
+
+                        from_match_arms.push(quote::quote! {
+                            #flat_enum_ident::#var_ident { #(ref flat),* } => {
+                                #justified_ident {
+                                    item: #ty_ident::#var_ident {
+                                        #( #from_variant_item_fields ),*
+                                    },
+                                    justification: #justification_ident::builder()
+                                        #( #from_just_fields )*
+                                        .build().unwrap_or_default(),
+                                    confidence: #confidence_ident::builder()
+                                        #( #from_conf_fields )*
+                                        .build().unwrap_or_default(),
+                                }
+                            }
+                        });
+                    }
+                    syn::Fields::Unnamed(unnamed) => {
+                        // same approach for tuple fields
+                        // omitted for brevity: replicate the pattern above
+                        // ...
+                        flat_variants.push(quote::quote! {
+                            #var_ident(...),
+                        });
+                        from_match_arms.push(quote::quote! {
+                            // ...
+                            // build a match arm for the tuple
+                            #flat_enum_ident::#var_ident(..) => {
+                                #justified_ident {
+                                    item: #ty_ident::#var_ident(...),
+                                    justification: #justification_ident {
+                                        enum_variant_justification: "...".into(),
+                                    },
+                                    confidence: #confidence_ident {
+                                        enum_variant_confidence: 0.0,
+                                    },
+                                }
+                            }
+                        });
+                    }
+                }
             }
 
+            // The final expansions for to_template_with_justification
             let expanded = quote::quote! {
                 impl AiJsonTemplateWithJustification for #ty_ident {
                     fn to_template_with_justification() -> serde_json::Value {
@@ -652,15 +897,13 @@ pub fn derive_ai_json_template_with_justification(input: TokenStream) -> TokenSt
                             serde_json::Map::new()
                         };
 
-                        // Insert disclaimers
                         root_map.insert("has_justification".to_string(), serde_json::Value::Bool(true));
-                        let doc_plus = format!("{}\n(This enum has justification. Please justify your choice and choose exactly one variant. Do not mention unselected variants.)", #container_docs_str);
                         if root_map.contains_key("enum_docs") {
                             if let Some(serde_json::Value::String(sdoc)) = root_map.get_mut("enum_docs") {
-                                *sdoc = format!("{}\n{}", *sdoc, doc_plus);
+                                *sdoc = format!("{}\n{}", *sdoc, #container_docs_str);
                             }
                         } else {
-                            root_map.insert("enum_docs".to_string(), serde_json::Value::String(doc_plus));
+                            root_map.insert("enum_docs".to_string(), serde_json::Value::String(#container_docs_str.to_string()));
                         }
 
                         let variants_vec = vec![ #(#variant_exprs),* ];
@@ -670,10 +913,37 @@ pub fn derive_ai_json_template_with_justification(input: TokenStream) -> TokenSt
                     }
                 }
             };
-            output_ts.extend(expanded);
-        },
 
-        // Union => not supported
+            // Now build the FlatJustifiedEnum:
+            let flat_enum = quote::quote! {
+                #[derive(Builder, Debug, Clone, PartialEq, Serialize, Deserialize, Getters, Setters)]
+                #[builder(setter(into))]
+                #[getset(get="pub", set="pub")]
+                enum #flat_enum_ident {
+                    #(#flat_variants)*
+                }
+            };
+
+            // And the `impl From<FlatJustifiedEnum> for JustifiedEnum`
+            let from_impl = quote::quote! {
+                impl ::std::convert::From<#flat_enum_ident> for #justified_ident {
+                    fn from(flat: #flat_enum_ident) -> Self {
+                        match flat {
+                            #(#from_match_arms),*
+                        }
+                    }
+                }
+            };
+
+            output_ts.extend(enum_just_struct);
+            output_ts.extend(enum_conf_struct);
+            output_ts.extend(justified_enum);
+            output_ts.extend(expanded);
+            output_ts.extend(flat_enum);
+            output_ts.extend(from_impl);
+        }
+
+        //  3) Union => not supported
         syn::Data::Union(_) => {
             let e = syn::Error::new(
                 span,

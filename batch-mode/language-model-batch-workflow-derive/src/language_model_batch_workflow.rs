@@ -23,7 +23,7 @@ pub fn generate_impl_language_model_batch_workflow(parsed: &LmbwParsedInput) -> 
         quote! {
             {
                 let base_msg = <Self as ComputeSystemMessage>::system_message();
-                let appended = RigorousJsonCommandBuilderStage::get_all::<#json_ty>();
+                let appended = RigorousJsonCommandBuilder::instructions::<#json_ty>();
                 format!("{}\n\n{}", base_msg, appended)
             }
         }

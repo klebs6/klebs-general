@@ -1,9 +1,6 @@
 // ---------------- [ File: ai-json-template-derive/src/classify_result.rs ]
 crate::ix!();
 
-// ================== [ File: ai-json-template-derive/src/classify_result.rs ] ==================
-crate::ix!();
-
 /// If the field is a built-in scalar (bool, numeric, String), we store justification as String, confidence as f32.
 /// Otherwise, we treat it as a "nested" type that presumably implements AiJsonTemplateWithJustification,
 /// generating e.g. "MyTypeJustification" / "MyTypeConfidence", or "HashMap_u8_String_Justification" if underscores exist.

@@ -1,3 +1,4 @@
+// ---------------- [ File: ai-json-template/src/ai_json_template_for_vec.rs ]
 crate::ix!();
 
 /// Blanket impl for `Vec<T>` if `T: AiJsonTemplate`.
@@ -21,15 +22,9 @@ where
             JsonValue::String("array_of".to_string())
         );
 
-        // Disclaimers: not item-level justification or disclaimers, just an array
-        let disclaimers = format!(
-            "IMPORTANT:\n\
-             Provide a JSON array of items, each conforming to {}.",
-            type_name::<T>()
-        );
         obj.insert(
             "generation_instructions".to_string(),
-            JsonValue::String(disclaimers)
+            JsonValue::String(format!("Provide a JSON array of items, each conforming to {}.", type_name::<T>()))
         );
 
         // Typically marked required, but the parent can override or interpret it
@@ -59,24 +54,20 @@ where
         );
 
         let mut obj = serde_json::Map::new();
+
         obj.insert(
             "type".to_string(),
             JsonValue::String("array_of".to_string())
         );
+
         obj.insert("required".to_string(), JsonValue::Bool(true));
+
         // Indicate that top-level justification might exist for this entire array
         obj.insert("has_justification".to_string(), JsonValue::Bool(true));
 
-        let disclaimers = format!(
-            "IMPORTANT:\n\
-             Provide a JSON array of items, each conforming to {}.\n\
-             We do NOT want justification for every individual element. \n\
-             If a justification/confidence is required, it is typically a single top-level pair at the same level as this array, e.g. 'my_array_justification', 'my_array_confidence'.",
-            type_name::<T>()
-        );
         obj.insert(
             "generation_instructions".to_string(),
-            JsonValue::String(disclaimers)
+            JsonValue::String(format!("Provide a JSON array of items, each conforming to {}. We do not want you to justify each individual element.", type_name::<T>()))
         );
 
         // The item schema for nested types

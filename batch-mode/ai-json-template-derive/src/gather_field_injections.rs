@@ -6,8 +6,11 @@ crate::ix!();
 /// If a field is marked `#[justify = false]`, we skip injecting placeholders for it.
 pub fn gather_field_injections(
     named_fields: &syn::FieldsNamed
+
 ) -> Vec<proc_macro2::TokenStream> {
+
     let mut expansions = Vec::new();
+
     for field in &named_fields.named {
         let field_ident = match &field.ident {
             Some(id) => id,
@@ -43,6 +46,7 @@ pub fn gather_field_injections(
             }
         });
     }
+
     expansions
 }
 

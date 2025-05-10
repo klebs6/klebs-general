@@ -27,7 +27,6 @@ pub struct FieldJustConfMapping {
     confidence_field_type: proc_macro2::TokenStream,
 }
 
-
 /// Gathers justification/confidence fields for each original named field.
 /// - Also appends compile errors to `out_err` if something fails.
 /// - *Additionally*, we fill out a set of “mappings” so we can later generate
@@ -74,10 +73,10 @@ pub fn gather_justification_and_confidence_fields(
             Ok(ClassifyResult::JustString) => {
                 // Built-in scalar => justification is `String`, confidence is `f32`
                 out_justification_fields.push(quote! {
-                    #just_ident: String
+                    pub #just_ident: String
                 });
                 out_confidence_fields.push(quote! {
-                    #conf_ident: f32
+                    pub #conf_ident: f32
                 });
                 out_mappings.push(FieldJustConfMapping {
                     field_ident: field_ident.clone(),
@@ -90,10 +89,10 @@ pub fn gather_justification_and_confidence_fields(
             Ok(ClassifyResult::NestedJustification { justification_type, confidence_type }) => {
                 // A nested type => store a nested justification struct & a nested confidence struct
                 out_justification_fields.push(quote! {
-                    #just_ident: #justification_type
+                    pub #just_ident: #justification_type
                 });
                 out_confidence_fields.push(quote! {
-                    #conf_ident: #confidence_type
+                    pub #conf_ident: #confidence_type
                 });
                 out_mappings.push(FieldJustConfMapping {
                     field_ident: field_ident.clone(),

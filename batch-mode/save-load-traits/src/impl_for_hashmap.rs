@@ -1,3 +1,4 @@
+// ---------------- [ File: save-load-traits/src/impl_for_hashmap.rs ]
 crate::ix!();
 
 /// A specialized SaveToFile/LoadFromFile impl for HashMap<K, V>,
@@ -107,4 +108,3 @@ mod test_hashmap_save_load {
         fs::remove_file(&tmpfile).await.ok();
     }
 }
-

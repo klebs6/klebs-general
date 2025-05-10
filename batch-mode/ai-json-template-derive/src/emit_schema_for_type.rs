@@ -2,33 +2,18 @@
 crate::ix!();
 
 pub fn emit_schema_for_type(
-    ty: &syn::Type,
-    doc_lit: proc_macro2::Literal,
+    ty:       &syn::Type,
+    doc_lit:  proc_macro2::Literal,
     required: bool
+
 ) -> Option<proc_macro2::TokenStream> {
+
     let required_bool = if required { quote!(true) } else { quote!(false) };
 
-    // We'll build a small, combined "generation_instructions" string that includes both the doc
-    // comments (doc_lit) and universal disclaimers:
-    //
-    //  - Must be valid JSON of the correct type (no quotes around numbers).
-    //  - If optional and not used, set it to null.
-    //  - Do not add extra fields or rename them.
-    //  - For an enum, pick exactly one variant.
-    //  - Etc.
-    //
-    // We keep it short but explicit, so the AI is forced to produce a well-formed result.
-
-    let disclaimers = "\nIMPORTANT:\n\
-        1) Provide a real JSON value (no string quotes around numbers).\n\
-        2) If this field is optional and you choose not to fill it, set it to null.\n\
-        3) Do not add extra fields or rename existing fields.\n\
-        4) If this is an enum field, pick exactly one variant.\n\
-    ";
-    let merged_instructions = format!("{}{}", doc_lit, disclaimers);
+    let generation_instructions = format!("{}", doc_lit);
 
     let type_str = quote!(#ty).to_string();
-    tracing::trace!("emit_schema_for_type => required={} type={}", required, type_str);
+    trace!("emit_schema_for_type => required={} type={}", required, type_str);
 
     // 1) bool => "boolean"
     if is_bool(ty) {
@@ -36,7 +21,7 @@ pub fn emit_schema_for_type(
             {
                 let mut obj = serde_json::Map::new();
                 obj.insert("type".to_string(), serde_json::Value::String("boolean".to_string()));
-                obj.insert("generation_instructions".to_string(), serde_json::Value::String(#merged_instructions.to_string()));
+                obj.insert("generation_instructions".to_string(), serde_json::Value::String(#generation_instructions.to_string()));
                 obj.insert("required".to_string(), serde_json::Value::Bool(#required_bool));
                 serde_json::Value::Object(obj)
             }
@@ -49,7 +34,7 @@ pub fn emit_schema_for_type(
             {
                 let mut obj = serde_json::Map::new();
                 obj.insert("type".to_string(), serde_json::Value::String("string".to_string()));
-                obj.insert("generation_instructions".to_string(), serde_json::Value::String(#merged_instructions.to_string()));
+                obj.insert("generation_instructions".to_string(), serde_json::Value::String(#generation_instructions.to_string()));
                 obj.insert("required".to_string(), serde_json::Value::Bool(#required_bool));
                 serde_json::Value::Object(obj)
             }
@@ -62,7 +47,7 @@ pub fn emit_schema_for_type(
             {
                 let mut obj = serde_json::Map::new();
                 obj.insert("type".to_string(), serde_json::Value::String("number".to_string()));
-                obj.insert("generation_instructions".to_string(), serde_json::Value::String(#merged_instructions.to_string()));
+                obj.insert("generation_instructions".to_string(), serde_json::Value::String(#generation_instructions.to_string()));
                 obj.insert("required".to_string(), serde_json::Value::Bool(#required_bool));
                 serde_json::Value::Object(obj)
             }
@@ -71,18 +56,13 @@ pub fn emit_schema_for_type(
 
     // 4) Vec<T>
     if let Some(elem_ty) = extract_vec_inner(ty) {
-        // For arrays, we disclaim that it must be a real JSON array. No extra fields, no single scalar.
-        let disclaimers_array = format!(
-            "{}\nFor arrays: supply a JSON list [ ... ] of the correct item type.\n",
-            merged_instructions
-        );
 
         if is_numeric(elem_ty) {
             return Some(quote! {
                 {
                     let mut obj = serde_json::Map::new();
                     obj.insert("type".to_string(), serde_json::Value::String("array_of_numbers".to_string()));
-                    obj.insert("generation_instructions".to_string(), serde_json::Value::String(#disclaimers_array.to_string()));
+                    obj.insert("generation_instructions".to_string(), serde_json::Value::String(#generation_instructions.to_string()));
                     obj.insert("required".to_string(), serde_json::Value::Bool(#required_bool));
                     serde_json::Value::Object(obj)
                 }
@@ -92,7 +72,7 @@ pub fn emit_schema_for_type(
                 {
                     let mut obj = serde_json::Map::new();
                     obj.insert("type".to_string(), serde_json::Value::String("array_of_booleans".to_string()));
-                    obj.insert("generation_instructions".to_string(), serde_json::Value::String(#disclaimers_array.to_string()));
+                    obj.insert("generation_instructions".to_string(), serde_json::Value::String(#generation_instructions.to_string()));
                     obj.insert("required".to_string(), serde_json::Value::Bool(#required_bool));
                     serde_json::Value::Object(obj)
                 }
@@ -102,7 +82,7 @@ pub fn emit_schema_for_type(
                 {
                     let mut obj = serde_json::Map::new();
                     obj.insert("type".to_string(), serde_json::Value::String("array_of_strings".to_string()));
-                    obj.insert("generation_instructions".to_string(), serde_json::Value::String(#disclaimers_array.to_string()));
+                    obj.insert("generation_instructions".to_string(), serde_json::Value::String(#generation_instructions.to_string()));
                     obj.insert("required".to_string(), serde_json::Value::Bool(#required_bool));
                     serde_json::Value::Object(obj)
                 }
@@ -113,7 +93,6 @@ pub fn emit_schema_for_type(
                 {
                     let mut obj = serde_json::Map::new();
                     obj.insert("type".to_string(), serde_json::Value::String("array_of".to_string()));
-                    obj.insert("generation_instructions".to_string(), serde_json::Value::String(#disclaimers_array.to_string()));
                     obj.insert("required".to_string(), serde_json::Value::Bool(#required_bool));
                     let nested_t = <#elem_ty as AiJsonTemplate>::to_template();
                     obj.insert("item_template".to_string(), nested_t);
@@ -125,16 +104,11 @@ pub fn emit_schema_for_type(
 
     // 5) HashMap<K, V>
     if let Some((k_ty, v_ty)) = extract_hashmap_inner(ty) {
-        // Additional disclaimers about map => must be a JSON object with string keys
-        let disclaimers_map = format!(
-            "{}\nFor map fields: Provide a JSON object {{ \"key_as_string\": <value>, ... }}.\nKeys must be string in JSON.\n",
-            merged_instructions
-        );
 
         // Decide how to represent the key
         let map_key_schema = if is_bool(k_ty) {
             let err_msg = format!("Unsupported key type in HashMap<bool, _> for AiJsonTemplate");
-            tracing::trace!("ERROR: {}", err_msg);
+            trace!("ERROR: {}", err_msg);
             let err = syn::Error::new(k_ty.span(), &err_msg);
             return Some(err.to_compile_error());
         } else if is_numeric(k_ty) {
@@ -152,7 +126,7 @@ pub fn emit_schema_for_type(
                     let mut obj = serde_json::Map::new();
                     obj.insert("type".to_string(), serde_json::Value::String("map_of_numbers".to_string()));
                     obj.insert("map_key_type".to_string(), serde_json::Value::String(#map_key_schema.to_string()));
-                    obj.insert("generation_instructions".to_string(), serde_json::Value::String(#disclaimers_map.to_string()));
+                    obj.insert("generation_instructions".to_string(), serde_json::Value::String(#generation_instructions.to_string()));
                     obj.insert("required".to_string(), serde_json::Value::Bool(#required_bool));
                     serde_json::Value::Object(obj)
                 }
@@ -163,7 +137,7 @@ pub fn emit_schema_for_type(
                     let mut obj = serde_json::Map::new();
                     obj.insert("type".to_string(), serde_json::Value::String("map_of_booleans".to_string()));
                     obj.insert("map_key_type".to_string(), serde_json::Value::String(#map_key_schema.to_string()));
-                    obj.insert("generation_instructions".to_string(), serde_json::Value::String(#disclaimers_map.to_string()));
+                    obj.insert("generation_instructions".to_string(), serde_json::Value::String(#generation_instructions.to_string()));
                     obj.insert("required".to_string(), serde_json::Value::Bool(#required_bool));
                     serde_json::Value::Object(obj)
                 }
@@ -174,7 +148,7 @@ pub fn emit_schema_for_type(
                     let mut obj = serde_json::Map::new();
                     obj.insert("type".to_string(), serde_json::Value::String("map_of_strings".to_string()));
                     obj.insert("map_key_type".to_string(), serde_json::Value::String(#map_key_schema.to_string()));
-                    obj.insert("generation_instructions".to_string(), serde_json::Value::String(#disclaimers_map.to_string()));
+                    obj.insert("generation_instructions".to_string(), serde_json::Value::String(#generation_instructions.to_string()));
                     obj.insert("required".to_string(), serde_json::Value::Bool(#required_bool));
                     serde_json::Value::Object(obj)
                 }
@@ -186,7 +160,7 @@ pub fn emit_schema_for_type(
                     let mut obj = serde_json::Map::new();
                     obj.insert("type".to_string(), serde_json::Value::String("map_of".to_string()));
                     obj.insert("map_key_type".to_string(), serde_json::Value::String(#map_key_schema.to_string()));
-                    obj.insert("generation_instructions".to_string(), serde_json::Value::String(#disclaimers_map.to_string()));
+                    obj.insert("generation_instructions".to_string(), serde_json::Value::String(#generation_instructions.to_string()));
                     obj.insert("required".to_string(), serde_json::Value::Bool(#required_bool));
 
                     let nested_val = <#v_ty as AiJsonTemplate>::to_template();
@@ -197,12 +171,6 @@ pub fn emit_schema_for_type(
             });
         }
     }
-
-    // 6) fallback => treat as AiJsonTemplate
-    let disclaimers_nested = format!(
-        "{}\nFor nested struct/enum fields, pick exactly one variant if it's an enum, and be sure to fill all required subfields.\n",
-        merged_instructions
-    );
 
     Some(quote! {
         {
@@ -225,7 +193,7 @@ pub fn emit_schema_for_type(
             };
 
             obj.insert("type".to_string(), serde_json::Value::String(nested_type_str.to_string()));
-            obj.insert("generation_instructions".to_string(), serde_json::Value::String(#disclaimers_nested.to_string()));
+            obj.insert("generation_instructions".to_string(), serde_json::Value::String(#generation_instructions.to_string()));
             obj.insert("required".to_string(), serde_json::Value::Bool(#required_bool));
             obj.insert("nested_template".to_string(), nested);
 

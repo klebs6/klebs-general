@@ -10,9 +10,9 @@ crate::ix!();
 /// This prevents the ambiguous associated-type errors.
 ///
 pub fn gather_item_accessors(
-    named_fields: &syn::FieldsNamed,
+    named_fields:         &syn::FieldsNamed,
     _original_type_ident: &syn::Ident,
-    field_mappings: &[FieldJustConfMapping],
+    field_mappings:       &[FieldJustConfMapping],
 ) -> (
     Vec<proc_macro2::TokenStream>, // item field accessors
     Vec<proc_macro2::TokenStream>, // justification field accessors

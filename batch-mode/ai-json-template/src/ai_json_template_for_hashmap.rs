@@ -1,3 +1,4 @@
+// ---------------- [ File: ai-json-template/src/ai_json_template_for_hashmap.rs ]
 crate::ix!();
 
 /// Provides a blanket AiJsonTemplate implementation for HashMap<K, V>,
@@ -9,23 +10,11 @@ where
 {
     fn to_template() -> JsonValue {
         // We'll produce a basic "map_of" template with disclaimers
-        tracing::trace!("AiJsonTemplate::to_template for HashMap<K, V>");
+        trace!("AiJsonTemplate::to_template for HashMap<K, V>");
 
         let mut obj = serde_json::Map::new();
         obj.insert("type".to_string(), JsonValue::String("map_of".to_string()));
 
-        // We'll disclaim that the keys must be a single JSON object key
-        obj.insert(
-            "generation_instructions".to_string(),
-            JsonValue::String(
-                "IMPORTANT:\n\
-                 Provide this field as a JSON object {\"some_key\": <value>, ...}.\n\
-                 The keys must be valid JSON strings. For the map value, fill them per the V schema.\n\
-                 Do not add extra fields or wrap in arrays.\n\
-                 If optional, set it to null.\n"
-                    .to_string(),
-            ),
-        );
         // Typically required can be set at the parent struct’s logic, so default to true here:
         obj.insert("required".to_string(), JsonValue::Bool(true));
 
@@ -49,23 +38,13 @@ where
     V: Send + Sync + AiJsonTemplate + 'static,
 {
     fn to_template_with_justification() -> JsonValue {
-        tracing::trace!("AiJsonTemplateWithJustification::to_template_with_justification for HashMap<K, V>");
+        trace!("AiJsonTemplateWithJustification::to_template_with_justification for HashMap<K, V>");
 
         // We'll produce "map_of" plus disclaimers for justification
         let mut obj = serde_json::Map::new();
         obj.insert("type".to_string(), JsonValue::String("map_of".to_string()));
         obj.insert("required".to_string(), JsonValue::Bool(true));
         obj.insert("has_justification".to_string(), JsonValue::Bool(true));
-
-        let disclaimers = "\
-            IMPORTANT:\n\
-            Provide this map as {\"key\": <value>}, with each key a JSON string.\n\
-            If optional, set to null. Otherwise, fill all subfields of the map value.\n\
-            For justification:\n\
-            - You may have a justification/confidence for the entire map.\n\
-            - Each key and value might also be subject to justification if the parent struct so requires.\n";
-
-        obj.insert("generation_instructions".to_string(), JsonValue::String(disclaimers.to_string()));
 
         // subtemplates from K::to_template_with_justification() and V::to_template_with_justification()
         let nested_key = K::to_template();

@@ -1,3 +1,4 @@
+// ---------------- [ File: save-load-traits/src/impl_for_vec.rs ]
 crate::ix!();
 
 /// Implements SaveToFile for `Vec<T>`, writing its contents as JSON array,

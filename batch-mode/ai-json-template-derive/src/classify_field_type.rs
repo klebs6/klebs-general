@@ -115,7 +115,10 @@ pub fn classify_field_type_for_child(
             {
                 let mut map_obj = serde_json::Map::new();
                 map_obj.insert("type".to_string(), serde_json::Value::String("map_of".to_string()));
-                map_obj.insert("generation_instructions".to_string(), serde_json::Value::String(#doc_lit.to_string()));
+
+                //the following line is known to create duplicates
+                //map_obj.insert("generation_instructions".to_string(), serde_json::Value::String(#doc_lit.to_string()));
+
                 map_obj.insert("required".to_string(), serde_json::Value::Bool(#required_bool));
                 map_obj.insert("map_key_template".to_string(), #key_schema);
                 map_obj.insert("map_value_template".to_string(), #value_schema);
