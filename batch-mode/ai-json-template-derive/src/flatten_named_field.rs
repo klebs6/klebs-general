@@ -1,3 +1,4 @@
+// ---------------- [ File: ai-json-template-derive/src/flatten_named_field.rs ]
 crate::ix!();
 
 /// A little helper that collects expansions for one named field.

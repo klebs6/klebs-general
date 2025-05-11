@@ -1,6 +1,6 @@
 // ---------------- [ File: ai-json-template-derive/src/imports.rs ]
 pub(crate) use proc_macro::TokenStream;
-pub(crate) use proc_macro2::TokenStream as TokenStream2;
+pub(crate) use proc_macro2::{Span,TokenStream as TokenStream2};
 pub(crate) use quote::{quote};
 pub(crate) use export_magic::*;
 pub(crate) use tracing::{info,warn,error,trace,debug};
@@ -29,6 +29,7 @@ pub(crate) use syn::{
     MetaList,
     Meta,
     Lit,
+    Ident,
     spanned::Spanned,
     punctuated::Punctuated,
     Token,
@@ -37,6 +38,9 @@ pub(crate) use syn::{
     token::Colon,
     Field,
     FieldsNamed,
+    FieldsUnnamed,
+    DataEnum,
     Visibility,
+    Variant,
     FieldMutability,
 };

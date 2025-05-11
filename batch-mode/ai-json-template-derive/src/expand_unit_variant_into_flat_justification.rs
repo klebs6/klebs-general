@@ -1,3 +1,4 @@
+// ---------------- [ File: ai-json-template-derive/src/expand_unit_variant_into_flat_justification.rs ]
 crate::ix!();
 
 /// Expands a **unit variant** (e.g. `UnitVariant`) into “flat justification” form.
@@ -22,7 +23,7 @@ pub fn expand_unit_variant_into_flat_justification(
             #variant_ident,
         };
         let from_arm_ts = quote! {
-            FlatJustified#parent_enum_ident::#variant_ident => {
+            FlatJustified #parent_enum_ident::#variant_ident => {
                 Self {
                     item: #parent_enum_ident::#variant_ident,
                     justification: #justification_ident::#variant_ident {},
@@ -43,7 +44,7 @@ pub fn expand_unit_variant_into_flat_justification(
             },
         };
         let from_arm_ts = quote! {
-            FlatJustified#parent_enum_ident::#variant_ident {
+            FlatJustified #parent_enum_ident::#variant_ident {
                 enum_variant_justification,
                 enum_variant_confidence
             } => {
@@ -68,10 +69,10 @@ mod test_expand_unit_variant_into_flat_justification {
 
     #[traced_test]
     fn test_skip_self_just_true() {
-        let parent = Ident::new("MyEnum", Span::call_site());
-        let variant = Ident::new("Unit", Span::call_site());
-        let just = Ident::new("MyEnumJustification", Span::call_site());
-        let conf = Ident::new("MyEnumConfidence", Span::call_site());
+        let parent = Ident::new("MyEnum", proc_macro2::Span::call_site());
+        let variant = Ident::new("Unit", proc_macro2::Span::call_site());
+        let just = Ident::new("MyEnumJustification", proc_macro2::Span::call_site());
+        let conf = Ident::new("MyEnumConfidence", proc_macro2::Span::call_site());
         let (flat_ts, from_ts) = expand_unit_variant_into_flat_justification(
             &parent, &variant, &just, &conf, /*skip_self_just=*/ true
         );
@@ -88,10 +89,10 @@ mod test_expand_unit_variant_into_flat_justification {
 
     #[traced_test]
     fn test_skip_self_just_false() {
-        let parent = Ident::new("MyEnum", Span::call_site());
-        let variant = Ident::new("SpecialCase", Span::call_site());
-        let just = Ident::new("MyEnumJustification", Span::call_site());
-        let conf = Ident::new("MyEnumConfidence", Span::call_site());
+        let parent = Ident::new("MyEnum", proc_macro2::Span::call_site());
+        let variant = Ident::new("SpecialCase", proc_macro2::Span::call_site());
+        let just = Ident::new("MyEnumJustification", proc_macro2::Span::call_site());
+        let conf = Ident::new("MyEnumConfidence", proc_macro2::Span::call_site());
         let (flat_ts, from_ts) = expand_unit_variant_into_flat_justification(
             &parent, &variant, &just, &conf, /*skip_self_just=*/ false
         );

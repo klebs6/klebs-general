@@ -1,4 +1,4 @@
-// ---------------- [ File: ai-json-template-derive/src/generate_flat_justified_for_enum.rs ]
+// ---------------- [ File: ai-json-template-derive/src/generate_flat_justification_code_for_enum.rs ]
 crate::ix!();
 
 /// Generates a "FlatJustified{Enum}" plus `impl From<FlatJustified{Enum}> for Justified{Enum}`
@@ -116,8 +116,6 @@ pub fn generate_flat_justification_code_for_enum(
 #[cfg(test)]
 mod test_generate_flat_justification_code_for_enum {
     use super::*;
-    use syn::{DataEnum, Variant, Fields, Field};
-    use traced_test::traced_test;
 
     // We'll define small stubs for "skip_variant_self_just_fn", etc.
 
@@ -126,7 +124,7 @@ mod test_generate_flat_justification_code_for_enum {
         // Minimal enum with 1 unit variant
         let variant = Variant {
             attrs: vec![],
-            ident: Ident::new("UnitVar", Span::call_site()),
+            ident: Ident::new("UnitVar", proc_macro2::Span::call_site()),
             fields: Fields::Unit,
             discriminant: None,
         };
@@ -162,11 +160,11 @@ mod test_generate_flat_justification_code_for_enum {
             (TokenStream2::new(), TokenStream2::new(), TokenStream2::new(), TokenStream2::new())
         }
 
-        let enum_ident = Ident::new("MyEnum", Span::call_site());
+        let enum_ident = Ident::new("MyEnum", proc_macro2::Span::call_site());
         let (flat_ts, from_ts) = generate_flat_justification_code_for_enum(
             &enum_ident,
             &data_enum,
-            Span::call_site(),
+            proc_macro2::Span::call_site(),
             skip_variant_self_just,
             skip_variant_child_just,
             skip_field_self_just,
@@ -191,14 +189,15 @@ mod test_generate_flat_justification_code_for_enum {
         //   TupleVar(u32)
         let named_var = Variant {
             attrs: vec![],
-            ident: Ident::new("NamedVar", Span::call_site()),
+            ident: Ident::new("NamedVar", proc_macro2::Span::call_site()),
             fields: {
                 let f = Field {
                     attrs: vec![],
                     vis: syn::Visibility::Inherited,
-                    ident: Some(Ident::new("x", Span::call_site())),
+                    ident: Some(Ident::new("x", proc_macro2::Span::call_site())),
                     colon_token: Some(Default::default()),
                     ty: syn::parse_quote! { bool },
+                    mutability: FieldMutability::None,
                 };
                 let mut p = syn::punctuated::Punctuated::new();
                 p.push(f);
@@ -211,7 +210,7 @@ mod test_generate_flat_justification_code_for_enum {
         };
         let tuple_var = Variant {
             attrs: vec![],
-            ident: Ident::new("TupleVar", Span::call_site()),
+            ident: Ident::new("TupleVar", proc_macro2::Span::call_site()),
             fields: {
                 let f = Field {
                     attrs: vec![],
@@ -219,6 +218,7 @@ mod test_generate_flat_justification_code_for_enum {
                     ident: None,
                     colon_token: None,
                     ty: syn::parse_quote! { u32 },
+                    mutability: FieldMutability::None,
                 };
                 let mut p = syn::punctuated::Punctuated::new();
                 p.push(f);
@@ -266,11 +266,11 @@ mod test_generate_flat_justification_code_for_enum {
             (quote!{ #decl }, i_init, TokenStream2::new(), TokenStream2::new())
         }
 
-        let enum_ident = Ident::new("MyEnum2", Span::call_site());
+        let enum_ident = Ident::new("MyEnum2", proc_macro2::Span::call_site());
         let (flat_ts, from_ts) = generate_flat_justification_code_for_enum(
             &enum_ident,
             &data_enum,
-            Span::call_site(),
+            proc_macro2::Span::call_site(),
             skip_variant_self_just,
             skip_variant_child_just,
             skip_field_self_just,

@@ -1,3 +1,4 @@
+// ---------------- [ File: ai-json-template-derive/src/child_type_to_just.rs ]
 crate::ix!();
 
 /// If the child is a non-leaf custom type, we produce something like `ChildJustification`.

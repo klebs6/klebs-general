@@ -331,7 +331,7 @@ pub fn derive_ai_json_template_with_justification(
             out.extend(enum_tpl_ts);
 
             // (b) the FLAT expansions => "FlatJustifiedEnum" + From<FlatJustifiedEnum> for JustifiedEnum
-            let (flat_ts, from_ts) = crate::generate_flat_justified_for_enum(
+            let (flat_ts, from_ts) = crate::generate_flat_justification_code_for_enum(
                 ty_ident,
                 data_enum,
                 span

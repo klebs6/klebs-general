@@ -1,3 +1,4 @@
+// ---------------- [ File: ai-json-template-derive/src/expand_unnamed_variant_into_flat_justification.rs ]
 crate::ix!();
 
 /// Expands an **unnamed (tuple) variant** (e.g. `MixedVariant(T, U)`) into “flat justification” form.
@@ -95,7 +96,7 @@ pub fn expand_unnamed_variant_into_flat_justification(
     };
 
     let from_arm = quote! {
-        FlatJustified#parent_enum_ident::#variant_ident { #( #pattern_vars ),* } => {
+        FlatJustified #parent_enum_ident::#variant_ident { #( #pattern_vars ),* } => {
             Self {
                 item: #item_constructor,
                 justification: #just_constructor,
@@ -110,8 +111,6 @@ pub fn expand_unnamed_variant_into_flat_justification(
 #[cfg(test)]
 mod test_expand_unnamed_variant_into_flat_justification {
     use super::*;
-    use syn::{Field, FieldsUnnamed, Visibility};
-    use traced_test::traced_test;
 
     #[traced_test]
     fn test_two_tuple_fields() {
@@ -122,6 +121,7 @@ mod test_expand_unnamed_variant_into_flat_justification {
             ident: None,
             colon_token: None,
             ty: syn::parse_quote! { bool },
+            mutability: FieldMutability::None,
         };
         let f1 = Field {
             attrs: vec![],
@@ -129,6 +129,7 @@ mod test_expand_unnamed_variant_into_flat_justification {
             ident: None,
             colon_token: None,
             ty: syn::parse_quote! { String },
+            mutability: FieldMutability::None,
         };
         let fields_unnamed = FieldsUnnamed {
             paren_token: Default::default(),
@@ -153,10 +154,10 @@ mod test_expand_unnamed_variant_into_flat_justification {
         fn dummy_skip_field(_f: &syn::Field) -> bool { false }
         fn dummy_is_leaf_type(_t: &syn::Type) -> bool { false }
 
-        let parent = Ident::new("SomeEnum", Span::call_site());
-        let var = Ident::new("TupleVar", Span::call_site());
-        let just_id = Ident::new("SomeEnumJustification", Span::call_site());
-        let conf_id = Ident::new("SomeEnumConfidence", Span::call_site());
+        let parent = Ident::new("SomeEnum", proc_macro2::Span::call_site());
+        let var = Ident::new("TupleVar", proc_macro2::Span::call_site());
+        let just_id = Ident::new("SomeEnumJustification", proc_macro2::Span::call_site());
+        let conf_id = Ident::new("SomeEnumConfidence", proc_macro2::Span::call_site());
 
         let (fv, arm) = expand_unnamed_variant_into_flat_justification(
             &parent,

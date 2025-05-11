@@ -1,3 +1,4 @@
+// ---------------- [ File: ai-json-template-derive/src/flatten_unnamed_field.rs ]
 crate::ix!();
 
 /// Same as `flatten_named_field` but for a tuple (unnamed) field, e.g. `field_0`.

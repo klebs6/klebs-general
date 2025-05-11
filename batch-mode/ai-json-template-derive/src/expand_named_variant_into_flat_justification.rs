@@ -1,3 +1,4 @@
+// ---------------- [ File: ai-json-template-derive/src/expand_named_variant_into_flat_justification.rs ]
 crate::ix!();
 
 /// Expands a **named (struct) variant** (e.g. `StructVariant { x: T, y: U }`)
@@ -113,7 +114,7 @@ pub fn expand_named_variant_into_flat_justification(
     };
 
     let from_arm = quote! {
-        FlatJustified#parent_enum_ident::#variant_ident { #( #pattern_vars ),* } => {
+        FlatJustified #parent_enum_ident::#variant_ident { #( #pattern_vars ),* } => {
             Self {
                 item: #item_constructor,
                 justification: #just_constructor,
@@ -128,8 +129,6 @@ pub fn expand_named_variant_into_flat_justification(
 #[cfg(test)]
 mod test_expand_named_variant_into_flat_justification {
     use super::*;
-    use syn::{Field, FieldsNamed};
-    use traced_test::traced_test;
 
     #[traced_test]
     fn test_simple_named_variant() {
@@ -137,16 +136,18 @@ mod test_expand_named_variant_into_flat_justification {
         let alpha = Field {
             attrs: vec![],
             vis: syn::Visibility::Inherited,
-            ident: Some(Ident::new("alpha", Span::call_site())),
+            ident: Some(Ident::new("alpha", proc_macro2::Span::call_site())),
             colon_token: Some(Default::default()),
             ty: syn::parse_quote! { u8 },
+            mutability: FieldMutability::None,
         };
         let beta = Field {
             attrs: vec![],
             vis: syn::Visibility::Inherited,
-            ident: Some(Ident::new("beta", Span::call_site())),
+            ident: Some(Ident::new("beta", proc_macro2::Span::call_site())),
             colon_token: Some(Default::default()),
             ty: syn::parse_quote! { String },
+            mutability: FieldMutability::None,
         };
         let fields_named = FieldsNamed {
             brace_token: Default::default(),
@@ -174,10 +175,10 @@ mod test_expand_named_variant_into_flat_justification {
         fn dummy_skip_field(_f: &syn::Field) -> bool { false }
         fn dummy_is_leaf_type(_t: &syn::Type) -> bool { false }
 
-        let parent = Ident::new("MyEnum", Span::call_site());
-        let var = Ident::new("StructVariant", Span::call_site());
-        let just_id = Ident::new("MyEnumJustification", Span::call_site());
-        let conf_id = Ident::new("MyEnumConfidence", Span::call_site());
+        let parent = Ident::new("MyEnum", proc_macro2::Span::call_site());
+        let var = Ident::new("StructVariant", proc_macro2::Span::call_site());
+        let just_id = Ident::new("MyEnumJustification", proc_macro2::Span::call_site());
+        let conf_id = Ident::new("MyEnumConfidence", proc_macro2::Span::call_site());
 
         let (fv, arm) = expand_named_variant_into_flat_justification(
             &parent,

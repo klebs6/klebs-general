@@ -1,3 +1,4 @@
+// ---------------- [ File: ai-json-template-derive/src/create_flat_justification_idents_for_enum.rs ]
 crate::ix!();
 
 /// Creates four Ident values used when generating a flat-justified enum.
@@ -10,7 +11,7 @@ crate::ix!();
 /// The name alone conveys that it’s producing identifiers for our “flat justification” expansions.
 pub fn create_flat_justification_idents_for_enum(
     enum_ident: &Ident,
-    span: Span
+    span: proc_macro2::Span
 ) -> (Ident, Ident, Ident, Ident) {
     trace!("Creating four Ident values for enum: {}", enum_ident);
 
@@ -34,7 +35,7 @@ mod test_create_flat_justification_idents_for_enum {
 
     #[traced_test]
     fn test_generates_four_idents_correctly() {
-        let span = Span::call_site();
+        let span = proc_macro2::Span::call_site();
         let input_enum = Ident::new("FooEnum", span);
         trace!("Starting test: test_generates_four_idents_correctly");
 
