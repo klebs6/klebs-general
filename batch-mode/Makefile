@@ -53,6 +53,7 @@ ACTIVE_PACKAGE := ai-json-template-derive
 
 #-----------------------------------------------------[this section lets us choose how we want to test]
 DEFAULT := test
+#DEFAULT := expand_to_file
 #DEFAULT := test_file
 #DEFAULT := test_one
 #DEFAULT := test_file_one
@@ -66,9 +67,20 @@ default: $(DEFAULT)
 #NOCAPTURE := --nocapture
 #NOCAPTURE := 
 
+EXPANSION_FILE  := expanded_flat_justified_exhaustive.rs
+EXPANSION_PACKAGE := ai-json-template-derive
+EXPANSION_TEST    := flat_justified_exhaustive
+#EXPANSION_TEST    := classify_with_justification
+
 #----------------------------------------------[here are our rules]
 run:
 	RUSTFLAGS=$(RUSTFLAGS) $(CARGO) $(RUN) -p $(ACTIVE_PACKAGE) $(FEATURES)
+
+expand:
+	cargo expand --package $(EXPANSION_PACKAGE) --test $(EXPANSION_TEST)
+
+expand_to_file:
+	cargo expand --package $(EXPANSION_PACKAGE) --test $(EXPANSION_TEST) > $(EXPANSION_FILE)
 
 file_diff:
 	RUSTFLAGS=$(RUSTFLAGS) $(CARGO) $(RUN) --bin camel-case-token-file-difference -- --file-a $(FILE_A) --file-b $(FILE_B) --file-c $(FILE_C)

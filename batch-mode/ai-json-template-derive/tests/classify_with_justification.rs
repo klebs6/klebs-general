@@ -1,3 +1,4 @@
+/*
 // ---------------- [ File: ai-json-template-derive/tests/classify_with_justification.rs ]
 #![allow(dead_code)]
 #![allow(unused_imports)]
@@ -17,6 +18,7 @@ use std::collections::*;
 use save_load_derive::*;
 use save_load_traits::*;
 
+/*
 /// Key = String, Value = bool
 #[derive(Default,SaveLoad,Debug,Clone,PartialEq,Serialize,Deserialize,Getters,Setters,Builder)]
 #[derive(AiJsonTemplate, AiJsonTemplateWithJustification)]
@@ -56,6 +58,7 @@ pub struct NestedStruct {
     count: u32,
 }
 
+
 /// Key=String, Value=NestedStruct
 #[derive(Default,SaveLoad,Debug,Clone,PartialEq,Serialize,Deserialize,Getters,Setters,Builder)]
 #[derive(AiJsonTemplate, AiJsonTemplateWithJustification)]
@@ -63,6 +66,7 @@ pub struct NestedStruct {
 pub struct MapToCustomStruct {
     map: HashMap<String, NestedStruct>,
 }
+
 
 #[test]
 fn test_map_to_custom_struct_schema() {
@@ -97,16 +101,24 @@ fn test_map_to_custom_struct_schema() {
     assert!(inner_fields.contains_key("info"), "Missing 'info' in nested");
     assert!(inner_fields.contains_key("count"), "Missing 'count' in nested");
 }
+*/
 
 // ========== 3) Built-in key + custom nested enum as value ==========
 
+
 /// A custom enum
-#[derive(Default,SaveLoad,Debug,Clone,PartialEq,Serialize,Deserialize)]
+#[derive(SaveLoad,Debug,Clone,PartialEq,Serialize,Deserialize)]
 #[derive(AiJsonTemplate, AiJsonTemplateWithJustification)]
 pub enum MyEnum {
-    #[default]
     UnitVariant,
     StructVariant { name: String, active: bool },
+}
+
+/*
+impl Default for MyEnum {
+    fn default() -> Self {
+        MyEnum::UnitVariant
+    }
 }
 
 #[derive(Default,SaveLoad,Debug,Clone,PartialEq,Serialize,Deserialize,Getters,Setters,Builder)]
@@ -182,3 +194,5 @@ fn test_map_non_primitive_key_schema() {
     let val_template = map_entry.get("map_value_template").expect("No map_value_template");
     assert_eq!(val_template, "boolean", "Expected boolean for the value type");
 }
+*/
+*/

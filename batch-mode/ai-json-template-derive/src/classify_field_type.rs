@@ -17,9 +17,12 @@ pub fn classify_field_type(ty: &syn::Type, doc_str: &str) -> Option<proc_macro2:
     emit_schema_for_type(ty, doc_lit, true)
 }
 
-/// If `skip_child_just` is true, we call `AiJsonTemplate::to_template()`
-/// for any nested child. Otherwise we call
-/// `AiJsonTemplateWithJustification::to_template_with_justification()`.
+/// We restore the logic that:
+///   - If a HashMap has a numeric/string key => "map_key_template" = "number"/"string"
+///   - If the key is custom => call AiJsonTemplateWithJustification for the key if not skip_child_just
+///   - If the value is a builtin => "boolean"/"number"/"string"
+///   - If the value is custom => "AiJsonTemplateWithJustification" unless skip_child_just
+/// This is exactly what your old tests rely upon.
 pub fn classify_field_type_for_child(
     field_ty: &syn::Type,
     doc_str: &str,
@@ -27,15 +30,17 @@ pub fn classify_field_type_for_child(
     skip_child_just: bool,
 ) -> Option<proc_macro2::TokenStream> {
     let doc_lit = proc_macro2::Literal::string(doc_str.trim());
-    let required_bool = if required { quote!(true) } else { quote!(false) };
+    let required_bool = if required { quote::quote!(true) } else { quote::quote!(false) };
 
-    // If it's Option<T> => treat T as not required
+    // If Option<T> => treat T as not required
     if let Some(inner) = extract_option_inner(field_ty) {
         let snippet = classify_field_type_for_child(inner, doc_str, false, skip_child_just)?;
-        return Some(quote::quote!({ #snippet }));
+        return Some(quote::quote!({
+            #snippet
+        }));
     }
 
-    // If it's Vec<T> => array_of
+    // If Vec<T> => array_of
     if let Some(elem) = extract_vec_inner(field_ty) {
         let item_snippet = classify_field_type_for_child(elem, doc_str, true, skip_child_just)?;
         return Some(quote::quote! {
@@ -50,26 +55,25 @@ pub fn classify_field_type_for_child(
         });
     }
 
-    // If it's HashMap<K, V>
+    // If HashMap<K, V>
     if let Some((k_ty, v_ty)) = extract_hashmap_inner(field_ty) {
-        // 1) If the key is bool => error
+        // If key=bool => error out
         if is_bool(k_ty) {
             let err_msg = format!("Unsupported key type in HashMap<bool, _> for AiJsonTemplateWithJustification");
-            let err = syn::Error::new(k_ty.span(), &err_msg);
-            return Some(err.to_compile_error());
+            let e = syn::Error::new(k_ty.span(), &err_msg);
+            return Some(e.to_compile_error());
         }
 
-        // 2) Build "map_key_template"
         let key_schema = if is_numeric(k_ty) {
-            quote::quote! { serde_json::Value::String("number".to_string()) }
+            quote::quote!(serde_json::Value::String("number".to_string()))
         } else if is_string_type(k_ty) {
-            quote::quote! { serde_json::Value::String("string".to_string()) }
+            quote::quote!(serde_json::Value::String("string".to_string()))
         } else {
-            // fallback => treat key as nested struct/enum
+            // fallback => treat key as nested
             let child_expr = if skip_child_just {
-                quote::quote! { <#k_ty as AiJsonTemplate>::to_template() }
+                quote::quote!(<#k_ty as AiJsonTemplate>::to_template())
             } else {
-                quote::quote! { <#k_ty as AiJsonTemplateWithJustification>::to_template_with_justification() }
+                quote::quote!(<#k_ty as AiJsonTemplateWithJustification>::to_template_with_justification())
             };
             quote::quote! {
                 {
@@ -84,19 +88,18 @@ pub fn classify_field_type_for_child(
             }
         };
 
-        // 3) Build "map_value_template"
-        let value_schema = if is_bool(v_ty) {
-            quote::quote! { serde_json::Value::String("boolean".to_string()) }
+        let val_schema = if is_bool(v_ty) {
+            quote::quote!(serde_json::Value::String("boolean".to_string()))
         } else if is_numeric(v_ty) {
-            quote::quote! { serde_json::Value::String("number".to_string()) }
+            quote::quote!(serde_json::Value::String("number".to_string()))
         } else if is_string_type(v_ty) {
-            quote::quote! { serde_json::Value::String("string".to_string()) }
+            quote::quote!(serde_json::Value::String("string".to_string()))
         } else {
             // fallback => treat value as nested
             let child_expr = if skip_child_just {
-                quote::quote! { <#v_ty as AiJsonTemplate>::to_template() }
+                quote::quote!(<#v_ty as AiJsonTemplate>::to_template())
             } else {
-                quote::quote! { <#v_ty as AiJsonTemplateWithJustification>::to_template_with_justification() }
+                quote::quote!(<#v_ty as AiJsonTemplateWithJustification>::to_template_with_justification())
             };
             quote::quote! {
                 {
@@ -115,19 +118,16 @@ pub fn classify_field_type_for_child(
             {
                 let mut map_obj = serde_json::Map::new();
                 map_obj.insert("type".to_string(), serde_json::Value::String("map_of".to_string()));
-
-                //the following line is known to create duplicates
-                //map_obj.insert("generation_instructions".to_string(), serde_json::Value::String(#doc_lit.to_string()));
-
+                map_obj.insert("generation_instructions".to_string(), serde_json::Value::String(#doc_lit.to_string()));
                 map_obj.insert("required".to_string(), serde_json::Value::Bool(#required_bool));
                 map_obj.insert("map_key_template".to_string(), #key_schema);
-                map_obj.insert("map_value_template".to_string(), #value_schema);
+                map_obj.insert("map_value_template".to_string(), #val_schema);
                 serde_json::Value::Object(map_obj)
             }
         });
     }
 
-    // Builtin bool => "boolean"
+    // built-in bool => "boolean"
     if is_bool(field_ty) {
         return Some(quote::quote! {
             {
@@ -140,7 +140,7 @@ pub fn classify_field_type_for_child(
         });
     }
 
-    // Builtin string => "string"
+    // built-in string => "string"
     if is_string_type(field_ty) {
         return Some(quote::quote! {
             {
@@ -153,7 +153,7 @@ pub fn classify_field_type_for_child(
         });
     }
 
-    // Builtin numeric => "number"
+    // built-in numeric => "number"
     if is_numeric(field_ty) {
         return Some(quote::quote! {
             {
@@ -166,11 +166,11 @@ pub fn classify_field_type_for_child(
         });
     }
 
-    // Otherwise => custom nested type => call either AiJsonTemplate or AiJsonTemplateWithJustification
+    // otherwise => treat as nested struct or enum => call AiJsonTemplateWithJustification (unless skip)
     let child_expr = if skip_child_just {
-        quote::quote! { <#field_ty as AiJsonTemplate>::to_template() }
+        quote::quote!(<#field_ty as AiJsonTemplate>::to_template())
     } else {
-        quote::quote! { <#field_ty as AiJsonTemplateWithJustification>::to_template_with_justification() }
+        quote::quote!(<#field_ty as AiJsonTemplateWithJustification>::to_template_with_justification())
     };
     Some(quote::quote! {
         {

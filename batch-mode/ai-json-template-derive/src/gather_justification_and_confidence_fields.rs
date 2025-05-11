@@ -1,109 +1,84 @@
 // ---------------- [ File: ai-json-template-derive/src/gather_justification_and_confidence_fields.rs ]
 crate::ix!();
 
-/// A small struct for recording how each original field maps to its
-/// justification/confidence identifiers *and* each field’s type.
-///
-/// By removing `pub`, these fields are no longer publicly accessible. 
-/// Instead, you can access them through the Getters/Setters or from methods 
-/// inside the same module.
+/// Restored logic that, for each named field, creates e.g. `fieldname_justification: String` and
+/// `fieldname_confidence: f32`. If the field is a nested type, we produce e.g. `SomeTypeJustification` 
+/// and `SomeTypeConfidence`.
 #[derive(Builder, Debug, Clone, Getters, Setters)]
 #[builder(setter(into))]
-#[getset(get = "pub", set = "pub")] // If you want them accessible by getset, you can keep these
+#[getset(get = "pub", set = "pub")]
 pub struct FieldJustConfMapping {
-    /// Original field name (e.g. "count")
-    field_ident: syn::Ident,
-
-    /// The newly created justification field name (e.g. "count_justification")
-    justification_field_ident: syn::Ident,
-
-    /// The newly created confidence field name (e.g. "count_confidence")
-    confidence_field_ident: syn::Ident,
-
-    /// The type used for justification (e.g. `String` or `SomeNestedJustification`)
-    justification_field_type: proc_macro2::TokenStream,
-
-    /// The type used for confidence (e.g. `f32` or `SomeNestedConfidence`)
-    confidence_field_type: proc_macro2::TokenStream,
+    pub field_ident: syn::Ident,
+    pub justification_field_ident: syn::Ident,
+    pub confidence_field_ident: syn::Ident,
+    pub justification_field_type: proc_macro2::TokenStream,
+    pub confidence_field_type: proc_macro2::TokenStream,
 }
 
-/// Gathers justification/confidence fields for each original named field.
-/// - Also appends compile errors to `out_err` if something fails.
-/// - *Additionally*, we fill out a set of “mappings” so we can later generate
-///   correct accessor methods without ambiguous references to associated types.
-/// - If a field has `#[justify = false]`, we skip generating justification/confidence for it.
 pub fn gather_justification_and_confidence_fields(
-    named_fields:             &syn::FieldsNamed,
+    named_fields: &syn::FieldsNamed,
     out_justification_fields: &mut Vec<proc_macro2::TokenStream>,
-    out_confidence_fields:    &mut Vec<proc_macro2::TokenStream>,
-    out_err:                  &mut proc_macro2::TokenStream,
-    out_mappings:             &mut Vec<FieldJustConfMapping>,
+    out_confidence_fields: &mut Vec<proc_macro2::TokenStream>,
+    out_err: &mut proc_macro2::TokenStream,
+    out_mappings: &mut Vec<FieldJustConfMapping>,
 ) {
-    tracing::trace!("Gathering justification/confidence fields with distinct field names like `foo_justification`, plus tracking their types.");
-
     for field in &named_fields.named {
         let field_ident = match &field.ident {
             Some(id) => id,
             None => {
                 let e = syn::Error::new(field.span(), "Unnamed fields not supported.");
                 let err_ts = e.to_compile_error();
-                *out_err = quote! { #out_err #err_ts };
+                *out_err = quote::quote! { #out_err #err_ts };
                 continue;
             }
         };
 
-        // NEW: Check if justification is disabled for this field
         if !is_justification_enabled(field) {
-            tracing::trace!("Skipping justification for '{}'", field_ident);
+            // skip
             continue;
         }
 
-        // e.g. if main field is `count`, we create `count_justification` and `count_confidence`.
         let just_ident = syn::Ident::new(
             &format!("{}_justification", field_ident),
-            field_ident.span(),
+            field_ident.span()
         );
         let conf_ident = syn::Ident::new(
             &format!("{}_confidence", field_ident),
-            field_ident.span(),
+            field_ident.span()
         );
-
-        let field_ty = &field.ty;
-        match classify_for_justification(field_ty) {
+        match classify_for_justification(&field.ty) {
             Ok(ClassifyResult::JustString) => {
-                // Built-in scalar => justification is `String`, confidence is `f32`
-                out_justification_fields.push(quote! {
-                    pub #just_ident: String
+                out_justification_fields.push(quote::quote! {
+                    pub #just_ident: String,
                 });
-                out_confidence_fields.push(quote! {
-                    pub #conf_ident: f32
+                out_confidence_fields.push(quote::quote! {
+                    pub #conf_ident: f32,
                 });
                 out_mappings.push(FieldJustConfMapping {
                     field_ident: field_ident.clone(),
                     justification_field_ident: just_ident,
                     confidence_field_ident: conf_ident,
-                    justification_field_type: quote!(String),
-                    confidence_field_type:   quote!(f32),
+                    justification_field_type: quote::quote!(String),
+                    confidence_field_type: quote::quote!(f32),
                 });
             }
-            Ok(ClassifyResult::NestedJustification { justification_type, confidence_type }) => {
-                // A nested type => store a nested justification struct & a nested confidence struct
-                out_justification_fields.push(quote! {
-                    pub #just_ident: #justification_type
+            Ok(ClassifyResult::NestedJustification{ justification_type, confidence_type }) => {
+                out_justification_fields.push(quote::quote! {
+                    pub #just_ident: #justification_type,
                 });
-                out_confidence_fields.push(quote! {
-                    pub #conf_ident: #confidence_type
+                out_confidence_fields.push(quote::quote! {
+                    pub #conf_ident: #confidence_type,
                 });
                 out_mappings.push(FieldJustConfMapping {
                     field_ident: field_ident.clone(),
                     justification_field_ident: just_ident,
                     confidence_field_ident: conf_ident,
                     justification_field_type: justification_type,
-                    confidence_field_type:    confidence_type,
+                    confidence_field_type: confidence_type,
                 });
             }
-            Err(err_ts) => {
-                *out_err = quote! { #out_err #err_ts };
+            Err(e_ts) => {
+                *out_err = quote::quote! { #out_err #e_ts };
             }
         }
     }

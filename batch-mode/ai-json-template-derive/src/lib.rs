@@ -3,21 +3,29 @@
 #![allow(unused_imports)]
 #[macro_use] mod imports; use imports::*;
 
-xp!{classify_field_type_with_justification}
+xp!{child_type_to_just}
 xp!{classify_field_type}
+xp!{classify_field_type_with_justification}
 xp!{classify_result}
 xp!{comma_separated_expression}
 xp!{compute_flat_type_for_stamped}
+xp!{create_flat_justification_idents_for_enum}
 xp!{emit_schema_for_type}
+xp!{expand_ai_json_template_with_justification}
+xp!{expand_named_variant_into_flat_justification}
+xp!{expand_unit_variant_into_flat_justification}
+xp!{expand_unnamed_variant_into_flat_justification}
 xp!{extract_hashmap_inner}
 xp!{extract_option_inner}
 xp!{extract_vec_inner}
+xp!{flatten_named_field}
+xp!{flatten_unnamed_field}
 xp!{gather_doc_comments}
 xp!{gather_field_injections}
 xp!{gather_item_accessors}
 xp!{gather_justification_and_confidence_fields}
 xp!{generate_enum_justified}
-xp!{generate_flat_justified_for_enum}
+xp!{generate_flat_justification_code_for_enum}
 xp!{generate_flat_justified_for_named}
 xp!{generate_justified_structs_for_named}
 xp!{generate_to_template_with_justification_for_enum}
@@ -26,7 +34,6 @@ xp!{is_builtin_scalar}
 xp!{is_justification_enabled}
 xp!{is_numeric}
 xp!{parse_doc_expr}
-xp!{expand_ai_json_template_with_justification}
 
 /// This new implementation supports:
 ///
@@ -250,12 +257,95 @@ pub fn derive_ai_json_template(input: TokenStream) -> TokenStream {
     }
 }
 
-/// This is the **main** entrypoint called by the proc macro. It just
-/// parses the input, calls `process_ai_json_template_with_justification`,
-/// and returns the resulting token stream.
+/// The main entrypoint for `#[derive(AiJsonTemplateWithJustification)]`.
+/// We generate (a) the typed justification structs/enums, and
+/// (b) the *FlatJustified* expansions if desired by the test suite.
 #[proc_macro_derive(AiJsonTemplateWithJustification, attributes(doc, justify, justify_inner))]
-pub fn derive_ai_json_template_with_justification(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
+pub fn derive_ai_json_template_with_justification(
+    input: proc_macro::TokenStream
+) -> proc_macro::TokenStream {
     let ast = syn::parse_macro_input!(input as syn::DeriveInput);
-    let expanded = expand_ai_json_template_with_justification(&ast);
-    expanded.into()
+    let span = ast.span();
+
+    // We'll build up the final expansions in `out`
+    let mut out = proc_macro2::TokenStream::new();
+
+    let ty_ident = &ast.ident;
+    let container_docs = crate::gather_doc_comments(&ast.attrs);
+    let _container_doc_str = container_docs.join("\n");
+
+    match &ast.data {
+        // ==================== Named Struct ====================
+        syn::Data::Struct(ds) => {
+            if let syn::Fields::Named(ref named_fields) = ds.fields {
+                // (a) typed expansions
+                let (just_ts, conf_ts, justified_ts, accessor_ts) =
+                    crate::generate_justified_structs_for_named(ty_ident, named_fields, span);
+                out.extend(just_ts);
+                out.extend(conf_ts);
+                out.extend(justified_ts);
+                out.extend(accessor_ts);
+
+                // Optionally generate a specialized "to_template_with_justification()"—you might already do so.
+                let to_tpl_ts = crate::generate_to_template_with_justification_for_named(
+                    ty_ident,
+                    named_fields,
+                    &_container_doc_str
+                );
+                out.extend(to_tpl_ts);
+
+                // (b) the FLAT expansions => "FlatJustifiedFoo" + From<FlatJustifiedFoo> for JustifiedFoo
+                let (flat_ts, from_ts) = crate::generate_flat_justified_for_named(
+                    ty_ident,
+                    named_fields,
+                    span
+                );
+                out.extend(flat_ts);
+                out.extend(from_ts);
+
+            } else {
+                // e.g. unit or tuple struct => produce an error or do something else
+                let err = syn::Error::new(
+                    span,
+                    "AiJsonTemplateWithJustification only supports named structs"
+                );
+                out.extend(err.to_compile_error());
+            }
+        }
+
+        // ==================== Enum ====================
+        syn::Data::Enum(data_enum) => {
+            // (a) typed expansions for justification/conf + JustifiedEnum
+            let (enum_just_ts, enum_conf_ts, justified_enum_ts) =
+                crate::generate_enum_justified(ty_ident, data_enum, span);
+            out.extend(enum_just_ts);
+            out.extend(enum_conf_ts);
+            out.extend(justified_enum_ts);
+
+            // Optionally generate a specialized "to_template_with_justification_for_enum(...)"
+            let enum_tpl_ts = crate::generate_to_template_with_justification_for_enum(
+                ty_ident,
+                data_enum,
+                &_container_doc_str
+            );
+            out.extend(enum_tpl_ts);
+
+            // (b) the FLAT expansions => "FlatJustifiedEnum" + From<FlatJustifiedEnum> for JustifiedEnum
+            let (flat_ts, from_ts) = crate::generate_flat_justified_for_enum(
+                ty_ident,
+                data_enum,
+                span
+            );
+            out.extend(flat_ts);
+            out.extend(from_ts);
+        }
+
+        // ==================== Union => not supported ====================
+        syn::Data::Union(_) => {
+            let e = syn::Error::new(span, "AiJsonTemplateWithJustification not supported on unions.");
+            out.extend(e.to_compile_error());
+        }
+    }
+
+    out.into()
 }

@@ -81,7 +81,7 @@ pub fn classify_for_justification(
 /// then **conditionally** appends "Justification" or "Confidence":
 /// - If there's at least one underscore in the sanitized name, we do `Foo_Bar_Justification`.
 /// - If there's **no** underscore in the sanitized name, we do `FooBarJustification`.
-fn sanitize_into_idents_for_nested(
+pub fn sanitize_into_idents_for_nested(
     the_type: &syn::Type,
     span: proc_macro2::Span
 ) -> (proc_macro2::TokenStream, proc_macro2::TokenStream) {
