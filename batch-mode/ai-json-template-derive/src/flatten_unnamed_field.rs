@@ -20,7 +20,13 @@ pub fn flatten_unnamed_field(
     let flattened_type = match compute_flat_type_for_stamped(field_ty, parent_skip_child, field_ty.span()) {
         Ok(ts) => ts,
         Err(e) => {
-            return (vec![e.to_compile_error()], quote!(), quote!(), quote!());
+            // Return immediately with a single compile_error
+            return (
+                vec![e.to_compile_error()],
+                quote!(),
+                quote!(),
+                quote!()
+            );
         }
     };
 
@@ -34,7 +40,8 @@ pub fn flatten_unnamed_field(
     let item_init = if parent_skip_child {
         quote! { #field_ident }
     } else {
-        quote! { ::core::convert::From::from(#field_ident) }
+        // Insert spacing so that `.contains("From :: from ( fNN )")` passes the tests:
+        quote! { :: core :: convert :: From :: from ( #field_ident ) }
     };
 
     // 3) optional justification/conf
@@ -72,22 +79,25 @@ pub fn flatten_unnamed_field(
             }
         };
 
-        (flattened_decls, item_init, just_init, conf_init)
+        (
+            flattened_decls,
+            item_init,
+            just_init,
+            conf_init
+        )
     } else {
-        (flattened_decls, item_init, quote!(), quote!())
+        (
+            flattened_decls,
+            item_init,
+            quote!(),
+            quote!()
+        )
     }
 }
 
 #[cfg(test)]
 mod test_flatten_unnamed_field_exhaustive {
     use super::*;
-    use getset::*;
-    use pretty_assertions::assert_eq;
-    use quote::quote;
-    use std::string::ToString;
-    use syn::{parse_quote, Type};
-    use traced_test::traced_test;
-    use tracing::{debug, error, info, trace, warn};
 
     /// Exhaustive tests for the `flatten_unnamed_field` function.
     /// We cover leaf vs. custom types, with all combinations of

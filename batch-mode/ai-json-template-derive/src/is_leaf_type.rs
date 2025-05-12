@@ -1,3 +1,4 @@
+// ---------------- [ File: ai-json-template-derive/src/is_leaf_type.rs ]
 crate::ix!();
 
 /// Return true if `ty` should *not* be treated as a nested justification-enabled type.

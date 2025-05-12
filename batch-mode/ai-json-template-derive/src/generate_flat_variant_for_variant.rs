@@ -1,3 +1,4 @@
+// ---------------- [ File: ai-json-template-derive/src/generate_flat_variant_for_variant.rs ]
 crate::ix!();
 
 pub fn generate_flat_variant_for_variant(

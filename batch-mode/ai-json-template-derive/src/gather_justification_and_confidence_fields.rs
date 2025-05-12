@@ -8,63 +8,77 @@ pub fn gather_justification_and_confidence_fields(
     out_err: &mut proc_macro2::TokenStream,
     out_mappings: &mut Vec<FieldJustConfMapping>,
 ) {
+    trace!("Entering gather_justification_and_confidence_fields");
+
     for field in &named_fields.named {
         let field_ident = match &field.ident {
             Some(id) => id,
             None => {
-                let e = syn::Error::new(field.span(), "Unnamed fields not supported.");
+                let e = syn::Error::new(
+                    field.span(),
+                    "Unnamed fields not supported in gather_justification_and_confidence_fields.",
+                );
                 let err_ts = e.to_compile_error();
                 *out_err = quote::quote! { #out_err #err_ts };
                 continue;
             }
         };
 
+        // Skip if #[justify = false]
         if !is_justification_enabled(field) {
-            // skip
+            debug!("Field '{}' has justification disabled; skipping", field_ident);
             continue;
         }
 
         let just_ident = syn::Ident::new(
             &format!("{}_justification", field_ident),
-            field_ident.span()
+            field_ident.span(),
         );
         let conf_ident = syn::Ident::new(
             &format!("{}_confidence", field_ident),
-            field_ident.span()
+            field_ident.span(),
         );
+
         match classify_for_justification(&field.ty) {
             Ok(ClassifyResult::JustString) => {
+                // Remove any `pub` usage here:
                 out_justification_fields.push(quote::quote! {
-                    pub #just_ident: String,
+                    #just_ident: String,
                 });
                 out_confidence_fields.push(quote::quote! {
-                    pub #conf_ident: f32,
+                    #conf_ident: f32,
                 });
-                out_mappings.push(FieldJustConfMappingBuilder::default()
-                    .field_ident(field_ident.clone())
-                    .justification_field_ident(just_ident)
-                    .confidence_field_ident(conf_ident)
-                    .justification_field_type(quote::quote!(String))
-                    .confidence_field_type(quote::quote!(f32))
-                    .build()
-                    .unwrap()
+                out_mappings.push(
+                    FieldJustConfMappingBuilder::default()
+                        .field_ident(field_ident.clone())
+                        .justification_field_ident(just_ident)
+                        .confidence_field_ident(conf_ident)
+                        .justification_field_type(quote::quote!(String))
+                        .confidence_field_type(quote::quote!(f32))
+                        .build()
+                        .unwrap(),
                 );
             }
-            Ok(ClassifyResult::NestedJustification{ justification_type, confidence_type }) => {
+            Ok(ClassifyResult::NestedJustification {
+                justification_type,
+                confidence_type,
+            }) => {
+                // Remove any `pub` usage here:
                 out_justification_fields.push(quote::quote! {
-                    pub #just_ident: #justification_type,
+                    #just_ident: #justification_type,
                 });
                 out_confidence_fields.push(quote::quote! {
-                    pub #conf_ident: #confidence_type,
+                    #conf_ident: #confidence_type,
                 });
-                out_mappings.push(FieldJustConfMappingBuilder::default()
-                    .field_ident(field_ident.clone())
-                    .justification_field_ident(just_ident)
-                    .confidence_field_ident(conf_ident)
-                    .justification_field_type(justification_type)
-                    .confidence_field_type(confidence_type)
-                    .build()
-                    .unwrap()
+                out_mappings.push(
+                    FieldJustConfMappingBuilder::default()
+                        .field_ident(field_ident.clone())
+                        .justification_field_ident(just_ident)
+                        .confidence_field_ident(conf_ident)
+                        .justification_field_type(justification_type)
+                        .confidence_field_type(confidence_type)
+                        .build()
+                        .unwrap(),
                 );
             }
             Err(e_ts) => {
@@ -72,6 +86,8 @@ pub fn gather_justification_and_confidence_fields(
             }
         }
     }
+
+    trace!("Exiting gather_justification_and_confidence_fields");
 }
 
 #[cfg(test)]

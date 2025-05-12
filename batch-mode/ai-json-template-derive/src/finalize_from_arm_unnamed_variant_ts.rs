@@ -1,31 +1,14 @@
+// ---------------- [ File: ai-json-template-derive/src/finalize_from_arm_unnamed_variant_ts.rs ]
 crate::ix!();
 
-/// Builds the final from-arm snippet, e.g.:
-/// ```ignore
-/// FlatJustifiedFooEnum :: TupleVar {
-///     enum_variant_justification,
-///     enum_variant_confidence,
-///     f0,
-///     f1
-/// } => {
-///     Self {
-///         item: FooEnum :: TupleVar( f0, f1 ),
-///         justification: FooEnumJustification :: TupleVar {
-///             variant_justification: enum_variant_justification
-///         },
-///         confidence: FooEnumConfidence :: TupleVar {
-///             variant_confidence: enum_variant_confidence
-///         },
-///     }
-/// }
-/// ```
 pub fn finalize_from_arm_unnamed_variant_ts(
     parent_enum_ident:   &syn::Ident,
     variant_ident:       &syn::Ident,
     justification_ident: &syn::Ident,
     confidence_ident:    &syn::Ident,
     expansions:          &UnnamedVariantExpansion
-) -> TokenStream2 {
+) -> TokenStream2
+{
     trace!(
         "Constructing from-arm expansions for unnamed variant '{}::{}'",
         parent_enum_ident,
@@ -45,10 +28,10 @@ pub fn finalize_from_arm_unnamed_variant_ts(
         variant_ident.clone()
     };
 
-    // item constructor
-    let item_ctor = if !expansions.item_exprs.is_empty() {
+    // Construct the final item expression
+    let item_ctor = if !expansions.item_exprs().is_empty() {
         quote! {
-            #parent_enum_ident :: #variant_ident( #( #expansions.item_exprs ),* )
+            #parent_enum_ident :: #variant_ident(#(#expansions.item_exprs()),*)
         }
     } else {
         quote! {
@@ -56,11 +39,11 @@ pub fn finalize_from_arm_unnamed_variant_ts(
         }
     };
 
-    // justification constructor
-    let just_ctor = if !expansions.just_vals.is_empty() {
+    // Justification constructor
+    let just_ctor = if !expansions.just_vals().is_empty() {
         quote! {
             #justification_ident :: #renamed_just_var {
-                #( #expansions.just_vals ),*
+                #(#expansions.just_vals()),*
             }
         }
     } else {
@@ -69,11 +52,11 @@ pub fn finalize_from_arm_unnamed_variant_ts(
         }
     };
 
-    // confidence constructor
-    let conf_ctor = if !expansions.conf_vals.is_empty() {
+    // Confidence constructor
+    let conf_ctor = if !expansions.conf_vals().is_empty() {
         quote! {
             #confidence_ident :: #renamed_just_var {
-                #( #expansions.conf_vals ),*
+                #(#expansions.conf_vals()),*
             }
         }
     } else {
@@ -82,10 +65,10 @@ pub fn finalize_from_arm_unnamed_variant_ts(
         }
     };
 
-    // final pattern match
-    if !expansions.pattern_vars.is_empty() {
+    // Now build the match arm pattern
+    if !expansions.pattern_vars().is_empty() {
         quote! {
-            #flat_parent_ident :: #variant_ident { #( #expansions.pattern_vars ),* } => {
+            #flat_parent_ident :: #variant_ident { #(#expansions.pattern_vars()),* } => {
                 Self {
                     item: #item_ctor,
                     justification: #just_ctor,
@@ -94,6 +77,7 @@ pub fn finalize_from_arm_unnamed_variant_ts(
             }
         }
     } else {
+        // No fields
         quote! {
             #flat_parent_ident :: #variant_ident {} => {
                 Self {

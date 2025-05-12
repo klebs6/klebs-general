@@ -1,7 +1,8 @@
+// ---------------- [ File: ai-json-template-derive/src/unnamed_variant_expansion.rs ]
 crate::ix!();
 
-#[derive(Getters,Debug)]
-#[getset(get="pub")]
+#[derive(MutGetters,Getters,Debug)]
+#[getset(get="pub",get_mut="pub")]
 pub struct UnnamedVariantExpansion {
     field_declarations: Vec<TokenStream2>,
     pattern_vars:       Vec<TokenStream2>,

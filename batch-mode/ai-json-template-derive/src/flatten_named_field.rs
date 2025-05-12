@@ -95,9 +95,6 @@ pub fn flatten_named_field(
 #[cfg(test)]
 mod test_flatten_named_field_exhaustive {
     use super::*;
-    use pretty_assertions::assert_eq as pretty_assert_eq;
-    use traced_test::traced_test;
-    use syn::{parse_quote, Type};
 
     /// A helper to remove all whitespace from `TokenStream::to_string()`,
     /// making it easier to test for a substring match regardless of spacing.

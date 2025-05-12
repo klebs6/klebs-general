@@ -1,3 +1,4 @@
+// ---------------- [ File: ai-json-template-derive/src/field_just_conf_mapping.rs ]
 crate::ix!();
 
 /// Restored logic that, for each named field, creates e.g. `fieldname_justification: String` and

@@ -1,87 +1,43 @@
 // ---------------- [ File: ai-json-template-derive/src/expand_unit_variant_into_flat_justification.rs ]
 crate::ix!();
 
+/// Refactored version of `expand_unit_variant_into_flat_justification`,
+/// now split into smaller subroutines with robust tracing logs.
 pub fn expand_unit_variant_into_flat_justification(
-    parent_enum_ident:   &Ident,
-    variant_ident:       &Ident,
-    justification_ident: &Ident,
-    confidence_ident:    &Ident,
+    parent_enum_ident: &syn::Ident,
+    variant_ident:     &syn::Ident,
+    justification_ident: &syn::Ident,
+    confidence_ident:    &syn::Ident,
     skip_self_just:      bool
-) -> (TokenStream2, TokenStream2)
+) -> (proc_macro2::TokenStream, proc_macro2::TokenStream)
 {
     trace!(
-        "Expanding unit variant '{}' in enum '{}' => flat justification",
+        "expand_unit_variant_into_flat_justification: parent_enum='{}', variant='{}', skip_self_just={}",
+        parent_enum_ident, variant_ident, skip_self_just
+    );
+
+    // 1) Determine final names for the flat variant and the justification variant.
+    let renamed_var_for_flat = rename_variant_ident_if_unit(variant_ident, "UnitVariant");
+    let renamed_var_for_just = rename_variant_ident_if_unit(variant_ident, "UnitVariant");
+
+    // 2) Construct the "FlatJustifiedFoo" ident for our match arms.
+    let flat_parent_ident = build_flat_parent_ident(parent_enum_ident);
+
+    // 3) Build the flat variant snippet (the piece inside `pub enum FlatJustifiedFoo { ... }`).
+    let flat_variant_ts = build_flat_unit_variant_ts(skip_self_just, &renamed_var_for_flat);
+
+    // 4) Build the corresponding `From<FlatJustifiedFoo> for JustifiedFoo` match arm snippet.
+    let from_arm_ts = build_from_arm_for_unit_variant(
+        skip_self_just,
+        parent_enum_ident,
         variant_ident,
-        parent_enum_ident
+        justification_ident,
+        confidence_ident,
+        &flat_parent_ident,
+        &renamed_var_for_just
     );
 
-    // The tests want:
-    //   - In the "from_arm", match on: "FlatJustifiedMyEnum :: UnitVar => { ... }"
-    //   - In the justification, "MyEnumJustification :: UnitVar => { ... }"
-    // Also, if the variant is literally "Unit", rename to "UnitVariant".
-    let real_name = variant_ident.to_string();
-    let renamed_var_ident = if real_name == "Unit" {
-        Ident::new("UnitVariant", variant_ident.span())
-    } else {
-        variant_ident.clone()
-    };
-
-    // Combine "FlatJustified" + parent_enum_ident for the match pattern
-    let flat_parent_ident = Ident::new(
-        &format!("FlatJustified{}", parent_enum_ident),
-        parent_enum_ident.span()
-    );
-
-    // Also for justification, rename "Unit" -> "UnitVariant" so the string
-    // shows up as e.g. "MyEnumJustification :: UnitVariant"
-    let real_just_name = variant_ident.to_string();
-    let renamed_just_var = if real_just_name == "Unit" {
-        Ident::new("UnitVariant", variant_ident.span())
-    } else {
-        variant_ident.clone()
-    };
-
-    if skip_self_just {
-        let flat_variant_ts = quote! {
-            #renamed_var_ident,
-        };
-        let from_arm_ts = quote! {
-            #flat_parent_ident :: #renamed_var_ident => {
-                Self {
-                    item: #parent_enum_ident :: #variant_ident,
-                    justification: #justification_ident :: #renamed_just_var {},
-                    confidence:    #confidence_ident :: #renamed_just_var {},
-                }
-            }
-        };
-        (flat_variant_ts, from_arm_ts)
-    } else {
-        let flat_variant_ts = quote! {
-            #renamed_var_ident {
-                #[serde(default)]
-                enum_variant_justification: String,
-                #[serde(default)]
-                enum_variant_confidence: f32
-            },
-        };
-        let from_arm_ts = quote! {
-            #flat_parent_ident :: #renamed_var_ident {
-                enum_variant_justification,
-                enum_variant_confidence
-            } => {
-                Self {
-                    item: #parent_enum_ident :: #variant_ident,
-                    justification: #justification_ident :: #renamed_just_var {
-                        variant_justification: enum_variant_justification,
-                    },
-                    confidence: #confidence_ident :: #renamed_just_var {
-                        variant_confidence: enum_variant_confidence,
-                    },
-                }
-            }
-        };
-        (flat_variant_ts, from_arm_ts)
-    }
+    (flat_variant_ts, from_arm_ts)
 }
 
 #[cfg(test)]

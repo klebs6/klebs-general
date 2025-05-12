@@ -1,158 +1,180 @@
 // ---------------- [ File: ai-json-template-derive/src/generate_flat_justified_for_named.rs ]
 crate::ix!();
 
-/// For each **named struct**, build:
-///
-/// - A flattened struct `FlatJustifiedFoo { ... }`
-/// - An impl `From<FlatJustifiedFoo> for JustifiedFoo`.
-///
-/// This logic ensures that **leaf types** (`String`, numeric, `HashMap<K,V>`, etc.)
-/// do *not* get turned into `StringJustification` or `HashMapConfidence`.
-/// Instead, we store a single `String` (justification) and `f32` (confidence) at the parent level.
+/// Replaces the original `generate_flat_justified_for_named` with a refactored version
+/// that delegates to our single-purpose subroutines.
 pub fn generate_flat_justified_for_named(
     ty_ident:     &syn::Ident,
     named_fields: &syn::FieldsNamed,
     span:         proc_macro2::Span
 ) -> (proc_macro2::TokenStream, proc_macro2::TokenStream)
 {
-    let flat_ident       = syn::Ident::new(&format!("FlatJustified{}", ty_ident), span);
-    let justified_ident  = syn::Ident::new(&format!("Justified{}",   ty_ident), span);
+    trace!(
+        "generate_flat_justified_for_named: starting for struct '{}'",
+        ty_ident
+    );
 
-    // The parent's justification+confidence types, e.g. `FooJustification`, `FooConfidence`.
-    let justification_ident = syn::Ident::new(&format!("{}Justification", ty_ident), span);
-    let confidence_ident    = syn::Ident::new(&format!("{}Confidence",   ty_ident), span);
+    let (flat_ident, justified_ident, justification_ident, confidence_ident) =
+        create_flat_justified_idents_for_named(ty_ident, span);
 
     let mut flat_fields = Vec::new();
     let mut item_inits  = Vec::new();
     let mut just_inits  = Vec::new();
     let mut conf_inits  = Vec::new();
 
-    for field in &named_fields.named {
-        let field_ident = match &field.ident {
-            Some(id) => id,
-            None => continue, // skip unnamed, or produce error
+    gather_flat_fields_and_inits_for_named(
+        ty_ident,
+        named_fields,
+        &mut flat_fields,
+        &mut item_inits,
+        &mut just_inits,
+        &mut conf_inits,
+    );
+
+    let flat_ts = build_flattened_named_struct_for_named(&flat_ident, &flat_fields);
+    let from_ts = build_from_impl_for_named(
+        &flat_ident,
+        &justified_ident,
+        ty_ident,
+        &justification_ident,
+        &confidence_ident,
+        &item_inits,
+        &just_inits,
+        &conf_inits,
+    );
+
+    debug!(
+        "generate_flat_justified_for_named: finished building for struct '{}'",
+        ty_ident
+    );
+    (flat_ts, from_ts)
+}
+
+#[cfg(test)]
+mod test_refactored_generate_flat_justified_for_named {
+    use super::*;
+    use traced_test::traced_test;
+    use syn::{parse_quote, Field, Visibility, FieldMutability};
+
+    #[traced_test]
+    fn test_refactored_generation_basic_named_struct() {
+        // We'll build a struct with fields: name: String, count: u32
+        let name_field = Field {
+            attrs: vec![],
+            vis: Visibility::Inherited,
+            mutability: FieldMutability::None,
+            ident: Some(syn::Ident::new("name", proc_macro2::Span::call_site())),
+            colon_token: Some(Default::default()),
+            ty: parse_quote! { String },
+        };
+        let count_field = Field {
+            attrs: vec![],
+            vis: Visibility::Inherited,
+            mutability: FieldMutability::None,
+            ident: Some(syn::Ident::new("count", proc_macro2::Span::call_site())),
+            colon_token: Some(Default::default()),
+            ty: parse_quote! { u32 },
         };
 
-        // (A) If `#[justify=false]` => skip top-level justification for this field.
-        let skip_self_just = is_justification_disabled_for_field(field);
-
-        // (B) If child is a leaf type or has `#[justify_inner=false]`, skip nested flattening.
-        // That means we do **not** produce `ChildJustification`; we store a single `String` in the parent's struct.
-        let skip_child_just = skip_self_just 
-            || is_justification_disabled_for_inner(field)
-            || is_leaf_type(&field.ty);
-
-        // 1) Figure out the flattened type for `pub field: ???`
-        let flattened_type = match compute_flat_type_for_stamped(&field.ty, skip_child_just, field.span()) {
-            Ok(ts) => ts,
-            Err(e) => {
-                flat_fields.push(e.to_compile_error());
-                continue;
-            }
+        let fields_named = syn::FieldsNamed {
+            brace_token: Default::default(),
+            named: {
+                let mut p = syn::punctuated::Punctuated::new();
+                p.push(name_field);
+                p.push(count_field);
+                p
+            },
         };
-        flat_fields.push(quote! {
-            #[serde(default)]
-            pub #field_ident: #flattened_type,
-        });
 
-        // 2) In `impl From<FlatJustifiedFoo> for JustifiedFoo`: do either `... = flat.field`
-        //    or `... = From::from(flat.field)`.
-        if skip_child_just {
-            item_inits.push(quote! {
-                #field_ident: flat.#field_ident
-            });
-        } else {
-            // child is presumably a user-defined justification struct => wrap with From
-            item_inits.push(quote! {
-                #field_ident: ::core::convert::From::from(flat.#field_ident)
-            });
-        }
+        let struct_ident = syn::Ident::new("MyStruct", proc_macro2::Span::call_site());
+        let (flat_ts, from_ts) = generate_flat_justified_for_named(
+            &struct_ident,
+            &fields_named,
+            proc_macro2::Span::call_site()
+        );
 
-        // 3) If `#[justify=false]` is NOT set => we do top-level justification/conf.
-        if !skip_self_just {
-            let j_id = syn::Ident::new(
-                &format!("{}_justification", field_ident),
-                field_ident.span()
-            );
-            let c_id = syn::Ident::new(
-                &format!("{}_confidence", field_ident),
-                field_ident.span()
-            );
+        let flat_str = flat_ts.to_string();
+        let from_str = from_ts.to_string();
 
-            // Add them to the flattened struct:
-            flat_fields.push(quote! {
-                #[serde(default)]
-                pub #j_id: String,
-                #[serde(default)]
-                pub #c_id: f32,
-            });
+        assert!(
+            flat_str.contains("pub struct FlatJustifiedMyStruct")
+                && flat_str.contains("pub name : String")
+                && flat_str.contains("pub count : u32"),
+            "Expected flattened struct with fields name, count"
+        );
 
-            // Now decide: if the child is also justification-enabled (skip_child_just == false),
-            // we must store them in a nested child struct in the parent's justification.
-            if skip_child_just {
-                // It's a leaf => parent's justification struct simply has a `String` for justification
-                just_inits.push(quote! { #j_id: flat.#j_id });
-                conf_inits.push(quote! { #c_id: flat.#c_id });
-            } else {
-                // It's a user-defined child => parent's justification field is e.g. `ChildJustification`.
-                // So we do a small wrapper struct with sub-fields.  Minimal example:
-                let child_just_ty = child_ty_to_just(&field.ty);
-                let child_conf_ty = child_ty_to_conf(&field.ty);
+        assert!(
+            from_str.contains("impl From < FlatJustifiedMyStruct > for JustifiedMyStruct"),
+            "Expected an impl From<FlatJustifiedMyStruct> for JustifiedMyStruct"
+        );
+        assert!(
+            from_str.contains("name : flat . name")
+                && from_str.contains("count : flat . count"),
+            "Expected item init from flat.name, flat.count"
+        );
 
-                just_inits.push(quote! {
-                    #j_id: #child_just_ty {
-                        detail_justification: flat.#j_id,
-                        ..::core::default::Default::default()
-                    }
-                });
-                conf_inits.push(quote! {
-                    #c_id: #child_conf_ty {
-                        detail_confidence: flat.#c_id,
-                        ..::core::default::Default::default()
-                    }
-                });
-            }
-        }
+        // Should see name_justification, count_justification in the flattened struct:
+        assert!(
+            flat_str.contains("pub name_justification : String")
+                && flat_str.contains("pub count_justification : String"),
+            "Expected top-level justification fields for each"
+        );
+        // And the From impl referencing them:
+        assert!(
+            from_str.contains("detail_justification : flat . name_justification")
+                || from_str.contains("detail_justification: flat . count_justification"),
+            "Expected usage of detail_justification for nested expansions"
+        );
     }
 
-    // Flattened struct def:
-    let flat_ts = quote! {
-        #[derive(
-            Default,
-            Serialize,
-            Deserialize,
-            Debug,
-            Clone,
-            PartialEq
-        )]
-        pub struct #flat_ident {
-            #(#flat_fields)*
-        }
-    };
+    #[traced_test]
+    fn test_refactored_generation_with_justify_false() {
+        // We'll build a struct with fields:
+        //   skip_it: String (with #[justify=false])
+        //   keep_it: bool
+        let skip_field = Field {
+            attrs: vec![parse_quote! { #[justify = false] }],
+            vis: Visibility::Inherited,
+            mutability: FieldMutability::None,
+            ident: Some(syn::Ident::new("skip_it", proc_macro2::Span::call_site())),
+            colon_token: Some(Default::default()),
+            ty: parse_quote! { String },
+        };
+        let keep_field = Field {
+            attrs: vec![],
+            vis: Visibility::Inherited,
+            mutability: FieldMutability::None,
+            ident: Some(syn::Ident::new("keep_it", proc_macro2::Span::call_site())),
+            colon_token: Some(Default::default()),
+            ty: parse_quote! { bool },
+        };
+        let fields_named = syn::FieldsNamed {
+            brace_token: Default::default(),
+            named: {
+                let mut p = syn::punctuated::Punctuated::new();
+                p.push(skip_field);
+                p.push(keep_field);
+                p
+            },
+        };
 
-    // `impl From<FlatJustifiedFoo> for JustifiedFoo`
-    let from_ts = quote! {
-        impl From<#flat_ident> for #justified_ident {
-            fn from(flat: #flat_ident) -> Self {
-                let item = #ty_ident {
-                    #(#item_inits, )*
-                };
-                let justification = #justification_ident {
-                    #(#just_inits, )*
-                    ..Default::default()
-                };
-                let confidence = #confidence_ident {
-                    #(#conf_inits, )*
-                    ..Default::default()
-                };
-                Self {
-                    item,
-                    justification,
-                    confidence,
-                }
-            }
-        }
-    };
+        let si = syn::Ident::new("TestStruct", proc_macro2::Span::call_site());
+        let (flat_ts, from_ts) = generate_flat_justified_for_named(
+            &si,
+            &fields_named,
+            proc_macro2::Span::call_site()
+        );
 
-    (flat_ts, from_ts)
+        let fs = flat_ts.to_string();
+        let fr = from_ts.to_string();
+
+        // skip_it => we do not see "skip_it_justification"
+        assert!(fs.contains("skip_it : String"));
+        assert!(!fs.contains("skip_it_justification"));
+
+        // keep_it => has keep_it_justification
+        assert!(fs.contains("keep_it : bool"));
+        assert!(fs.contains("keep_it_justification"));
+        assert!(fr.contains("detail_justification : flat . keep_it_justification"));
+    }
 }

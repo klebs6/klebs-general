@@ -1,87 +1,60 @@
 // ---------------- [ File: ai-json-template-derive/src/generate_justified_structs_for_named.rs ]
 crate::ix!();
 
-/// Generates for a named struct `Foo`:
-///   - `FooJustification` (one field per original field, type=String or nested),
-///   - `FooConfidence`,
-///   - `JustifiedFoo`,
-///   - plus the item/justification/confidence accessor expansions.
+/// Refactored version of the old `generate_justified_structs_for_named`,
+/// broken down into single-purpose, well-traced subroutines.
+/// It returns the token streams for:
+///   1) the FooJustification struct
+///   2) the FooConfidence struct
+///   3) the JustifiedFoo struct
+///   4) the accessor impl block
+///
+/// # Arguments
+/// * `ty_ident`     - The original named struct's identifier
+/// * `named_fields` - The named fields of that struct
+/// * `span`         - The proc-macro2::Span used to generate new Ident(s)
+///
 pub fn generate_justified_structs_for_named(
-    ty_ident:     &syn::Ident,
+    ty_ident: &syn::Ident,
     named_fields: &syn::FieldsNamed,
-    span:         proc_macro2::Span
+    span: proc_macro2::Span,
 ) -> (
     proc_macro2::TokenStream, // justification struct
     proc_macro2::TokenStream, // confidence struct
     proc_macro2::TokenStream, // justified struct
     proc_macro2::TokenStream, // accessor expansions
 ) {
-    let justification_ident             = syn::Ident::new(&format!("{}Justification", ty_ident), span);
-    let confidence_ident                = syn::Ident::new(&format!("{}Confidence", ty_ident), span);
-    let justified_ident                 = syn::Ident::new(&format!("Justified{}", ty_ident), span);
-
-    let mut justification_struct_fields = Vec::new();
-    let mut confidence_struct_fields    = Vec::new();
-    let mut errs                        = quote::quote!();
-    let mut field_mappings              = Vec::new();
-
-    gather_justification_and_confidence_fields(
-        named_fields,
-        &mut justification_struct_fields,
-        &mut confidence_struct_fields,
-        &mut errs,
-        &mut field_mappings,
+    trace!(
+        "Beginning refactored generate_justified_structs_for_named for '{}'",
+        ty_ident
     );
 
-    let just_ts = quote::quote! {
-        #errs
-        #[derive(Builder, Debug, Clone, PartialEq, Default, Serialize, Deserialize, Getters, Setters)]
-        #[builder(setter(into))]
-        #[getset(get="pub", set="pub")]
-        pub struct #justification_ident {
-            #(#justification_struct_fields)*
-        }
-    };
-    let conf_ts = quote::quote! {
-        #[derive(Builder, Debug, Clone, PartialEq, Default, Serialize, Deserialize, Getters, Setters)]
-        #[builder(setter(into))]
-        #[getset(get="pub", set="pub")]
-        pub struct #confidence_ident {
-            #(#confidence_struct_fields)*
-        }
-    };
-    let justified_ts = quote::quote! {
-        #[derive(Builder, Debug, Default, Clone, PartialEq, Serialize, Deserialize, Getters, Setters)]
-        #[builder(setter(into))]
-        #[getset(get="pub", set="pub")]
-        pub struct #justified_ident {
-            item:          #ty_ident,
-            justification: #justification_ident,
-            confidence:    #confidence_ident,
-        }
+    // (1) Create the 3 Ident values
+    let (justification_ident, confidence_ident, justified_ident) =
+        gather_named_struct_just_conf_idents(ty_ident, span);
 
-        impl #justified_ident {
-            pub fn new(item: #ty_ident) -> Self {
-                Self {
-                    item,
-                    justification: Default::default(),
-                    confidence: Default::default(),
-                }
-            }
-        }
-    };
+    // (2) Gather the field expansions => justification/conf fields, plus any errors
+    let (just_fields, conf_fields, errs, mappings) = gather_fields_for_just_conf(named_fields);
 
-    // Now gather the three sets of item/just/conf accessor expansions
-    let (item_acc, just_acc, conf_acc) =
-        gather_item_accessors(named_fields, ty_ident, &field_mappings);
+    // (3) Build the two struct definitions => e.g. `FooJustification`, `FooConfidence`
+    let (just_ts, conf_ts) =
+        build_just_and_conf_structs(&justification_ident, &confidence_ident, &errs, &just_fields, &conf_fields);
 
-    let accessor_ts = quote::quote! {
-        impl #justified_ident {
-            #(#item_acc)*
-            #(#just_acc)*
-            #(#conf_acc)*
-        }
-    };
+    // (4) Build the `JustifiedFoo` struct
+    let justified_ts = build_justified_struct(&justified_ident, ty_ident, &justification_ident, &confidence_ident);
+
+    // (5) Build the accessor impl for JustifiedFoo
+    let accessor_ts = build_justified_struct_accessors(
+        &justified_ident,
+        named_fields,
+        ty_ident,
+        &mappings,
+    );
+
+    debug!(
+        "Finished generate_justified_structs_for_named for '{}'",
+        ty_ident
+    );
 
     (just_ts, conf_ts, justified_ts, accessor_ts)
 }
