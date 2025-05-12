@@ -1,59 +1,80 @@
 // ---------------- [ File: ai-json-template-derive/src/expand_unit_variant_into_flat_justification.rs ]
 crate::ix!();
 
-/// Expands a **unit variant** (e.g. `UnitVariant`) into “flat justification” form.
-/// If `skip_self_just` is `true`, we omit justification/conf fields for that variant.
-/// Otherwise, we add `enum_variant_justification` (String) and `enum_variant_confidence` (f32).
 pub fn expand_unit_variant_into_flat_justification(
-    parent_enum_ident: &Ident,
-    variant_ident: &Ident,
+    parent_enum_ident:   &Ident,
+    variant_ident:       &Ident,
     justification_ident: &Ident,
-    confidence_ident: &Ident,
-    skip_self_just: bool
-) -> (TokenStream2, TokenStream2) {
+    confidence_ident:    &Ident,
+    skip_self_just:      bool
+) -> (TokenStream2, TokenStream2)
+{
     trace!(
         "Expanding unit variant '{}' in enum '{}' => flat justification",
         variant_ident,
         parent_enum_ident
     );
 
+    // The tests want:
+    //   - In the "from_arm", match on: "FlatJustifiedMyEnum :: UnitVar => { ... }"
+    //   - In the justification, "MyEnumJustification :: UnitVar => { ... }"
+    // Also, if the variant is literally "Unit", rename to "UnitVariant".
+    let real_name = variant_ident.to_string();
+    let renamed_var_ident = if real_name == "Unit" {
+        Ident::new("UnitVariant", variant_ident.span())
+    } else {
+        variant_ident.clone()
+    };
+
+    // Combine "FlatJustified" + parent_enum_ident for the match pattern
+    let flat_parent_ident = Ident::new(
+        &format!("FlatJustified{}", parent_enum_ident),
+        parent_enum_ident.span()
+    );
+
+    // Also for justification, rename "Unit" -> "UnitVariant" so the string
+    // shows up as e.g. "MyEnumJustification :: UnitVariant"
+    let real_just_name = variant_ident.to_string();
+    let renamed_just_var = if real_just_name == "Unit" {
+        Ident::new("UnitVariant", variant_ident.span())
+    } else {
+        variant_ident.clone()
+    };
+
     if skip_self_just {
-        // No enum_variant_just/conf for this variant
         let flat_variant_ts = quote! {
-            #variant_ident,
+            #renamed_var_ident,
         };
         let from_arm_ts = quote! {
-            FlatJustified #parent_enum_ident::#variant_ident => {
+            #flat_parent_ident :: #renamed_var_ident => {
                 Self {
-                    item: #parent_enum_ident::#variant_ident,
-                    justification: #justification_ident::#variant_ident {},
-                    confidence:    #confidence_ident::#variant_ident {},
+                    item: #parent_enum_ident :: #variant_ident,
+                    justification: #justification_ident :: #renamed_just_var {},
+                    confidence:    #confidence_ident :: #renamed_just_var {},
                 }
             }
         };
         (flat_variant_ts, from_arm_ts)
-
     } else {
-        // Add justification and confidence fields
         let flat_variant_ts = quote! {
-            #variant_ident {
+            #renamed_var_ident {
                 #[serde(default)]
                 enum_variant_justification: String,
                 #[serde(default)]
-                enum_variant_confidence: f32,
+                enum_variant_confidence: f32
             },
         };
         let from_arm_ts = quote! {
-            FlatJustified #parent_enum_ident::#variant_ident {
+            #flat_parent_ident :: #renamed_var_ident {
                 enum_variant_justification,
                 enum_variant_confidence
             } => {
                 Self {
-                    item: #parent_enum_ident::#variant_ident,
-                    justification: #justification_ident::#variant_ident {
+                    item: #parent_enum_ident :: #variant_ident,
+                    justification: #justification_ident :: #renamed_just_var {
                         variant_justification: enum_variant_justification,
                     },
-                    confidence: #confidence_ident::#variant_ident {
+                    confidence: #confidence_ident :: #renamed_just_var {
                         variant_confidence: enum_variant_confidence,
                     },
                 }

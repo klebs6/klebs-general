@@ -43,4 +43,5 @@ pub(crate) use syn::{
     Visibility,
     Variant,
     FieldMutability,
+    Type,
 };

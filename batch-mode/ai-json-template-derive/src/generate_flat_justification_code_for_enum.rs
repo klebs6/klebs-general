@@ -1,95 +1,46 @@
 // ---------------- [ File: ai-json-template-derive/src/generate_flat_justification_code_for_enum.rs ]
 crate::ix!();
 
-/// Generates a "FlatJustified{Enum}" plus `impl From<FlatJustified{Enum}> for Justified{Enum}`
-/// by iterating over each variant. The name alone indicates that this is
-/// the top-level logic orchestrating the “flat justification” code generation for an enum.
-///
-/// This function delegates to the specialized subroutines above,
-/// making it straightforward to see how each variant form is handled.
 pub fn generate_flat_justification_code_for_enum(
-    enum_ident: &Ident,
-    data_enum: &DataEnum,
-    span: Span,
-    skip_variant_self_just_fn: impl Fn(&syn::Variant) -> bool,
+    enum_ident:                 &Ident,
+    data_enum:                  &DataEnum,
+    span:                       Span,
+    skip_variant_self_just_fn:  impl Fn(&syn::Variant) -> bool,
     skip_variant_child_just_fn: impl Fn(&syn::Variant) -> bool,
-    skip_field_self_just_fn: impl Fn(&syn::Field) -> bool,
-    is_leaf_type_fn: impl Fn(&syn::Type) -> bool,
-    flatten_named_field_fn: impl Fn(
-        &Ident,
-        &syn::Type,
-        bool,  // skip self
-        bool   // skip child
-    ) -> (TokenStream2, TokenStream2, TokenStream2, TokenStream2),
-    flatten_unnamed_field_fn: impl Fn(
-        &Ident,
-        &syn::Type,
-        bool,  // skip self
-        bool   // skip child
-    ) -> (TokenStream2, TokenStream2, TokenStream2, TokenStream2),
-) -> (TokenStream2, TokenStream2) {
+    skip_field_self_just_fn:    impl Fn(&syn::Field) -> bool,
+    is_leaf_type_fn:            impl Fn(&syn::Type) -> bool,
+
+    flatten_named_field_fn:     impl Fn(&Ident, &syn::Type, bool, bool)
+        -> (Vec<TokenStream2>, TokenStream2, TokenStream2, TokenStream2),
+
+    flatten_unnamed_field_fn:   impl Fn(&Ident, &syn::Type, bool, bool)
+        -> (Vec<TokenStream2>, TokenStream2, TokenStream2, TokenStream2),
+) -> (TokenStream2, TokenStream2)
+{
     trace!("Starting generate_flat_justification_code_for_enum for '{}'", enum_ident);
 
-    let (
-        flat_enum_ident,
-        justified_ident,
-        justification_ident,
-        confidence_ident
-    ) = create_flat_justification_idents_for_enum(enum_ident, span);
+    let (flat_enum_ident, justified_ident, justification_ident, confidence_ident) =
+        create_flat_justification_idents_for_enum(enum_ident, span);
 
     let mut variant_defs = Vec::new();
     let mut from_arms    = Vec::new();
 
     for variant in &data_enum.variants {
-        let var_ident = &variant.ident;
-        let skip_self_just  = skip_variant_self_just_fn(variant);
-        let skip_child_just = skip_self_just || skip_variant_child_just_fn(variant);
-
-        match &variant.fields {
-            Fields::Unit => {
-                let (fv, arm) = expand_unit_variant_into_flat_justification(
-                    enum_ident,
-                    var_ident,
-                    &justification_ident,
-                    &confidence_ident,
-                    skip_self_just
-                );
-                variant_defs.push(fv);
-                from_arms.push(arm);
-            }
-            Fields::Named(named_fields) => {
-                let (fv, arm) = expand_named_variant_into_flat_justification(
-                    enum_ident,
-                    var_ident,
-                    named_fields,
-                    &justification_ident,
-                    &confidence_ident,
-                    skip_self_just,
-                    skip_child_just,
-                    &flatten_named_field_fn,
-                    &skip_field_self_just_fn,
-                    &is_leaf_type_fn
-                );
-                variant_defs.push(fv);
-                from_arms.push(arm);
-            }
-            Fields::Unnamed(unnamed_fields) => {
-                let (fv, arm) = expand_unnamed_variant_into_flat_justification(
-                    enum_ident,
-                    var_ident,
-                    unnamed_fields,
-                    &justification_ident,
-                    &confidence_ident,
-                    skip_self_just,
-                    skip_child_just,
-                    &flatten_unnamed_field_fn,
-                    &skip_field_self_just_fn,
-                    &is_leaf_type_fn
-                );
-                variant_defs.push(fv);
-                from_arms.push(arm);
-            }
-        }
+        debug!("Processing variant '{}'", variant.ident);
+        let (fv, arm) = generate_flat_variant_for_variant(
+            enum_ident,
+            variant,
+            &justification_ident,
+            &confidence_ident,
+            &skip_variant_self_just_fn,
+            &skip_variant_child_just_fn,
+            &skip_field_self_just_fn,
+            &is_leaf_type_fn,
+            &flatten_named_field_fn,
+            &flatten_unnamed_field_fn,
+        );
+        variant_defs.push(fv);
+        from_arms.push(arm);
     }
 
     let flat_ts = quote! {
@@ -109,7 +60,10 @@ pub fn generate_flat_justification_code_for_enum(
         }
     };
 
-    debug!("Completed generate_flat_justification_code_for_enum for '{}'", enum_ident);
+    debug!(
+        "Completed generate_flat_justification_code_for_enum for '{}'",
+        enum_ident
+    );
     (flat_ts, from_impl_ts)
 }
 
@@ -148,16 +102,16 @@ mod test_generate_flat_justification_code_for_enum {
             _ty: &syn::Type,
             _skip_self: bool,
             _skip_child: bool
-        ) -> (TokenStream2, TokenStream2, TokenStream2, TokenStream2) {
-            (TokenStream2::new(), TokenStream2::new(), TokenStream2::new(), TokenStream2::new())
+        ) -> (Vec<TokenStream2>, TokenStream2, TokenStream2, TokenStream2) {
+            (vec![TokenStream2::new()], TokenStream2::new(), TokenStream2::new(), TokenStream2::new())
         }
         fn flatten_unnamed_field_fn(
             _fid: &Ident,
             _ty: &syn::Type,
             _skip_self: bool,
             _skip_child: bool
-        ) -> (TokenStream2, TokenStream2, TokenStream2, TokenStream2) {
-            (TokenStream2::new(), TokenStream2::new(), TokenStream2::new(), TokenStream2::new())
+        ) -> (Vec<TokenStream2>, TokenStream2, TokenStream2, TokenStream2) {
+            (vec![TokenStream2::new()], TokenStream2::new(), TokenStream2::new(), TokenStream2::new())
         }
 
         let enum_ident = Ident::new("MyEnum", proc_macro2::Span::call_site());
@@ -250,20 +204,20 @@ mod test_generate_flat_justification_code_for_enum {
             _ty: &syn::Type,
             _skip_self: bool,
             _skip_child: bool
-        ) -> (TokenStream2, TokenStream2, TokenStream2, TokenStream2) {
+        ) -> (Vec<TokenStream2>, TokenStream2, TokenStream2, TokenStream2) {
             let decl = quote! { #field_ident: #field_ident, };
             let i_init = quote! { #field_ident };
-            (quote!{ #decl }, i_init, TokenStream2::new(), TokenStream2::new())
+            (vec![quote!{ #decl }], i_init, TokenStream2::new(), TokenStream2::new())
         }
         fn dummy_flatten_unnamed_field(
             field_ident: &Ident,
             _ty: &syn::Type,
             _skip_self: bool,
             _skip_child: bool
-        ) -> (TokenStream2, TokenStream2, TokenStream2, TokenStream2) {
+        ) -> (Vec<TokenStream2>, TokenStream2, TokenStream2, TokenStream2) {
             let decl = quote! { #field_ident: #field_ident, };
             let i_init = quote! { #field_ident };
-            (quote!{ #decl }, i_init, TokenStream2::new(), TokenStream2::new())
+            (vec![quote!{ #decl }], i_init, TokenStream2::new(), TokenStream2::new())
         }
 
         let enum_ident = Ident::new("MyEnum2", proc_macro2::Span::call_site());

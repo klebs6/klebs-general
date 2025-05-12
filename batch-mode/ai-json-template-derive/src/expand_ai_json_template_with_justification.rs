@@ -2,9 +2,8 @@
 crate::ix!();
 
 /// The main subroutine that orchestrates “AiJsonTemplateWithJustification” expansions:
-pub fn expand_ai_json_template_with_justification(
-    ast: &syn::DeriveInput
-) -> proc_macro2::TokenStream {
+pub fn expand_ai_json_template_with_justification(ast: &syn::DeriveInput) -> proc_macro2::TokenStream {
+
     let span = ast.span();
     let ty_ident = &ast.ident;
 

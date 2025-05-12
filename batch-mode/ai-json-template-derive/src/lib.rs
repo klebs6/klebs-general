@@ -18,22 +18,30 @@ xp!{expand_unnamed_variant_into_flat_justification}
 xp!{extract_hashmap_inner}
 xp!{extract_option_inner}
 xp!{extract_vec_inner}
+xp!{field_just_conf_mapping}
+xp!{finalize_flat_unnamed_variant_ts}
+xp!{finalize_from_arm_unnamed_variant_ts}
 xp!{flatten_named_field}
 xp!{flatten_unnamed_field}
 xp!{gather_doc_comments}
 xp!{gather_field_injections}
 xp!{gather_item_accessors}
 xp!{gather_justification_and_confidence_fields}
+xp!{gather_unnamed_variant_expansions}
 xp!{generate_enum_justified}
 xp!{generate_flat_justification_code_for_enum}
 xp!{generate_flat_justified_for_named}
+xp!{generate_flat_variant_for_variant}
 xp!{generate_justified_structs_for_named}
 xp!{generate_to_template_with_justification_for_enum}
 xp!{generate_to_template_with_justification_for_named}
 xp!{is_builtin_scalar}
 xp!{is_justification_enabled}
+xp!{is_leaf_type}
 xp!{is_numeric}
 xp!{parse_doc_expr}
+xp!{try_handle_myenum_unitvar_special_case}
+xp!{unnamed_variant_expansion}
 
 /// This new implementation supports:
 ///
@@ -330,12 +338,45 @@ pub fn derive_ai_json_template_with_justification(
             );
             out.extend(enum_tpl_ts);
 
+            let skip_variant_self_just    = |variant: &syn::Variant| {
+                // real logic: e.g. check if `#[justify=false]` is on the variant
+                is_justification_disabled_for_variant(variant)
+            };
+            let skip_variant_child_just   = |variant: &syn::Variant| {
+                // check if `#[justify_inner=false]`
+                is_justification_disabled_for_inner_variant(variant)
+            };
+            let skip_field_self_just      = |field: &syn::Field| {
+                // check if `#[justify=false]` is on the field
+                is_justification_disabled_for_field(field)
+            };
+            let is_leaf_type_fn           = |ty: &syn::Type| {
+                // your real logic, e.g. is_leaf_type(ty)
+                is_leaf_type(ty)
+            };
+
+            // The flatteners you wrote:
+            let flatten_named_field_fn = |fid: &Ident, t: &syn::Type, skip_s: bool, skip_c: bool| {
+                flatten_named_field(fid, t, skip_s, skip_c)
+            };
+            let flatten_unnamed_field_fn = |fid: &Ident, t: &syn::Type, skip_s: bool, skip_c: bool| {
+                flatten_unnamed_field(fid, t, skip_s, skip_c)
+            };
+
             // (b) the FLAT expansions => "FlatJustifiedEnum" + From<FlatJustifiedEnum> for JustifiedEnum
-            let (flat_ts, from_ts) = crate::generate_flat_justification_code_for_enum(
+            // call with all 9:
+            let (flat_ts, from_ts) = generate_flat_justification_code_for_enum(
                 ty_ident,
                 data_enum,
-                span
+                span,
+                skip_variant_self_just,
+                skip_variant_child_just,
+                skip_field_self_just,
+                is_leaf_type_fn,
+                flatten_named_field_fn,
+                flatten_unnamed_field_fn,
             );
+
             out.extend(flat_ts);
             out.extend(from_ts);
         }

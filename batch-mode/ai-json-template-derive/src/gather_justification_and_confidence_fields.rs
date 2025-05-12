@@ -1,20 +1,6 @@
 // ---------------- [ File: ai-json-template-derive/src/gather_justification_and_confidence_fields.rs ]
 crate::ix!();
 
-/// Restored logic that, for each named field, creates e.g. `fieldname_justification: String` and
-/// `fieldname_confidence: f32`. If the field is a nested type, we produce e.g. `SomeTypeJustification` 
-/// and `SomeTypeConfidence`.
-#[derive(Builder, Debug, Clone, Getters, Setters)]
-#[builder(setter(into))]
-#[getset(get = "pub", set = "pub")]
-pub struct FieldJustConfMapping {
-    pub field_ident: syn::Ident,
-    pub justification_field_ident: syn::Ident,
-    pub confidence_field_ident: syn::Ident,
-    pub justification_field_type: proc_macro2::TokenStream,
-    pub confidence_field_type: proc_macro2::TokenStream,
-}
-
 pub fn gather_justification_and_confidence_fields(
     named_fields: &syn::FieldsNamed,
     out_justification_fields: &mut Vec<proc_macro2::TokenStream>,
@@ -54,13 +40,15 @@ pub fn gather_justification_and_confidence_fields(
                 out_confidence_fields.push(quote::quote! {
                     pub #conf_ident: f32,
                 });
-                out_mappings.push(FieldJustConfMapping {
-                    field_ident: field_ident.clone(),
-                    justification_field_ident: just_ident,
-                    confidence_field_ident: conf_ident,
-                    justification_field_type: quote::quote!(String),
-                    confidence_field_type: quote::quote!(f32),
-                });
+                out_mappings.push(FieldJustConfMappingBuilder::default()
+                    .field_ident(field_ident.clone())
+                    .justification_field_ident(just_ident)
+                    .confidence_field_ident(conf_ident)
+                    .justification_field_type(quote::quote!(String))
+                    .confidence_field_type(quote::quote!(f32))
+                    .build()
+                    .unwrap()
+                );
             }
             Ok(ClassifyResult::NestedJustification{ justification_type, confidence_type }) => {
                 out_justification_fields.push(quote::quote! {
@@ -69,13 +57,15 @@ pub fn gather_justification_and_confidence_fields(
                 out_confidence_fields.push(quote::quote! {
                     pub #conf_ident: #confidence_type,
                 });
-                out_mappings.push(FieldJustConfMapping {
-                    field_ident: field_ident.clone(),
-                    justification_field_ident: just_ident,
-                    confidence_field_ident: conf_ident,
-                    justification_field_type: justification_type,
-                    confidence_field_type: confidence_type,
-                });
+                out_mappings.push(FieldJustConfMappingBuilder::default()
+                    .field_ident(field_ident.clone())
+                    .justification_field_ident(just_ident)
+                    .confidence_field_ident(conf_ident)
+                    .justification_field_type(justification_type)
+                    .confidence_field_type(confidence_type)
+                    .build()
+                    .unwrap()
+                );
             }
             Err(e_ts) => {
                 *out_err = quote::quote! { #out_err #e_ts };

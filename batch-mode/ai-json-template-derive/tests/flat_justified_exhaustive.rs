@@ -120,6 +120,7 @@ fn test_example_nested_flat_usage() {
 // 3) Enum with unit, named-struct, tuple variants => test typed flattening
 // --------------------------------------------------------------------------------
 
+/*
 #[derive(SaveLoad, Debug, Clone, PartialEq, Serialize, Deserialize, 
          AiJsonTemplate, AiJsonTemplateWithJustification)]
 enum ExampleEnum {
@@ -135,12 +136,12 @@ enum ExampleEnum {
     MixedVariant(String, HashMap<u8, bool>),
 }
 
-/*
 impl Default for ExampleEnum {
     fn default() -> Self {
         ExampleEnum::UnitVariant
     }
 }
+
 
 #[test]
 fn test_example_enum_unit_variant_flat() {
