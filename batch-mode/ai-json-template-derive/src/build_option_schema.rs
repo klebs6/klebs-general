@@ -1,3 +1,4 @@
+// ---------------- [ File: ai-json-template-derive/src/build_option_schema.rs ]
 crate::ix!();
 
 /// Builds the schema when the field is `Option<T>`. We treat `T` as not required.

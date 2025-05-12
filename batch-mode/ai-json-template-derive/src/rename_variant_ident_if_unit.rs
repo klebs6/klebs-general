@@ -1,3 +1,4 @@
+// ---------------- [ File: ai-json-template-derive/src/rename_variant_ident_if_unit.rs ]
 crate::ix!();
 
 /// If the `variant_ident`'s string is "Unit", returns a new Ident with the `replacement_name`.

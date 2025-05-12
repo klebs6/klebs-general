@@ -1,3 +1,4 @@
+// ---------------- [ File: ai-json-template-derive/src/resolve_map_key_type.rs ]
 crate::ix!();
 
 pub fn resolve_map_key_type(k_ty: &syn::Type) -> Result<String, proc_macro2::TokenStream> {

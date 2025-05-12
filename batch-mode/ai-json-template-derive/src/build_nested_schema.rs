@@ -1,3 +1,4 @@
+// ---------------- [ File: ai-json-template-derive/src/build_nested_schema.rs ]
 crate::ix!();
 
 /// Builds the fallback schema snippet for any nested struct/enum => call `AiJsonTemplateWithJustification`.

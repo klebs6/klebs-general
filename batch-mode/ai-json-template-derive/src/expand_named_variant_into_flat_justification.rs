@@ -31,21 +31,10 @@ pub fn expand_named_variant_into_flat_justification(
     let renamed_just_var = rename_unit_to_unitvariant(variant_ident);
 
     // Step A) Possibly insert top-level enum justification/conf fields.
-    let TopLevelJustResult {
-        field_decls_top,
-        pattern_vars_top,
-        just_inits_top,
-        conf_inits_top,
-    } = build_top_level_just_fields_for_variant(variant_ident, skip_self_just);
+    let top_level_just_result = build_top_level_just_fields_for_variant(variant_ident, skip_self_just);
 
     // Step B) Flatten each named field
-    let FlattenedFieldResult {
-        field_decls_for_fields,
-        pattern_vars_for_fields,
-        item_inits,
-        just_inits_for_fields,
-        conf_inits_for_fields,
-    } = flatten_named_variant_fields(
+    let flattened_field_result = flatten_named_variant_fields(
         &named_fields,
         skip_field_self_just_fn,
         is_leaf_type_fn,
@@ -56,8 +45,8 @@ pub fn expand_named_variant_into_flat_justification(
     // Step C) Construct the final flat variant snippet
     let flat_variant_ts = build_flat_variant_snippet_named(
         variant_ident,
-        &field_decls_top,
-        &field_decls_for_fields
+        top_level_just_result.field_decls_top(),
+        flattened_field_result.field_decls_for_fields()
     );
 
     // Step D) Build the final “from” arm snippet
@@ -68,13 +57,13 @@ pub fn expand_named_variant_into_flat_justification(
         &renamed_just_var,
         justification_ident,
         confidence_ident,
-        &pattern_vars_top,
-        &pattern_vars_for_fields,
-        &just_inits_top,
-        &just_inits_for_fields,
-        &conf_inits_top,
-        &conf_inits_for_fields,
-        &item_inits
+        top_level_just_result.pattern_vars_top(),
+        flattened_field_result.pattern_vars_for_fields(),
+        top_level_just_result.just_inits_top(),
+        flattened_field_result.just_inits_for_fields(),
+        top_level_just_result.conf_inits_top(),
+        flattened_field_result.conf_inits_for_fields(),
+        flattened_field_result.item_inits()
     );
 
     (flat_variant_ts, from_arm_ts)

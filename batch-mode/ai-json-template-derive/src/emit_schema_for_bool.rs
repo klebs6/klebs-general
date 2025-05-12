@@ -1,3 +1,4 @@
+// ---------------- [ File: ai-json-template-derive/src/emit_schema_for_bool.rs ]
 crate::ix!();
 
 pub fn emit_schema_for_bool(

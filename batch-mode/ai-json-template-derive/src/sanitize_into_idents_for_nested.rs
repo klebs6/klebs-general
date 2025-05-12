@@ -1,3 +1,4 @@
+// ---------------- [ File: ai-json-template-derive/src/sanitize_into_idents_for_nested.rs ]
 crate::ix!();
 
 /// This helper sanitizes a type string (e.g. "HashMap<u8, String>" => "HashMap_u8_String")

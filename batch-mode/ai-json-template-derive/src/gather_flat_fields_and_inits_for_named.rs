@@ -1,3 +1,4 @@
+// ---------------- [ File: ai-json-template-derive/src/gather_flat_fields_and_inits_for_named.rs ]
 crate::ix!();
 
 pub fn gather_flat_fields_and_inits_for_named(

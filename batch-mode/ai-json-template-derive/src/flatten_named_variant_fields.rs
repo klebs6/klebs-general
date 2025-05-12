@@ -1,3 +1,4 @@
+// ---------------- [ File: ai-json-template-derive/src/flatten_named_variant_fields.rs ]
 crate::ix!();
 
 pub fn flatten_named_variant_fields(
@@ -21,6 +22,7 @@ pub fn flatten_named_variant_fields(
     let mut conf_inits_for_fields   = Vec::new();
 
     for field in &named_fields.named {
+
         let f_ident = match &field.ident {
             Some(id) => id,
             None => {
@@ -58,11 +60,12 @@ pub fn flatten_named_variant_fields(
         }
     }
 
-    FlattenedFieldResult {
-        field_decls_for_fields,
-        pattern_vars_for_fields,
-        item_inits,
-        just_inits_for_fields,
-        conf_inits_for_fields
-    }
+    FlattenedFieldResultBuilder::default()
+        .field_decls_for_fields(field_decls_for_fields)
+        .pattern_vars_for_fields(pattern_vars_for_fields)
+        .item_inits(item_inits)
+        .just_inits_for_fields(just_inits_for_fields)
+        .conf_inits_for_fields(conf_inits_for_fields)
+        .build()
+        .unwrap()
 }

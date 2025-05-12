@@ -1,3 +1,4 @@
+// ---------------- [ File: ai-json-template-derive/src/build_top_level_justification_fields_for_variant.rs ]
 crate::ix!();
 
 // ---------------------------------------------------------------------------
@@ -16,12 +17,13 @@ pub fn build_top_level_just_fields_for_variant(
 
     if skip_self_just {
         // no top-level justification/conf
-        return TopLevelJustResult {
-            field_decls_top:    vec![],
-            pattern_vars_top:   vec![],
-            just_inits_top:     vec![],
-            conf_inits_top:     vec![],
-        };
+        return TopLevelJustResultBuilder::default()
+            .field_decls_top(vec![])
+            .pattern_vars_top(vec![])
+            .just_inits_top(vec![])
+            .conf_inits_top(vec![])
+            .build()
+            .unwrap();
     }
 
     debug!(
@@ -29,8 +31,8 @@ pub fn build_top_level_just_fields_for_variant(
         variant_ident
     );
 
-    TopLevelJustResult {
-        field_decls_top: vec![
+    TopLevelJustResultBuilder::default()
+        .field_decls_top(vec![
             quote::quote! {
                 #[serde(default)]
                 enum_variant_justification:String
@@ -39,16 +41,17 @@ pub fn build_top_level_just_fields_for_variant(
                 #[serde(default)]
                 enum_variant_confidence:f32
             }
-        ],
-        pattern_vars_top: vec![
+        ])
+        .pattern_vars_top(vec![
             quote::quote! { enum_variant_justification },
             quote::quote! { enum_variant_confidence },
-        ],
-        just_inits_top: vec![
+        ])
+        .just_inits_top(vec![
             quote::quote! { variant_justification: enum_variant_justification },
-        ],
-        conf_inits_top: vec![
+        ])
+        .conf_inits_top(vec![
             quote::quote! { variant_confidence: enum_variant_confidence },
-        ],
-    }
+        ])
+        .build()
+        .unwrap()
 }

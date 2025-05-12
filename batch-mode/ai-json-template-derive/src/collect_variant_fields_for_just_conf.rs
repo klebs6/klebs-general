@@ -1,3 +1,4 @@
+// ---------------- [ File: ai-json-template-derive/src/collect_variant_fields_for_just_conf.rs ]
 crate::ix!();
 
 #[tracing::instrument(level = "trace", skip_all)]

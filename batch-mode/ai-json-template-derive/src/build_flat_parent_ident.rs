@@ -1,3 +1,4 @@
+// ---------------- [ File: ai-json-template-derive/src/build_flat_parent_ident.rs ]
 crate::ix!();
 
 /// Builds `FlatJustified{ParentEnum}` ident, e.g. `FlatJustifiedMyEnum`.

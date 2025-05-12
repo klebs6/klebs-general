@@ -1,3 +1,4 @@
+// ---------------- [ File: ai-json-template-derive/src/create_flat_justified_idents_for_named.rs ]
 crate::ix!();
 
 pub fn create_flat_justified_idents_for_named(

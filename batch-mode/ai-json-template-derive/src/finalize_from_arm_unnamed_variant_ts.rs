@@ -1,6 +1,7 @@
 // ---------------- [ File: ai-json-template-derive/src/finalize_from_arm_unnamed_variant_ts.rs ]
 crate::ix!();
 
+#[tracing::instrument(level = "trace", skip_all)]
 pub fn finalize_from_arm_unnamed_variant_ts(
     parent_enum_ident:   &syn::Ident,
     variant_ident:       &syn::Ident,
@@ -20,7 +21,7 @@ pub fn finalize_from_arm_unnamed_variant_ts(
         parent_enum_ident.span()
     );
 
-    // Possibly rename "Unit" => "UnitVariant" for the justification
+    // Possibly rename "Unit" => "UnitVariant"
     let raw_vname = variant_ident.to_string();
     let renamed_just_var = if raw_vname == "Unit" {
         syn::Ident::new("UnitVariant", variant_ident.span())
@@ -28,10 +29,15 @@ pub fn finalize_from_arm_unnamed_variant_ts(
         variant_ident.clone()
     };
 
+    let item_exprs   = expansions.item_exprs();
+    let just_vals    = expansions.just_vals();
+    let conf_vals    = expansions.conf_vals();
+    let pattern_vars = expansions.pattern_vars();
+
     // Construct the final item expression
-    let item_ctor = if !expansions.item_exprs().is_empty() {
+    let item_ctor = if !item_exprs.is_empty() {
         quote! {
-            #parent_enum_ident :: #variant_ident(#(#expansions.item_exprs()),*)
+            #parent_enum_ident :: #variant_ident(#(#item_exprs),*)
         }
     } else {
         quote! {
@@ -40,10 +46,10 @@ pub fn finalize_from_arm_unnamed_variant_ts(
     };
 
     // Justification constructor
-    let just_ctor = if !expansions.just_vals().is_empty() {
+    let just_ctor = if !just_vals.is_empty() {
         quote! {
             #justification_ident :: #renamed_just_var {
-                #(#expansions.just_vals()),*
+                #(#just_vals),*
             }
         }
     } else {
@@ -53,10 +59,10 @@ pub fn finalize_from_arm_unnamed_variant_ts(
     };
 
     // Confidence constructor
-    let conf_ctor = if !expansions.conf_vals().is_empty() {
+    let conf_ctor = if !conf_vals.is_empty() {
         quote! {
             #confidence_ident :: #renamed_just_var {
-                #(#expansions.conf_vals()),*
+                #(#conf_vals),*
             }
         }
     } else {
@@ -65,10 +71,10 @@ pub fn finalize_from_arm_unnamed_variant_ts(
         }
     };
 
-    // Now build the match arm pattern
-    if !expansions.pattern_vars().is_empty() {
+    // Build the match arm pattern
+    if !pattern_vars.is_empty() {
         quote! {
-            #flat_parent_ident :: #variant_ident { #(#expansions.pattern_vars()),* } => {
+            #flat_parent_ident :: #variant_ident { #(#pattern_vars),* } => {
                 Self {
                     item: #item_ctor,
                     justification: #just_ctor,
@@ -77,7 +83,6 @@ pub fn finalize_from_arm_unnamed_variant_ts(
             }
         }
     } else {
-        // No fields
         quote! {
             #flat_parent_ident :: #variant_ident {} => {
                 Self {

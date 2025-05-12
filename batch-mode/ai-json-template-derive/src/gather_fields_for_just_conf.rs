@@ -1,3 +1,4 @@
+// ---------------- [ File: ai-json-template-derive/src/gather_fields_for_just_conf.rs ]
 crate::ix!();
 
 pub fn gather_fields_for_just_conf(

@@ -1,6 +1,7 @@
 // ---------------- [ File: ai-json-template-derive/src/finalize_flat_unnamed_variant_ts.rs ]
 crate::ix!();
 
+#[tracing::instrument(level = "trace", skip_all)]
 pub fn finalize_flat_unnamed_variant_ts(
     variant_ident: &syn::Ident,
     expansions: &UnnamedVariantExpansion
@@ -11,10 +12,12 @@ pub fn finalize_flat_unnamed_variant_ts(
         variant_ident
     );
 
-    if !expansions.field_declarations().is_empty() {
+    let field_decls = expansions.field_declarations();
+
+    if !field_decls.is_empty() {
         quote! {
             #variant_ident {
-                #(#expansions.field_declarations()),*
+                #(#field_decls),*
             },
         }
     } else {

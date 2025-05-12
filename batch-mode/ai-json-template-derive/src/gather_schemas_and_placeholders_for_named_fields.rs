@@ -1,3 +1,4 @@
+// ---------------- [ File: ai-json-template-derive/src/gather_schemas_and_placeholders_for_named_fields.rs ]
 crate::ix!();
 
 #[tracing::instrument(level="trace", skip_all)]

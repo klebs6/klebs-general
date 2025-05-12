@@ -1,3 +1,4 @@
+// ---------------- [ File: ai-json-template-derive/src/build_flattened_named_struct_for_named.rs ]
 crate::ix!();
 
 pub fn build_flattened_named_struct_for_named(

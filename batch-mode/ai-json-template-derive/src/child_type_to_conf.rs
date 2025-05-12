@@ -1,3 +1,4 @@
+// ---------------- [ File: ai-json-template-derive/src/child_type_to_conf.rs ]
 crate::ix!();
 
 pub fn child_ty_to_conf(ty: &syn::Type) -> syn::Type {

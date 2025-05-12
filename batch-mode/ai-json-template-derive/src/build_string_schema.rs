@@ -1,3 +1,4 @@
+// ---------------- [ File: ai-json-template-derive/src/build_string_schema.rs ]
 crate::ix!();
 
 /// Builds a schema snippet for `String` => "string".

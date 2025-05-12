@@ -1,3 +1,4 @@
+// ---------------- [ File: ai-json-template-derive/src/build_vec_schema.rs ]
 crate::ix!();
 
 /// Builds the schema for `Vec<T>`, returning a JSON "array_of" schema with `item_template`.

@@ -1,3 +1,4 @@
+// ---------------- [ File: ai-json-template-derive/src/gather_named_struct_just_conf_fields.rs ]
 crate::ix!();
 
 pub fn gather_named_struct_just_conf_idents(

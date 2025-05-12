@@ -18,13 +18,14 @@ pub fn gather_unnamed_variant_expansions(
         variant_ident
     );
 
-    let mut expansions = UnnamedVariantExpansion {
-        field_declarations: vec![],
-        pattern_vars:       vec![],
-        item_exprs:         vec![],
-        just_vals:          vec![],
-        conf_vals:          vec![],
-    };
+    let mut expansions = UnnamedVariantExpansionBuilder::default()
+        .field_declarations(vec![])
+        .pattern_vars(vec![])
+        .item_exprs(vec![])
+        .just_vals(vec![])
+        .conf_vals(vec![])
+        .build()
+        .unwrap();
 
     // Top-level justification/conf if not skipped
     if !skip_self_just {
