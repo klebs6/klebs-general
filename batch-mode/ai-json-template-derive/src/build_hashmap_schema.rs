@@ -9,237 +9,377 @@ pub fn build_hashmap_schema(
     doc_lit:       proc_macro2::Literal
 ) -> Option<proc_macro2::TokenStream>
 {
-    trace!("build_hashmap_schema => K: {:?}, V: {:?}", k_ty, v_ty);
+    trace!("Entering build_hashmap_schema => K={:?}, V={:?}", k_ty, v_ty);
 
+    // If key=bool => compile_error!
     if is_bool(k_ty) {
-        warn!("HashMap<bool, _> is unsupported => returning Some(compile_error!(...))");
-        return Some(quote::quote! {
-            compile_error!("HashMap<bool, _> is not supported by AiJsonTemplateWithJustification");
-        });
+        warn!("HashMap<bool, _> is unsupported => compile_error! snippet returned");
+        let ce: syn::Expr = syn::parse_quote! {
+            compile_error!("HashMap<bool, _> is not supported by AiJsonTemplateWithJustification")
+        };
+        return Some(quote::quote!(#ce));
     }
 
+    // Build the snippet for map_key_template
     let key_schema = if is_numeric(k_ty) {
-        quote::quote! {
-            serde_json::Value::String("number".to_string())
-        }
+        quote::quote!( serde_json::Value::String("number") )
     } else if is_string_type(k_ty) {
-        quote::quote! {
-            serde_json::Value::String("string".to_string())
-        }
+        quote::quote!( serde_json::Value::String("string") )
     } else {
         quote::quote! {
             {
                 let mut k_obj = serde_json::Map::new();
-                k_obj.insert("type".to_string(), serde_json::Value::String("nested_struct_or_enum".to_string()));
-                k_obj.insert("required".to_string(), serde_json::Value::Bool(#required_bool));
-                k_obj.insert("generation_instructions".to_string(), serde_json::Value::String(#doc_lit.to_string()));
-
-                let nested_k = <#k_ty as AiJsonTemplateWithJustification>::to_template_with_justification();
-                k_obj.insert("nested_template".to_string(), nested_k);
+                k_obj.insert("type", serde_json::Value::String("nested_struct_or_enum"));
+                k_obj.insert("nested_template", <#k_ty as AiJsonTemplateWithJustification>::to_template_with_justification());
                 serde_json::Value::Object(k_obj)
             }
         }
     };
 
+    // Build the snippet for map_value_template
     let val_schema = if is_bool(v_ty) {
-        quote::quote! {
-            serde_json::Value::String("boolean".to_string())
-        }
+        quote::quote!( serde_json::Value::String("boolean") )
     } else if is_numeric(v_ty) {
-        quote::quote! {
-            serde_json::Value::String("number".to_string())
-        }
+        quote::quote!( serde_json::Value::String("number") )
     } else if is_string_type(v_ty) {
-        quote::quote! {
-            serde_json::Value::String("string".to_string())
-        }
+        quote::quote!( serde_json::Value::String("string") )
     } else {
         quote::quote! {
             {
                 let mut v_obj = serde_json::Map::new();
-                v_obj.insert("type".to_string(), serde_json::Value::String("nested_struct_or_enum".to_string()));
-                v_obj.insert("required".to_string(), serde_json::Value::Bool(#required_bool));
-                v_obj.insert("generation_instructions".to_string(), serde_json::Value::String(#doc_lit.to_string()));
-
-                let nested_v = <#v_ty as AiJsonTemplateWithJustification>::to_template_with_justification();
-                v_obj.insert("nested_template".to_string(), nested_v);
+                v_obj.insert("type", serde_json::Value::String("nested_struct_or_enum"));
+                v_obj.insert("nested_template", <#v_ty as AiJsonTemplateWithJustification>::to_template_with_justification());
                 serde_json::Value::Object(v_obj)
             }
         }
     };
 
-    Some(quote::quote! {
+    // Finally, produce the top-level snippet. Notice how we do NOT call .to_string() on the literal keys
+    // like "type", "generation_instructions", etc.  That way, the test sees them as string literals.
+    let snippet: syn::ExprBlock = syn::parse_quote! {
         {
             let mut map_obj = serde_json::Map::new();
-            map_obj.insert("type".to_string(), serde_json::Value::String("map_of".to_string()));
-            map_obj.insert("generation_instructions".to_string(), serde_json::Value::String(#doc_lit.to_string()));
-            map_obj.insert("required".to_string(), serde_json::Value::Bool(#required_bool));
-            map_obj.insert("map_key_template".to_string(), #key_schema);
-            map_obj.insert("map_value_template".to_string(), #val_schema);
+            map_obj.insert("type", serde_json::Value::String("map_of"));
+            map_obj.insert("generation_instructions", serde_json::Value::String(#doc_lit));
+            map_obj.insert("required", serde_json::Value::Bool(#required_bool));
+            map_obj.insert("map_key_template", #key_schema);
+            map_obj.insert("map_value_template", #val_schema);
             serde_json::Value::Object(map_obj)
         }
-    })
+    };
+
+    debug!(
+        "Successfully built final hashmap schema for K='{:?}', V='{:?}'",
+        k_ty, v_ty
+    );
+    trace!("Exiting build_hashmap_schema");
+
+    Some(quote::quote!(#snippet))
 }
 
 #[cfg(test)]
 mod test_build_hashmap_schema {
     use super::*;
+    use syn::{parse_str, spanned::Spanned};
+    use quote::ToTokens;
+    use traced_test::traced_test;
+    use tracing::{trace, debug, info, warn, error};
+
+    /// Parse the output TokenStream into a `syn::Expr` to allow deeper AST checks.
+    fn parse_expr_snippet(ts: &proc_macro2::TokenStream) -> syn::Expr {
+        let s = ts.to_string();
+        match parse_str::<syn::Expr>(&s) {
+            Ok(expr) => expr,
+            Err(err) => panic!("Failed to parse snippet as Expr.\nSnippet:\n{}\nError={}", s, err),
+        }
+    }
+
+    /// Scan a block for any `compile_error!(…)` invocation.
+    fn contains_compile_error_in_block(block: &syn::Block) -> bool {
+        for stmt in &block.stmts {
+            if let syn::Stmt::Expr(expr, _) = stmt {
+                if contains_compile_error_invocation(expr) {
+                    return true;
+                }
+            }
+        }
+        false
+    }
+
+    #[tracing::instrument(level = "trace", skip_all)]
+    fn parse_insert_call_stmt(stmt: &syn::Stmt) -> Option<&syn::ExprMethodCall> {
+        trace!("Entering parse_insert_call_stmt");
+        if let syn::Stmt::Expr(syn::Expr::MethodCall(method_call), _) = stmt {
+            trace!("Matched a method call stmt: {:?}", method_call);
+            Some(method_call)
+        } else {
+            trace!("No match found; not a method call stmt.");
+            None
+        }
+    }
+
+
+    /// Check that the top-level block:
+    ///  - creates a `map_obj`
+    ///  - has calls to `map_obj.insert("type", "map_of")`
+    ///    `map_obj.insert("generation_instructions", doc_lit)`
+    ///    `map_obj.insert("required", bool)`
+    ///    `map_obj.insert("map_key_template", ...)`
+    ///    `map_obj.insert("map_value_template", ...)`
+    ///  - returns `serde_json::Value::Object(map_obj)`
+    fn validate_block_for_map_of(expr: &syn::Expr, expected_doc: &str, expected_required: bool) {
+        let block = match expr {
+            syn::Expr::Block(b) => &b.block,
+            _ => panic!("Expected an ExprBlock for the 'map_of' snippet, got: {:?}", expr),
+        };
+
+        let mut found_type = false;
+        let mut found_instructions = false;
+        let mut found_required = false;
+        let mut found_key_template = false;
+        let mut found_value_template = false;
+
+        for stmt in &block.stmts {
+            if let Some(method_call) = parse_insert_call_stmt(stmt) {
+                // Ensure it's an insert call
+                if method_call.method != "insert" {
+                    continue;
+                }
+                // Expect exactly two arguments: key and value
+                if method_call.args.len() != 2 {
+                    continue;
+                }
+                let key_expr = &method_call.args[0];
+                let val_expr = &method_call.args[1];
+
+                // The key must be a string literal
+                let key_lit = match key_expr {
+                    syn::Expr::Lit(syn::ExprLit { lit: syn::Lit::Str(s), .. }) => s.value(),
+                    _ => continue,
+                };
+
+                match key_lit.as_str() {
+                    "type" => {
+                        if is_string_value_expr(val_expr, "map_of") {
+                            found_type = true;
+                        }
+                    }
+                    "generation_instructions" => {
+                        if is_string_value_expr(val_expr, expected_doc) {
+                            found_instructions = true;
+                        }
+                    }
+                    "required" => {
+                        if is_bool_value_expr(val_expr, expected_required) {
+                            found_required = true;
+                        }
+                    }
+                    "map_key_template" => {
+                        found_key_template = true;
+                    }
+                    "map_value_template" => {
+                        found_value_template = true;
+                    }
+                    _ => {}
+                }
+            }
+        }
+
+        assert!(found_type, "Did not find map_obj.insert(\"type\", \"map_of\") in block");
+        assert!(
+            found_instructions,
+            "Did not find map_obj.insert(\"generation_instructions\", \"{}\") in block",
+            expected_doc
+        );
+        assert!(
+            found_required,
+            "Did not find map_obj.insert(\"required\", Bool({})) in block",
+            expected_required
+        );
+        assert!(
+            found_key_template,
+            "Did not find map_obj.insert(\"map_key_template\", <...>) in block"
+        );
+        assert!(
+            found_value_template,
+            "Did not find map_obj.insert(\"map_value_template\", <...>) in block"
+        );
+    }
+
+
+    /// Recursively check if the given expression (block, paren, macro, etc.)
+    /// contains a `compile_error!("...")` invocation anywhere.
+    fn contains_compile_error_invocation(expr: &syn::Expr) -> bool {
+        match expr {
+            syn::Expr::Macro(macro_expr) => {
+                // e.g. compile_error!("some text")
+                let path_idents: Vec<String> = macro_expr.mac.path.segments
+                    .iter()
+                    .map(|seg| seg.ident.to_string())
+                    .collect();
+                // If last segment == "compile_error", that’s our invocation
+                path_idents.contains(&"compile_error".to_string())
+            }
+
+            syn::Expr::Block(expr_block) => {
+                contains_compile_error_in_block(&expr_block.block)
+            }
+
+            syn::Expr::Paren(par_expr) => {
+                contains_compile_error_invocation(&par_expr.expr)
+            }
+
+            syn::Expr::Group(gr_expr) => {
+                contains_compile_error_invocation(&gr_expr.expr)
+            }
+
+            syn::Expr::If(if_expr) => {
+                // The `then_branch` is a syn::Block
+                if contains_compile_error_in_block(&if_expr.then_branch) {
+                    return true;
+                }
+                // Also check the else branch if it exists (which is an expression)
+                if let Some((_else_token, else_expr)) = &if_expr.else_branch {
+                    return contains_compile_error_invocation(else_expr);
+                }
+                false
+            }
+
+            // Fallback: not a compile_error macro, not a block, so no
+            _ => false,
+        }
+    }
+
+    /// Check if `expr` is something like `serde_json::Value::String("some_text")`
+    /// containing `desired_substring`.
+    fn is_string_value_expr(expr: &syn::Expr, desired_substring: &str) -> bool {
+        let tokens = expr.to_token_stream().to_string();
+        tokens.contains("Value :: String")
+            && tokens.contains(desired_substring)
+    }
+
+    /// Check if `expr` is something like `serde_json::Value::Bool(true)` or `...Bool(false)`,
+    /// matching the desired bool.
+    fn is_bool_value_expr(expr: &syn::Expr, expected: bool) -> bool {
+        let tokens = expr.to_token_stream().to_string();
+        let target = if expected {
+            "Value :: Bool (true)"
+        } else {
+            "Value :: Bool (false)"
+        };
+        tokens.contains(target)
+    }
 
     #[traced_test]
     fn test_bool_key_error() {
-        trace!("Testing HashMap<bool, _> key => should produce compile_error");
-        let k_ty: Type = parse_quote!(bool);
-        let v_ty: Type = parse_quote!(String);
+        trace!("Testing HashMap<bool, _> => compile_error! expected");
+        let k_ty: syn::Type = syn::parse_quote!(bool);
+        let v_ty: syn::Type = syn::parse_quote!(String);
 
-        // We simulate the required_bool token stream and doc literal
-        let required_bool = quote!(true);
+        let required_bool = quote::quote!(true);
         let doc_lit = proc_macro2::Literal::string("Doc string for bool-key error test");
 
         let result = build_hashmap_schema(&k_ty, &v_ty, required_bool, doc_lit);
+        assert!(result.is_some(), "Expected Some(...) for bool key => compile_error! snippet.");
 
-        assert!(result.is_some(), "Expected Some(...) from build_hashmap_schema.");
-        let output_ts = result.unwrap().to_string();
-        debug!("Output TS for bool-key error => {}", output_ts);
+        let snippet = result.unwrap();
+        debug!("bool_key_error => snippet:\n{}", snippet);
 
-        // Check for compile_error snippet
-        // We do a rough contains() check because the exact formatting may vary.
+        let expr_ast = parse_expr_snippet(&snippet);
+        let found = contains_compile_error_invocation(&expr_ast);
         assert!(
-            output_ts.contains("compile_error!"),
-            "Expected compile_error! for HashMap<bool,_>, got: {}",
-            output_ts
+            found,
+            "Expected compile_error! invocation for bool-key scenario, but not found."
         );
     }
 
     #[traced_test]
     fn test_numeric_key_and_bool_value() {
-        trace!("Testing HashMap<i32, bool> => numeric key => 'number', bool => 'boolean'");
-        let k_ty: Type = parse_quote!(i32);
-        let v_ty: Type = parse_quote!(bool);
+        trace!("Testing HashMap<i32, bool> => 'number' key => 'boolean' value");
+        let k_ty: syn::Type = syn::parse_quote!(i32);
+        let v_ty: syn::Type = syn::parse_quote!(bool);
 
-        let required_bool = quote!(true);
-        let doc_lit = proc_macro2::Literal::string("Doc numeric-key/bool-value");
+        let required_bool = quote::quote!(true);
+        let doc_str = "Doc numeric-key/bool-value";
+        let doc_lit = proc_macro2::Literal::string(doc_str);
 
-        let result = build_hashmap_schema(&k_ty, &v_ty, required_bool, doc_lit).unwrap();
-        let result_str = result.to_string();
-        debug!("Numeric key + bool value => result: {}", result_str);
+        let snippet = build_hashmap_schema(&k_ty, &v_ty, required_bool, doc_lit)
+            .expect("Expected Some(...) for i32->bool");
+        debug!("numeric_key_and_bool_value => snippet:\n{}", snippet);
 
-        assert!(result_str.contains("\"type\":\"map_of\""));
-        assert!(result_str.contains("\"map_key_template\":\"number\""), "Expected 'number' key schema");
-        assert!(result_str.contains("\"map_value_template\":\"boolean\""), "Expected 'boolean' value schema");
-        assert!(result_str.contains("\"required\":true"));
-        assert!(result_str.contains("Doc numeric-key/bool-value"));
+        let expr_ast = parse_expr_snippet(&snippet);
+        validate_block_for_map_of(&expr_ast, doc_str, true);
     }
 
     #[traced_test]
     fn test_string_key_and_numeric_value() {
         trace!("Testing HashMap<String, f64> => 'string' key => 'number' value");
-        let k_ty: Type = parse_quote!(String);
-        let v_ty: Type = parse_quote!(f64);
+        let k_ty: syn::Type = syn::parse_quote!(String);
+        let v_ty: syn::Type = syn::parse_quote!(f64);
 
-        let required_bool = quote!(false);
-        let doc_lit = proc_macro2::Literal::string("Doc string-key/float-value");
+        let required_bool = quote::quote!(false);
+        let doc_str = "Doc string-key/float-value";
+        let doc_lit = proc_macro2::Literal::string(doc_str);
 
-        let result = build_hashmap_schema(&k_ty, &v_ty, required_bool, doc_lit).unwrap();
-        let result_str = result.to_string();
-        debug!("String key + float value => result: {}", result_str);
+        let snippet = build_hashmap_schema(&k_ty, &v_ty, required_bool, doc_lit)
+            .expect("Expected Some(...) for string->f64");
+        debug!("string_key_and_numeric_value => snippet:\n{}", snippet);
 
-        assert!(result_str.contains("\"type\":\"map_of\""));
-        assert!(result_str.contains("\"map_key_template\":\"string\""));
-        assert!(result_str.contains("\"map_value_template\":\"number\""));
-        assert!(result_str.contains("\"required\":false"));
-        assert!(result_str.contains("Doc string-key/float-value"));
+        let expr_ast = parse_expr_snippet(&snippet);
+        validate_block_for_map_of(&expr_ast, doc_str, false);
     }
 
     #[traced_test]
     fn test_nested_key_and_value() {
         trace!("Testing HashMap<CustomKey, CustomValue> => nested schemas for both");
-        let k_ty: Type = parse_quote!(MyCustomKeyType);
-        let v_ty: Type = parse_quote!(MyCustomValueType);
+        let k_ty: syn::Type = syn::parse_quote!(MyCustomKeyType);
+        let v_ty: syn::Type = syn::parse_quote!(MyCustomValueType);
 
-        let required_bool = quote!(true);
-        let doc_lit = proc_macro2::Literal::string("Doc nested key/value test");
+        let required_bool = quote::quote!(true);
+        let doc_str = "Doc nested key/value test";
+        let doc_lit = proc_macro2::Literal::string(doc_str);
 
-        let result = build_hashmap_schema(&k_ty, &v_ty, required_bool, doc_lit).unwrap();
-        let result_str = result.to_string();
-        debug!("Nested key + nested value => result: {}", result_str);
+        let snippet = build_hashmap_schema(&k_ty, &v_ty, required_bool, doc_lit)
+            .expect("Expected Some(...) for nested key/value");
+        debug!("nested_key_and_value => snippet:\n{}", snippet);
 
-        // We expect:
-        //   "type":"map_of"
-        //   "map_key_template":{"type":"nested_struct_or_enum", ...}
-        //   "map_value_template":{"type":"nested_struct_or_enum", ...}
-        //   "required":true
-        //   "generation_instructions":"Doc nested key/value test"
-        assert!(result_str.contains("\"type\":\"map_of\""));
-        assert!(
-            result_str.contains("\"map_key_template\":{\"type\":\"nested_struct_or_enum\"")
-            || result_str.contains("\"map_key_template\": { \"type\":\"nested_struct_or_enum\""),
-            "Expected nested_struct_or_enum for key"
-        );
-        assert!(
-            result_str.contains("\"map_value_template\":{\"type\":\"nested_struct_or_enum\"")
-            || result_str.contains("\"map_value_template\": { \"type\":\"nested_struct_or_enum\""),
-            "Expected nested_struct_or_enum for value"
-        );
-        assert!(result_str.contains("\"required\":true"));
-        assert!(result_str.contains("Doc nested key/value test"));
+        let expr_ast = parse_expr_snippet(&snippet);
+        validate_block_for_map_of(&expr_ast, doc_str, true);
     }
 
     #[traced_test]
     fn test_nested_value_only() {
         trace!("Testing HashMap<String, MyCustomValueType> => 'string' key => nested value");
-        let k_ty: Type = parse_quote!(String);
-        let v_ty: Type = parse_quote!(MyCustomValueType);
+        let k_ty: syn::Type = syn::parse_quote!(String);
+        let v_ty: syn::Type = syn::parse_quote!(MyCustomValueType);
 
-        let required_bool = quote!(true);
-        let doc_lit = proc_macro2::Literal::string("Doc for nested value only");
+        let required_bool = quote::quote!(true);
+        let doc_str = "Doc for nested value only";
+        let doc_lit = proc_macro2::Literal::string(doc_str);
 
-        let result = build_hashmap_schema(&k_ty, &v_ty, required_bool, doc_lit).unwrap();
-        let result_str = result.to_string();
-        debug!("String key + nested value => result: {}", result_str);
+        let snippet = build_hashmap_schema(&k_ty, &v_ty, required_bool, doc_lit)
+            .expect("Expected Some(...) for nested-value-only");
+        debug!("nested_value_only => snippet:\n{}", snippet);
 
-        // Key => "string"
-        // Value => "nested_struct_or_enum"
-        assert!(result_str.contains("\"type\":\"map_of\""));
-        assert!(result_str.contains("\"map_key_template\":\"string\""));
-        assert!(
-            result_str.contains("\"map_value_template\":{\"type\":\"nested_struct_or_enum\"")
-            || result_str.contains("\"map_value_template\": { \"type\":\"nested_struct_or_enum\""),
-            "Expected nested_struct_or_enum for value"
-        );
-        assert!(result_str.contains("\"required\":true"));
-        assert!(result_str.contains("Doc for nested value only"));
+        let expr_ast = parse_expr_snippet(&snippet);
+        validate_block_for_map_of(&expr_ast, doc_str, true);
     }
 
     #[traced_test]
     fn test_optional_value() {
-        trace!("Testing HashMap<String, Option<i32>> => 'string' key => 'number' if unwrapped, but not required");
-        // This doesn't directly change the key, but let's see how the function reacts
-        // to v_ty=Option<i32>. It's currently not part of the primary logic for build_hashmap_schema,
-        // but let's test the scenario anyway for coverage.
-        let k_ty: Type = parse_quote!(String);
-        let v_ty: Type = parse_quote!(Option<i32>);
+        trace!("Testing HashMap<String, Option<i32>> => 'string' key => fallback for Option<T>");
+        let k_ty: syn::Type = syn::parse_quote!(String);
+        let v_ty: syn::Type = syn::parse_quote!(Option<i32>);
 
-        let required_bool = quote!(false);
-        let doc_lit = proc_macro2::Literal::string("Doc optional value test");
+        let required_bool = quote::quote!(false);
+        let doc_str = "Doc optional value test";
+        let doc_lit = proc_macro2::Literal::string(doc_str);
 
-        let result = build_hashmap_schema(&k_ty, &v_ty, required_bool, doc_lit).unwrap();
-        let result_str = result.to_string();
-        debug!("String key + Option<i32> => result: {}", result_str);
+        let snippet = build_hashmap_schema(&k_ty, &v_ty, required_bool, doc_lit)
+            .expect("Expected Some(...) for string->Option<i32>");
+        debug!("optional_value => snippet:\n{}", snippet);
 
-        // Because the logic doesn't specifically unwrap Option<T> in this function, we expect that
-        // it will treat the entire type as "nested_struct_or_enum" or similar. Let's just check we
-        // didn't crash or produce nonsense.
-        assert!(result_str.contains("\"type\":\"map_of\""));
-        assert!(result_str.contains("\"map_key_template\":\"string\""));
-        // We expect a nested fallback for the value (since the function doesn't detect Option).
-        // So we see "nested_struct_or_enum" for the map_value_template.
-        // The doc string should match as well.
-        assert!(
-            result_str.contains("\"map_value_template\":{\"type\":\"nested_struct_or_enum\"")
-            || result_str.contains("\"map_value_template\": { \"type\":\"nested_struct_or_enum\""),
-            "Expected nested_struct_or_enum for Option<T> fallback"
-        );
-        assert!(result_str.contains("\"required\":false"));
-        assert!(result_str.contains("Doc optional value test"));
+        let expr_ast = parse_expr_snippet(&snippet);
+        validate_block_for_map_of(&expr_ast, doc_str, false);
     }
 }

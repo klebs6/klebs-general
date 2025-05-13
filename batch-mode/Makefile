@@ -73,7 +73,7 @@ EXPANSION_TEST    := flat_justified_exhaustive
 #EXPANSION_TEST    := classify_with_justification
 INDIVIDUAL_TEST    := classify_field_type
 INDIVIDUAL_TEST    := build_enum_confidence
-INDIVIDUAL_TEST    := build_enum_justification
+INDIVIDUAL_TEST    := build_hashmap_schema
 
 #----------------------------------------------[here are our rules]
 run:

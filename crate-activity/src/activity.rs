@@ -2,7 +2,9 @@ crate::ix!();
 
 pub async fn crate_activity_main(cli: &CrateActivityCli) -> Result<(), CrateActivityError> {
 
-    tracing_setup::configure_tracing();
+    if *cli.verbose() {
+        tracing_setup::configure_tracing();
+    }
 
     let config_dir   = configure_directory().await?;
     let crate_names  = read_crate_list(&config_dir).await;
@@ -40,10 +42,10 @@ pub async fn crate_activity_main(cli: &CrateActivityCli) -> Result<(), CrateActi
         min_group_size 
     );
 
-    tracing::info!("{}", activity_summary);
+    println!("{}", activity_summary);
 
     let cleaned_summaries = if cli.disable_outlier_handling() {
-        tracing::info!("Outlier detection disabled. Using raw data.");
+        info!("Outlier detection disabled. Using raw data.");
         activity_data.summaries().to_vec()
     } else {
         let z_threshold = *cli.outlier_z_threshold();
@@ -58,7 +60,7 @@ pub async fn crate_activity_main(cli: &CrateActivityCli) -> Result<(), CrateActi
 
             if outlier_count > 0 {
                 if downweight {
-                    tracing::info!(
+                    info!(
                         "Crate '{}' had {} outliers (z-threshold={:.2}); downweighting by {:.2}",
                         s.crate_name(),
                         outlier_count,
@@ -66,7 +68,7 @@ pub async fn crate_activity_main(cli: &CrateActivityCli) -> Result<(), CrateActi
                         weight
                     );
                 } else {
-                    tracing::info!(
+                    info!(
                         "Crate '{}' had {} outliers (z-threshold={:.2}); removing them.",
                         s.crate_name(),
                         outlier_count,
@@ -74,7 +76,7 @@ pub async fn crate_activity_main(cli: &CrateActivityCli) -> Result<(), CrateActi
                     );
                 }
             } else {
-                tracing::info!(
+                info!(
                     "Crate '{}' had no outliers detected (z-threshold={:.2}).",
                     s.crate_name(),
                     z_threshold
@@ -171,7 +173,7 @@ pub async fn crate_activity_main(cli: &CrateActivityCli) -> Result<(), CrateActi
         display_time_lag_correlations(&lag_results);
     }
 
-    tracing::info!("Crate usage analysis completed.");
+    println!("Crate usage analysis completed.");
 
     Ok(())
 }

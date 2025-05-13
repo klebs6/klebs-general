@@ -90,6 +90,10 @@ pub struct CrateActivityCli {
     #[structopt(long, default_value = "2", help = "Minimum group size required to treat them as a group")]
     #[getset(get="pub")]
     min_group_size: usize,
+
+    #[structopt(long, short = "v", help = "Enable tracing")]
+    #[getset(get="pub")]
+    verbose: bool,
 }
 
 impl CrateActivityCli {

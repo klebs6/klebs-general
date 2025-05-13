@@ -10,6 +10,9 @@ workspace = true
 [dependencies.getset]
 workspace = true
 
+[dependencies.regex]
+workspace = true
+
 [dependencies.pretty_assertions]
 workspace = true
 

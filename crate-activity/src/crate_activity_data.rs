@@ -16,7 +16,6 @@ pub struct CrateActivityData {
     interval_downloads_7d: HashMap<String, i64>,
 }
 
-#[tracing::instrument(level = "info", skip_all)]
 pub async fn gather_crate_activity_data(
     ignore_cache:   bool,
     crate_names:    &[String],
@@ -28,7 +27,7 @@ pub async fn gather_crate_activity_data(
 ) -> Result<CrateActivityData, CrateActivityError> {
     use futures::{StreamExt};
 
-    tracing::info!(
+    println!(
         "Gathering crate activity data for {} crates (ignore_cache={})",
         crate_names.len(),
         ignore_cache
@@ -43,18 +42,18 @@ pub async fn gather_crate_activity_data(
         let ua = user_agent.to_string();
         let cfg_dir = config_dir.to_path_buf();
         async move {
-            tracing::debug!("Fetching usage for crate '{}'", crate_name);
+            debug!("Fetching usage for crate '{}'", crate_name);
             match fetch_usage(ignore_cache, &ua, &cfg_dir, &crate_name).await {
                 Ok(Some(response)) => {
-                    tracing::info!("Successfully fetched usage for crate '{}'", crate_name);
+                    debug!("Successfully fetched usage for crate '{}'", crate_name);
                     Some((crate_name, response))
                 },
                 Ok(None) => {
-                    tracing::warn!("No data for crate '{}'", crate_name);
+                    warn!("No data for crate '{}'", crate_name);
                     None
                 },
                 Err(e) => {
-                    tracing::error!("Failed to fetch data for '{}': {:?}", crate_name, e);
+                    error!("Failed to fetch data for '{}': {:?}", crate_name, e);
                     None
                 }
             }
@@ -103,7 +102,7 @@ pub async fn gather_crate_activity_data(
         }
     }
 
-    tracing::info!(
+    println!(
         "Collected activity data for {} crates (out of {} requested).",
         summaries.len(),
         crate_names.len()
