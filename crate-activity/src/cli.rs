@@ -82,6 +82,14 @@ pub struct CrateActivityCli {
     /// Disable outlier handling altogether
     #[structopt(long, help = "Disable outlier detection and handling")]
     disable_outlier_handling: bool,
+
+    #[structopt(long, help = "If true, we will print each individual crate per group")]
+    #[getset(get="pub")]
+    expand_groups: bool,
+
+    #[structopt(long, default_value = "2", help = "Minimum group size required to treat them as a group")]
+    #[getset(get="pub")]
+    min_group_size: usize,
 }
 
 impl CrateActivityCli {

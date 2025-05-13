@@ -7,7 +7,7 @@ pub fn build_justified_enum_struct(
     enum_just_ident: &syn::Ident,
     enum_conf_ident: &syn::Ident,
     justified_ident: &syn::Ident
-) -> proc_macro2::TokenStream
+) -> TokenStream2
 {
     debug!(
         "Building the final Justified struct '{}' for enum '{}'",
@@ -44,13 +44,13 @@ mod test_build_justified_enum_struct {
     fn it_generates_a_struct_with_the_correct_name() {
         trace!("Starting test: it_generates_a_struct_with_the_correct_name");
 
-        let ty_ident = syn::Ident::new("MyEnum", Span::call_site());
-        let enum_just_ident = syn::Ident::new("MyEnumJustification", Span::call_site());
-        let enum_conf_ident = syn::Ident::new("MyEnumConfidence", Span::call_site());
-        let justified_ident = syn::Ident::new("JustifiedMyEnum", Span::call_site());
+        let ty_ident = syn::Ident::new("MyEnum", proc_macro2::Span::call_site());
+        let enum_just_ident = syn::Ident::new("MyEnumJustification", proc_macro2::Span::call_site());
+        let enum_conf_ident = syn::Ident::new("MyEnumConfidence", proc_macro2::Span::call_site());
+        let justified_ident = syn::Ident::new("JustifiedMyEnum", proc_macro2::Span::call_site());
 
         debug!("Calling build_justified_enum_struct(...) with ident='{}'", justified_ident);
-        let tokens: TokenStream = build_justified_enum_struct(
+        let tokens: TokenStream2 = build_justified_enum_struct(
             &ty_ident,
             &enum_just_ident,
             &enum_conf_ident,
@@ -58,7 +58,7 @@ mod test_build_justified_enum_struct {
         );
         trace!("Generated token stream: {}", tokens);
 
-        let file_syntax: File = parse2(tokens).expect("Could not parse token stream into a syn::File");
+        let file_syntax: syn::File = parse2(tokens).expect("Could not parse token stream into a syn::File");
         let mut found_struct = false;
 
         for item in file_syntax.items {
@@ -93,15 +93,15 @@ mod test_build_justified_enum_struct {
     fn it_derives_necessary_traits() {
         trace!("Starting test: it_derives_necessary_traits");
 
-        let ty_ident = syn::Ident::new("FooEnum", Span::call_site());
-        let just_ident = syn::Ident::new("FooEnumJustification", Span::call_site());
-        let conf_ident = syn::Ident::new("FooEnumConfidence", Span::call_site());
-        let justified_ident = syn::Ident::new("JustifiedFooEnum", Span::call_site());
+        let ty_ident = syn::Ident::new("FooEnum", proc_macro2::Span::call_site());
+        let just_ident = syn::Ident::new("FooEnumJustification", proc_macro2::Span::call_site());
+        let conf_ident = syn::Ident::new("FooEnumConfidence", proc_macro2::Span::call_site());
+        let justified_ident = syn::Ident::new("JustifiedFooEnum", proc_macro2::Span::call_site());
 
         let tokens = build_justified_enum_struct(&ty_ident, &just_ident, &conf_ident, &justified_ident);
         trace!("Token stream: {}", tokens);
 
-        let file_syntax: File = parse2(tokens).expect("Could not parse token stream");
+        let file_syntax: syn::File = parse2(tokens).expect("Could not parse token stream");
 
         let mut found_struct_with_derives = false;
 
@@ -120,37 +120,30 @@ mod test_build_justified_enum_struct {
                     let mut found_derive_setters = false;
 
                     for attr in &item_struct.attrs {
-                        if let Ok(Meta::List(meta_list)) = attr.parse_meta() {
-                            let path_str = meta_list.path.to_token_stream().to_string();
-                            // e.g. check if it's #[derive(...)]
-                            if path_str == "derive" {
-                                let nested = &meta_list.nested;
-                                let derived_str = nested.to_token_stream().to_string();
-                                trace!("Derived: {}", derived_str);
-                                if derived_str.contains("Debug") {
-                                    found_derive_debug = true;
+                        if attr.path().is_ident("derive") {
+                            let parsed = attr.parse_nested_meta(|meta| {
+                                if let Some(ident) = meta.path.get_ident() {
+                                    let derived_str = ident.to_string();
+                                    trace!("Derived: {}", derived_str);
+
+                                    match derived_str.as_str() {
+                                        "Debug" => found_derive_debug = true,
+                                        "Clone" => found_derive_clone = true,
+                                        "PartialEq" => found_derive_partial_eq = true,
+                                        "Serialize" => found_derive_serialize = true,
+                                        "Deserialize" => found_derive_deserialize = true,
+                                        "Default" => found_derive_default = true,
+                                        "Getters" => found_derive_getters = true,
+                                        "Setters" => found_derive_setters = true,
+                                        _ => (),
+                                    }
                                 }
-                                if derived_str.contains("Clone") {
-                                    found_derive_clone = true;
-                                }
-                                if derived_str.contains("PartialEq") {
-                                    found_derive_partial_eq = true;
-                                }
-                                if derived_str.contains("Serialize") {
-                                    found_derive_serialize = true;
-                                }
-                                if derived_str.contains("Deserialize") {
-                                    found_derive_deserialize = true;
-                                }
-                                if derived_str.contains("Default") {
-                                    found_derive_default = true;
-                                }
-                                if derived_str.contains("Getters") {
-                                    found_derive_getters = true;
-                                }
-                                if derived_str.contains("Setters") {
-                                    found_derive_setters = true;
-                                }
+                                Ok(())
+                            });
+
+                            if let Err(e) = parsed {
+                                error!("Failed to parse nested meta: {:?}", e);
+                                panic!("Parsing nested meta for derive attribute failed: {e}");
                             }
                         }
                     }
@@ -170,19 +163,20 @@ mod test_build_justified_enum_struct {
         assert!(found_struct_with_derives, "Expected to find a struct with the correct derives.");
     }
 
+
     #[traced_test]
     fn it_includes_impl_new_method() {
         trace!("Starting test: it_includes_impl_new_method");
 
-        let ty_ident = syn::Ident::new("BarEnum", Span::call_site());
-        let just_ident = syn::Ident::new("BarEnumJustification", Span::call_site());
-        let conf_ident = syn::Ident::new("BarEnumConfidence", Span::call_site());
-        let justified_ident = syn::Ident::new("JustifiedBarEnum", Span::call_site());
+        let ty_ident = syn::Ident::new("BarEnum", proc_macro2::Span::call_site());
+        let just_ident = syn::Ident::new("BarEnumJustification", proc_macro2::Span::call_site());
+        let conf_ident = syn::Ident::new("BarEnumConfidence", proc_macro2::Span::call_site());
+        let justified_ident = syn::Ident::new("JustifiedBarEnum", proc_macro2::Span::call_site());
 
         let tokens = build_justified_enum_struct(&ty_ident, &just_ident, &conf_ident, &justified_ident);
         trace!("Token stream: {}", tokens);
 
-        let syntax: File = parse2(tokens).expect("Could not parse token stream");
+        let syntax: syn::File = parse2(tokens).expect("Could not parse token stream");
         let mut impl_found = false;
         let mut new_method_found = false;
 
@@ -239,15 +233,15 @@ mod test_build_justified_enum_struct {
     fn it_is_free_of_public_fields() {
         trace!("Starting test: it_is_free_of_public_fields");
 
-        let ty_ident = syn::Ident::new("PublessEnum", Span::call_site());
-        let just_ident = syn::Ident::new("PublessEnumJustification", Span::call_site());
-        let conf_ident = syn::Ident::new("PublessEnumConfidence", Span::call_site());
-        let justified_ident = syn::Ident::new("JustifiedPublessEnum", Span::call_site());
+        let ty_ident = syn::Ident::new("PublessEnum", proc_macro2::Span::call_site());
+        let just_ident = syn::Ident::new("PublessEnumJustification", proc_macro2::Span::call_site());
+        let conf_ident = syn::Ident::new("PublessEnumConfidence", proc_macro2::Span::call_site());
+        let justified_ident = syn::Ident::new("JustifiedPublessEnum", proc_macro2::Span::call_site());
 
         let tokens = build_justified_enum_struct(&ty_ident, &just_ident, &conf_ident, &justified_ident);
         trace!("Token stream: {}", tokens);
 
-        let syntax: File = parse2(tokens).expect("Could not parse token stream");
+        let syntax: syn::File = parse2(tokens).expect("Could not parse token stream");
 
         let mut tested_any_struct_fields = false;
         for item in syntax.items {
@@ -272,16 +266,16 @@ mod test_build_justified_enum_struct {
         trace!("Starting test: it_produces_valid_syntax_for_arbitrary_idents");
 
         // Trying an enum name with underscores or digits
-        let ty_ident = syn::Ident::new("Enum_42", Span::call_site());
-        let just_ident = syn::Ident::new("Enum_42Justification", Span::call_site());
-        let conf_ident = syn::Ident::new("Enum_42Confidence", Span::call_site());
-        let justified_ident = syn::Ident::new("JustifiedEnum_42", Span::call_site());
+        let ty_ident = syn::Ident::new("Enum_42", proc_macro2::Span::call_site());
+        let just_ident = syn::Ident::new("Enum_42Justification", proc_macro2::Span::call_site());
+        let conf_ident = syn::Ident::new("Enum_42Confidence", proc_macro2::Span::call_site());
+        let justified_ident = syn::Ident::new("JustifiedEnum_42", proc_macro2::Span::call_site());
 
         let tokens = build_justified_enum_struct(&ty_ident, &just_ident, &conf_ident, &justified_ident);
         trace!("Generated: {}", tokens);
 
         // Ensure it parses cleanly
-        let syntax: File = parse2(tokens).expect("Failed to parse token stream from arbitrary idents");
+        let syntax: syn::File = parse2(tokens).expect("Failed to parse token stream from arbitrary idents");
         let mut found_any_struct = false;
         for item in syntax.items {
             if let Item::Struct(s) = item {

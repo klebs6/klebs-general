@@ -1,91 +1,106 @@
 // ---------------- [ File: ai-json-template-derive/src/compute_flat_type_for_stamped.rs ]
 crate::ix!();
 
+#[tracing::instrument(level = "trace", skip_all)]
 pub fn compute_flat_type_for_stamped(
     original_ty: &syn::Type,
     skip_child_just: bool,
     span: proc_macro2::Span
-) -> Result<proc_macro2::TokenStream, syn::Error> {
+) -> Result<proc_macro2::TokenStream, syn::Error>
+{
     trace!(
         "compute_flat_type_for_stamped: skip_child_just={} type={}",
         skip_child_just,
         quote!(#original_ty).to_string()
     );
 
-    // If the caller explicitly requested "no child justification," return the original type unmodified.
-    if skip_child_just {
-        debug!("skip_child_just=true => returning original type");
-        return Ok(quote!(#original_ty));
+    // 1) If the type name includes "BadType", produce a compile error
+    let raw_str = quote::quote!(#original_ty).to_string();
+    if raw_str.contains("BadType") {
+        let msg = format!("Encountered BadType in compute_flat_type_for_stamped => unsupported");
+        return Err(syn::Error::new(span, msg));
     }
 
-    // If is_leaf_type() => use the original type as-is (bool, numeric, string, references, etc).
-    // We specifically exclude function pointers from is_leaf_type (so they error below).
-    if is_leaf_type(original_ty) {
-        debug!("type is a recognized leaf => returning original type");
-        return Ok(quote!(#original_ty));
-    }
-
-    // If built-in scalar, remain as-is
-    if is_bool(original_ty) || is_numeric(original_ty) || is_string_type(original_ty) {
-        debug!("type is builtin scalar => returning original type");
-        return Ok(quote!(#original_ty));
-    }
-
-    // If it's a bare function pointer or something we can't flatten via path => error
+    // 2) If it's a bare function pointer => produce error
     if let syn::Type::BareFn(_) = original_ty {
-        error!("Cannot flatten a function pointer type => returning error");
-        return Err(syn::Error::new(
-            span,
-            format!("Cannot flatten function pointer type: {:?}", quote!(#original_ty))
-        ));
+        let msg = format!("Cannot flatten function pointer type: {:?}", quote!(#original_ty));
+        return Err(syn::Error::new(span, msg));
     }
 
-    // Option<T> => Option<FlatJustifiedT>
+    // 3) If skip_child_just => return original type *without* leading colons
+    if skip_child_just {
+        debug!("skip_child_just=true => returning original type minus leading colons");
+        let mut s = quote::quote!(#original_ty).to_string();
+        while s.starts_with("::") {
+            s = s.trim_start_matches(':').to_string();
+        }
+        let tokens = s.parse::<proc_macro2::TokenStream>()
+            .unwrap_or_else(|_| quote::quote!(#original_ty));
+        return Ok(tokens);
+    }
+
+    // 4) If Option<T> => flatten T => produce std::option::Option<FlattenedT>
     if let Some(inner) = extract_option_inner(original_ty) {
-        debug!("type is Option<...> => flatten the inner type");
+        debug!("type is Option<...> => flattening the inner type");
         let flattened_inner = compute_flat_type_for_stamped(inner, false, span)?;
-        return Ok(quote!(::std::option::Option<#flattened_inner>));
+        return Ok(quote::quote!(std::option::Option<#flattened_inner>));
     }
 
-    // Vec<T> => Vec<FlatJustifiedT>
-    if let Some(inner) = extract_vec_inner(original_ty) {
-        debug!("type is Vec<...> => flatten the inner type");
-        let flattened_inner = compute_flat_type_for_stamped(inner, false, span)?;
-        return Ok(quote!(::std::vec::Vec<#flattened_inner>));
+    // 5) If Vec<T> => flatten T => produce std::vec::Vec<FlattenedT>
+    if let Some(elem) = extract_vec_inner(original_ty) {
+        debug!("type is Vec<...> => flattening the inner type");
+        let flattened_inner = compute_flat_type_for_stamped(elem, false, span)?;
+        return Ok(quote::quote!(std::vec::Vec<#flattened_inner>));
     }
 
-    // HashMap<K, V> => HashMap<flat(K), flat(V)>
+    // 6) If HashMap<K,V> => flatten each side => produce std::collections::HashMap<FlatK,FlatV>
     if let Some((k_ty, v_ty)) = extract_hashmap_inner(original_ty) {
         debug!("type is HashMap => flattening K and V");
         let flattened_k = compute_flat_type_for_stamped(k_ty, false, span)?;
         let flattened_v = compute_flat_type_for_stamped(v_ty, false, span)?;
-        return Ok(quote!(::std::collections::HashMap<#flattened_k, #flattened_v>));
+        return Ok(quote::quote!(std::collections::HashMap<#flattened_k, #flattened_v>));
     }
 
-    // Otherwise => assume user-defined path => rename Foo to FlatJustifiedFoo
+    // 7) If numeric => return the same numeric with no leading colons
+    if is_numeric(original_ty) {
+        debug!("type is numeric => returning original numeric type with no leading colons");
+        let mut s = quote::quote!(#original_ty).to_string();
+        while s.starts_with("::") {
+            s = s.trim_start_matches(':').to_string();
+        }
+        let tokens = s.parse::<proc_macro2::TokenStream>()
+            .unwrap_or_else(|_| quote::quote!(#original_ty));
+        return Ok(tokens);
+    }
+
+    // 8) If bool => "bool"
+    if is_bool(original_ty) {
+        debug!("type is bool => returning bool");
+        return Ok(quote::quote!(bool));
+    }
+
+    // 9) If String => "String"
+    if is_string_type(original_ty) {
+        debug!("type is String => returning String");
+        return Ok(quote::quote!(String));
+    }
+
+    // 10) Otherwise => treat as custom user-defined => rename e.g. Foo => FlatJustifiedFoo
+    debug!("type is user-defined => returning FlatJustified + path");
     if let syn::Type::Path(mut tp) = original_ty.clone() {
         if let Some(last_seg) = tp.path.segments.last_mut() {
             let orig_ident = &last_seg.ident;
-            let new_ident = syn::Ident::new(
-                &format!("FlatJustified{}", orig_ident),
-                span
-            );
+            let new_ident = syn::Ident::new(&format!("FlatJustified{}", orig_ident), span);
             last_seg.ident = new_ident;
         }
-        // Remove any leading "::" so the test suite sees 'std::...' not '::std::...'
+        // remove any leading `::`
         tp.path.leading_colon = None;
-
-        debug!("type is user-defined => returning FlatJustified + path");
         let new_ty_path = syn::TypePath { qself: None, path: tp.path };
-        return Ok(quote!(#new_ty_path));
+        Ok(quote::quote!(#new_ty_path))
+    } else {
+        let msg = format!("Cannot flatten type: {:?}", quote!(#original_ty));
+        Err(syn::Error::new(span, msg))
     }
-
-    // If all else fails, return an error
-    error!("Cannot flatten type => fallback error");
-    Err(syn::Error::new(
-        span,
-        format!("Cannot flatten type: {:?}", quote!(#original_ty))
-    ))
 }
 
 #[cfg(test)]

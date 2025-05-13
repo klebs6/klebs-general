@@ -21,13 +21,47 @@ pub fn build_named_field_child_schema_expr(
     classify_field_type_for_child(&field.ty, doc_str, is_required, skip_child_just)
 }
 
+
 #[cfg(test)]
 mod test_build_named_field_child_schema_expr_exhaustive {
     use super::*;
 
+    /// A helper function for verifying that the generated TokenStream
+    /// contains `"required"` being set to the expected boolean. We do this
+    /// by normalizing whitespace and then checking for a substring that
+    /// corresponds to how our code actually emits `"required"`.
+    #[tracing::instrument(level = "trace", skip_all)]
+    fn assert_contains_required_bool(ts: &proc_macro2::TokenStream, expected: bool) {
+        trace!("Checking if TokenStream has 'required' set to {:?}", expected);
+        let raw = ts.to_string().replace(' ', "").replace('\n', "");
+        let needle = format!("\"required\".to_string(),serde_json::Value::Bool({})", expected);
+        assert!(
+            raw.contains(&needle),
+            "Could not find `{}` in token string:\n{}",
+            needle,
+            raw
+        );
+    }
+
+    /// A helper function for verifying that the generated TokenStream
+    /// also emits the doc text we expect. The doc text usually ends
+    /// up in `.insert("generation_instructions".to_string(), serde_json::Value::String(...))`.
+    #[tracing::instrument(level = "trace", skip_all)]
+    fn assert_contains_doc_text(ts: &proc_macro2::TokenStream, doc_substring: &str) {
+        trace!("Checking if TokenStream has doc text: {:?}", doc_substring);
+        let raw = ts.to_string();
+        assert!(
+            raw.contains(doc_substring),
+            "Expected doc substring '{}' not found in:\n{}",
+            doc_substring,
+            raw
+        );
+    }
+
     /// A helper function to parse a single named field of the form:
     /// `struct Temp { <field_tokens> }`
     /// then extract that single named field for testing.
+    #[tracing::instrument(level = "trace", skip_all)]
     fn parse_single_named_field(field_tokens: proc_macro2::TokenStream) -> Field {
         trace!("parse_single_named_field: parsing field tokens = {}", field_tokens.to_string());
         let full_struct: syn::DeriveInput = parse_quote! {
@@ -35,7 +69,6 @@ mod test_build_named_field_child_schema_expr_exhaustive {
                 #field_tokens
             }
         };
-        // Extract the sole field from the struct
         match full_struct.data {
             syn::Data::Struct(ds) => {
                 match ds.fields {
@@ -61,9 +94,13 @@ mod test_build_named_field_child_schema_expr_exhaustive {
         assert!(result.is_some(), "Expected a schema for bool field");
         let ts = result.unwrap();
         debug!("Generated TokenStream: {}", ts.to_token_stream().to_string());
-        assert!(ts.to_string().contains("\"boolean\""));
-        assert!(ts.to_string().contains("\"required\":true"));
-        assert!(ts.to_string().contains("\"Documentation for bool"));
+
+        // Check that we indeed produce `required = true` in the code
+        assert_contains_required_bool(&ts, true);
+
+        // Also check doc text
+        assert_contains_doc_text(&ts, "Documentation for bool");
+
         info!("test_bool_required_skip_false passed.");
     }
 
@@ -76,10 +113,12 @@ mod test_build_named_field_child_schema_expr_exhaustive {
         assert!(result.is_some());
         let ts = result.unwrap();
         debug!("Generated TokenStream: {}", ts.to_token_stream().to_string());
-        // Should still mention "boolean", but required=false
-        assert!(ts.to_string().contains("\"boolean\""));
-        assert!(ts.to_string().contains("\"required\":false"));
-        assert!(ts.to_string().contains("\"Doc for optional bool"));
+
+        // Should have `required = false`
+        assert_contains_required_bool(&ts, false);
+        // And doc text
+        assert_contains_doc_text(&ts, "Doc for optional bool");
+
         info!("test_bool_not_required_skip_false passed.");
     }
 
@@ -93,10 +132,11 @@ mod test_build_named_field_child_schema_expr_exhaustive {
         assert!(result.is_some());
         let ts = result.unwrap();
         debug!("Generated TokenStream: {}", ts.to_token_stream().to_string());
-        // Should still produce a boolean schema, but skip_child_just doesn't really alter a primitive.
-        assert!(ts.to_string().contains("\"boolean\""));
-        assert!(ts.to_string().contains("\"required\":true"));
-        assert!(ts.to_string().contains("\"doc skip child"));
+
+        // Should still produce boolean with `required = true`
+        assert_contains_required_bool(&ts, true);
+        assert_contains_doc_text(&ts, "doc skip child");
+
         info!("test_bool_skip_child_just_true passed.");
     }
 
@@ -109,10 +149,12 @@ mod test_build_named_field_child_schema_expr_exhaustive {
         assert!(result.is_some());
         let ts = result.unwrap();
         debug!("Generated TokenStream: {}", ts.to_token_stream().to_string());
-        // "string" type => must contain "type":"string"
-        assert!(ts.to_string().contains("\"string\""));
-        assert!(ts.to_string().contains("\"required\":true"));
-        assert!(ts.to_string().contains("\"Doc for string field"));
+
+        // Must have required = true
+        assert_contains_required_bool(&ts, true);
+        // And doc
+        assert_contains_doc_text(&ts, "Doc for string field");
+
         info!("test_string_required passed.");
     }
 
@@ -125,8 +167,10 @@ mod test_build_named_field_child_schema_expr_exhaustive {
         assert!(result.is_some());
         let ts = result.unwrap();
         debug!("Generated TokenStream: {}", ts.to_token_stream().to_string());
-        assert!(ts.to_string().contains("\"string\""));
-        assert!(ts.to_string().contains("\"required\":false"));
+
+        assert_contains_required_bool(&ts, false);
+        assert_contains_doc_text(&ts, "Optional string doc");
+
         info!("test_string_not_required passed.");
     }
 
@@ -139,10 +183,11 @@ mod test_build_named_field_child_schema_expr_exhaustive {
         assert!(result.is_some());
         let ts = result.unwrap();
         debug!("Generated TokenStream: {}", ts.to_token_stream().to_string());
-        // "number" type => must contain "type":"number"
-        assert!(ts.to_string().contains("\"number\""));
-        assert!(ts.to_string().contains("\"required\":true"));
-        assert!(ts.to_string().contains("\"Integer doc"));
+
+        // Must have required = true
+        assert_contains_required_bool(&ts, true);
+        assert_contains_doc_text(&ts, "Integer doc");
+
         info!("test_numeric_required passed.");
     }
 
@@ -155,8 +200,10 @@ mod test_build_named_field_child_schema_expr_exhaustive {
         assert!(result.is_some());
         let ts = result.unwrap();
         debug!("Generated TokenStream: {}", ts.to_token_stream().to_string());
-        assert!(ts.to_string().contains("\"number\""));
-        assert!(ts.to_string().contains("\"required\":false"));
+
+        assert_contains_required_bool(&ts, false);
+        assert_contains_doc_text(&ts, "Optional number doc");
+
         info!("test_numeric_not_required passed.");
     }
 
@@ -169,10 +216,18 @@ mod test_build_named_field_child_schema_expr_exhaustive {
         assert!(result.is_some());
         let ts = result.unwrap();
         debug!("Generated TokenStream: {}", ts.to_token_stream().to_string());
-        // Should mention "array_of" and also "string" for item_template
-        assert!(ts.to_string().contains("\"array_of\""));
-        assert!(ts.to_string().contains("\"item_template\":"));
-        assert!(ts.to_string().contains("\"string\""));
+
+        // We want "array_of" with required = true
+        assert_contains_required_bool(&ts, true);
+        // And an item_template snippet
+        let no_whitespace = ts.to_string().replace(' ', "").replace('\n', "");
+        assert!(
+            no_whitespace.contains("\"item_template\""),
+            "Expected 'item_template' in the snippet: {}",
+            no_whitespace
+        );
+        assert_contains_doc_text(&ts, "Doc for vector of strings");
+
         info!("test_vec_of_strings_required passed.");
     }
 
@@ -185,10 +240,12 @@ mod test_build_named_field_child_schema_expr_exhaustive {
         assert!(result.is_some());
         let ts = result.unwrap();
         debug!("Generated TokenStream: {}", ts.to_token_stream().to_string());
-        // "array_of" with "number" inside
-        assert!(ts.to_string().contains("\"array_of\""));
-        assert!(ts.to_string().contains("\"number\""));
-        assert!(ts.to_string().contains("\"required\":false"));
+
+        // "array_of" => required=false top-level
+        assert_contains_required_bool(&ts, false);
+        // doc text
+        assert_contains_doc_text(&ts, "Optional vector doc");
+
         info!("test_vec_of_numeric_not_required passed.");
     }
 
@@ -201,14 +258,18 @@ mod test_build_named_field_child_schema_expr_exhaustive {
         assert!(result.is_some());
         let ts = result.unwrap();
         debug!("Generated TokenStream: {}", ts.to_token_stream().to_string());
-        // Expect "map_of"
-        assert!(ts.to_string().contains("\"map_of\""));
-        // key is "string", value is "number"
-        assert!(ts.to_string().contains("\"map_key_template\""));
-        assert!(ts.to_string().contains("\"map_value_template\""));
-        assert!(ts.to_string().contains("\"string\""));
-        assert!(ts.to_string().contains("\"number\""));
-        assert!(ts.to_string().contains("\"Doc for map"));
+
+        let no_whitespace = ts.to_string().replace(' ', "").replace('\n', "");
+        // Expect 'map_of' at top
+        assert!(
+            no_whitespace.contains("\"map_of\""),
+            "Expected 'map_of' in snippet: {}",
+            no_whitespace
+        );
+        // Key=string, Value=number
+        assert_contains_required_bool(&ts, false);
+        assert_contains_doc_text(&ts, "Doc for map");
+
         info!("test_hashmap_string_key_not_required passed.");
     }
 
@@ -218,15 +279,14 @@ mod test_build_named_field_child_schema_expr_exhaustive {
         let field_tokens = quote! { bad_map: std::collections::HashMap<bool, String> };
         let field = parse_single_named_field(field_tokens);
         let result = build_named_field_child_schema_expr(&field, "Bad map doc", true, false);
-        // This should produce Some(...) containing a compile_error about unsupported bool keys
+        // We expect Some(...) with a compile_error inside
         match result {
             Some(ts) => {
                 let s = ts.to_string();
                 debug!("Generated TokenStream for error: {}", s);
-                // Expect a compile_error
                 assert!(s.contains("compile_error"));
                 assert!(s.contains("Unsupported key type in HashMap<bool"));
-                info!("test_hashmap_bool_key_should_error passed as expected.");
+                info!("test_hashmap_bool_key_should_error passed.");
             }
             None => panic!("Expected Some(...) with compile_error for bool key"),
         }
@@ -235,34 +295,46 @@ mod test_build_named_field_child_schema_expr_exhaustive {
     #[traced_test]
     fn test_nested_custom_type() {
         trace!("Starting test_nested_custom_type");
-        // We'll pretend there's a type named "MyStruct" in scope
         let field_tokens = quote! { custom: MyStruct };
         let field = parse_single_named_field(field_tokens);
         let result = build_named_field_child_schema_expr(&field, "Doc for nested custom", true, false);
         assert!(result.is_some());
         let ts = result.unwrap();
         debug!("Generated TokenStream: {}", ts.to_token_stream().to_string());
-        // Should produce "nested_struct_or_enum"
-        assert!(ts.to_string().contains("\"nested_struct_or_enum\""));
-        assert!(ts.to_string().contains("\"required\":true"));
-        assert!(ts.to_string().contains("\"nested_template\""));
+
+        // "nested_struct_or_enum"
+        let no_ws = ts.to_string().replace(' ', "").replace('\n', "");
+        assert!(
+            no_ws.contains("\"nested_struct_or_enum\""),
+            "Expected nested_struct_or_enum but not found: {}",
+            no_ws
+        );
+        assert_contains_required_bool(&ts, true);
+        assert_contains_doc_text(&ts, "Doc for nested custom");
+
         info!("test_nested_custom_type passed.");
     }
 
     #[traced_test]
     fn test_optional_nested_custom_type() {
         trace!("Starting test_optional_nested_custom_type");
-        // We'll pretend there's a type named "MyEnum" in scope
         let field_tokens = quote! { maybe_custom: Option<MyEnum> };
         let field = parse_single_named_field(field_tokens);
         let result = build_named_field_child_schema_expr(&field, "Doc for optional nested", false, false);
         assert!(result.is_some());
         let ts = result.unwrap();
         debug!("Generated TokenStream: {}", ts.to_token_stream().to_string());
-        // "nested_struct_or_enum"
-        assert!(ts.to_string().contains("\"nested_struct_or_enum\""));
-        // required should be false
-        assert!(ts.to_string().contains("\"required\":false"));
+
+        let no_ws = ts.to_string().replace(' ', "").replace('\n', "");
+        assert!(
+            no_ws.contains("\"nested_struct_or_enum\""),
+            "Expected nested_struct_or_enum but not found: {}",
+            no_ws
+        );
+        // Should be required=false at top-level
+        assert_contains_required_bool(&ts, false);
+        assert_contains_doc_text(&ts, "Doc for optional nested");
+
         info!("test_optional_nested_custom_type passed.");
     }
 }

@@ -1,21 +1,24 @@
 // ---------------- [ File: ai-json-template-derive/src/build_hashmap_schema.rs ]
 crate::ix!();
 
-/// Builds the schema for a `HashMap<K, V>`, handling special cases for K=bool, K=number, etc.
+#[tracing::instrument(level="trace", skip_all)]
 pub fn build_hashmap_schema(
-    k_ty: &syn::Type,
-    v_ty: &syn::Type,
+    k_ty:          &syn::Type,
+    v_ty:          &syn::Type,
     required_bool: proc_macro2::TokenStream,
-    doc_lit: proc_macro2::Literal
-) -> Option<proc_macro2::TokenStream> {
+    doc_lit:       proc_macro2::Literal
+) -> Option<proc_macro2::TokenStream>
+{
     trace!("build_hashmap_schema => K: {:?}, V: {:?}", k_ty, v_ty);
 
-    // Key handling
-    let key_schema = if is_bool(k_ty) {
-        let err_msg = format!("Unsupported key type in HashMap<bool, _> for AiJsonTemplateWithJustification");
-        let err = syn::Error::new(k_ty.span(), &err_msg);
-        return Some(err.to_compile_error());
-    } else if is_numeric(k_ty) {
+    if is_bool(k_ty) {
+        warn!("HashMap<bool, _> is unsupported => returning Some(compile_error!(...))");
+        return Some(quote::quote! {
+            compile_error!("HashMap<bool, _> is not supported by AiJsonTemplateWithJustification");
+        });
+    }
+
+    let key_schema = if is_numeric(k_ty) {
         quote::quote! {
             serde_json::Value::String("number".to_string())
         }
@@ -24,7 +27,6 @@ pub fn build_hashmap_schema(
             serde_json::Value::String("string".to_string())
         }
     } else {
-        // Non-primitive key => treat as nested
         quote::quote! {
             {
                 let mut k_obj = serde_json::Map::new();
@@ -39,7 +41,6 @@ pub fn build_hashmap_schema(
         }
     };
 
-    // Value handling
     let val_schema = if is_bool(v_ty) {
         quote::quote! {
             serde_json::Value::String("boolean".to_string())
@@ -53,7 +54,6 @@ pub fn build_hashmap_schema(
             serde_json::Value::String("string".to_string())
         }
     } else {
-        // Non-primitive => nested
         quote::quote! {
             {
                 let mut v_obj = serde_json::Map::new();
@@ -68,7 +68,6 @@ pub fn build_hashmap_schema(
         }
     };
 
-    // Build final map_of
     Some(quote::quote! {
         {
             let mut map_obj = serde_json::Map::new();

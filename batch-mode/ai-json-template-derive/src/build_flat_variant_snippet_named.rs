@@ -33,6 +33,7 @@ pub fn build_flat_variant_snippet_named(
     }
 }
 
+#[cfg(test)]
 mod test_build_flat_variant_snippet_named {
     use super::*;
 

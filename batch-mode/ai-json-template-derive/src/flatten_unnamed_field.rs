@@ -1,55 +1,56 @@
 // ---------------- [ File: ai-json-template-derive/src/flatten_unnamed_field.rs ]
 crate::ix!();
 
-/// Same as `flatten_named_field` but for a tuple (unnamed) field, e.g. `f0`.
+#[tracing::instrument(level="trace", skip_all)]
 pub fn flatten_unnamed_field(
-    field_ident: &Ident,
-    field_ty: &syn::Type,
-    skip_self_just: bool,
+    field_ident:       &syn::Ident,
+    field_ty:          &syn::Type,
+    skip_self_just:    bool,
     parent_skip_child: bool
 ) -> (
-    Vec<TokenStream2>, // flattened_decls
-    TokenStream2,      // item_init
-    TokenStream2,      // just_init
-    TokenStream2       // conf_init
+    Vec<proc_macro2::TokenStream>, // flattened_decls
+    proc_macro2::TokenStream,      // item_init
+    proc_macro2::TokenStream,      // just_init
+    proc_macro2::TokenStream       // conf_init
 )
 {
-    let mut flattened_decls = Vec::new();
+    trace!(
+        "flatten_unnamed_field: field='{}', skip_self_just={}, parent_skip_child={}",
+        field_ident, skip_self_just, parent_skip_child
+    );
 
-    // Flatten the type
+    let mut flattened_decls = Vec::new();
     let flattened_type = match compute_flat_type_for_stamped(field_ty, parent_skip_child, field_ty.span()) {
         Ok(ts) => ts,
         Err(e) => {
-            // Return immediately with a single compile_error
             return (
                 vec![e.to_compile_error()],
-                quote!(),
-                quote!(),
-                quote!()
+                quote::quote!(),
+                quote::quote!(),
+                quote::quote!()
             );
         }
     };
 
-    // 1) Declare the flattened field
-    flattened_decls.push(quote! {
+    // The core field
+    flattened_decls.push(quote::quote! {
         #[serde(default)]
         #field_ident:#flattened_type,
     });
 
-    // 2) item init
+    // If parent_skip_child=false => we call From::from(...), else use the field as-is
     let item_init = if parent_skip_child {
-        quote! { #field_ident }
+        quote::quote!(#field_ident)
     } else {
-        // Insert spacing so that `.contains("From :: from ( fNN )")` passes the tests:
-        quote! { :: core :: convert :: From :: from ( #field_ident ) }
+        quote::quote!(::core::convert::From::from(#field_ident))
     };
 
-    // 3) optional justification/conf
+    // If skip_self_just=false => add field_justification + field_confidence
     if !skip_self_just {
-        let j_id = Ident::new(&format!("{}_justification", field_ident), field_ident.span());
-        let c_id = Ident::new(&format!("{}_confidence",   field_ident), field_ident.span());
+        let j_id = syn::Ident::new(&format!("{}_justification", field_ident), field_ident.span());
+        let c_id = syn::Ident::new(&format!("{}_confidence",    field_ident), field_ident.span());
 
-        flattened_decls.push(quote! {
+        flattened_decls.push(quote::quote! {
             #[serde(default)]
             #j_id:String,
             #[serde(default)]
@@ -57,21 +58,22 @@ pub fn flatten_unnamed_field(
         });
 
         let just_init = if parent_skip_child {
-            quote! { #j_id:#j_id }
+            quote::quote!(#j_id:#j_id)
         } else {
             let child_just = child_ty_to_just(field_ty);
-            quote! {
+            quote::quote! {
                 #j_id:#child_just {
                     detail_justification:#j_id,
                     ..::core::default::Default::default()
                 }
             }
         };
+
         let conf_init = if parent_skip_child {
-            quote! { #c_id:#c_id }
+            quote::quote!(#c_id:#c_id)
         } else {
             let child_conf = child_ty_to_conf(field_ty);
-            quote! {
+            quote::quote! {
                 #c_id:#child_conf {
                     detail_confidence:#c_id,
                     ..::core::default::Default::default()
@@ -79,20 +81,11 @@ pub fn flatten_unnamed_field(
             }
         };
 
-        (
-            flattened_decls,
-            item_init,
-            just_init,
-            conf_init
-        )
-    } else {
-        (
-            flattened_decls,
-            item_init,
-            quote!(),
-            quote!()
-        )
+        return (flattened_decls, item_init, just_init, conf_init);
     }
+
+    // If skip_self_just=true => no justification/conf
+    (flattened_decls, item_init, quote::quote!(), quote::quote!())
 }
 
 #[cfg(test)]

@@ -128,8 +128,8 @@ mod verify_build_from_arm_for_named {
         let just_inits_fields = vec![quote! { field_justification: field_alpha }];
 
         // Confidence inits (top + fields)
-        let conf_inits_top = vec![quote! { variant_confidence: top_beta }];
-        let conf_inits_fields = vec![quote! { field_confidence: field_beta }];
+        let conf_inits_top: Vec<TokenStream2> = vec![quote! { variant_confidence: top_beta }];
+        let conf_inits_fields: Vec<TokenStream2> = vec![quote! { field_confidence: field_beta }];
 
         // Item inits for fields
         let item_inits_fields = vec![quote! { alpha: field_alpha }, quote! { beta: field_beta }];
@@ -178,11 +178,11 @@ mod verify_build_from_arm_for_named {
         let pattern_vars_fields = vec![];
 
         // Some inits to show the item, just, conf expansions
-        let just_inits_top = vec![quote! { variant_justification: top_j }];
-        let just_inits_fields = vec![];
-        let conf_inits_top = vec![quote! { variant_confidence: top_c }];
-        let conf_inits_fields = vec![];
-        let item_inits_fields = vec![quote! { gamma: some_gamma }];
+        let just_inits_top: Vec<TokenStream2> = vec![quote! { variant_justification: top_j }];
+        let just_inits_fields: Vec<TokenStream2> = vec![];
+        let conf_inits_top: Vec<TokenStream2> = vec![quote! { variant_confidence: top_c }];
+        let conf_inits_fields: Vec<TokenStream2> = vec![];
+        let item_inits_fields: Vec<TokenStream2> = vec![quote! { gamma: some_gamma }];
 
         debug!("Invoking build_from_arm_for_named with empty pattern var slices");
         let output_tokens = build_from_arm_for_named(
@@ -231,8 +231,8 @@ mod verify_build_from_arm_for_named {
         let just_inits_fields = vec![];
 
         // Confidence inits are non-empty
-        let conf_inits_top = vec![quote! { variant_confidence: zeta }];
-        let conf_inits_fields = vec![];
+        let conf_inits_top: Vec<TokenStream2> = vec![quote! { variant_confidence: zeta }];
+        let conf_inits_fields: Vec<TokenStream2> = vec![];
 
         // Item inits
         let item_inits_fields = vec![quote! { epsilon: zeta }];
@@ -286,8 +286,8 @@ mod verify_build_from_arm_for_named {
         let just_inits_fields = vec![quote! { field_justification: x_upsilon }];
 
         // Confidence inits are empty
-        let conf_inits_top = vec![];
-        let conf_inits_fields = vec![];
+        let conf_inits_top: Vec<TokenStream2> = vec![];
+        let conf_inits_fields: Vec<TokenStream2> = vec![];
 
         // Item inits
         let item_inits_fields = vec![quote! { alpha: x_mu }, quote! { beta: x_upsilon }];
@@ -342,7 +342,7 @@ mod verify_build_from_arm_for_named {
         
         // Confidence inits
         let conf_inits_top = vec![quote! { variant_confidence: b }];
-        let conf_inits_fields = vec![];
+        let conf_inits_fields: Vec<TokenStream2> = vec![];
         
         // No item fields => it returns the variant constructor with {}
         let item_inits_fields = vec![];
@@ -387,13 +387,13 @@ mod verify_build_from_arm_for_named {
         let justification_ident: syn::Ident = parse_quote! { CompletelyEmptyJustification };
         let confidence_ident: syn::Ident = parse_quote! { CompletelyEmptyConfidence };
 
-        let pattern_vars_top = vec![];
-        let pattern_vars_fields = vec![];
-        let just_inits_top = vec![];
-        let just_inits_fields = vec![];
-        let conf_inits_top = vec![];
-        let conf_inits_fields = vec![];
-        let item_inits_fields = vec![];
+        let pattern_vars_top: Vec<TokenStream2> = vec![];
+        let pattern_vars_fields: Vec<TokenStream2> = vec![];
+        let just_inits_top: Vec<TokenStream2> = vec![];
+        let just_inits_fields: Vec<TokenStream2> = vec![];
+        let conf_inits_top: Vec<TokenStream2> = vec![];
+        let conf_inits_fields: Vec<TokenStream2> = vec![];
+        let item_inits_fields: Vec<TokenStream2> = vec![];
 
         debug!("Invoking build_from_arm_for_named with everything empty");
         let output_tokens = build_from_arm_for_named(

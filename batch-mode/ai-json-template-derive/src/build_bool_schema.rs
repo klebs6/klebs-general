@@ -1,7 +1,6 @@
 // ---------------- [ File: ai-json-template-derive/src/build_bool_schema.rs ]
 crate::ix!();
 
-/// Builds a schema snippet for `bool` => "boolean".
 pub fn build_bool_schema(
     required_bool: proc_macro2::TokenStream,
     doc_lit: proc_macro2::Literal

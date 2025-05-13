@@ -53,8 +53,6 @@ pub fn generate_flat_justified_for_named(
 #[cfg(test)]
 mod test_refactored_generate_flat_justified_for_named {
     use super::*;
-    use traced_test::traced_test;
-    use syn::{parse_quote, Field, Visibility, FieldMutability};
 
     #[traced_test]
     fn test_refactored_generation_basic_named_struct() {

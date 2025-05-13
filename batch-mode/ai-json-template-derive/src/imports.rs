@@ -1,7 +1,7 @@
 // ---------------- [ File: ai-json-template-derive/src/imports.rs ]
 pub(crate) use proc_macro::TokenStream;
 pub(crate) use proc_macro2::{Literal,Span,TokenStream as TokenStream2};
-pub(crate) use quote::{quote};
+
 pub(crate) use export_magic::*;
 pub(crate) use tracing::{info,warn,error,trace,debug};
 pub(crate) use getset::*;
@@ -10,9 +10,16 @@ pub(crate) use getset::*;
 #[cfg(test)] pub(crate) use traced_test::traced_test;
 #[cfg(test)] pub(crate) use pretty_assertions::assert_eq as pretty_assert_eq;
 #[cfg(test)] pub(crate) use syn::{parse_quote};
-pub(crate) use derive_builder::*;
 
+pub(crate) use derive_builder::*;
+pub(crate) use disable_macro::disable;
+
+#[allow(unused_imports)]
+pub(crate) use quote::{ToTokens,quote};
+
+#[allow(unused_imports)]
 pub(crate) use syn::{
+    parse_str,
     parse_macro_input,
     Data,
     DataStruct,
@@ -45,4 +52,11 @@ pub(crate) use syn::{
     FieldMutability,
     Type,
     ItemEnum,
+    ItemImpl,
+    Item,
+    ItemStruct,
+    token::Brace,
+    token::PathSep,
+    PathSegment,
 };
+pub(crate) use serde_json::json;

@@ -53,9 +53,9 @@ ACTIVE_PACKAGE := ai-json-template-derive
 
 #-----------------------------------------------------[this section lets us choose how we want to test]
 DEFAULT := test
+#DEFAULT := test_one
 #DEFAULT := expand_to_file
 #DEFAULT := test_file
-#DEFAULT := test_one
 #DEFAULT := test_file_one
 #DEFAULT := test_all
 #DEFAULT := run
@@ -71,6 +71,9 @@ EXPANSION_FILE  := expanded_flat_justified_exhaustive.rs
 EXPANSION_PACKAGE := ai-json-template-derive
 EXPANSION_TEST    := flat_justified_exhaustive
 #EXPANSION_TEST    := classify_with_justification
+INDIVIDUAL_TEST    := classify_field_type
+INDIVIDUAL_TEST    := build_enum_confidence
+INDIVIDUAL_TEST    := build_enum_justification
 
 #----------------------------------------------[here are our rules]
 run:

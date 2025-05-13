@@ -25,6 +25,9 @@ pub async fn crate_activity_main(cli: &CrateActivityCli) -> Result<(), CrateActi
     )
     .await?;
 
+    let min_group_size = *cli.min_group_size();
+    let expand_groups = *cli.expand_groups();
+
     let activity_summary = CrateActivitySummary::new(
         activity_data.summaries(),
         activity_data.interval_downloads_1d().clone(),
@@ -33,6 +36,8 @@ pub async fn crate_activity_main(cli: &CrateActivityCli) -> Result<(), CrateActi
         one_day_ago,
         three_days_ago,
         seven_days_ago,
+        expand_groups,
+        min_group_size 
     );
 
     tracing::info!("{}", activity_summary);

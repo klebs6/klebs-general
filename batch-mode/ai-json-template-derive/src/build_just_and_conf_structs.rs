@@ -66,12 +66,12 @@ mod test_build_just_and_conf_structs_exhaustively {
         );
 
         trace!("Validating generated tokens for justification");
-        let just_syn: File = parse2(just_ts.clone())
+        let just_syn: syn::File = parse2(just_ts.clone())
             .expect("Justification tokens should parse successfully");
         debug!("Parsed justification syntax: {:?}", just_syn);
 
         trace!("Validating generated tokens for confidence");
-        let conf_syn: File = parse2(conf_ts.clone())
+        let conf_syn: syn::File = parse2(conf_ts.clone())
             .expect("Confidence tokens should parse successfully");
         debug!("Parsed confidence syntax: {:?}", conf_syn);
 
@@ -125,12 +125,12 @@ mod test_build_just_and_conf_structs_exhaustively {
         );
 
         trace!("Parsing the justification tokens");
-        let just_syn: File = parse2(just_ts.clone())
+        let just_syn: syn::File = parse2(just_ts.clone())
             .expect("Justification tokens should parse successfully");
         debug!("Parsed justification syntax: {:?}", just_syn);
 
         trace!("Parsing the confidence tokens");
-        let conf_syn: File = parse2(conf_ts.clone())
+        let conf_syn: syn::File = parse2(conf_ts.clone())
             .expect("Confidence tokens should parse successfully");
         debug!("Parsed confidence syntax: {:?}", conf_syn);
 
@@ -186,11 +186,11 @@ mod test_build_just_and_conf_structs_exhaustively {
         );
 
         trace!("Parsing the justification tokens");
-        let just_syn_res = parse2::<File>(just_ts.clone());
+        let just_syn_res = parse2::<syn::File>(just_ts.clone());
         debug!("Parsing result for justification: {:?}", just_syn_res);
 
         trace!("Parsing the confidence tokens");
-        let conf_syn_res = parse2::<File>(conf_ts.clone());
+        let conf_syn_res = parse2::<syn::File>(conf_ts.clone());
         debug!("Parsing result for confidence: {:?}", conf_syn_res);
 
         // We expect the presence of compile_error! but it should still parse
@@ -250,12 +250,12 @@ mod test_build_just_and_conf_structs_exhaustively {
         );
 
         trace!("Parsing the returned justification tokens");
-        let just_parse_res = parse2::<File>(just_ts.clone());
+        let just_parse_res = parse2::<syn::File>(just_ts.clone());
         debug!("Parsed justification AST: {:?}", just_parse_res);
         assert!(just_parse_res.is_ok(), "Justification tokens should parse properly in a mixed scenario");
 
         trace!("Parsing the returned confidence tokens");
-        let conf_parse_res = parse2::<File>(conf_ts.clone());
+        let conf_parse_res = parse2::<syn::File>(conf_ts.clone());
         debug!("Parsed confidence AST: {:?}", conf_parse_res);
         assert!(conf_parse_res.is_ok(), "Confidence tokens should parse properly in a mixed scenario");
 

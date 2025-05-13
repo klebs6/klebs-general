@@ -4,6 +4,9 @@ workspace = true
 [dependencies.export-magic]
 workspace = true
 
+[dependencies.disable_macro]
+workspace = true
+
 [dependencies.getset]
 workspace = true
 

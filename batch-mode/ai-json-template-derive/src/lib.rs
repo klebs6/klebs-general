@@ -1,5 +1,6 @@
 // ---------------- [ File: ai-json-template-derive/src/lib.rs ]
 #![allow(dead_code)]
+#![feature(box_patterns)]
 #![allow(unused_imports)]
 #[macro_use] mod imports; use imports::*;
 

@@ -36,7 +36,7 @@ mod test_build_flat_unit_variant_ts {
     #[traced_test]
     fn test_variant_skip_self_just_true_single_word_name() {
         trace!("Testing build_flat_unit_variant_ts with skip_self_just=true and variant='Foo'");
-        let variant_ident = Ident::new("Foo", Span::call_site());
+        let variant_ident = Ident::new("Foo", proc_macro2::Span::call_site());
         let actual = build_flat_unit_variant_ts(true, &variant_ident);
         debug!("Generated token stream: {}", actual.to_string());
 
@@ -51,7 +51,7 @@ mod test_build_flat_unit_variant_ts {
     #[traced_test]
     fn test_variant_skip_self_just_true_different_variant_name() {
         trace!("Testing build_flat_unit_variant_ts with skip_self_just=true and variant='Bar'");
-        let variant_ident = Ident::new("Bar", Span::call_site());
+        let variant_ident = Ident::new("Bar", proc_macro2::Span::call_site());
         let actual = build_flat_unit_variant_ts(true, &variant_ident);
         debug!("Generated token stream: {}", actual.to_string());
 
@@ -66,7 +66,7 @@ mod test_build_flat_unit_variant_ts {
     #[traced_test]
     fn test_variant_skip_self_just_false_single_word_name() {
         trace!("Testing build_flat_unit_variant_ts with skip_self_just=false and variant='ExampleA'");
-        let variant_ident = Ident::new("ExampleA", Span::call_site());
+        let variant_ident = Ident::new("ExampleA", proc_macro2::Span::call_site());
         let actual = build_flat_unit_variant_ts(false, &variant_ident);
         debug!("Generated token stream: {}", actual.to_string());
 
@@ -86,7 +86,7 @@ mod test_build_flat_unit_variant_ts {
     #[traced_test]
     fn test_variant_skip_self_just_false_different_variant_name() {
         trace!("Testing build_flat_unit_variant_ts with skip_self_just=false and variant='LongVariant'");
-        let variant_ident = Ident::new("LongVariant", Span::call_site());
+        let variant_ident = Ident::new("LongVariant", proc_macro2::Span::call_site());
         let actual = build_flat_unit_variant_ts(false, &variant_ident);
         debug!("Generated token stream: {}", actual.to_string());
 
