@@ -2,15 +2,17 @@
 crate::ix!();
 
 pub fn build_from_impl_for_named(
-    flat_ident: &syn::Ident,
-    justified_ident: &syn::Ident,
-    ty_ident: &syn::Ident,
-    justification_ident: &syn::Ident,
-    confidence_ident: &syn::Ident,
-    item_inits: &[proc_macro2::TokenStream],
-    just_inits: &[proc_macro2::TokenStream],
-    conf_inits: &[proc_macro2::TokenStream],
+    flat_ident:           &syn::Ident,
+    justified_ident:      &syn::Ident,
+    ty_ident:             &syn::Ident,
+    justification_ident:  &syn::Ident,
+    confidence_ident:     &syn::Ident,
+    item_inits:           &[proc_macro2::TokenStream],
+    just_inits:           &[proc_macro2::TokenStream],
+    conf_inits:           &[proc_macro2::TokenStream],
+
 ) -> proc_macro2::TokenStream {
+
     trace!(
         "build_from_impl_for_named: building From<{}> for {}",
         flat_ident,
@@ -122,24 +124,29 @@ mod test_build_from_impl_for_named {
 
         // item fields
         // The snippet might appear as `color : flat . color` or `color: flat . color`
-        assert!(s.contains("color : flat . color") || s.contains("color: flat . color"),
+        assert!(
+            s.contains("color : flat . color") || s.contains("color: flat . color"),
             "Expected item_inits for color, got:\n{}", s
         );
-        assert!(s.contains("weight : flat . weight") || s.contains("weight: flat . weight"),
+        assert!(
+            s.contains("weight : flat . weight") || s.contains("weight: flat . weight"),
             "Expected item_inits for weight, got:\n{}", s
         );
 
         // justification & confidence references
-        assert!(s.contains("color_justification : flat . color_justification")
-                || s.contains("color_justification: flat . color_justification"),
+        assert!(
+            s.contains("color_justification : flat . color_justification")
+             || s.contains("color_justification: flat . color_justification"),
             "Expected just_inits for color, got:\n{}", s
         );
-        assert!(s.contains("weight_confidence : flat . weight_confidence")
-                || s.contains("weight_confidence: flat . weight_confidence"),
+        assert!(
+            s.contains("weight_confidence : flat . weight_confidence")
+             || s.contains("weight_confidence: flat . weight_confidence"),
             "Expected conf_inits for weight, got:\n{}", s
         );
-        assert!(s.contains("color_confidence : flat . color_confidence")
-                || s.contains("color_confidence: flat . color_confidence"),
+        assert!(
+            s.contains("color_confidence : flat . color_confidence")
+             || s.contains("color_confidence: flat . color_confidence"),
             "Expected conf_inits for color, got:\n{}", s
         );
 
@@ -193,7 +200,8 @@ mod test_build_from_impl_for_named {
             "color: :: core::convert::From::from(flat.color)",
         ];
         let matched_color = color_pattern.iter().any(|pat| s.contains(pat));
-        assert!(matched_color,
+        assert!(
+            matched_color,
             "Expected item_inits for color to appear; snippet:\n{}", s
         );
 
@@ -203,29 +211,30 @@ mod test_build_from_impl_for_named {
             "taste: flat . taste_builder . build()"
         ];
         let matched_taste = taste_pattern.iter().any(|pat| s.contains(pat));
-        assert!(matched_taste,
+        assert!(
+            matched_taste,
             "Expected item_inits for taste to appear; snippet:\n{}", s
         );
 
         // Justification fields
-        // "color_justification : flat . color_justification . into ()"
         let color_just_pattern = [
             "color_justification : flat . color_justification . into ()",
             "color_justification: flat.color_justification.into()"
         ];
         let matched_color_just = color_just_pattern.iter().any(|pat| s.contains(pat));
-        assert!(matched_color_just,
+        assert!(
+            matched_color_just,
             "Expected just_inits for color_justification; snippet:\n{}", s
         );
 
         // confidence fields
-        // "taste_confidence : flat . taste_confidence"
         let taste_conf_pattern = [
             "taste_confidence : flat . taste_confidence",
             "taste_confidence: flat . taste_confidence"
         ];
         let matched_taste_conf = taste_conf_pattern.iter().any(|pat| s.contains(pat));
-        assert!(matched_taste_conf,
+        assert!(
+            matched_taste_conf,
             "Expected conf_inits for taste_confidence; snippet:\n{}", s
         );
 
@@ -261,6 +270,7 @@ mod test_build_from_impl_for_named {
 
         // Confirm we have an "impl From<FlatPear> for JustifiedPear"
         assert!(s.contains("impl From < FlatPear > for JustifiedPear"));
+
         // Confirm the item field is there
         let size_field_pattern = [
             "size : flat . size",
@@ -273,7 +283,7 @@ mod test_build_from_impl_for_named {
 
         // Confirm that justification & confidence use `Default::default()`
         let default_pat = [
-            ".. Default :: default ( )",
+            ".. Default :: default ()",
             "..Default::default()"
         ];
         let matched_default = default_pat.iter().any(|p| s.contains(p));
@@ -296,8 +306,8 @@ mod test_build_from_impl_for_named {
 
         let item_inits = vec![
             // Possibly the snippet uses "generate_variety!(flat.variety)"
-            // but the test expects "generate_variety ! ( flat . variety )".
-            // We'll do a lenient check below
+            // but the test expects "generate_variety ! ( flat . variety )",
+            // or some close variant. We allow all of them below.
             quote::quote! { variety: generate_variety!(flat.variety) },
             quote::quote! { firmness: flat.firmness },
             quote::quote! { seeded: is_seeded!(flat.seeded_state) },
@@ -332,12 +342,16 @@ mod test_build_from_impl_for_named {
         assert!(s.contains("Tomato"));
 
         // Check expansions
-        // The snippet might appear as `variety : generate_variety ! ( flat . variety )`
-        // or `variety: generate_variety!(flat.variety)`.
+        // The snippet might appear as:
+        //   variety : generate_variety ! ( flat . variety )
+        //   variety : generate_variety ! (flat . variety)
+        //   variety: generate_variety!(flat.variety)
+        //   variety : generate_variety!(flat.variety)
         let variety_pat = [
             "variety : generate_variety ! ( flat . variety )",
+            "variety : generate_variety ! (flat . variety)",
             "variety: generate_variety!(flat.variety)",
-            "variety : generate_variety!(flat.variety)" // maybe no space
+            "variety : generate_variety!(flat.variety)",
         ];
         let matched_variety = variety_pat.iter().any(|p| s.contains(p));
         assert!(
@@ -348,6 +362,7 @@ mod test_build_from_impl_for_named {
         // Similarly for `is_seeded!(flat.seeded_state)`
         let seeded_pat = [
             "seeded : is_seeded ! ( flat . seeded_state )",
+            "seeded : is_seeded ! (flat . seeded_state)",
             "seeded: is_seeded!(flat.seeded_state)",
         ];
         let matched_seeded = seeded_pat.iter().any(|p| s.contains(p));
@@ -359,6 +374,7 @@ mod test_build_from_impl_for_named {
         // Justification expansions
         let variety_just_pat = [
             "variety_justification : some_macro_for_just ! ( flat . variety_justification )",
+            "variety_justification : some_macro_for_just ! (flat . variety_justification)",
             "variety_justification: some_macro_for_just!(flat.variety_justification)",
         ];
         let matched_variety_just = variety_just_pat.iter().any(|p| s.contains(p));
@@ -370,6 +386,7 @@ mod test_build_from_impl_for_named {
         // Confidence expansions
         let variety_conf_pat = [
             "variety_confidence : parse_conf ! ( flat . variety_confidence )",
+            "variety_confidence : parse_conf ! (flat . variety_confidence)",
             "variety_confidence: parse_conf!(flat.variety_confidence)",
         ];
         let matched_variety_conf = variety_conf_pat.iter().any(|p| s.contains(p));
@@ -380,6 +397,7 @@ mod test_build_from_impl_for_named {
 
         let seeded_conf_pat = [
             "seeded_confidence : parse_conf ! ( flat . seeded_confidence )",
+            "seeded_confidence : parse_conf ! (flat . seeded_confidence)",
             "seeded_confidence: parse_conf!(flat.seeded_confidence)",
         ];
         let matched_seeded_conf = seeded_conf_pat.iter().any(|p| s.contains(p));

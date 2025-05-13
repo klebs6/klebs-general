@@ -1,2 +1,11 @@
 [workspace]
-members = []
+members = ["aqua-resistor", "aqua-3p"]
+
+[workspace.dependencies]
+serde          = "*"
+serde_derive   = "*"
+chrono         = "*"
+uuid           = "*"
+getset         = "*"
+derive_builder = "*"
+export-magic   = "*"

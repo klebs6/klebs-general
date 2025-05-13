@@ -1,0 +1,19 @@
+[package]
+name = "aqua-3p"
+version = "0.1.0"
+authors = ["YourName <you@example.com>"]
+license = "MIT"
+edition = "2024"
+description = "todo: write a description here"
+
+# keywords = []
+# categories = []
+
+[dependencies]
+serde.workspace          = true
+serde_derive.workspace   = true
+chrono.workspace         = true
+uuid.workspace           = true
+getset.workspace         = true
+derive_builder.workspace = true
+export-magic.workspace   = true
