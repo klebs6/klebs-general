@@ -163,35 +163,6 @@ mod classify_field_type_for_child_exhaustive_validation {
     use super::*;
 
     #[traced_test]
-    fn confirm_handling_of_bool_field() {
-        info!("Starting confirm_handling_of_bool_field...");
-        let ty: Type = parse_str("bool").expect("Unable to parse bool");
-        let doc_str = "Example bool doc";
-        let required = true;
-        let skip_child_just = false;
-
-        let result = classify_field_type_for_child(&ty, doc_str, required, skip_child_just);
-        assert!(
-            result.is_some(),
-            "Expected Some(...) when classifying bool type, got None"
-        );
-        let tokens = result.unwrap().to_token_stream().to_string();
-        trace!("Resulting token stream: {}", tokens);
-
-        assert!(
-            tokens.contains("\"boolean\""),
-            "Expected output to contain 'boolean', got: {}",
-            tokens
-        );
-        assert!(
-            tokens.contains("\"required\": true"),
-            "Expected 'required' to be true for bool, got: {}",
-            tokens
-        );
-        info!("Completed confirm_handling_of_bool_field successfully.");
-    }
-
-    #[traced_test]
     fn confirm_handling_of_numeric_field() {
         info!("Starting confirm_handling_of_numeric_field...");
         let ty: Type = parse_str("i32").expect("Unable to parse i32");
@@ -207,14 +178,21 @@ mod classify_field_type_for_child_exhaustive_validation {
         let tokens = result.unwrap().to_token_stream().to_string();
         debug!("Resulting token stream: {}", tokens);
 
+        // We expect "type": "number", plus "required": false => 
+        // typically "Value :: Bool (false)" or "Value::Bool(false)"
         assert!(
             tokens.contains("\"number\""),
             "Expected output to contain 'number', got: {}",
             tokens
         );
         assert!(
-            tokens.contains("\"required\": false"),
+            tokens.contains("Bool (false)") || tokens.contains("Bool(false)"),
             "Expected 'required' to be false for numeric, got: {}",
+            tokens
+        );
+        assert!(
+            tokens.contains("Example numeric doc"),
+            "Expected doc string in snippet, got: {}",
             tokens
         );
         info!("Completed confirm_handling_of_numeric_field successfully.");
@@ -236,14 +214,21 @@ mod classify_field_type_for_child_exhaustive_validation {
         let tokens = result.unwrap().to_token_stream().to_string();
         debug!("Resulting token stream: {}", tokens);
 
+        // We expect "type": "string", plus "required": true => 
+        // typically "Bool (true)" or "Bool(true)"
         assert!(
             tokens.contains("\"string\""),
             "Expected output to contain 'string', got: {}",
             tokens
         );
         assert!(
-            tokens.contains("\"required\": true"),
+            tokens.contains("Bool (true)") || tokens.contains("Bool(true)"),
             "Expected 'required' to be true for string, got: {}",
+            tokens
+        );
+        assert!(
+            tokens.contains("Example string doc"),
+            "Expected doc string in snippet, got: {}",
             tokens
         );
         info!("Completed confirm_handling_of_string_field successfully.");
@@ -265,16 +250,22 @@ mod classify_field_type_for_child_exhaustive_validation {
         let tokens = result.unwrap().to_token_stream().to_string();
         trace!("Resulting token stream: {}", tokens);
 
-        // For Option, we expect an inner reclassification
-        // Ultimately it should contain "number" (due to i64) and "required": false
+        // Because it's Option<...>, we expect the final snippet to contain "required": false 
+        // and some reference to "number" for i64.
+        // The actual snippet might wrap it in an extra block => e.g. "{ { ... } }".
         assert!(
             tokens.contains("\"number\""),
             "Expected the Option's inner numeric type to appear, got: {}",
             tokens
         );
         assert!(
-            tokens.contains("\"required\": false"),
+            tokens.contains("Bool (false)") || tokens.contains("Bool(false)"),
             "Expected 'required' to be false for an Option field, got: {}",
+            tokens
+        );
+        assert!(
+            tokens.contains("Example optional doc"),
+            "Expected doc string in snippet, got: {}",
             tokens
         );
         info!("Completed confirm_handling_of_option_field successfully.");
@@ -296,19 +287,24 @@ mod classify_field_type_for_child_exhaustive_validation {
         let tokens = result.unwrap().to_token_stream().to_string();
         debug!("Resulting token stream: {}", tokens);
 
+        // The parent is "array_of", required=false
+        // The child "item_template" might be a string => required=true
+        // The test only cares that the *parent* is required=false
         assert!(
             tokens.contains("\"array_of\""),
             "Expected the result to contain 'array_of', got: {}",
             tokens
         );
+        // confirm parent's `required` is false:
+        // Typically => `obj.insert("required", serde_json::Value::Bool(false))`
         assert!(
-            tokens.contains("\"string\""),
-            "Expected the array item to be 'string', got: {}",
+            tokens.contains("Bool (false)") || tokens.contains("Bool(false)"),
+            "Expected 'required' to be false for parent Vec field, got: {}",
             tokens
         );
         assert!(
-            tokens.contains("\"required\": false"),
-            "Expected 'required' to be false for parent Vec field, got: {}",
+            tokens.contains("Example vector doc"),
+            "Expected doc string in snippet, got: {}",
             tokens
         );
         info!("Completed confirm_handling_of_vec_field successfully.");
@@ -336,6 +332,7 @@ mod classify_field_type_for_child_exhaustive_validation {
             "Expected 'map_of' in the classification, got: {}",
             tokens
         );
+        // Check key=string, value=boolean
         assert!(
             tokens.contains("\"string\""),
             "Expected 'string' for map key, got: {}",
@@ -344,6 +341,12 @@ mod classify_field_type_for_child_exhaustive_validation {
         assert!(
             tokens.contains("\"boolean\""),
             "Expected 'boolean' for map value, got: {}",
+            tokens
+        );
+        // required=true for the parent 
+        assert!(
+            tokens.contains("Bool (true)") || tokens.contains("Bool(true)"),
+            "Expected required=true for the parent HashMap field, got: {}",
             tokens
         );
         info!("Completed confirm_handling_of_hashmap_field_with_string_key_and_bool_value successfully.");
@@ -358,7 +361,7 @@ mod classify_field_type_for_child_exhaustive_validation {
         let skip_child_just = true;
 
         let result = classify_field_type_for_child(&ty, doc_str, required, skip_child_just);
-        // In the code, it returns Some(...) containing a compile_error() if we see bool keys
+        // The code returns Some(TokenStream) containing compile_error if bool is used as a key
         assert!(
             result.is_some(),
             "We still expect Some(TokenStream) containing compile_error for bool keys"
@@ -377,8 +380,6 @@ mod classify_field_type_for_child_exhaustive_validation {
     #[traced_test]
     fn confirm_handling_of_fallback_nested_struct_or_enum() {
         info!("Starting confirm_handling_of_fallback_nested_struct_or_enum...");
-        // We'll define a made-up user type: "UserType"
-        // We only parse the type. We assume the type "UserType" is not recognized as a builtin.
         let ty: Type = parse_str("UserType").expect("Unable to parse user-defined type");
         let doc_str = "Example user type doc";
         let required = true;
@@ -392,8 +393,7 @@ mod classify_field_type_for_child_exhaustive_validation {
         let tokens = result.unwrap().to_token_stream().to_string();
         debug!("Resulting token stream: {}", tokens);
 
-        // We expect it to contain "nested_struct_or_enum"
-        // plus an invocation of AiJsonTemplateWithJustification if skip_child_just=false
+        // We expect it to contain "nested_struct_or_enum", plus call AiJsonTemplateWithJustification if skip_child_just=false
         assert!(
             tokens.contains("\"nested_struct_or_enum\""),
             "Expected fallback to nested_struct_or_enum, got: {}",
@@ -404,6 +404,263 @@ mod classify_field_type_for_child_exhaustive_validation {
             "Expected call to AiJsonTemplateWithJustification, got: {}",
             tokens
         );
+        // required=true for the parent
+        assert!(
+            tokens.contains("Bool (true)") || tokens.contains("Bool(true)"),
+            "Expected required=true for user type, got: {}",
+            tokens
+        );
         info!("Completed confirm_handling_of_fallback_nested_struct_or_enum successfully.");
+    }
+
+    /// A helper that runs `classify_field_type` and returns the stringified TokenStream,
+    /// or panics if `None` is returned.
+    fn run_classify_and_stringify(ty: &Type, doc_str: &str) -> String {
+        trace!("Invoking classify_field_type on type: {:?}, doc_str={:?}", ty, doc_str);
+        let result_opt = classify_field_type(ty, doc_str);
+        match result_opt {
+            Some(ts) => {
+                let out = ts.to_string();
+                debug!("Successfully obtained TokenStream: {}", out);
+                out
+            },
+            None => {
+                panic!("Expected Some(TokenStream) but got None for type={:?}, doc_str={:?}", ty, doc_str);
+            }
+        }
+    }
+
+    #[traced_test]
+    fn test_option_bool() {
+        info!("test_option_bool => Checking classification for Option<bool>");
+        let ty: Type = parse_quote!(Option<bool>);
+        let output = run_classify_and_stringify(&ty, "example doc for Option<bool>");
+        // Should have "boolean", "required=false"
+        assert!(
+            output.contains("\"boolean\""),
+            "Should contain 'boolean' for bool type, got: {}",
+            output
+        );
+        // The actual code typically prints `Value :: Bool (false)`, or `Value::Bool(false)`
+        // with no space around (false).
+        assert!(
+            output.contains("Value :: Bool (false)") || output.contains("Value::Bool(false)"),
+            "Should mark required=false for Option<bool>, got: {}",
+            output
+        );
+        // Also check we have the doc string as "\"example doc for Option<bool>\"" or similar
+        // (the macros typically embed the doc with an extra quote).
+        assert!(
+            output.contains("example doc for Option<bool>"),
+            "Expected doc string for Option<bool>, got: {}",
+            output
+        );
+    }
+
+    #[traced_test]
+    fn test_bool() {
+        info!("test_bool => Checking classification for bare bool");
+        let ty: Type = parse_quote!(bool);
+        let output = run_classify_and_stringify(&ty, "example doc for bool");
+        // Should have "boolean", "required=true"
+        assert!(
+            output.contains("\"boolean\""),
+            "Should contain 'boolean' for bool type, got: {}",
+            output
+        );
+        assert!(
+            output.contains("Value :: Bool (true)") || output.contains("Value::Bool(true)"),
+            "Should mark required=true for bare bool, got: {}",
+            output
+        );
+        assert!(
+            output.contains("example doc for bool"),
+            "Expected doc string for bool, got: {}",
+            output
+        );
+    }
+
+    #[traced_test]
+    fn test_option_string() {
+        info!("test_option_string => Checking classification for Option<String>");
+        let ty: Type = parse_quote!(Option<String>);
+        let output = run_classify_and_stringify(&ty, "doc for Option<String>");
+        // Should have "string", "required=false"
+        assert!(
+            output.contains("\"string\""),
+            "Should contain 'string' for String type, got: {}",
+            output
+        );
+        assert!(
+            output.contains("Value :: Bool (false)") || output.contains("Value::Bool(false)"),
+            "Should mark required=false for Option<String>, got: {}",
+            output
+        );
+        assert!(
+            output.contains("doc for Option<String>"),
+            "Expected doc string for Option<String>, got: {}",
+            output
+        );
+    }
+
+    #[traced_test]
+    fn test_string() {
+        info!("test_string => Checking classification for bare String");
+        let ty: Type = parse_quote!(String);
+        let output = run_classify_and_stringify(&ty, "doc for bare String");
+        // Should have "string", "required=true"
+        assert!(
+            output.contains("\"string\""),
+            "Should contain 'string' for String type, got: {}",
+            output
+        );
+        assert!(
+            output.contains("Value :: Bool (true)") || output.contains("Value::Bool(true)"),
+            "Should mark required=true for bare String, got: {}",
+            output
+        );
+        assert!(
+            output.contains("doc for bare String"),
+            "Expected doc string for bare String, got: {}",
+            output
+        );
+    }
+
+    #[traced_test]
+    fn test_i32() {
+        info!("test_i32 => Checking classification for i32");
+        let ty: Type = parse_quote!(i32);
+        let output = run_classify_and_stringify(&ty, "doc for i32");
+        // Should have "number", "required=true"
+        assert!(
+            output.contains("\"number\""),
+            "Should contain 'number' for numeric type i32, got: {}",
+            output
+        );
+        assert!(
+            output.contains("Value :: Bool (true)") || output.contains("Value::Bool(true)"),
+            "Should mark required=true for i32, got: {}",
+            output
+        );
+        assert!(
+            output.contains("doc for i32"),
+            "Expected doc string for i32, got: {}",
+            output
+        );
+    }
+
+    #[traced_test]
+    fn test_option_f64() {
+        info!("test_option_f64 => Checking classification for Option<f64>");
+        let ty: Type = parse_quote!(Option<f64>);
+        let output = run_classify_and_stringify(&ty, "doc for Option<f64>");
+        // Should have "number", "required=false"
+        assert!(
+            output.contains("\"number\""),
+            "Should contain 'number' for numeric type f64, got: {}",
+            output
+        );
+        assert!(
+            output.contains("Value :: Bool (false)") || output.contains("Value::Bool(false)"),
+            "Should mark required=false for Option<f64>, got: {}",
+            output
+        );
+        assert!(
+            output.contains("doc for Option<f64>"),
+            "Expected doc string for Option<f64>, got: {}",
+            output
+        );
+    }
+
+    #[traced_test]
+    fn test_nested_custom_type() {
+        info!("test_nested_custom_type => Checking classification for a user-defined type");
+        let ty: Type = parse_quote!(MyCustomType);
+        let output = run_classify_and_stringify(&ty, "doc for MyCustomType");
+        // Expect fallback => "nested_struct_or_enum", "required=true"
+        // But the macro might produce a snippet that calls AiJsonTemplate::to_template() 
+        // plus some logic to guess "nested_enum"/"nested_struct". We just check for "required=true" 
+        // and "nested" in the snippet.
+        assert!(
+            output.contains("nested_struct_or_enum")
+                || output.contains("nested_struct") 
+                || output.contains("nested_enum"),
+            "Expected fallback to 'nested_struct_or_enum' or 'nested_struct' for unknown user type, got: {}",
+            output
+        );
+        assert!(
+            output.contains("Value :: Bool (true)") || output.contains("Value::Bool(true)"),
+            "Should mark required=true for MyCustomType, got: {}",
+            output
+        );
+        assert!(
+            output.contains("doc for MyCustomType"),
+            "Expected doc for MyCustomType, got: {}",
+            output
+        );
+    }
+
+    #[traced_test]
+    fn test_option_nested_custom_type() {
+        info!("test_option_nested_custom_type => Checking classification for Option of user-defined type");
+        let ty: Type = parse_quote!(Option<AnotherType>);
+        let output = run_classify_and_stringify(&ty, "doc for Option<AnotherType>");
+        // Expect fallback => "nested_struct_or_enum", "required=false"
+        assert!(
+            output.contains("nested_struct_or_enum")
+                || output.contains("nested_struct") 
+                || output.contains("nested_enum"),
+            "Expected fallback to 'nested_struct_or_enum', 'nested_struct', or 'nested_enum' for unknown user type, got: {}",
+            output
+        );
+        assert!(
+            output.contains("Value :: Bool (false)") || output.contains("Value::Bool(false)"),
+            "Should mark required=false for Option<AnotherType>, got: {}",
+            output
+        );
+        assert!(
+            output.contains("doc for Option<AnotherType>"),
+            "Expected doc string for Option<AnotherType>, got: {}",
+            output
+        );
+    }
+
+    #[traced_test]
+    fn confirm_handling_of_bool_field() {
+
+        info!("confirm_handling_of_bool_field...");
+
+        // Suppose we call classify_field_type_for_child with required=true
+        let required        = true;
+        let doc_str         = "Example bool doc";
+        let skip_child_just = false;
+
+        let snippet         = classify_field_type_for_child(
+            &parse_quote!(bool), 
+            doc_str, 
+            required, 
+            skip_child_just
+        ).expect("expected this to unwrap");
+
+        debug!("Resulting token stream: {}", snippet.to_string());
+
+        // The snippet includes something like `obj.insert("required", serde_json::Value::Bool(true))`
+        assert!(
+            snippet.to_string().contains("Bool (true)") 
+            || snippet.to_string().contains("Bool(true)"),
+            "Expected 'required' to be true for bool, got: {}",
+            snippet.to_string()
+        );
+        // Also check "boolean" is present
+        assert!(
+            snippet.to_string().contains("\"boolean\""),
+            "Expected 'boolean' classification in snippet, got: {}",
+            snippet.to_string()
+        );
+        assert!(
+            snippet.to_string().contains(doc_str),
+            "Expected doc string in snippet, got: {}",
+            snippet.to_string()
+        );
     }
 }

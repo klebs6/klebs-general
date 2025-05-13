@@ -71,11 +71,9 @@ EXPANSION_FILE  := expanded_flat_justified_exhaustive.rs
 EXPANSION_PACKAGE := ai-json-template-derive
 EXPANSION_TEST    := flat_justified_exhaustive
 #EXPANSION_TEST    := classify_with_justification
-INDIVIDUAL_TEST    := classify_field_type
-INDIVIDUAL_TEST    := build_enum_confidence
-INDIVIDUAL_TEST    := build_hashmap_schema
-INDIVIDUAL_TEST    := build_from_arm_for_named
 
+INDIVIDUAL_TEST    := test_build_vec_schema
+INDIVIDUAL_TEST    := test_classify_field_type_with_justification
 #----------------------------------------------[here are our rules]
 run:
 	RUSTFLAGS=$(RUSTFLAGS) $(CARGO) $(RUN) -p $(ACTIVE_PACKAGE) $(FEATURES)

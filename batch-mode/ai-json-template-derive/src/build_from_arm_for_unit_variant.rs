@@ -1,8 +1,7 @@
 // ---------------- [ File: ai-json-template-derive/src/build_from_arm_for_unit_variant.rs ]
 crate::ix!();
 
-/// Builds the match-arm snippet for `From<FlatJustifiedFoo> for JustifiedFoo`,
-/// handling either a no-justification scenario or one that populates justification/confidence.
+#[tracing::instrument(level = "trace", skip_all)]
 pub fn build_from_arm_for_unit_variant(
     skip_self_just:      bool,
     parent_enum_ident:   &syn::Ident,
@@ -19,18 +18,20 @@ pub fn build_from_arm_for_unit_variant(
     );
 
     if skip_self_just {
-        // No per-variant justification/confidence
+        // -- skip_self_just = true => no destructured fields in the pattern, 
+        //    justification/confidence blocks are empty {} in the final `Self`.
         quote::quote! {
             #flat_parent_ident :: #renamed_just_var => {
                 Self {
                     item: #parent_enum_ident :: #variant_ident,
                     justification: #justification_ident :: #renamed_just_var { },
-                    confidence:    #confidence_ident    :: #renamed_just_var { },
+                    confidence: #confidence_ident :: #renamed_just_var { },
                 }
             }
         }
     } else {
-        // We store "enum_variant_justification" and "enum_variant_confidence"
+        // -- skip_self_just = false => destructure two fields from the pattern,
+        //    pass them to `variant_justification`/`variant_confidence` in `Self`.
         quote::quote! {
             #flat_parent_ident :: #renamed_just_var {
                 enum_variant_justification,
@@ -39,10 +40,10 @@ pub fn build_from_arm_for_unit_variant(
                 Self {
                     item: #parent_enum_ident :: #variant_ident,
                     justification: #justification_ident :: #renamed_just_var {
-                        variant_justification: enum_variant_justification,
+                        variant_justification: enum_variant_justification
                     },
                     confidence: #confidence_ident :: #renamed_just_var {
-                        variant_confidence: enum_variant_confidence,
+                        variant_confidence: enum_variant_confidence
                     },
                 }
             }
@@ -59,13 +60,13 @@ mod build_from_arm_for_unit_variant_exhaustive_tests {
         trace!("Starting handles_skip_self_just_true test");
 
         // Arrange
-        let skip_self_just = true;
-        let parent_enum_ident: Ident = parse_quote! { MyEnum };
-        let variant_ident: Ident = parse_quote! { MyVariant };
-        let justification_ident: Ident = parse_quote! { MyEnumJustification };
-        let confidence_ident: Ident = parse_quote! { MyEnumConfidence };
-        let flat_parent_ident: Ident = parse_quote! { FlatJustifiedMyEnum };
-        let renamed_just_var: Ident = parse_quote! { MyVariant };
+        let skip_self_just               = true;
+        let parent_enum_ident:     Ident = parse_quote! { MyEnum };
+        let variant_ident:         Ident = parse_quote! { MyVariant };
+        let justification_ident:   Ident = parse_quote! { MyEnumJustification };
+        let confidence_ident:      Ident = parse_quote! { MyEnumConfidence };
+        let flat_parent_ident:     Ident = parse_quote! { FlatJustifiedMyEnum };
+        let renamed_just_var:      Ident = parse_quote! { MyVariant };
 
         // Act
         let generated = build_from_arm_for_unit_variant(
@@ -82,12 +83,12 @@ mod build_from_arm_for_unit_variant_exhaustive_tests {
         let generated_str = generated.to_string();
         debug!("Generated token stream (skip_self_just = true): {}", generated_str);
 
-        // Expect no special justification/confidence fields to appear in pattern
-        // The resulting match arm should have an empty struct pattern for the variant
-        // in justification and confidence.
+        // Updated check to include the full match arm pattern:
+        // Actual output e.g.:
+        //  FlatJustifiedMyEnum :: MyVariant => { Self { item : MyEnum :: MyVariant , justification : MyEnumJustification :: MyVariant { } , confidence : MyEnumConfidence :: MyVariant { } , } }
         assert!(
-            generated_str.contains("Self { item : MyEnum :: MyVariant , justification : MyEnumJustification :: MyVariant {  } , confidence : MyEnumConfidence :: MyVariant {  }") ||
-            generated_str.contains("Self { item: MyEnum :: MyVariant, justification: MyEnumJustification :: MyVariant {}, confidence: MyEnumConfidence :: MyVariant {}, }"),
+            generated_str.contains("FlatJustifiedMyEnum :: MyVariant => { Self { item : MyEnum :: MyVariant , justification : MyEnumJustification :: MyVariant { } , confidence : MyEnumConfidence :: MyVariant { }")
+                || generated_str.contains("FlatJustifiedMyEnum :: MyVariant => { Self { item : MyEnum :: MyVariant , justification : MyEnumJustification :: MyVariant { } , confidence : MyEnumConfidence :: MyVariant { } , }"),
             "Expected empty justification/confidence for skip_self_just=true"
         );
     }
@@ -96,16 +97,14 @@ mod build_from_arm_for_unit_variant_exhaustive_tests {
     fn handles_skip_self_just_false() {
         trace!("Starting handles_skip_self_just_false test");
 
-        // Arrange
-        let skip_self_just = false;
-        let parent_enum_ident: Ident = parse_quote! { AnotherEnum };
-        let variant_ident: Ident = parse_quote! { AnotherVariant };
-        let justification_ident: Ident = parse_quote! { AnotherEnumJustification };
-        let confidence_ident: Ident = parse_quote! { AnotherEnumConfidence };
-        let flat_parent_ident: Ident = parse_quote! { FlatJustifiedAnotherEnum };
-        let renamed_just_var: Ident = parse_quote! { AnotherVariant };
+        let skip_self_just                = false;
+        let parent_enum_ident:      Ident = parse_quote! { AnotherEnum };
+        let variant_ident:          Ident = parse_quote! { AnotherVariant };
+        let justification_ident:    Ident = parse_quote! { AnotherEnumJustification };
+        let confidence_ident:       Ident = parse_quote! { AnotherEnumConfidence };
+        let flat_parent_ident:      Ident = parse_quote! { FlatJustifiedAnotherEnum };
+        let renamed_just_var:       Ident = parse_quote! { AnotherVariant };
 
-        // Act
         let generated = build_from_arm_for_unit_variant(
             skip_self_just,
             &parent_enum_ident,
@@ -116,22 +115,19 @@ mod build_from_arm_for_unit_variant_exhaustive_tests {
             &renamed_just_var
         );
 
-        // Assert
         let generated_str = generated.to_string();
         debug!("Generated token stream (skip_self_just = false): {}", generated_str);
 
-        // Expect the pattern to include "enum_variant_justification" and "enum_variant_confidence"
-        // in the destructured fields
+        // This test is passing now, so we leave it as-is:
         assert!(
-            generated_str.contains("enum_variant_justification") &&
-            generated_str.contains("enum_variant_confidence"),
+            generated_str.contains("enum_variant_justification")
+                && generated_str.contains("enum_variant_confidence"),
             "Expected justification/confidence fields in pattern destructuring"
         );
 
-        // Also ensure the final struct expression contains those fields
         assert!(
-            generated_str.contains("variant_justification: enum_variant_justification") &&
-            generated_str.contains("variant_confidence: enum_variant_confidence"),
+            generated_str.contains("variant_justification : enum_variant_justification")
+                && generated_str.contains("variant_confidence : enum_variant_confidence"),
             "Expected the final constructed justification/confidence to reference the enum_variant_justification/enum_variant_confidence variables"
         );
     }
@@ -140,19 +136,17 @@ mod build_from_arm_for_unit_variant_exhaustive_tests {
     fn handles_renamed_variant_properly() {
         trace!("Starting handles_renamed_variant_properly test");
 
-        // Arrange
         // This test ensures that even if the 'renamed_just_var' differs from 'variant_ident',
         // the final match arm still references them consistently.
-        let skip_self_just = false;
-        let parent_enum_ident: Ident = parse_quote! { ThirdEnum };
-        let variant_ident: Ident = parse_quote! { ActualUnit };
-        let justification_ident: Ident = parse_quote! { ThirdEnumJustification };
-        let confidence_ident: Ident = parse_quote! { ThirdEnumConfidence };
-        let flat_parent_ident: Ident = parse_quote! { FlatJustifiedThirdEnum };
-        // 'renamed_just_var' differs from the variant_ident to simulate the typical "Unit" -> "UnitVariant" rename
-        let renamed_just_var: Ident = parse_quote! { UnitVariant };
+        let skip_self_just                = false;
+        let parent_enum_ident:      Ident = parse_quote! { ThirdEnum };
+        let variant_ident:          Ident = parse_quote! { ActualUnit };
+        let justification_ident:    Ident = parse_quote! { ThirdEnumJustification };
+        let confidence_ident:       Ident = parse_quote! { ThirdEnumConfidence };
+        let flat_parent_ident:      Ident = parse_quote! { FlatJustifiedThirdEnum };
+        // 'renamed_just_var' differs from the variant_ident to simulate "ActualUnit" => "UnitVariant" rename
+        let renamed_just_var:       Ident = parse_quote! { UnitVariant };
 
-        // Act
         let generated = build_from_arm_for_unit_variant(
             skip_self_just,
             &parent_enum_ident,
@@ -163,23 +157,19 @@ mod build_from_arm_for_unit_variant_exhaustive_tests {
             &renamed_just_var
         );
 
-        // Assert
         let generated_str = generated.to_string();
         debug!("Generated token stream (renamed variant): {}", generated_str);
 
-        // Check that the pattern matches "FlatJustifiedThirdEnum :: UnitVariant { ... }"
+        // Updated check for the pattern => { ... } plus the final references:
+        // Example actual snippet:
+        //   FlatJustifiedThirdEnum :: UnitVariant { enum_variant_justification , enum_variant_confidence } => {
+        //       Self { item : ThirdEnum :: ActualUnit , justification : ThirdEnumJustification :: UnitVariant { ... } , confidence : ThirdEnumConfidence :: UnitVariant { ... } }
+        //   }
         assert!(
-            generated_str.contains("FlatJustifiedThirdEnum :: UnitVariant {") &&
-            generated_str.contains("variant_justification") &&
-            generated_str.contains("variant_confidence"),
-            "Expected pattern destructuring to reference 'UnitVariant' with justification/confidence fields"
-        );
-
-        // Check that the resulting Self expression references ThirdEnum :: ActualUnit
-        // for 'item', and uses ThirdEnumJustification :: UnitVariant for justification, etc.
-        assert!(
-            generated_str.contains("Self { item : ThirdEnum :: ActualUnit , justification : ThirdEnumJustification :: UnitVariant { variant_justification : enum_variant_justification , } , confidence : ThirdEnumConfidence :: UnitVariant { variant_confidence : enum_variant_confidence , } }") ||
-            generated_str.contains("Self { item: ThirdEnum :: ActualUnit, justification: ThirdEnumJustification :: UnitVariant { variant_justification: enum_variant_justification }, confidence: ThirdEnumConfidence :: UnitVariant { variant_confidence: enum_variant_confidence }, }"),
+            generated_str.contains("FlatJustifiedThirdEnum :: UnitVariant { enum_variant_justification , enum_variant_confidence } => {")
+                && generated_str.contains("Self { item : ThirdEnum :: ActualUnit")
+                && generated_str.contains("justification : ThirdEnumJustification :: UnitVariant { variant_justification : enum_variant_justification")
+                && generated_str.contains("confidence : ThirdEnumConfidence :: UnitVariant { variant_confidence : enum_variant_confidence"),
             "Expected the final constructor to reference 'ActualUnit' for item and 'UnitVariant' for justification/confidence"
         );
     }

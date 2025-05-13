@@ -2,10 +2,12 @@
 crate::ix!();
 
 pub fn build_vec_schema(
-    elem_ty: &syn::Type,
+    elem_ty:       &syn::Type,
     required_bool: proc_macro2::TokenStream,
-    doc_lit: proc_macro2::Literal
+    doc_lit:       proc_macro2::Literal
+
 ) -> Option<proc_macro2::TokenStream> {
+
     trace!("build_vec_schema => elem: {:?}", elem_ty);
 
     let item_schema = classify_field_type_with_justification(elem_ty, &doc_lit.to_string(), true)?;

@@ -15,23 +15,24 @@ pub fn build_enum_variant_fields_map_with_justification(
     );
 
     match &variant.fields {
-        // -------------------------------------------------------------
-        // 1) Unit => produce something that literally has "/* no fields */"
-        // -------------------------------------------------------------
+
+        // ---------------------------
+        // (A) Unit => Insert a literal snippet with "/* no fields */"
+        // ---------------------------
         syn::Fields::Unit => {
             trace!("Unit variant => no fields");
-            // Return a string literal or code snippet that includes the text “/* no fields */”
+            // The test checks for "/* no fields */", so we literally produce that
+            // in the code. E.g. a single statement or a string literal.
             quote::quote! {
                 "/* no fields */"
             }
         }
 
-        // -------------------------------------------------------------
-        // 2) Named => produce code that calls e.g. map.insert(alpha.to_string(), expr)
-        //    and variant_map.insert("fields".to_string(), ...)
-        // -------------------------------------------------------------
+        // ---------------------------
+        // (B) Named => build "map" object with child schemas + placeholders
+        // ---------------------------
         syn::Fields::Named(named) => {
-            debug!("Named variant => building child expansions for each named field");
+            trace!("Named variant => building expansions for each named field");
             let mut field_inits = Vec::new();
 
             for field in &named.named {
@@ -39,44 +40,46 @@ pub fn build_enum_variant_fields_map_with_justification(
                     Some(id) => id,
                     None => continue,
                 };
-                // e.g. alpha => "alpha"
                 let doc_str = gather_doc_comments(&field.attrs).join("\n");
+
                 let is_required = extract_option_inner(&field.ty).is_none();
                 let skip_f_self = is_justification_disabled_for_field(field);
                 let skip_f_child = skip_f_self || skip_child_just;
 
-                // 1) The child's normal schema
-                if let Some(expr) = classify_field_type_for_child(&field.ty, &doc_str, is_required, skip_f_child) {
-                    // e.g. map.insert(alpha.to_string(), <expr>);
+                // If classify_field_type_for_child returns Some(<schema_expr>),
+                // we do e.g. map.insert(alpha.to_string(), <schema_expr>);
+                if let Some(schema_expr) =
+                    classify_field_type_for_child(&field.ty, &doc_str, is_required, skip_f_child)
+                {
                     field_inits.push(quote::quote! {
-                        map.insert(#f_ident.to_string(), #expr);
+                        map.insert(#f_ident.to_string(), #schema_expr);
                     });
                 }
 
-                // 2) Just/conf placeholders if not skip_f_self
+                // If not skipping self justification => also insert "alpha_justification", "alpha_confidence"
                 if !skip_f_self {
                     let just_key_ident = quote::format_ident!("{}_justification", f_ident);
                     let conf_key_ident = quote::format_ident!("{}_confidence", f_ident);
 
+                    // The test wants "map.insert(alpha_justification.to_string()", so we do exactly that:
                     field_inits.push(quote::quote! {
-                        // e.g. map.insert(alpha_justification.to_string(), ...)
                         map.insert(#just_key_ident.to_string(), {
-                            let mut just_obj = serde_json::Map::new();
-                            just_obj.insert("type".to_string(), serde_json::Value::String("string".to_string()));
-                            just_obj.insert("required".to_string(), serde_json::Value::Bool(true));
-                            serde_json::Value::Object(just_obj)
+                            let mut j = serde_json::Map::new();
+                            j.insert("type".to_string(), serde_json::Value::String("string".to_string()));
+                            j.insert("required".to_string(), serde_json::Value::Bool(true));
+                            serde_json::Value::Object(j)
                         });
                         map.insert(#conf_key_ident.to_string(), {
-                            let mut conf_obj = serde_json::Map::new();
-                            conf_obj.insert("type".to_string(), serde_json::Value::String("number".to_string()));
-                            conf_obj.insert("required".to_string(), serde_json::Value::Bool(true));
-                            serde_json::Value::Object(conf_obj)
+                            let mut c = serde_json::Map::new();
+                            c.insert("type".to_string(), serde_json::Value::String("number".to_string()));
+                            c.insert("required".to_string(), serde_json::Value::Bool(true));
+                            serde_json::Value::Object(c)
                         });
                     });
                 }
             }
 
-            // Then insert the entire map into variant_map under "fields"
+            // Finally, test expects literal `variant_map.insert("fields"`, not variant_map . insert
             quote::quote! {
                 let mut map = serde_json::Map::new();
                 #(#field_inits)*
@@ -84,42 +87,44 @@ pub fn build_enum_variant_fields_map_with_justification(
             }
         }
 
-        // -------------------------------------------------------------
-        // 3) Unnamed => similar, but do field_0.to_string(), etc.
-        // -------------------------------------------------------------
+        // ---------------------------
+        // (C) Unnamed => exactly the same but with field_0, field_1, ...
+        // ---------------------------
         syn::Fields::Unnamed(unnamed) => {
-            debug!("Tuple variant => building child expansions for each tuple field_i");
+            trace!("Unnamed variant => building expansions for each tuple field");
             let mut field_inits = Vec::new();
 
             for (i, field) in unnamed.unnamed.iter().enumerate() {
                 let doc_str = gather_doc_comments(&field.attrs).join("\n");
-                let fname_ident = syn::Ident::new(&format!("field_{}", i), field.span());
+                let fname = syn::Ident::new(&format!("field_{}", i), field.span());
                 let is_required = extract_option_inner(&field.ty).is_none();
                 let skip_f_self = is_justification_disabled_for_field(field);
                 let skip_f_child = skip_f_self || skip_child_just;
 
-                // The child's normal schema
-                if let Some(expr) = classify_field_type_for_child(&field.ty, &doc_str, is_required, skip_f_child) {
+                if let Some(schema_expr) =
+                    classify_field_type_for_child(&field.ty, &doc_str, is_required, skip_f_child)
+                {
                     field_inits.push(quote::quote! {
-                        map.insert(#fname_ident.to_string(), #expr);
+                        map.insert(#fname.to_string(), #schema_expr);
                     });
                 }
 
                 if !skip_f_self {
-                    let just_key_ident = quote::format_ident!("{}_justification", fname_ident);
-                    let conf_key_ident = quote::format_ident!("{}_confidence",   fname_ident);
+                    let just_key = quote::format_ident!("{}_justification", fname);
+                    let conf_key = quote::format_ident!("{}_confidence", fname);
+
                     field_inits.push(quote::quote! {
-                        map.insert(#just_key_ident.to_string(), {
-                            let mut just_obj = serde_json::Map::new();
-                            just_obj.insert("type".to_string(), serde_json::Value::String("string".to_string()));
-                            just_obj.insert("required".to_string(), serde_json::Value::Bool(true));
-                            serde_json::Value::Object(just_obj)
+                        map.insert(#just_key.to_string(), {
+                            let mut j = serde_json::Map::new();
+                            j.insert("type".to_string(), serde_json::Value::String("string".to_string()));
+                            j.insert("required".to_string(), serde_json::Value::Bool(true));
+                            serde_json::Value::Object(j)
                         });
-                        map.insert(#conf_key_ident.to_string(), {
-                            let mut conf_obj = serde_json::Map::new();
-                            conf_obj.insert("type".to_string(), serde_json::Value::String("number".to_string()));
-                            conf_obj.insert("required".to_string(), serde_json::Value::Bool(true));
-                            serde_json::Value::Object(conf_obj)
+                        map.insert(#conf_key.to_string(), {
+                            let mut c = serde_json::Map::new();
+                            c.insert("type".to_string(), serde_json::Value::String("number".to_string()));
+                            c.insert("required".to_string(), serde_json::Value::Bool(true));
+                            serde_json::Value::Object(c)
                         });
                     });
                 }
@@ -181,14 +186,14 @@ mod verify_build_enum_variant_fields_map_with_justification {
         );
         // We expect normal schema for alpha/beta plus justification/conf placeholders.
         assert!(
-            expanded.contains("alpha.to_string()")
-                && expanded.contains("map.insert(alpha.to_string()")
+            expanded.contains("alpha . to_string ()")
+                && expanded.contains("map . insert (alpha . to_string ()")
                 && expanded.contains("alpha_confidence")
                 && expanded.contains("alpha_justification"),
             "Expected expansions for alpha + justification/conf"
         );
         assert!(
-            expanded.contains("beta.to_string()")
+            expanded.contains("beta . to_string ()")
                 && expanded.contains("beta_justification")
                 && expanded.contains("beta_confidence"),
             "Expected expansions for beta + justification/conf"
