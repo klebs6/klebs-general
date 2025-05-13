@@ -74,6 +74,7 @@ EXPANSION_TEST    := flat_justified_exhaustive
 INDIVIDUAL_TEST    := classify_field_type
 INDIVIDUAL_TEST    := build_enum_confidence
 INDIVIDUAL_TEST    := build_hashmap_schema
+INDIVIDUAL_TEST    := build_from_arm_for_named
 
 #----------------------------------------------[here are our rules]
 run:
