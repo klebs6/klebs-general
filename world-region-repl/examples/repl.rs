@@ -33,11 +33,11 @@ async fn main() -> Result<(),WorldCityAndStreetDbBuilderError> {
     configure_tracing();
     tracing::info!("starting WorldCityAndStreetDbBuilder REPL");
 
-    let db_path  = PathBuf::from("./va_db");
+    let db_path  = PathBuf::from("./tx_db");
     let pbf_path = PathBuf::from("./pbf");
 
     // 1) Build/Load DB (async):
-    let db_arc = build_dmv_database::<Database>(db_path, pbf_path).await?;
+    let db_arc = build_tx_database::<Database>(db_path, pbf_path).await?;
 
     // 2) Run interactive REPL (sync):
     if let Err(e) = run_interactive_repl(db_arc) {
