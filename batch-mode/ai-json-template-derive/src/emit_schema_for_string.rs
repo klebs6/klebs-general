@@ -32,6 +32,7 @@ pub fn emit_schema_for_string(
 mod test_emit_schema_for_string_schema_output {
     use super::*;
 
+    #[tracing::instrument(level="trace", skip_all)]
     #[traced_test]
     fn generates_required_string_schema_with_instructions() {
         trace!("Testing string schema generation with required = true");
@@ -40,20 +41,25 @@ mod test_emit_schema_for_string_schema_output {
         let required = quote::quote!(true);
         let schema_ts = emit_schema_for_string(instructions, &required);
 
+        // Convert the token stream to a string for substring checks
         let schema_str = schema_ts.to_string();
-        debug!(%schema_str, "Generated schema token stream");
+        debug!("Generated schema token stream: {}", schema_str);
 
-        // Evaluate into a JSON value
-        let json_expr = schema_ts.to_string();
-        let parsed: serde_json::Value = serde_json::from_str(&json_expr.replace("# [", "\"").replace("]", "\"")).expect("Failed to parse generated schema");
-        info!("json_expr={:#?}",json_expr);
-        info!("parsed={:#?}",parsed);
+        // Instead of parsing `schema_str` as JSON, we do substring checks:
+        // The old approach with `serde_json::from_str(...)` fails because the snippet is valid Rust, not valid JSON.
+        assert!(schema_str.contains("\"type\" . to_string ()"), "Should define a 'type' key via to_string()");
+        assert!(schema_str.contains("\"string\" . to_string ()"), "Should specify 'string' as the type value");
+        assert!(schema_str.contains("\"generation_instructions\" . to_string ()"), "Should have a generation_instructions key via to_string()");
+        assert!(schema_str.contains(instructions), "Should embed our instructions literal");
+        assert!(schema_str.contains("\"required\" . to_string ()"), "Should define a 'required' key via to_string()");
+        assert!(schema_str.contains("serde_json :: Value :: Bool (true)"), "Should set 'required' to true in the snippet");
 
-        assert_eq!(parsed["type"], "string");
-        assert_eq!(parsed["generation_instructions"], instructions);
-        assert_eq!(parsed["required"], true);
+        // If we truly want to confirm the *runtime* JSON object:
+        // we'd compile+run the snippet or call the function in a real test.
+        // But for these tests, we only do substring checks to ensure we see the intended Rust code.
     }
 
+    #[tracing::instrument(level="trace", skip_all)]
     #[traced_test]
     fn generates_optional_string_schema_with_instructions() {
         trace!("Testing string schema generation with required = false");
@@ -63,36 +69,35 @@ mod test_emit_schema_for_string_schema_output {
         let schema_ts = emit_schema_for_string(instructions, &required);
 
         let schema_str = schema_ts.to_string();
-        debug!(%schema_str, "Generated schema token stream");
+        debug!("Generated schema token stream: {}", schema_str);
 
-        let json_expr = schema_ts.to_string();
-        let parsed: serde_json::Value = serde_json::from_str(&json_expr.replace("# [", "\"").replace("]", "\"")).expect("Failed to parse generated schema");
-        info!("json_expr={:#?}",json_expr);
-        info!("parsed={:#?}",parsed);
-
-        assert_eq!(parsed["type"], "string");
-        assert_eq!(parsed["generation_instructions"], instructions);
-        assert_eq!(parsed["required"], false);
+        // Substring checks:
+        assert!(schema_str.contains("\"type\" . to_string ()"), "Should define a 'type' key via to_string()");
+        assert!(schema_str.contains("\"string\" . to_string ()"), "Should specify 'string' type");
+        assert!(schema_str.contains("\"generation_instructions\" . to_string ()"), "Should define 'generation_instructions'");
+        assert!(schema_str.contains(instructions), "Should include our instructions literal");
+        assert!(schema_str.contains("\"required\" . to_string ()"), "Should define a 'required' key via to_string()");
+        assert!(schema_str.contains("serde_json :: Value :: Bool (false)"), "Should set 'required' to false in the snippet");
     }
 
+    #[tracing::instrument(level="trace", skip_all)]
     #[traced_test]
     fn string_schema_preserves_all_fields() {
-        trace!("Ensuring all expected fields exist in the output schema");
+        trace!("Ensuring all expected fields appear in the snippet output");
 
         let instructions = "Example field doc";
         let required = quote::quote!(true);
         let schema_ts = emit_schema_for_string(instructions, &required);
 
         let schema_str = schema_ts.to_string();
-        debug!(%schema_str, "Schema token stream as string");
+        debug!("Schema token stream as string: {}", schema_str);
 
-        let json_expr = schema_ts.to_string();
-        let parsed: serde_json::Value = serde_json::from_str(&json_expr.replace("# [", "\"").replace("]", "\"")).expect("Failed to parse schema");
-        info!("json_expr={:#?}",json_expr);
-        info!("parsed={:#?}",parsed);
-
-        assert!(parsed.get("type").is_some(), "Missing 'type' key");
-        assert!(parsed.get("generation_instructions").is_some(), "Missing 'generation_instructions' key");
-        assert!(parsed.get("required").is_some(), "Missing 'required' key");
+        // Check each key:
+        assert!(schema_str.contains("\"type\" . to_string ()"), "Missing 'type' key");
+        assert!(schema_str.contains("\"string\" . to_string ()"), "Missing 'string' type value");
+        assert!(schema_str.contains("\"generation_instructions\" . to_string ()"), "Missing 'generation_instructions' key");
+        assert!(schema_str.contains(instructions), "Should include instructions string");
+        assert!(schema_str.contains("\"required\" . to_string ()"), "Missing 'required' key");
+        assert!(schema_str.contains("serde_json :: Value :: Bool (true)"), "Missing 'required' = true");
     }
 }
