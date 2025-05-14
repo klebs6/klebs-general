@@ -25,7 +25,7 @@ pub fn list_all_addresses_in_pbf_dir<I:StorageInterface + 'static>(
     debug!("list_all_addresses_in_pbf_dir: found {} PBF files", pbf_files.len());
 
     // 2) Identify known regions.
-    let known_regions = dmv_regions();
+    let known_regions = known_regions();
     info!("list_all_addresses_in_pbf_dir: known regions: {:#?}", known_regions);
 
     // 3) Build a chained iterator of addresses from all recognized PBF files.
@@ -39,21 +39,26 @@ mod list_all_addresses_tests {
 
     // Asynchronous utility to create a corrupted .pbf file.
     async fn create_corrupt_pbf(path: &Path) {
+        info!("Creating corrupt PBF at {:?}", path);
         let mut f = tokio::fs::File::create(path).await.expect("create corrupt pbf");
         f.write_all(b"not a valid pbf").await.expect("write bytes");
+        debug!("Corrupt PBF created at {:?}", path);
     }
 
     // Asynchronous utility to create an empty .pbf file.
     async fn create_empty_pbf(path: &Path) {
+        info!("Creating empty PBF at {:?}", path);
         tokio::fs::File::create(path).await.expect("create empty pbf");
+        debug!("Empty PBF created at {:?}", path);
     }
 
     #[traced_test]
     async fn test_list_all_addresses_empty_dir() {
+        info!("Testing list_all_addresses_in_pbf_dir with an empty directory");
         let temp_dir = TempDir::new().unwrap();
         let db = Database::open(&temp_dir).expect("DB should open");
         // No .pbf files => the returned iterator is empty.
-        let result = list_all_addresses_in_pbf_dir(temp_dir.path(),db);
+        let result = list_all_addresses_in_pbf_dir(temp_dir.path(), db);
         assert!(result.is_ok(), "Should not fail scanning an empty dir");
         let iter = result.unwrap();
         assert_eq!(iter.count(), 0, "No pbf => no addresses");
@@ -61,33 +66,39 @@ mod list_all_addresses_tests {
 
     #[traced_test]
     async fn test_list_all_addresses_no_matching_filenames() {
+        info!("Testing list_all_addresses_in_pbf_dir with no recognized region filenames");
         let temp_dir = TempDir::new().unwrap();
         let db = Database::open(&temp_dir).expect("DB should open");
 
         // Create a file not recognized by find_region_for_file, e.g. "unknown-latest.osm.pbf".
         let unknown_path = temp_dir.path().join("unknown-latest.osm.pbf");
+        info!("Creating unknown-latest.osm.pbf at {:?}", unknown_path);
         {
             let mut f = tokio::fs::File::create(&unknown_path).await.unwrap();
             f.write_all(b"fake").await.unwrap();
         }
+        debug!("Finished writing 'fake' data to unknown-latest.osm.pbf");
 
         // The file is recognized as .pbf, but region determination fails => skip.
-        let result = list_all_addresses_in_pbf_dir(temp_dir.path(),db).unwrap();
+        let result = list_all_addresses_in_pbf_dir(temp_dir.path(), db).unwrap();
         let items: Vec<_> = result.collect();
         assert_eq!(items.len(), 0, "No recognized region => skip => zero addresses");
     }
 
     #[traced_test]
     fn test_list_all_addresses_corrupted_pbf() {
+        info!("Testing list_all_addresses_in_pbf_dir with a corrupted California PBF");
         let temp_dir = TempDir::new().unwrap();
         let db = Database::open(&temp_dir).expect("DB should open");
-        let pbf_path = temp_dir.path().join("maryland-latest.osm.pbf");
+        let pbf_path = temp_dir.path().join("california-latest.osm.pbf");
+        debug!("Creating corrupt PBF at {:?}", pbf_path);
+
         {
             let rt = Runtime::new().unwrap();
             rt.block_on(create_corrupt_pbf(&pbf_path));
         }
 
-        let result_iter = list_all_addresses_in_pbf_dir(temp_dir.path(),db).unwrap();
+        let result_iter = list_all_addresses_in_pbf_dir(temp_dir.path(), db).unwrap();
 
         // We expect the iterator to yield at least one error.
         let mut iter = result_iter;
@@ -107,15 +118,18 @@ mod list_all_addresses_tests {
 
     #[traced_test]
     fn test_list_all_addresses_zero_length_pbf() {
+        info!("Testing list_all_addresses_in_pbf_dir with a zero-length Texas PBF");
         let temp_dir = TempDir::new().unwrap();
         let db = Database::open(&temp_dir).expect("DB should open");
-        let pbf_path = temp_dir.path().join("virginia-latest.osm.pbf");
+        let pbf_path = temp_dir.path().join("texas-latest.osm.pbf");
+
         {
             let rt = Runtime::new().unwrap();
             rt.block_on(create_empty_pbf(&pbf_path));
         }
-        let result_iter = list_all_addresses_in_pbf_dir(temp_dir.path(),db).unwrap();
+        let result_iter = list_all_addresses_in_pbf_dir(temp_dir.path(), db).unwrap();
         let collected: Vec<_> = result_iter.collect();
+
         if collected.is_empty() {
             debug!("Zero-length file => no addresses, acceptable");
         } else {
@@ -127,21 +141,26 @@ mod list_all_addresses_tests {
 
     #[traced_test]
     fn test_list_all_addresses_multiple_files_mixture() {
+        info!("Testing list_all_addresses_in_pbf_dir with multiple corrupt PBF files (California & Texas)");
         let temp_dir = TempDir::new().unwrap();
         let db = Database::open(&temp_dir).expect("DB should open");
-        let md_path = temp_dir.path().join("maryland-latest.osm.pbf");
-        let va_path = temp_dir.path().join("virginia-latest.osm.pbf");
+        let ca_path = temp_dir.path().join("california-latest.osm.pbf");
+        let tx_path = temp_dir.path().join("texas-latest.osm.pbf");
         {
             let rt = Runtime::new().unwrap();
-            rt.block_on(create_corrupt_pbf(&md_path));
-            rt.block_on(create_corrupt_pbf(&va_path));
+            rt.block_on(create_corrupt_pbf(&ca_path));
+            rt.block_on(create_corrupt_pbf(&tx_path));
         }
-        let iter = list_all_addresses_in_pbf_dir(temp_dir.path(),db).unwrap();
+        debug!("Both California & Texas PBF files are corrupted");
+
+        let iter = list_all_addresses_in_pbf_dir(temp_dir.path(), db).unwrap();
         let results: Vec<_> = iter.collect();
-        assert_eq!(results.len(), 2, "two .pbf files should yield two parse errors");
+        assert_eq!(results.len(), 2, "two .pbf files => two parse results/errors");
         for res in results {
             match res {
-                Err(OsmPbfParseError::OsmPbf(_)) => {}
+                Err(OsmPbfParseError::OsmPbf(_)) => {
+                    debug!("Got expected parse error from corrupted file");
+                }
                 other => panic!("Expected parse error, got: {:?}", other),
             }
         }

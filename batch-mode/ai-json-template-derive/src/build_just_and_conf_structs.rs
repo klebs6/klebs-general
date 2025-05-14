@@ -1,6 +1,9 @@
 // ---------------- [ File: ai-json-template-derive/src/build_just_and_conf_structs.rs ]
 crate::ix!();
 
+/// Builds the “justification” and “confidence” structs as token streams.
+/// Any `errs` (like compile_error!) are spliced in first.
+/// The fields are appended inside each struct.
 pub fn build_just_and_conf_structs(
     justification_ident: &syn::Ident,
     confidence_ident: &syn::Ident,
@@ -45,8 +48,8 @@ mod test_build_just_and_conf_structs_exhaustively {
     use super::*;
     use quote::ToTokens;
     use syn::{
-        parse2, File, Item, ItemMacro, ItemStruct, Field, Attribute, Meta,
-        Fields, Type, Visibility,
+        parse2, File, Item, ItemMacro, ItemStruct, Field, Attribute,
+        Fields, Type, Visibility, Path, token, punctuated::Punctuated
     };
     use tracing::{trace, debug, info};
 
@@ -67,7 +70,7 @@ mod test_build_just_and_conf_structs_exhaustively {
     fn has_compile_error_top_level(ast: &File, expected_msg: &str) -> bool {
         for item in &ast.items {
             if let Item::Macro(ItemMacro { mac, .. }) = item {
-                // For example: `compile_error!("some message")`
+                // e.g. `compile_error!("some message")`
                 if mac.path.is_ident("compile_error") {
                     let token_str = mac.tokens.to_string();
                     if token_str.contains(expected_msg) {
@@ -79,32 +82,28 @@ mod test_build_just_and_conf_structs_exhaustively {
         false
     }
 
-    /// Parse the `#[derive(...)]` attribute from a struct to see if it includes all required traits.
-    /// In syn 2.x, `Attribute` has `meta: Option<Meta>`. If `meta` is `Some(Meta::List(list))`,
-    /// we can parse nested metas using `list.parse_nested_meta(...)`.
-    fn assert_derive_traits(attrs: &[syn::Attribute], struct_name: &str, required_traits: &[&str]) {
-        use syn::{Meta, MetaList};
+    /// Parse `#[derive(...)]` attributes in syn 2.x by calling `attr.parse_args_with(...)`
+    /// if `attr.path()` is `"derive"`. We collect each trait name from e.g. `#[derive(Debug,Clone)]`.
+    fn assert_derive_traits(attrs: &[Attribute], struct_name: &str, required_traits: &[&str]) {
         let mut found_any_derive = false;
-        let mut found_traits: Vec<String> = Vec::new();
+        let mut found_traits = Vec::new();
 
         for attr in attrs {
-            // `attr.meta` is Option<Meta> in syn 2.x
-            if let Some(meta) = &attr.meta {
-                // e.g. #[derive(...)]
-                if let Meta::List(meta_list) = meta {
-                    // Check if it's actually `#[derive(...)]`
-                    if meta_list.path.is_ident("derive") {
-                        found_any_derive = true;
+            // Check if attribute is `#[derive(...)]`
+            if attr.path().is_ident("derive") {
+                found_any_derive = true;
 
-                        // Use parse_nested_meta to get each nested item, e.g. Builder, Debug, etc.
-                        meta_list.parse_nested_meta(|nested| {
-                            // `nested` is a ParseNestedMeta struct in syn 2.x
-                            // If you want the path ident, do:
-                            if let Some(ident) = nested.path.get_ident() {
-                                found_traits.push(ident.to_string());
-                            }
-                            Ok(())
-                        }).ok(); // Ignore errors
+                // Parse comma-separated list of paths, e.g. `Debug, Clone, PartialEq`
+                // Each path might have multiple segments, but typically is just e.g. `Debug`.
+                let parsed: syn::Result<Punctuated<Path, token::Comma>> =
+                    attr.parse_args_with(Punctuated::parse_terminated);
+
+                if let Ok(punct_paths) = parsed {
+                    for p in punct_paths {
+                        // If something like `std::fmt::Debug`, the last segment is `Debug`.
+                        if let Some(final_seg) = p.segments.last() {
+                            found_traits.push(final_seg.ident.to_string());
+                        }
                     }
                 }
             }
@@ -115,6 +114,7 @@ mod test_build_just_and_conf_structs_exhaustively {
             "No #[derive(...)] attribute found on struct {struct_name}"
         );
 
+        // Check each required trait is present
         for &trait_name in required_traits {
             assert!(
                 found_traits.iter().any(|t| t == trait_name),
@@ -123,8 +123,8 @@ mod test_build_just_and_conf_structs_exhaustively {
         }
     }
 
-    /// Confirm that a struct has exactly `expected_fields.len()` fields,
-    /// each with the matching `(name, type_substring)` pair.
+    /// Confirm that `item_struct` has exactly `expected_fields.len()` fields,
+    /// each matching `(field_name, type_substring)`.
     fn assert_struct_fields(
         item_struct: &ItemStruct,
         expected_fields: &[(&str, &str)],
@@ -134,44 +134,46 @@ mod test_build_just_and_conf_structs_exhaustively {
             panic!("Struct {} does not have named fields!", struct_name);
         };
 
-        let actual = named.named.iter().collect::<Vec<_>>();
+        let actual_fields = named.named.iter().collect::<Vec<_>>();
         assert_eq!(
-            actual.len(),
+            actual_fields.len(),
             expected_fields.len(),
             "Expected {} fields in struct {}, found {}",
             expected_fields.len(),
             struct_name,
-            actual.len()
+            actual_fields.len()
         );
 
-        for (i, (exp_name, exp_type)) in expected_fields.iter().enumerate() {
-            let Field { ident, ty, vis, .. } = actual[i];
-            let name_found = ident.as_ref().map(|x| x.to_string()).unwrap_or_default();
+        for (i, (exp_name, exp_type_substr)) in expected_fields.iter().enumerate() {
+            let Field { ident, ty, vis, .. } = actual_fields[i];
+            let name_found = ident.as_ref().map(|id| id.to_string()).unwrap_or_default();
             assert_eq!(
                 name_found, *exp_name,
                 "Expected field name '{}' but found '{}'",
                 exp_name, name_found
             );
+
             // Check the type substring
             let type_str = ty.to_token_stream().to_string();
             assert!(
-                type_str.contains(exp_type),
+                type_str.contains(exp_type_substr),
                 "Field '{}' in struct '{}': expected type containing '{}', got '{}'",
-                exp_name, struct_name, exp_type, type_str
+                exp_name, struct_name, exp_type_substr, type_str
             );
-            // In your code you said "we do not want pub fields". If so, check the Visibility:
+
+            // Ensure fields are not pub
             match vis {
-                Visibility::Inherited => { /* OK, it's not pub */ }
-                _ => panic!("Field '{}' in {} is not inherited (private). Found: {:?}", exp_name, struct_name, vis),
+                Visibility::Inherited => { /* good, it's private (not pub) */ }
+                _ => panic!("Field '{}' in {} is not private. Found: {:?}", exp_name, struct_name, vis),
             }
         }
     }
 
-    // --------------------------------------------------
-    //  TESTS
-    // --------------------------------------------------
+    // -----------------------------------------------------------------
+    //                         TESTS
+    // -----------------------------------------------------------------
 
-    #[traced_test]
+    #[test]
     fn test_empty_fields_no_error_tokens() {
         info!("test_empty_fields_no_error_tokens");
         let justification_ident = syn::Ident::new("EmptyJustification", proc_macro2::Span::call_site());
@@ -179,7 +181,7 @@ mod test_build_just_and_conf_structs_exhaustively {
 
         let errs = quote::quote! {};
         let justification_fields = vec![];
-        let confidence_fields    = vec![];
+        let confidence_fields = vec![];
 
         let (just_ts, conf_ts) = build_just_and_conf_structs(
             &justification_ident,
@@ -189,12 +191,10 @@ mod test_build_just_and_conf_structs_exhaustively {
             &confidence_fields
         );
 
-        let just_ast: File = parse2(just_ts.clone())
-            .expect("Justification tokens parse error");
-        let conf_ast: File = parse2(conf_ts.clone())
-            .expect("Confidence tokens parse error");
+        let just_ast: File = parse2(just_ts.clone()).expect("Justification parse error");
+        let conf_ast: File = parse2(conf_ts.clone()).expect("Confidence parse error");
 
-        // Justification struct => no fields
+        // Check justification struct
         let js_struct = find_struct_by_name(&just_ast, "EmptyJustification");
         assert_struct_fields(js_struct, &[], "EmptyJustification");
         assert_derive_traits(
@@ -202,10 +202,12 @@ mod test_build_just_and_conf_structs_exhaustively {
             "EmptyJustification",
             &["Builder","Debug","Clone","PartialEq","Default","Serialize","Deserialize","Getters","Setters"]
         );
-        // No compile_error
-        assert!(!has_compile_error_top_level(&just_ast, ""), "Found unexpected compile_error in justification snippet!");
+        assert!(
+            !has_compile_error_top_level(&just_ast, ""),
+            "Found unexpected compile_error! in justification snippet"
+        );
 
-        // Confidence struct => no fields
+        // Check confidence struct
         let cf_struct = find_struct_by_name(&conf_ast, "EmptyConfidence");
         assert_struct_fields(cf_struct, &[], "EmptyConfidence");
         assert_derive_traits(
@@ -213,10 +215,13 @@ mod test_build_just_and_conf_structs_exhaustively {
             "EmptyConfidence",
             &["Builder","Debug","Clone","PartialEq","Default","Serialize","Deserialize","Getters","Setters"]
         );
-        assert!(!has_compile_error_top_level(&conf_ast, ""), "Found unexpected compile_error in confidence snippet!");
+        assert!(
+            !has_compile_error_top_level(&conf_ast, ""),
+            "Found unexpected compile_error! in confidence snippet"
+        );
     }
 
-    #[traced_test]
+    #[test]
     fn test_populated_fields_no_error_tokens() {
         info!("test_populated_fields_no_error_tokens");
         let justification_ident = syn::Ident::new("PopulatedJustification", proc_macro2::Span::call_site());
@@ -240,10 +245,10 @@ mod test_build_just_and_conf_structs_exhaustively {
             &confidence_fields
         );
 
-        let just_ast: File = parse2(just_ts.clone()).expect("Justification parse");
-        let conf_ast: File = parse2(conf_ts.clone()).expect("Confidence parse");
+        let just_ast: File = syn::parse2(just_ts.clone()).expect("Justification parse");
+        let conf_ast: File = syn::parse2(conf_ts.clone()).expect("Confidence parse");
 
-        // Justification
+        // Justification struct check
         let js_struct = find_struct_by_name(&just_ast, "PopulatedJustification");
         assert_struct_fields(
             js_struct,
@@ -258,9 +263,12 @@ mod test_build_just_and_conf_structs_exhaustively {
             "PopulatedJustification",
             &["Builder","Debug","Clone","PartialEq","Default","Serialize","Deserialize","Getters","Setters"]
         );
-        assert!(!has_compile_error_top_level(&just_ast, "Simulated"), "Unexpected compile_error in justification snippet!");
+        assert!(
+            !has_compile_error_top_level(&just_ast, "Simulated"),
+            "Unexpected compile_error in justification"
+        );
 
-        // Confidence
+        // Confidence struct check
         let cf_struct = find_struct_by_name(&conf_ast, "PopulatedConfidence");
         assert_struct_fields(
             cf_struct,
@@ -275,18 +283,23 @@ mod test_build_just_and_conf_structs_exhaustively {
             "PopulatedConfidence",
             &["Builder","Debug","Clone","PartialEq","Default","Serialize","Deserialize","Getters","Setters"]
         );
-        assert!(!has_compile_error_top_level(&conf_ast, "Simulated"), "Unexpected compile_error in confidence snippet!");
+        assert!(
+            !has_compile_error_top_level(&conf_ast, "Simulated"),
+            "Unexpected compile_error in confidence"
+        );
     }
 
-    #[traced_test]
+    #[test]
     fn test_with_error_tokens() {
         info!("test_with_error_tokens");
         let justification_ident = syn::Ident::new("ErrorfulJustification", proc_macro2::Span::call_site());
         let confidence_ident    = syn::Ident::new("ErrorfulConfidence",    proc_macro2::Span::call_site());
 
+        // Suppose we inject a compile_error into both
         let errs = quote::quote! {
             compile_error!("Simulated error from prior step.");
         };
+
         let justification_fields = vec![
             quote::quote! { j1: String, },
         ];
@@ -302,34 +315,43 @@ mod test_build_just_and_conf_structs_exhaustively {
             &confidence_fields
         );
 
-        let just_ast: File = parse2(just_ts.clone()).expect("Justification parse");
-        let conf_ast: File = parse2(conf_ts.clone()).expect("Confidence parse");
+        let just_ast: File = parse2(just_ts.clone()).expect("Just parse");
+        let conf_ast: File = parse2(conf_ts.clone()).expect("Conf parse");
 
-        // Justification: should have compile_error
+        // Justification => must have compile_error
         assert!(
             has_compile_error_top_level(&just_ast, "Simulated error from prior step."),
             "Expected compile_error in justification snippet"
         );
         let js_struct = find_struct_by_name(&just_ast, "ErrorfulJustification");
-        assert_struct_fields(js_struct, &[("j1","String")], "ErrorfulJustification");
+        assert_struct_fields(
+            js_struct,
+            &[("j1","String")],
+            "ErrorfulJustification"
+        );
         assert_derive_traits(
             &js_struct.attrs,
             "ErrorfulJustification",
             &["Builder","Debug","Clone","PartialEq","Default","Serialize","Deserialize","Getters","Setters"]
         );
 
-        // Confidence: If your code re-injects the same errs, it also contains compile_error. 
-        // Or maybe not: check if it does, or not. We'll skip for demonstration:
+        // Confidence => also check fields, derive, etc.
         let cf_struct = find_struct_by_name(&conf_ast, "ErrorfulConfidence");
-        assert_struct_fields(cf_struct, &[("c1","i64")], "ErrorfulConfidence");
+        assert_struct_fields(
+            cf_struct,
+            &[("c1","i64")],
+            "ErrorfulConfidence"
+        );
         assert_derive_traits(
             &cf_struct.attrs,
             "ErrorfulConfidence",
             &["Builder","Debug","Clone","PartialEq","Default","Serialize","Deserialize","Getters","Setters"]
         );
+        // If you want the same compile_error in confidence, also do:
+        // assert!(has_compile_error_top_level(&conf_ast, "Simulated error from prior step."));
     }
 
-    #[traced_test]
+    #[test]
     fn test_minimal_overall_validity() {
         info!("test_minimal_overall_validity");
         let justification_ident = syn::Ident::new("MixedJustification", proc_macro2::Span::call_site());
@@ -375,7 +397,7 @@ mod test_build_just_and_conf_structs_exhaustively {
             &["Builder","Debug","Clone","PartialEq","Default","Serialize","Deserialize","Getters","Setters"]
         );
 
-        // Confidence => also has fields, check them
+        // Confidence => fields + maybe the same compile_error
         let cf_struct = find_struct_by_name(&conf_ast, "MixedConfidence");
         assert_struct_fields(
             cf_struct,
@@ -387,7 +409,7 @@ mod test_build_just_and_conf_structs_exhaustively {
             "MixedConfidence",
             &["Builder","Debug","Clone","PartialEq","Default","Serialize","Deserialize","Getters","Setters"]
         );
-        // If your code injects the same compile_error in confidence, test that too:
-        // assert!(has_compile_error_top_level(&conf_ast, "Mixed scenario error"), "... ");
+        // If you re-inject the same compile_error on confidence, test that too:
+        // assert!(has_compile_error_top_level(&conf_ast, "Mixed scenario error"));
     }
 }

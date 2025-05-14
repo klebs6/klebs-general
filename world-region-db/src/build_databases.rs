@@ -1,6 +1,74 @@
 // ---------------- [ File: src/dmv.rs ]
 crate::ix!();
 
+/// Builds (or updates) a RocksDB database with California data, downloading
+/// the OSM PBF into `pbf_dir` if necessary.
+///
+/// Returns the opened database handle upon success.
+pub async fn build_ca_database<I: StorageInterface>(
+    db_path: impl AsRef<Path> + Send + Sync,
+    pbf_dir: impl AsRef<Path> + Send + Sync,
+) -> Result<Arc<Mutex<I>>, WorldCityAndStreetDbBuilderError>
+{
+    trace!("Attempting to open or create database at {:?}", db_path.as_ref());
+    let db = I::open(db_path)?;
+
+    {
+        let mut db_guard = match db.lock() {
+            Ok(g) => g,
+            Err(_) => {
+                error!("Database lock poisoned for California build operation");
+                return Err(WorldCityAndStreetDbBuilderError::DbLockError);
+            }
+        };
+
+        info!("Loading California regions");
+        let regions = ca_regions();
+        for region in regions {
+            info!("Downloading and parsing region: {:?}", region);
+            download_and_parse_region(&region, &pbf_dir, &mut *db_guard, true).await?;
+            debug!("Finished region: {:?}", region);
+        }
+    }
+
+    info!("Successfully built/updated California database");
+    Ok(db)
+}
+
+/// Builds (or updates) a RocksDB database with Texas data, downloading
+/// the OSM PBF into `pbf_dir` if necessary.
+///
+/// Returns the opened database handle upon success.
+pub async fn build_tx_database<I: StorageInterface>(
+    db_path: impl AsRef<Path> + Send + Sync,
+    pbf_dir: impl AsRef<Path> + Send + Sync,
+) -> Result<Arc<Mutex<I>>, WorldCityAndStreetDbBuilderError>
+{
+    trace!("Attempting to open or create database at {:?}", db_path.as_ref());
+    let db = I::open(db_path)?;
+
+    {
+        let mut db_guard = match db.lock() {
+            Ok(g) => g,
+            Err(_) => {
+                error!("Database lock poisoned for Texas build operation");
+                return Err(WorldCityAndStreetDbBuilderError::DbLockError);
+            }
+        };
+
+        info!("Loading Texas regions");
+        let regions = tx_regions();
+        for region in regions {
+            info!("Downloading and parsing region: {:?}", region);
+            download_and_parse_region(&region, &pbf_dir, &mut *db_guard, true).await?;
+            debug!("Finished region: {:?}", region);
+        }
+    }
+
+    info!("Successfully built/updated Texas database");
+    Ok(db)
+}
+
 /// Builds (or updates) a RocksDB database with DC/MD/VA data, downloading
 /// each region’s OSM PBF into `pbf_dir` if necessary.
 ///
@@ -25,6 +93,38 @@ pub async fn build_dmv_database<I:StorageInterface>(
 
         // All DC/MD/VA
         let regions = dmv_regions();
+        for region in regions {
+            // This checks if region_done(...) first, so we can just always call it:
+            download_and_parse_region(&region, &pbf_dir, &mut *db_guard, true).await?;
+        }
+    }
+
+    Ok(db)
+}
+
+/// Builds (or updates) a RocksDB database with DC/MD/VA data, downloading
+/// each region’s OSM PBF into `pbf_dir` if necessary.
+///
+/// Returns the opened database handle upon success.
+pub async fn build_full_database<I:StorageInterface>(
+    db_path: impl AsRef<Path> + Send + Sync,
+    pbf_dir: impl AsRef<Path> + Send + Sync,
+) -> Result<Arc<Mutex<I>>, WorldCityAndStreetDbBuilderError> 
+{
+    // 1) Open (or create) the DB
+    let db = I::open(db_path)?;
+
+    // 2) For each DMV region, try to parse if not already done
+    {
+        let mut db_guard = match db.lock() {
+            Ok(g) => g,
+            Err(_) => {
+                // Lock is poisoned
+                return Err(WorldCityAndStreetDbBuilderError::DbLockError);
+            }
+        };
+
+        let regions = known_regions();
         for region in regions {
             // This checks if region_done(...) first, so we can just always call it:
             download_and_parse_region(&region, &pbf_dir, &mut *db_guard, true).await?;
@@ -67,15 +167,9 @@ pub async fn build_va_database<I:StorageInterface>(
     Ok(db)
 }
 
-
 #[cfg(test)]
-mod dmv_database_tests {
+mod build_database_tests {
     use super::*;
-    use std::path::PathBuf;
-    use std::sync::Arc;
-    use std::sync::Mutex;
-    use tempfile::TempDir;
-    use tokio::runtime::Runtime;
 
     /// Helper function that, for each region in the given slice, creates an empty tiny OSM PBF file in `pbf_dir`
     /// with the expected filename. Here we use `create_tiny_osm_pbf` (which produces a file without housenumber).
@@ -97,6 +191,61 @@ mod dmv_database_tests {
     {
         let meta_key = crate::meta_key::MetaKeyForRegion::from(*region);
         db.get(meta_key.key().as_bytes()).unwrap().is_some()
+    }
+
+    #[traced_test]
+    #[disable]
+    async fn test_build_ca_database_success() {
+        info!("Testing build_ca_database with tiny PBF files for California");
+        let db_temp  = TempDir::new().expect("Could not create temporary directory for DB");
+        let pbf_temp = TempDir::new().expect("Could not create temporary directory for PBF files");
+
+        let db_path  = db_temp.path().to_path_buf();
+        let pbf_dir  = pbf_temp.path().to_path_buf();
+
+        let regions = ca_regions();
+        trace!("Regions for California: {:?}", regions);
+
+        // Create tiny OSM PBFs for each region
+        create_dummy_pbf_files_for_regions(&pbf_dir, &regions)
+            .await
+            .expect("Failed to create dummy PBF files for California");
+
+        let db_result = build_ca_database(db_path.clone(), pbf_dir.clone()).await;
+        assert!(db_result.is_ok(), "build_ca_database should succeed");
+        let db = db_result.unwrap();
+
+        {
+            let db_guard = db.lock().unwrap();
+            for region in &regions {
+                assert!(
+                    region_is_done(&db_guard, region),
+                    "Region {} should be marked done in the DB",
+                    region.abbreviation()
+                );
+            }
+        }
+    }
+
+    #[tokio::test]
+    async fn test_build_ca_database_failure_on_invalid_db_path() {
+        info!("Testing build_ca_database failure with invalid DB path");
+        let pbf_temp = TempDir::new().expect("Could not create temporary directory for PBF files");
+        let pbf_dir = pbf_temp.path().to_path_buf();
+
+        // Create a temporary file and use its path as the DB path (invalid).
+        let invalid_db_file = TempDir::new()
+            .expect("Failed to create temp dir")
+            .into_path()
+            .join("not_a_dir.txt");
+        std::fs::write(&invalid_db_file, b"this is a file, not a directory")
+            .expect("Failed to write to file");
+
+        let db_result = build_ca_database::<Database>(invalid_db_file, pbf_dir).await;
+        assert!(
+            db_result.is_err(),
+            "build_ca_database should fail on an invalid DB path"
+        );
     }
 
     #[traced_test]

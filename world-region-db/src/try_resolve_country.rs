@@ -20,10 +20,10 @@ mod test_try_resolve_country {
     use tracing::{trace, debug};
 
     /// A helper that returns a region that definitely maps to a valid country (if your code so defines).
-    /// For instance, `USRegion::UnitedState(UnitedState::Maryland).into()` typically corresponds to `Country::USA`.
+    /// For instance, `USRegion::UnitedState(UnitedState::Florida).into()` typically corresponds to `Country::USA`.
     fn valid_region() -> WorldRegion {
         // Adjust to something that your `Country::try_from` will accept
-        USRegion::UnitedState(UnitedState::Maryland).into()
+        USRegion::UnitedState(UnitedState::Florida).into()
     }
 
     #[traced_test]

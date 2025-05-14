@@ -5,7 +5,7 @@ crate::ix!();
 /// -------------------------------------------
 #[derive(Debug, Clone, Serialize, Deserialize, Getters, Builder)]
 #[getset(get = "pub")]
-#[builder(setter(into), default)]
+#[builder(setter(into))]
 pub struct Resistor {
     resistor_id:                    ResistorId,
     manufacturer_info:              Option<ManufacturerInfo>,
@@ -30,7 +30,7 @@ pub type VerificationRecordId = Uuid;
 /// -------------------------------------------
 #[derive(Debug, Clone, Serialize, Deserialize, Getters, Builder)]
 #[getset(get = "pub")]
-#[builder(setter(into), default)]
+#[builder(setter(into))]
 pub struct ManufacturerInfo {
     name:                   String,
     part_number:            String,
@@ -44,7 +44,7 @@ pub struct ManufacturerInfo {
 /// -------------------------------------------
 #[derive(Debug, Clone, Serialize, Deserialize, Getters, Builder)]
 #[getset(get = "pub")]
-#[builder(setter(into), default)]
+#[builder(setter(into))]
 pub struct ElectricalCharacteristics {
     nominal_resistance_ohms:            f64,
     tolerance_percent:                  f64,
@@ -60,7 +60,7 @@ pub struct ElectricalCharacteristics {
 /// -------------------------------------------
 #[derive(Debug, Clone, Serialize, Deserialize, Getters, Builder)]
 #[getset(get = "pub")]
-#[builder(setter(into), default)]
+#[builder(setter(into))]
 pub struct PhysicalDimensions {
     length_mm:          f64,
     diameter_mm:        f64,
@@ -75,7 +75,7 @@ pub struct PhysicalDimensions {
 /// -------------------------------------------
 #[derive(Debug, Clone, Serialize, Deserialize, Getters, Builder)]
 #[getset(get = "pub")]
-#[builder(setter(into), default)]
+#[builder(setter(into))]
 pub struct ThermalEnvironmentalCharacteristics {
     thermal_resistance_c_per_w: Option<f64>,
     max_operating_temp_c:       f64,
@@ -90,7 +90,7 @@ pub struct ThermalEnvironmentalCharacteristics {
 /// -------------------------------------------
 #[derive(Debug, Clone, Serialize, Deserialize, Getters, Builder)]
 #[getset(get = "pub")]
-#[builder(setter(into), default)]
+#[builder(setter(into))]
 pub struct FrequencyCharacteristics {
     max_operational_frequency_hz:   f64,
     self_inductance_henry:          Option<f64>,
@@ -102,7 +102,7 @@ pub struct FrequencyCharacteristics {
 /// -------------------------------------------
 #[derive(Debug, Clone, Serialize, Deserialize, Getters, Builder)]
 #[getset(get = "pub")]
-#[builder(setter(into), default)]
+#[builder(setter(into))]
 pub struct AgingCharacteristics {
     resistance_drift_per_year_ohms: Option<f64>,
     shelf_life_years:               Option<f64>,
@@ -114,7 +114,7 @@ pub struct AgingCharacteristics {
 /// -------------------------------------------
 #[derive(Debug, Clone, Serialize, Deserialize, Getters, Builder)]
 #[getset(get = "pub")]
-#[builder(setter(into), default)]
+#[builder(setter(into))]
 pub struct PerformanceCharacteristics {
     stability:              ResistorStability,
     life_expectancy:        ResistorLifeExpectancy,
@@ -127,7 +127,7 @@ pub struct PerformanceCharacteristics {
 /// -------------------------------------------
 #[derive(Debug, Clone, Serialize, Deserialize, Getters, Builder)]
 #[getset(get = "pub")]
-#[builder(setter(into), default)]
+#[builder(setter(into))]
 pub struct PackagingAssortment {
     availability:        AssortmentAvailability,
     values_per_decade:   u32,

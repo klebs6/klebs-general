@@ -82,29 +82,32 @@ mod build_all_region_data_tests {
 
     /// Helper that inserts a set of city names for a given region into DB
     /// under the `C2Z:` prefix, simulating how `load_all_cities_for_region(...)` fetches them.
-    fn insert_cities_for_region<I:StorageInterface>(
+    fn insert_cities_for_region<I: StorageInterface>(
         db:         &mut I,
         region:     &WorldRegion,
         city_names: &[&str],
     ) {
+        info!("Inserting cities for region {:?}: {:?}", region, city_names);
         for &c in city_names {
             let city = CityName::new(c).expect("valid CityName");
             let c2z_k = c2z_key(region, &city);
 
-            // We store a BTreeSet<PostalCode>, but can be empty if we only want city presence.
+            // We store a BTreeSet<PostalCode>, which may be empty if we only want city presence.
             let empty_postals: BTreeSet<PostalCode> = BTreeSet::new();
             db.put(c2z_k.as_bytes(), crate::compress_set_to_cbor(&empty_postals))
                 .expect("DB put success");
+            debug!("Inserted city '{}' into DB key '{}'", c, c2z_k);
         }
     }
 
     /// Helper that inserts a set of streets for a given region into DB
     /// under the `S2C:` prefix, simulating how `load_all_streets_for_region(...)` fetches them.
-    fn insert_streets_for_region<I:StorageInterface>(
+    fn insert_streets_for_region<I: StorageInterface>(
         db:           &mut I,
         region:       &WorldRegion,
         street_names: &[&str],
     ) {
+        info!("Inserting streets for region {:?}: {:?}", region, street_names);
         for &s in street_names {
             let street = StreetName::new(s).expect("valid StreetName");
             let s2c_k = s2c_key(region, &street);
@@ -113,6 +116,7 @@ mod build_all_region_data_tests {
             let empty_cities: BTreeSet<CityName> = BTreeSet::new();
             db.put(s2c_k.as_bytes(), crate::compress_set_to_cbor(&empty_cities))
                 .expect("DB put success");
+            debug!("Inserted street '{}' into DB key '{}'", s, s2c_k);
         }
     }
 
@@ -120,6 +124,7 @@ mod build_all_region_data_tests {
     // => the returned map should be empty
     #[traced_test]
     fn test_build_all_region_data_empty_done_regions() {
+        info!("Testing build_all_region_data with empty done_regions");
         let (db_arc, _tmp) = create_temp_db::<Database>();
         let db_guard = db_arc.lock().unwrap();
 
@@ -131,10 +136,12 @@ mod build_all_region_data_tests {
     // 2) Single region with no city/street => yields empty city_vec & street_vec
     #[traced_test]
     fn test_build_all_region_data_single_region_no_data() {
+        info!("Testing single-region case (no data) with Tennessee");
         let (db_arc, _tmp) = create_temp_db::<Database>();
         let db_guard = db_arc.lock().unwrap();
 
-        let region = WorldRegion::default(); // e.g. USRegion::UnitedState(UnitedState::Maryland)
+        // e.g. "tn"
+        let region = USRegion::UnitedState(UnitedState::Tennessee).into();
         let done_regions = vec![region];
 
         // No city or street data inserted.
@@ -155,14 +162,15 @@ mod build_all_region_data_tests {
     // 5) Partial data for a region => e.g. some city keys exist but no street keys
     #[traced_test]
     fn test_build_all_region_data_partial_region_data() {
+        info!("Testing partial region data for Tennessee");
         let (db_arc, _tmp) = create_temp_db::<Database>();
         let mut db_guard = db_arc.lock().unwrap();
 
-        let region = USRegion::UnitedState(UnitedState::Maryland).into();
+        let region = USRegion::UnitedState(UnitedState::Tennessee).into();
         let done_regions = vec![region];
 
-        // Insert city data => "Greenbelt", "Wheaton" but no street data
-        insert_cities_for_region(&mut *db_guard, &region, &["Greenbelt", "Wheaton"]);
+        // Insert city data => "Knoxville", "Chattanooga" but no street data
+        insert_cities_for_region(&mut *db_guard, &region, &["Knoxville", "Chattanooga"]);
 
         // Now build
         let result_map = build_all_region_data(&*db_guard, &done_regions);
@@ -170,97 +178,110 @@ mod build_all_region_data_tests {
 
         let region_data = result_map.get(&region).unwrap();
         // city => 2, street => 0
-        assert_eq!(region_data.cities(), &["greenbelt", "wheaton"]);
+        assert_eq!(region_data.cities(), &["chattanooga", "knoxville"]);
         assert!(region_data.streets().is_empty());
     }
 
     #[traced_test]
     fn test_build_all_region_data_single_region_some_data() {
+        info!("Testing single region with some data for Tennessee");
         let (db_arc, _tmp) = create_temp_db::<Database>();
         let mut db_guard = db_arc.lock().unwrap();
 
-        let region = USRegion::UnitedState(UnitedState::Maryland).into();
+        let region = USRegion::UnitedState(UnitedState::Tennessee).into();
         let done_regions = vec![region];
 
-        // Insert 3 city keys
-        insert_cities_for_region(&mut *db_guard, &region, &["Baltimore", "Rockville", "Bethesda"]);
+        // Insert 3 city keys => "Memphis", "Knoxville", "Nashville"
+        insert_cities_for_region(
+            &mut *db_guard,
+            &region,
+            &["Memphis", "Knoxville", "Nashville"],
+        );
 
-        // Insert 2 street keys => "Main Street", "Highway 1"
-        // even if each has an empty city set, 
-        // we want them to appear in the final 'streets' anyway.
-        insert_streets_for_region(&mut *db_guard, &region, &["Main Street", "Highway 1"]);
+        // Insert 2 street keys => "Beale St", "Broadway"
+        insert_streets_for_region(&mut *db_guard, &region, &["Beale St", "Broadway"]);
 
         let result_map = build_all_region_data(&*db_guard, &done_regions);
         assert_eq!(result_map.len(), 1);
 
         let region_data = result_map
             .get(&region)
-            .expect("region_data for MD must exist");
+            .expect("region_data for TN must exist");
 
         // 3 city names, normalized + sorted
         let city_list = region_data.cities();
-        assert_eq!(city_list, &["baltimore", "bethesda", "rockville"]);
+        assert_eq!(city_list, &["knoxville", "memphis", "nashville"]);
 
         // 2 street names, normalized + sorted
         let street_list = region_data.streets();
-        assert_eq!(street_list, &["highway 1", "main street"]);
+        assert_eq!(street_list, &["beale st", "broadway"]);
     }
 
     #[traced_test]
     fn test_build_all_region_data_multiple_regions() {
+        info!("Testing multiple-region scenario with Tennessee and Texas");
         let (db_arc, _tmp) = create_temp_db::<Database>();
         let mut db_guard = db_arc.lock().unwrap();
 
-        let region_md = USRegion::UnitedState(UnitedState::Maryland).into();
-        let region_va = USRegion::UnitedState(UnitedState::Virginia).into();
-        let done_regions = vec![region_md, region_va];
+        let region_tn = USRegion::UnitedState(UnitedState::Tennessee).into();
+        let region_tx = USRegion::UnitedState(UnitedState::Texas).into();
+        let done_regions = vec![region_tn, region_tx];
 
-        // MD
-        insert_cities_for_region(&mut *db_guard, &region_md, &["Annapolis"]);
-        insert_streets_for_region(&mut *db_guard, &region_md, &["North Avenue"]);
+        // Tennessee
+        insert_cities_for_region(&mut *db_guard, &region_tn, &["Memphis"]);
+        insert_streets_for_region(&mut *db_guard, &region_tn, &["Beale St"]);
 
-        // VA
-        insert_cities_for_region(&mut *db_guard, &region_va, &["Arlington", "Reston"]);
-        insert_streets_for_region(&mut *db_guard, &region_va, &["Wilson Blvd", "Sunrise Valley Dr"]);
+        // Texas
+        insert_cities_for_region(&mut *db_guard, &region_tx, &["Dallas", "Austin"]);
+        insert_streets_for_region(
+            &mut *db_guard,
+            &region_tx,
+            &["Congress Ave", "Guadalupe St"],
+        );
 
         let result_map = build_all_region_data(&*db_guard, &done_regions);
         assert_eq!(result_map.len(), 2);
 
-        // MD => expect 1 city: "annapolis", 1 street: "north avenue"
+        // TN => expect 1 city: "memphis", 1 street: "beale st"
         {
-            let rd_md = result_map.get(&region_md).expect("MD entry");
-            assert_eq!(rd_md.cities(), &["annapolis"]);
-            assert_eq!(rd_md.streets(), &["north avenue"]);
+            let rd_tn = result_map.get(&region_tn).expect("TN entry");
+            assert_eq!(rd_tn.cities(), &["memphis"]);
+            assert_eq!(rd_tn.streets(), &["beale st"]);
         }
 
-        // VA => 2 city: "arlington", "reston", 2 street: "sunrise valley dr", "wilson blvd"
+        // TX => 2 cities: "austin", "dallas", 2 streets: "congress ave", "guadalupe st"
         {
-            let rd_va = result_map.get(&region_va).expect("VA entry");
-            assert_eq!(rd_va.cities(), &["arlington", "reston"]);
-            assert_eq!(rd_va.streets(), &["sunrise valley dr", "wilson blvd"]);
+            let rd_tx = result_map.get(&region_tx).expect("TX entry");
+            assert_eq!(rd_tx.cities(), &["austin", "dallas"]);
+            assert_eq!(rd_tx.streets(), &["congress ave", "guadalupe st"]);
         }
     }
 
     #[traced_test]
     fn test_build_all_region_data_sorting_and_dedup() {
+        info!("Testing city/street name sorting & dedup for Tennessee");
         let (db_arc, _tmp) = create_temp_db::<Database>();
         let mut db_guard = db_arc.lock().unwrap();
 
-        let region = USRegion::UnitedState(UnitedState::Maryland).into();
+        let region = USRegion::UnitedState(UnitedState::Tennessee).into();
         let done_regions = vec![region];
 
-        // city: "BALTIMORE", "baltimore", etc => all dedup to "baltimore"
-        insert_cities_for_region(&mut *db_guard, &region, &["BALTIMORE", "baltimore", "Baltimore"]);
-        // street: "MAIN street", "Main Street" => dedup to "main street"
-        insert_streets_for_region(&mut *db_guard, &region, &["MAIN street", "Main Street"]);
+        // city: "MEMPHIS", "memphis", "Memphis" => all dedup to "memphis"
+        insert_cities_for_region(
+            &mut *db_guard,
+            &region,
+            &["MEMPHIS", "memphis", "Memphis"],
+        );
+        // street: "BROADWAY", "BroadWay" => dedup to "broadway"
+        insert_streets_for_region(&mut *db_guard, &region, &["BROADWAY", "BroadWay"]);
 
         let result_map = build_all_region_data(&*db_guard, &done_regions);
         let rd = result_map.get(&region).expect("region data must exist");
 
-        // city => dedup to a single "baltimore"
-        assert_eq!(rd.cities(), &["baltimore"]);
+        // city => dedup to a single "memphis"
+        assert_eq!(rd.cities(), &["memphis"]);
 
-        // street => dedup to a single "main street"
-        assert_eq!(rd.streets(), &["main street"]);
+        // street => dedup to a single "broadway"
+        assert_eq!(rd.streets(), &["broadway"]);
     }
 }

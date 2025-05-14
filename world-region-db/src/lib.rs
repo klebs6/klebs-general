@@ -41,7 +41,7 @@ x!{create_tiny_osm_pbf_with_housenumber}
 x!{create_tiny_osm_pbf}
 x!{data_access}
 x!{db_decoder}
-x!{dmv}
+x!{build_databases}
 x!{download_and_parse_all_regions}
 x!{dump}
 x!{errors}
