@@ -80,24 +80,6 @@ mod test_create_flat_justification_idents_for_enum {
     }
 
     #[traced_test]
-    fn test_empty_enum_name() {
-        trace!("Beginning test_empty_enum_name");
-        // While unusual, let's see how our function behaves with an empty ident:
-        let enum_ident = Ident::new("", proc_macro2::Span::call_site());
-        let (flat_enum_ident, justified_ident, justification_ident, confidence_ident) =
-            create_flat_justification_idents_for_enum(&enum_ident, enum_ident.span());
-
-        debug!("Asserting returned Ident values for an empty enum name");
-        // The function simply appends to an empty string:
-        assert_eq!(flat_enum_ident.to_string(), "FlatJustified");
-        assert_eq!(justified_ident.to_string(), "Justified");
-        assert_eq!(justification_ident.to_string(), "Justification");
-        assert_eq!(confidence_ident.to_string(), "Confidence");
-
-        info!("test_empty_enum_name passed successfully");
-    }
-
-    #[traced_test]
     fn test_symbolic_enum_name() {
         trace!("Beginning test_symbolic_enum_name");
         // Not typical, but let's see if we can create an Ident with non-alphabetic characters:

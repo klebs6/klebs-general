@@ -11,20 +11,13 @@ pub fn build_hashmap_schema(
 {
     trace!("Entering build_hashmap_schema => K={:?}, V={:?}", k_ty, v_ty);
 
-    // If key=bool => compile_error!
-    if is_bool(k_ty) {
-        warn!("HashMap<bool, _> is unsupported => compile_error! snippet returned");
-        let ce: syn::Expr = syn::parse_quote! {
-            compile_error!("HashMap<bool, _> is not supported by AiJsonTemplateWithJustification")
-        };
-        return Some(quote::quote!(#ce));
-    }
-
     // Build the snippet for map_key_template
     let key_schema = if is_numeric(k_ty) {
         quote::quote!( serde_json::Value::String("number") )
     } else if is_string_type(k_ty) {
         quote::quote!( serde_json::Value::String("string") )
+    } else if is_bool(k_ty) {
+        quote::quote!( serde_json::Value::String("boolean") )
     } else {
         quote::quote! {
             {
@@ -271,7 +264,7 @@ mod test_build_hashmap_schema {
     }
 
     #[traced_test]
-    fn test_bool_key_error() {
+    fn test_bool_key_actually_legal() {
         trace!("Testing HashMap<bool, _> => compile_error! expected");
         let k_ty: syn::Type = syn::parse_quote!(bool);
         let v_ty: syn::Type = syn::parse_quote!(String);
@@ -286,10 +279,10 @@ mod test_build_hashmap_schema {
         debug!("bool_key_error => snippet:\n{}", snippet);
 
         let expr_ast = parse_expr_snippet(&snippet);
-        let found = contains_compile_error_invocation(&expr_ast);
+        let ce = contains_compile_error_invocation(&expr_ast);
         assert!(
-            found,
-            "Expected compile_error! invocation for bool-key scenario, but not found."
+            !ce,
+            "Expected no compile_error! invocation for bool-key scenario, but found one."
         );
     }
 

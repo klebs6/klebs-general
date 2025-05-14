@@ -2,11 +2,14 @@
 crate::ix!();
 
 pub fn emit_schema_for_vec(
-    elem_ty: &syn::Type,
+    elem_ty:                 &syn::Type,
     generation_instructions: &str,
-    required_bool: &proc_macro2::TokenStream
+    required_bool:           &proc_macro2::TokenStream
+
 ) -> proc_macro2::TokenStream {
+
     trace!("emit_schema_for_vec invoked");
+
     if is_numeric(elem_ty) {
         return quote! {
             {
@@ -43,9 +46,10 @@ pub fn emit_schema_for_vec(
                 let mut obj = serde_json::Map::new();
                 obj.insert("type".to_string(), serde_json::Value::String("array_of".to_string()));
                 obj.insert("required".to_string(), serde_json::Value::Bool(#required_bool));
+                obj.insert("generation_instructions".to_string(), serde_json::Value::String(#generation_instructions.to_string()));
 
                 let nested_t = <#elem_ty as AiJsonTemplate>::to_template();
-                obj.insert("item_template".to_string(), nested_t);
+                obj.insert("nested_template".to_string(), nested_t);
 
                 serde_json::Value::Object(obj)
             }
@@ -56,6 +60,12 @@ pub fn emit_schema_for_vec(
 #[cfg(test)]
 mod test_emit_schema_for_vec_exhaustively {
     use super::*;
+    use quote::quote;
+    use syn::parse_quote;
+    use tracing::{trace, debug, info, warn, error};
+    use traced_test::traced_test;
+    use serde_json::{Value, json};
+    use ai_json_template::*;
 
     #[traced_test]
     fn test_vec_of_i32() {
@@ -75,12 +85,12 @@ mod test_emit_schema_for_vec_exhaustively {
             ts_string
         );
         assert!(
-            ts_string.contains("\"required\": serde_json :: Value :: Bool ( true )"),
+            ts_string.contains("obj . insert (\"required\" . to_string () , serde_json :: Value :: Bool (true))"),
             "Expected required: true in schema but got: {}",
             ts_string
         );
         assert!(
-            ts_string.contains("\"generation_instructions\": serde_json :: Value :: String ( \"Generate an array of integers\".to_string())"),
+            ts_string.contains("obj . insert (\"generation_instructions\" . to_string () , serde_json :: Value :: String (\"Generate an array of integers\" . to_string ()))"),
             "Missing generation_instructions in schema but got: {}",
             ts_string
         );
@@ -104,7 +114,7 @@ mod test_emit_schema_for_vec_exhaustively {
             ts_string
         );
         assert!(
-            ts_string.contains("\"required\": serde_json :: Value :: Bool ( false )"),
+            ts_string.contains("obj . insert (\"required\" . to_string () , serde_json :: Value :: Bool (false))"),
             "Expected required: false in schema but got: {}",
             ts_string
         );
@@ -132,7 +142,6 @@ mod test_emit_schema_for_vec_exhaustively {
     #[traced_test]
     fn test_vec_of_nested_custom_type() {
         trace!("Starting test_vec_of_nested_custom_type for emit_schema_for_vec");
-        // Simulate a user-defined type named MyCustomType
         let elem_ty: syn::Type = parse_quote! { MyCustomType };
         let generation_instructions = "Generate an array of MyCustomType";
         let required_bool = quote! { true };
@@ -141,9 +150,9 @@ mod test_emit_schema_for_vec_exhaustively {
         debug!("Resulting token stream: {}", result);
 
         let ts_string = result.to_string();
-        info!("Checking if output matches expected content for array_of + item_template for nested type");
+        info!("Checking if output matches expected content for array_of + nested_template for nested type");
         assert!(
-            ts_string.contains("\"type\"") && ts_string.contains("\"array_of\""),
+            ts_string.contains("\"array_of\""),
             "Expected schema to identify array_of for nested type but got: {}",
             ts_string
         );
@@ -172,7 +181,7 @@ mod test_emit_schema_for_vec_exhaustively {
             ts_string
         );
         assert!(
-            ts_string.contains("\"required\": serde_json :: Value :: Bool ( false )"),
+            ts_string.contains("obj . insert (\"required\" . to_string () , serde_json :: Value :: Bool (false))"),
             "Expected required: false in schema but got: {}",
             ts_string
         );

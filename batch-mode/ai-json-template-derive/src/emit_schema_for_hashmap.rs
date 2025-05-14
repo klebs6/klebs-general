@@ -185,18 +185,18 @@ mod test_emit_schema_for_hashmap {
 
         debug!("Resulting token_stream: {}", actual_str);
 
-        // For a non-primitive value => "map_of" plus "nested_template"
+        // For a non-primitive value => "map_of" plus "map_value_template"
         assert!(
             actual_str.contains("\"map_of\""),
             "Expected 'map_of' for nested type, got:\n{}",
             actual_str
         );
         assert!(
-            actual_str.contains("nested_template"),
-            "Expected 'nested_template' property for nested type, got:\n{}",
+            actual_str.contains("map_value_template"),
+            "Expected 'map_value_template' property for nested type, got:\n{}",
             actual_str
         );
-        info!("Passed: nested user-defined type => 'map_of' with 'nested_template'");
+        info!("Passed: nested user-defined type => 'map_of' with 'map_value_template'");
     }
 
     #[traced_test]

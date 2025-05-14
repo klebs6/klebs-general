@@ -40,13 +40,12 @@ mod test_build_option_schema_exhaustive {
     #[traced_test]
     fn returns_none_for_unsupported_inner_type() {
         trace!("Starting test: returns_none_for_unsupported_inner_type");
-        // Using a known unsupported scenario, e.g. HashMap<bool, i32>,
-        // which classify_field_type_with_justification should reject.
-        let ty = parse_str::<syn::Type>("std::option::Option<std::collections::HashMap<bool, i32>>").unwrap();
+        // Use our dedicated "UnsupportedType" marker.
+        let ty = parse_str::<syn::Type>("Option<UnsupportedType>").unwrap();
         let result = build_option_schema(&ty, "doc for unsupported");
         assert!(
             result.is_none(),
-            "Expected None because HashMap<bool, _> should be unsupported!"
+            "Expected None because Option<UnsupportedType> should be unsupported!"
         );
     }
 

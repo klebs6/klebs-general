@@ -74,6 +74,8 @@ EXPANSION_TEST    := flat_justified_exhaustive
 
 INDIVIDUAL_TEST    := test_build_vec_schema
 INDIVIDUAL_TEST    := test_classify_field_type_with_justification
+INDIVIDUAL_TEST    := emit_schema_for_vec
+
 #----------------------------------------------[here are our rules]
 run:
 	RUSTFLAGS=$(RUSTFLAGS) $(CARGO) $(RUN) -p $(ACTIVE_PACKAGE) $(FEATURES)

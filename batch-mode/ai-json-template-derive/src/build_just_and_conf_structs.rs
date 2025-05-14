@@ -5,12 +5,14 @@ crate::ix!();
 /// Any `errs` (like compile_error!) are spliced in first.
 /// The fields are appended inside each struct.
 pub fn build_just_and_conf_structs(
-    justification_ident: &syn::Ident,
-    confidence_ident: &syn::Ident,
-    errs: &proc_macro2::TokenStream,
+    justification_ident:  &syn::Ident,
+    confidence_ident:     &syn::Ident,
+    errs:                 &proc_macro2::TokenStream,
     justification_fields: &[proc_macro2::TokenStream],
-    confidence_fields: &[proc_macro2::TokenStream],
+    confidence_fields:    &[proc_macro2::TokenStream],
+
 ) -> (proc_macro2::TokenStream, proc_macro2::TokenStream) {
+
     trace!(
         "Building justification/conf structs: '{}' and '{}'",
         justification_ident,
@@ -40,6 +42,7 @@ pub fn build_just_and_conf_structs(
         "Finished building struct tokens for '{}' and '{}'",
         justification_ident, confidence_ident
     );
+
     (just_ts, conf_ts)
 }
 

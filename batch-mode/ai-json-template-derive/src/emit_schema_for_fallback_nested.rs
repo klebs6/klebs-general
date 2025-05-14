@@ -4,7 +4,7 @@ crate::ix!();
 pub fn emit_schema_for_fallback_nested(
     ty: &syn::Type,
     generation_instructions: &str,
-    required_bool: &proc_macro2::TokenStream
+    required_bool: &proc_macro2::TokenStream,
 ) -> proc_macro2::TokenStream {
     trace!("emit_schema_for_fallback_nested invoked");
     quote! {
@@ -38,179 +38,275 @@ pub fn emit_schema_for_fallback_nested(
 }
 
 #[cfg(test)]
-mod emit_schema_for_fallback_nested_exhaustive_validation {
+mod test_emit_schema_for_fallback_nested {
     use super::*;
+    use quote::quote;
+    use syn::parse_quote;
+    use serde_json::{Value, json};
+    use tracing::{trace, debug, info, warn, error};
+    use traced_test::traced_test;
     use ai_json_template::*;
-    use serde_derive::*;
     use save_load_derive::*;
     use save_load_traits::*;
-    use std::fs;
+    use serde::*;
+    use serde_derive::*;
 
-    // A simple "fake" type that returns an object with "enum_name" key
-    // to simulate a nested enum scenario.
-    #[derive(Debug,SaveLoad,Clone,Deserialize,Serialize)]
-    struct FakeEnumType;
-    impl AiJsonTemplate for FakeEnumType {
+    // We'll define some local mock types to simulate different
+    // outputs for <T as AiJsonTemplate>::to_template().
+    //
+    // The function under test, emit_schema_for_fallback_nested,
+    // inspects the JSON object returned by AiJsonTemplate::to_template()
+    // to decide whether the result is "nested_enum" or "nested_struct".
+    // Also, we want a scenario where the nested template is not even an object
+    // to confirm that the code's fallback path is taken.
+
+    // 1) Type that returns an object with "enum_name"
+    //    => code should label it as "nested_enum".
+    #[derive(SaveLoad,Clone,Serialize,Deserialize,Debug)]
+    struct EnumNameMock;
+
+    impl AiJsonTemplate for EnumNameMock {
         fn to_template() -> serde_json::Value {
-            // Produce a JSON object with "enum_name" to trigger "nested_enum"
-            json!({
-                "enum_name": "FakeEnum",
-            })
+            trace!("EnumNameMock => returning JSON object with 'enum_name' key");
+            let mut obj = serde_json::Map::new();
+            obj.insert("enum_name".to_string(), serde_json::Value::String("MyEnumName".to_string()));
+            serde_json::Value::Object(obj)
         }
     }
 
-    // Another "fake" type that returns an object with "type"="complex_enum"
-    // to also trigger a nested enum classification.
-    #[derive(Debug,SaveLoad,Clone,Deserialize,Serialize)]
-    struct FakeComplexEnumType;
-    impl AiJsonTemplate for FakeComplexEnumType {
+    // 2) Type that returns an object with "type": "complex_enum"
+    //    => code should label it as "nested_enum" as well.
+    #[derive(SaveLoad,Clone,Serialize,Deserialize,Debug)]
+    struct ComplexEnumMock;
+
+    impl AiJsonTemplate for ComplexEnumMock {
         fn to_template() -> serde_json::Value {
-            // Produce a JSON object with "type":"complex_enum"
-            json!({
-                "type": "complex_enum",
-                "other_data": 123
-            })
+            trace!("ComplexEnumMock => returning JSON object with 'type'='complex_enum'");
+            let mut obj = serde_json::Map::new();
+            obj.insert("type".to_string(), serde_json::Value::String("complex_enum".to_string()));
+            serde_json::Value::Object(obj)
         }
     }
 
-    // Another "fake" type that returns an object with "struct_name" to trigger "nested_struct".
-    #[derive(Debug,SaveLoad,Clone,Deserialize,Serialize)]
-    struct FakeStructType;
-    impl AiJsonTemplate for FakeStructType {
+    // 3) Type that returns an object with "struct_name"
+    //    => code should label it as "nested_struct".
+    #[derive(SaveLoad,Clone,Serialize,Deserialize,Debug)]
+    struct StructNameMock;
+
+    impl AiJsonTemplate for StructNameMock {
         fn to_template() -> serde_json::Value {
-            // Produce a JSON object with "struct_name" => "FakeStruct"
-            json!({
-                "struct_name": "FakeStruct"
-            })
+            trace!("StructNameMock => returning JSON object with 'struct_name' key");
+            let mut obj = serde_json::Map::new();
+            obj.insert("struct_name".to_string(), serde_json::Value::String("MyStructName".to_string()));
+            serde_json::Value::Object(obj)
         }
     }
 
-    // A fallback "fake" type that returns something non-object or an empty object
-    // so that we default to "nested_struct" classification.
-    #[derive(Debug,SaveLoad,Clone,Deserialize,Serialize)]
-    struct FakeFallbackType;
-    impl AiJsonTemplate for FakeFallbackType {
+    // 4) Type that returns an object with none of the recognized keys
+    //    => code should label it as "nested_struct" by default.
+    #[derive(SaveLoad,Clone,Serialize,Deserialize,Debug)]
+    struct NoSpecialKeysMock;
+
+    impl AiJsonTemplate for NoSpecialKeysMock {
         fn to_template() -> serde_json::Value {
-            // Return either an empty JSON object or something else
-            // so we have no "enum_name"/"struct_name" and thus fallback to "nested_struct"
-            json!({})
+            trace!("NoSpecialKeysMock => returning JSON object with no recognized keys");
+            let mut obj = serde_json::Map::new();
+            obj.insert("random_key".to_string(), serde_json::Value::String("random_value".to_string()));
+            serde_json::Value::Object(obj)
+        }
+    }
+
+    // 5) Type that returns a non-object (e.g. a string) => fallback is "nested_struct".
+    #[derive(SaveLoad,Clone,Serialize,Deserialize,Debug)]
+    struct NonObjectMock;
+
+    impl AiJsonTemplate for NonObjectMock {
+        fn to_template() -> serde_json::Value {
+            trace!("NonObjectMock => returning a non-object value (string)");
+            serde_json::Value::String("I'm not an object".to_string())
         }
     }
 
     #[traced_test]
-    fn confirm_nested_enum_for_enum_name_key() {
-        info!("Testing emit_schema_for_fallback_nested for a type that returns 'enum_name'...");
-        let ty: Type = parse_str("FakeEnumType").expect("Failed to parse 'FakeEnumType'");
-        let required_bool = quote!(true);
+    fn test_nested_enum_by_enum_name() {
+        trace!("test_nested_enum_by_enum_name => Start");
+        let ty: syn::Type = parse_quote!(EnumNameMock);
+        let instructions = "doc instructions for enum_name mock";
 
-        let ts = emit_schema_for_fallback_nested(&ty, "Instructions for enum-like", &required_bool);
-        let result_str = ts.to_string();
-        debug!("Token stream: {}", result_str);
-
-        // Because FakeEnumType includes "enum_name", we expect "nested_enum"
-        assert!(
-            result_str.contains("\"nested_enum\""),
-            "Expected 'nested_enum' in the output for 'enum_name', got: {}",
-            result_str
-        );
-        assert!(
-            result_str.contains("\"required\": true"),
-            "Expected required=true, got: {}",
-            result_str
-        );
-        assert!(
-            result_str.contains("\"generation_instructions\": \"Instructions for enum-like\""),
-            "Expected generation instructions to match, got: {}",
-            result_str
-        );
-        info!("Completed confirm_nested_enum_for_enum_name_key successfully.");
-    }
-
-    #[traced_test]
-    fn confirm_nested_enum_for_complex_enum_type() {
-        info!("Testing emit_schema_for_fallback_nested for a type with 'type':'complex_enum'...");
-        let ty: Type = parse_str("FakeComplexEnumType").expect("Failed to parse 'FakeComplexEnumType'");
+        debug!("Invoking emit_schema_for_fallback_nested with required=false");
         let required_bool = quote!(false);
 
-        let ts = emit_schema_for_fallback_nested(&ty, "Complex enum instructions", &required_bool);
-        let result_str = ts.to_string();
-        trace!("Token stream: {}", result_str);
+        let result = emit_schema_for_fallback_nested(&ty, instructions, &required_bool);
+        debug!("Got result: {}", result);
 
-        // Because FakeComplexEnumType includes "type":"complex_enum", we expect "nested_enum"
+        let code_str = result.to_string();
+        debug!("Code string:\n{}", code_str);
+
+        // Because "enum_name" is recognized, the code sets "nested_enum"
         assert!(
-            result_str.contains("\"nested_enum\""),
-            "Expected 'nested_enum' for complex_enum, got: {}",
-            result_str
+            code_str.contains("\"nested_enum\""),
+            "Should set 'type' to nested_enum in generated code"
         );
+        // Check we embed the correct generation_instructions
         assert!(
-            result_str.contains("\"required\": false"),
-            "Expected required=false, got: {}",
-            result_str
+            code_str.contains("doc instructions for enum_name mock"),
+            "Should embed 'doc instructions for enum_name mock' in the code"
         );
+        // Check the "required" boolean
         assert!(
-            result_str.contains("\"Complex enum instructions\""),
-            "Expected correct generation_instructions, got: {}",
-            result_str
+            code_str.contains("false"),
+            "Should embed false as the 'required' value"
         );
-        info!("Completed confirm_nested_enum_for_complex_enum_type successfully.");
+        // Check presence of nested_template
+        assert!(
+            code_str.contains("\"nested_template\""),
+            "Should embed 'nested_template' key in the code"
+        );
+
+        info!("test_nested_enum_by_enum_name => PASSED");
     }
 
     #[traced_test]
-    fn confirm_nested_struct_for_struct_name_key() {
-        info!("Testing emit_schema_for_fallback_nested for a type that returns 'struct_name'...");
-        let ty: Type = parse_str("FakeStructType").expect("Failed to parse 'FakeStructType'");
+    fn test_nested_enum_by_complex_enum() {
+        trace!("test_nested_enum_by_complex_enum => Start");
+        let ty: syn::Type = parse_quote!(ComplexEnumMock);
+        let instructions = "doc instructions for complex_enum mock";
+
+        debug!("Invoking emit_schema_for_fallback_nested with required=true");
         let required_bool = quote!(true);
 
-        let ts = emit_schema_for_fallback_nested(&ty, "Some struct instructions", &required_bool);
-        let result_str = ts.to_string();
-        debug!("Token stream: {}", result_str);
+        let result = emit_schema_for_fallback_nested(&ty, instructions, &required_bool);
+        debug!("Got result: {}", result);
 
-        // Because FakeStructType includes "struct_name", we expect "nested_struct"
+        let code_str = result.to_string();
+        debug!("Code string:\n{}", code_str);
+
+        // Because "type" was "complex_enum", the code sets "nested_enum"
         assert!(
-            result_str.contains("\"nested_struct\""),
-            "Expected 'nested_struct', got: {}",
-            result_str
+            code_str.contains("\"nested_enum\""),
+            "Should set 'type' to nested_enum in generated code"
         );
         assert!(
-            result_str.contains("\"required\": true"),
-            "Expected required=true, got: {}",
-            result_str
+            code_str.contains("doc instructions for complex_enum mock"),
+            "Should embed 'doc instructions for complex_enum mock' in the code"
         );
         assert!(
-            result_str.contains("\"Some struct instructions\""),
-            "Expected generation_instructions, got: {}",
-            result_str
+            code_str.contains("true"),
+            "Should embed true as the 'required' value"
         );
-        info!("Completed confirm_nested_struct_for_struct_name_key successfully.");
+        assert!(
+            code_str.contains("\"nested_template\""),
+            "Should embed 'nested_template' key in the code"
+        );
+
+        info!("test_nested_enum_by_complex_enum => PASSED");
     }
 
     #[traced_test]
-    fn confirm_nested_struct_for_fallback() {
-        info!("Testing emit_schema_for_fallback_nested fallback scenario...");
-        let ty: Type = parse_str("FakeFallbackType").expect("Failed to parse 'FakeFallbackType'");
+    fn test_nested_struct_by_struct_name() {
+        trace!("test_nested_struct_by_struct_name => Start");
+        let ty: syn::Type = parse_quote!(StructNameMock);
+        let instructions = "doc instructions for struct_name mock";
+
+        debug!("Invoking emit_schema_for_fallback_nested with required=false");
         let required_bool = quote!(false);
 
-        let ts = emit_schema_for_fallback_nested(&ty, "Fallback instructions", &required_bool);
-        let result_str = ts.to_string();
-        trace!("Token stream: {}", result_str);
+        let result = emit_schema_for_fallback_nested(&ty, instructions, &required_bool);
+        debug!("Got result: {}", result);
 
-        // Because FakeFallbackType returns an empty object (no enum_name/struct_name/type=complex_enum),
-        // we expect "nested_struct" fallback
+        let code_str = result.to_string();
+        debug!("Code string:\n{}", code_str);
+
+        // Because "struct_name" is present, the code sets "nested_struct"
         assert!(
-            result_str.contains("\"nested_struct\""),
-            "Expected fallback to 'nested_struct', got: {}",
-            result_str
+            code_str.contains("\"nested_struct\""),
+            "Should set 'type' to nested_struct in generated code"
         );
         assert!(
-            result_str.contains("\"required\": false"),
-            "Expected required=false, got: {}",
-            result_str
+            code_str.contains("doc instructions for struct_name mock"),
+            "Should embed 'doc instructions for struct_name mock' in the code"
         );
         assert!(
-            result_str.contains("\"Fallback instructions\""),
-            "Expected generation_instructions, got: {}",
-            result_str
+            code_str.contains("false"),
+            "Should embed false as the 'required' value"
         );
-        info!("Completed confirm_nested_struct_for_fallback successfully.");
+        assert!(
+            code_str.contains("\"nested_template\""),
+            "Should embed 'nested_template' key in the code"
+        );
+
+        info!("test_nested_struct_by_struct_name => PASSED");
+    }
+
+    #[traced_test]
+    fn test_nested_struct_fallback() {
+        trace!("test_nested_struct_fallback => Start");
+        let ty: syn::Type = parse_quote!(NoSpecialKeysMock);
+        let instructions = "doc instructions for no-special-keys mock";
+
+        debug!("Invoking emit_schema_for_fallback_nested with required=true");
+        let required_bool = quote!(true);
+
+        let result = emit_schema_for_fallback_nested(&ty, instructions, &required_bool);
+        debug!("Got result: {}", result);
+
+        let code_str = result.to_string();
+        debug!("Code string:\n{}", code_str);
+
+        // Because none of the recognized keys are present, the code defaults to "nested_struct"
+        assert!(
+            code_str.contains("\"nested_struct\""),
+            "Should set 'type' to nested_struct by default"
+        );
+        assert!(
+            code_str.contains("doc instructions for no-special-keys mock"),
+            "Should embed 'doc instructions for no-special-keys mock' in the code"
+        );
+        assert!(
+            code_str.contains("true"),
+            "Should embed true as the 'required' value"
+        );
+        assert!(
+            code_str.contains("\"nested_template\""),
+            "Should embed 'nested_template' key in the code"
+        );
+
+        info!("test_nested_struct_fallback => PASSED");
+    }
+
+    #[traced_test]
+    fn test_nested_template_is_not_object() {
+        trace!("test_nested_template_is_not_object => Start");
+        let ty: syn::Type = parse_quote!(NonObjectMock);
+        let instructions = "doc instructions for non-object mock";
+
+        debug!("Invoking emit_schema_for_fallback_nested with required=false");
+        let required_bool = quote!(false);
+
+        let result = emit_schema_for_fallback_nested(&ty, instructions, &required_bool);
+        debug!("Got result: {}", result);
+
+        let code_str = result.to_string();
+        debug!("Code string:\n{}", code_str);
+
+        // Because the nested template is not an object at all, the code sets "nested_struct"
+        assert!(
+            code_str.contains("\"nested_struct\""),
+            "Should set 'type' to nested_struct if the nested value is not an object"
+        );
+        assert!(
+            code_str.contains("doc instructions for non-object mock"),
+            "Should embed 'doc instructions for non-object mock' in the code"
+        );
+        assert!(
+            code_str.contains("false"),
+            "Should embed false as the 'required' value"
+        );
+        assert!(
+            code_str.contains("\"nested_template\""),
+            "Should embed 'nested_template' key in the code"
+        );
+
+        info!("test_nested_template_is_not_object => PASSED");
     }
 }

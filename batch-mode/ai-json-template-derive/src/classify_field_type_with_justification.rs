@@ -3,10 +3,11 @@ crate::ix!();
 
 #[tracing::instrument(level = "trace", skip_all)]
 pub fn classify_field_type_with_justification(
-    ty: &syn::Type,
-    doc_str: &str,
+    ty:       &syn::Type,
+    doc_str:  &str,
     required: bool
 ) -> Option<proc_macro2::TokenStream> {
+
     trace!(
         "classify_field_type_with_justification => type: {:?}, required: {}, doc_str: {:?}",
         ty,
@@ -24,8 +25,13 @@ pub fn classify_field_type_with_justification(
 
     // 1) Convert doc_str into a literal
     let doc_lit = proc_macro2::Literal::string(doc_str.trim());
+
     // 2) Turn required bool into token
-    let required_bool = if required { quote::quote!(true) } else { quote::quote!(false) };
+    let required_bool = if required { 
+        quote::quote!(true) 
+    } else { 
+        quote::quote!(false) 
+    };
 
     // 3) If it's Option<T> => handle T as not required
     if let Some(inner) = extract_option_inner(ty) {

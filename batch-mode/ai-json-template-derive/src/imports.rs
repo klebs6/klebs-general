@@ -58,5 +58,8 @@ pub(crate) use syn::{
     token::Brace,
     token::PathSep,
     PathSegment,
+    ExprBlock,
+    ExprMethodCall,
+    Stmt,
 };
 pub(crate) use serde_json::json;

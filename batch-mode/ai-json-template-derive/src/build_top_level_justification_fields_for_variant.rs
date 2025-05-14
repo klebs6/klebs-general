@@ -87,20 +87,22 @@ mod test_build_top_level_just_fields_for_variant {
 
         // Check the actual content of the first field decl
         let field_1_str = result.field_decls_top()[0].to_string();
+        info!("field_1_str={}",field_1_str);
         assert!(
             field_1_str.contains("enum_variant_justification")
             && field_1_str.contains("String")
-            && field_1_str.contains("# [ serde ( default ) ]"),
+            && field_1_str.contains("# [serde (default)]"),
             "Expected the first field to reference enum_variant_justification:String with #[serde(default)]. Got: {}",
             field_1_str
         );
 
         // Check the content of the second field decl
         let field_2_str = result.field_decls_top()[1].to_string();
+        info!("field_2_str={}",field_2_str);
         assert!(
             field_2_str.contains("enum_variant_confidence")
             && field_2_str.contains("f32")
-            && field_2_str.contains("# [ serde ( default ) ]"),
+            && field_2_str.contains("# [serde (default)]"),
             "Expected the second field to reference enum_variant_confidence:f32 with #[serde(default)]. Got: {}",
             field_2_str
         );
