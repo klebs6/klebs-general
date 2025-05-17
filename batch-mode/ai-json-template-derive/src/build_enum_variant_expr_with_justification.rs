@@ -3,13 +3,15 @@ crate::ix!();
 
 #[tracing::instrument(level = "trace", skip_all)]
 pub fn build_enum_variant_expr_with_justification(
-    variant: &syn::Variant,
-    variant_name_str: &str,
-    variant_docs: &str,
-    variant_kind_str: &str,
+    variant:             &syn::Variant,
+    variant_name_str:    &str,
+    variant_docs:        &str,
+    variant_kind_str:    &str,
     fields_insertion_ts: proc_macro2::TokenStream,
-    skip_self_just: bool
+    skip_self_just:      bool
+
 ) -> proc_macro2::TokenStream {
+
     trace!(
         "Building enum variant expr with justification => variant: '{}', kind: '{}'",
         variant_name_str,
@@ -44,8 +46,8 @@ pub fn build_enum_variant_expr_with_justification(
             variant_map.insert("variant_docs".to_string(), serde_json::Value::String(#variant_docs.to_string()));
             variant_map.insert("variant_type".to_string(), serde_json::Value::String(#variant_kind_str.to_string()));
 
-            #fields_insertion_ts
-            #top_level_just_conf
+            #fields_insertion_ts;
+            #top_level_just_conf;
 
             serde_json::Value::Object(variant_map)
         }

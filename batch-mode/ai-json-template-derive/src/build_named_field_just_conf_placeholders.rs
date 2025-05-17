@@ -30,12 +30,12 @@ pub fn build_named_field_just_conf_placeholders(field_name_str: &str) -> proc_ma
                 let mut just_obj = serde_json::Map::new();
                 just_obj.insert("type".to_string(), serde_json::Value::String("string".to_string()));
                 just_obj.insert("required".to_string(), serde_json::Value::Bool(true));
-                map.insert(#justify_key_lit, serde_json::Value::Object(just_obj));
+                map.insert(#justify_key_lit.to_string(), serde_json::Value::Object(just_obj));
 
                 let mut conf_obj = serde_json::Map::new();
                 conf_obj.insert("type".to_string(), serde_json::Value::String("number".to_string()));
                 conf_obj.insert("required".to_string(), serde_json::Value::Bool(true));
-                map.insert(#conf_key_lit, serde_json::Value::Object(conf_obj));
+                map.insert(#conf_key_lit.to_string(), serde_json::Value::Object(conf_obj));
             }
         }
     };

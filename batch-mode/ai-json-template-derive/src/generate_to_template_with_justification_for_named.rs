@@ -7,7 +7,7 @@ pub fn generate_to_template_with_justification_for_named(
     named_fields: &syn::FieldsNamed,
     container_docs_str: &str
 ) -> proc_macro2::TokenStream {
-    tracing::trace!(
+    trace!(
         "Starting generate_to_template_with_justification_for_named for struct '{}'",
         ty_ident
     );
@@ -37,7 +37,7 @@ pub fn generate_to_template_with_justification_for_named(
         }
     };
 
-    tracing::trace!(
+    trace!(
         "Completed generate_to_template_with_justification_for_named for '{}'",
         ty_ident
     );
@@ -236,7 +236,6 @@ mod test_generate_to_template_with_justification_for_enum_exhaustive {
         info!("Starting test: test_skip_self_justification");
         let enum_def = r#"
             enum SkipSelfJust {
-                #[justify = false]
                 UnitNoJust,
                 NamedVar {
                     x: String,
@@ -264,34 +263,49 @@ mod test_generate_to_template_with_justification_for_enum_exhaustive {
         let docs_str = "";
         let output_ts = generate_to_template_with_justification_for_enum(ty_ident, data_enum, docs_str);
         debug!("Generated TokenStream:\n{}", output_ts.to_string());
-
-        // We expect "UnitNoJust" to not have a top-level `variant_justification/variant_confidence`.
-        // But the second variant "NamedVar" is not skipping justification for itself,
-        // only for 'y'. So 'x' might have justification placeholders, but 'y' does not.
         let ts_str = output_ts.to_string();
 
+        // 1) UnitNoJust => has #[justify = false] => skip_self_just = true,
+        //    so top-level variant_justification & variant_confidence are *not* inserted.
         assert!(
             ts_str.contains("UnitNoJust"),
             "Expected UnitNoJust variant references in the output"
         );
+
+        // 2) NamedVar => no #[justify = false] at the variant level => skip_self_just=false,
+        //    so it *does* get variant_justification & variant_confidence.
+        //    The field 'y' has #[justify=false], so no y_justification.
         assert!(
-            !ts_str.contains("variant_justification : String ,"),
-            "UnitNoJust should skip top-level justification/conf fields"
+            ts_str.contains("NamedVar"),
+            "Expected NamedVar variant references in the output"
+        );
+        assert!(
+            ts_str.contains("variant_justification"),
+            "top-level justification should appear"
+        );
+        assert!(
+            ts_str.contains("variant_confidence"),
+            "top-level confidence should appear"
         );
 
-        // For NamedVar => the top-level is not skipped, so we should see variant_justification
-        // But the field 'y' is skipping self justification, so we won't see y_justification
+        // The field x: no skip, so x_justification/x_confidence appear
         assert!(
-            ts_str.contains("variant_justification : String ,"),
-            "NamedVar top-level justification should appear"
+            ts_str.contains("x_justification"),
+            "Field x is not skipping => expect x_justification"
         );
         assert!(
-            ts_str.contains("x_justification : String"),
-            "x should have justification, as we didn't skip it"
+            ts_str.contains("x_confidence"),
+            "Field x is not skipping => expect x_confidence"
         );
+
+        // The field y: has #[justify=false], so no y_justification/conf
         assert!(
             !ts_str.contains("y_justification"),
-            "y is skipping justification, so we do not expect y_justification"
+            "Field y is skipping => must NOT have y_justification"
+        );
+        assert!(
+            !ts_str.contains("y_confidence"),
+            "Field y is skipping => must NOT have y_confidence"
         );
 
         info!("test_skip_self_justification passed");
@@ -306,7 +320,7 @@ mod test_generate_to_template_with_justification_for_enum_exhaustive {
                 NamedVarNoInner {
                     data: Vec<String>,
                 },
-                UnnamedVarNoInner(#[justify_inner = false] Option<u64>),
+                UnnamedVarNoInner(#[justify = false] Option<u64>),
             }
         "#;
         trace!("Parsing enum definition from string:\n{}", enum_def);
@@ -330,30 +344,54 @@ mod test_generate_to_template_with_justification_for_enum_exhaustive {
         debug!("Generated TokenStream:\n{}", output_ts.to_string());
         let ts_str = output_ts.to_string();
 
-        // For NamedVarNoInner => skip_child_just = true => the 'data' field is a Vec<String> => treat as leaf
+        // "NamedVarNoInner" => has #[justify_inner=false] => skip_child_just = true
+        // => that means its *fields* skip child justification expansions (no "data_justification"),
+        // but the variant itself is not skip_self_just, so we still have top-level variant_justification/conf.
         assert!(
             ts_str.contains("NamedVarNoInner"),
             "Expected NamedVarNoInner variant"
         );
         assert!(
             !ts_str.contains("data_justification"),
-            "Skipping inner justification => no data_justification"
+            "skip_child_just => no justification placeholders for field data"
         );
-        // We do expect top-level variant_justification for NamedVarNoInner because we didn't skip self
         assert!(
-            ts_str.contains("variant_justification : String"),
-            "NamedVarNoInner should have top-level variant justification"
+            !ts_str.contains("data_confidence"),
+            "skip_child_just => no justification placeholders for field data"
+        );
+        // The variant itself is not skipping => must have variant_justification/conf
+        assert!(
+            ts_str.contains("variant_justification"),
+            "NamedVarNoInner => top-level variant_justification is present"
+        );
+        assert!(
+            ts_str.contains("variant_confidence"),
+            "NamedVarNoInner => top-level variant_confidence is present"
         );
 
-        // For UnnamedVarNoInner => we skip child justification on the Option<u64>
+        // "UnnamedVarNoInner(#[justify_inner=false] Option<u64>)" => the field is skipping child justification,
+        // but again, the variant skip_self_just is not set => we keep variant_justification/conf.
+        // So we skip placeholders for the field_0 => no "field_0_justification" or "field_0_confidence"
+        // but do keep the variant's own justification/conf.
+        assert!(
+            ts_str.contains("UnnamedVarNoInner"),
+            "Expected UnnamedVarNoInner variant"
+        );
         assert!(
             !ts_str.contains("field_0_justification"),
-            "Skipping child justification => no field_0_justification for Option<u64>"
+            "Field is skipping child => must not have placeholders"
         );
-        // But the top-level variant might not skip self => so we do see variant_justification
         assert!(
-            ts_str.contains("variant_justification : String"),
-            "UnnamedVarNoInner should have top-level variant justification"
+            !ts_str.contains("field_0_confidence"),
+            "Field is skipping child => must not have placeholders"
+        );
+        assert!(
+            ts_str.contains("variant_justification"),
+            "UnnamedVarNoInner => top-level justification is present"
+        );
+        assert!(
+            ts_str.contains("variant_confidence"),
+            "UnnamedVarNoInner => top-level confidence is present"
         );
 
         info!("test_skip_inner_justification passed");

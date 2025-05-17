@@ -10,6 +10,7 @@ use getset::{Getters, Setters};
 use derive_builder::Builder;
 use save_load_derive::*;
 use save_load_traits::*;
+use tracing::*;
 
 /// Attempting a HashMap<bool, String>, which your macro presumably rejects as an invalid key type.
 #[derive(
@@ -20,6 +21,8 @@ use save_load_traits::*;
     Deserialize,
     AiJsonTemplate,
     AiJsonTemplateWithJustification,
+    Eq,
+    PartialEq,
 )]
 struct BadMapKeyStruct {
     kv: HashMap<bool, String>,

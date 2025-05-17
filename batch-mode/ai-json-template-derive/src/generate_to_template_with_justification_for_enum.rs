@@ -3,28 +3,33 @@ crate::ix!();
 
 #[tracing::instrument(level = "trace", skip_all)]
 pub fn generate_to_template_with_justification_for_enum(
-    ty_ident: &syn::Ident,
-    data_enum: &syn::DataEnum,
+    ty_ident:           &syn::Ident,
+    data_enum:          &syn::DataEnum,
     container_docs_str: &str
+
 ) -> proc_macro2::TokenStream {
+
     let type_name_str = ty_ident.to_string();
+
     trace!(
         "Starting generate_to_template_with_justification_for_enum for '{}'",
         type_name_str
     );
 
     let mut variant_exprs = Vec::new();
+
     for var in &data_enum.variants {
+
         let var_name_str = var.ident.to_string();
-        let var_docs = gather_doc_comments(&var.attrs).join("\n");
+        let var_docs     = gather_doc_comments(&var.attrs).join("\n");
 
         // Should we skip top-level variant_justification/conf?
-        let skip_self_just = is_justification_disabled_for_variant(var);
+        let skip_self_just  = is_justification_disabled_for_variant(var);
         let skip_child_just = skip_self_just || is_justification_disabled_for_inner_variant(var);
 
         let variant_kind_str = match var.fields {
-            syn::Fields::Unit => "unit_variant",
-            syn::Fields::Named(_) => "struct_variant",
+            syn::Fields::Unit       => "unit_variant",
+            syn::Fields::Named(_)   => "struct_variant",
             syn::Fields::Unnamed(_) => "tuple_variant",
         };
 
@@ -111,7 +116,7 @@ mod test_generate_to_template_with_justification_for_named {
 
         trace!("Resulting TokenStream = {}", token_stream.to_string());
         assert!(token_stream.to_string().contains("impl AiJsonTemplateWithJustification for TestSimple"));
-        assert!(token_stream.to_string().contains("fn to_template_with_justification()"));
+        assert!(token_stream.to_string().contains("fn to_template_with_justification ()"));
         assert!(token_stream.to_string().contains("struct_docs"));
         assert!(token_stream.to_string().contains("alpha"));
         assert!(token_stream.to_string().contains("beta"));

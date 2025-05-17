@@ -1,48 +1,11 @@
 error: Unsupported key type in HashMap<bool, _> for AiJsonTemplate
-  --> tests/trybuild_justification/fail_hashmap_invalid_key.rs:25:17
+  --> tests/trybuild_justification/fail_hashmap_invalid_key.rs:28:17
    |
-25 |     kv: HashMap<bool, String>,
+28 |     kv: HashMap<bool, String>,
    |                 ^^^^
 
 error: Unsupported key type in HashMap<bool, _> for AiJsonTemplateWithJustification
-  --> tests/trybuild_justification/fail_hashmap_invalid_key.rs:22:5
+  --> tests/trybuild_justification/fail_hashmap_invalid_key.rs:28:17
    |
-22 |     AiJsonTemplateWithJustification,
-   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-   |
-   = note: this error originates in the derive macro `AiJsonTemplateWithJustification` (in Nightly builds, run with -Z macro-backtrace for more info)
-
-error: Unsupported key type in HashMap<bool, _> for AiJsonTemplateWithJustification
-  --> tests/trybuild_justification/fail_hashmap_invalid_key.rs:25:17
-   |
-25 |     kv: HashMap<bool, String>,
+28 |     kv: HashMap<bool, String>,
    |                 ^^^^
-
-error[E0277]: the trait bound `BadMapKeyStruct: Default` is not satisfied
-  --> tests/trybuild_justification/fail_hashmap_invalid_key.rs:22:5
-   |
-22 |     AiJsonTemplateWithJustification,
-   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `Default` is not implemented for `BadMapKeyStruct`
-   |
-help: consider annotating `BadMapKeyStruct` with `#[derive(Default)]`
-   |
-24 + #[derive(Default)]
-25 | struct BadMapKeyStruct {
-   |
-
-error[E0369]: binary operation `==` cannot be applied to type `BadMapKeyStruct`
-  --> tests/trybuild_justification/fail_hashmap_invalid_key.rs:22:5
-   |
-22 |     AiJsonTemplateWithJustification,
-   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-   |
-note: an implementation of `PartialEq` might be missing for `BadMapKeyStruct`
-  --> tests/trybuild_justification/fail_hashmap_invalid_key.rs:24:1
-   |
-24 | struct BadMapKeyStruct {
-   | ^^^^^^^^^^^^^^^^^^^^^^ must implement `PartialEq`
-help: consider annotating `BadMapKeyStruct` with `#[derive(PartialEq)]`
-   |
-24 + #[derive(PartialEq)]
-25 | struct BadMapKeyStruct {
-   |

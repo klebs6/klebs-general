@@ -14,14 +14,15 @@ use getset::*;
 use derive_builder::Builder;
 use save_load_derive::*;
 use save_load_traits::*;
+use tracing::*;
 
-#[derive(SaveLoad, Debug, Clone, Serialize, Deserialize)]
+#[derive(PartialEq,Eq,SaveLoad, Debug, Clone, Serialize, Deserialize)]
 enum BadEnum {
     A,
     B,
 }
 
-#[derive(SaveLoad, Debug, Clone, Serialize, Deserialize, Getters, Setters, Builder)]
+#[derive(PartialEq,Eq,SaveLoad, Debug, Clone, Serialize, Deserialize, Getters, Setters, Builder)]
 #[derive(AiJsonTemplate, AiJsonTemplateWithJustification)]
 #[getset(get = "pub", set = "pub")]
 #[builder(setter(into))]

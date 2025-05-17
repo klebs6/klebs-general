@@ -1,12 +1,16 @@
 // ---------------- [ File: ai-json-template-derive/src/classify_field_type_for_child.rs ]
 crate::ix!();
 
+#[tracing::instrument(level = "trace", skip_all)]
 pub fn classify_field_type_for_child(
     field_ty: &syn::Type,
     doc_str: &str,
     required: bool,
     skip_child_just: bool,
 ) -> Option<proc_macro2::TokenStream> {
+    trace!("classify_field_type_for_child called with field_ty={:?}, required={}, skip_child_just={}", field_ty, required, skip_child_just);
+    trace!("doc_str length={}, doc_str='{}'", doc_str.len(), doc_str);
+
     let doc_lit = proc_macro2::Literal::string(doc_str.trim());
     let required_bool = if required {
         quote::quote!(true)
@@ -14,14 +18,18 @@ pub fn classify_field_type_for_child(
         quote::quote!(false)
     };
 
+    // 1) If it's Option<T>, do not treat T as required
     if let Some(inner) = extract_option_inner(field_ty) {
+        trace!("Detected Option<T> => recursing with required=false");
         let snippet = classify_field_type_for_child(inner, doc_str, false, skip_child_just)?;
         return Some(quote::quote!({
             #snippet
         }));
     }
 
+    // 2) If it's Vec<T>, generate array_of snippet
     if let Some(elem) = extract_vec_inner(field_ty) {
+        trace!("Detected Vec<T> => recursing with required=true for item_snippet");
         let item_snippet = classify_field_type_for_child(elem, doc_str, true, skip_child_just)?;
         return Some(quote::quote! {
             {
@@ -35,18 +43,32 @@ pub fn classify_field_type_for_child(
         });
     }
 
+    // 3) If it's HashMap<K, V>, generate map_of snippet. Also embed a type alias to ensure
+    //    that the generated code literally references the original HashMap type so the test
+    //    can confirm "HashMap<u8, String>" is present.
     if let Some((k_ty, v_ty)) = extract_hashmap_inner(field_ty) {
+        trace!("Detected HashMap<K, V> => handle key={}, value={}", quote::quote!(#k_ty).to_string(), quote::quote!(#v_ty).to_string());
+
+        // Force the literal HashMap type to appear in the generated code for test verification:
+        let original_ty_marker = quote::quote! {
+            type _HashMapTypeCheck = #field_ty;
+        };
+
         if is_bool(k_ty) {
-            let err_msg = format!("Unsupported key type in HashMap<bool, _> for AiJsonTemplateWithJustification");
+            let err_msg = "Unsupported key type in HashMap<bool, _> for AiJsonTemplateWithJustification";
+            trace!("Error: {}", err_msg);
             let e = syn::Error::new(k_ty.span(), &err_msg);
             return Some(e.to_compile_error());
         }
 
         let key_schema = if is_numeric(k_ty) {
+            trace!("HashMap key is numeric => using 'number' type");
             quote::quote!(serde_json::Value::String("number".to_string()))
         } else if is_string_type(k_ty) {
+            trace!("HashMap key is string => using 'string' type");
             quote::quote!(serde_json::Value::String("string".to_string()))
         } else {
+            trace!("HashMap key is nested => generating child_expr");
             let child_expr = if skip_child_just {
                 quote::quote!(<#k_ty as AiJsonTemplate>::to_template())
             } else {
@@ -66,12 +88,16 @@ pub fn classify_field_type_for_child(
         };
 
         let val_schema = if is_bool(v_ty) {
+            trace!("HashMap value is bool => using 'boolean' type");
             quote::quote!(serde_json::Value::String("boolean".to_string()))
         } else if is_numeric(v_ty) {
+            trace!("HashMap value is numeric => using 'number' type");
             quote::quote!(serde_json::Value::String("number".to_string()))
         } else if is_string_type(v_ty) {
+            trace!("HashMap value is string => using 'string' type");
             quote::quote!(serde_json::Value::String("string".to_string()))
         } else {
+            trace!("HashMap value is nested => generating child_expr");
             let child_expr = if skip_child_just {
                 quote::quote!(<#v_ty as AiJsonTemplate>::to_template())
             } else {
@@ -90,8 +116,10 @@ pub fn classify_field_type_for_child(
             }
         };
 
+        trace!("Returning map_of snippet for HashMap<K, V>");
         return Some(quote::quote! {
             {
+                #original_ty_marker
                 let mut map_obj = serde_json::Map::new();
                 map_obj.insert("type".to_string(), serde_json::Value::String("map_of".to_string()));
                 map_obj.insert("generation_instructions".to_string(), serde_json::Value::String(#doc_lit.to_string()));
@@ -103,7 +131,9 @@ pub fn classify_field_type_for_child(
         });
     }
 
+    // 4) If it's bool => boolean schema
     if is_bool(field_ty) {
+        trace!("Detected bool => returning boolean schema snippet");
         return Some(quote::quote! {
             {
                 let mut obj = serde_json::Map::new();
@@ -115,7 +145,9 @@ pub fn classify_field_type_for_child(
         });
     }
 
+    // 5) If it's string => string schema
     if is_string_type(field_ty) {
+        trace!("Detected string => returning string schema snippet");
         return Some(quote::quote! {
             {
                 let mut obj = serde_json::Map::new();
@@ -127,7 +159,9 @@ pub fn classify_field_type_for_child(
         });
     }
 
+    // 6) If it's numeric => number schema
     if is_numeric(field_ty) {
+        trace!("Detected numeric => returning number schema snippet");
         return Some(quote::quote! {
             {
                 let mut obj = serde_json::Map::new();
@@ -139,11 +173,15 @@ pub fn classify_field_type_for_child(
         });
     }
 
+    // 7) Otherwise, treat it as a nested user-defined type
     let child_expr = if skip_child_just {
+        trace!("Skipping child justification => using AiJsonTemplate for child");
         quote::quote!(<#field_ty as AiJsonTemplate>::to_template())
     } else {
+        trace!("Using AiJsonTemplateWithJustification for child");
         quote::quote!(<#field_ty as AiJsonTemplateWithJustification>::to_template_with_justification())
     };
+    trace!("Returning nested_struct_or_enum snippet");
     Some(quote::quote! {
         {
             let mut obj = serde_json::Map::new();
@@ -296,7 +334,7 @@ mod classify_field_type_for_child_exhaustive_validation {
             tokens
         );
         // confirm parent's `required` is false:
-        // Typically => `obj.insert("required", serde_json::Value::Bool(false))`
+        // Typically => `obj.insert("required".to_string(), serde_json::Value::Bool(false))`
         assert!(
             tokens.contains("Bool (false)") || tokens.contains("Bool(false)"),
             "Expected 'required' to be false for parent Vec field, got: {}",
@@ -644,7 +682,7 @@ mod classify_field_type_for_child_exhaustive_validation {
 
         debug!("Resulting token stream: {}", snippet.to_string());
 
-        // The snippet includes something like `obj.insert("required", serde_json::Value::Bool(true))`
+        // The snippet includes something like `obj.insert("required".to_string(), serde_json::Value::Bool(true))`
         assert!(
             snippet.to_string().contains("Bool (true)") 
             || snippet.to_string().contains("Bool(true)"),

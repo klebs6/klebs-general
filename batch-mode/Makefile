@@ -1,8 +1,9 @@
 .PHONY: build vendor json active test test_one test_all
 
 #RUSTFLAGS := "-Awarnings -Z time-passes"
-RUSTFLAGS  := -Awarnings RUST_BACKTRACE=1
-#RUSTFLAGS  := 
+RUSTFLAGS  := 
+#RUSTFLAGS  := -Awarnings RUST_BACKTRACE=1
+
 #CARGO     := env CARGO_MSG_LIMIT=15 CARGO_BUILD_JOBS=12 NUM_JOBS=12 cargo 
 CARGO      := MAKEFLAGS= env CARGO_BUILD_JOBS=12 NUM_JOBS=12 cargo 
 BUILD      := build --verbose
@@ -54,6 +55,7 @@ ACTIVE_PACKAGE := ai-json-template-derive
 #-----------------------------------------------------[this section lets us choose how we want to test]
 DEFAULT := test
 #DEFAULT := test_one
+#DEFAULT := expand
 #DEFAULT := expand_to_file
 #DEFAULT := test_file
 #DEFAULT := test_file_one
@@ -67,9 +69,11 @@ default: $(DEFAULT)
 #NOCAPTURE := --nocapture
 #NOCAPTURE := 
 
-EXPANSION_FILE  := expanded_flat_justified_exhaustive.rs
+EXPANSION_FILE    := expanded.rs
 EXPANSION_PACKAGE := ai-json-template-derive
 EXPANSION_TEST    := flat_justified_exhaustive
+EXPANSION_TEST    := pass_enum_named_with_hashmap
+EXPANSION_TEST    := expand_this
 #EXPANSION_TEST    := classify_with_justification
 
 INDIVIDUAL_TEST    := test_build_vec_schema

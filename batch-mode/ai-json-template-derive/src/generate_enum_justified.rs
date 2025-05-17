@@ -6,312 +6,183 @@ pub fn generate_enum_justified(
     ty_ident: &syn::Ident,
     data_enum: &syn::DataEnum,
     span: proc_macro2::Span
-) -> (proc_macro2::TokenStream, proc_macro2::TokenStream, proc_macro2::TokenStream)
-{
-    trace!("Beginning generate_enum_justified for enum '{}'", ty_ident);
+) -> proc_macro2::TokenStream {
+    use quote::quote;
 
-    let enum_just_ident = syn::Ident::new(&format!("{}Justification", ty_ident), span);
-    let enum_conf_ident = syn::Ident::new(&format!("{}Confidence",   ty_ident), span);
-    let justified_ident = syn::Ident::new(&format!("Justified{}",    ty_ident), span);
-
-    let (
-        just_variants,
-        conf_variants,
-        first_variant_ident,
-        first_variant_just_fields,
-        first_variant_conf_fields
-    ) = collect_variant_fields_for_just_conf(data_enum, &ty_ident, span, &enum_just_ident, &enum_conf_ident);
-
-    let enum_just_ts = build_enum_justification(
-        &enum_just_ident,
-        &just_variants,
-        first_variant_ident.as_ref(),
-        &first_variant_just_fields
+    // e.g. "Geometry2dWithJustification"
+    let enum_with_just_ident = syn::Ident::new(
+        &format!("{}WithJustification", ty_ident),
+        span
     );
 
-    let enum_conf_ts = build_enum_confidence(
-        &enum_conf_ident,
-        &conf_variants,
-        first_variant_ident.as_ref(),
-        &first_variant_conf_fields
+    // e.g. "JustifiedGeometry2d"
+    let justified_enum_ident = syn::Ident::new(
+        &format!("Justified{}", ty_ident),
+        span
     );
 
-    let justified_ts = build_justified_enum_struct(
-        &ty_ident,
-        &enum_just_ident,
-        &enum_conf_ident,
-        &justified_ident
-    );
-
-    trace!("Completed generate_enum_justified for enum '{}'", ty_ident);
-    (enum_just_ts, enum_conf_ts, justified_ts)
-}
-
-#[cfg(test)]
-mod test_generate_enum_justified {
-    use super::*;
-
-    #[traced_test]
-    fn test_empty_enum() {
-        trace!("Testing generate_enum_justified with an empty enum");
-        // Parse an entire item enum, then convert its fields to DataEnum
-        let item_enum: ItemEnum = parse_quote! {
-            enum EmptyEnum {}
-        };
-
-        let data_enum = DataEnum {
-            enum_token: item_enum.enum_token,
-            brace_token: item_enum.brace_token,
-            variants: item_enum.variants,
-        };
-
-        let (just_ts, conf_ts, just_enum_ts) =
-            generate_enum_justified(&item_enum.ident, &data_enum, item_enum.ident.span());
-
-        trace!("Justification tokens: {}", just_ts);
-        trace!("Confidence tokens: {}", conf_ts);
-        trace!("Justified enum tokens: {}", just_enum_ts);
-
-        let just_str = just_ts.to_string();
-        let conf_str = conf_ts.to_string();
-        let enum_str = just_enum_ts.to_string();
-
-        assert!(
-            just_str.contains("enum EmptyEnumJustification"),
-            "Expected Justification enum name not found in output."
-        );
-        assert!(
-            conf_str.contains("enum EmptyEnumConfidence"),
-            "Expected Confidence enum name not found in output."
-        );
-        assert!(
-            enum_str.contains("struct JustifiedEmptyEnum"),
-            "Expected Justified struct name not found in output."
-        );
-    }
-
-    #[traced_test]
-    fn test_unit_variants_only() {
-        trace!("Testing generate_enum_justified with a unit-variants-only enum");
-
-        let item_enum: ItemEnum = parse_quote! {
-            enum UnitOnlyEnum {
-                Alpha,
-                Beta,
-                #[justify=false]
-                Gamma
+    // Detect if the user’s original enum has a `#[default]` variant
+    // so we can safely derive Default for the expanded “WithJustification” enum.
+    let mut user_has_default_variant = false;
+    for variant in &data_enum.variants {
+        for attr in &variant.attrs {
+            if attr.path().is_ident("default") {
+                user_has_default_variant = true;
+                break;
             }
-        };
-        let data_enum = DataEnum {
-            enum_token: item_enum.enum_token,
-            brace_token: item_enum.brace_token,
-            variants: item_enum.variants,
-        };
-
-        let (just_ts, conf_ts, just_enum_ts) =
-            generate_enum_justified(&item_enum.ident, &data_enum, item_enum.ident.span());
-
-        debug!("Justification tokens: {}", just_ts);
-        debug!("Confidence tokens: {}", conf_ts);
-        debug!("Justified enum tokens: {}", just_enum_ts);
-
-        let just_str = just_ts.to_string();
-        let conf_str = conf_ts.to_string();
-        let enum_str = just_enum_ts.to_string();
-
-        // Check if we define variant fields correctly 
-        // skip_self_just is false by default, overridden by #[justify=false].
-        assert!(
-            just_str.contains("Alpha { variant_justification : String }"),
-            "Expected justification field in 'Alpha' variant."
-        );
-        assert!(
-            !just_str.contains("Gamma { variant_justification : String }"),
-            "Expected no justification field in 'Gamma' due to #[justify=false]."
-        );
-        assert!(
-            conf_str.contains("Beta { variant_confidence : f32 }"),
-            "Expected confidence field in 'Beta' variant."
-        );
-        assert!(
-            enum_str.contains("JustifiedUnitOnlyEnum"),
-            "Expected a Justified struct name for UnitOnlyEnum."
-        );
+        }
+        if user_has_default_variant {
+            break;
+        }
     }
 
-    #[traced_test]
-    fn test_named_variants() {
-        trace!("Testing generate_enum_justified with named variants");
+    let mut variant_defs: Vec<TokenStream2> = Vec::new();
 
-        let item_enum: ItemEnum = parse_quote! {
-            enum NamedVariantsEnum {
-                FirstVariant {
-                    alpha: i32,
-                    #[justify=false]
-                    beta: bool
-                },
-                SecondVariant {
-                    gamma: String,
-                    delta: Vec<u64>
+    for variant in &data_enum.variants {
+
+        let var_ident = &variant.ident;
+
+        // Does the user have `#[justify = false]` on this variant? => skip_self_just
+        // Does the user have `#[justify_inner = false]`? => skip_child_just
+        let skip_self_just  = crate::is_justification_disabled_for_variant(variant);
+        let skip_child_just = skip_self_just || crate::is_justification_disabled_for_inner_variant(variant);
+
+        match &variant.fields {
+            // ---------- Unit Variant ----------
+            syn::Fields::Unit => {
+                if skip_self_just {
+                    // No top-level fields
+                    variant_defs.push(quote! { #var_ident, });
+                } else {
+                    // Insert variant_confidence, variant_justification
+                    variant_defs.push(quote! {
+                        #var_ident {
+                            variant_confidence: f64,
+                            variant_justification: String,
+                        },
+                    });
                 }
             }
-        };
-        let data_enum = DataEnum {
-            enum_token: item_enum.enum_token,
-            brace_token: item_enum.brace_token,
-            variants: item_enum.variants,
-        };
 
-        let (just_ts, conf_ts, just_enum_ts) =
-            generate_enum_justified(&item_enum.ident, &data_enum, item_enum.ident.span());
+            // ---------- Named Variant ----------
+            syn::Fields::Named(named_fields) => {
+                let mut final_fields = Vec::new();
 
-        info!("Justification tokens: {}", just_ts);
-        info!("Confidence tokens: {}", conf_ts);
-        info!("Justified enum tokens: {}", just_enum_ts);
+                // If skip_self_just == false => top-level
+                if !skip_self_just {
+                    final_fields.push(quote! { variant_confidence: f64, });
+                    final_fields.push(quote! { variant_justification: String, });
+                }
 
-        let just_str = just_ts.to_string();
-        let conf_str = conf_ts.to_string();
+                for field in &named_fields.named {
+                    let f_ident = match &field.ident {
+                        Some(id) => id,
+                        None => continue, // shouldn't happen in Named
+                    };
 
-        // "FirstVariant" => alpha_justification, skip beta_justification
-        assert!(
-            just_str.contains("FirstVariant { variant_justification : String , alpha_justification : String }"),
-            "Expected 'alpha_justification' in FirstVariant"
-        );
-        assert!(
-            !just_str.contains("beta_justification"),
-            "Did not expect 'beta_justification' in FirstVariant due to #[justify=false]"
-        );
+                    let field_ty = &field.ty;
 
-        // "SecondVariant" => gamma_justification, delta_justification
-        assert!(
-            just_str.contains("SecondVariant { variant_justification : String , gamma_justification : String , delta_justification : String }"),
-            "Expected 'gamma_justification' and 'delta_justification' in SecondVariant"
-        );
-        // Confidence expansions
-        assert!(
-            conf_str.contains("alpha_confidence : f32"),
-            "Expected 'alpha_confidence' in FirstVariant"
-        );
-        assert!(
-            conf_str.contains("delta_confidence : f32"),
-            "Expected 'delta_confidence' in SecondVariant"
-        );
+                    let skip_field_self = crate::is_justification_disabled_for_field(field);
+                    let actually_skip   = skip_field_self || skip_child_just;
+
+                    // Always store the original field as is
+                    final_fields.push(quote! {
+                        #f_ident: #field_ty,
+                    });
+
+                    // If not skipping => add `field_confidence`, `field_justification`
+                    if !actually_skip {
+                        let conf_id = syn::Ident::new(&format!("{}_confidence", f_ident), f_ident.span());
+                        let just_id = syn::Ident::new(&format!("{}_justification", f_ident), f_ident.span());
+                        final_fields.push(quote! {
+                            #conf_id: f64,
+                            #just_id: String,
+                        });
+                    }
+                }
+
+                variant_defs.push(quote! {
+                    #var_ident {
+                        #(#final_fields)*
+                    },
+                });
+            }
+
+            // ---------- Unnamed (tuple) Variant ----------
+            syn::Fields::Unnamed(unnamed_fields) => {
+                let mut final_fields = Vec::new();
+
+                if !skip_self_just {
+                    final_fields.push(quote! { variant_confidence: f64, });
+                    final_fields.push(quote! { variant_justification: String, });
+                }
+
+                for (i, field) in unnamed_fields.unnamed.iter().enumerate() {
+                    let field_ident = syn::Ident::new(&format!("field_{}", i), field.span());
+
+                    let skip_field_self = crate::is_justification_disabled_for_field(field);
+                    let actually_skip = skip_field_self || skip_child_just;
+
+                    let field_ty = &field.ty;
+
+                    // Always store the original field
+                    final_fields.push(quote! {
+                        #field_ident: #field_ty,
+                    });
+
+                    // If not skipping => add `field_i_confidence` and `field_i_justification`
+                    if !actually_skip {
+                        let conf_id = syn::Ident::new(&format!("field_{}_confidence", i), field.span());
+                        let just_id = syn::Ident::new(&format!("field_{}_justification", i), field.span());
+                        final_fields.push(quote! {
+                            #conf_id: f64,
+                            #just_id: String,
+                        });
+                    }
+                }
+
+                variant_defs.push(quote! {
+                    #var_ident {
+                        #(#final_fields)*
+                    },
+                });
+            }
+        }
     }
 
-    #[traced_test]
-    fn test_unnamed_variants() {
-        trace!("Testing generate_enum_justified with tuple variants (Fields::Unnamed)");
+    // If the user’s original enum had a `#[default]` variant,
+    // we can safely do `#[derive(Default)]` on the “WithJustification” enum.
+    // Otherwise, we omit Default to avoid parse errors or runtime panics.
+    let maybe_default = if user_has_default_variant {
+        quote! { #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)] }
+    } else {
+        quote! { #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)] }
+    };
 
-        let item_enum: ItemEnum = parse_quote! {
-            enum UnnamedVariantsEnum {
-                Single(u8),
-                Pair(#[justify=false] String, i64),
-            }
-        };
-        let data_enum = DataEnum {
-            enum_token: item_enum.enum_token,
-            brace_token: item_enum.brace_token,
-            variants: item_enum.variants,
-        };
+    // The flattened enum e.g. `enum MyEnumWithJustification { ... }`
+    let enum_with_just_ts = quote! {
+        #maybe_default
+        pub enum #enum_with_just_ident {
+            #(#variant_defs)*
+        }
+    };
 
-        let (just_ts, conf_ts, just_enum_ts) =
-            generate_enum_justified(&item_enum.ident, &data_enum, item_enum.ident.span());
+    // The top-level wrapper e.g. 
+    //  `pub struct JustifiedMyEnum { variant_confidence: f64, variant_justification: String, variant_selection: MyEnumWithJustification }`
+    // always has top-level variant_confidence & variant_justification for the *choice* of variant.
+    // That’s how we track which variant was chosen, plus the top-level justification.
+    let justified_wrapper_ts = quote! {
+        #[derive(Getters, Debug, Clone, PartialEq, Serialize, Deserialize)]
+        #[getset(get="pub")]
+        pub struct #justified_enum_ident {
+            variant_confidence: f64,
+            variant_justification: String,
+            variant_selection: #enum_with_just_ident,
+        }
+    };
 
-        warn!("Justification tokens: {}", just_ts);
-        warn!("Confidence tokens: {}", conf_ts);
-        warn!("Justified enum tokens: {}", just_enum_ts);
-
-        let just_str = just_ts.to_string();
-        let conf_str = conf_ts.to_string();
-
-        // "Single" => single unnamed field => field_0_justification
-        assert!(
-            just_str.contains("Single { variant_justification : String , field_0_justification : String }"),
-            "Expected field_0_justification in Single variant"
-        );
-        // "Pair" => first field is #[justify=false], second is i64 => only second gets justification
-        assert!(
-            just_str.contains("Pair { variant_justification : String , field_1_justification : String }"),
-            "Expected only field_1_justification in Pair variant"
-        );
-        assert!(
-            !just_str.contains("field_0_justification : String , field_1_justification : String , field_2_justification"),
-            "Did not expect a justification field for Pair's field_0"
-        );
-        // Confidence is analogous
-        assert!(
-            conf_str.contains("field_1_confidence"),
-            "Expected second field confidence in Pair variant"
-        );
-        assert!(
-            !conf_str.contains("field_0_confidence : f32 , field_1_confidence"),
-            "Did not expect confidence for Pair's first field"
-        );
-    }
-
-    #[traced_test]
-    fn test_mixed_variant_types() {
-        trace!("Testing generate_enum_justified with a mix of unit, named, and unnamed variants");
-
-        let item_enum: ItemEnum = parse_quote! {
-            enum MixedVariantsEnum {
-                Unit,
-                Named {
-                    x: String,
-                    #[justify=false]
-                    y: u32
-                },
-                Unnamed(bool, i16)
-            }
-        };
-        let data_enum = DataEnum {
-            enum_token: item_enum.enum_token,
-            brace_token: item_enum.brace_token,
-            variants: item_enum.variants,
-        };
-
-        let (just_ts, conf_ts, just_enum_ts) =
-            generate_enum_justified(&item_enum.ident, &data_enum, item_enum.ident.span());
-
-        error!("Justification tokens: {}", just_ts);
-        error!("Confidence tokens: {}", conf_ts);
-        error!("Justified enum tokens: {}", just_enum_ts);
-
-        let just_str = just_ts.to_string();
-        let conf_str = conf_ts.to_string();
-
-        // "Unit" => variant_justification
-        assert!(
-            just_str.contains("Unit { variant_justification : String }"),
-            "Expected top-level justification in Unit variant"
-        );
-        // "Named" => x gets justification, y is skipped
-        assert!(
-            just_str.contains("Named { variant_justification : String , x_justification : String }"),
-            "Expected x_justification in Named variant"
-        );
-        assert!(
-            !just_str.contains("y_justification"),
-            "Did not expect y_justification in Named variant"
-        );
-        // "Unnamed" => two fields => both get justification unless specify otherwise
-        assert!(
-            just_str.contains("Unnamed { variant_justification : String , field_0_justification : String , field_1_justification : String }"),
-            "Expected field_0_justification and field_1_justification in Unnamed variant"
-        );
-
-        // Confidence checks:
-        assert!(
-            conf_str.contains("Unit { variant_confidence : f32 }"),
-            "Expected top-level variant_confidence for Unit"
-        );
-        assert!(
-            conf_str.contains("x_confidence"),
-            "Expected x_confidence in Named variant"
-        );
-        assert!(
-            conf_str.contains("field_0_confidence") && conf_str.contains("field_1_confidence"),
-            "Expected field_0_confidence and field_1_confidence in Unnamed variant"
-        );
+    quote! {
+        #enum_with_just_ts
+        #justified_wrapper_ts
     }
 }

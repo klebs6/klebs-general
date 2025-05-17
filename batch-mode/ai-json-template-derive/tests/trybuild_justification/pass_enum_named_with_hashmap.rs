@@ -10,10 +10,10 @@ use std::collections::HashMap;
 use derive_builder::Builder;
 use save_load_derive::*;
 use save_load_traits::*;
+use tracing::*;
 
 #[derive(
     SaveLoad,
-    Default,
     Debug,
     Clone,
     PartialEq,
@@ -23,20 +23,23 @@ use save_load_traits::*;
     AiJsonTemplateWithJustification,
 )]
 enum NamedEnumWithMap {
-    /// No fields here
-    #[default]
     EmptyVariant,
 
-    /// A normal variant with some numeric field
     NumericStuff {
         count: u32,
         label: String,
     },
 
-    /// A variant that includes a HashMap
     MapVariant {
         items: HashMap<u8, String>,
-    },
+    }
+}
+
+impl Default for NamedEnumWithMap {
+    fn default() -> Self {
+        Self::EmptyVariant
+    }
+
 }
 
 fn main() {

@@ -1,19 +1,19 @@
 error: Unsupported shape `unnamed fields`. Expected named fields.
-  --> tests/trybuild_justification/fail_justification_unnamed_struct.rs:18:58
+  --> tests/trybuild_justification/fail_justification_unnamed_struct.rs:19:58
    |
-18 | #[derive(SaveLoad, Debug, Clone, Serialize, Deserialize, Builder)]
+19 | #[derive(SaveLoad, Debug, Clone, Serialize, Deserialize, Builder)]
    |                                                          ^^^^^^^
    |
    = note: this error originates in the derive macro `Builder` (in Nightly builds, run with -Z macro-backtrace for more info)
 
 error: AiJsonTemplate derive only supports named fields for structs. Tuple/unnamed not supported here.
-  --> tests/trybuild_justification/fail_justification_unnamed_struct.rs:20:1
+  --> tests/trybuild_justification/fail_justification_unnamed_struct.rs:21:1
    |
-20 | struct BasicUnnamed(u32, String);
+21 | struct BasicUnnamed(u32, String);
    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-error: AiJsonTemplateWithJustification only supports named fields for structs.
-  --> tests/trybuild_justification/fail_justification_unnamed_struct.rs:20:1
+error: AiJsonTemplateWithJustification only supports named structs
+  --> tests/trybuild_justification/fail_justification_unnamed_struct.rs:21:1
    |
-20 | struct BasicUnnamed(u32, String);
+21 | struct BasicUnnamed(u32, String);
    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

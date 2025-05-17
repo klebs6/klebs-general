@@ -10,6 +10,7 @@ use getset::{Getters, Setters};
 use derive_builder::Builder;
 use save_load_derive::*;
 use save_load_traits::*;
+use tracing::*;
 
 /// Fake "BadType" that your macro's logic doesn't support => triggers compile_error
 struct BadType;

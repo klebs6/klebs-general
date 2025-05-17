@@ -61,5 +61,22 @@ pub(crate) use syn::{
     ExprBlock,
     ExprMethodCall,
     Stmt,
+    Block,
 };
 pub(crate) use serde_json::json;
+
+/// A small helper that tries to parse generated Rust code with `syn`
+/// and fails the test if `syn` returns an error.
+/// This ensures expansions didn't produce partial tokens like "count:: u32".
+pub fn assert_tokens_parse_ok(ts: &proc_macro2::TokenStream) {
+    let code_str = ts.to_string();
+    // Attempt to parse it as a top-level file (or item).
+    // If there's a syntax error (like "count:: u32"), parsing should fail.
+    let parse_result: syn::Result<syn::File> = parse_str(&code_str);
+    if let Err(e) = parse_result {
+        panic!(
+            "Generated tokens failed to parse!\nError: {}\n\nGenerated code:\n{}",
+            e, code_str
+        );
+    }
+}

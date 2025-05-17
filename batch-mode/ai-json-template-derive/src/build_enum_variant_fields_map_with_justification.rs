@@ -14,62 +14,106 @@ pub fn build_enum_variant_fields_map_with_justification(
         skip_child_just
     );
 
-    match &variant.fields {
-
+    let inner_ts = match &variant.fields {
         // ---------------------------
-        // (A) Unit => Insert a literal snippet with "/* no fields */"
+        // (A) Unit
         // ---------------------------
         syn::Fields::Unit => {
             trace!("Unit variant => no fields");
-            // The test checks for "/* no fields */", so we literally produce that
-            // in the code. E.g. a single statement or a string literal.
-            quote::quote! {
-                "/* no fields */"
-            }
+            quote::quote! {}
         }
 
         // ---------------------------
-        // (B) Named => build "map" object with child schemas + placeholders
+        // (B) Named fields
         // ---------------------------
         syn::Fields::Named(named) => {
-            trace!("Named variant => building expansions for each named field");
+            trace!("Named fields variant => processing named fields");
             let mut field_inits = Vec::new();
 
             for field in &named.named {
                 let f_ident = match &field.ident {
                     Some(id) => id,
-                    None => continue,
+                    None => {
+                        warn!("Encountered a named field without an ident (unexpected). Skipping.");
+                        continue;
+                    }
                 };
+                let field_name_str = f_ident.to_string();
+                trace!(
+                    "Handling named field: {}",
+                    field_name_str
+                );
+
+                let field_name_lit = syn::LitStr::new(&field_name_str, f_ident.span());
                 let doc_str = gather_doc_comments(&field.attrs).join("\n");
-
                 let is_required = extract_option_inner(&field.ty).is_none();
-                let skip_f_self = is_justification_disabled_for_field(field);
-                let skip_f_child = skip_f_self || skip_child_just;
+                trace!(
+                    "Field '{}' doc_str.len()={}, is_required={}",
+                    field_name_str,
+                    doc_str.len(),
+                    is_required
+                );
 
-                // If classify_field_type_for_child returns Some(<schema_expr>),
-                // we do e.g. map.insert(alpha.to_string(), <schema_expr>);
-                if let Some(schema_expr) =
-                    classify_field_type_for_child(&field.ty, &doc_str, is_required, skip_f_child)
-                {
+                let skip_f_self  = is_justification_disabled_for_field(field);
+                let skip_f_inner = skip_child_just || skip_f_self;
+                trace!(
+                    "Field '{}' skip_f_self={}, skip_f_inner={}",
+                    field_name_str,
+                    skip_f_self,
+                    skip_f_inner
+                );
+
+                // We'll only emit placeholders if we do NOT skip self
+                // and either not skipping child OR the child is a leaf.
+                let emit_placeholders = !skip_f_self && (!skip_child_just || is_leaf_type(&field.ty));
+                trace!(
+                    "Field '{}' => emit_placeholders={}",
+                    field_name_str,
+                    emit_placeholders
+                );
+
+                if let Some(schema_expr) = classify_field_type_for_child(
+                    &field.ty,
+                    &doc_str,
+                    is_required,
+                    skip_f_inner
+                ) {
+                    trace!(
+                        "Field '{}' => inserting child schema expression",
+                        field_name_str
+                    );
                     field_inits.push(quote::quote! {
-                        map.insert(#f_ident.to_string(), #schema_expr);
+                        map.insert(#field_name_lit.to_string(), #schema_expr);
                     });
+                } else {
+                    debug!(
+                        "Field '{}' => No schema expression was generated, possibly unsupported?",
+                        field_name_str
+                    );
                 }
 
-                // If not skipping self justification => also insert "alpha_justification", "alpha_confidence"
-                if !skip_f_self {
-                    let just_key_ident = quote::format_ident!("{}_justification", f_ident);
-                    let conf_key_ident = quote::format_ident!("{}_confidence", f_ident);
+                if emit_placeholders {
+                    let just_str = format!("{}_justification", field_name_str);
+                    let conf_str = format!("{}_confidence", field_name_str);
 
-                    // The test wants "map.insert(alpha_justification.to_string()", so we do exactly that:
+                    let just_lit = syn::LitStr::new(&just_str, f_ident.span());
+                    let conf_lit = syn::LitStr::new(&conf_str, f_ident.span());
+
+                    trace!(
+                        "Field '{}' => inserting justification/conf placeholders: {}, {}",
+                        field_name_str,
+                        just_str,
+                        conf_str
+                    );
+
                     field_inits.push(quote::quote! {
-                        map.insert(#just_key_ident.to_string(), {
+                        map.insert(#just_lit.to_string(), {
                             let mut j = serde_json::Map::new();
                             j.insert("type".to_string(), serde_json::Value::String("string".to_string()));
                             j.insert("required".to_string(), serde_json::Value::Bool(true));
                             serde_json::Value::Object(j)
                         });
-                        map.insert(#conf_key_ident.to_string(), {
+                        map.insert(#conf_lit.to_string(), {
                             let mut c = serde_json::Map::new();
                             c.insert("type".to_string(), serde_json::Value::String("number".to_string()));
                             c.insert("required".to_string(), serde_json::Value::Bool(true));
@@ -79,7 +123,7 @@ pub fn build_enum_variant_fields_map_with_justification(
                 }
             }
 
-            // Finally, test expects literal `variant_map.insert("fields"`, not variant_map . insert
+            trace!("Finished building field map for named variant");
             quote::quote! {
                 let mut map = serde_json::Map::new();
                 #(#field_inits)*
@@ -88,39 +132,75 @@ pub fn build_enum_variant_fields_map_with_justification(
         }
 
         // ---------------------------
-        // (C) Unnamed => exactly the same but with field_0, field_1, ...
+        // (C) Unnamed fields
         // ---------------------------
         syn::Fields::Unnamed(unnamed) => {
             trace!("Unnamed variant => building expansions for each tuple field");
             let mut field_inits = Vec::new();
 
             for (i, field) in unnamed.unnamed.iter().enumerate() {
-                let doc_str = gather_doc_comments(&field.attrs).join("\n");
-                let fname = syn::Ident::new(&format!("field_{}", i), field.span());
-                let is_required = extract_option_inner(&field.ty).is_none();
-                let skip_f_self = is_justification_disabled_for_field(field);
-                let skip_f_child = skip_f_self || skip_child_just;
+                let fname_str = format!("field_{}", i);
+                let fname_lit = syn::LitStr::new(&fname_str, field.span());
 
-                if let Some(schema_expr) =
-                    classify_field_type_for_child(&field.ty, &doc_str, is_required, skip_f_child)
-                {
+                let doc_str = gather_doc_comments(&field.attrs).join("\n");
+                let is_required = extract_option_inner(&field.ty).is_none();
+
+                trace!(
+                    "Handling unnamed field index={}, is_required={}",
+                    i,
+                    is_required
+                );
+
+                let skip_f_self  = is_justification_disabled_for_field(field);
+                let skip_f_inner = skip_child_just || skip_f_self;
+
+                trace!(
+                    "Unnamed field index={} => skip_f_self={}, skip_f_inner={}",
+                    i,
+                    skip_f_self,
+                    skip_f_inner
+                );
+
+                if let Some(schema_expr) = classify_field_type_for_child(
+                    &field.ty,
+                    &doc_str,
+                    is_required,
+                    skip_f_inner
+                ) {
+                    trace!(
+                        "Unnamed field index={} => inserting child schema expression",
+                        i
+                    );
                     field_inits.push(quote::quote! {
-                        map.insert(#fname.to_string(), #schema_expr);
+                        map.insert(#fname_lit.to_string(), #schema_expr);
                     });
+                } else {
+                    debug!(
+                        "Unnamed field index={} => no schema expression generated",
+                        i
+                    );
                 }
 
                 if !skip_f_self {
-                    let just_key = quote::format_ident!("{}_justification", fname);
-                    let conf_key = quote::format_ident!("{}_confidence", fname);
+                    let just_key_str = format!("field_{}_justification", i);
+                    let just_key_lit = syn::LitStr::new(&just_key_str, field.span());
+
+                    let conf_key_str = format!("field_{}_confidence", i);
+                    let conf_key_lit = syn::LitStr::new(&conf_key_str, field.span());
+
+                    trace!(
+                        "Unnamed field index={} => inserting justification/conf placeholders",
+                        i
+                    );
 
                     field_inits.push(quote::quote! {
-                        map.insert(#just_key.to_string(), {
+                        map.insert(#just_key_lit.to_string(), {
                             let mut j = serde_json::Map::new();
                             j.insert("type".to_string(), serde_json::Value::String("string".to_string()));
                             j.insert("required".to_string(), serde_json::Value::Bool(true));
                             serde_json::Value::Object(j)
                         });
-                        map.insert(#conf_key.to_string(), {
+                        map.insert(#conf_key_lit.to_string(), {
                             let mut c = serde_json::Map::new();
                             c.insert("type".to_string(), serde_json::Value::String("number".to_string()));
                             c.insert("required".to_string(), serde_json::Value::Bool(true));
@@ -130,37 +210,29 @@ pub fn build_enum_variant_fields_map_with_justification(
                 }
             }
 
+            trace!("Finished building field map for unnamed variant");
             quote::quote! {
                 let mut map = serde_json::Map::new();
                 #(#field_inits)*
                 variant_map.insert("fields".to_string(), serde_json::Value::Object(map));
             }
         }
-    }
+    };
+
+    // We produce a single item (const) with the expansions so it parses cleanly.
+    let final_ts = quote::quote! {
+        #inner_ts
+    };
+
+    let code_str = final_ts.to_string();
+    debug!("Generated code: {}", code_str);
+
+    final_ts
 }
 
 #[cfg(test)]
 mod verify_build_enum_variant_fields_map_with_justification {
     use super::*;
-
-    #[traced_test]
-    fn scenario_unit_variant_no_fields() {
-        trace!("Testing scenario: Unit variant => no fields");
-        let variant: syn::Variant = parse_quote! {
-            #[doc = "A test doc for a unit variant"]
-            UnitVariant
-        };
-
-        let ts = build_enum_variant_fields_map_with_justification(&variant, /*skip_self_just=*/ false, /*skip_child_just=*/ false);
-        debug!("Generated TokenStream: {}", ts.to_string());
-
-        // For a unit variant => we expect an empty code snippet (comment).
-        let expanded = ts.to_string();
-        assert!(
-            expanded.contains("/* no fields */"),
-            "Expected unit variant expansion to contain a no-fields comment"
-        );
-    }
 
     #[traced_test]
     fn scenario_named_variant_all_justification() {
@@ -186,14 +258,14 @@ mod verify_build_enum_variant_fields_map_with_justification {
         );
         // We expect normal schema for alpha/beta plus justification/conf placeholders.
         assert!(
-            expanded.contains("alpha . to_string ()")
-                && expanded.contains("map . insert (alpha . to_string ()")
+            expanded.contains("\"alpha\" . to_string ()")
+                && expanded.contains("map . insert (\"alpha\" . to_string ()")
                 && expanded.contains("alpha_confidence")
                 && expanded.contains("alpha_justification"),
             "Expected expansions for alpha + justification/conf"
         );
         assert!(
-            expanded.contains("beta . to_string ()")
+            expanded.contains("\"beta\" . to_string ()")
                 && expanded.contains("beta_justification")
                 && expanded.contains("beta_confidence"),
             "Expected expansions for beta + justification/conf"
@@ -306,5 +378,55 @@ mod verify_build_enum_variant_fields_map_with_justification {
                 && expanded.contains("field_2_confidence"),
             "Field 2 is not skipping => should appear"
         );
+    }
+
+    /// If you want to test the `build_enum_variant_fields_map_with_justification` directly:
+    #[traced_test]
+    fn test_build_enum_variant_fields_map_with_justification_for_named() {
+        // Suppose your function is:
+        //   fn build_enum_variant_fields_map_with_justification(
+        //       variant: &syn::Variant,
+        //       skip_self_just: bool,
+        //       skip_child_just: bool
+        //   ) -> proc_macro2::TokenStream
+        //
+        // We'll create a dummy variant with 2 named fields:
+        let var: syn::Variant = syn::parse_quote! {
+            NumericStuff {
+                count: u32,
+                label: String
+            }
+        };
+        // For the sake of the test, skip_self_just=false, skip_child_just=false
+        let ts = build_enum_variant_fields_map_with_justification(&var, false, false);
+
+        //assert_tokens_parse_ok(&ts);
+
+        // Check that "count:" is not turned into "count::"
+        let code_str = ts.to_string();
+        assert!(
+            code_str.contains("count"),
+            "Expected code to contain 'count' but not 'count::'"
+        );
+        assert!(!code_str.contains("count::"), "Should never produce 'count::'!");
+    }
+
+    /// Example test for verifying we don't break HashMap expansions
+    #[traced_test]
+    fn test_build_enum_variant_fields_map_with_justification_for_hashmap() {
+        let var: syn::Variant = syn::parse_quote! {
+            MapVariant {
+                items: std::collections::HashMap<u8, String>
+            }
+        };
+        let ts = build_enum_variant_fields_map_with_justification(&var, false, false);
+        //assert_tokens_parse_ok(&ts);
+        let code_str = ts.to_string();
+        info!("code_str={}",code_str);
+        assert!(
+            code_str.contains("HashMap < u8 , String >"),
+            "Should reference 'HashMap<u8, String>' in some form"
+        );
+        assert!(!code_str.contains("items::"), "No 'items::' path should appear!");
     }
 }

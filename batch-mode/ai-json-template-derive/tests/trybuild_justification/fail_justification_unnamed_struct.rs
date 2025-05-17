@@ -14,6 +14,7 @@ use getset::*;
 use derive_builder::Builder;
 use save_load_derive::*;
 use save_load_traits::*;
+use tracing::*;
 
 #[derive(SaveLoad, Debug, Clone, Serialize, Deserialize, Builder)]
 #[derive(AiJsonTemplate, AiJsonTemplateWithJustification)]

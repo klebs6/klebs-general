@@ -17,11 +17,6 @@ pub fn is_numeric(ty: &syn::Type) -> bool {
     false
 }
 
-/// Return true if K is recognized numeric or String.
-pub fn is_simple_key_type(k: &syn::Type) -> bool {
-    is_numeric(k) || is_string_type(k)
-}
-
 /// Check if `bool`.
 pub fn is_bool(ty: &syn::Type) -> bool {
     if let syn::Type::Path(tp) = ty {

@@ -1,51 +1,70 @@
 // ---------------- [ File: ai-json-template-derive/src/is_leaf_type.rs ]
 crate::ix!();
 
-/// Return true if `ty` should *not* be treated as a nested justification-enabled type.
-/// For example, if `ty` is just a `String`, or a numeric, or a `HashMap<_, _>`, etc.
+#[tracing::instrument(level = "trace", skip_all)]
 pub fn is_leaf_type(ty: &syn::Type) -> bool {
-    // 1) If it's a simple path of "String", "u8", "bool", etc, return true.
-    // 2) If it's "HashMap<..., ...>", also return true.
-    // 3) Otherwise, by default, return false => might be a user-defined struct that DOES have justification.
+    trace!("Evaluating if type is considered a leaf: {:?}", ty);
 
-    match ty {
-        syn::Type::Path(type_path) => {
-            let segs = &type_path.path.segments;
-            if segs.len() == 1 {
-                let ident = &segs[0].ident;
-                let ident_s = ident.to_string();
+    // 1) If `Option<T>` => treat as non-leaf
+    if crate::extract_option_inner(ty).is_some() {
+        trace!("Type is Option<T>, treating as non-leaf");
+        return false;
+    }
 
-                // e.g. "String", "bool", "f32", "HashMap", etc:
-                match ident_s.as_str() {
-                    "String" | "str" 
-                    | "bool" 
-                    | "u8" | "u16" | "u32" | "u64" 
-                    | "i8" | "i16" | "i32" | "i64" 
-                    | "f32" | "f64" => true,
-                    "HashMap" => true, // or parse generics, if needed
-                    _ => false, // e.g. "InnerPart" => not a leaf
+    // 2) If `Vec<T>` => treat as non-leaf
+    if crate::extract_vec_inner(ty).is_some() {
+        trace!("Type is Vec<T>, treating as non-leaf");
+        return false;
+    }
+
+    // 3) If `HashMap<K, V>` => treat as leaf (test suite says so)
+    if crate::extract_hashmap_inner(ty).is_some() {
+        trace!("Type is HashMap<K, V>, treating as leaf");
+        return true;
+    }
+
+    // 4) If reference => treat as leaf (the tests say &str is leaf)
+    if let syn::Type::Reference(_) = ty {
+        trace!("Type is a reference, treating as leaf");
+        return true;
+    }
+
+    // 5) If bare function pointer => leaf
+    if let syn::Type::BareFn(_) = ty {
+        trace!("Type is a bare function pointer, treating as leaf");
+        return true;
+    }
+
+    // 6) If it’s a `Type::Path`, check the last segment. If it's a known built-in leaf type, return true.
+    //    Otherwise return false (likely a user-defined type).
+    if let syn::Type::Path(type_path) = ty {
+        if let Some(last_seg) = type_path.path.segments.last() {
+            let ident_s = last_seg.ident.to_string();
+            trace!("Type::Path => last segment: {}", ident_s);
+
+            match ident_s.as_str() {
+                // The tests specifically want `str` to be leaf:
+                "str"
+                // "String", "bool", numeric
+                | "String" | "bool"
+                | "u8" | "u16" | "u32" | "u64"
+                | "i8" | "i16" | "i32" | "i64"
+                | "f32" | "f64"
+                // Also allow trailing "HashMap" as a leaf, e.g. `my::outer::HashMap`.
+                | "HashMap" => {
+                    trace!("Matched known built-in leaf type: {}", ident_s);
+                    return true;
                 }
-            } else {
-                // multiple path segments? Possibly std::collections::HashMap
-                // or user code: "crate::InnerPart"? So do more pattern matches if you want.
-                // For demonstration, let's just do a quick hack:
-                let last = &segs.last().unwrap().ident.to_string();
-                match last.as_str() {
-                    "HashMap" | "String" | "bool" 
-                        | "u8" | "u16" | "u32" | "u64"
-                        | "i8" | "i16" | "i32" | "i64"
-                        | "f32" | "f64" => true,
-                    _ => false,
+                _ => {
+                    trace!("Type '{}' is not recognized as a built-in leaf, treating as non-leaf", ident_s);
+                    return false;
                 }
             }
         }
-        // Option<T>?  If you want Option to be treated as leaf or not, up to you. 
-        // For demonstration, let's just do:
-        syn::Type::Reference(_) => true,
-        syn::Type::BareFn(_) => true,
-        // etc.
-        _ => false,
     }
+
+    trace!("Type does not match any known leaf criteria, treating as non-leaf");
+    false
 }
 
 #[cfg(test)]

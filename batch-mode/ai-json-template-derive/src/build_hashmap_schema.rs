@@ -22,8 +22,8 @@ pub fn build_hashmap_schema(
         quote::quote! {
             {
                 let mut k_obj = serde_json::Map::new();
-                k_obj.insert("type", serde_json::Value::String("nested_struct_or_enum"));
-                k_obj.insert("nested_template", <#k_ty as AiJsonTemplateWithJustification>::to_template_with_justification());
+                k_obj.insert("type".to_string(), serde_json::Value::String("nested_struct_or_enum"));
+                k_obj.insert("nested_template".to_string(), <#k_ty as AiJsonTemplateWithJustification>::to_template_with_justification());
                 serde_json::Value::Object(k_obj)
             }
         }
@@ -40,8 +40,8 @@ pub fn build_hashmap_schema(
         quote::quote! {
             {
                 let mut v_obj = serde_json::Map::new();
-                v_obj.insert("type", serde_json::Value::String("nested_struct_or_enum"));
-                v_obj.insert("nested_template", <#v_ty as AiJsonTemplateWithJustification>::to_template_with_justification());
+                v_obj.insert("type".to_string(), serde_json::Value::String("nested_struct_or_enum"));
+                v_obj.insert("nested_template".to_string(), <#v_ty as AiJsonTemplateWithJustification>::to_template_with_justification());
                 serde_json::Value::Object(v_obj)
             }
         }
@@ -52,11 +52,11 @@ pub fn build_hashmap_schema(
     let snippet: syn::ExprBlock = syn::parse_quote! {
         {
             let mut map_obj = serde_json::Map::new();
-            map_obj.insert("type", serde_json::Value::String("map_of"));
-            map_obj.insert("generation_instructions", serde_json::Value::String(#doc_lit));
-            map_obj.insert("required", serde_json::Value::Bool(#required_bool));
-            map_obj.insert("map_key_template", #key_schema);
-            map_obj.insert("map_value_template", #val_schema);
+            map_obj.insert("type".to_string(), serde_json::Value::String("map_of"));
+            map_obj.insert("generation_instructions".to_string(), serde_json::Value::String(#doc_lit));
+            map_obj.insert("required".to_string(), serde_json::Value::Bool(#required_bool));
+            map_obj.insert("map_key_template".to_string(), #key_schema);
+            map_obj.insert("map_value_template".to_string(), #val_schema);
             serde_json::Value::Object(map_obj)
         }
     };
@@ -111,6 +111,38 @@ mod test_build_hashmap_schema {
         }
     }
 
+    fn extract_str_key_from_expr(e: &syn::Expr) -> Option<String> {
+        // (1) If `e` is literally a string literal, e.g. `"type"`
+        if let syn::Expr::Lit(syn::ExprLit {
+            lit: syn::Lit::Str(s),
+            ..
+        }) = e
+        {
+            return Some(s.value());
+        }
+
+        // (2) If `e` is something like `"some_text".to_string()` ...
+        if let syn::Expr::MethodCall(mc) = e {
+            // Make sure the method name is exactly `to_string`
+            if mc.method == "to_string" {
+                // ...and make sure there are no arguments, i.e. `.to_string()` not `.to_string(x)`
+                if mc.args.is_empty() {
+                    // Now check if the receiver is a string literal
+                    // e.g. the code looks like:  "foo".to_string()
+                    if let syn::Expr::Lit(syn::ExprLit {
+                        lit: syn::Lit::Str(slit),
+                        ..
+                    }) = &*mc.receiver
+                    {
+                        return Some(slit.value());
+                    }
+                }
+            }
+        }
+
+        // (3) otherwise, we don’t recognize this expression as a plain string or `"...".to_string()`
+        None
+    }
 
     /// Check that the top-level block:
     ///  - creates a `map_obj`
@@ -145,13 +177,12 @@ mod test_build_hashmap_schema {
                 let key_expr = &method_call.args[0];
                 let val_expr = &method_call.args[1];
 
-                // The key must be a string literal
-                let key_lit = match key_expr {
-                    syn::Expr::Lit(syn::ExprLit { lit: syn::Lit::Str(s), .. }) => s.value(),
-                    _ => continue,
+                let key_string: String = match extract_str_key_from_expr(&method_call.args[0]) {
+                    Some(k) => k,
+                    None => continue,
                 };
 
-                match key_lit.as_str() {
+                match key_string.as_str() {
                     "type" => {
                         if is_string_value_expr(val_expr, "map_of") {
                             found_type = true;

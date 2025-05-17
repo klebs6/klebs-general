@@ -1,45 +1,21 @@
 // ---------------- [ File: ai-json-template-derive/src/lib.rs ]
-#![allow(dead_code)]
+//#![allow(dead_code)]
 #![feature(box_patterns)]
 #![allow(unused_imports)]
+#![allow(unused_variables)]
 #[macro_use] mod imports; use imports::*;
 
-xp!{build_bool_schema}
-xp!{build_enum_confidence}
-xp!{build_enum_justification}
 xp!{build_enum_variant_expr_with_justification}
 xp!{build_enum_variant_fields_map_with_justification}
-xp!{build_flat_parent_ident}
-xp!{build_flat_unit_variant_ts}
-xp!{build_flat_variant_snippet_named}
-xp!{build_flattened_named_struct_for_named}
 xp!{build_from_arm_for_named}
 xp!{build_from_arm_for_unit_variant}
-xp!{build_from_impl_for_named}
 xp!{build_hashmap_schema}
-xp!{build_just_and_conf_structs}
-xp!{build_justified_enum_struct}
-xp!{build_justified_struct}
-xp!{build_justified_struct_accessors}
 xp!{build_named_field_child_schema_expr}
 xp!{build_named_field_just_conf_placeholders}
-xp!{build_nested_schema}
-xp!{build_numeric_schema}
-xp!{build_option_schema}
-xp!{build_string_schema}
 xp!{build_top_level_justification_fields_for_variant}
-xp!{build_vec_schema}
-xp!{child_type_to_conf}
-xp!{child_type_to_just}
 xp!{classify_field_type}
 xp!{classify_field_type_for_child}
-xp!{classify_field_type_with_justification}
-xp!{classify_result}
-xp!{collect_variant_fields_for_just_conf}
 xp!{comma_separated_expression}
-xp!{compute_flat_type_for_stamped}
-xp!{create_flat_justification_idents_for_enum}
-xp!{create_flat_justified_idents_for_named}
 xp!{emit_schema_for_bool}
 xp!{emit_schema_for_fallback_nested}
 xp!{emit_schema_for_hashmap}
@@ -47,50 +23,24 @@ xp!{emit_schema_for_number}
 xp!{emit_schema_for_string}
 xp!{emit_schema_for_type}
 xp!{emit_schema_for_vec}
-xp!{expand_ai_json_template_with_justification}
 xp!{expand_enum_with_justification}
 xp!{expand_named_struct_with_justification}
-xp!{expand_named_variant_into_flat_justification}
-xp!{expand_unit_variant_into_flat_justification}
-xp!{expand_unnamed_variant_into_flat_justification}
 xp!{extract_hashmap_inner}
 xp!{extract_option_inner}
 xp!{extract_vec_inner}
-xp!{field_just_conf_mapping}
-xp!{finalize_flat_unnamed_variant_ts}
-xp!{finalize_from_arm_unnamed_variant_ts}
-xp!{flatten_named_field}
-xp!{flatten_named_variant_fields}
-xp!{flatten_unnamed_field}
 xp!{flattened_field_result}
 xp!{gather_doc_comments}
-xp!{gather_field_injections}
-xp!{gather_fields_for_just_conf}
-xp!{gather_flat_fields_and_inits_for_named}
-xp!{gather_item_accessors}
-xp!{gather_justification_and_confidence_fields}
-xp!{gather_named_struct_just_conf_fields}
 xp!{gather_schemas_and_placeholders_for_named_fields}
-xp!{gather_unnamed_variant_expansions}
 xp!{generate_enum_justified}
-xp!{generate_flat_justification_code_for_enum}
-xp!{generate_flat_justified_for_named}
-xp!{generate_flat_variant_for_variant}
 xp!{generate_justified_structs_for_named}
 xp!{generate_to_template_with_justification_for_enum}
 xp!{generate_to_template_with_justification_for_named}
-xp!{handle_named_variant}
-xp!{handle_unit_variant}
-xp!{handle_unnamed_variant}
 xp!{is_builtin_scalar}
 xp!{is_justification_enabled}
 xp!{is_leaf_type}
 xp!{is_numeric}
 xp!{parse_doc_expr}
-xp!{rename_unit_to_unitvariant}
-xp!{rename_variant_ident_if_unit}
 xp!{resolve_map_key_type}
-xp!{sanitize_into_idents_for_nested}
 xp!{top_level_justification_result}
 xp!{unnamed_variant_expansion}
 
@@ -330,7 +280,7 @@ pub fn derive_ai_json_template_with_justification(
     let mut out = proc_macro2::TokenStream::new();
 
     let ty_ident = &ast.ident;
-    let container_docs = crate::gather_doc_comments(&ast.attrs);
+    let container_docs = gather_doc_comments(&ast.attrs);
     let _container_doc_str = container_docs.join("\n");
 
     match &ast.data {
@@ -338,29 +288,16 @@ pub fn derive_ai_json_template_with_justification(
         syn::Data::Struct(ds) => {
             if let syn::Fields::Named(ref named_fields) = ds.fields {
                 // (a) typed expansions
-                let (just_ts, conf_ts, justified_ts, accessor_ts) =
-                    crate::generate_justified_structs_for_named(ty_ident, named_fields, span);
-                out.extend(just_ts);
-                out.extend(conf_ts);
-                out.extend(justified_ts);
-                out.extend(accessor_ts);
+                let justified_struct = generate_justified_structs_for_named(ty_ident, named_fields, span);
+                out.extend(justified_struct);
 
                 // Optionally generate a specialized "to_template_with_justification()"—you might already do so.
-                let to_tpl_ts = crate::generate_to_template_with_justification_for_named(
+                let to_tpl_ts = generate_to_template_with_justification_for_named(
                     ty_ident,
                     named_fields,
                     &_container_doc_str
                 );
                 out.extend(to_tpl_ts);
-
-                // (b) the FLAT expansions => "FlatJustifiedFoo" + From<FlatJustifiedFoo> for JustifiedFoo
-                let (flat_ts, from_ts) = crate::generate_flat_justified_for_named(
-                    ty_ident,
-                    named_fields,
-                    span
-                );
-                out.extend(flat_ts);
-                out.extend(from_ts);
 
             } else {
                 // e.g. unit or tuple struct => produce an error or do something else
@@ -375,61 +312,16 @@ pub fn derive_ai_json_template_with_justification(
         // ==================== Enum ====================
         syn::Data::Enum(data_enum) => {
             // (a) typed expansions for justification/conf + JustifiedEnum
-            let (enum_just_ts, enum_conf_ts, justified_enum_ts) =
-                crate::generate_enum_justified(ty_ident, data_enum, span);
-            out.extend(enum_just_ts);
-            out.extend(enum_conf_ts);
-            out.extend(justified_enum_ts);
+            let justified_enum = generate_enum_justified(ty_ident, data_enum, span);
+            out.extend(justified_enum);
 
             // Optionally generate a specialized "to_template_with_justification_for_enum(...)"
-            let enum_tpl_ts = crate::generate_to_template_with_justification_for_enum(
+            let enum_tpl_ts = generate_to_template_with_justification_for_enum(
                 ty_ident,
                 data_enum,
                 &_container_doc_str
             );
             out.extend(enum_tpl_ts);
-
-            let skip_variant_self_just    = |variant: &syn::Variant| {
-                // real logic: e.g. check if `#[justify=false]` is on the variant
-                is_justification_disabled_for_variant(variant)
-            };
-            let skip_variant_child_just   = |variant: &syn::Variant| {
-                // check if `#[justify_inner=false]`
-                is_justification_disabled_for_inner_variant(variant)
-            };
-            let skip_field_self_just      = |field: &syn::Field| {
-                // check if `#[justify=false]` is on the field
-                is_justification_disabled_for_field(field)
-            };
-            let is_leaf_type_fn           = |ty: &syn::Type| {
-                // your real logic, e.g. is_leaf_type(ty)
-                is_leaf_type(ty)
-            };
-
-            // The flatteners you wrote:
-            let flatten_named_field_fn = |fid: &Ident, t: &syn::Type, skip_s: bool, skip_c: bool| {
-                flatten_named_field(fid, t, skip_s, skip_c)
-            };
-            let flatten_unnamed_field_fn = |fid: &Ident, t: &syn::Type, skip_s: bool, skip_c: bool| {
-                flatten_unnamed_field(fid, t, skip_s, skip_c)
-            };
-
-            // (b) the FLAT expansions => "FlatJustifiedEnum" + From<FlatJustifiedEnum> for JustifiedEnum
-            // call with all 9:
-            let (flat_ts, from_ts) = generate_flat_justification_code_for_enum(
-                ty_ident,
-                data_enum,
-                span,
-                skip_variant_self_just,
-                skip_variant_child_just,
-                skip_field_self_just,
-                is_leaf_type_fn,
-                flatten_named_field_fn,
-                flatten_unnamed_field_fn,
-            );
-
-            out.extend(flat_ts);
-            out.extend(from_ts);
         }
 
         // ==================== Union => not supported ====================
@@ -438,6 +330,12 @@ pub fn derive_ai_json_template_with_justification(
             out.extend(e.to_compile_error());
         }
     }
+
+    /*
+    eprintln!("=== FINAL EXPANSION for {} ===\n{}", ty_ident, out.to_string());
+
+    assert_tokens_parse_ok(&out);
+    */
 
     out.into()
 }

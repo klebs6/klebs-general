@@ -4,39 +4,60 @@ crate::ix!();
 #[tracing::instrument(level="trace", skip_all)]
 pub fn gather_schemas_and_placeholders_for_named_fields(
     fields: &syn::FieldsNamed
-) -> Vec<proc_macro2::TokenStream> {
-    use tracing::debug;
-
+) -> Vec<proc_macro2::TokenStream>
+{
     let mut expansions = Vec::new();
+
     for field in &fields.named {
         let field_ident = match &field.ident {
             Some(id) => id,
             None => {
+                // Should never happen for named fields, but just in case:
                 debug!("Skipping unnamed field in a named struct?");
                 continue;
             }
         };
         let field_name_str = field_ident.to_string();
-        debug!("Processing field '{}'", field_name_str);
 
+        // Gather doc lines
         let doc_str = gather_doc_comments(&field.attrs).join("\n");
-        let is_required = extract_option_inner(&field.ty).is_none();
-        let skip_self_just   = is_justification_disabled_for_field(field);
-        let skip_child_just  = skip_self_just || is_justification_disabled_for_inner(field);
 
-        // (A) Normal child schema
-        if let Some(child_expr) = build_named_field_child_schema_expr(field, &doc_str, is_required, skip_child_just) {
+        // required = (not an Option<...>)
+        let is_required = extract_option_inner(&field.ty).is_none();
+
+        // Evaluate justification attributes
+        let skip_f_self  = is_justification_disabled_for_field(field);
+        let skip_f_inner = is_justification_disabled_for_inner(field);
+
+        trace!(
+            "Processing field '{}' => skip_f_self={}, skip_f_inner={}",
+            field_name_str, skip_f_self, skip_f_inner
+        );
+
+        // (1) Build the child schema. If skip_f_inner=true, we skip any *nested*
+        //     expansions (like justification for the child’s subfields),
+        //     but we do still produce a "leaf" schema. So we pass skip_child_just=skip_f_inner
+        //     to `build_named_field_child_schema_expr`.
+        if let Some(child_expr) = build_named_field_child_schema_expr(
+            field,
+            &doc_str,
+            is_required,
+            /* skip_child_just = */ skip_f_inner
+        ) {
             expansions.push(quote::quote! {
                 map.insert(#field_name_str.to_string(), #child_expr);
             });
         }
 
-        // (B) Just/conf placeholders if skip_self_just is false
-        if !skip_self_just {
+        // (2) Insert top-level placeholders unless `#[justify=false]`.
+        //     We do *not* skip placeholders for `#[justify_inner=false]` in a struct,
+        //     because the test suite wants them. So only skip if skip_f_self==true.
+        if !skip_f_self {
             let just_conf_ts = build_named_field_just_conf_placeholders(&field_name_str);
             expansions.push(just_conf_ts);
         }
     }
+
     expansions
 }
 
@@ -101,7 +122,7 @@ mod tests_for_gather_schemas_and_placeholders_for_named_fields {
 
         // Check that the normal schema mentions 'foo'
         assert!(
-            expansions_str[0].contains("map.insert(\"foo\""),
+            expansions_str[0].contains("map . insert (\"foo\""),
             "First expansion should insert 'foo' child schema"
         );
 
@@ -177,11 +198,12 @@ mod tests_for_gather_schemas_and_placeholders_for_named_fields {
         // expansions[1] is beta child schema
         // expansions[2] is placeholders for beta
         let joined = expansions_str.join("\n");
+        info!("joined={}",joined);
 
         // Check that alpha was inserted
-        assert!(joined.contains("map.insert(\"alpha\""), "alpha child schema");
+        assert!(joined.contains("map . insert (\"alpha\""), "alpha child schema");
         // Check that beta was inserted
-        assert!(joined.contains("map.insert(\"beta\""), "beta child schema");
+        assert!(joined.contains("map . insert (\"beta\""), "beta child schema");
 
         // Only beta should have placeholders
         assert!(
@@ -240,6 +262,19 @@ mod tests_for_gather_schemas_and_placeholders_for_named_fields {
         // but gather_schemas_and_placeholders_for_named_fields still inserts the top-level placeholders.
     }
 
+    /// A small helper that takes a token stream (the expansion),
+    /// wraps it in braces, and parses as a syn::Block.
+    /// That way, we get zero or more statements we can match on.
+    fn parse_as_statements(ts: proc_macro2::TokenStream) -> syn::Result<Vec<Stmt>> {
+        let wrapped = quote::quote! {
+            {
+                #ts
+            }
+        };
+        let block: Block = parse2(wrapped)?;
+        Ok(block.stmts)
+    }
+
     #[traced_test]
     fn test_gather_schemas_and_placeholders_multiple_fields() {
         trace!("Starting test_gather_schemas_and_placeholders_multiple_fields");
@@ -257,33 +292,92 @@ mod tests_for_gather_schemas_and_placeholders_for_named_fields {
         "#;
         let fields = parse_named_fields(src);
         let expansions = gather_schemas_and_placeholders_for_named_fields(&fields);
-        let expansions_str = tokens_to_string_vec(&expansions);
-        debug!("Expansions: {:#?}", expansions_str);
-
-        // We have 3 fields: foo, bar, baz.
-        // The function will produce:
-        //   - Child schema for foo
-        //   - Just/conf placeholders for foo
-        //   - Child schema for bar
-        //   (No placeholders for bar => justify = false)
-        //   - Child schema for baz
-        //   - Just/conf placeholders for baz (since it doesn't have justify=false)
-        //
-        // => total expansions = 1+1 + 1 + 1+1 = 5
-        // Actually that's 1 + 1 (foo) + 1 (bar only child) + 1 + 1 (baz) = 5 expansions
+        // We expect 5 expansions:
+        //   (1) child schema for foo
+        //   (2) placeholders for foo
+        //   (3) child schema for bar
+        //   (4) child schema for baz
+        //   (5) placeholders for baz
         assert_eq!(expansions.len(), 5, "Expected 5 expansions total");
 
-        let joined = expansions_str.join("\n");
-        // foo expansions
-        assert!(joined.contains("map.insert(\"foo\""), "foo child schema");
-        assert!(joined.contains("foo_justification") && joined.contains("foo_confidence"));
+        // --- (1) Child schema for `foo`
+        {
+            let stmts = parse_as_statements(expansions[0].clone())
+                .expect("Should parse as statements");
+            // Typically it's a single statement: `map.insert("foo", { ... });`
+            assert_eq!(stmts.len(), 1, "Expected exactly 1 statement for foo child schema");
 
-        // bar expansions
-        assert!(joined.contains("map.insert(\"bar\""), "bar child schema");
-        assert!(!joined.contains("bar_justification"), "no placeholders for bar");
+            match &stmts[0] {
+                Stmt::Expr(Expr::MethodCall(mc), _) => {
+                    // Something like: map . insert("foo", <expr>)
+                    // Check the method name is "insert"
+                    assert_eq!(mc.method.to_string(), "insert");
+                    // Check the receiver is a path "map"
+                    if let Expr::Path(ref p) = *mc.receiver {
+                        assert_eq!(p.path.segments[0].ident, "map");
+                    } else {
+                        panic!("Expected receiver to be `map`");
+                    }
+                    // Optionally, check first argument is `"foo".to_string()` or just `"foo"`.
+                    // Because you might do `foo.to_string()` or something else. 
+                    // For simplicity, let’s just check we see "foo" somewhere in the argument tokens:
+                    let arg0_str = mc.args[0].to_token_stream().to_string();
+                    assert!(
+                        arg0_str.contains("\"foo\""),
+                        "First arg should mention \"foo\""
+                    );
+                }
+                _ => panic!("Expected `map.insert(\"foo\", ...)` as a single statement for foo"),
+            }
+        }
 
-        // baz expansions
-        assert!(joined.contains("map.insert(\"baz\""), "baz child schema");
-        assert!(joined.contains("baz_justification") && joined.contains("baz_confidence"));
+        // --- (2) Placeholders for `foo`
+        {
+            let stmts = parse_as_statements(expansions[1].clone())
+                .expect("Should parse the placeholders for foo");
+            // We expect a block with ~2 statements inside: one for foo_justification, one for foo_confidence.
+            // This might be a single block or multiple statements. Let’s at least check we see "foo_justification".
+            let joined = stmts.iter().map(|s| s.to_token_stream().to_string()).collect::<String>();
+            assert!(joined.contains("foo_justification"), "Should define foo_justification placeholder");
+            assert!(joined.contains("foo_confidence"), "Should define foo_confidence placeholder");
+        }
+
+        // --- (3) Child schema for `bar` (because justify=false => no placeholders)
+        {
+            let stmts = parse_as_statements(expansions[2].clone())
+                .expect("Should parse as statements");
+            assert_eq!(stmts.len(), 1, "Expected exactly 1 statement for bar child schema");
+            // We can do the same approach: confirm method call is `map.insert("bar", ...)`
+            match &stmts[0] {
+                Stmt::Expr(Expr::MethodCall(mc), _) => {
+                    assert_eq!(mc.method.to_string(), "insert");
+                    let arg0_str = mc.args[0].to_token_stream().to_string();
+                    assert!(arg0_str.contains("\"bar\""), "Should mention \"bar\" as first arg");
+                }
+                _ => panic!("Expected `map.insert(\"bar\", ...)` as a single statement for bar"),
+            }
+        }
+
+        // --- (4) Child schema for `baz`
+        {
+            let stmts = parse_as_statements(expansions[3].clone())
+                .expect("Should parse as statements for baz child schema");
+            assert_eq!(
+                stmts.len(),
+                1,
+                "Expected a single statement for baz child schema"
+            );
+            let joined = stmts[0].to_token_stream().to_string();
+            assert!(joined.contains("\"baz\""), "Should mention \"baz\" as first arg");
+        }
+
+        // --- (5) Placeholders for `baz`
+        {
+            let stmts = parse_as_statements(expansions[4].clone())
+                .expect("Should parse as statements for baz placeholders");
+            let joined = stmts.iter().map(|s| s.to_token_stream().to_string()).collect::<String>();
+            assert!(joined.contains("baz_justification"), "Should define baz_justification");
+            assert!(joined.contains("baz_confidence"), "Should define baz_confidence");
+        }
     }
 }
