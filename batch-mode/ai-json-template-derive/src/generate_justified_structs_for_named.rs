@@ -32,7 +32,9 @@ pub fn generate_justified_structs_for_named(
     //   - add `_confidence: f64` 
     //   - add `_justification: String`
     let mut flattened_fields = Vec::new();
+
     for field in &named_fields.named {
+
         let field_ident = match &field.ident {
             Some(id) => id,
             None => {
@@ -40,11 +42,23 @@ pub fn generate_justified_structs_for_named(
                 continue;
             }
         };
-        let field_ty = &field.ty;
+
+        let justified_ty = justified_type(&field.ty);
+
+        // 1) Gather all attributes from the original field
+        let original_attrs = &field.attrs;
+
+        // 2) Filter only the ones that start with `#[serde(...)]`
+        let serde_attrs: Vec<_> = original_attrs
+            .iter()
+            .filter(|attr| attr.path().is_ident("serde"))
+            .collect();
+
 
         // The original field itself
         flattened_fields.push(quote::quote! {
-            #field_ident: #field_ty,
+            #( #serde_attrs )*
+            #field_ident: #justified_ty,
         });
 
         // The confidence + justification
@@ -69,7 +83,7 @@ pub fn generate_justified_structs_for_named(
     // but remember you said “never use pub members.” 
     // If you want them private + getset, adapt as needed:
     let flattened_struct = quote::quote! {
-        #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default, Getters, Setters)]
+        #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Getters, Setters)]
         #[getset(get="pub", set="pub")]
         pub struct #justified_ident {
             #(#flattened_fields)*

@@ -1,3 +1,9 @@
+error[E0412]: cannot find type `JustifiedBadEnum` in this scope
+  --> tests/trybuild_justification/fail_justification_enum_field.rs:31:11
+   |
+31 |     data: BadEnum,
+   |           ^^^^^^^ not found in this scope
+
 error[E0277]: the trait bound `BadEnum: ai_json_template::AiJsonTemplate` is not satisfied
   --> tests/trybuild_justification/fail_justification_enum_field.rs:31:11
    |
@@ -9,17 +15,6 @@ error[E0277]: the trait bound `BadEnum: ai_json_template::AiJsonTemplate` is not
              HashMap<K, V>
              Vec<T>
              std::string::String
-
-error[E0277]: the trait bound `BadEnum: Default` is not satisfied
-  --> tests/trybuild_justification/fail_justification_enum_field.rs:31:5
-   |
-26 | #[derive(AiJsonTemplate, AiJsonTemplateWithJustification)]
-   |                          ------------------------------- in this derive macro expansion
-...
-31 |     data: BadEnum,
-   |     ^^^^^^^^^^^^^ the trait `Default` is not implemented for `BadEnum`
-   |
-   = note: this error originates in the derive macro `Default` which comes from the expansion of the derive macro `AiJsonTemplateWithJustification` (in Nightly builds, run with -Z macro-backtrace for more info)
 
 error[E0277]: the trait bound `BadEnum: ai_json_template::AiJsonTemplateWithJustification` is not satisfied
   --> tests/trybuild_justification/fail_justification_enum_field.rs:31:11

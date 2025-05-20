@@ -9,32 +9,11 @@ pub fn generate_enum_justified(
 ) -> proc_macro2::TokenStream {
     use quote::quote;
 
-    // e.g. "Geometry2dWithJustification"
-    let enum_with_just_ident = syn::Ident::new(
-        &format!("{}WithJustification", ty_ident),
-        span
-    );
-
     // e.g. "JustifiedGeometry2d"
     let justified_enum_ident = syn::Ident::new(
         &format!("Justified{}", ty_ident),
         span
     );
-
-    // Detect if the user’s original enum has a `#[default]` variant
-    // so we can safely derive Default for the expanded “WithJustification” enum.
-    let mut user_has_default_variant = false;
-    for variant in &data_enum.variants {
-        for attr in &variant.attrs {
-            if attr.path().is_ident("default") {
-                user_has_default_variant = true;
-                break;
-            }
-        }
-        if user_has_default_variant {
-            break;
-        }
-    }
 
     let mut variant_defs: Vec<TokenStream2> = Vec::new();
 
@@ -75,25 +54,35 @@ pub fn generate_enum_justified(
                 }
 
                 for field in &named_fields.named {
-                    let f_ident = match &field.ident {
+                    let field_ident = match &field.ident {
                         Some(id) => id,
                         None => continue, // shouldn't happen in Named
                     };
 
-                    let field_ty = &field.ty;
+                    let justified_ty = justified_type(&field.ty);
+
+                    // 1) Gather all attributes from the original field
+                    let original_attrs = &field.attrs;
+
+                    // 2) Filter only the ones that start with `#[serde(...)]`
+                    let serde_attrs: Vec<_> = original_attrs
+                        .iter()
+                        .filter(|attr| attr.path().is_ident("serde"))
+                        .collect();
 
                     let skip_field_self = crate::is_justification_disabled_for_field(field);
                     let actually_skip   = skip_field_self || skip_child_just;
 
                     // Always store the original field as is
                     final_fields.push(quote! {
-                        #f_ident: #field_ty,
+                        #( #serde_attrs )*
+                        #field_ident: #justified_ty,
                     });
 
                     // If not skipping => add `field_confidence`, `field_justification`
                     if !actually_skip {
-                        let conf_id = syn::Ident::new(&format!("{}_confidence", f_ident), f_ident.span());
-                        let just_id = syn::Ident::new(&format!("{}_justification", f_ident), f_ident.span());
+                        let conf_id = syn::Ident::new(&format!("{}_confidence", field_ident), field_ident.span());
+                        let just_id = syn::Ident::new(&format!("{}_justification", field_ident), field_ident.span());
                         final_fields.push(quote! {
                             #conf_id: f64,
                             #just_id: String,
@@ -123,11 +112,11 @@ pub fn generate_enum_justified(
                     let skip_field_self = crate::is_justification_disabled_for_field(field);
                     let actually_skip = skip_field_self || skip_child_just;
 
-                    let field_ty = &field.ty;
+                    let justified_ty = justified_type(&field.ty);
 
                     // Always store the original field
                     final_fields.push(quote! {
-                        #field_ident: #field_ty,
+                        #field_ident: #justified_ty,
                     });
 
                     // If not skipping => add `field_i_confidence` and `field_i_justification`
@@ -150,39 +139,14 @@ pub fn generate_enum_justified(
         }
     }
 
-    // If the user’s original enum had a `#[default]` variant,
-    // we can safely do `#[derive(Default)]` on the “WithJustification” enum.
-    // Otherwise, we omit Default to avoid parse errors or runtime panics.
-    let maybe_default = if user_has_default_variant {
-        quote! { #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)] }
-    } else {
-        quote! { #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)] }
-    };
-
-    // The flattened enum e.g. `enum MyEnumWithJustification { ... }`
-    let enum_with_just_ts = quote! {
-        #maybe_default
-        pub enum #enum_with_just_ident {
+    let enum_def = quote! {
+        #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+        pub enum #justified_enum_ident {
             #(#variant_defs)*
         }
     };
 
-    // The top-level wrapper e.g. 
-    //  `pub struct JustifiedMyEnum { variant_confidence: f64, variant_justification: String, variant_selection: MyEnumWithJustification }`
-    // always has top-level variant_confidence & variant_justification for the *choice* of variant.
-    // That’s how we track which variant was chosen, plus the top-level justification.
-    let justified_wrapper_ts = quote! {
-        #[derive(Getters, Debug, Clone, PartialEq, Serialize, Deserialize)]
-        #[getset(get="pub")]
-        pub struct #justified_enum_ident {
-            variant_confidence: f64,
-            variant_justification: String,
-            variant_selection: #enum_with_just_ident,
-        }
-    };
-
-    quote! {
-        #enum_with_just_ts
-        #justified_wrapper_ts
+    quote!{
+        #enum_def
     }
 }

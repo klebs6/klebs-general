@@ -24,6 +24,15 @@ impl PostalCode {
     }
 }
 
+impl std::ops::Deref for PostalCode {
+
+    type Target = String;
+
+    fn deref(&self) -> &Self::Target {
+        &self.code
+    }
+}
+
 impl PostalCodeBuilder {
     pub fn validate(&self) -> Result<(), PostalCodeConstructionError> {
         if self.country.is_none() || self.code.is_none() {

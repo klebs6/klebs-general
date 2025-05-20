@@ -5,6 +5,11 @@
 #![allow(unused_variables)]
 #[macro_use] mod imports; use imports::*;
 
+xp!{generate_reverse_from_impl_for_named_with_justification}
+xp!{generate_reverse_from_impl_for_enum_with_justification}
+xp!{generate_manual_default_for_justified_enum}
+xp!{justified_type}
+xp!{find_default_variant}
 xp!{build_enum_variant_expr_with_justification}
 xp!{build_enum_variant_fields_map_with_justification}
 xp!{build_from_arm_for_named}
@@ -273,19 +278,22 @@ pub fn derive_ai_json_template(input: TokenStream) -> TokenStream {
 pub fn derive_ai_json_template_with_justification(
     input: proc_macro::TokenStream
 ) -> proc_macro::TokenStream {
-    let ast = syn::parse_macro_input!(input as syn::DeriveInput);
+
+    let ast  = syn::parse_macro_input!(input as syn::DeriveInput);
     let span = ast.span();
 
     // We'll build up the final expansions in `out`
     let mut out = proc_macro2::TokenStream::new();
 
-    let ty_ident = &ast.ident;
-    let container_docs = gather_doc_comments(&ast.attrs);
+    let ty_ident           = &ast.ident;
+    let container_docs     = gather_doc_comments(&ast.attrs);
     let _container_doc_str = container_docs.join("\n");
 
     match &ast.data {
+
         // ==================== Named Struct ====================
         syn::Data::Struct(ds) => {
+
             if let syn::Fields::Named(ref named_fields) = ds.fields {
                 // (a) typed expansions
                 let justified_struct = generate_justified_structs_for_named(ty_ident, named_fields, span);
@@ -299,6 +307,13 @@ pub fn derive_ai_json_template_with_justification(
                 );
                 out.extend(to_tpl_ts);
 
+                let from_impl = generate_reverse_from_impl_for_named_with_justification(
+                    ty_ident,
+                    named_fields,
+                    span,
+                );
+                out.extend(from_impl);
+
             } else {
                 // e.g. unit or tuple struct => produce an error or do something else
                 let err = syn::Error::new(
@@ -311,6 +326,7 @@ pub fn derive_ai_json_template_with_justification(
 
         // ==================== Enum ====================
         syn::Data::Enum(data_enum) => {
+
             // (a) typed expansions for justification/conf + JustifiedEnum
             let justified_enum = generate_enum_justified(ty_ident, data_enum, span);
             out.extend(justified_enum);
@@ -322,6 +338,13 @@ pub fn derive_ai_json_template_with_justification(
                 &_container_doc_str
             );
             out.extend(enum_tpl_ts);
+
+            let from_impl = generate_reverse_from_impl_for_enum_with_justification(
+                ty_ident,
+                data_enum,
+                span,
+            );
+            out.extend(from_impl);
         }
 
         // ==================== Union => not supported ====================
@@ -331,11 +354,14 @@ pub fn derive_ai_json_template_with_justification(
         }
     }
 
-    /*
-    eprintln!("=== FINAL EXPANSION for {} ===\n{}", ty_ident, out.to_string());
+    if DEBUG_FINAL_EXPANSION {
 
-    assert_tokens_parse_ok(&out);
-    */
+        eprintln!("=== FINAL EXPANSION for {} ===\n{}", ty_ident, out.to_string());
+
+        assert_tokens_parse_ok(&out);
+    }
 
     out.into()
 }
+
+const DEBUG_FINAL_EXPANSION: bool = false;
