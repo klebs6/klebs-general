@@ -54,7 +54,6 @@ pub fn generate_justified_structs_for_named(
             .filter(|attr| attr.path().is_ident("serde"))
             .collect();
 
-
         // The original field itself
         flattened_fields.push(quote::quote! {
             #( #serde_attrs )*

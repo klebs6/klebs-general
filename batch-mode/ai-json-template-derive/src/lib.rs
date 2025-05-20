@@ -5,11 +5,6 @@
 #![allow(unused_variables)]
 #[macro_use] mod imports; use imports::*;
 
-xp!{generate_reverse_from_impl_for_named_with_justification}
-xp!{generate_reverse_from_impl_for_enum_with_justification}
-xp!{generate_manual_default_for_justified_enum}
-xp!{justified_type}
-xp!{find_default_variant}
 xp!{build_enum_variant_expr_with_justification}
 xp!{build_enum_variant_fields_map_with_justification}
 xp!{build_from_arm_for_named}
@@ -33,17 +28,23 @@ xp!{expand_named_struct_with_justification}
 xp!{extract_hashmap_inner}
 xp!{extract_option_inner}
 xp!{extract_vec_inner}
+xp!{find_default_variant}
 xp!{flattened_field_result}
 xp!{gather_doc_comments}
 xp!{gather_schemas_and_placeholders_for_named_fields}
 xp!{generate_enum_justified}
 xp!{generate_justified_structs_for_named}
+xp!{generate_manual_default_for_justified_enum}
+xp!{generate_manual_default_for_justified_named_struct}
+xp!{generate_reverse_from_impl_for_enum_with_justification}
+xp!{generate_reverse_from_impl_for_named_with_justification}
 xp!{generate_to_template_with_justification_for_enum}
 xp!{generate_to_template_with_justification_for_named}
 xp!{is_builtin_scalar}
 xp!{is_justification_enabled}
 xp!{is_leaf_type}
 xp!{is_numeric}
+xp!{justified_type}
 xp!{parse_doc_expr}
 xp!{resolve_map_key_type}
 xp!{top_level_justification_result}

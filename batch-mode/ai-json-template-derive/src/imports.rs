@@ -9,7 +9,6 @@ pub(crate) use getset::*;
 #[cfg(test)] pub(crate) use tracing_setup::{EventPrinter,colored,Flushable,setup_buffered_tracing};
 #[cfg(test)] pub(crate) use traced_test::traced_test;
 #[cfg(test)] pub(crate) use pretty_assertions::assert_eq as pretty_assert_eq;
-#[cfg(test)] pub(crate) use syn::{parse_quote};
 
 pub(crate) use derive_builder::*;
 pub(crate) use disable_macro::disable;
@@ -62,6 +61,7 @@ pub(crate) use syn::{
     ExprMethodCall,
     Stmt,
     Block,
+    parse_quote,
 };
 pub(crate) use serde_json::json;
 
