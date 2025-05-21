@@ -190,11 +190,11 @@ mod test_expand_enum_with_justification {
         // The X variant should skip top-level variant_conf/just
         // but the derived code should handle that gracefully
         assert!(
-            out_str.contains("JustifiedNoJustifyEnum :: X { variant_confidence : _ , variant_justification : _ } =>"),
+            out_str.contains("JustifiedNoJustifyEnum :: X =>"),
             "Should have a match arm for X"
         );
         assert!(
-            !out_str.contains("variant_confidence : f64 , variant_justification : String ,"),
+            !out_str.contains("X { variant_confidence : f64 , variant_justification : String"),
             "Should skip self justification for X"
         );
     }

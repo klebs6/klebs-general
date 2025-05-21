@@ -6,81 +6,61 @@ pub fn generate_justified_structs_for_named(
     ty_ident: &syn::Ident,
     named_fields: &syn::FieldsNamed,
     span: proc_macro2::Span
-) -> proc_macro2::TokenStream
-{
+) -> proc_macro2::TokenStream {
     trace!(
         "Entering generate_justified_structs_for_named for '{}'",
         ty_ident
     );
 
-    // Example: For `struct Coordinate { x: f32, y: f32 }`, we’ll create a flattened
-    // `JustifiedCoordinate` with fields:
-    //   x: f32,
-    //   x_confidence: f64,
-    //   x_justification: String,
-    //   y: f32,
-    //   y_confidence: f64,
-    //   y_justification: String,
-    //
-    // We'll skip separate `CoordinateJustification` / `CoordinateConfidence`.
-
     let justified_ident = syn::Ident::new(&format!("Justified{}", ty_ident), span);
 
-    // Collect flattened fields for the new `JustifiedFoo`.
-    // For each original field: 
-    //   - keep the same name + type 
-    //   - add `_confidence: f64` 
-    //   - add `_justification: String`
     let mut flattened_fields = Vec::new();
 
     for field in &named_fields.named {
-
         let field_ident = match &field.ident {
             Some(id) => id,
             None => {
-                warn!("Skipping unnamed field in named struct?");
+                warn!("Skipping unnamed field in a named struct?");
                 continue;
             }
         };
 
-        let justified_ty = justified_type(&field.ty);
+        let justified_ty = crate::justified_type(&field.ty);
 
-        // 1) Gather all attributes from the original field
+        // Collect any original #[serde(...)] attributes
         let original_attrs = &field.attrs;
-
-        // 2) Filter only the ones that start with `#[serde(...)]`
         let serde_attrs: Vec<_> = original_attrs
             .iter()
             .filter(|attr| attr.path().is_ident("serde"))
             .collect();
 
-        // The original field itself
+        // Check if `#[justify(false)]` => skip top-level conf & just
+        let skip_field_self = crate::is_justification_disabled_for_field(field);
+
+        // Always store the base field:
         flattened_fields.push(quote::quote! {
             #( #serde_attrs )*
-            #field_ident: #justified_ty,
+            #field_ident : #justified_ty,
         });
 
-        // The confidence + justification
-        let conf_ident = syn::Ident::new(
-            &format!("{}_confidence", field_ident),
-            field_ident.span()
-        );
-        let just_ident = syn::Ident::new(
-            &format!("{}_justification", field_ident),
-            field_ident.span()
-        );
+        // If skip_field_self is false => add `xxx_confidence : f64, xxx_justification : String`
+        if !skip_field_self {
+            let conf_ident = syn::Ident::new(
+                &format!("{}_confidence", field_ident),
+                field_ident.span()
+            );
+            let just_ident = syn::Ident::new(
+                &format!("{}_justification", field_ident),
+                field_ident.span()
+            );
 
-        // We use `f64` for confidence, `String` for justification
-        flattened_fields.push(quote::quote! {
-            #conf_ident: f64,
-            #just_ident: String,
-        });
+            flattened_fields.push(quote::quote! {
+                #conf_ident : f64,
+                #just_ident : String,
+            });
+        }
     }
 
-    // Now build the struct with those flattened fields
-    // We keep it `pub struct ...` for final usage in user code, 
-    // but remember you said “never use pub members.” 
-    // If you want them private + getset, adapt as needed:
     let flattened_struct = quote::quote! {
         #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Getters, Setters)]
         #[getset(get="pub", set="pub")]

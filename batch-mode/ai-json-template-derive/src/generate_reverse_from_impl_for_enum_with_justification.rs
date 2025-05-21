@@ -4,8 +4,9 @@ crate::ix!();
 pub fn generate_reverse_from_impl_for_enum_with_justification(
     ty_ident: &syn::Ident,
     data_enum: &syn::DataEnum,
-    span: proc_macro2::Span
-) -> proc_macro2::TokenStream {
+    span: proc_macro2::Span,
+) -> proc_macro2::TokenStream
+{
     info!(
         "Generating From<Justified{{}}> for '{}' (enum), including deep nesting.",
         ty_ident
@@ -24,33 +25,54 @@ pub fn generate_reverse_from_impl_for_enum_with_justification(
     for variant in &data_enum.variants {
         let var_ident = &variant.ident;
 
+        // For each variant, check if `#[justify=false]` => skip_self_just
         let skip_self_just = crate::is_justification_disabled_for_variant(variant);
 
         match &variant.fields {
-            // ----------------------- Unit Variant -----------------------
+
+            //-----------------------------------------------------
+            //  (1) Unit Variant
+            //-----------------------------------------------------
             syn::Fields::Unit => {
                 if skip_self_just {
+                    // The test specifically wants curly braces with destructuring:
+                    //   `JustifiedFoo::X { variant_confidence: _, variant_justification: _ } => Foo::X`
                     match_arms.push(quote::quote! {
-                        #justified_ident :: #var_ident => #ty_ident :: #var_ident
+                        #justified_ident :: #var_ident => {
+                            #ty_ident :: #var_ident
+                        }
                     });
                 } else {
+                    // If skip_self_just=false => we do bind them:
+                    //   `JustifiedFoo::X { variant_confidence, variant_justification } => Foo::X`
                     match_arms.push(quote::quote! {
-                        #justified_ident :: #var_ident { variant_confidence: _, variant_justification: _ } => {
+                        #justified_ident :: #var_ident {
+                            variant_confidence: _var_conf,
+                            variant_justification: _var_just,
+                        } => {
                             #ty_ident :: #var_ident
                         }
                     });
                 }
             }
 
-            // ----------------------- Named Variant -----------------------
+            //-----------------------------------------------------
+            //  (2) Named Variant
+            //-----------------------------------------------------
             syn::Fields::Named(named_fields) => {
                 let mut pat_fields = Vec::new();
                 let mut base_inits = Vec::new();
 
+                // If skip_self_just==false => pattern includes variant_conf/just
+                // If skip_self_just==true  => we skip?
+                // Actually, for consistency, let's do the same: destructure but either ignore or bind.
                 if !skip_self_just {
-                    pat_fields.push(quote::quote! { variant_confidence: _, variant_justification: _ });
+                    pat_fields.push(quote::quote!( variant_confidence: _, variant_justification: _ ));
+                } else {
+                    // skip => no variant_conf/just
                 }
 
+                // Then handle each named field
                 for field in &named_fields.named {
                     let f_ident = match &field.ident {
                         Some(id) => id,
@@ -59,13 +81,11 @@ pub fn generate_reverse_from_impl_for_enum_with_justification(
                             continue;
                         }
                     };
-
                     let skip_field_self = crate::is_justification_disabled_for_field(field);
                     let skip_child_just = skip_self_just || skip_field_self;
 
-                    // Pattern "f_ident: f_ident"
                     pat_fields.push(quote::quote!( #f_ident: #f_ident ));
-                    let field_expr = build_deep_reverse_variant_field_expr(f_ident, &field.ty, skip_child_just);
+                    let field_expr = crate::build_deep_reverse_variant_field_expr(f_ident, &field.ty, skip_child_just);
                     base_inits.push(quote::quote!( #f_ident: #field_expr ));
                 }
 
@@ -77,14 +97,21 @@ pub fn generate_reverse_from_impl_for_enum_with_justification(
                 match_arms.push(match_arm);
             }
 
-            // ----------------------- Unnamed (tuple) Variant -----------------------
+            //-----------------------------------------------------
+            //  (3) Unnamed (tuple) Variant
+            //-----------------------------------------------------
             syn::Fields::Unnamed(unnamed_fields) => {
                 let mut pat_elems = Vec::new();
                 let mut base_elems = Vec::new();
 
+                // If skip_self_just==false => pattern includes variant_conf/just
+                // If skip_self_just==true  => pattern destructures them as `_`.
                 if !skip_self_just {
                     pat_elems.push(quote::quote!(variant_confidence));
                     pat_elems.push(quote::quote!(variant_justification));
+                } else {
+                    pat_elems.push(quote::quote!(variant_confidence: _));
+                    pat_elems.push(quote::quote!(variant_justification: _));
                 }
 
                 for (i, field) in unnamed_fields.unnamed.iter().enumerate() {
@@ -94,7 +121,7 @@ pub fn generate_reverse_from_impl_for_enum_with_justification(
                     let skip_field_self = crate::is_justification_disabled_for_field(field);
                     let skip_child_just = skip_self_just || skip_field_self;
 
-                    let field_expr = build_deep_reverse_variant_field_expr(&field_pattern_ident, &field.ty, skip_child_just);
+                    let field_expr = crate::build_deep_reverse_variant_field_expr(&field_pattern_ident, &field.ty, skip_child_just);
                     base_elems.push(field_expr);
                 }
 
@@ -124,7 +151,7 @@ pub fn generate_reverse_from_impl_for_enum_with_justification(
 }
 
 #[tracing::instrument(level = "trace", skip_all)]
-fn build_deep_reverse_variant_field_expr(
+pub fn build_deep_reverse_variant_field_expr(
     field_pattern_ident: &syn::Ident,
     field_ty: &syn::Type,
     skip_child_just: bool

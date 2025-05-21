@@ -203,25 +203,36 @@ pub fn is_justification_disabled_for_inner_variant(variant: &Variant) -> bool {
 mod tests_is_justification_enabled {
     use super::*;
 
-    // Helper to parse a named struct snippet into its **first field**:
     fn first_field_of_struct(input: &str) -> syn::Field {
-        let item_struct: ItemStruct = parse_quote!(#input);
+        // Parse the entire snippet as a file.
+        let file: syn::File = syn::parse_str(input)
+            .expect("Could not parse the snippet as a Rust file");
+
+        // Expect exactly one item, and expect it to be a struct.
+        let item_struct = match file.items.into_iter().next() {
+            Some(syn::Item::Struct(s)) => s,
+            other => panic!("expected a single struct item, got: {:?}", other),
+        };
+
+        // Now get the first named field.
         match &item_struct.fields {
-            Fields::Named(named) => {
-                named.named.iter().next().expect("No fields in struct?").clone()
+            syn::Fields::Named(named) => {
+                named.named.iter().next().expect("struct has no fields").clone()
             }
             _ => panic!("Not a named struct"),
         }
     }
 
-    // Helper to parse an enum snippet, returning the **first variant**:
-    fn first_variant_of_enum(input: &str) -> Variant {
-        let item_enum: ItemEnum = parse_quote!(#input);
-        item_enum.variants
-            .iter()
-            .next()
-            .expect("No variants in enum?")
-            .clone()
+    fn first_variant_of_enum(input: &str) -> syn::Variant {
+        let file: syn::File = syn::parse_str(input)
+            .expect("Could not parse snippet as a Rust file");
+
+        let item_enum = match file.items.into_iter().next() {
+            Some(syn::Item::Enum(e)) => e,
+            other => panic!("expected a single enum item, got: {:?}", other),
+        };
+
+        item_enum.variants.into_iter().next().expect("No variants?")
     }
 
     // ----------------------------------------------------------

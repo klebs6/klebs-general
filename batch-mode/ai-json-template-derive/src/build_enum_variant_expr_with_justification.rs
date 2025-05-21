@@ -9,18 +9,19 @@ pub fn build_enum_variant_expr_with_justification(
     variant_kind_str:    &str,
     fields_insertion_ts: proc_macro2::TokenStream,
     skip_self_just:      bool
-
-) -> proc_macro2::TokenStream {
-
+) -> proc_macro2::TokenStream
+{
     trace!(
         "Building enum variant expr with justification => variant: '{}', kind: '{}'",
         variant_name_str,
         variant_kind_str
     );
 
-    // Optionally add top-level "variant_justification" & "variant_confidence"
-    let top_level_just_conf = if !skip_self_just {
-        debug!("Adding top-level variant_justification and variant_confidence for '{}'", variant_name_str);
+    // If skip_self_just=true, we do NOT insert top-level 'variant_confidence' or 'variant_justification'.
+    // If skip_self_just=false, we do insert them.
+    let top_level_just_conf = if skip_self_just {
+        quote::quote! {}
+    } else {
         quote::quote! {
             {
                 let mut j_obj = serde_json::Map::new();
@@ -34,9 +35,6 @@ pub fn build_enum_variant_expr_with_justification(
                 variant_map.insert("variant_confidence".to_string(), serde_json::Value::Object(c_obj));
             }
         }
-    } else {
-        trace!("skip_self_just=true => No variant_justification/confidence for '{}'", variant_name_str);
-        quote::quote! {}
     };
 
     quote::quote! {
@@ -47,6 +45,7 @@ pub fn build_enum_variant_expr_with_justification(
             variant_map.insert("variant_type".to_string(), serde_json::Value::String(#variant_kind_str.to_string()));
 
             #fields_insertion_ts;
+
             #top_level_just_conf;
 
             serde_json::Value::Object(variant_map)
