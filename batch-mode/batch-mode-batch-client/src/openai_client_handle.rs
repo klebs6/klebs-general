@@ -53,6 +53,7 @@ where
         to self.client {
             pub fn batches(&self) -> async_openai::Batches<OpenAIConfig>;
             pub fn files(&self) -> async_openai::Files<OpenAIConfig>;
+            pub fn chat(&self) -> async_openai::Chat<OpenAIConfig>;
         }
     }
 }

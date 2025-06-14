@@ -108,9 +108,15 @@ impl RigorousJsonCommandBuilderStage {
                     - Use proper JSON syntax with keys and arrays.
                     - Ensure that all entries are correctly placed in their respective places.
 
+                    Provide only the final JSON data as specified by the schema. 
+
+                    Do not include any schema generation instructions, meta-fields, nested-templates (unless directly asked) or extraneous information. 
+
+                    Provide only the populated fields and their values, conforming exactly to the required structure without embedding any intermediate annotations or placeholders.
+
                     Your output should only consist of the JSON object. do *not* include a preamble or postamble to your response. 
 
-                    We would like to be able to parse your response directly as JSON."
+                    We seek to successfully parse your response directly as JSON."
             },
         }
     }

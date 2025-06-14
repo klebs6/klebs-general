@@ -34,6 +34,26 @@ pub fn generate_justified_structs_for_named(
             .filter(|attr| attr.path().is_ident("serde"))
             .collect();
 
+        let serde_default_attrs: Vec<_> = serde_attrs.iter().filter(|attr| {
+            match &attr.meta
+            {
+                Meta::List(MetaList { path, delimiter, tokens }) => {
+                    //println!("attr={:?}, tokens.ident={:?}", attr, tokens); 
+                    match parse2::<Ident>(tokens.clone()) {
+                        Ok(ident) => {
+                            ident == Ident::new("default", tokens.span())
+                        }
+                        Err(e) => {
+                            //warn!("Failed parsing tokens as ident: {:?}", e);
+                            false
+                        }
+                    }
+
+                }
+                _ =>  { false }
+            }
+        }).collect();
+
         // Check if `#[justify(false)]` => skip top-level conf & just
         let skip_field_self = crate::is_justification_disabled_for_field(field);
 
@@ -55,7 +75,9 @@ pub fn generate_justified_structs_for_named(
             );
 
             flattened_fields.push(quote::quote! {
+                #( #serde_default_attrs )*
                 #conf_ident : f64,
+                #( #serde_default_attrs )*
                 #just_ident : String,
             });
         }
