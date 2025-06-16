@@ -4,7 +4,7 @@ crate::ix!();
 /// Attempts to parse `#[system_message_goal = "some text"]` or
 /// `#[system_message_goal("some text")]` from the attribute list.
 /// Returns `Ok(Some(lit_str))` if one is found; otherwise `Ok(None)`.
-#[tracing::instrument(level = "trace", skip(attrs))]
+#[instrument(level = "trace", skip(attrs))]
 pub fn parse_system_message_goal(attrs: &[Attribute]) -> SynResult<Option<LitStr>> {
     trace!("Looking for a #[system_message_goal(...)] or #[system_message_goal = ...] attribute.");
 

@@ -1,3 +1,5 @@
+#![allow(unused_imports)]
+
 // ---------------- [ File: batch-mode-token-expansion-axis-derive/tests/integration.rs ]
 use std::borrow::Cow;
 use std::fs;
@@ -5,9 +7,11 @@ use std::path::PathBuf;
 use batch_mode_3p::*;
 use batch_mode_token_expansion_traits::*;
 use batch_mode_token_expansion_axis_derive::*;
-use save_load_traits::{LoadFromFile, SaveLoadError};
 use save_load_derive::*;
 use serde_json;
+use ai_json_template_derive::*;
+use ai_json_template::*;
+use save_load_traits::*;
 
 #[traced_test]
 fn check_multiple_variants_and_expanded_struct() {

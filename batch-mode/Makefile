@@ -30,7 +30,6 @@ TEST_FILE  := tests/test_scale_layer.rs
 #ACTIVE_PACKAGE := batch-mode-token-expansion-step
 #-------------------------------------[done-below]
 
-ACTIVE_PACKAGE := batch-mode-token-expansion-axis-derive
 ACTIVE_PACKAGE := batch-mode-batch-executor
 ACTIVE_PACKAGE := batch-mode-batch-schema
 ACTIVE_PACKAGE := batch-mode-json
@@ -48,6 +47,8 @@ ACTIVE_PACKAGE := language-model-batch-workflow-derive
 ACTIVE_PACKAGE := batch-mode-batch-workflow
 ACTIVE_PACKAGE := ai-json-template
 ACTIVE_PACKAGE := ai-json-template-derive
+ACTIVE_PACKAGE := batch-mode
+ACTIVE_PACKAGE := batch-mode-token-expansion-axis-derive
 
 #-----------------------------------------------------[]
 #INDIVIDUAL_TEST := test_build_network_io_enum

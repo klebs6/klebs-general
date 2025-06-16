@@ -1,3 +1,12 @@
+[dependencies]
+serde.workspace              = true
+serde_derive.workspace       = true
+serde_json.workspace         = true
+traced-test.workspace        = true
+tracing-setup.workspace      = true
+tracing-subscriber.workspace = true
+tracing.workspace            = true
+
 [dependencies.batch-mode-3p]
 path = "../batch-mode-3p"
 version = "0.2.1"
@@ -49,15 +58,6 @@ version = "0.1.1"
 [dependencies.save-load-traits]
 path = "../save-load-traits"
 version = "0.2.1"
-
-[dependencies.serde]
-workspace = true
-
-[dependencies.serde_derive]
-workspace = true
-
-[dependencies.serde_json]
-workspace = true
 
 [package]
 authors = ["klebs tpk3.mx@gmail.com"]

@@ -19,7 +19,7 @@ impl Parse for ParenthesizedMessage {
     }
 }
 
-#[tracing::instrument(level = "trace", skip(attr))]
+#[instrument(level = "trace", skip(attr))]
 pub fn try_parse_parenthesized(attr: &Attribute) -> SynResult<Option<LitStr>> {
     /*
        We want to parse attributes of the form:

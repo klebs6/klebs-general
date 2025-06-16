@@ -72,13 +72,13 @@ structured-language-form = "0.3.0"
 strum_macros             = "0.24"
 tempfile                 = "3.17.1"
 traced-test              = "*"
-tracing-setup            = "1.0.2"
+tracing-setup            = "*"
 trybuild                 = "1.0.104"
 
 serde                    = { version = "1.0",    features = ["derive"] }
 strum                    = { version = "0.24",   features = ["derive"] }
 syn                      = { version = "2.0",    features = [ "parsing", "full" ] }
 tokio                    = { version = "1",      features = ["full"] }
-tracing                  = { version = "0.1.40", features = ["log"] }
-tracing-subscriber       = { version = "0.3",    features = ["fmt", "std", "env-filter"], default-features = false }
+tracing                  = { version = "*", features = ["log"] }
+tracing-subscriber       = { version = "*",    features = ["fmt", "std", "env-filter"], default-features = false }
 uuid                     = { version = "1.14.0", features = ["v4", "serde"] }
