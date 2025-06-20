@@ -95,7 +95,7 @@ CONSOLIDATE_CRATE := workspacer-toml
 #-----------------------------------------------------[this section lets us choose how we want to test]
 DEFAULT := test
 #DEFAULT := build
-#DEFAULT := readme_writer
+DEFAULT := readme_writer
 #DEFAULT := readme_writer_all
 #DEFAULT := test_file
 #DEFAULT := test_one
@@ -119,6 +119,10 @@ default: $(DEFAULT)
 
 README_WRITE_CRATE := workspacer-readme-writer
 README_WRITE_CRATE := workspacer-consolidate
+README_WRITE_CRATE := workspacer-topo
+
+README_WRITER_WORKSPACE :=  ../batch-mode
+README_WRITER_WORKSPACE :=  ../../rare-document-generators/simulizer
 
 #----------------------------------------------[here are our rules]
 
@@ -129,7 +133,7 @@ readme_writer:
 	RUSTFLAGS=$(RUSTFLAGS) $(CARGO) $(RUN) --bin workspacer-readme-writer -- single-crate $(README_WRITE_CRATE)
 
 readme_writer_all:
-	RUSTFLAGS=$(RUSTFLAGS) $(CARGO) $(RUN) --bin workspacer-readme-writer -- workspace ../batch-mode
+	RUSTFLAGS=$(RUSTFLAGS) $(CARGO) $(RUN) --bin workspacer-readme-writer -- workspace $(README_WRITER_WORKSPACE)
 
 pin_wildcard_deps:
 	RUSTFLAGS=$(RUSTFLAGS) $(CARGO) $(RUN) --bin workspacer-pin-wildcard-deps $(FEATURES)

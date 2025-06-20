@@ -36,7 +36,6 @@ ACTIVE_PACKAGE := batch-mode-json
 #ACTIVE_PACKAGE := batch-mode-batch-client
 ACTIVE_PACKAGE := batch-mode-batch-reconciliation
 ACTIVE_PACKAGE := batch-mode-batch-triple
-ACTIVE_PACKAGE := batch-mode-process-response
 #ACTIVE_PACKAGE := instructed-language-model-at-coordinate
 #ACTIVE_PACKAGE := save-load-derive
 #ACTIVE_PACKAGE := save-load-traits
@@ -49,6 +48,7 @@ ACTIVE_PACKAGE := ai-json-template
 ACTIVE_PACKAGE := ai-json-template-derive
 ACTIVE_PACKAGE := batch-mode
 ACTIVE_PACKAGE := batch-mode-token-expansion-axis-derive
+ACTIVE_PACKAGE := batch-mode-process-response
 
 #-----------------------------------------------------[]
 #INDIVIDUAL_TEST := test_build_network_io_enum

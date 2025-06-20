@@ -1,91 +1,144 @@
 // ---------------- [ File: batch-mode-process-response/src/handle_successful_response.rs ]
 crate::ix!();
 
-#[instrument(level="trace", skip_all)]
+/// Produce a *flattened* JSON payload suitable for saving to `target/`
+///
+/// * If the original assistant JSON already matches the target structure,
+///   we return it unchanged.
+/// * If it was wrapped in a `{ "fields": { … } }` envelope, we drop the
+///   envelope and return only the inner object so that subsequent
+///   `T::load_from_file()` calls (which expect a *flat* object) succeed.
+///
+/// All paths are traced for debuggability.
+#[instrument(level = "trace", skip_all)]
+fn flatten_json_for_persistence(original: &serde_json::Value) -> serde_json::Value {
+    if let Some(inner) = original.get("fields") {
+        trace!("Detected `fields` wrapper — flattening for persistence.");
+        inner.clone()
+    } else {
+        trace!("No `fields` wrapper — JSON already flat.");
+        original.clone()
+    }
+}
+
+#[instrument(level = "trace", skip_all)]
 pub async fn handle_successful_response<T>(
-    success_body:          &BatchSuccessResponseBody,
-    workspace:             &dyn BatchWorkspaceInterface,
+    success_body: &BatchSuccessResponseBody,
+    workspace: &dyn BatchWorkspaceInterface,
     expected_content_type: &ExpectedContentType,
-) -> Result<(), BatchSuccessResponseHandlingError> 
+) -> Result<(), BatchSuccessResponseHandlingError>
 where
     T: 'static + Send + Sync + Named + DeserializeOwned + GetTargetPathForAIExpansion,
 {
-    trace!("Entering handle_successful_response with success_body ID: {}", success_body.id());
-    trace!("success_body => finish_reason={:?}, total_choices={}",
+    trace!(
+        "Entering handle_successful_response with success_body ID: {}",
+        success_body.id()
+    );
+    trace!(
+        "success_body => finish_reason={:?}, total_choices={}",
         success_body.choices().get(0).map(|c| c.finish_reason()),
         success_body.choices().len()
     );
 
     let choice = &success_body.choices()[0];
     let message_content = choice.message().content();
-    trace!("Pulled first choice => finish_reason={:?}", choice.finish_reason());
+    trace!(
+        "Pulled first choice => finish_reason={:?}",
+        choice.finish_reason()
+    );
 
     if *choice.finish_reason() == FinishReason::Length {
         trace!("Detected finish_reason=Length => calling handle_finish_reason_length");
         handle_finish_reason_length(success_body.id(), message_content).await?;
-        trace!("Returned from handle_finish_reason_length with success_body ID: {}", success_body.id());
+        trace!(
+            "Returned from handle_finish_reason_length with success_body ID: {}",
+            success_body.id()
+        );
     }
 
     match expected_content_type {
         ExpectedContentType::Json => {
-            trace!("ExpectedContentType::Json => about to extract/repair JSON for success_body ID: {}", success_body.id());
+            trace!(
+                "ExpectedContentType::Json => about to extract/repair JSON for success_body ID: {}",
+                success_body.id()
+            );
+
             match message_content.extract_clean_parse_json_with_repair() {
                 Ok(json_content) => {
-                    debug!("JSON parse/repair succeeded for success_body ID: {}", success_body.id());
-                    trace!("Now deserializing into typed struct T...");
+                    debug!(
+                        "JSON parse/repair succeeded for success_body ID: {}",
+                        success_body.id()
+                    );
 
-                    // In handle_successful_response.rs:
-                    let typed_item: T = match serde_json::from_value(json_content.clone()) {
-                        Ok(t) => {
-                            trace!("Deserialization into T succeeded...");
-                            t
-                        }
+                    // ---------- DESERIALISE (with optional wrapper) ----------
+                    let typed_item: T = match deserialize_json_with_optional_fields_wrapper::<T>(&json_content) {
+                        Ok(item) => item,
                         Err(e) => {
                             error!("Deserialization into T failed: {:?}", e);
-                            // We also call handle_failed_json_repair here so that the test sees a file
                             handle_failed_json_repair(success_body.id(), message_content, workspace).await?;
                             return Err(e.into());
                         }
                     };
+                    //------------------------------------------------------------------
 
-                    // Convert to Arc if needed
                     trace!("Wrapping typed_item in Arc => T::name()={}", typed_item.name());
-                    let typed_item_arc: Arc<dyn GetTargetPathForAIExpansion + Send + Sync + 'static> = Arc::new(typed_item);
+                    let typed_item_arc: Arc<
+                        dyn GetTargetPathForAIExpansion + Send + Sync + 'static,
+                    > = Arc::new(typed_item);
 
-                    // Determine target path
+                    // Choose where we will write the output **before** we flatten it.
                     let target_path = workspace.target_path(&typed_item_arc, expected_content_type);
                     trace!("Target path computed => {:?}", target_path);
 
-                    // Pretty-print the fully repaired JSON
-                    let serialized_json = match serde_json::to_string_pretty(&json_content) {
+                    // ---------- NEW: ALWAYS WRITE A *FLAT* OBJECT ----------
+                    let flattened_json = flatten_json_for_persistence(&json_content);
+                    let serialized_json = match serde_json::to_string_pretty(&flattened_json) {
                         Ok(s) => {
-                            trace!("Successfully created pretty JSON string for success_body ID: {}", success_body.id());
+                            trace!(
+                                "Successfully created pretty JSON string for success_body ID: {}",
+                                success_body.id()
+                            );
                             s
                         }
                         Err(e) => {
-                            error!("Re-serialization to pretty JSON failed: {:?}", e);
+                            error!("Re‑serialization to pretty JSON failed: {:?}", e);
                             return Err(JsonParseError::SerdeError(e).into());
                         }
                     };
+                    //--------------------------------------------------------
 
                     info!("writing JSON output to {:?}", target_path);
                     write_to_file(&target_path, &serialized_json).await?;
                     trace!("Successfully wrote JSON file => {:?}", target_path);
-                    trace!("Exiting handle_successful_response with success_body ID: {}", success_body.id());
+                    trace!(
+                        "Exiting handle_successful_response with success_body ID: {}",
+                        success_body.id()
+                    );
                     Ok(())
                 }
-                Err(e) => {
-                    warn!("JSON extraction/repair failed for success_body ID: {} with error: {:?}", success_body.id(), e);
+                Err(e_extract) => {
+                    warn!(
+                        "JSON extraction/repair failed for success_body ID: {} with error: {:?}",
+                        success_body.id(),
+                        e_extract
+                    );
                     let failed_id = success_body.id();
                     trace!("Calling handle_failed_json_repair for ID={}", failed_id);
                     handle_failed_json_repair(failed_id, message_content, workspace).await?;
-                    trace!("Returned from handle_failed_json_repair => now returning error for ID={}", failed_id);
-                    Err(e.into())
+                    trace!(
+                        "Returned from handle_failed_json_repair => now returning error for ID={}",
+                        failed_id
+                    );
+                    Err(e_extract.into())
                 }
             }
         }
         ExpectedContentType::PlainText => {
-            trace!("Received plain text content for request {} => length={}", success_body.id(), message_content.len());
+            trace!(
+                "Received plain text content for request {} => length={}",
+                success_body.id(),
+                message_content.len()
+            );
             let index = BatchIndex::from_uuid_str(success_body.id())?;
             trace!("Parsed BatchIndex => {:?}", index);
 
@@ -93,11 +146,15 @@ where
             info!("writing plain text output to {:?}", text_path);
             write_to_file(&text_path, message_content.as_str()).await?;
             trace!("Successfully wrote plain text file => {:?}", text_path);
-
-            trace!("Exiting handle_successful_response with success_body ID: {}", success_body.id());
+            trace!(
+                "Exiting handle_successful_response with success_body ID: {}",
+                success_body.id()
+            );
             Ok(())
         }
-        _ => { todo!() }
+        _ => {
+            todo!("Unsupported ExpectedContentType variant encountered.")
+        }
     }
 }
 

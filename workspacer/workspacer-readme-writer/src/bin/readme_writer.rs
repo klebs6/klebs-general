@@ -43,7 +43,7 @@ enum ReadmeWriterCommand {
 pub async fn main() -> Result<(), AiReadmeWriterError> {
     configure_tracing();
 
-    let plant = false;
+    let plant = true;
     let force = false;
 
     // Parse the CLI arguments

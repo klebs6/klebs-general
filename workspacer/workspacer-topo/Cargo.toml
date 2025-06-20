@@ -4,7 +4,9 @@ version = "0.1.0"
 authors = ["YourName <you@example.com>"]
 license = "MIT"
 edition = "2024"
-description = "todo: write a description here"
+description = "An advanced, async-capable topological sorting crate for managing Rust workspace dependencies."
+keywords = ["topologicalsort", "workspace", "dependency", "sorting", "async"]
+categories = ["development-tools", "data-structures", "concurrency"]
 
 # keywords = []
 # categories = []
