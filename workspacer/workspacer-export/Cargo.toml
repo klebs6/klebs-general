@@ -112,9 +112,11 @@ version = "0.1.1"
 
 [dependencies.workspacer-run]
 path = "../workspacer-run"
+version = "0.1.0"
 
 [dependencies.workspacer-show]
 path = "../workspacer-show"
+version = "0.1.1"
 
 [dependencies.workspacer-syntax]
 path = "../workspacer-syntax"
@@ -130,6 +132,7 @@ version = "0.5.1"
 
 [dependencies.workspacer-topo]
 path = "../workspacer-topo"
+version = "0.1.0"
 
 [dependencies.workspacer-tree]
 path = "../workspacer-tree"

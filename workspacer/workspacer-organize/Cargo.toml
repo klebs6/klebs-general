@@ -1,16 +1,16 @@
 [dependencies]
-workspacer-topo = { path = "../workspacer-topo" }
-workspacer-mock = { path = "../workspacer-mock" }
-workspacer-workspace-mock = { path = "../workspacer-workspace-mock" }
-workspacer-crate-mock = { path = "../workspacer-crate-mock" }
-workspacer-crate-interface = { path = "../workspacer-crate-interface" }
-workspacer-workspace-interface = { path = "../workspacer-workspace-interface" }
-workspacer-workspace = { path = "../workspacer-workspace" }
-workspacer-crate = { path = "../workspacer-crate" }
-workspacer-name-all-files = { path = "../workspacer-name-all-files" }
-workspacer-register-crate-files = { path = "../workspacer-register-crate-files" }
-workspacer-format-imports = { path = "../workspacer-format-imports" }
-workspacer-lossless-file = { path = "../workspacer-lossless-file" }
+workspacer-topo = { path = "../workspacer-topo" , version = "0.1.0" }
+workspacer-mock = { path = "../workspacer-mock" , version = "0.5.1" }
+workspacer-workspace-mock = { path = "../workspacer-workspace-mock" , version = "0.1.1" }
+workspacer-crate-mock = { path = "../workspacer-crate-mock" , version = "0.1.1" }
+workspacer-crate-interface = { path = "../workspacer-crate-interface" , version = "0.1.1" }
+workspacer-workspace-interface = { path = "../workspacer-workspace-interface" , version = "0.1.2" }
+workspacer-workspace = { path = "../workspacer-workspace" , version = "0.1.1" }
+workspacer-crate = { path = "../workspacer-crate" , version = "0.5.1" }
+workspacer-name-all-files = { path = "../workspacer-name-all-files" , version = "0.1.1" }
+workspacer-register-crate-files = { path = "../workspacer-register-crate-files" , version = "0.1.2" }
+workspacer-format-imports = { path = "../workspacer-format-imports" , version = "0.1.1" }
+workspacer-lossless-file = { path = "../workspacer-lossless-file" , version = "0.1.0" }
 [dependencies.workspacer-3p]
 path = "../workspacer-3p"
 version = "0.5.1"

@@ -26,12 +26,15 @@ version = "0.1.3"
 
 [dependencies.workspacer-file-filter]
 path = "../workspacer-file-filter"
+version = "0.1.0"
 
 [dependencies.workspacer-lossless-file]
 path = "../workspacer-lossless-file"
+version = "0.1.0"
 
 [dependencies.workspacer-run]
 path = "../workspacer-run"
+version = "0.1.0"
 
 [package]
 authors = ["klebs tpk3.mx@gmail.com"]

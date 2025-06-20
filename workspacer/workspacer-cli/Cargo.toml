@@ -22,6 +22,7 @@ version = "0.1.3"
 
 [dependencies.workspacer-file-filter]
 path = "../workspacer-file-filter"
+version = "0.1.0"
 
 [dependencies.workspacer-prune-bad-category-slugs]
 path = "../workspacer-prune-bad-category-slugs"
@@ -29,9 +30,11 @@ version = "0.1.0"
 
 [dependencies.workspacer-run]
 path = "../workspacer-run"
+version = "0.1.0"
 
 [dependencies.workspacer-show]
 path = "../workspacer-show"
+version = "0.1.1"
 
 [package]
 categories = [

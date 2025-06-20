@@ -10,5 +10,5 @@ description = "todo: write a description here"
 # categories = []
 
 [dependencies]
-workspacer-3p = { path = "../workspacer-3p" }
-workspacer-consolidate = { path = "../workspacer-consolidate" }
+workspacer-3p = { path = "../workspacer-3p" , version = "0.5.1" }
+workspacer-consolidate = { path = "../workspacer-consolidate" , version = "0.5.2" }

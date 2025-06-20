@@ -10,8 +10,8 @@ description = "todo: write a description here"
 # categories = []
 
 [dependencies]
-workspacer-3p = { path = "../workspacer-3p" }
-workspacer-workspace = { path = "../workspacer-workspace" }
-workspacer-crate = { path = "../workspacer-crate" }
-workspacer-errors = { path = "../workspacer-errors" }
-workspacer-git = { path = "../workspacer-git" }
+workspacer-3p = { path = "../workspacer-3p" , version = "0.5.1" }
+workspacer-workspace = { path = "../workspacer-workspace" , version = "0.1.1" }
+workspacer-crate = { path = "../workspacer-crate" , version = "0.5.1" }
+workspacer-errors = { path = "../workspacer-errors" , version = "0.1.1" }
+workspacer-git = { path = "../workspacer-git" , version = "0.1.1" }

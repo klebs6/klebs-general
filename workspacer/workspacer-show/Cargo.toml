@@ -1,13 +1,13 @@
 [dependencies]
 structopt.workspace = true
 derive_builder.workspace = true
-workspacer-consolidate = { path = "../workspacer-consolidate" }
-workspacer-crate-interface = { path = "../workspacer-crate-interface" }
-workspacer-errors = { path = "../workspacer-errors" }
-workspacer-workspace = { path = "../workspacer-workspace" }
-workspacer-crate = { path = "../workspacer-crate" }
-workspacer-run = { path = "../workspacer-run" }
-workspacer-mock = { path = "../workspacer-mock" }
+workspacer-consolidate = { path = "../workspacer-consolidate" , version = "0.5.2" }
+workspacer-crate-interface = { path = "../workspacer-crate-interface" , version = "0.1.1" }
+workspacer-errors = { path = "../workspacer-errors" , version = "0.1.1" }
+workspacer-workspace = { path = "../workspacer-workspace" , version = "0.1.1" }
+workspacer-crate = { path = "../workspacer-crate" , version = "0.5.1" }
+workspacer-run = { path = "../workspacer-run" , version = "0.1.0" }
+workspacer-mock = { path = "../workspacer-mock" , version = "0.5.1" }
 
 [dependencies.workspacer-3p]
 path = "../workspacer-3p"
