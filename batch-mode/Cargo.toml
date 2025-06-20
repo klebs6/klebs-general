@@ -1,3 +1,6 @@
+[profile.test]
+strip = "none"
+
 [workspace]
 members = [ 
     "agent-coordinate", 
@@ -82,3 +85,4 @@ tokio                    = { version = "1",      features = ["full"] }
 tracing                  = { version = "*", features = ["log"] }
 tracing-subscriber       = { version = "*",    features = ["fmt", "std", "env-filter"], default-features = false }
 uuid                     = { version = "1.14.0", features = ["v4", "serde"] }
+

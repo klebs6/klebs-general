@@ -41,7 +41,7 @@ workspace = true
 
 [dev-dependencies.batch-mode-batch-workflow]
 path = "../batch-mode-batch-workflow"
-version = "0.2.2"
+version = "0.1.1"
 
 [dev-dependencies.batch-mode-batch-workspace-interface]
 path = "../batch-mode-batch-workspace-interface"

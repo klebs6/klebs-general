@@ -46,9 +46,9 @@ ACTIVE_PACKAGE := language-model-batch-workflow-derive
 ACTIVE_PACKAGE := batch-mode-batch-workflow
 ACTIVE_PACKAGE := ai-json-template
 ACTIVE_PACKAGE := ai-json-template-derive
-ACTIVE_PACKAGE := batch-mode
 ACTIVE_PACKAGE := batch-mode-token-expansion-axis-derive
 ACTIVE_PACKAGE := batch-mode-process-response
+ACTIVE_PACKAGE := batch-mode
 
 #-----------------------------------------------------[]
 #INDIVIDUAL_TEST := test_build_network_io_enum
