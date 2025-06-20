@@ -10,6 +10,7 @@ version = "0.5.1"
 
 [dependencies.workspacer-either]
 path = "../workspacer-either"
+version = "0.1.0"
 
 [dependencies.workspacer-errors]
 path = "../workspacer-errors"

@@ -18,6 +18,7 @@ version = "0.1.1"
 
 [dependencies.workspacer-either]
 path = "../workspacer-either"
+version = "0.1.0"
 
 [dependencies.workspacer-export]
 path = "../workspacer-export"
