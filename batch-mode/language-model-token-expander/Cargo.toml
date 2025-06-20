@@ -55,7 +55,7 @@ version = "0.2.1"
 
 [dependencies.batch-mode-process-response]
 path = "../batch-mode-process-response"
-version = "0.2.1"
+version = "0.2.2"
 
 [dependencies.batch-mode-token-expansion-traits]
 path = "../batch-mode-token-expansion-traits"
