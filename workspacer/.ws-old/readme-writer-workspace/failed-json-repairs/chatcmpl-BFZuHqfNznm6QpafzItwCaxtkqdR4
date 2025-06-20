@@ -1,0 +1,21 @@
+{
+    "fields": {
+        "crate_name": "workspacer-consolidate",
+        "full_readme_markdown": "# workspacer-consolidate\n\n## Overview\n\n`workspacer-consolidate` is a Rust library designed to streamline and consolidate the interface elements within a software crate. This module synthesizes key elements such as functions, structs, enums, traits, type aliases, macro rules, and modules into a coherent and unified interface. This tool is engineered for advanced Rust developers aiming to manage and explore their codebase structure efficiently.\n\n## Features\n- **Consolidation of Interface Items**: Assimilate diverse code elements into a singular representation for simplified navigation.\n- **Extensive Customize Options**: Influences the inclusion of documentation, private items, test-related components, function bodies, and more.\n- **Efficient Attribute Handling**: Manages and processes attributes defined on items, providing insightful examination of internal crate structure.\n\n## Usage\nTo utilize `workspacer-consolidate`, implement the `ConsolidateCrateInterface` trait for your crate loader or manager. You can configure `ConsolidationOptions` to fine-tune the scope and depth of element consolidation. The library supports both synchronous and asynchronous patterns, aiding flexibility for various development styles.\n\n## Example\n```rust\nuse workspacer_consolidate::{ConsolidateCrateInterface, ConsolidationOptions};\n\nasync fn consolidate_my_crate() {\n    let my_crate = MyCrate::new();\n    let options = ConsolidationOptions::new().with_docs().with_private_items();\n    let consolidated_interface = my_crate.consolidate_crate_interface(&options).await.unwrap();\n    println!(\"{:#?}\", consolidated_interface);\n}\n```\n\n## Installation\nAdd the following to your `Cargo.toml`:\n```toml\n[dependencies]\nworkspacer-consolidate = \"0.5.0\"\n```\n\n## Contributing\nContributions are welcome! Please refer to the repository [here](https://github.com/klebs6/klebs-general) for more information.\n\n## License\nLicensed under either of Apache License, Version 2.0 or MIT license at your option.",
+        "package_categories": [
+            "development-tools",
+            "parsing",
+            "rust-patterns",
+            "code-generation",
+            "documentation"
+        ],
+        "package_description": "A Rust library for consolidating crate interface elements like functions, structs, and more into a unified representation.",
+        "package_keywords": [
+            "rust",
+            "crate-consolidation",
+            "interface",
+            "code-structure",
+            "development"
+        ]
+    }
+}
