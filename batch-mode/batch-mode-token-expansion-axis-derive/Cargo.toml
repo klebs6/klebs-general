@@ -32,11 +32,11 @@ version = "0.2.1"
 
 [dependencies.ai-json-template]
 path = "../ai-json-template"
-version = "*"
+version = "0.1.1"
 
 [dependencies.ai-json-template-derive]
 path = "../ai-json-template-derive"
-version = "*"
+version = "0.1.1"
 
 [features]
 default = []
