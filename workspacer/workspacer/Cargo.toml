@@ -2,12 +2,6 @@
 name = "ws"
 path = "src/bin/workspacer.rs"
 
-[dependencies]
-workspacer-run = { path = "../workspacer-run" }
-workspacer-lossless-file = { path = "../workspacer-lossless-file" }
-workspacer-file-filter = { path = "../workspacer-file-filter" }
-workspacer-either = { path = "../workspacer-either" }
-
 [dependencies.structopt]
 workspace = true
 
@@ -22,9 +16,21 @@ version = "0.5.1"
 path = "../workspacer-cli"
 version = "0.1.1"
 
+[dependencies.workspacer-either]
+path = "../workspacer-either"
+
 [dependencies.workspacer-export]
 path = "../workspacer-export"
-version = "0.1.1"
+version = "0.1.3"
+
+[dependencies.workspacer-file-filter]
+path = "../workspacer-file-filter"
+
+[dependencies.workspacer-lossless-file]
+path = "../workspacer-lossless-file"
+
+[dependencies.workspacer-run]
+path = "../workspacer-run"
 
 [package]
 authors = ["klebs tpk3.mx@gmail.com"]
