@@ -39,7 +39,6 @@ ACTIVE_PACKAGE := workspacer-format-imports
 ACTIVE_PACKAGE := workspacer-test-coverage
 ACTIVE_PACKAGE := workspacer-toml
 ACTIVE_PACKAGE := workspacer-workspace
-#ACTIVE_PACKAGE := workspacer
 ACTIVE_PACKAGE := workspacer-scan-for-prefix-groups
 ACTIVE_PACKAGE := workspacer-register-internal-crate-in-prefix-group
 ACTIVE_PACKAGE := workspacer
@@ -95,7 +94,7 @@ CONSOLIDATE_CRATE := workspacer-toml
 #-----------------------------------------------------[this section lets us choose how we want to test]
 DEFAULT := test
 #DEFAULT := build
-DEFAULT := readme_writer
+#DEFAULT := readme_writer
 #DEFAULT := readme_writer_all
 #DEFAULT := test_file
 #DEFAULT := test_one
