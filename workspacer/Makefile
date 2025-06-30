@@ -32,7 +32,6 @@ ACTIVE_PACKAGE := workspacer-linting
 ACTIVE_PACKAGE := workspacer-lock
 ACTIVE_PACKAGE := workspacer-metadata
 ACTIVE_PACKAGE := workspacer-mock
-ACTIVE_PACKAGE := workspacer-publish
 ACTIVE_PACKAGE := workspacer-rebuild-or-test
 ACTIVE_PACKAGE := workspacer-format-imports
 
@@ -78,6 +77,7 @@ ACTIVE_PACKAGE := workspacer
 #ACTIVE_PACKAGE := workspacer-lossless-file
 #ACTIVE_PACKAGE := workspacer-organize
 ACTIVE_PACKAGE := workspacer-topo
+ACTIVE_PACKAGE := workspacer-publish
 
 INDIVIDUAL_TEST := gather_leading_token_comments
 INDIVIDUAL_TEST := gather_leading_comment_lines
@@ -93,7 +93,7 @@ CONSOLIDATE_CRATE := workspacer-toml
 
 #-----------------------------------------------------[this section lets us choose how we want to test]
 DEFAULT := test
-DEFAULT := build
+#DEFAULT := build
 #DEFAULT := readme_writer
 #DEFAULT := readme_writer_all
 #DEFAULT := test_file

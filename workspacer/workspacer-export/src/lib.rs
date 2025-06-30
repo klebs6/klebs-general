@@ -55,6 +55,7 @@ pub trait ExtendedWorkspaceInterface<P,T>
 + EnsureGitClean<Error=GitError>
 + NameAllFiles<Error=WorkspaceError>
 + TryPublish<Error=WorkspaceError>
++ TryPublishCrateTree<Error=WorkspaceError>
 where 
 for<'async_trait> P: From<PathBuf> + AsRef<Path> + Send + Sync + 'async_trait,
 T: CrateHandleInterface<P>
@@ -63,6 +64,7 @@ T: CrateHandleInterface<P>
 pub trait ExtendedCrateInterface<P>
 : CrateHandleInterface<P>
 + TryPublish<Error=CrateError>
++ TryPublishCrateTree<Error=CrateError>
 + EnsureGitClean<Error=GitError>
 + NameAllFiles<Error=CrateError>
 + PinWildcardDependencies<Error=CrateError>

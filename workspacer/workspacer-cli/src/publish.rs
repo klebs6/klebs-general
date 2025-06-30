@@ -14,6 +14,17 @@ pub enum PublishSubcommand {
         #[structopt(long = "path")]
         path: PathBuf,
     },
+
+    /// Publish one crate **and every workspace crate it depends on**
+    CrateTree {
+        /// Path to the workspace root (directory that contains the workspace‑level Cargo.toml)
+        #[structopt(long = "path")]
+        path: PathBuf,
+
+        /// Name of the crate that should act as the tree’s *root*
+        #[structopt(long = "root")]
+        root: String,
+    },
 }
 
 impl PublishSubcommand {
@@ -59,6 +70,30 @@ impl PublishSubcommand {
 
                         info!("Successfully published all crates in workspace at '{}'", ws.as_ref().display());
                         Ok(())
+                    })
+                })
+                .await
+            }
+
+            PublishSubcommand::CrateTree { path, root } => {
+                trace!(
+                    "Publishing crate‑tree rooted at '{}' in workspace '{}'",
+                    root,
+                    path.display()
+                );
+
+                let root_clone = root.clone();
+                run_with_workspace(Some(path.clone()), /*skip_git_check=*/false, move |ws| {
+                    Box::pin(async move {
+                        ws.try_publish_crate_tree(&root_clone, false).await.map_err(|err| {
+                            error!(
+                                "Could not publish crate‑tree rooted at '{}' in workspace '{}': {:?}",
+                                root_clone,
+                                ws.as_ref().display(),
+                                err
+                            );
+                            err
+                        })
                     })
                 })
                 .await
