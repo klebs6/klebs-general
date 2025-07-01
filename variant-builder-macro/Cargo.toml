@@ -1,6 +1,6 @@
 [package]
 name = "variant-builder-macro"
-version = "0.2.0"
+version = "0.3.0"
 edition = "2021"
 
 description = "This crate gives us the VariantBuider proc macro which can be used to streamline creting an enum from wrapping variants each using the builder pattern."
@@ -19,6 +19,12 @@ quote = "1.0"
 syn = { version = "2.0", features = ["full"] }
 convert_case = "0.4"
 derive_builder = "0.20.2"
+tracing                 = "0.1.40"
 
-[dev-dependencies]
-derive_builder = "0.20.2"
+[dependencies.traced-test]
+path = "../traced-test"
+version = "1.0.3"
+
+[dependencies.tracing-setup]
+path = "../tracing-setup"
+version = "1.0.3"
