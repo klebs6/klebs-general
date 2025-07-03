@@ -11,8 +11,8 @@ pub fn derive_random_constructible_for_struct(input: &DeriveInput) -> TokenStrea
     };
 
     match &data_struct.fields {
-        Fields::Named(fields_named)     => derive_for_named_fields(name, fields_named),
-        Fields::Unnamed(fields_unnamed) => derive_for_unnamed_fields(name, fields_unnamed, &input.generics),
+        Fields::Named(fields_named)     => expand_rand_construct_for_named_struct(name, fields_named),
+        Fields::Unnamed(fields_unnamed) => expand_rand_construct_for_tuple_struct(name, fields_unnamed, &input.generics),
         Fields::Unit                    => derive_for_unit_struct(name),
     }
 }

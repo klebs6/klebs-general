@@ -4,23 +4,31 @@ extern crate proc_macro;
 
 #[macro_use] mod imports; use imports::*;
 
-xp!{parse_min_max}
+xp!{check_primitive_field_type}
 xp!{clamp_code}
+xp!{collect_named_field_context}
+xp!{collect_tuple_field_context}
+xp!{collect_variant_probs}
 xp!{derive_for_enum}
 xp!{derive_for_struct}
 xp!{derive_for_unit_struct}
-xp!{derive_for_struct_named_fields}
-xp!{derive_for_struct_unnamed_fields}
-xp!{parse}
-xp!{extract_from_meta_list}
+xp!{expand_rand_construct_for_named_struct}
+xp!{expand_rand_construct_for_tuple_struct}
+xp!{extract_enum_variants}
 xp!{extract_from_attribute}
 xp!{extract_from_attributes}
-xp!{extract_enum_variants}
-xp!{generate_variant_constructors}
+xp!{extract_from_meta_list}
+xp!{field_generation_tokens}
+xp!{generate_env_helpers_named}
+xp!{generate_env_helpers_tuple}
 xp!{generate_match_arms}
+xp!{generate_rand_impl_named}
+xp!{generate_rand_impl_tuple}
 xp!{generate_random_constructible_enum_impl}
-xp!{collect_variant_probs}
-xp!{check_primitive_field_type}
+xp!{generate_variant_constructors}
+xp!{parse}
+xp!{parse_min_max}
+xp!{parsed_field_spec}
 xp!{variant_has_primitive_type}
 
 #[proc_macro_derive(RandConstructEnvironment)]
