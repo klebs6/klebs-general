@@ -2,6 +2,9 @@
 name = "workspacer-show-consolidated-crate-interface"
 path = "src/bin/show_consolidated_crate_interface.rs"
 
+[dependencies.tracing]
+workspace = true
+
 [dependencies.derive_builder]
 workspace = true
 

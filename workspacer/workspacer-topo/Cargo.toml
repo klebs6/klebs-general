@@ -12,6 +12,7 @@ categories = ["development-tools", "data-structures", "concurrency"]
 # categories = []
 
 [dependencies]
+tracing.workspace = true
 workspacer-3p                   = { path = "../workspacer-3p" , version = "0.5.1" }
 derive_builder.workspace        = true
 getset.workspace                = true

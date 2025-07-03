@@ -1,3 +1,6 @@
+[dependencies.tracing]
+workspace = true
+
 [[bin]]
 name = "workspacer-ensure-all-source-files-are-registered"
 path = "src/bin/ensure_all_source_files_are_registered.rs"

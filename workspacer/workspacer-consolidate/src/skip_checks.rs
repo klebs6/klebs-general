@@ -1,7 +1,7 @@
 // ---------------- [ File: workspacer-consolidate/src/skip_checks.rs ]
 crate::ix!();
 
-#[tracing::instrument(level = "trace", skip(node, options))]
+#[instrument(level = "trace", skip(node, options))]
 pub fn should_skip_item(node: &SyntaxNode, options: &ConsolidationOptions) -> bool {
     trace!("Entered should_skip_item for snippet={}", snippet_for_logging(node));
 
@@ -68,7 +68,7 @@ pub fn should_skip_item(node: &SyntaxNode, options: &ConsolidationOptions) -> bo
     false
 }
 
-#[tracing::instrument(level="trace", skip(impl_ast, options))]
+#[instrument(level="trace", skip(impl_ast, options))]
 pub fn should_skip_impl(impl_ast: &ast::Impl, options: &ConsolidationOptions) -> bool {
     let snippet = snippet_for_logging(impl_ast.syntax());
     trace!("Entered should_skip_impl for snippet: {}", snippet);

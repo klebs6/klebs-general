@@ -1,3 +1,6 @@
+[dependencies]
+tracing.workspace = true
+
 [dependencies.derive_builder]
 workspace = true
 

@@ -1,3 +1,6 @@
+[dependencies.tracing]
+workspace = true
+
 [[bin]]
 name = "workspacer-readme-writer"
 path = "src/bin/readme_writer.rs"

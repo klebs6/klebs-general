@@ -4,7 +4,7 @@ crate::ix!();
 /// 2) We define a new helper function that is basically the same pattern as
 ///    `run_with_workspace_and_crate_name`, but it takes *two* crate name strings.
 ///    This avoids the lifetime conflict by using a higher-ranked trait bound.
-#[tracing::instrument(level = "trace", skip(operation))]
+#[instrument(level = "trace", skip(operation))]
 pub async fn run_with_workspace_and_two_crate_names<R, F>(
     user_supplied_path: Option<PathBuf>,
     skip_git_check: bool,

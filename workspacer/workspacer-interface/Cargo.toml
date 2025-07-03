@@ -1,3 +1,6 @@
+[dependencies.tracing]
+workspace = true
+
 [dependencies.workspacer-crate-interface]
 path = "../workspacer-crate-interface"
 version = "0.1.1"

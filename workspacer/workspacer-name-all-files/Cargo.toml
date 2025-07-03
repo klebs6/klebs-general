@@ -1,3 +1,6 @@
+[dependencies.tracing]
+workspace = true
+
 [[bin]]
 name = "workspacer-name-all-files"
 path = "src/bin/name_all_files.rs"

@@ -1,3 +1,6 @@
+[dependencies.tracing]
+workspace = true
+
 [dependencies]
 workspacer-topo = { path = "../workspacer-topo" , version = "0.1.0" }
 workspacer-mock = { path = "../workspacer-mock" , version = "0.5.1" }

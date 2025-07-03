@@ -1,3 +1,6 @@
+[dependencies.tracing]
+workspace = true
+
 [dependencies.get-file-size]
 path = "../get-file-size"
 version = "0.1.1"

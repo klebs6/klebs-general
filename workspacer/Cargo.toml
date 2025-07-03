@@ -111,7 +111,7 @@ tempfile                = "3.17.0"
 tokio-stream            = "0.1.16"
 tokio-util              = "0.7.12"
 toml                    = "0.8.19"
-tracing                 = "0.1.40"
+tracing                 = "*"
 which                   = "7.0.2"
 
 [workspace.dependencies.batch-mode]

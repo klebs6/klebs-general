@@ -1,3 +1,6 @@
+[dependencies.tracing]
+workspace = true
+
 [[bin]]
 name = "workspacer-pin-wildcard-deps"
 path = "src/bin/pin_wildcard_deps.rs"

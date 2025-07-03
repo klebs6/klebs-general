@@ -1,3 +1,6 @@
+[dependencies.tracing]
+workspace = true
+
 [[bin]]
 name = "workspacer-cratesio-mock"
 path = "src/bin/main.rs"

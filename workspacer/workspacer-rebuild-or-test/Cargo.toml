@@ -1,3 +1,6 @@
+[dependencies.tracing]
+workspace = true
+
 [dependencies.lightweight-command-runner]
 path = "../lightweight-command-runner"
 version = "0.1.2"

@@ -1,5 +1,6 @@
-[dependencies.derive_builder]
-workspace = true
+[dependencies]
+derive_builder.workspace = true
+tracing.workspace = true
 
 [dependencies.workspacer-3p]
 path = "../workspacer-3p"
