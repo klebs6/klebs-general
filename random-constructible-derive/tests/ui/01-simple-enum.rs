@@ -1,4 +1,4 @@
-// ---------------- [ File: tests/ui/01-simple-enum.rs ]
+// ---------------- [ File: random-constructible-derive/tests/ui/01-simple-enum.rs ]
 extern crate random_constructible;
 extern crate random_constructible_derive;
 

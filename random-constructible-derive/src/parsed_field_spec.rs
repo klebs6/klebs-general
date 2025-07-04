@@ -1,7 +1,23 @@
+// ---------------- [ File: random-constructible-derive/src/parsed_field_spec.rs ]
 crate::ix!();
 
+/// Compile‑time fragments required to *generate* a value for an individual
+/// field across all constructor modes.
+///
+/// All fields are private; read‑only access is provided via `getset`.
+#[derive(Getters)]
+#[getset(get = "pub")]
+pub struct FieldGenerationTokens {
+    random:      TokenStream2,
+    uniform:     TokenStream2,
+    random_env:  TokenStream2,
+    uniform_env: TokenStream2,
+    provider_types: Vec<Type>,
+    rand_bound: TokenStream2,
+}
+
 /// Parsed semantic description of a single `syn::Field`.
-#[derive(Debug, Getters)]
+#[derive(Getters)]
 #[getset(get = "pub")]
 pub struct ParsedFieldSpec {
     ident:      Option<Ident>,
@@ -23,9 +39,9 @@ impl ParsedFieldSpec {
 
         ParsedFieldSpec {
             ident:    field.ident.clone(),
-            ty,
+            ty: ty.clone(),
             is_option,
-            inner_ty,
+            inner_ty: inner_ty.cloned(),
             some_prob: parse_some_probability(&field.attrs).unwrap_or(0.5),
             min_max:  parse_min_max(&field.attrs),
         }
@@ -70,10 +86,12 @@ impl ParsedFieldSpec {
             }
         };
 
+        let prob_lit = proc_macro2::Literal::f64_unsuffixed(self.some_prob);
+
         FieldGenerationTokens {
-            random:      build_branch(quote! { <#inner>::random() },                 quote! { #self.some_prob }),
+            random:      build_branch(quote! { <#inner>::random() },                 quote! { #prob_lit }),
             uniform:     build_branch(quote! { <#inner>::uniform() },                quote! { 0.5 }),
-            random_env:  build_branch(quote! { <#inner>::random_with_env::<ENV>() }, quote! { #self.some_prob }),
+            random_env:  build_branch(quote! { <#inner>::random_with_env::<ENV>() }, quote! { #prob_lit }),
             uniform_env: build_branch(quote! { <#inner>::random_uniform_with_env::<ENV>() }, quote! { 0.5 }),
             provider_types: vec![inner.clone()],
             rand_bound: quote! { #inner : RandConstruct },
@@ -118,7 +136,7 @@ mod parsed_field_spec_tests {
         let spec  = ParsedFieldSpec::from_syn_field(&field);
 
         assert!(spec.is_option());
-        assert_eq!(spec.some_prob(), 0.8);
+        assert_eq!(*spec.some_prob(), 0.8);
         assert_eq!(spec.inner_ty().as_ref().unwrap().to_token_stream().to_string(), "bool");
     }
 

@@ -1,5 +1,9 @@
+// ---------------- [ File: random-constructible-derive/src/collect_named_field_context.rs ]
 crate::ix!();
 
+#[derive(Builder,Getters)]
+#[getset(get = "pub")]
+#[builder(setter(into))]
 pub struct NamedContext {
     member_idents:     Vec<Ident>,
     provider_types:    Vec<Type>,
@@ -8,6 +12,7 @@ pub struct NamedContext {
     inits_uniform:     Vec<TokenStream2>,
     inits_random_env:  Vec<TokenStream2>,
     inits_uniform_env: Vec<TokenStream2>,
+    field_types:       Vec<Type>,
 }
 
 pub fn collect_named_field_context(fields: &FieldsNamed) -> NamedContext {
@@ -19,6 +24,7 @@ pub fn collect_named_field_context(fields: &FieldsNamed) -> NamedContext {
         inits_uniform:     Vec::new(),
         inits_random_env:  Vec::new(),
         inits_uniform_env: Vec::new(),
+        field_types:       Vec::new(),
     };
 
     for field in &fields.named {
@@ -38,7 +44,55 @@ pub fn collect_named_field_context(fields: &FieldsNamed) -> NamedContext {
 
         ctx.provider_types.extend(tokens.provider_types().iter().cloned());
         ctx.rand_bounds.push(tokens.rand_bound().clone());
+        ctx.field_types.push(spec.ty().clone());
     }
 
     ctx
+}
+
+pub fn generate_env_helpers_named(name: &Ident, c: &NamedContext) -> TokenStream2 {
+    if provider_types_contain_primitive(c.provider_types()) {
+        return quote! {};
+    }
+
+    let NamedContext {
+        member_idents,
+        provider_types,
+        inits_random_env,
+        inits_uniform_env,
+        ..
+    } = c;
+
+    quote! {
+        impl #name {
+            pub fn random_with_env<ENV>() -> Self
+            where #( ENV : RandConstructProbabilityMapProvider<#provider_types>, )* {
+                Self { #( #member_idents : #inits_random_env , )* }
+            }
+            pub fn random_uniform_with_env<ENV>() -> Self
+            where #( ENV : RandConstructProbabilityMapProvider<#provider_types>, )* {
+                Self { #( #member_idents : #inits_uniform_env , )* }
+            }
+        }
+    }
+}
+
+pub fn generate_rand_impl_named(name: &Ident, c: &NamedContext) -> TokenStream2 {
+    let NamedContext {
+        member_idents,
+        rand_bounds,
+        inits_random,
+        inits_uniform,
+        ..
+    } = c;
+
+    quote! {
+        impl RandConstruct for #name where #(#rand_bounds,)* {
+            fn random()  -> Self { Self { #( #member_idents : #inits_random , )* } }
+            fn uniform() -> Self { Self { #( #member_idents : #inits_uniform , )* } }
+            fn random_with_rng<R: rand::Rng + ?Sized>(rng: &mut R) -> Self {
+                Self { #( #member_idents : <_ as RandConstruct>::random_with_rng(rng), )* }
+            }
+        }
+    }
 }

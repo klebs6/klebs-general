@@ -1,3 +1,4 @@
+// ---------------- [ File: random-constructible-derive/src/expand_rand_construct_for_tuple_struct.rs ]
 crate::ix!();
 
 pub fn expand_rand_construct_for_tuple_struct(
@@ -32,7 +33,7 @@ mod expand_for_tuple_struct_tests {
         let ctx    = collect_tuple_field_context(&fields);
 
         // provider types are [u8, u16]
-        let providers = ctx.provider_types.iter().map(|t| t.to_token_stream().to_string()).collect::<Vec<_>>();
+        let providers = ctx.provider_types().iter().map(|t| t.to_token_stream().to_string()).collect::<Vec<_>>();
         assert_eq!(providers, vec!["u8", "u16"]);
     }
 

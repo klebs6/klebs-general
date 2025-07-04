@@ -1,4 +1,4 @@
-// ---------------- [ File: src/generate_variant_constructors.rs ]
+// ---------------- [ File: random-constructible-derive/src/generate_variant_constructors.rs ]
 crate::ix!();
 
 /// Generates constructors for each variant of an enum.

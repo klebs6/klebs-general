@@ -1,4 +1,4 @@
-// ---------------- [ File: src/derive_for_unit_struct.rs ]
+// ---------------- [ File: random-constructible-derive/src/derive_for_unit_struct.rs ]
 crate::ix!();
 
 pub fn derive_for_unit_struct(name: &Ident) -> TokenStream2 {

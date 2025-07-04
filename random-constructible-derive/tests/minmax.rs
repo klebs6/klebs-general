@@ -1,3 +1,4 @@
+// ---------------- [ File: random-constructible-derive/tests/minmax.rs ]
 use tracing::*;
 use traced_test::*;
 use tracing_setup::*;
@@ -43,4 +44,3 @@ fn verify_min_max_clamping() {
     assert!(instance_uniform.fraction() >= &0.2);
     assert!(instance_uniform.fraction() <= &0.8);
 }
-

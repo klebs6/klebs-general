@@ -1,3 +1,4 @@
+// ---------------- [ File: random-constructible-derive/src/expand_rand_construct_for_named_struct.rs ]
 crate::ix!();
 
 pub fn expand_rand_construct_for_named_struct(
@@ -38,12 +39,12 @@ mod expand_for_named_struct_tests {
 
         let ctx = collect_named_field_context(&fields);
         // two identifiers captured
-        assert_eq!(ctx.member_idents.len(), 2);
+        assert_eq!(ctx.member_idents().len(), 2);
         // provider_types should be [u8, i16]
-        let providers = ctx.provider_types.iter().map(|t| t.to_token_stream().to_string()).collect::<Vec<_>>();
+        let providers = ctx.provider_types().iter().map(|t| t.to_token_stream().to_string()).collect::<Vec<_>>();
         assert_eq!(providers, vec!["u8", "i16"]);
         // env helpers must be *skipped* because u8 is primitive
-        assert!(provider_types_contain_primitive(&ctx.provider_types));
+        assert!(provider_types_contain_primitive(&ctx.provider_types()));
     }
 
     #[traced_test]

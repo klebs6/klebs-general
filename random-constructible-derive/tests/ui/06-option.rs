@@ -1,4 +1,4 @@
-// ---------------- [ File: tests/ui/06-option.rs ]
+// ---------------- [ File: random-constructible-derive/tests/ui/06-option.rs ]
 use random_constructible::*;
 use random_constructible_derive::*;
 

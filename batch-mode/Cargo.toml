@@ -39,7 +39,7 @@ resolver = "3"
 [workspace.dependencies]
 Inflector                = "0.11.4"
 ai-descriptor            = "0.9.0"
-async-openai             = "0.27.2"
+async-openai             = "0.29.0"
 async-trait              = "0.1.86"
 bytes                    = "1.10.0"
 crossbeam                = "0.8.4"

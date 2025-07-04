@@ -1,4 +1,4 @@
-// ---------------- [ File: src/lib.rs ]
+// ---------------- [ File: random-constructible-derive/src/lib.rs ]
 #![allow(unused_imports)]
 extern crate proc_macro;
 
@@ -18,12 +18,7 @@ xp!{extract_enum_variants}
 xp!{extract_from_attribute}
 xp!{extract_from_attributes}
 xp!{extract_from_meta_list}
-xp!{field_generation_tokens}
-xp!{generate_env_helpers_named}
-xp!{generate_env_helpers_tuple}
 xp!{generate_match_arms}
-xp!{generate_rand_impl_named}
-xp!{generate_rand_impl_tuple}
 xp!{generate_random_constructible_enum_impl}
 xp!{generate_variant_constructors}
 xp!{parse}

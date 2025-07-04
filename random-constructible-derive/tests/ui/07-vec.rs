@@ -1,4 +1,4 @@
-// ---------------- [ File: tests/ui/07-vec.rs ]
+// ---------------- [ File: random-constructible-derive/tests/ui/07-vec.rs ]
 use random_constructible::*;
 use random_constructible_derive::*;
 

@@ -1,4 +1,4 @@
-// ---------------- [ File: src/rand_construct_enum.rs ]
+// ---------------- [ File: random-constructible/src/rand_construct_enum.rs ]
 crate::ix!();
 
 pub trait RandConstructProbabilityMapProvider<R: Eq + Hash + Sized> {
