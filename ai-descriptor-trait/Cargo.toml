@@ -14,7 +14,7 @@ keywords      = ["ai", "enums", "simulation", "ergonomics"]
 categories    = ["game-development", "simulation", "rust-patterns"]
 
 [dependencies]
-str-shorthand      = { version = "0.2.0", path = "/Users/kleb/bethesda/work/repo/klebs-general/str-shorthand" }
+str-shorthand      = { version = "0.3.0", path = "/Users/kleb/bethesda/work/repo/klebs-general/str-shorthand" }
 tracing            = { version = "0.1.41", features = ["log"] }
 tracing-setup      = "1.0.4"
 tracing-subscriber = { version = "0.3.19", default-features = false, features = ["fmt", "std", "env-filter", "json"] }
