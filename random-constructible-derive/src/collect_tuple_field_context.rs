@@ -9,8 +9,13 @@ pub struct TupleContext {
     rand_bounds:       Vec<TokenStream2>,
     inits_random:      Vec<TokenStream2>,
     inits_uniform:     Vec<TokenStream2>,
+
+    #[cfg(feature="env")]
     inits_random_env:  Vec<TokenStream2>,
+
+    #[cfg(feature="env")]
     inits_uniform_env: Vec<TokenStream2>,
+
     field_types:       Vec<Type>,
 }
 
@@ -20,8 +25,13 @@ pub fn collect_tuple_field_context(fields: &FieldsUnnamed) -> TupleContext {
         rand_bounds:       Vec::new(),
         inits_random:      Vec::new(),
         inits_uniform:     Vec::new(),
+
+        #[cfg(feature="env")]
         inits_random_env:  Vec::new(),
+
+        #[cfg(feature="env")]
         inits_uniform_env: Vec::new(),
+
         field_types:       Vec::new(),
     };
 
@@ -31,7 +41,11 @@ pub fn collect_tuple_field_context(fields: &FieldsUnnamed) -> TupleContext {
 
         append_ts(&mut ctx.inits_random,      tokens.random());
         append_ts(&mut ctx.inits_uniform,     tokens.uniform());
+
+        #[cfg(feature="env")]
         append_ts(&mut ctx.inits_random_env,  tokens.random_env());
+
+        #[cfg(feature="env")]
         append_ts(&mut ctx.inits_uniform_env, tokens.uniform_env());
 
         ctx.provider_types.extend(tokens.provider_types().iter().cloned());
@@ -42,6 +56,17 @@ pub fn collect_tuple_field_context(fields: &FieldsUnnamed) -> TupleContext {
     ctx
 }
 
+#[cfg(not(feature="env"))]
+pub fn generate_env_helpers_tuple(
+    name:     &Ident,
+    generics: &Generics,
+    c:        &TupleContext,
+
+) -> TokenStream2 {
+    quote! { }
+}
+
+#[cfg(feature="env")]
 pub fn generate_env_helpers_tuple(
     name:     &Ident,
     generics: &Generics,

@@ -1,6 +1,6 @@
 [package]
 name = "ai-descriptor-derive"
-version = "0.5.0"
+version = "0.6.0"
 edition = "2021"
 
 authors       = [ "klebs tpk3.mx@gmail.com" ]
@@ -25,10 +25,10 @@ export-magic = "0.3.6"
 #rand = "0.8"
 tracing                     = { version = "0.1.41", features      = ["log"] }
 tracing-setup               = "1.0.4"
-tracing-subscriber          = { version = "0.3.19", default-features = false, features                                                = ["fmt", "std", "env-filter", "json"] }
+tracing-subscriber          = { version = "0.3.19", default-features = false, features = ["fmt", "std", "env-filter", "json"] }
 
 [dev-dependencies]
 trybuild = "1.0"
 ai-descriptor-trait = "0.3.0"
-traced-test = "*"
+traced-test = "1.0.4"
 #ai-descriptor-trait = { version = "*", path = "../ai-descriptor-trait" }

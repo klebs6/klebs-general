@@ -13,10 +13,11 @@ pub(crate) fn process_field(field: &Field) -> Result<TokenStream2, TokenStream2>
     /// - `will_use_ai_alt`
     #[derive(Debug, Default)]
     struct FieldAiInfo {
-        feature_if_none: Option<String>,
-        feature_prefix:  Option<String>,
-        feature_postfix: Option<String>,
-        will_use_ai_alt: bool,
+        feature_if_none:        Option<String>,
+        feature_prefix:         Option<String>,
+        feature_postfix:        Option<String>,
+        feature_prefix_if_some: Option<String>,      // ── NEW
+        will_use_ai_alt:        bool,
     }
 
     /// Parse the relevant `#[ai(...)]` attributes on this field.
@@ -42,6 +43,10 @@ pub(crate) fn process_field(field: &Field) -> Result<TokenStream2, TokenStream2>
                             } else if key.is_ident("feature_prefix") {
                                 if let syn::Lit::Str(ref lit_str) = nv.lit {
                                     info.feature_prefix = Some(lit_str.value());
+                                }
+                            } else if key.is_ident("feature_prefix_if_some") {
+                                if let syn::Lit::Str(ref lit_str) = nv.lit {
+                                    info.feature_prefix_if_some = Some(lit_str.value());
                                 }
                             } else if key.is_ident("feature_postfix") {
                                 if let syn::Lit::Str(ref lit_str) = nv.lit {
@@ -134,6 +139,31 @@ pub(crate) fn process_field(field: &Field) -> Result<TokenStream2, TokenStream2>
         }
     };
 
+    let prefix_some = field_info
+        .feature_prefix_if_some
+        .as_deref()
+        .unwrap_or(&prefix);
+
+    let produce_combined_with_prefix = |value_expr: proc_macro2::TokenStream,
+    pref: &str| {
+        quote! {
+            {
+                let prefix_space = if #pref.is_empty() {
+                    std::string::String::new()
+                } else {
+                    format!("{} ", #pref)
+                };
+                let postfix_space = if #postfix.is_empty() {
+                    std::string::String::new()
+                } else {
+                    format!(" {}", #postfix)
+                };
+                let combined = format!("{}{}{}", prefix_space, #value_expr, postfix_space);
+                features.push(std::borrow::Cow::Owned(combined));
+            }
+        }
+    };
+
     if is_opt {
         // If the field is Option<T>
         if let Some(default_text) = field_info.feature_if_none {
@@ -142,8 +172,11 @@ pub(crate) fn process_field(field: &Field) -> Result<TokenStream2, TokenStream2>
             //       Some(value) => { prefix + value.(text or ai_alt) + postfix }
             //       None => { prefix + default_text + postfix }
             //   }
-            let some_arm = produce_combined(quote!(value.#method_call));
-            let none_arm = produce_combined(quote!(std::borrow::Cow::Borrowed(#default_text)));
+            let some_arm = produce_combined_with_prefix(quote!(value.#method_call), prefix_some);
+            let none_arm = produce_combined_with_prefix(
+                quote!(std::borrow::Cow::Borrowed(#default_text)),
+                /* no prefix for None */ ""
+            );
             Ok(quote! {
                 match &self.#field_name {
                     Some(value) => #some_arm,

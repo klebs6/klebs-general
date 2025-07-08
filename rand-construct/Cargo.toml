@@ -1,6 +1,6 @@
 [package]
 name = "rand-construct"
-version = "0.12.0"
+version = "0.14.0"
 edition = "2021"
 
 authors       = [ "klebs tpk3.mx@gmail.com" ]
@@ -16,8 +16,5 @@ categories    = ["game-development", "simulation", "rust-patterns"]
 [dependencies]
 once_cell = "1.16"
 
-#random-constructible        = "0.10.0"
-random-constructible        = { version = "0.10.0", path = "../random-constructible", features = ["specialization"] }
-
-#random-constructible-derive = "0.12.0"
-random-constructible-derive = { version = "0.12.0", path = "../random-constructible-derive" }
+random-constructible        = { version = "0.11.0", path = "../random-constructible" }
+random-constructible-derive = { version = "0.13.0", path = "../random-constructible-derive" }

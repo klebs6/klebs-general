@@ -12,25 +12,6 @@ x!{prim_traits}
 x!{sample}
 x!{impl_for_optiont}
 
-/// Catch‑all implementation.
-///
-/// * Compiles on nightly with `min_specialization`.
-/// * Does **not** try to be clever – it merely fulfils the bound that the
-///   derive macro emits for every field type.
-#[cfg(feature = "specialization")]
-default impl<ENV, T> RandConstructProbabilityMapProvider<T> for ENV
-where
-    T: Eq + Hash + Clone,
-{
-    default fn probability_map() -> Arc<HashMap<T, f64>> {
-        Arc::new(HashMap::new())
-    }
-
-    default fn uniform_probability_map() -> Arc<HashMap<T, f64>> {
-        Arc::new(HashMap::new())
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;

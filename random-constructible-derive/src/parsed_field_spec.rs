@@ -10,8 +10,13 @@ crate::ix!();
 pub struct FieldGenerationTokens {
     random:      TokenStream2,
     uniform:     TokenStream2,
+
+    #[cfg(feature="env")]
     random_env:  TokenStream2,
+
+    #[cfg(feature="env")]
     uniform_env: TokenStream2,
+
     provider_types: Vec<Type>,
     rand_bound: TokenStream2,
 }
@@ -65,8 +70,13 @@ impl ParsedFieldSpec {
         FieldGenerationTokens {
             random:      quote!({ let mut v = <#ty>::random();                 #clamp v }),
             uniform:     quote!({ let mut v = <#ty>::uniform();                #clamp v }),
+
+            #[cfg(feature="env")]
             random_env:  quote!({ let mut v = <#ty>::random_with_env::<ENV>(); #clamp v }),
+
+            #[cfg(feature="env")]
             uniform_env: quote!({ let mut v = <#ty>::random_uniform_with_env::<ENV>(); #clamp v }),
+
             provider_types: vec![ty.clone()],
             rand_bound: quote! { #ty : RandConstruct },
         }
@@ -91,8 +101,13 @@ impl ParsedFieldSpec {
         FieldGenerationTokens {
             random:      build_branch(quote! { <#inner>::random() },                 quote! { #prob_lit }),
             uniform:     build_branch(quote! { <#inner>::uniform() },                quote! { 0.5 }),
+
+            #[cfg(feature="env")]
             random_env:  build_branch(quote! { <#inner>::random_with_env::<ENV>() }, quote! { #prob_lit }),
+
+            #[cfg(feature="env")]
             uniform_env: build_branch(quote! { <#inner>::random_uniform_with_env::<ENV>() }, quote! { 0.5 }),
+
             provider_types: vec![inner.clone()],
             rand_bound: quote! { #inner : RandConstruct },
         }
@@ -165,14 +180,27 @@ mod parsed_field_spec_tests {
         assert_eq!(tokens.provider_types()[0].to_token_stream().to_string(), "u8");
 
         // All four constructor snippets must mention "Some"
-        let all = format!(
-            "{}{}{}{}",
-            tokens.random().to_string(),
-            tokens.uniform().to_string(),
-            tokens.random_env().to_string(),
-            tokens.uniform_env().to_string()
-        );
-        assert!(all.contains("Some"));
+        #[cfg(feature="env")]
+        {
+            let all = format!(
+                "{}{}{}{}",
+                tokens.random().to_string(),
+                tokens.uniform().to_string(),
+                tokens.random_env().to_string(),
+                tokens.uniform_env().to_string()
+            );
+            assert!(all.contains("Some"));
+        }
+
+        #[cfg(not(feature="env"))]
+        {
+            let all = format!(
+                "{}{}",
+                tokens.random().to_string(),
+                tokens.uniform().to_string(),
+            );
+            assert!(all.contains("Some"));
+        }
     }
 
     #[test]

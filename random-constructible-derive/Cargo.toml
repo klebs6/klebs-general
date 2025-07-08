@@ -1,6 +1,6 @@
 [package]
 name = "random-constructible-derive"
-version = "0.12.0"
+version = "0.13.0"
 edition = "2021"
 
 authors       = [ "klebs tpk3.mx@gmail.com" ]
@@ -35,3 +35,7 @@ tracing-subscriber        = { version = "0.3", default-features = false, feature
 trybuild = "1.0"
 random-constructible = "0.10.0"
 #random-constructible = { version = "*", path = "../random-constructible" }
+
+[features]
+default = []
+env = []
