@@ -3,7 +3,7 @@ workspace = true
 
 [dependencies.workspacer-3p]
 path = "../workspacer-3p"
-version = "0.5.1"
+version = "0.5.2"
 
 [package]
 categories = [
@@ -21,6 +21,6 @@ keywords = [
     "integrity",
     "automation",
 ]
-name = "workspacer-ensure-git-clean"
-version = "0.1.1"
 license = "MIT"
+name = "workspacer-ensure-git-clean"
+version = "0.1.2"

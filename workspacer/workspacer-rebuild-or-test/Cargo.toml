@@ -1,37 +1,37 @@
+[dependencies.lightweight-command-runner]
+path = "../lightweight-command-runner"
+version = "0.1.3"
+
 [dependencies.tracing]
 workspace = true
 
-[dependencies.lightweight-command-runner]
-path = "../lightweight-command-runner"
-version = "0.1.2"
-
 [dependencies.workspacer-3p]
 path = "../workspacer-3p"
-version = "0.5.1"
+version = "0.5.2"
 
 [dependencies.workspacer-crate]
 path = "../workspacer-crate"
-version = "0.5.1"
+version = "0.5.2"
 
 [dependencies.workspacer-crate-interface]
 path = "../workspacer-crate-interface"
-version = "0.1.1"
+version = "0.1.2"
 
 [dependencies.workspacer-errors]
 path = "../workspacer-errors"
-version = "0.1.1"
+version = "0.1.2"
 
 [dependencies.workspacer-workspace]
 path = "../workspacer-workspace"
-version = "0.1.1"
+version = "0.1.2"
 
 [dependencies.workspacer-workspace-interface]
 path = "../workspacer-workspace-interface"
-version = "0.1.2"
+version = "0.1.3"
 
 [dev-dependencies.workspacer-mock]
 path = "../workspacer-mock"
-version = "0.5.1"
+version = "0.5.2"
 
 [package]
 categories = [
@@ -48,6 +48,6 @@ keywords = [
     "test",
     "workspace",
 ]
-name = "workspacer-rebuild-or-test"
-version = "0.1.1"
 license = "MIT"
+name = "workspacer-rebuild-or-test"
+version = "0.1.2"

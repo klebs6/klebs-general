@@ -1,6 +1,3 @@
-[dependencies.tracing]
-workspace = true
-
 [[bin]]
 name = "workspacer-publish-public-crates-in-order"
 path = "src/bin/publish_public_crates_in_order.rs"
@@ -14,57 +11,60 @@ workspace = true
 [dependencies.structopt]
 workspace = true
 
+[dependencies.tracing]
+workspace = true
+
 [dependencies.workspacer-3p]
 path = "../workspacer-3p"
-version = "0.5.1"
+version = "0.5.2"
 
 [dependencies.workspacer-check-crates-io]
 path = "../workspacer-check-crates-io"
-version = "0.1.2"
+version = "0.1.3"
 
 [dependencies.workspacer-check-publish-ready]
 path = "../workspacer-check-publish-ready"
-version = "0.1.2"
+version = "0.1.3"
 
 [dependencies.workspacer-crate]
 path = "../workspacer-crate"
-version = "0.5.1"
+version = "0.5.2"
 
 [dependencies.workspacer-crate-interface]
 path = "../workspacer-crate-interface"
-version = "0.1.1"
+version = "0.1.2"
 
 [dependencies.workspacer-detect-circular-deps]
 path = "../workspacer-detect-circular-deps"
-version = "0.1.1"
+version = "0.1.2"
 
 [dependencies.workspacer-errors]
 path = "../workspacer-errors"
-version = "0.1.1"
+version = "0.1.2"
 
 [dependencies.workspacer-git]
 path = "../workspacer-git"
-version = "0.1.1"
+version = "0.1.2"
 
 [dependencies.workspacer-toml]
 path = "../workspacer-toml"
-version = "0.5.1"
+version = "0.5.2"
 
 [dependencies.workspacer-toml-interface]
 path = "../workspacer-toml-interface"
-version = "0.1.2"
+version = "0.1.3"
 
 [dependencies.workspacer-workspace]
 path = "../workspacer-workspace"
-version = "0.1.1"
+version = "0.1.2"
 
 [dev-dependencies.workspacer-cratesio-mock]
 path = "../workspacer-cratesio-mock"
-version = "0.1.2"
+version = "0.1.3"
 
 [dev-dependencies.workspacer-mock]
 path = "../workspacer-mock"
-version = "0.5.1"
+version = "0.5.2"
 
 [package]
 categories = [
@@ -83,6 +83,6 @@ keywords = [
     "asynchronous",
     "crates",
 ]
-name = "workspacer-publish"
-version = "0.1.1"
 license = "MIT"
+name = "workspacer-publish"
+version = "0.1.2"

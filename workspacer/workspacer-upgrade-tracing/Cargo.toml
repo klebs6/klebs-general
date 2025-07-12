@@ -1,14 +1,12 @@
-[dependencies]
-tracing.workspace = true
+[dependencies.tracing]
+workspace = true
 
 [dependencies.workspacer-3p]
 path = "../workspacer-3p"
-version = "0.5.1"
+version = "0.5.2"
 
 [package]
-categories = [
-    "development-tools",
-]
+categories = ["development-tools"]
 description = "Enhances tracing and logging capabilities in workspacer applications."
 edition = "2024"
 keywords = [
@@ -18,6 +16,6 @@ keywords = [
     "debugging",
     "monitoring",
 ]
-name = "workspacer-upgrade-tracing"
-version = "0.1.1"
 license = "MIT"
+name = "workspacer-upgrade-tracing"
+version = "0.1.2"

@@ -3,29 +3,25 @@ workspace = true
 
 [dependencies.workspacer-crate-interface]
 path = "../workspacer-crate-interface"
-version = "0.1.1"
+version = "0.1.2"
 
 [dependencies.workspacer-errors]
 path = "../workspacer-errors"
-version = "0.1.1"
+version = "0.1.2"
 
 [dependencies.workspacer-toml-interface]
 path = "../workspacer-toml-interface"
-version = "0.1.2"
+version = "0.1.3"
 
 [dependencies.workspacer-workspace-interface]
 path = "../workspacer-workspace-interface"
-version = "0.1.2"
+version = "0.1.3"
 
 [package]
-categories = [
-    "development-tools",
-]
+categories = ["development-tools"]
 description = "A comprehensive API for workspace management, offering customizable layouts and efficient task handling."
 edition = "2024"
-keywords = [
-    "workspacer",
-]
-name = "workspacer-interface"
-version = "0.5.2"
+keywords = ["workspacer"]
 license = "MIT"
+name = "workspacer-interface"
+version = "0.5.3"

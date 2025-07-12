@@ -1,43 +1,43 @@
-[dependencies.tracing]
-workspace = true
-
 [dependencies.derive_builder]
 workspace = true
 
 [dependencies.structopt]
 workspace = true
 
+[dependencies.tracing]
+workspace = true
+
 [dependencies.workspacer-3p]
 path = "../workspacer-3p"
-version = "0.5.1"
+version = "0.5.2"
 
 [dependencies.workspacer-either]
 path = "../workspacer-either"
-version = "0.1.0"
+version = "0.1.1"
 
 [dependencies.workspacer-errors]
 path = "../workspacer-errors"
-version = "0.1.1"
+version = "0.1.2"
 
 [dependencies.workspacer-export]
 path = "../workspacer-export"
-version = "0.1.3"
+version = "0.1.4"
 
 [dependencies.workspacer-file-filter]
 path = "../workspacer-file-filter"
-version = "0.1.0"
+version = "0.1.1"
 
 [dependencies.workspacer-prune-bad-category-slugs]
 path = "../workspacer-prune-bad-category-slugs"
-version = "0.1.0"
+version = "0.1.1"
 
 [dependencies.workspacer-run]
 path = "../workspacer-run"
-version = "0.1.0"
+version = "0.1.1"
 
 [dependencies.workspacer-show]
 path = "../workspacer-show"
-version = "0.1.1"
+version = "0.1.2"
 
 [package]
 categories = [
@@ -56,4 +56,4 @@ keywords = [
 ]
 license = "MIT"
 name = "workspacer-cli"
-version = "0.1.1"
+version = "0.1.2"

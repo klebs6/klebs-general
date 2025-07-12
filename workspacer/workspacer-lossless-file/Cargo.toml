@@ -1,17 +1,18 @@
 [dependencies.tracing]
 workspace = true
 
+[dependencies.workspacer-3p]
+path = "../workspacer-3p"
+version = "0.5.2"
+
+[dependencies.workspacer-consolidate]
+path = "../workspacer-consolidate"
+version = "0.5.3"
+
 [package]
-name = "workspacer-lossless-file"
-version = "0.1.0"
 authors = ["YourName <you@example.com>"]
-license = "MIT"
-edition = "2024"
 description = "todo: write a description here"
-
-# keywords = []
-# categories = []
-
-[dependencies]
-workspacer-3p = { path = "../workspacer-3p" , version = "0.5.1" }
-workspacer-consolidate = { path = "../workspacer-consolidate" , version = "0.5.2" }
+edition = "2024"
+license = "MIT"
+name = "workspacer-lossless-file"
+version = "0.1.1"

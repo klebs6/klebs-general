@@ -1,27 +1,27 @@
-[dependencies]
-tracing.workspace = true
-
 [dependencies.derive_builder]
 workspace = true
 
 [dependencies.getset]
 workspace = true
 
+[dependencies.tracing]
+workspace = true
+
 [dependencies.workspacer-3p]
 path = "../workspacer-3p"
-version = "0.5.1"
+version = "0.5.2"
 
 [dependencies.workspacer-errors]
 path = "../workspacer-errors"
-version = "0.1.1"
+version = "0.1.2"
 
 [dependencies.workspacer-toml]
 path = "../workspacer-toml"
-version = "0.5.1"
+version = "0.5.2"
 
 [dependencies.workspacer-toml-interface]
 path = "../workspacer-toml-interface"
-version = "0.1.2"
+version = "0.1.3"
 
 [package]
 categories = [
@@ -37,6 +37,6 @@ keywords = [
     "testing",
     "simulation",
 ]
-name = "workspacer-toml-mock"
-version = "0.1.1"
 license = "MIT"
+name = "workspacer-toml-mock"
+version = "0.1.2"

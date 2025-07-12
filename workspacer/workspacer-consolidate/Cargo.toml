@@ -2,9 +2,6 @@
 name = "workspacer-show-consolidated-crate-interface"
 path = "src/bin/show_consolidated_crate_interface.rs"
 
-[dependencies.tracing]
-workspace = true
-
 [dependencies.derive_builder]
 workspace = true
 
@@ -20,33 +17,36 @@ workspace = true
 [dependencies.structopt]
 workspace = true
 
+[dependencies.tracing]
+workspace = true
+
 [dependencies.workspacer-3p]
 path = "../workspacer-3p"
-version = "0.5.1"
+version = "0.5.2"
 
 [dependencies.workspacer-crate]
 path = "../workspacer-crate"
-version = "0.5.1"
+version = "0.5.2"
 
 [dependencies.workspacer-crate-interface]
 path = "../workspacer-crate-interface"
-version = "0.1.1"
+version = "0.1.2"
 
 [dependencies.workspacer-errors]
 path = "../workspacer-errors"
-version = "0.1.1"
+version = "0.1.2"
 
 [dependencies.workspacer-interface]
 path = "../workspacer-interface"
-version = "0.5.2"
+version = "0.5.3"
 
 [dependencies.workspacer-syntax]
 path = "../workspacer-syntax"
-version = "0.5.1"
+version = "0.5.2"
 
 [dependencies.workspacer-workspace]
 path = "../workspacer-workspace"
-version = "0.1.1"
+version = "0.1.2"
 
 [package]
 authors = ["klebs tpk3.mx@gmail.com"]
@@ -68,4 +68,4 @@ keywords = [
 license = "MIT OR Apache-2.0"
 name = "workspacer-consolidate"
 repository = "https://github.com/klebs6/klebs-general"
-version = "0.5.2"
+version = "0.5.3"

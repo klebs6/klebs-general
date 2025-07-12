@@ -1,9 +1,9 @@
-[dependencies]
-tracing.workspace = true
+[dependencies.tracing]
+workspace = true
 
 [dependencies.workspacer-3p]
 path = "../workspacer-3p"
-version = "0.5.1"
+version = "0.5.2"
 
 [package]
 categories = [
@@ -18,6 +18,6 @@ keywords = [
     "schema",
     "workspace",
 ]
-name = "workspacer-validate"
-version = "0.1.1"
 license = "MIT"
+name = "workspacer-validate"
+version = "0.1.2"

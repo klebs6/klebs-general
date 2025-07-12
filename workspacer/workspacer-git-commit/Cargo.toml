@@ -3,7 +3,7 @@ workspace = true
 
 [dependencies.workspacer-3p]
 path = "../workspacer-3p"
-version = "0.5.1"
+version = "0.5.2"
 
 [package]
 categories = [
@@ -19,6 +19,6 @@ keywords = [
     "rust",
     "programmatic",
 ]
-name = "workspacer-git-commit"
-version = "0.1.2"
 license = "MIT"
+name = "workspacer-git-commit"
+version = "0.1.3"
