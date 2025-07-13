@@ -116,7 +116,7 @@ which                   = "7.0.2"
 
 [workspace.dependencies.batch-mode]
 path = "../batch-mode/batch-mode"
-version = "0.2.2"
+version = "0.2.3"
 
 [workspace.dependencies.rocket]
 features = [ "json" ]
