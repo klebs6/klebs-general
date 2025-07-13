@@ -1,16 +1,13 @@
 [dependencies.derive_builder]
 workspace = true
 
-[dependencies.export-magic]
-workspace = true
-
 [dependencies.disable_macro]
 workspace = true
 
-[dependencies.getset]
+[dependencies.export-magic]
 workspace = true
 
-[dependencies.regex]
+[dependencies.getset]
 workspace = true
 
 [dependencies.pretty_assertions]
@@ -20,6 +17,9 @@ workspace = true
 workspace = true
 
 [dependencies.quote]
+workspace = true
+
+[dependencies.regex]
 workspace = true
 
 [dependencies.serde]
@@ -48,15 +48,15 @@ workspace = true
 
 [dev-dependencies.ai-json-template]
 path = "../ai-json-template"
-version = "0.1.1"
+version = "0.1.2"
 
 [dev-dependencies.save-load-derive]
 path = "../save-load-derive"
-version = "0.1.1"
+version = "0.1.2"
 
 [dev-dependencies.save-load-traits]
 path = "../save-load-traits"
-version = "0.2.1"
+version = "0.2.2"
 
 [dev-dependencies.trybuild]
 workspace = true
@@ -79,4 +79,4 @@ license = "MIT"
 name = "ai-json-template-derive"
 readme = "README.md"
 repository = "https://github.com/klebs6/klebs-general"
-version = "0.1.1"
+version = "0.1.2"

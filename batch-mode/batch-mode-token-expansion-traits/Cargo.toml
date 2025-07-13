@@ -1,18 +1,18 @@
 [dependencies.ai-json-template]
 path = "../ai-json-template"
-version = "0.1.1"
+version = "0.1.2"
 
 [dependencies.batch-mode-3p]
 path = "../batch-mode-3p"
-version = "0.2.1"
+version = "0.2.2"
 
 [dependencies.camel-case-token-with-comment]
 path = "../camel-case-token-with-comment"
-version = "0.2.1"
+version = "0.2.2"
 
 [dependencies.save-load-traits]
 path = "../save-load-traits"
-version = "0.2.1"
+version = "0.2.2"
 
 [package]
 authors = ["klebs tpk3.mx@gmail.com"]
@@ -31,4 +31,4 @@ license-file = "OGPv1"
 name = "batch-mode-token-expansion-traits"
 readme = "README.md"
 repository = "https://github.com/klebs6/klebs-general"
-version = "0.1.1"
+version = "0.1.2"

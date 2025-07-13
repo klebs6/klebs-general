@@ -1,14 +1,14 @@
 [dependencies.ai-json-template]
 path = "../ai-json-template"
-version = "0.1.1"
+version = "0.1.2"
 
 [dependencies.ai-json-template-derive]
 path = "../ai-json-template-derive"
-version = "0.1.1"
+version = "0.1.2"
 
 [dependencies.batch-mode-3p]
 path = "../batch-mode-3p"
-version = "0.2.1"
+version = "0.2.2"
 
 [dependencies.getset]
 workspace = true
@@ -48,15 +48,15 @@ workspace = true
 
 [dev-dependencies.batch-mode-token-expansion-traits]
 path = "../batch-mode-token-expansion-traits"
-version = "0.1.1"
+version = "0.1.2"
 
 [dev-dependencies.save-load-derive]
 path = "../save-load-derive"
-version = "0.1.1"
+version = "0.1.2"
 
 [dev-dependencies.save-load-traits]
 path = "../save-load-traits"
-version = "0.2.1"
+version = "0.2.2"
 
 [features]
 default = []
@@ -79,4 +79,4 @@ license-file = "OGPv1"
 name = "batch-mode-token-expansion-axis-derive"
 readme = "README.md"
 repository = "https://github.com/klebs6/klebs-general"
-version = "0.1.2"
+version = "0.1.3"

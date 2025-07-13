@@ -1,25 +1,16 @@
-[package]
-authors     = ["klebs tpk3.mx@gmail.com"]
-description = "Contains code we use for ai-assisted struct generation. Please also see the ai-json-template-derive crate for more information."
-edition     = "2024"
-license     = "MIT"
-name        = "ai-json-template"
-repository  = "https://github.com/klebs6/klebs-general"
-version     = "0.1.1"
-
 [dependencies.export-magic]
 workspace = true
 
 [dependencies.indoc]
 workspace = true
 
-[dependencies.save-load-traits]
-path = "../save-load-traits"
-version = "0.2.1"
-
 [dependencies.save-load-derive]
 path = "../save-load-derive"
-version = "0.1.1"
+version = "0.1.2"
+
+[dependencies.save-load-traits]
+path = "../save-load-traits"
+version = "0.2.2"
 
 [dependencies.serde]
 workspace = true
@@ -28,6 +19,9 @@ workspace = true
 workspace = true
 
 [dependencies.serde_json]
+workspace = true
+
+[dependencies.traced-test]
 workspace = true
 
 [dependencies.tracing]
@@ -39,5 +33,11 @@ workspace = true
 [dependencies.tracing-subscriber]
 workspace = true
 
-[dependencies.traced-test]
-workspace = true
+[package]
+authors = ["klebs tpk3.mx@gmail.com"]
+description = "Contains code we use for ai-assisted struct generation. Please also see the ai-json-template-derive crate for more information."
+edition = "2024"
+license = "MIT"
+name = "ai-json-template"
+repository = "https://github.com/klebs6/klebs-general"
+version = "0.1.2"
