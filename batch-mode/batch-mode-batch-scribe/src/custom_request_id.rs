@@ -20,6 +20,11 @@ impl std::fmt::Display for CustomRequestId {
     }
 }
 
+// batch-mode-batch-scribe/src/custom_request_id.rs
+impl AsRef<str> for CustomRequestId {
+    fn as_ref(&self) -> &str { self.as_str() }
+}
+
 #[cfg(test)]
 mod custom_request_id_tests {
     use super::*;

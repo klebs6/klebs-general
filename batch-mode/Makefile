@@ -49,6 +49,7 @@ ACTIVE_PACKAGE := ai-json-template-derive
 ACTIVE_PACKAGE := batch-mode-token-expansion-axis-derive
 ACTIVE_PACKAGE := batch-mode-process-response
 ACTIVE_PACKAGE := batch-mode
+ACTIVE_PACKAGE := batch-mode-tts
 
 #-----------------------------------------------------[]
 #INDIVIDUAL_TEST := test_build_network_io_enum
@@ -62,6 +63,7 @@ DEFAULT := test
 #DEFAULT := test_file_one
 #DEFAULT := test_all
 #DEFAULT := run
+DEFAULT := tts
 #DEFAULT := file_diff
 #DEFAULT := build
 
@@ -80,6 +82,19 @@ EXPANSION_TEST    := expand_this
 INDIVIDUAL_TEST    := test_build_vec_schema
 INDIVIDUAL_TEST    := test_classify_field_type_with_justification
 INDIVIDUAL_TEST    := emit_schema_for_vec
+
+INPUT_FILE  := /Users/kleb/bethesda/work/repo/rare-document-generators/grower/generated-skill-tree-workspaces/river-town/river-town.txt
+OUTPUT_FILE := /Users/kleb/bethesda/work/repo/rare-document-generators/grower/generated-skill-tree-workspaces/river-town/river-town.mp3
+
+INPUT_FILE  := /Users/kleb/bethesda/work/repo/rare-document-generators/grower/generated-skill-tree-workspaces/two-person-workout/two-person-workout.txt
+OUTPUT_FILE := /Users/kleb/bethesda/work/repo/rare-document-generators/grower/generated-skill-tree-workspaces/two-person-workout/two-person-workout.mp3
+
+INPUT_FILE  := /Users/kleb/bethesda/work/repo/rare-document-generators/grower/generated-skill-tree-workspaces/quad-approach/quad-approach.txt
+OUTPUT_FILE := /Users/kleb/bethesda/work/repo/rare-document-generators/grower/generated-skill-tree-workspaces/quad-approach/quad-approach.mp3
+
+tts:
+	RUSTFLAGS=$(RUSTFLAGS) $(CARGO) run -p batch-mode-tts -- $(INPUT_FILE) $(OUTPUT_FILE)
+
 
 #----------------------------------------------[here are our rules]
 run:

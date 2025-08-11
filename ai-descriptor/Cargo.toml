@@ -20,3 +20,4 @@ plural-trait  = "0.1.0"
 
 ai-descriptor-derive = { version = "0.6.0", path = "/Users/kleb/bethesda/work/repo/klebs-general/ai-descriptor-derive" }
 ai-descriptor-trait  = { version = "0.4.0", path = "/Users/kleb/bethesda/work/repo/klebs-general/ai-descriptor-trait" }
+language-enum = { version = "*", path = "../language-enum" }

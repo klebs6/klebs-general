@@ -1,3 +1,5 @@
+[dependencies]
+batch-mode-batch-scribe = { path = "../batch-mode-batch-scribe" }
 [dependencies.batch-mode-3p]
 path = "../batch-mode-3p"
 version = "0.2.2"
@@ -30,6 +32,9 @@ path = "../save-load-traits"
 version = "0.2.2"
 
 [dependencies.traced-test]
+workspace = true
+
+[dependencies.serde]
 workspace = true
 
 [dependencies.tracing]

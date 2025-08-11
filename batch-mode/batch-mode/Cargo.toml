@@ -6,6 +6,9 @@ path = "src/bin/batch-mode-parse-raw-batch-file-dir.rs"
 name = "camel-case-token-file-difference"
 path = "src/bin/camel_case_token_file_difference.rs"
 
+[dependencies]
+batch-mode-tts = { path = "../batch-mode-tts" }
+
 [dependencies.agent-coordinate]
 path = "../agent-coordinate"
 version = "0.1.2"

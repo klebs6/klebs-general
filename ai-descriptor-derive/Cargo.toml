@@ -26,6 +26,7 @@ export-magic = "0.3.6"
 tracing                     = { version = "0.1.41", features      = ["log"] }
 tracing-setup               = "1.0.4"
 tracing-subscriber          = { version = "0.3.19", default-features = false, features = ["fmt", "std", "env-filter", "json"] }
+language-enum = { version = "*", path = "../language-enum" }
 
 [dev-dependencies]
 trybuild = "1.0"

@@ -18,8 +18,9 @@
 crate::ix!();
 
 /// Represents the complete request structure.
-#[derive(Getters,Setters,Clone,Debug, Serialize, Deserialize)]
+#[derive(Builder,Getters,Setters,Clone,Debug, Serialize, Deserialize)]
 #[getset(get="pub")]
+#[builder(setter(into))]
 pub struct LanguageModelBatchAPIRequest {
 
     /// Identifier for the custom request.
@@ -35,6 +36,37 @@ pub struct LanguageModelBatchAPIRequest {
 
     /// Body of the request.
     body: LanguageModelRequestBody,
+}
+
+impl LanguageModelBatchAPIRequest {
+    pub fn chat_completion_with_id(
+        custom_id: impl Into<String>,
+        system_msg: impl Into<String>,
+        user_msg: impl Into<String>,
+        model: LanguageModelType,
+    ) -> Self {
+        let system_msg = system_msg.into();
+        let user_msg   = user_msg.into();
+
+        LanguageModelBatchAPIRequestBuilder::default()
+            .custom_id(CustomRequestId::new(custom_id))
+            .method(HttpMethod::Post)
+            .url(LanguageModelApiUrl::ChatCompletions)
+            .body(LanguageModelRequestBody::new_basic(
+                model,
+                &system_msg,
+                &user_msg,
+            ))
+            .build()
+            .expect("LanguageModelBatchAPIRequest should build without error")
+    }
+}
+
+impl SeedManifestEntry for LanguageModelBatchAPIRequest {
+
+    fn custom_id(&self) -> String {
+        self.custom_id().as_str().to_string()
+    }
 }
 
 impl LanguageModelBatchAPIRequest {

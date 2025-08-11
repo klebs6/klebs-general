@@ -1,5 +1,6 @@
 // ---------------- [ File: ai-descriptor-trait/src/lib.rs ]
 use std::borrow::Cow;
+use language_enum::Language;
 
 #[allow(unused_imports)]
 use str_shorthand::lowercase_first_letter;
@@ -9,7 +10,15 @@ pub trait ItemFeature {
 }
 
 pub trait ItemWithFeatures {
-    fn header(&self) -> Cow<'_,str>;
+
+    /// Localised header.
+    fn header_in(&self, lang: &Language) -> Cow<'_, str>;
+
+    /// English header (legacy helper).
+    fn header(&self) -> Cow<'_, str> {
+        self.header_in(&Language::English)
+    }
+
     fn features(&self) -> Vec<Cow<'_, str>>;
 }
 
@@ -66,15 +75,47 @@ impl<T: ItemWithFeatures> AIDescriptor for T {
 
         Cow::Owned(lines.join(" "))
     }
+
+    /// Localised description.
+    fn ai_in(&self, lang: &Language) -> Cow<'_, str> {
+        tracing::trace!("Generating AI descriptor in {:?}", lang);
+
+        let mut lines: Vec<String> = Vec::new();
+        lines.push(self.header_in(&lang).to_string());
+
+        let unique = crate::unique_items(&self.features());
+        if !unique.is_empty() {
+            lines.push(has_features_phrase(&lang).into());
+        }
+
+        for feat in unique {
+            lines.push(format!("- {}", feat));
+        }
+
+        let out = Cow::Owned(lines.join("\n"));
+        tracing::info!(%out, "Generated AI descriptor");
+        out
+    }
 }
 
+/// High‑level description facilities for any value that implements
+/// [`ItemWithFeatures`].
+///
+/// * `ai` generates an English description (back‑compat).  
+/// * `ai_in` generates a description in the requested language.  
+/// * `ai_alt` remains a terse, single‑line variant.
 pub trait AIDescriptor {
 
+    /// English description (legacy default).
     fn ai(&self) -> Cow<'_,str>;
 
+    /// Compact, single‑line English description.
     fn ai_alt(&self) -> Cow<'_,str> {
         unimplemented!("can implement this function for ai_alt() function")
     }
+
+    /// Localised description.
+    fn ai_in(&self, lang: &Language) -> Cow<'_, str>;
 }
 
 /// Extract unique items from a vector, maintaining their original order.
@@ -105,7 +146,8 @@ mod tests {
     }
 
     impl ItemWithFeatures for TestItem {
-        fn header(&self) -> Cow<'_, str> {
+
+        fn header_in(&self, l: &Language) -> Cow<'_, str> {
             Cow::Borrowed(&self.header)
         }
 
@@ -135,3 +177,38 @@ It has the following features:
         assert_eq!(item.ai(), expected_output);
     }
 }
+
+/// Return a localized translation of the sentence  
+/// “It has the following features:”.  
+///  
+/// If the provided language is not explicitly recognised, the function
+/// gracefully falls back to English.
+///
+/// Supported languages:
+/// * English  
+/// * Latin  
+/// * Ancient Greek  
+/// * Russian  
+/// * French  
+/// * Italian  
+/// * Swedish  
+/// * Finnish  
+/// * Icelandic
+pub fn has_features_phrase(lang: &Language) -> &'static str {
+    match lang {
+        Language::English       => "It has the following features:",
+        Language::Latin         => "Habet has proprietates sequentes:",
+        Language::AncientGreek  => "Ἔχει τὰ ἑξῆς γνωρίσματα:",
+        Language::Russian       => "Он обладает следующими характеристиками:",
+        Language::French        => "Il possède les caractéristiques suivantes :",
+        Language::Italian       => "Ha le seguenti caratteristiche:",
+        Language::Swedish       => "Den har följande egenskaper:",
+        Language::Finnish       => "Sillä on seuraavat ominaisuudet:",
+        Language::Icelandic     => "Það hefur eftirfarandi einkenni:",
+        Language::Arabic        => "له الميزات التالية:",
+        Language::Swahili       => "Ina sifa zifuatazo:",
+        Language::IrishGaelic   => "Tá na tréithe seo a leanas aige:",
+        _                                     => "It has the following features:",
+    }
+}
+

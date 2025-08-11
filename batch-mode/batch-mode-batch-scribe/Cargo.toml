@@ -10,6 +10,9 @@ workspace = true
 [dependencies.getset]
 workspace = true
 
+[dependencies.derive_builder]
+workspace = true
+
 [dependencies.language-model-type]
 path = "../language-model-type"
 version = "0.1.3"

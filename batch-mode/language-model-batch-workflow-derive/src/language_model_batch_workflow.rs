@@ -61,11 +61,19 @@ pub fn generate_impl_language_model_batch_workflow(parsed: &LmbwParsedInput) -> 
                 }
                 tracing::info!("Built {} core query item(s) from the input seeds.", core_queries.len());
 
-                LanguageModelBatchAPIRequest::requests_from_query_strings(
-                    &final_msg,
-                    model.clone(),
-                    &core_queries
-                )
+                let mut reqs = Vec::with_capacity(inputs.len());
+
+                for (seed, core_query) in inputs.iter().zip(core_queries.into_iter()) {
+                    let req = LanguageModelBatchAPIRequest::chat_completion_with_id(
+                        seed.name(),              // <--  this is the kebab‑case header
+                        &final_msg,
+                        &core_query,
+                        model.clone(),
+                    );
+                    reqs.push(req);
+                }
+
+                reqs
             }
         }
     };

@@ -6,3 +6,4 @@ x!{expected_content_type}
 x!{mock}
 x!{failing_mock}
 x!{calculate_unseen}
+x!{error}

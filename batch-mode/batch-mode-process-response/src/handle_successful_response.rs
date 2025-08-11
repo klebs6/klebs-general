@@ -21,11 +21,32 @@ fn flatten_json_for_persistence(original: &serde_json::Value) -> serde_json::Val
     }
 }
 
+/// ---------------------------------------------------------------------------
+/// Guarantee *header echo*:  
+/// If the JSON produced by the LLM contains a `"header"` key, we make sure its
+/// value matches `T::name()`.  If not, we patch it **before the file is written**.
+/// This keeps the rule generic – no per‑type hard‑coding is required.
+/// ---------------------------------------------------------------------------
+#[inline(always)]
+fn enforce_header_echo(seed: &(dyn Named), json: &mut serde_json::Value) {
+    let expected = seed.name();
+    match json.get_mut("header") {
+        Some(h) if h == expected.as_ref() => {} // already fine
+        Some(h) => *h = serde_json::Value::String(expected.into_owned()),
+        None => {
+            json.as_object_mut()
+                .expect("output must be object")
+                .insert("header".into(), serde_json::Value::String(expected.into_owned()));
+        }
+    }
+}
+
 #[instrument(level = "trace", skip_all)]
 pub async fn handle_successful_response<T>(
-    success_body: &BatchSuccessResponseBody,
-    workspace: &dyn BatchWorkspaceInterface,
+    success_body:          &BatchSuccessResponseBody,
+    workspace:             &dyn BatchWorkspaceInterface,
     expected_content_type: &ExpectedContentType,
+    original_seed:         &(dyn Named + Send + Sync),
 ) -> Result<(), BatchSuccessResponseHandlingError>
 where
     T: 'static + Send + Sync + Named + DeserializeOwned + GetTargetPathForAIExpansion,
@@ -64,7 +85,7 @@ where
             );
 
             match message_content.extract_clean_parse_json_with_repair() {
-                Ok(json_content) => {
+                Ok(mut json_content) => {
                     debug!(
                         "JSON parse/repair succeeded for success_body ID: {}",
                         success_body.id()
@@ -79,6 +100,10 @@ where
                             return Err(e.into());
                         }
                     };
+
+                    /* Enforce the header‑echo rule *generically*. */
+                    enforce_header_echo(original_seed, &mut json_content);
+
                     //------------------------------------------------------------------
 
                     trace!("Wrapping typed_item in Arc => T::name()={}", typed_item.name());

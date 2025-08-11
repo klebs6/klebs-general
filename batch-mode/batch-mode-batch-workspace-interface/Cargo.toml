@@ -1,3 +1,5 @@
+[dependencies]
+save-load-traits = { path = "../save-load-traits" }
 [dependencies.batch-mode-3p]
 path = "../batch-mode-3p"
 version = "0.2.2"
@@ -5,6 +7,10 @@ version = "0.2.2"
 [dependencies.batch-mode-batch-index]
 path = "../batch-mode-batch-index"
 version = "0.2.2"
+
+[dependencies.batch-mode-batch-scribe]
+path = "../batch-mode-batch-scribe"
+version = "0.1.6"
 
 [dependencies.camel-case-token-with-comment]
 path = "../camel-case-token-with-comment"

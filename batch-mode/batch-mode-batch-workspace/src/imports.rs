@@ -4,3 +4,4 @@ pub(crate) use batch_mode_batch_index::*;
 pub(crate) use batch_mode_batch_triple::*;
 pub(crate) use batch_mode_batch_workspace_interface::*;
 pub(crate) use save_load_traits::*;
+pub(crate) use batch_mode_batch_scribe::*;

@@ -1,0 +1,26 @@
+[package]
+name = "batch-mode-tts"
+version = "0.1.0"
+authors = ["YourName <you@example.com>"]
+license = "MIT"
+edition = "2024"
+description = "todo: write a description here"
+
+# keywords = []
+# categories = []
+
+[dependencies]
+batch-mode-3p = { path = "../batch-mode-3p" }
+async-openai.workspace = true
+derive_builder.workspace = true
+tracing.workspace = true
+tracing-setup.workspace = true
+getset.workspace = true
+structopt.workspace = true
+tokio.workspace = true
+clap = "*"
+export-magic = "*"
+
+[[bin]]
+path = "src/bin/main.rs"
+name = "batch-mode-tts"

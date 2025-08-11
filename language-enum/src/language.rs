@@ -583,6 +583,10 @@ pub enum Language {
     #[rand_construct(p=0.0001)]
     Latin,
 
+    #[ai("The language spoken in ancient Greece.")]
+    #[rand_construct(p=0.0001)]
+    AncientGreek,
+
     #[ai("A regional language used in Lingala-speaking communities and local markets. Periodically included in local radio discussions and basic literacy workshops.")]
     #[rand_construct(p=0.0005)]
     Lingala,

@@ -74,7 +74,7 @@ pub(crate) fn impl_item_with_features(input: &syn::DeriveInput) -> proc_macro2::
 
             let expanded = quote::quote! {
                 impl ItemWithFeatures for #name {
-                    fn header(&self) -> std::borrow::Cow<'_, str> {
+                    fn header_in(&self, l: &Language) -> std::borrow::Cow<'_, str> {
                         std::borrow::Cow::Borrowed(#header)
                     }
 
@@ -370,7 +370,7 @@ pub(crate) fn impl_item_with_features(input: &syn::DeriveInput) -> proc_macro2::
             // Build the final enum impl
             let expanded = quote::quote! {
                 impl ItemWithFeatures for #name {
-                    fn header(&self) -> std::borrow::Cow<'_, str> {
+                    fn header_in(&self, l: &Language) -> std::borrow::Cow<'_, str> {
                         match self {
                             #(#header_arms),*
                         }

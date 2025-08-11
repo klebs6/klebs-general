@@ -69,7 +69,7 @@ pub use regex::{self,Regex,Captures};
 pub use std::collections::{VecDeque,HashSet};
 pub use traced_test::traced_test;
 pub use tracing_setup::*;
-pub use tracing::{self,instrument,trace,info,debug,error,warn};
+pub use tracing::{self,Instrument,instrument,trace,info,debug,error,warn};
 pub use std::cell::RefCell;
 pub use std::rc::Rc;
 pub use tempfile::{self,NamedTempFile,tempdir,TempDir};
