@@ -50,7 +50,6 @@ ACTIVE_PACKAGE := workspacer-check-publish-ready
 ACTIVE_PACKAGE := workspacer-name-all-files
 ACTIVE_PACKAGE := workspacer-watch-and-reload
 #ACTIVE_PACKAGE := workspacer-add-new-crate-to-workspace
-#ACTIVE_PACKAGE := workspacer-bump
 #ACTIVE_PACKAGE := workspacer-check-crates-io
 #ACTIVE_PACKAGE := workspacer-check-private
 #ACTIVE_PACKAGE := workspacer-check-publish-ready
@@ -80,6 +79,7 @@ ACTIVE_PACKAGE := workspacer-topo
 ACTIVE_PACKAGE := workspacer-publish
 ACTIVE_PACKAGE := workspacer-pin
 ACTIVE_PACKAGE := workspacer
+ACTIVE_PACKAGE := workspacer-bump
 
 INDIVIDUAL_TEST := gather_leading_token_comments
 INDIVIDUAL_TEST := gather_leading_comment_lines
@@ -95,7 +95,7 @@ CONSOLIDATE_CRATE := workspacer-toml
 
 #-----------------------------------------------------[this section lets us choose how we want to test]
 DEFAULT := test
-DEFAULT := build
+#DEFAULT := build
 #DEFAULT := readme_writer
 #DEFAULT := readme_writer_all
 #DEFAULT := test_file

@@ -44,7 +44,7 @@ where
         let mut visited = HashSet::new();
         visited.insert(crate_key.clone());
 
-        self.update_downstreams_recursively(&crate_key, &new_ver, &mut visited).await
+        self.update_downstreams_recursively(&crate_key, &new_ver, &release, &mut visited).await
     }
 }
 

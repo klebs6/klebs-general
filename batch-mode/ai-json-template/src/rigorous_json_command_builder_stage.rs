@@ -116,8 +116,18 @@ impl RigorousJsonCommandBuilderStage {
 
                     Your output should only consist of the JSON object. do *not* include a preamble or postamble to your response. 
 
-                    We seek to successfully parse your response directly as JSON."
+                    We seek to successfully parse your response directly as JSON.
+
+                    For the final answer, output the result only as a valid JSON object, wrapped inside triple backticks with json immediately after the opening backticks.
+                    The JSON must be parser-ready:
+                    – No additional text before or after the block
+                    – No markdown or prose outside the fenced block
+                    – No HTML escaping of quotes, slashes, or other characters
+                    – Indentation and whitespace preserved exactly as written
+                    – The content between the fences must be valid JSON as per RFC 8259"
             },
         }
     }
 }
+
+// FIXME make sure the JSON output instructions are correct

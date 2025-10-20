@@ -92,6 +92,12 @@ OUTPUT_FILE := /Users/kleb/bethesda/work/repo/rare-document-generators/grower/ge
 INPUT_FILE  := /Users/kleb/bethesda/work/repo/rare-document-generators/grower/generated-skill-tree-workspaces/quad-approach/quad-approach.txt
 OUTPUT_FILE := /Users/kleb/bethesda/work/repo/rare-document-generators/grower/generated-skill-tree-workspaces/quad-approach/quad-approach.mp3
 
+INPUT_FILE  := /Users/kleb/bethesda/work/repo/rare-document-generators/grower/generated-skill-tree-workspaces/deer/deer.txt
+OUTPUT_FILE := /Users/kleb/bethesda/work/repo/rare-document-generators/grower/generated-skill-tree-workspaces/deer/deer.mp3
+
+INPUT_FILE  := /Users/kleb/bethesda/work/repo/rare-document-generators/grower/generated-skill-tree-workspaces/goals/goals.txt
+OUTPUT_FILE := /Users/kleb/bethesda/work/repo/rare-document-generators/grower/generated-skill-tree-workspaces/goals/goals.mp3
+
 tts:
 	RUSTFLAGS=$(RUSTFLAGS) $(CARGO) run -p batch-mode-tts -- $(INPUT_FILE) $(OUTPUT_FILE)
 

@@ -5,9 +5,10 @@ crate::ix!();
 pub trait WorkspaceDownstreamExt {
     async fn update_downstreams_recursively(
         &mut self,
-        dep_name: &str,
+        dep_name:    &str,
         new_version: &semver::Version,
-        visited: &mut HashSet<String>,
+        release:     &ReleaseType,
+        visited:     &mut HashSet<String>,
     ) -> Result<(), WorkspaceError>;
 }
 
@@ -19,9 +20,10 @@ where
 {
     async fn update_downstreams_recursively(
         &mut self,
-        dep_name: &str,
+        dep_name:    &str,
         new_version: &semver::Version,
-        visited: &mut HashSet<String>,
+        release:     &ReleaseType,
+        visited:     &mut HashSet<String>,
     ) -> Result<(), WorkspaceError> {
 
         // 1) local copy of crates
@@ -51,20 +53,32 @@ where
             };
 
             if changed {
-                // 3) do async save, once the guard is dropped
+                // 1) Save the dependency rewrite
                 {
                     let crate_guard = arc_crate.lock().await;
-
                     let toml = crate_guard.cargo_toml();
-
                     let toml_guard = toml.lock().await;
-
                     toml_guard.save_to_disk().await?;
                 }
 
+                // 2) Bump THIS crate's version (since its deps changed)
+                let bumped_ver = {
+                    let mut guard = arc_crate.lock().await;
+                    guard.bump(release.clone()).await.map_err(|e| {
+                        WorkspaceError::BumpError {
+                            crate_path: guard.as_ref().join("Cargo.toml"),
+                            source: Box::new(e),
+                        }
+                    })?;
+                    guard.version().map_err(WorkspaceError::CrateError)?
+                };
+
                 visited.insert(crate_name.clone());
-                self.update_downstreams_recursively(&crate_name, new_version, visited).await?;
+
+                // 3) Recurse to crates that depend on THIS crate, carrying THIS crate's new version
+                self.update_downstreams_recursively(&crate_name, &bumped_ver, release, visited).await?;
             }
+
         }
 
         Ok(())
