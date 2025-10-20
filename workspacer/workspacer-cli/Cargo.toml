@@ -21,7 +21,7 @@ version = "0.1.2"
 
 [dependencies.workspacer-export]
 path = "../workspacer-export"
-version = "0.1.4"
+version = "0.1.5"
 
 [dependencies.workspacer-file-filter]
 path = "../workspacer-file-filter"
@@ -56,4 +56,4 @@ keywords = [
 ]
 license = "MIT"
 name = "workspacer-cli"
-version = "0.1.2"
+version = "0.1.3"

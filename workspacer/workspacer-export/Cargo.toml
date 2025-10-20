@@ -27,7 +27,7 @@ version = "0.1.2"
 
 [dependencies.workspacer-bump]
 path = "../workspacer-bump"
-version = "0.1.3"
+version = "0.1.4"
 
 [dependencies.workspacer-check-publish-ready]
 path = "../workspacer-check-publish-ready"
@@ -169,4 +169,4 @@ keywords = [
 ]
 license = "MIT"
 name = "workspacer-export"
-version = "0.1.4"
+version = "0.1.5"
