@@ -2,6 +2,12 @@
 path = "../batch-mode-3p"
 version = "0.2.2"
 
+[dependencies.derive_builder]
+workspace = true
+
+[dependencies.getset]
+workspace = true
+
 [dependencies.serde]
 workspace = true
 
@@ -9,6 +15,12 @@ workspace = true
 workspace = true
 
 [dependencies.serde_json]
+workspace = true
+
+[dependencies.traced-test]
+workspace = true
+
+[dependencies.tracing]
 workspace = true
 
 [package]
@@ -31,4 +43,4 @@ license = "MIT"
 name = "language-model-type"
 readme = "README.md"
 repository = "https://github.com/klebs6/klebs-general"
-version = "0.1.3"
+version = "0.1.4"

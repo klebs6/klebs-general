@@ -50,6 +50,7 @@ ACTIVE_PACKAGE := batch-mode-token-expansion-axis-derive
 ACTIVE_PACKAGE := batch-mode-process-response
 ACTIVE_PACKAGE := batch-mode
 ACTIVE_PACKAGE := batch-mode-tts
+ACTIVE_PACKAGE := language-model-type
 
 #-----------------------------------------------------[]
 #INDIVIDUAL_TEST := test_build_network_io_enum

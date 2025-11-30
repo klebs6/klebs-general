@@ -1,6 +1,9 @@
 [dependencies.async-openai]
 workspace = true
 
+[dependencies.derive_builder]
+workspace = true
+
 [dependencies.error-tree]
 workspace = true
 
@@ -10,12 +13,9 @@ workspace = true
 [dependencies.getset]
 workspace = true
 
-[dependencies.derive_builder]
-workspace = true
-
 [dependencies.language-model-type]
 path = "../language-model-type"
-version = "0.1.3"
+version = "0.1.4"
 
 [dependencies.pretty_assertions]
 workspace = true
@@ -58,4 +58,4 @@ keywords = [
 license = "MIT"
 name = "batch-mode-batch-scribe"
 repository = "https://github.com/klebs6/klebs-general"
-version = "0.1.6"
+version = "0.1.7"

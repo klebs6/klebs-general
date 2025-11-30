@@ -1,5 +1,3 @@
-[dependencies]
-batch-mode-batch-scribe = { path = "../batch-mode-batch-scribe" }
 [dependencies.batch-mode-3p]
 path = "../batch-mode-3p"
 version = "0.2.2"
@@ -8,13 +6,16 @@ version = "0.2.2"
 path = "../batch-mode-batch-index"
 version = "0.2.2"
 
+[dependencies.batch-mode-batch-scribe]
+path = "../batch-mode-batch-scribe"
+
 [dependencies.batch-mode-batch-triple]
 path = "../batch-mode-batch-triple"
-version = "0.2.2"
+version = "0.2.3"
 
 [dependencies.batch-mode-batch-workspace-interface]
 path = "../batch-mode-batch-workspace-interface"
-version = "0.2.2"
+version = "0.2.3"
 
 [dependencies.batch-mode-json]
 path = "../batch-mode-json"
@@ -31,10 +32,10 @@ workspace = true
 path = "../save-load-traits"
 version = "0.2.2"
 
-[dependencies.traced-test]
+[dependencies.serde]
 workspace = true
 
-[dependencies.serde]
+[dependencies.traced-test]
 workspace = true
 
 [dependencies.tracing]
@@ -53,4 +54,4 @@ edition = "2024"
 license = "MIT"
 name = "batch-mode-batch-workspace"
 repository = "https://github.com/klebs6/klebs-general"
-version = "0.2.2"
+version = "0.2.3"

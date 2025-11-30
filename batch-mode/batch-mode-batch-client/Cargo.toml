@@ -12,11 +12,11 @@ version = "0.2.2"
 
 [dependencies.batch-mode-batch-schema]
 path = "../batch-mode-batch-schema"
-version = "0.2.2"
+version = "0.2.3"
 
 [dependencies.batch-mode-batch-triple]
 path = "../batch-mode-batch-triple"
-version = "0.2.2"
+version = "0.2.3"
 
 [dependencies.derive_builder]
 workspace = true
@@ -35,4 +35,4 @@ edition = "2024"
 license = "MIT"
 name = "batch-mode-batch-client"
 repository = "https://github.com/klebs6/klebs-general"
-version = "0.2.2"
+version = "0.2.3"
