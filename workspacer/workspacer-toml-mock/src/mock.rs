@@ -77,6 +77,15 @@ fn default_empty_table() -> toml::Value {
     toml::Value::Table(toml::map::Map::new())
 }
 
+impl ReferencesDependencyInAnyTable for MockCargoToml {
+    fn references_dependency_in_any_table(
+        &self,
+        dep_name: &str,
+    ) -> Result<bool, CargoTomlError> {
+        unimplemented!("could implement this in the future");
+    }
+}
+
 #[async_trait]
 impl SaveToDisk for MockCargoToml {
     type Error = CargoTomlError;

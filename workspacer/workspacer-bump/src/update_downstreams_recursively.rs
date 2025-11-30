@@ -30,38 +30,36 @@ where
         let crate_list: Vec<_> = self.crates().iter().cloned().collect();
 
         for arc_crate in crate_list {
+
+            // Get the name without holding the lock longer than needed
             let crate_name = {
                 let h = arc_crate.lock().await;
                 h.name().to_string()
             };
-            if visited.contains(&crate_name) {
-                continue;
-            }
 
-            // 2) lock for short, synchronous update
-            let changed = {
-
-                let h          = arc_crate.lock().await;
-                let toml           = h.cargo_toml();
+            // 2) Try to rewrite (if a `version = "…"` exists) and also detect path/workspace refs
+            let (was_rewritten, references_dep) = {
+                let h = arc_crate.lock().await;
+                let toml = h.cargo_toml();
                 let mut toml_guard = toml.lock().await;
 
-                // do in-memory updates
-                let changed = toml_guard.update_dependency_version(dep_name, &new_version.to_string())?;
+                let rewritten =
+                    toml_guard.update_dependency_version(dep_name, &new_version.to_string())?;
 
-                changed
-                // guard dropped
-            };
+                // NEW: detect references even when there is no `version` key (path/workspace deps)
+                let referenced =
+                    toml_guard.references_dependency_in_any_table(dep_name)?;
 
-            if changed {
-                // 1) Save the dependency rewrite
-                {
-                    let crate_guard = arc_crate.lock().await;
-                    let toml = crate_guard.cargo_toml();
-                    let toml_guard = toml.lock().await;
+                if rewritten {
                     toml_guard.save_to_disk().await?;
                 }
+                (rewritten, referenced)
+            };
 
-                // 2) Bump THIS crate's version (since its deps changed)
+            // 3) Decide whether this crate needs a bump (at most once per node)
+            let needs_bump = (was_rewritten || references_dep) && !visited.contains(&crate_name);
+            if needs_bump {
+                // Bump THIS crate's version (since its deps changed)
                 let bumped_ver = {
                     let mut guard = arc_crate.lock().await;
                     guard.bump(release.clone()).await.map_err(|e| {
@@ -75,10 +73,9 @@ where
 
                 visited.insert(crate_name.clone());
 
-                // 3) Recurse to crates that depend on THIS crate, carrying THIS crate's new version
+                // Recurse to crates that depend on THIS crate, carrying THIS crate's new version
                 self.update_downstreams_recursively(&crate_name, &bumped_ver, release, visited).await?;
             }
-
         }
 
         Ok(())

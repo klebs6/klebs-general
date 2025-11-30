@@ -43,6 +43,62 @@ impl SaveToDisk for CargoToml {
     }
 }
 
+impl ReferencesDependencyInAnyTable for CargoToml {
+    /// Returns `true` if this manifest references `dep_name` in any of the
+    /// standard dependency tables (top-level or target-specific):
+    /// - `dependencies`
+    /// - `dev-dependencies`
+    /// - `build-dependencies`
+    ///
+    /// This is a read-only check; it does **not** inject or modify `version`
+    /// fields. It treats path/git/workspace-only entries as "referenced".
+    fn references_dependency_in_any_table(
+        &self,
+        dep_name: &str,
+    ) -> Result<bool, CargoTomlError> {
+        // Root must be a table
+        let root_table = self
+            .content
+            .as_table()
+            .ok_or_else(|| CargoTomlError::TopLevelNotATable {
+                path: self.path.clone(),
+                details: "Top-level TOML is not a table".to_string(),
+            })?;
+
+        // Helper to check a single table for a dependency key
+        let mut table_has_dep = |tbl: &toml::value::Table| -> bool {
+            for section_key in ["dependencies", "dev-dependencies", "build-dependencies"] {
+                if let Some(section_val) = tbl.get(section_key) {
+                    if let Some(dep_tbl) = section_val.as_table() {
+                        if dep_tbl.contains_key(dep_name) {
+                            return true;
+                        }
+                    }
+                }
+            }
+            false
+        };
+
+        // 1) Top-level dependency sections
+        if table_has_dep(root_table) {
+            return Ok(true);
+        }
+
+        // 2) target.'...'.{dependencies,dev-dependencies,build-dependencies}
+        if let Some(targets) = root_table.get("target").and_then(|v| v.as_table()) {
+            for (_target_name, target_tbl_val) in targets.iter() {
+                if let Some(target_tbl) = target_tbl_val.as_table() {
+                    if table_has_dep(target_tbl) {
+                        return Ok(true);
+                    }
+                }
+            }
+        }
+
+        Ok(false)
+    }
+}
+
 impl UpdateDependencyVersionRaw for CargoToml {
     type Error = CargoTomlError;
 
@@ -69,19 +125,27 @@ impl UpdateDependencyVersionRaw for CargoToml {
                 if let Some(dep_table) = section_val.as_table_mut() {
                     // Check if this crate is listed
                     if let Some(dep_item) = dep_table.get_mut(dep_name) {
-                        // If it’s a table: set dep_item["version"] = new_version
-                        if let Some(tbl) = dep_item.as_table_mut() {
-                            tbl.insert(
-                                "version".to_string(),
-                                toml::Value::String(new_version.into()),
-                            );
-                            changed = true;
-                        }
-                        // If it’s a string: replace it
-                        else if dep_item.is_str() {
+                        // If it’s a plain string version: replace it
+                        if let Some(s) = dep_item.as_str() {
+                            let _ = s; // just to emphasize the branch
                             *dep_item = toml::Value::String(new_version.into());
                             changed = true;
                         }
+                        // If it’s a table/inline-table, update **only if** `version` exists
+                        else if let Some(tbl) = dep_item.as_table_mut() {
+                            if let Some(v) = tbl.get_mut("version") {
+                                *v = toml::Value::String(new_version.into());
+                                changed = true;
+                            } else {
+                                // path-only/git-only/workspace-only: leave unchanged
+                                tracing::trace!(
+                                    section = *section_key,
+                                    dep = dep_name,
+                                    "leaving dependency without `version` unchanged"
+                                );
+                            }
+                        }
+
                         // else: could also be something else, e.g. a bool or int?
                         // We can choose to skip or do something else
                     }
@@ -440,5 +504,85 @@ mod test_cargo_toml {
         // Check that as_ref() points to the same path
         let as_ref_path = cargo_toml_handle.as_ref();
         assert_eq!(as_ref_path, cargo_toml_path.as_path());
+    }
+
+    #[tokio::test]
+    async fn update_dep_does_not_inject_version_for_path_only_in_all_sections() {
+        use tempfile::tempdir;
+        let dir = tempdir().unwrap();
+        let toml_content = r#"
+            [package]
+            name = "demo"
+            version = "0.1.0"
+
+            [dependencies]
+            a = { path = "../a" }
+            b = { path = "../b", version = "1.0.0" }
+            c = "0.2.3"
+
+            [dev-dependencies]
+            a = { path = "../a" }
+
+            [build-dependencies]
+            a = { path = "../a" }
+        "#;
+
+        let path = dir.path().join("Cargo.toml");
+        tokio::fs::write(&path, toml_content).await.unwrap();
+        let mut ct = CargoToml::new(&path).await.unwrap();
+
+        // Update all three names to a new version
+        let _ = ct.update_dependency_version("a", "9.9.9").unwrap();
+        let _ = ct.update_dependency_version("b", "9.9.9").unwrap();
+        let _ = ct.update_dependency_version("c", "9.9.9").unwrap();
+
+        // No need to save to disk; we can inspect ct.content in memory
+        let root = ct.get_content().as_table().unwrap();
+
+        // deps.a remains path-only: no 'version'
+        let deps = root.get("dependencies").unwrap().as_table().unwrap();
+        assert!(deps.get("a").unwrap().as_table().unwrap().get("version").is_none());
+        // deps.b had version: updated
+        assert_eq!(
+            deps.get("b").unwrap().as_table().unwrap().get("version").unwrap().as_str(),
+            Some("9.9.9")
+        );
+        // deps.c was string: updated
+        assert_eq!(deps.get("c").unwrap().as_str(), Some("9.9.9"));
+
+        // dev-dependencies: a remains path-only
+        let dev = root.get("dev-dependencies").unwrap().as_table().unwrap();
+        assert!(dev.get("a").unwrap().as_table().unwrap().get("version").is_none());
+
+        // build-dependencies: a remains path-only
+        let build = root.get("build-dependencies").unwrap().as_table().unwrap();
+        assert!(build.get("a").unwrap().as_table().unwrap().get("version").is_none());
+    }
+
+    #[tokio::test]
+    async fn update_dep_does_not_inject_version_for_git_only() {
+        use tempfile::tempdir;
+        let dir = tempdir().unwrap();
+        let toml_content = r#"
+            [package]
+            name = "demo"
+            version = "0.1.0"
+
+            [dependencies]
+            g = { git = "https://example.com/repo.git", rev = "abc123" }
+        "#;
+        let path = dir.path().join("Cargo.toml");
+        tokio::fs::write(&path, toml_content).await.unwrap();
+        let mut ct = CargoToml::new(&path).await.unwrap();
+
+        let _ = ct.update_dependency_version("g", "1.2.3").unwrap();
+
+        let deps = ct.get_content()
+            .as_table().unwrap()
+            .get("dependencies").unwrap()
+            .as_table().unwrap();
+
+        // Ensure no 'version' got injected
+        assert!(deps.get("g").unwrap().as_table().unwrap().get("version").is_none());
     }
 }

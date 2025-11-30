@@ -4,3 +4,4 @@
 x!{publish_topo}
 x!{try_publish_crate}
 x!{try_publish_crate_tree}
+x!{try_publish_crate_list}

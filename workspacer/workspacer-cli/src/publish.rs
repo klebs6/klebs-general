@@ -34,6 +34,18 @@ pub enum PublishSubcommand {
         #[structopt(long = "dry-run")]
         dry_run: bool,
     },
+
+    CrateList { 
+
+        #[structopt(long = "path")]
+        path: PathBuf, 
+
+        #[structopt(long = "crate-names")]
+        crate_names: Vec<String>, 
+
+        #[structopt(long = "dry-run")]
+        dry_run: bool 
+    },
 }
 
 impl PublishSubcommand {
@@ -106,6 +118,41 @@ impl PublishSubcommand {
                             );
                             err
                         })
+                    })
+                })
+                .await
+            }
+
+            PublishSubcommand::CrateList { path, crate_names, dry_run } => {
+                let dry_run_flag = *dry_run;
+                let workspace_path = path.clone();
+                let requested_crates = crate_names.clone();
+
+                trace!(
+                    "Publishing selected crate list {:?} in workspace '{}' (dry_run={})",
+                    requested_crates,
+                    workspace_path.display(),
+                    dry_run_flag
+                );
+
+                run_with_workspace(Some(workspace_path), /*skip_git_check=*/false, move |ws| {
+                    Box::pin(async move {
+                        ws.try_publish_crate_list(&requested_crates, dry_run_flag).await.map_err(|err| {
+                            error!(
+                                "Could not publish requested crate list {:?} in workspace '{}': {:?}",
+                                requested_crates,
+                                ws.as_ref().display(),
+                                err
+                            );
+                            err
+                        })?;
+
+                        info!(
+                            "Successfully completed publish for requested crate list {:?} in workspace '{}'",
+                            requested_crates,
+                            ws.as_ref().display()
+                        );
+                        Ok(())
                     })
                 })
                 .await
