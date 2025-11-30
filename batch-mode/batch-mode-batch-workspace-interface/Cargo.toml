@@ -8,7 +8,7 @@ version = "0.2.2"
 
 [dependencies.batch-mode-batch-scribe]
 path = "../batch-mode-batch-scribe"
-version = "0.1.7"
+version = "0.1.8"
 
 [dependencies.camel-case-token-with-comment]
 path = "../camel-case-token-with-comment"
@@ -30,4 +30,4 @@ edition = "2024"
 license = "MIT"
 name = "batch-mode-batch-workspace-interface"
 repository = "https://github.com/klebs6/klebs-general"
-version = "0.2.3"
+version = "0.2.4"

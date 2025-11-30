@@ -88,7 +88,7 @@ impl FromStr for LanguageModelType {
             "gpt-4.1-nano"        => Ok(Self::Gpt4_1Nano),
             "gpt-4o"              => Ok(Self::Gpt4o),
             "gpt-4o-mini"         => Ok(Self::Gpt4oMini),
-            "o1"                  => Ok(Self::O1),
+            "o1,
             "o1-pro"              => Ok(Self::O1Pro),
             "o3"                  => Ok(Self::O3),
             "o3-pro"              => Ok(Self::O3Pro),
@@ -101,7 +101,7 @@ impl FromStr for LanguageModelType {
     }
 }
 
-pub mod model_type_format {
+pub mod model_type {
     use super::*;
 
     pub fn serialize<S>(value: &LanguageModelType, serializer: S)
@@ -127,7 +127,6 @@ pub mod model_type_format {
 #[cfg(test)]
 mod model_type_tests {
     use super::*;
-    use traced_test::traced_test;
 
     #[traced_test]
     fn round_trip_serialization() {
@@ -167,3 +166,4 @@ mod model_type_tests {
         debug!("Correctly errored on invalid input '{}'", input);
     }
 }
+

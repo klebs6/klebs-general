@@ -11,15 +11,15 @@ version = "0.2.2"
 
 [dependencies.batch-mode-batch-client]
 path = "../batch-mode-batch-client"
-version = "0.2.3"
+version = "0.2.4"
 
 [dependencies.batch-mode-batch-error]
 path = "../batch-mode-batch-error"
-version = "0.1.3"
+version = "0.1.4"
 
 [dependencies.batch-mode-batch-executor]
 path = "../batch-mode-batch-executor"
-version = "0.2.3"
+version = "0.2.4"
 
 [dependencies.batch-mode-batch-index]
 path = "../batch-mode-batch-index"
@@ -31,31 +31,31 @@ version = "0.2.2"
 
 [dependencies.batch-mode-batch-reconciliation]
 path = "../batch-mode-batch-reconciliation"
-version = "0.2.3"
+version = "0.2.4"
 
 [dependencies.batch-mode-batch-scribe]
 path = "../batch-mode-batch-scribe"
-version = "0.1.7"
+version = "0.1.8"
 
 [dependencies.batch-mode-batch-triple]
 path = "../batch-mode-batch-triple"
-version = "0.2.3"
+version = "0.2.4"
 
 [dependencies.batch-mode-batch-workflow]
 path = "../batch-mode-batch-workflow"
-version = "0.1.3"
+version = "0.1.4"
 
 [dependencies.batch-mode-batch-workspace]
 path = "../batch-mode-batch-workspace"
-version = "0.2.3"
+version = "0.2.4"
 
 [dependencies.batch-mode-batch-workspace-interface]
 path = "../batch-mode-batch-workspace-interface"
-version = "0.2.3"
+version = "0.2.4"
 
 [dependencies.batch-mode-process-response]
 path = "../batch-mode-process-response"
-version = "0.2.4"
+version = "0.2.5"
 
 [dependencies.batch-mode-token-expansion-traits]
 path = "../batch-mode-token-expansion-traits"
@@ -67,15 +67,15 @@ version = "0.2.2"
 
 [dependencies.instructed-language-model-at-coordinate]
 path = "../instructed-language-model-at-coordinate"
-version = "0.1.3"
+version = "0.1.4"
 
 [dependencies.language-model-batch-workflow-derive]
 path = "../language-model-batch-workflow-derive"
-version = "0.1.3"
+version = "0.1.4"
 
 [dependencies.language-model-type]
 path = "../language-model-type"
-version = "0.1.4"
+version = "0.1.5"
 
 [dependencies.save-load-traits]
 path = "../save-load-traits"
@@ -109,4 +109,4 @@ license-file = "OGPv1"
 name = "language-model-token-expander"
 readme = "README.md"
 repository = "https://github.com/klebs6/klebs-general"
-version = "0.1.3"
+version = "0.1.4"

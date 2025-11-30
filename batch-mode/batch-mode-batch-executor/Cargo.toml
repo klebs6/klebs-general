@@ -4,7 +4,7 @@ version = "0.2.2"
 
 [dependencies.batch-mode-batch-client]
 path = "../batch-mode-batch-client"
-version = "0.2.3"
+version = "0.2.4"
 
 [dependencies.batch-mode-batch-index]
 path = "../batch-mode-batch-index"
@@ -16,19 +16,19 @@ version = "0.2.2"
 
 [dependencies.batch-mode-batch-reconciliation]
 path = "../batch-mode-batch-reconciliation"
-version = "0.2.3"
+version = "0.2.4"
 
 [dependencies.batch-mode-batch-schema]
 path = "../batch-mode-batch-schema"
-version = "0.2.3"
+version = "0.2.4"
 
 [dependencies.batch-mode-batch-triple]
 path = "../batch-mode-batch-triple"
-version = "0.2.3"
+version = "0.2.4"
 
 [dependencies.batch-mode-batch-workspace]
 path = "../batch-mode-batch-workspace"
-version = "0.2.3"
+version = "0.2.4"
 
 [dependencies.batch-mode-json]
 path = "../batch-mode-json"
@@ -51,4 +51,4 @@ edition = "2024"
 license = "MIT"
 name = "batch-mode-batch-executor"
 repository = "https://github.com/klebs6/klebs-general"
-version = "0.2.3"
+version = "0.2.4"

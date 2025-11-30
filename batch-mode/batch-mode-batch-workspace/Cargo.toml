@@ -11,11 +11,11 @@ path = "../batch-mode-batch-scribe"
 
 [dependencies.batch-mode-batch-triple]
 path = "../batch-mode-batch-triple"
-version = "0.2.3"
+version = "0.2.4"
 
 [dependencies.batch-mode-batch-workspace-interface]
 path = "../batch-mode-batch-workspace-interface"
-version = "0.2.3"
+version = "0.2.4"
 
 [dependencies.batch-mode-json]
 path = "../batch-mode-json"
@@ -54,4 +54,4 @@ edition = "2024"
 license = "MIT"
 name = "batch-mode-batch-workspace"
 repository = "https://github.com/klebs6/klebs-general"
-version = "0.2.3"
+version = "0.2.4"
