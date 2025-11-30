@@ -88,7 +88,7 @@ impl FromStr for LanguageModelType {
             "gpt-4.1-nano"        => Ok(Self::Gpt4_1Nano),
             "gpt-4o"              => Ok(Self::Gpt4o),
             "gpt-4o-mini"         => Ok(Self::Gpt4oMini),
-            "o1,
+            "o1"                  => Ok(Self::O1),
             "o1-pro"              => Ok(Self::O1Pro),
             "o3"                  => Ok(Self::O3),
             "o3-pro"              => Ok(Self::O3Pro),
