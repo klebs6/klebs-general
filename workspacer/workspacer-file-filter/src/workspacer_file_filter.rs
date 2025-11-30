@@ -22,7 +22,7 @@ impl AiFileFilter
 {
     pub async fn default() -> Result<Self,AiFileFilterError> {
         let readme_dir = WorkspacerDir::local().ensure_subdir_exists("file-filter-workspace")?;
-        Ok(AiFileFilter::new(&readme_dir, LanguageModelType::Gpt4_5Preview).await?)
+        Ok(AiFileFilter::new(&readme_dir, LanguageModelType::Gpt5_1Codex).await?)
     }
 
     pub async fn with_model(model_type: &LanguageModelType) -> Result<Self,AiFileFilterError> {

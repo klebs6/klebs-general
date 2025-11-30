@@ -15,8 +15,9 @@ where
         info!("uploading batch file at path={:?} to online", file_path);
 
         let create_file_request = CreateFileRequest {
-            file:    file_path.into(),
-            purpose: FilePurpose::Batch,
+            file:          file_path.into(),
+            purpose:       FilePurpose::Batch,
+            expires_after: None,
         };
 
         // similarly map the openai error

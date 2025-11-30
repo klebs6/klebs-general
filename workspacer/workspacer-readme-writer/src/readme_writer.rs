@@ -22,7 +22,7 @@ impl AiReadmeWriter
 {
     pub async fn default() -> Result<Self,AiReadmeWriterError> {
         let readme_dir = WorkspacerDir::local().ensure_subdir_exists("readme-writer-workspace")?;
-        Ok(AiReadmeWriter::new(&readme_dir, LanguageModelType::Gpt4o).await?)
+        Ok(AiReadmeWriter::new(&readme_dir, LanguageModelType::Gpt5_1).await?)
     }
 
     pub async fn new(

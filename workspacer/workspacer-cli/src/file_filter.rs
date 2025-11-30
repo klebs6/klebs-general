@@ -54,7 +54,7 @@ impl FileFilterCli {
             } => {
 
                 let model_type = language_model_type.unwrap_or_else(|| {
-                    LanguageModelType::Gpt4_5Preview
+                    LanguageModelType::Gpt5_1
                 });
 
                 // 1) Detect single crate vs. workspace

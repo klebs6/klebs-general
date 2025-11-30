@@ -63,7 +63,6 @@ ACTIVE_PACKAGE := workspacer-watch-and-reload
 ACTIVE_PACKAGE := workspacer-toml-mock
 ACTIVE_PACKAGE := workspacer-crate-mock
 ACTIVE_PACKAGE := workspacer-publish
-ACTIVE_PACKAGE := workspacer-readme-writer
 ACTIVE_PACKAGE := workspacer-add-internal-dep
 ACTIVE_PACKAGE := workspacer-show
 ACTIVE_PACKAGE := workspacer-tree
@@ -81,6 +80,8 @@ ACTIVE_PACKAGE := workspacer-bump
 ACTIVE_PACKAGE := workspacer-publish
 ACTIVE_PACKAGE := workspacer-cli
 #ACTIVE_PACKAGE := workspacer-toml
+ACTIVE_PACKAGE := workspacer-readme-writer
+ACTIVE_PACKAGE := workspacer
 
 INDIVIDUAL_TEST := gather_leading_token_comments
 INDIVIDUAL_TEST := gather_leading_comment_lines
