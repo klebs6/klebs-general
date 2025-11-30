@@ -670,7 +670,6 @@ where
             object: "file".to_string(),
             status: Some("uploaded".to_string()),
             status_details: None,
-            expires_at: None,
         };
 
         Ok(openai_file)

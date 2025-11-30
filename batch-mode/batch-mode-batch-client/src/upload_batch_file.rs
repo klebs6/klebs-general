@@ -17,7 +17,6 @@ where
         let create_file_request = CreateFileRequest {
             file:    file_path.into(),
             purpose: FilePurpose::Batch,
-            expires_after: None,
         };
 
         // similarly map the openai error
