@@ -10,7 +10,7 @@ description = "todo: write a description here"
 # categories = []
 
 [dependencies]
-batch-mode-3p = { path = "../batch-mode-3p" }
+batch-mode-3p = { path = "../batch-mode-3p" , version = "0.2.2" }
 async-openai.workspace = true
 derive_builder.workspace = true
 tracing.workspace = true
@@ -18,8 +18,8 @@ tracing-setup.workspace = true
 getset.workspace = true
 structopt.workspace = true
 tokio.workspace = true
-clap = "*"
-export-magic = "*"
+clap = "2.34.0"
+export-magic = "0.3.6"
 
 [[bin]]
 path = "src/bin/main.rs"

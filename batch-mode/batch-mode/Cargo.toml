@@ -88,6 +88,7 @@ version = "0.1.2"
 
 [dependencies.batch-mode-tts]
 path = "../batch-mode-tts"
+version = "0.1.0"
 
 [dependencies.camel-case-token-with-comment]
 path = "../camel-case-token-with-comment"
