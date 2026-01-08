@@ -1,0 +1,31 @@
+[package]
+name = "osx-wallpaper-cycler"
+version = "0.1.0"
+edition = "2024"
+
+[[bin]]
+path = "src/bin/main.rs"
+name = "osx-wallpaper-cycler"
+
+[dependencies]
+export-magic = "*"
+tracing = "*"
+derive_builder = "*"
+getset = "*"
+tokio = { version = "*", features = [ "full" ] }
+reqwest = "*"
+structopt = "*"
+traced-test = "*"
+tracing-setup = "*"
+objc2 = "*"
+sha2 = "*"
+rand = "*"
+futures = "*"
+toml = "*"
+tempfile = "*"
+httpmock = "*"
+tracing-subscriber = "*"
+serde_json = "*"
+serde = {version = "*", features = [ "derive" ] }
+async-trait = "*"
+objc2-foundation = "*"
