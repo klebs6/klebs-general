@@ -33,6 +33,8 @@ impl AiReadmeWriter
 
         let language_model_client: LanguageModelClientArc = OpenAIClientHandle::new();
 
+        language_model_client.preflight_check_openai_api_key().await?;
+
         Ok(Self {
             language_model_client,
             language_model_type,
