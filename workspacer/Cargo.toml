@@ -113,10 +113,11 @@ tokio-util              = "0.7.12"
 toml                    = "0.8.19"
 tracing                 = "0.1.41"
 which                   = "7.0.2"
+async-openai            = "=0.29.0" #higher versions break
 
 [workspace.dependencies.batch-mode]
 path = "../batch-mode/batch-mode"
-version = "0.2.3"
+#version = "0.2.5"
 
 [workspace.dependencies.rocket]
 features = [ "json" ]
@@ -146,3 +147,4 @@ version = "0.3"
 [workspace.dependencies.uuid]
 features = [ "v4" ]
 version = "1.10.0"
+

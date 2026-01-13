@@ -33,7 +33,6 @@ TEST_FILE  := tests/test_scale_layer.rs
 ACTIVE_PACKAGE := batch-mode-batch-executor
 ACTIVE_PACKAGE := batch-mode-batch-schema
 ACTIVE_PACKAGE := batch-mode-json
-#ACTIVE_PACKAGE := batch-mode-batch-client
 ACTIVE_PACKAGE := batch-mode-batch-reconciliation
 ACTIVE_PACKAGE := batch-mode-batch-triple
 #ACTIVE_PACKAGE := instructed-language-model-at-coordinate
@@ -51,6 +50,8 @@ ACTIVE_PACKAGE := batch-mode-process-response
 ACTIVE_PACKAGE := batch-mode
 ACTIVE_PACKAGE := batch-mode-tts
 ACTIVE_PACKAGE := language-model-type
+ACTIVE_PACKAGE := batch-mode-batch-client
+ACTIVE_PACKAGE := batch-mode
 
 #-----------------------------------------------------[]
 #INDIVIDUAL_TEST := test_build_network_io_enum
@@ -64,7 +65,7 @@ DEFAULT := test
 #DEFAULT := test_file_one
 #DEFAULT := test_all
 #DEFAULT := run
-DEFAULT := tts
+#DEFAULT := tts
 #DEFAULT := file_diff
 #DEFAULT := build
 

@@ -3,12 +3,15 @@ crate::ix!();
 
 pub trait OpenAIConfigInterface = async_openai::config::Config;
 
-#[derive(Debug)]
+#[derive(Getters,Debug)]
+#[getset(get="pub")]
 pub struct OpenAIClientHandle<E> 
 where
     E: Debug + Send + Sync + From<OpenAIClientError>,
 {
     client: async_openai::Client<OpenAIConfig>,
+
+    #[getset(skip)]
     _marker: std::marker::PhantomData<E>,
 }
 

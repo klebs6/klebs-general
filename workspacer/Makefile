@@ -97,7 +97,7 @@ CONSOLIDATE_CRATE := workspacer-toml
 
 #-----------------------------------------------------[this section lets us choose how we want to test]
 DEFAULT := test
-#DEFAULT := build
+DEFAULT := build
 #DEFAULT := readme_writer
 #DEFAULT := readme_writer_all
 #DEFAULT := test_file
