@@ -236,4 +236,3 @@ mod test_classify_field_type_exhaustive {
         );
     }
 }
-

@@ -1,3 +1,4 @@
+// ---------------- [ File: batch-mode-tts/src/bin/main.rs ]
 use std::path::PathBuf;
 use structopt::StructOpt;
 use tracing::{info, error};
@@ -54,4 +55,3 @@ async fn main() {
 
     info!("batch‑mode‑tts completed successfully");
 }
-

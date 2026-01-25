@@ -1,3 +1,4 @@
+// ---------------- [ File: batch-mode-batch-client/src/openai_client_handle_preflight_checks.rs ]
 crate::ix!();
 
 #[async_trait]

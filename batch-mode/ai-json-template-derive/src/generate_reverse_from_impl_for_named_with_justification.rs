@@ -1,3 +1,4 @@
+// ---------------- [ File: ai-json-template-derive/src/generate_reverse_from_impl_for_named_with_justification.rs ]
 crate::ix!();
 
 #[tracing::instrument(level = "trace", skip_all)]
@@ -411,4 +412,3 @@ mod test_generate_reverse_from_impl_named_with_justification_deep {
         info!("Deep nesting reverse From impl is verified successfully.");
     }
 }
-

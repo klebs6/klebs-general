@@ -166,4 +166,3 @@ mod model_type_tests {
         debug!("Correctly errored on invalid input '{}'", input);
     }
 }
-

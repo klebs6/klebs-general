@@ -1,3 +1,4 @@
+// ---------------- [ File: ai-json-template-derive/src/justified_type.rs ]
 crate::ix!();
 
 //TODO: maybe want to clean this up and test it
@@ -38,5 +39,4 @@ pub fn justified_type(ty: &syn::Type) -> TokenStream2 {
         ty.span()
     ).to_token_stream()
 }
-
 

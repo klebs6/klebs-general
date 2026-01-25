@@ -36,7 +36,7 @@ impl AiFileFilter
 
     ) -> Result<Self,AiFileFilterError> {
 
-        let language_model_client: LanguageModelClientArc = OpenAIClientHandle::new();
+        let language_model_client: LanguageModelClientArc = OpenAIClientHandle::new_with_preflight_checks().await?;
 
         Ok(Self {
             language_model_client,

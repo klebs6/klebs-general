@@ -31,9 +31,7 @@ impl AiReadmeWriter
 
     ) -> Result<Self,AiReadmeWriterError> {
 
-        let language_model_client: LanguageModelClientArc = OpenAIClientHandle::new();
-
-        language_model_client.preflight_check_openai_api_key().await?;
+        let language_model_client: LanguageModelClientArc = OpenAIClientHandle::new_with_preflight_checks().await?;
 
         Ok(Self {
             language_model_client,

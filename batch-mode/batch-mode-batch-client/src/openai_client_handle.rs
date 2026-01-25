@@ -52,6 +52,12 @@ where
         })
     }
 
+    pub async fn new_with_preflight_checks() -> Result<Arc<Self>, E> {
+        let handle = Self::new();
+        handle.preflight_check_openai_api_key().await?;
+        Ok(handle)
+    }
+
     delegate!{
         to self.client {
             pub fn batches(&self) -> async_openai::Batches<OpenAIConfig>;

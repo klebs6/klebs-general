@@ -1,3 +1,4 @@
+// ---------------- [ File: batch-mode-batch-scribe/src/write_seed_manifest.rs ]
 crate::ix!();
 
 pub trait SeedManifestEntry {

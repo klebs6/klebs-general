@@ -1,3 +1,4 @@
+// ---------------- [ File: ai-json-template-derive/src/generate_manual_default_for_justified_named_struct.rs ]
 crate::ix!();
 
 #[tracing::instrument(level = "trace", skip_all)]

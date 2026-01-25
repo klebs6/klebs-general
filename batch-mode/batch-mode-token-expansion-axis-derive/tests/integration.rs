@@ -1,6 +1,6 @@
+// ---------------- [ File: batch-mode-token-expansion-axis-derive/tests/integration.rs ]
 #![allow(unused_imports)]
 
-// ---------------- [ File: batch-mode-token-expansion-axis-derive/tests/integration.rs ]
 use std::borrow::Cow;
 use std::fs;
 use std::path::PathBuf;
