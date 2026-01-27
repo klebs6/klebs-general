@@ -1,7 +1,7 @@
 [package]
 edition       = "2024"
 name          = "language-distribution"
-version       = "0.1.0"
+version       = "0.2.0"
 authors       = [ "klebs tpk3.mx@gmail.com" ]
 license       = "MIT"
 description   = "Provides language distribution mappings for countries, returning HashMaps of Language to relative prevalence and a method to pick a random language."
