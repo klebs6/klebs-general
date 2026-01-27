@@ -463,9 +463,9 @@ impl LanguageDistribution for Country {
                 map
             },
             Country::Ireland => {
-                // English, Irish Gaelic
+                // English, Irish Gaeilge
                 map.insert(Language::English, 0.98);
-                map.insert(Language::IrishGaelic, 0.02);
+                map.insert(Language::IrishGaeilge, 0.02);
                 map
             },
             Country::Israel => {
