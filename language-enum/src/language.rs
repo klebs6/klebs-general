@@ -3,6 +3,7 @@ crate::ix!();
 /// Enumerates languages.
 /// This enum covers a wide range of languages, including major world languages, regional languages,
 /// and some languages with smaller populations for inclusivity.
+#[allow(deprecated)]
 #[derive(Default,RandConstruct,ItemFeature,Hash,Debug,Clone,PartialEq,Eq,PartialOrd,Ord,Serialize,Deserialize)]
 pub enum Language {
 
@@ -557,7 +558,7 @@ pub enum Language {
 
     #[ai("An official language used in Irish government, education, and daily communication. Often supported through language promotion agencies and bilingual education policies.")]
     #[rand_construct(p=0.001)]
-    IrishGaelic,
+    IrishGaeilge,
 
     #[ai("A regional language used in Jamaican communities and local markets. Sometimes included in grassroots literacy sessions and local narrative collections.")]
     #[rand_construct(p=0.0005)]
@@ -671,33 +672,62 @@ pub enum Language {
     #[rand_construct(p=0.0001)]
     Tuvaluan,
 
+    #[deprecated(
+        since = "0.4.0",
+        note = "Legacy umbrella bucket. Prefer explicit Mayan languages (e.g., YucatecMaya, Kiche, Kaqchikel, Qeqchi, Mam, Tzotzil, Tzeltal, Chol) and ClassicalMaya for historical contexts; add further Mayan languages as distinct variants."
+    )]
     #[ai("An indigenous language used in Mayan cultural traditions and daily life. Usually supported by seasonal language workshops and artisan documentation practices.")]
     #[rand_construct(p=0.0005)]
     VariousMayanIndigenous,
 
+    #[deprecated(
+        since = "0.4.0",
+        note = "Legacy umbrella bucket. Prefer explicit Mexican indigenous languages (e.g., Nahuatl and individually enumerated Mayan languages); add further languages as distinct variants."
+    )]
     #[ai("An indigenous language used in Mexican indigenous cultural traditions and daily life. Often sustained by community language cooperatives and traditional mentorships.")]
     #[rand_construct(p=0.0005)]
     VariousMexicanIndigenous,
 
+    #[deprecated(
+        since = "0.4.0",
+        note = "Transitional umbrella bucket. Prefer explicit languages where available (e.g., Chichewa) and add further languages as distinct variants."
+    )]
     #[ai("A regional language used in Zambian communities and local markets. Occasionally employed in village educational groups and local language promotion campaigns.")]
     #[rand_construct(p=0.0005)]
     VariousBembaNyanjaLocal,
 
+    #[deprecated(
+        since = "0.4.0",
+        note = "Legacy umbrella bucket. Prefer explicit Indian languages already enumerated (e.g., Hindi, Bengali, Tamil, Telugu, Marathi, Gujarati, Kannada, Malayalam, Oriya, Punjabi, Sindhi, Urdu, Nepali) and add further languages as distinct variants."
+    )]
     #[ai("A regional language used in Indian communities and local markets. Sometimes implemented in grassroots literacy clubs and informal language improvement sessions.")]
     #[rand_construct(p=0.0005)]
     VariousIndianLocal,
 
+    #[deprecated(
+        since = "0.4.0",
+        note = "Transitional umbrella bucket. Prefer explicit Micronesian languages where available (e.g., Marshallese, Gilbertese) and add further languages as distinct variants."
+    )]
     #[ai("A regional language used in Micronesian communities and local markets. Periodically included in island-level reading programs and small educational exchanges.")]
     #[rand_construct(p=0.0005)]
     VariousMicronesianLocal,
 
+    #[deprecated(
+        since = "0.4.0",
+        note = "Legacy umbrella bucket. Prefer explicit languages already enumerated (e.g., Russian, Yakut, Tatar, Bashkir, Chuvash, Chechen, Ossetian) and add further languages as distinct variants."
+    )]
     #[ai("A regional language used in Russian communities and local markets. Known to surface in local cultural fairs and community-based linguistic initiatives.")]
     #[rand_construct(p=0.0005)]
     VariousRussianLocal,
 
+    #[deprecated(
+        since = "0.4.0",
+        note = "Legacy umbrella bucket. Prefer explicit South African languages already enumerated (e.g., Zulu, Xhosa, Afrikaans, Sotho, Tswana, Ndebele) and add further languages as distinct variants."
+    )]
     #[ai("A regional language used in South African communities and local markets. Sometimes applied in neighborhood education tasks and minimal-scale language classes.")]
     #[rand_construct(p=0.0005)]
     VariousSouthAfricanLocal,
+
 
     #[ai("An official language used in South African government, education, and daily communication. Regularly part of local literacy campaigns and widely integrated into community schooling materials.")]
     #[rand_construct(p=0.002)]
@@ -706,6 +736,223 @@ pub enum Language {
     #[ai("A regional language used in unknown communities and local markets. Potentially employed in limited-language skill-building activities and informal learning contexts.")]
     #[rand_construct(p=0.0000001)]
     Other(OtherLanguage),
+
+    // =========================
+    // Classical / Liturgical
+    // =========================
+
+    #[ai("A Semitic language of the Afroasiatic family used in community and liturgical contexts across parts of the Middle East and diaspora. Often encountered in religious services, inscriptions, heritage education, and scholarly study.")]
+    #[rand_construct(p=0.00005)]
+    Aramaic,
+
+    #[ai("A liturgical language of the Afroasiatic family, historically derived from Ancient Egyptian. Primarily used in Coptic Orthodox religious services, hymnody, and academic study of early Christian and Egyptian texts.")]
+    #[rand_construct(p=0.000002)]
+    Coptic,
+
+    #[ai("A classical Indo-Aryan language of the Indo-European family used in South Asian liturgy, scholarship, and historical texts. Commonly encountered in religious recitation, classical literature, philosophy, and academic study.")]
+    #[rand_construct(p=0.00002)]
+    Sanskrit,
+
+    #[ai("A classical language of the Mayan language family used in ancient Maya hieroglyphic inscriptions and scholarly study. Commonly encountered in epigraphic research, museum materials, and academic instruction on Maya texts.")]
+    #[rand_construct(p=0.0000001)]
+    ClassicalMaya,
+
+    // =========================
+    // Ainu / Isolates
+    // =========================
+
+    #[ai("An indigenous language of northern Japan, often classified as an isolate. Typically encountered in cultural revitalization, heritage education, community programs, and linguistic documentation.")]
+    #[rand_construct(p=0.0000001)]
+    Ainu,
+
+    #[ai("An indigenous language of the Uto-Aztecan family used in Hopi community life and ceremonial contexts. Maintained through intergenerational instruction, community education programs, and cultural documentation initiatives.")]
+    #[rand_construct(p=0.000001)]
+    Hopi,
+
+    #[ai("An indigenous language of the Amazon basin, often classified as an isolate. Used in community life and encountered primarily through linguistic documentation and field research.")]
+    #[rand_construct(p=0.00000005)]
+    Piraha,
+
+    #[ai("An indigenous language of the western Amazon region, often classified as an isolate. Used in community life, local education contexts, and linguistic documentation.")]
+    #[rand_construct(p=0.000005)]
+    Ticuna,
+
+    #[ai("An indigenous language of northern South America, often classified as an isolate. Used in riverine communities and encountered in linguistic documentation and local cultural materials.")]
+    #[rand_construct(p=0.000002)]
+    Warao,
+
+    #[ai("An indigenous language of the Amazon basin, often classified as an isolate. Encountered primarily in linguistic documentation, community use, and heritage contexts.")]
+    #[rand_construct(p=0.00000005)]
+    Trumai,
+
+    #[ai("An indigenous language of the Amazon basin, often classified as an isolate. Primarily encountered in linguistic documentation and small-scale community heritage efforts.")]
+    #[rand_construct(p=0.00000002)]
+    Aikana,
+
+    #[ai("An indigenous language of the Amazon basin, often classified as an isolate. Primarily encountered in linguistic documentation and community heritage contexts.")]
+    #[rand_construct(p=0.00000001)]
+    Kanoe,
+
+    // =========================
+    // Mayan Languages
+    // =========================
+
+    #[ai("An indigenous language of the Mayan language family spoken in the Yucatán Peninsula. Used in daily communication, community media, bilingual education, and local civic outreach.")]
+    #[rand_construct(p=0.00008)]
+    YucatecMaya,
+
+    #[ai("An indigenous language of the Mayan language family spoken primarily in highland Guatemala. Used in daily life, local education, community media, and regional cultural programming.")]
+    #[rand_construct(p=0.00010)]
+    Kiche,
+
+    #[ai("An indigenous language of the Mayan language family spoken primarily in central Guatemala. Used in daily communication, bilingual education, community announcements, and local cultural documentation.")]
+    #[rand_construct(p=0.00008)]
+    Kaqchikel,
+
+    #[ai("An indigenous language of the Mayan language family spoken in Guatemala and Belize. Used in daily communication, bilingual education, community radio, and local civic materials.")]
+    #[rand_construct(p=0.00010)]
+    Qeqchi,
+
+    #[ai("An indigenous language of the Mayan language family spoken in Guatemala and southern Mexico. Used in daily communication, bilingual education materials, and community cultural initiatives.")]
+    #[rand_construct(p=0.00007)]
+    Mam,
+
+    #[ai("An indigenous language of the Mayan language family spoken in Chiapas, Mexico. Used in daily communication, community storytelling, local media, and regionally produced teaching resources.")]
+    #[rand_construct(p=0.00007)]
+    Tzotzil,
+
+    #[ai("An indigenous language of the Mayan language family spoken in Chiapas, Mexico. Used in daily communication, community media, bilingual education programs, and local reading materials.")]
+    #[rand_construct(p=0.00006)]
+    Tzeltal,
+
+    #[ai("An indigenous language of the Mayan language family spoken in southern Mexico. Used in community life, local traditions, and bilingual education initiatives.")]
+    #[rand_construct(p=0.00002)]
+    Chol,
+
+    #[ai("An indigenous language of the Mayan language family spoken in Guatemala and southern Mexico. Used in daily communication, local education, and community documentation projects.")]
+    #[rand_construct(p=0.000015)]
+    Qanjobal,
+
+    #[ai("An indigenous language of the Mayan language family spoken in Guatemala. Used in daily community life, local education, and cultural documentation and revitalization efforts.")]
+    #[rand_construct(p=0.00001)]
+    Ixil,
+
+    #[ai("An indigenous language of the Mayan language family spoken in Guatemala. Used in daily communication, bilingual education, community media, and cultural programming.")]
+    #[rand_construct(p=0.000012)]
+    Tzutujil,
+
+    #[ai("An indigenous language of the Mayan language family spoken in Guatemala. Used in daily community life, bilingual education materials, and local cultural documentation programs.")]
+    #[rand_construct(p=0.000008)]
+    Poqomchi,
+
+    #[ai("An indigenous language of the Mayan language family spoken in Guatemala and Mexico. Used in daily communication, community education programs, and local publications and documentation projects.")]
+    #[rand_construct(p=0.000008)]
+    Chuj,
+
+    #[ai("An indigenous language of the Mayan language family spoken in Guatemala and Mexico. Used in community life, local education, and documentation and revitalization initiatives.")]
+    #[rand_construct(p=0.000006)]
+    Jakaltek,
+
+    #[ai("An indigenous language of the Mayan language family spoken in southern Mexico. Used in community life, local traditions, and small-scale education and documentation efforts.")]
+    #[rand_construct(p=0.000004)]
+    Tojolabal,
+
+    // =========================
+    // Algonquian Languages
+    // =========================
+
+    #[ai("An indigenous language of the Algonquian language family spoken across large regions of Canada. Used in community life, education programs, media, and language revitalization initiatives.")]
+    #[rand_construct(p=0.00002)]
+    Cree,
+
+    #[ai("An indigenous language of the Algonquian language family spoken in the Great Lakes region. Used in community life, immersion education, cultural programs, and documentation projects.")]
+    #[rand_construct(p=0.000015)]
+    Ojibwe,
+
+    #[ai("An indigenous language of the Algonquian language family spoken in Atlantic Canada. Used in community contexts, cultural programming, education initiatives, and revitalization efforts.")]
+    #[rand_construct(p=0.000001)]
+    Mikmaq,
+
+    #[ai("An indigenous language of the Algonquian language family spoken in Plains communities. Used in cultural traditions, community life, education initiatives, and language revitalization programs.")]
+    #[rand_construct(p=0.0000005)]
+    Blackfoot,
+
+    #[ai("An indigenous language of the Algonquian language family spoken in Plains communities. Used in community life, ceremonial contexts, and language revitalization and documentation initiatives.")]
+    #[rand_construct(p=0.0000003)]
+    Cheyenne,
+
+    #[ai("An indigenous language of the Algonquian language family spoken in Plains communities. Used in community life, cultural traditions, and revitalization and documentation efforts.")]
+    #[rand_construct(p=0.0000002)]
+    Arapaho,
+
+    #[ai("An indigenous language of the Algonquian language family historically spoken by Lenape communities. Used today primarily in revitalization, education programs, and cultural heritage contexts.")]
+    #[rand_construct(p=0.0000001)]
+    Lenape,
+
+    // =========================
+    // Iroquoian Languages
+    // =========================
+
+    #[ai("An indigenous language of the Iroquoian language family used in Haudenosaunee community life, education, ceremonial contexts, and revitalization programs.")]
+    #[rand_construct(p=0.000001)]
+    Oneida,
+
+    #[ai("An indigenous language of the Iroquoian language family used in Haudenosaunee community life, ceremonial practice, education initiatives, and documentation and revitalization efforts.")]
+    #[rand_construct(p=0.000001)]
+    Onondaga,
+
+    #[ai("An indigenous language of the Iroquoian language family used in Haudenosaunee community life, local education initiatives, and cultural programming and revitalization work.")]
+    #[rand_construct(p=0.000001)]
+    Cayuga,
+
+    #[ai("An indigenous language of the Iroquoian language family used in Haudenosaunee community life, education initiatives, cultural programming, and revitalization efforts.")]
+    #[rand_construct(p=0.000001)]
+    Seneca,
+
+    #[ai("An indigenous language of the Iroquoian language family historically spoken in the southeastern United States. Used today primarily in revitalization, education programs, and heritage contexts.")]
+    #[rand_construct(p=0.0000005)]
+    Tuscarora,
+
+    // =========================
+    // Siouan Languages
+    // =========================
+
+    #[ai("An indigenous language of the Siouan language family used in Lakota community life, cultural traditions, immersion education, and revitalization programs.")]
+    #[rand_construct(p=0.000001)]
+    Lakota,
+
+    #[ai("An indigenous language of the Siouan language family used in Dakota community life, cultural traditions, education initiatives, and revitalization programs.")]
+    #[rand_construct(p=0.000001)]
+    Dakota,
+
+    #[ai("An indigenous language of the Siouan language family used in Nakota community contexts, cultural traditions, and revitalization and documentation efforts.")]
+    #[rand_construct(p=0.0000005)]
+    Nakota,
+
+    #[ai("An indigenous language of the Siouan language family used in Crow community life, cultural traditions, education initiatives, and revitalization programs.")]
+    #[rand_construct(p=0.0000005)]
+    Crow,
+
+    #[ai("An indigenous language of the Siouan language family used in Hidatsa community contexts, cultural traditions, and revitalization and documentation initiatives.")]
+    #[rand_construct(p=0.0000002)]
+    Hidatsa,
+
+    #[ai("An indigenous language of the Siouan language family historically spoken by Mandan communities. Used today primarily in revitalization, cultural heritage, and documentation contexts.")]
+    #[rand_construct(p=0.0000001)]
+    Mandan,
+
+    #[ai("An indigenous language of the Siouan language family used in Omaha community contexts, cultural traditions, education initiatives, and revitalization programs.")]
+    #[rand_construct(p=0.0000003)]
+    Omaha,
+
+    #[ai("An indigenous language of the Siouan language family used in Ponca revitalization, education, and cultural heritage contexts.")]
+    #[rand_construct(p=0.0000001)]
+    Ponca,
+
+    #[ai("An indigenous language of the Siouan language family used in Ho-Chunk community contexts, cultural traditions, education initiatives, and revitalization programs.")]
+    #[rand_construct(p=0.0000002)]
+    HoChunk,
+
 }
 
 impl Language {

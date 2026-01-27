@@ -386,9 +386,12 @@ impl LanguageDistribution for Country {
                 map
             },
             Country::Guatemala => {
-                // Spanish, plus Mayan languages
+                // Spanish, plus Mayan languages (Mayan family; representative selection)
                 map.insert(Language::Spanish, 0.9);
-                map.insert(Language::VariousMayanIndigenous, 0.1);
+                map.insert(Language::Kiche, 0.04);
+                map.insert(Language::Qeqchi, 0.03);
+                map.insert(Language::Kaqchikel, 0.02);
+                map.insert(Language::Mam, 0.01);
                 map
             },
             Country::Guinea => {
@@ -428,10 +431,19 @@ impl LanguageDistribution for Country {
                 map
             },
             Country::India => {
-                // Hindi, English, many others
+                // Hindi, English, and major regional languages (representative selection)
                 map.insert(Language::Hindi, 0.4);
                 map.insert(Language::English, 0.1);
-                map.insert(Language::VariousIndianLocal, 0.5);
+                map.insert(Language::Bengali, 0.1);
+                map.insert(Language::Telugu, 0.08);
+                map.insert(Language::Marathi, 0.06);
+                map.insert(Language::Tamil, 0.06);
+                map.insert(Language::Urdu, 0.06);
+                map.insert(Language::Gujarati, 0.04);
+                map.insert(Language::Kannada, 0.03);
+                map.insert(Language::Malayalam, 0.03);
+                map.insert(Language::Oriya, 0.02);
+                map.insert(Language::Punjabi, 0.02);
                 map
             },
             Country::Indonesia => {
@@ -627,14 +639,21 @@ impl LanguageDistribution for Country {
                 map
             },
             Country::Mexico => {
-                // Spanish
+                // Spanish, plus indigenous languages (representative selection)
                 map.insert(Language::Spanish, 0.97);
-                map.insert(Language::VariousMexicanIndigenous, 0.03);
+                map.insert(Language::Nahuatl, 0.015);
+                map.insert(Language::YucatecMaya, 0.005);
+                map.insert(Language::Tzotzil, 0.003);
+                map.insert(Language::Tzeltal, 0.003);
+                map.insert(Language::Chol, 0.002);
+                map.insert(Language::Mam, 0.001);
+                map.insert(Language::Chuj, 0.001);
                 map
             },
             Country::Micronesia => {
-                // English, plus local languages
+                // English, plus local languages (transitional umbrella bucket)
                 map.insert(Language::English, 0.5);
+                #[allow(deprecated)]
                 map.insert(Language::VariousMicronesianLocal, 0.5);
                 map
             },
@@ -810,11 +829,14 @@ impl LanguageDistribution for Country {
                 map
             },
             Country::Russia => {
-                // Russian + minorities
+                // Russian plus a representative set of minority languages
                 map.insert(Language::Russian, 0.95);
                 map.insert(Language::Tatar, 0.01);
                 map.insert(Language::Chechen, 0.01);
-                map.insert(Language::VariousRussianLocal, 0.03);
+                map.insert(Language::Bashkir, 0.01);
+                map.insert(Language::Chuvash, 0.008);
+                map.insert(Language::Yakut, 0.006);
+                map.insert(Language::Ossetian, 0.006);
                 map
             },
             Country::Rwanda => {
@@ -914,14 +936,15 @@ impl LanguageDistribution for Country {
                 map
             },
             Country::SouthAfrica => {
-                // 11 official languages: Zulu, Xhosa, Afrikaans, English, etc.
-                // Let's give a rough distribution:
+                // 11 official languages: we enumerate a representative set explicitly.
                 map.insert(Language::Zulu, 0.22);
                 map.insert(Language::Xhosa, 0.16);
                 map.insert(Language::Afrikaans, 0.13);
                 map.insert(Language::English, 0.09);
-                // Others combined:
-                map.insert(Language::VariousSouthAfricanLocal, 0.4);
+                map.insert(Language::Sotho, 0.15);
+                map.insert(Language::Tswana, 0.15);
+                map.insert(Language::Ndebele, 0.06);
+                map.insert(Language::Swati, 0.04);
                 map
             },
             Country::SouthKorea => {
@@ -1114,9 +1137,11 @@ impl LanguageDistribution for Country {
                 map
             },
             Country::Zambia => {
-                // English + local languages
+                // English plus major local languages (Chichewa/Nyanja represented explicitly; remainder via transitional umbrella bucket)
                 map.insert(Language::English, 0.5);
-                map.insert(Language::VariousBembaNyanjaLocal, 0.5);
+                map.insert(Language::Chichewa, 0.2);
+                #[allow(deprecated)]
+                map.insert(Language::VariousBembaNyanjaLocal, 0.3);
                 map
             },
             Country::Zimbabwe => {

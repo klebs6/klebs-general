@@ -207,8 +207,8 @@ pub fn has_features_phrase(lang: &Language) -> &'static str {
         Language::Icelandic     => "Það hefur eftirfarandi einkenni:",
         Language::Arabic        => "له الميزات التالية:",
         Language::Swahili       => "Ina sifa zifuatazo:",
-        Language::IrishGaelic   => "Tá na tréithe seo a leanas aige:",
-        _                                     => "It has the following features:",
+        Language::IrishGaeilge  => "Tá na tréithe seo a leanas aige:",
+        _                       => "It has the following features:",
     }
 }
 
