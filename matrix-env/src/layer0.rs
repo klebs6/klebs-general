@@ -212,6 +212,7 @@ pub enum Layer0Error {
     EnvFilterParse(EnvFilterParseError),
     TracingInit(Box<dyn std::error::Error + Send + Sync>),
     TokioRuntimeBuild(io::Error),
+    Layer1(crate::layer1::Layer1Error),
     ShutdownChannelClosed,
     ShutdownStateMissingReason,
     TaskJoin {
@@ -232,6 +233,7 @@ impl fmt::Display for Layer0Error {
             Self::EnvFilterParse(e) => write!(f, "invalid log filter directives: {e}"),
             Self::TracingInit(e) => write!(f, "failed to set tracing subscriber: {e}"),
             Self::TokioRuntimeBuild(e) => write!(f, "failed to build tokio runtime: {e}"),
+            Self::Layer1(e) => write!(f, "layer1 config error: {e}"),
             Self::ShutdownChannelClosed => write!(f, "shutdown channel closed unexpectedly"),
             Self::ShutdownStateMissingReason => write!(f, "shutdown requested but reason missing"),
             Self::TaskJoin { task_name, join_error } => {
@@ -247,7 +249,6 @@ impl fmt::Display for Layer0Error {
 }
 
 impl std::error::Error for Layer0Error {}
-
 
 pub struct Layer0Entrypoint;
 
@@ -271,6 +272,15 @@ impl Layer0Entrypoint {
         let cfg = cli.validate()?;
 
         install_tracing(cfg.log())?;
+
+        let layer1 = crate::layer1::Layer1ConfigLoader::load_for_process()
+            .map_err(Layer0Error::Layer1)?;
+
+        info!(
+            config_path = %layer1.config_file_path().display(),
+            session_path = %layer1.secret_store().path().display(),
+            "layer1 configuration boundary established"
+        );
 
         let span = tracing::info_span!(
             "layer0",

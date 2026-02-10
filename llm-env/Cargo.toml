@@ -7,3 +7,6 @@ edition = "2024"
 cocoa = "0.25"
 objc = "0.2"
 
+[features]
+cargo-clippy = []
+

@@ -19,3 +19,6 @@ getset = "*"
 export-magic = "*"
 traced-test = "*"
 colored = "*"
+toml = "*"
+serde = { version = "1.0.152", features   = [ "derive", "serde_derive", "rc" ]  }
+derive_builder          = "0.20.2"

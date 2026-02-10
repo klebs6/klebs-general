@@ -1,0 +1,20 @@
+[package]
+name = "itl-cli"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+# Keep the binary name short for terminal use.
+default-run = "itl"
+
+[dependencies]
+tracing.workspace            = true
+tracing-subscriber.workspace = true
+
+itl-core  = { path = "../itl-core" }
+itl-parse = { path = "../itl-parse" }
+itl-vfs   = { path = "../itl-vfs" }
+
+[[bin]]
+name = "itl"
+path = "src/main.rs"
