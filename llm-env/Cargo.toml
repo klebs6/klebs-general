@@ -1,0 +1,9 @@
+[package]
+name = "llm-env"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+cocoa = "0.25"
+objc = "0.2"
+

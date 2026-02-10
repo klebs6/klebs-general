@@ -1,0 +1,289 @@
+
+# Justfile — wkwebview_smoke / future “tmux-first” instrument
+#
+# Philosophy:
+# - Keep workflows one-command (or one key) while you live in tmux.
+# - Make “today” tasks work now, and “tomorrow” tasks exist as hooks you can wire up.
+#
+# Tips:
+# - `just` runs recipes from the repo root.
+# - `.env` is auto-loaded if present (see dotenv-load).
+
+set shell := ["bash", "-euo", "pipefail", "-c"]
+set dotenv-load := true
+set export := true
+
+# -----------------------------
+# Project configuration
+# -----------------------------
+crate := "wkwebview_smoke"
+bin := "wkwebview_smoke"
+
+# Default URLs
+EXAMPLE_URL := "https://example.com"
+CHATGPT_URL := "https://chat.openai.com/"
+
+# Local scratch dirs (safe to delete)
+VAR_DIR := "var"
+LOG_DIR := VAR_DIR + "/logs"
+STATE_DIR := VAR_DIR + "/state"
+ARTIFACTS_DIR := VAR_DIR + "/artifacts"
+
+# Optional env knobs (future-proofing)
+# - RUST_LOG: tracing/log verbosity
+# - START_URL: webview start URL (works today)
+# - WEBVIEW_PROFILE: which local profile to use (hook)
+# - WEBVIEW_EPHEMERAL: 1 = non-persistent storage (hook)
+# - WEBVIEW_LOCK_ORIGIN: enforce single origin (hook)
+# - WEBVIEW_DEVTOOLS: 1 = enable dev tooling if implemented (hook)
+# - IPC_ADDR: unix socket path or TCP addr for agent comms (hook)
+
+# -----------------------------
+# Default / Help
+# -----------------------------
+default:
+	@just --list
+
+help:
+	@just --list
+
+env:
+	@echo "crate            = {{crate}}"
+	@echo "bin              = {{bin}}"
+	@echo "EXAMPLE_URL      = {{EXAMPLE_URL}}"
+	@echo "CHATGPT_URL      = {{CHATGPT_URL}}"
+	@echo "VAR_DIR          = {{VAR_DIR}}"
+	@echo "LOG_DIR          = {{LOG_DIR}}"
+	@echo "STATE_DIR        = {{STATE_DIR}}"
+	@echo "ARTIFACTS_DIR    = {{ARTIFACTS_DIR}}"
+	@echo
+	@echo "Environment (if set):"
+	@env | egrep '^(RUST_LOG|START_URL|WEBVIEW_|IPC_)=' || true
+
+init:
+	@mkdir -p "{{LOG_DIR}}" "{{STATE_DIR}}" "{{ARTIFACTS_DIR}}"
+	@echo "Initialized {{VAR_DIR}}/*"
+
+# -----------------------------
+# OS guards
+# -----------------------------
+assert-macos:
+	@if [[ "$(uname -s)" != "Darwin" ]]; then \
+	  echo "This recipe is macOS-only (needs WKWebView/WebKit.framework)."; \
+	  exit 1; \
+	fi
+
+# -----------------------------
+# Build / Run
+# -----------------------------
+build: assert-macos
+	cargo build
+
+build-release: assert-macos
+	cargo build --release
+
+run *args: assert-macos init
+	cargo run -- {{args}}
+
+run-release *args: assert-macos init
+	cargo run --release -- {{args}}
+
+run-example *args: assert-macos init
+	START_URL="{{EXAMPLE_URL}}" cargo run -- {{args}}
+
+run-chatgpt *args: assert-macos init
+	START_URL="{{CHATGPT_URL}}" cargo run -- {{args}}
+
+# Run with logs captured to var/logs/<timestamp>.log
+run-log *args: assert-macos init
+	ts="$(date +%Y%m%d_%H%M%S)"; \
+	log="{{LOG_DIR}}/run_$$ts.log"; \
+	echo "Logging to $$log"; \
+	RUST_LOG="${RUST_LOG:-info}" START_URL="${START_URL:-{{EXAMPLE_URL}}}" \
+	  cargo run -- {{args}} 2>&1 | tee "$$log"
+
+# Convenience: open the current START_URL in the embedded webview
+# (if START_URL is unset, uses EXAMPLE_URL)
+run-url url *args: assert-macos init
+	START_URL="{{url}}" cargo run -- {{args}}
+
+clean:
+	cargo clean
+	@rm -rf "{{VAR_DIR}}"
+	@echo "Cleaned cargo + {{VAR_DIR}}"
+
+# -----------------------------
+# Dev loop ergonomics
+# -----------------------------
+fmt:
+	cargo fmt --all
+
+fmt-check:
+	cargo fmt --all -- --check
+
+check:
+	cargo check
+
+clippy:
+	cargo clippy --all-targets --all-features -- -D warnings
+
+test:
+	cargo test --all-features
+
+lint: fmt clippy
+
+ci: fmt-check clippy test
+
+# Requires `cargo-watch` (see `tools-install`)
+watch *args: assert-macos init
+	cargo watch -x "run -- {{args}}"
+
+watch-chatgpt *args: assert-macos init
+	cargo watch -x "run -- {{args}}" -s "START_URL={{CHATGPT_URL}} cargo run -- {{args}}"
+
+# -----------------------------
+# Dependency & toolchain maintenance
+# -----------------------------
+update:
+	cargo update
+
+# Useful if you hit objc/cocoa macro cfg warnings; often fixed by updating.
+update-objc:
+	cargo update -p objc -p cocoa
+
+# Install common dev tools (safe to run repeatedly).
+# You can comment out tools you don't want globally.
+tools-install:
+	@command -v cargo-watch >/dev/null 2>&1 || cargo install cargo-watch
+	@command -v cargo-audit >/dev/null 2>&1 || cargo install cargo-audit
+	@command -v cargo-deny  >/dev/null 2>&1 || cargo install cargo-deny
+	@command -v cargo-outdated >/dev/null 2>&1 || cargo install cargo-outdated
+	@command -v cargo-license >/dev/null 2>&1 || cargo install cargo-license
+	@command -v cargo-flamegraph >/dev/null 2>&1 || cargo install cargo-flamegraph
+	@command -v cargo-bundle >/dev/null 2>&1 || cargo install cargo-bundle
+	@echo "Installed common cargo tools."
+
+# -----------------------------
+# Security / compliance hygiene
+# -----------------------------
+audit:
+	cargo audit
+
+deny:
+	cargo deny check
+
+outdated:
+	cargo outdated || true
+
+licenses:
+	cargo license || true
+
+hygiene: audit deny licenses
+
+# -----------------------------
+# Docs / Introspection
+# -----------------------------
+doc:
+	cargo doc --no-deps
+
+doc-open:
+	cargo doc --no-deps --open
+
+tree:
+	cargo tree
+
+bloat:
+	@echo "Tip: install cargo-bloat (cargo install cargo-bloat) then run:"
+	@echo "  cargo bloat --release -n 50"
+
+# -----------------------------
+# Profiling (hooks)
+# -----------------------------
+# Requires `cargo flamegraph` and may prompt for sudo on macOS
+flame *args: assert-macos init
+	cargo flamegraph --root -- \
+	  "$(pwd)/target/debug/{{bin}}" {{args}}
+
+# Quick RSS snapshot (useful when you start tightening memory)
+mem:
+	@ps -ax -o pid,rss,command | egrep "(PID|{{bin}})" || true
+
+# -----------------------------
+# App bundling & signing (hooks)
+# -----------------------------
+# Bundling to a .app is valuable later for stable WebKit storage isolation via bundle ID.
+bundle: assert-macos
+	@echo "Bundling .app (requires cargo-bundle + proper Cargo.toml metadata)."
+	@echo "If you haven't set it up yet, this is a hook for later."
+	cargo bundle --release || true
+
+codesign-adhoc: assert-macos
+	@echo "Ad-hoc signing hook (set APP path once bundle exists)."
+	@echo "Example:"
+	@echo "  codesign --force --deep --sign - path/to/{{crate}}.app"
+	@echo "(No-op until bundle exists.)"
+
+# -----------------------------
+# ChatGPT workflow hooks (future)
+# -----------------------------
+# These are intentionally “wires waiting to be connected” as we implement:
+# - persistent session handling
+# - login/logout flows
+# - storage mode toggles
+# - origin locks
+#
+# For now they just standardize the knobs and entrypoints.
+
+login: assert-macos init
+	@echo "Login hook:"
+	@echo " - Starts webview at ChatGPT."
+	@echo " - Later we can enforce a dedicated profile + persist cookies."
+	START_URL="{{CHATGPT_URL}}" WEBVIEW_PROFILE="${WEBVIEW_PROFILE:-default}" cargo run
+
+logout: assert-macos init
+	@echo "Logout hook:"
+	@echo " - Once we add JS bridge, this can click profile → log out programmatically."
+	@echo " - For now this just opens ChatGPT."
+	START_URL="{{CHATGPT_URL}}" WEBVIEW_PROFILE="${WEBVIEW_PROFILE:-default}" cargo run
+
+incognito-chatgpt: assert-macos init
+	@echo "Incognito hook (requires code support for nonPersistent store):"
+	START_URL="{{CHATGPT_URL}}" WEBVIEW_EPHEMERAL=1 cargo run
+
+lock-origin-chatgpt: assert-macos init
+	@echo "Origin lock hook (requires code support to block navigation away):"
+	START_URL="{{CHATGPT_URL}}" WEBVIEW_LOCK_ORIGIN=1 cargo run
+
+# -----------------------------
+# “Instrument mode” hooks (future)
+# -----------------------------
+# When you split into:
+# - rust core (tmux UI + substrate)
+# - webview agent (WKWebView host)
+# these become your standard workflows.
+
+agent-run: assert-macos init
+	@echo "Webview agent hook (future):"
+	@echo " - runs the WKWebView host as a separate process"
+	@echo " - exposes IPC for send/recv"
+	@echo "Suggested envs: IPC_ADDR=unix:{{STATE_DIR}}/agent.sock"
+	@echo "(No-op until implemented.)"
+
+core-run: init
+	@echo "Core (tmux UI) hook (future):"
+	@echo " - runs semantic instrument"
+	@echo " - connects to agent over IPC"
+	@echo "(No-op until implemented.)"
+
+tmux-dev:
+	@echo "tmux workflow hook (future):"
+	@echo " - left pane: core-run"
+	@echo " - right pane: agent-run"
+	@echo " - bottom: logs/mem"
+	@echo
+	@echo "Example tmux script once core/agent exist:"
+	@echo "  tmux new-session -d -s chatui 'just core-run'"
+	@echo "  tmux split-window -h 'just agent-run'"
+	@echo "  tmux split-window -v 'watch -n 1 just mem'"
+	@echo "  tmux attach -t chatui"
+
