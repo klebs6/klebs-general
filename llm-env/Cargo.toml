@@ -9,4 +9,3 @@ objc = "0.2"
 
 [features]
 cargo-clippy = []
-

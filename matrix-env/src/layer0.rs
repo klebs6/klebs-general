@@ -213,6 +213,7 @@ pub enum Layer0Error {
     TracingInit(Box<dyn std::error::Error + Send + Sync>),
     TokioRuntimeBuild(io::Error),
     Layer1(crate::layer1::Layer1Error),
+    Layer2(crate::layer2::Layer2Error),
     ShutdownChannelClosed,
     ShutdownStateMissingReason,
     TaskJoin {
@@ -234,6 +235,7 @@ impl fmt::Display for Layer0Error {
             Self::TracingInit(e) => write!(f, "failed to set tracing subscriber: {e}"),
             Self::TokioRuntimeBuild(e) => write!(f, "failed to build tokio runtime: {e}"),
             Self::Layer1(e) => write!(f, "layer1 config error: {e}"),
+            Self::Layer2(e) => write!(f, "layer2 http error: {e}"),
             Self::ShutdownChannelClosed => write!(f, "shutdown channel closed unexpectedly"),
             Self::ShutdownStateMissingReason => write!(f, "shutdown requested but reason missing"),
             Self::TaskJoin { task_name, join_error } => {
@@ -253,6 +255,7 @@ impl std::error::Error for Layer0Error {}
 pub struct Layer0Entrypoint;
 
 impl Layer0Entrypoint {
+
     pub fn run_from_env() -> ExitCode {
         match Self::try_run_from_env() {
             Ok(code) => code,
@@ -282,6 +285,16 @@ impl Layer0Entrypoint {
             "layer1 configuration boundary established"
         );
 
+        let homeserver_url = layer1.config().homeserver_url().clone();
+
+        let access_token = layer1
+            .secret_store()
+            .read_session()
+            .map_err(Layer0Error::Layer1)?
+            .map(|s| s.access_token().clone());
+
+        let layer2_auth = crate::layer2::Layer2AuthMaterial::from_optional_access_token(access_token);
+
         let span = tracing::info_span!(
             "layer0",
             heartbeat_ms = cfg.heartbeat_interval().as_millis() as u64,
@@ -299,6 +312,25 @@ impl Layer0Entrypoint {
 
         let rt = build_tokio_runtime()?;
         rt.block_on(async move {
+            if let Some(hs) = homeserver_url.as_deref() {
+                let http_cfg = crate::layer2::Layer2HttpClientConfig::standard();
+                let client = crate::layer2::Layer2HttpClient::new(hs, layer2_auth, &http_cfg)
+                    .map_err(Layer0Error::Layer2)?;
+
+                let versions = client
+                    .probe_matrix_client_versions()
+                    .await
+                    .map_err(Layer0Error::Layer2)?;
+
+                info!(
+                    versions = ?versions.versions(),
+                    unstable_features_count = versions.unstable_features().as_ref().map(|m| m.len()).unwrap_or(0),
+                    "layer2 reachability probe complete"
+                );
+            } else {
+                warn!("layer2 homeserver url not configured; skipping reachability probe");
+            }
+
             let orchestrator = Layer0Orchestrator::new(cfg);
             orchestrator.run(wait_for_os_shutdown()).await
         })

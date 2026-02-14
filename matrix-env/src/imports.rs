@@ -1,8 +1,10 @@
 // src/imports.rs
 
+
 #![allow(unused_imports)]
 
 pub(crate) use std::{
+    collections::BTreeMap,
     ffi::OsString,
     fmt,
     future::Future,
@@ -17,8 +19,11 @@ pub(crate) use std::{
 
 pub(crate) use derive_builder::Builder;
 pub(crate) use getset::Getters;
+pub(crate) use reqwest::{self, Url};
 pub(crate) use serde::{Deserialize, Serialize};
+pub(crate) use serde_json;
 pub(crate) use structopt::StructOpt;
+pub(crate) use url::ParseError as UrlParseError;
 
 pub(crate) use tokio::{
     runtime::{Builder as TokioRuntimeBuilder, Runtime as TokioRuntime},

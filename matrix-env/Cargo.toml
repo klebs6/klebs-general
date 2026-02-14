@@ -7,7 +7,6 @@ edition = "2024"
 features = [ "full" ]
 version = "1.40.0"
 
-
 [dependencies]
 
 tracing                 = { version = "0.1.41", features = ["log"] }
@@ -22,3 +21,16 @@ colored = "*"
 toml = "*"
 serde = { version = "1.0.152", features   = [ "derive", "serde_derive", "rc" ]  }
 derive_builder          = "0.20.2"
+serde_json = "*"
+url = "*"
+
+[dependencies.reqwest]
+version = "0.13"
+default-features = false
+features = ["rustls-no-provider", "charset", "http2", "system-proxy"]
+
+[dependencies.rustls]
+version = "0.23"
+default-features = false
+features = ["ring"]
+
