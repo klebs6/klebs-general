@@ -1,9 +1,0 @@
-[package]
-name = "itl-vfs"
-version.workspace = true
-edition.workspace = true
-license.workspace = true
-
-[dependencies]
-tracing.workspace = true
-itl-core = { path = "../itl-core" }
