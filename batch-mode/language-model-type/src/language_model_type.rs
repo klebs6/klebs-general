@@ -11,6 +11,7 @@ use std::str::FromStr;
 #[derive(PartialEq,Eq,Copy, Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum LanguageModelType {
+    Gpt5_4,
     Gpt5_1,
     Gpt5,
     Gpt5Mini,
@@ -31,6 +32,7 @@ pub enum LanguageModelType {
 impl Display for LanguageModelType {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
+            LanguageModelType::Gpt5_4             => write!(f, "gpt-5.4"),
             LanguageModelType::Gpt5_1             => write!(f, "gpt-5.1"),
             LanguageModelType::Gpt5               => write!(f, "gpt-5"),
             LanguageModelType::Gpt5Mini           => write!(f, "gpt-5-mini"),
@@ -77,6 +79,7 @@ impl FromStr for LanguageModelType {
         debug!("Attempting to parse LanguageModelType from input: {}", s);
 
         match s {
+            "gpt-5.4"             => Ok(Self::Gpt5_4),
             "gpt-5.1"             => Ok(Self::Gpt5_1),
             "gpt-5"               => Ok(Self::Gpt5),
             "gpt-5-mini"          => Ok(Self::Gpt5Mini),
@@ -131,6 +134,7 @@ mod model_type_tests {
     #[traced_test]
     fn round_trip_serialization() {
         for model in &[
+            LanguageModelType::Gpt5_4,
             LanguageModelType::Gpt5_1,
             LanguageModelType::Gpt5,
             LanguageModelType::Gpt5Mini,
