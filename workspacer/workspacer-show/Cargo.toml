@@ -13,6 +13,9 @@ workspacer-mock = { path = "../workspacer-mock" }
 path = "../workspacer-3p"
 version = "0.5.1"
 
+[dependencies.tracing]
+workspace = true
+
 [package]
 categories = [
     "visualization",

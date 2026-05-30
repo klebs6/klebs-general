@@ -6,6 +6,9 @@ workspace = true
 workspace = true
 [dependencies.serde_json]
 workspace = true
+
+[dependencies.tracing]
+workspace = true
 [dependencies.structopt]
 workspace = true
 [dependencies.sync-run-async]

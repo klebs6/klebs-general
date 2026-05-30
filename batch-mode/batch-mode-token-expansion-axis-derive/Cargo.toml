@@ -20,6 +20,9 @@ workspace = true
 [dependencies.serde_json]
 workspace = true
 
+[dependencies.tracing]
+workspace = true
+
 [dependencies.syn]
 workspace = true
 

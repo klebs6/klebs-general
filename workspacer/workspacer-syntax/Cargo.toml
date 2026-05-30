@@ -5,6 +5,9 @@ workspace = true
 path = "../workspacer-3p"
 version = "0.5.1"
 
+[dependencies.tracing]
+workspace = true
+
 [package]
 authors = ["klebs tpk3.mx@gmail.com"]
 categories = [

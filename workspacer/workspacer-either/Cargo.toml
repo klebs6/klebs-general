@@ -1,3 +1,6 @@
+[dependencies.tracing]
+workspace = true
+
 [package]
 name = "workspacer-either"
 version = "0.1.0"
