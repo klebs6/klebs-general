@@ -178,6 +178,7 @@ mod test_error_variant {
                     attrs:  vec![],
                     ident:  Ident::new("DeviceNotAvailable", Span::call_site()),
                     fields: vec![ErrorField {
+                        attrs: vec![],
                         ident: Ident::new("device_name", Span::call_site()),
                         ty: syn::parse_quote!(String)
                     }],
@@ -186,6 +187,30 @@ mod test_error_variant {
                 };
 
                 assert_eq!(parsed_variant, s);
+            }
+
+            Err(e) => panic!("Failed to parse: {:?}", e),
+        }
+    }
+
+    #[test]
+    fn test_error_variant_struct_field_doc_attr_is_preserved() {
+        let input_str = r#"
+            DeviceNotAvailable {
+                /// Device name must be stable across display and equality checks.
+                device_name: String
+            }
+        "#;
+
+        match parse_str::<ErrorVariant>(input_str) {
+            Ok(parsed_variant) => {
+                match parsed_variant {
+                    ErrorVariant::Struct { fields, .. } => {
+                        assert_eq!(fields.len(), 1);
+                        assert_eq!(fields[0].attrs().len(), 1);
+                    }
+                    _ => panic!("expected struct variant"),
+                }
             }
 
             Err(e) => panic!("Failed to parse: {:?}", e),

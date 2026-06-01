@@ -165,3 +165,77 @@ impl Validate for ErrorTree {
         Err(e) => panic!("Failed to parse: {}", e),
     }
 }
+
+#[test]
+fn struct_variant_field_does_not_generate_from_impl_by_default() {
+
+    let input_str = r#"
+        pub enum RootError {
+            Structured {
+                payload: PayloadError
+            }
+        }
+
+        pub enum PayloadError {
+            Leaf
+        }
+    "#;
+
+    let parse_result: Result<ErrorTree, syn::Error> = syn::parse_str(input_str);
+
+    match parse_result {
+        Ok(parsed_tree) => {
+            let output = parsed_tree.into_token_stream().to_string();
+
+            assert!(!output.contains("From < PayloadError > for RootError"), "{output}");
+        }
+        Err(e) => panic!("Failed to parse: {}", e),
+    }
+}
+
+#[test]
+fn generated_default_display_for_struct_variant_does_not_bind_fields() {
+
+    let input_str = r#"
+        pub enum MyError {
+            DeviceNotAvailable {
+                device_name: String
+            }
+        }
+    "#;
+
+    let parse_result: Result<ErrorTree, syn::Error> = syn::parse_str(input_str);
+
+    match parse_result {
+        Ok(parsed_tree) => {
+            let output = parsed_tree.into_token_stream().to_string();
+
+            assert!(output.contains("DeviceNotAvailable { .. }"), "{output}");
+            assert!(!output.contains("DeviceNotAvailable { device_name }"), "{output}");
+        }
+        Err(e) => panic!("Failed to parse: {}", e),
+    }
+}
+
+#[test]
+fn generated_default_display_for_wrapped_variant_does_not_debug_payload() {
+
+    let input_str = r#"
+        pub enum MyError {
+            IOError(std::io::Error)
+        }
+    "#;
+
+    let parse_result: Result<ErrorTree, syn::Error> = syn::parse_str(input_str);
+
+    match parse_result {
+        Ok(parsed_tree) => {
+            let output = parsed_tree.into_token_stream().to_string();
+
+            assert!(output.contains("IOError (_)"), "{output}");
+            assert!(!output.contains("inner"), "{output}");
+            assert!(!output.contains(": ?"), "{output}");
+        }
+        Err(e) => panic!("Failed to parse: {}", e),
+    }
+}

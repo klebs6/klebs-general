@@ -105,10 +105,17 @@ impl ErrorEnum {
                 },
                 // Struct variants remain unchanged
                 ErrorVariant::Struct { ident, fields, .. } => {
-                    let field_defs: Vec<_> = fields.iter().map(|field| {
-                        let ErrorField { ident, ty } = field;
-                        quote! { #ident: #ty }
+                    let field_defs: Vec<TokenStream2> = fields.iter().map(|field| {
+                        let field_attrs = field.attrs();
+                        let field_ident = field.ident();
+                        let field_ty    = field.ty();
+
+                        quote! {
+                            #(#field_attrs)*
+                            #field_ident: #field_ty
+                        }
                     }).collect();
+
                     quote! {
                         #(#attrs)*
                         #ident { #(#field_defs),* }
@@ -145,7 +152,7 @@ impl ErrorEnum {
                         }
                     } else {
                         quote! {
-                            #ident::#variant_ident => write!(f, stringify!(#variant_ident)),
+                            #ident::#variant_ident => f.write_str(stringify!(#variant_ident)),
                         }
                     }
                 },
@@ -157,23 +164,25 @@ impl ErrorEnum {
                         }
                     } else {
                         quote! {
-                            #ident::#variant_ident(inner) => write!(f, "{}: {:?}", stringify!(#variant_ident), inner),
+                            #ident::#variant_ident(_) => f.write_str(stringify!(#variant_ident)),
                         }
                     }
                 },
                 // Struct variants
                 ErrorVariant::Struct { fields, .. } => {
-                    let field_idents: Vec<_> = fields.iter().map(|field| &field.ident).collect();
-                    let pattern = quote! { #ident::#variant_ident { #(#field_idents),* } };
-
                     if let Some(format_str) = display_format {
-                        let format_args = field_idents.iter().map(|ident| quote! { #ident = #ident });
+                        let field_idents: Vec<&Ident> = fields.iter().map(|field| field.ident()).collect();
+                        let pattern = quote! { #ident::#variant_ident { #(#field_idents),* } };
+                        let format_args = field_idents.iter().map(|field_ident| {
+                            quote! { #field_ident = #field_ident }
+                        });
+
                         quote! {
                             #pattern => write!(f, #format_str, #(#format_args),*),
                         }
                     } else {
                         quote! {
-                            #pattern => write!(f, stringify!(#variant_ident)),
+                            #ident::#variant_ident { .. } => f.write_str(stringify!(#variant_ident)),
                         }
                     }
                 },
@@ -229,7 +238,7 @@ impl ErrorEnum {
                         }
                     } else {
                         // Compare each field
-                        let field_idents: Vec<_> = fields.iter().map(|f| &f.ident).collect();
+                        let field_idents: Vec<_> = fields.iter().map(|f| f.ident()).collect();
                         let a_fields: Vec<_> = field_idents.iter()
                             .map(|ident| format_ident!("a_{}", ident))
                             .collect();
@@ -319,7 +328,7 @@ impl Validate for ErrorEnum {
                 },
                 ErrorVariant::Struct { fields, .. } => {
                     for field in fields {
-                        if !field.ty.validate() {
+                        if !field.ty().validate() {
                             return false;
                         }
                     }
@@ -435,6 +444,7 @@ mod test_error_enum {
                 ident:  Ident::new("DeviceNotAvailable", Span::call_site()), 
                 fields: vec![
                     ErrorField {
+                        attrs: vec![],
                         ident: Ident::new("device_name", Span::call_site()),
                         ty: parse_quote!(String)
                     }
