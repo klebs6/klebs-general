@@ -1,17 +1,8 @@
 // ---------------- [ File: src/syn_imports.rs ]
 pub(crate) use syn::{
-    Token,
-    spanned::Spanned,
-    parse::{
-        Parse as SynParse, 
-        ParseStream, 
-        Result as SynParseResult
-    },
+    parse::{Parse as SynParse, ParseStream, Result as SynParseResult},
+    parse_macro_input,
     punctuated::Punctuated,
-    parse_macro_input, 
-    Attribute, 
-    ItemFn,
-    Ident, 
-    LitStr,
-    Lit,
+    spanned::Spanned,
+    Attribute, Ident, ItemFn, Lit, LitStr, Token,
 };

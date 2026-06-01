@@ -29,7 +29,12 @@ impl TracedTestGenerator {
         };
 
         quote! {
-            use colored::Colorize;
+            use ::tracing_setup::traced_test_support::{
+                setup_buffered_tracing,
+                Colorize as _,
+                EventPrinter,
+                Flushable,
+            };
             use ::std::sync::{Arc,Mutex};
 
             #def_should_trace_trait

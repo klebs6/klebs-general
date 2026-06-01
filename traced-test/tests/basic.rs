@@ -6,8 +6,8 @@
 use disable_macro::disable;
 
 use traced_test::*;
-use tracing_setup::*;
 use tracing::info;
+use tracing_setup::*;
 
 use std::time::Duration;
 use tokio::time::sleep;
@@ -17,12 +17,8 @@ mod good {
     use super::*;
 
     // Async test that returns a Result (failure case)
-    #[traced_test(
-        should_fail(message = "Async test failed")
-    )]
-    async fn async_test_with_result_failure() 
-        -> Result<(), String> 
-    {
+    #[traced_test(should_fail(message = "Async test failed"))]
+    async fn async_test_with_result_failure() -> Result<(), String> {
         info!("we should not see this log message because the test is expected to fail with the provided message");
         Err("Async test failed".to_string())
     }
@@ -33,9 +29,7 @@ mod good {
     // Overall, the test should not crash our test suite because
     // the error message matches the expected failure message
     //
-    #[traced_test(
-        should_fail(message = "Test failed")
-    )]
+    #[traced_test(should_fail(message = "Test failed"))]
     fn sync_test_with_result_failure() -> Result<(), String> {
         info!("we should not see this log message because the test is expected to fail with the provided message");
         Err("Test failed".to_string())
@@ -51,7 +45,7 @@ mod good {
     }
 
     #[traced_test]
-    fn check_fundamental_behavior() -> Result<(),String> {
+    fn check_fundamental_behavior() -> Result<(), String> {
         debug!("we don't need to see logs when a test passes");
         assert!(true, "This test should pass.");
         //Err("we should see the logs if we uncomment this line and return the error".into())
@@ -63,15 +57,13 @@ mod good {
     //
     // The false assertion should trigger a panic which is
     // caught and matched with the message in the should_fail
-    // attribute. 
+    // attribute.
     //
     // Overall, the test should not crash our test suite because
     // of the matching should_fail message
     //
     //#[disable]
-    #[traced_test(
-        should_fail(message = "This test should fail.")
-    )]
+    #[traced_test(should_fail(message = "This test should fail."))]
     fn sync_test_fails() {
         info!("we should not see this log message because the test is expected to fail with the provided message");
         assert!(false, "This test should fail.");
@@ -100,9 +92,7 @@ mod good {
     // Overall, the test should not crash our test suite because
     // of the matching should_fail message
     //
-    #[traced_test(
-        should_fail(message = "This test should fail.")
-    )]
+    #[traced_test(should_fail(message = "This test should fail."))]
     async fn async_test_fails() {
         info!("we should not see this log message because the test is expected to fail with the provided message");
         assert!(false, "This test should fail.");
@@ -133,23 +123,20 @@ mod good {
 
     //TODO: the assertion does not trigger the proper logging!
     //
-    #[traced_test(
-        should_fail(message = "sync test failure")
-    )]
+    #[traced_test(should_fail(message = "sync test failure"))]
     fn sync_test_failure_but_proper_logging() {
         info!("we should not see this log message because we expect the test to fail with the provided message");
         assert!(false, "sync test failure");
     }
 
-
     // TODO: the assertion does not trigger the logging!
     //
     // Test that ensures the tracing happens correctly in an asynchronous test
-    #[traced_test(
-        should_fail(message = "async test failure")
-    )]
+    #[traced_test(should_fail(message = "async test failure"))]
     async fn async_test_failure_but_proper_logging() {
-        info!("we should not see this log message because the test fails in the way that we expect");
+        info!(
+            "we should not see this log message because the test fails in the way that we expect"
+        );
         assert!(false, "async test failure");
     }
 
@@ -181,7 +168,10 @@ mod good {
     async fn async_test_real_async_function_failure() -> Result<(), String> {
         info!("we should not see this log message because overall, the test passes");
         let result = real_async_function_failure().await;
-        assert!(result.is_err(), "Expected an error from real_async_function_failure");
+        assert!(
+            result.is_err(),
+            "Expected an error from real_async_function_failure"
+        );
 
         //this test passes because we successfully received an
         //error from the function we expected to fail
@@ -204,9 +194,7 @@ mod good {
         assert!(true);
     }
 
-    #[traced_test(
-        should_fail(message = "Expected failure")
-    )]
+    #[traced_test(should_fail(message = "Expected failure"))]
     fn test_sync_fail_with_matching_should_fail() {
         info!("This log should not be displayed because the test fails as expected.");
         panic!("Expected failure");
@@ -237,7 +225,7 @@ mod expect_failure {
     //
     // The false assertion should trigger a panic which is
     // caught and matched with the message in the should_fail
-    // attribute. 
+    // attribute.
     //
     // Overall, the test should not crash our test suite because
     // of the matching should_fail message
@@ -254,9 +242,7 @@ mod expect_failure {
         assert!(false, "This test should fail.");
     }
 
-    #[traced_test(
-        should_fail(message = "This test should fail.")
-    )]
+    #[traced_test(should_fail(message = "This test should fail."))]
     async fn EXPECT_FAILURE_async_test_failure_with_unexpected_error_message() {
         info!("EXPECT_FAILURE_async_test_failure_with_unexpected_error_message -- we should see this log message because the test fails with a message we did not expect");
         assert!(false, "unexpected error message");
@@ -289,17 +275,13 @@ mod expect_failure {
         assert!(false, "Unexpected failure");
     }
 
-    #[traced_test(
-        should_fail(message = "Expected failure")
-    )]
+    #[traced_test(should_fail(message = "Expected failure"))]
     fn EXPECT_FAILURE_test_sync_pass_with_should_fail() {
         info!("EXPECT_FAILURE_test_sync_pass_with_should_fail -- This log should be displayed because the test passes unexpectedly.");
         assert!(true);
     }
 
-    #[traced_test(
-        should_fail(message = "Expected failure")
-    )]
+    #[traced_test(should_fail(message = "Expected failure"))]
     fn EXPECT_FAILURE_test_sync_fail_with_non_matching_should_fail() {
         info!("EXPECT_FAILURE_test_sync_fail_with_non_matching_should_fail -- This log should be displayed because the test fails with an unexpected message.");
         panic!("Different failure message");
