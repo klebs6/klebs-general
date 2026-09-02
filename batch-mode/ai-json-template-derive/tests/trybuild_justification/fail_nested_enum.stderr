@@ -1,0 +1,7 @@
+error[E0277]: the trait bound `InnerEnum: ai_json_template::AiJsonTemplate` is not satisfied
+  --> tests/trybuild/fail_nested_enum.rs:28:16
+   |
+28 |     something: InnerEnum,
+   |                ^^^^^^^^^ the trait `ai_json_template::AiJsonTemplate` is not implemented for `InnerEnum`
+   |
+   = help: the trait `ai_json_template::AiJsonTemplate` is implemented for `FailNestedEnum`

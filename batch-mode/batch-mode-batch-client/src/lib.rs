@@ -16,6 +16,7 @@ x!{impl_language_model_client_interface_for_arc_dyn}
 x!{language_model_client_interface}
 x!{mock}
 x!{openai_client_handle}
+x!{openai_client_handle_preflight_checks}
 x!{retrieve_batch_by_id}
 x!{upload_batch_file}
 x!{wait_for_batch_completion}

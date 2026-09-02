@@ -1,15 +1,15 @@
 [dependencies.export-magic]
 workspace = true
 
-[dependencies.traced-test]
+[dependencies.tokio]
 workspace = true
 
-[dependencies.tokio]
+[dependencies.traced-test]
 workspace = true
 
 [dependencies.workspacer-3p]
 path = "../workspacer-3p"
-version = "0.5.1"
+version = "0.5.2"
 
 [package]
 authors = ["klebs tpk3.mx@gmail.com"]
@@ -28,4 +28,4 @@ keywords = [
 license = "MIT OR Apache-2.0"
 name = "sync-run-async"
 repository = "https://github.com/klebs6/klebs-general"
-version = "0.1.1"
+version = "0.1.2"

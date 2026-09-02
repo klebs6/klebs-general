@@ -1,0 +1,151 @@
+Below is the consolidated master list of JSON misunderstandings we’ve identified through all of our examples and analysis, enumerated in ascending order. Each item includes a short description:
+
+---
+
+### **1. Map–Vector Confusion**
+- **Description**: A vector of objects is instead emitted as a map of objects keyed by an identifier (or vice versa).
+
+### **2. Nested Vector Flattening**
+- **Description**: A nested array (e.g. `[[...], [...]]`) is misunderstood as a single-level array (e.g. `[...]`).
+
+### **3. Single-element Vector Omission**
+- **Description**: A single-element array is replaced by the element itself (or vice versa).
+
+### **4. Vector as Map of Indices**
+- **Description**: A sequential array is instead emitted as a map keyed by stringified indices (`{"0": ..., "1": ...}`).
+
+### **5. Boolean Strings**
+- **Description**: Boolean values (`true`/`false`) are emitted as strings (`"true"`/`"false"`).
+
+### **6. Numeric Strings**
+- **Description**: Numbers (integers or floats) are emitted as strings (`"42"`, `"7.5"`).
+
+### **7. Missing Wrapper Object**
+- **Description**: Expected nested object is flattened (omitting an enclosing field).
+
+### **8. Unnecessary Additional Nesting**
+- **Description**: An extra object layer is introduced where none is expected.
+
+### **9. Flattened Key-Value Pairs**
+- **Description**: Keys that should be inside an object appear top-level.
+
+### **10. Array-Wrapped Single Objects**
+- **Description**: A single object is placed inside an array unnecessarily (`[ {...} ]`).
+
+### **11. Key-name Misalignment**
+- **Description**: Key names differ from the schema (e.g., “description” vs. “descriptor”) when they should match exactly.
+
+### **12. Timestamp Misformatting**
+- **Description**: Timestamps appear in an unexpected format (e.g., epoch integer vs. ISO string).
+
+### **13. Null Value Misplacement**
+- **Description**: `null` is emitted as a string (`"null"`), or vice versa.
+
+### **14. Singleton Array instead of Object**
+- **Description**: An object is emitted as a single-element array of that object.
+
+### **15. Reversed Map Structure**
+- **Description**: A map is misunderstood as an array of `{key, value}` pairs, or vice versa.
+
+### **16. Mixed-type Arrays (Heterogeneous Misplacement)**
+- **Description**: A single array incorrectly mixes types (e.g., strings, objects, arrays) when uniform items are expected.
+
+### **17. Missing Array (Scalar to Array Misunderstanding)**
+- **Description**: A field that should be an array is emitted as a scalar or string with comma-separated values.
+
+### **18. Stringified JSON (Nested JSON as string)**
+- **Description**: An entire nested object is placed in a single string.
+
+### **19. Misplaced Metadata**
+- **Description**: Data that should be in a nested object is flattened or placed at the top level.
+
+### **20. Enumeration as Map**
+- **Description**: An enum variant is emitted as a map (e.g., `{"Success": {}}`) rather than a simple value.
+
+### **21. Deeply Nested Vector Overwrap**
+- **Description**: Arrays are wrapped in additional layers of nesting.
+
+### **22. Boolean Represented as Integers**
+- **Description**: `true`/`false` are given as `1`/`0` instead of booleans.
+
+### **23. Key/Value Inversion**
+- **Description**: The intended key is used as a value and vice versa.
+
+### **24. Incorrect Nested "data" Wrapper**
+- **Description**: Data is wrapped in an unnecessary `"data": {...}` object, or similar extraneous field.
+
+### **25. Overly-verbose Field Representation**
+- **Description**: A simple field is emitted as an object with `{"value": ...}`, “confidence,” etc., instead of a scalar.
+
+### **26. Date Formats (ISO vs Epoch) Confusion**
+- **Description**: A date/time field is given in a different format than expected (e.g., integer vs. ISO string).
+
+### **27. Numeric Keys Misunderstanding**
+- **Description**: Numeric keys are handled incorrectly as strings or lead to unexpected structures (maps vs. arrays).
+
+### **28. Redundant Nesting of Identical Keys**
+- **Description**: The same key is repeated as an inner wrapper, e.g., `{"config": {"config": {...}}}`.
+
+### **29. Flattened Objects into Arrays of Pairs**
+- **Description**: An object is represented as an array of `[key, value]` tuples, instead of a normal key-value map.
+
+### **30. Scalar-to-array Repetition**
+- **Description**: A scalar field is replaced with an array that contains that single scalar multiple times.
+
+### **31. Complex Enum with Confidence**
+- **Description**: An enum is expanded to list all possible variants with confidence scores, instead of just indicating the selected variant.
+
+### **32. Unit Enum Variants Wrapped as Objects**
+- **Description**: Simple unit variants (e.g., `"VariantName"`) appear as complex objects or nested metadata.
+
+### **33. Optional Field Misinterpretation**
+- **Description**: An optional field (expected to be omitted if not used) appears explicitly set to `null` or another placeholder.
+
+### **34. Scalar Nesting**
+- **Description**: A scalar field is unnecessarily wrapped in an object (e.g., `{"value": 42}`).
+
+### **35. Redundant Enum Metadata**
+- **Description**: Instead of a clean `"enum_field": "SelectedVariant"`, the JSON includes extra metadata for all non-selected variants too.
+
+### **36. Nested Confidence & Justification**
+- **Description**: Confidence/justification appear nested inside a separate object (rather than straightforward sibling fields).
+
+### **37. Array Length Errors**
+- **Description**: An array’s length doesn’t match the schema’s constraints (too long, too short, or incorrectly dimensioned).
+
+### **38. Incorrect Type Metadata**
+- **Description**: The final JSON includes developer-level “type” or “struct_name” metadata that belongs to the schema, not the output data.
+
+### **39. Enum Variants as Array**
+- **Description**: Multiple enum variants (including non-chosen ones) are grouped in an array instead of a single selected variant.
+
+### **40. Zero-confidence Non-selected Variants**
+- **Description**: Non-chosen enum variants appear with `confidence=0.0` or similar, rather than being omitted.
+
+### **41. Unused Probabilistic Fields Set to Zero**
+- **Description**: Fields irrelevant for the chosen variant (like `probability` when not in a probabilistic mode) are still included and set to zero.
+
+### **42. Redundant Justification for Null Fields**
+- **Description**: A justification is provided for a field that’s intentionally `null`/omitted, cluttering or contradicting the data.
+
+### **43. Confidence Scores for Null Fields**
+- **Description**: A field is null but still has separate confidence, which doesn’t add meaningful information.
+
+### **44. Partial Enum Simplification**
+- **Description**: An enum is represented half-simplified (with `variant_name`), but also includes expanded metadata (like `variant_confidence`).
+
+### **45. Inconsistent Nested Variant Type**
+- **Description**: Simple “unit” variants carry a `variant_type` or other metadata not required for a plain variant.
+
+### **46. Struct-level Justification/Confidence**
+- **Description**: Large, redundant struct-level confidence or justification fields overshadow or duplicate the field-level data.
+
+### **47. Multi-level Confidence/Justification**
+- **Description**: Confidence/justification appear at multiple nested levels for the exact same choice or field, leading to unnecessary repetition.
+
+### **48. Including “generation_instructions” or Other Schema Metadata in Final Output**
+- **Description**: The final JSON includes prompt or schema design metadata (like `"generation_instructions": "...", "required": true`) instead of just domain data.
+
+---
+
+These 48 entries form our comprehensive set of JSON misunderstandings gleaned from all the analyzed examples.

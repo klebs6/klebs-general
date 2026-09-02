@@ -1,8 +1,9 @@
 .PHONY: build vendor json active test test_one test_all
 
 #RUSTFLAGS := "-Awarnings -Z time-passes"
-RUSTFLAGS  := -Awarnings RUST_BACKTRACE=1
-#RUSTFLAGS  := 
+RUSTFLAGS  := 
+#RUSTFLAGS  := -Awarnings RUST_BACKTRACE=1
+
 #CARGO     := env CARGO_MSG_LIMIT=15 CARGO_BUILD_JOBS=12 NUM_JOBS=12 cargo 
 CARGO      := MAKEFLAGS= env CARGO_BUILD_JOBS=12 NUM_JOBS=12 cargo 
 BUILD      := build --verbose
@@ -15,8 +16,6 @@ FEATURES := --features ""
 TEST_FILE  := tests/test_scale_layer.rs
 
 #ACTIVE_PACKAGE := agent-coordinate
-#ACTIVE_PACKAGE := ai-json-template
-#ACTIVE_PACKAGE := ai-json-template-derive
 #ACTIVE_PACKAGE := batch-mode
 #ACTIVE_PACKAGE := batch-mode-3p
 #ACTIVE_PACKAGE := batch-mode-batch-index
@@ -31,14 +30,11 @@ TEST_FILE  := tests/test_scale_layer.rs
 #ACTIVE_PACKAGE := batch-mode-token-expansion-step
 #-------------------------------------[done-below]
 
-ACTIVE_PACKAGE := batch-mode-token-expansion-axis-derive
 ACTIVE_PACKAGE := batch-mode-batch-executor
 ACTIVE_PACKAGE := batch-mode-batch-schema
 ACTIVE_PACKAGE := batch-mode-json
-#ACTIVE_PACKAGE := batch-mode-batch-client
 ACTIVE_PACKAGE := batch-mode-batch-reconciliation
 ACTIVE_PACKAGE := batch-mode-batch-triple
-ACTIVE_PACKAGE := batch-mode-process-response
 #ACTIVE_PACKAGE := instructed-language-model-at-coordinate
 #ACTIVE_PACKAGE := save-load-derive
 #ACTIVE_PACKAGE := save-load-traits
@@ -47,18 +43,30 @@ ACTIVE_PACKAGE := batch-mode-process-response
 ACTIVE_PACKAGE := language-model-token-expander
 ACTIVE_PACKAGE := language-model-batch-workflow-derive
 ACTIVE_PACKAGE := batch-mode-batch-workflow
+ACTIVE_PACKAGE := ai-json-template
+ACTIVE_PACKAGE := ai-json-template-derive
+ACTIVE_PACKAGE := batch-mode-token-expansion-axis-derive
+ACTIVE_PACKAGE := batch-mode-process-response
+ACTIVE_PACKAGE := batch-mode
+ACTIVE_PACKAGE := batch-mode-tts
+ACTIVE_PACKAGE := language-model-type
+ACTIVE_PACKAGE := batch-mode-batch-client
+ACTIVE_PACKAGE := batch-mode
 
 #-----------------------------------------------------[]
 #INDIVIDUAL_TEST := test_build_network_io_enum
 
 #-----------------------------------------------------[this section lets us choose how we want to test]
 DEFAULT := test
-#DEFAULT := test_file
 #DEFAULT := test_one
+#DEFAULT := expand
+#DEFAULT := expand_to_file
+#DEFAULT := test_file
 #DEFAULT := test_file_one
 #DEFAULT := test_all
 #DEFAULT := run
-DEFAULT := file_diff
+#DEFAULT := tts
+#DEFAULT := file_diff
 #DEFAULT := build
 
 default: $(DEFAULT)
@@ -66,9 +74,45 @@ default: $(DEFAULT)
 #NOCAPTURE := --nocapture
 #NOCAPTURE := 
 
+EXPANSION_FILE    := expanded.rs
+EXPANSION_PACKAGE := ai-json-template-derive
+EXPANSION_TEST    := flat_justified_exhaustive
+EXPANSION_TEST    := pass_enum_named_with_hashmap
+EXPANSION_TEST    := expand_this
+#EXPANSION_TEST    := classify_with_justification
+
+INDIVIDUAL_TEST    := test_build_vec_schema
+INDIVIDUAL_TEST    := test_classify_field_type_with_justification
+INDIVIDUAL_TEST    := emit_schema_for_vec
+
+INPUT_FILE  := /Users/kleb/bethesda/work/repo/rare-document-generators/grower/generated-skill-tree-workspaces/river-town/river-town.txt
+OUTPUT_FILE := /Users/kleb/bethesda/work/repo/rare-document-generators/grower/generated-skill-tree-workspaces/river-town/river-town.mp3
+
+INPUT_FILE  := /Users/kleb/bethesda/work/repo/rare-document-generators/grower/generated-skill-tree-workspaces/two-person-workout/two-person-workout.txt
+OUTPUT_FILE := /Users/kleb/bethesda/work/repo/rare-document-generators/grower/generated-skill-tree-workspaces/two-person-workout/two-person-workout.mp3
+
+INPUT_FILE  := /Users/kleb/bethesda/work/repo/rare-document-generators/grower/generated-skill-tree-workspaces/quad-approach/quad-approach.txt
+OUTPUT_FILE := /Users/kleb/bethesda/work/repo/rare-document-generators/grower/generated-skill-tree-workspaces/quad-approach/quad-approach.mp3
+
+INPUT_FILE  := /Users/kleb/bethesda/work/repo/rare-document-generators/grower/generated-skill-tree-workspaces/deer/deer.txt
+OUTPUT_FILE := /Users/kleb/bethesda/work/repo/rare-document-generators/grower/generated-skill-tree-workspaces/deer/deer.mp3
+
+INPUT_FILE  := /Users/kleb/bethesda/work/repo/rare-document-generators/grower/generated-skill-tree-workspaces/goals/goals.txt
+OUTPUT_FILE := /Users/kleb/bethesda/work/repo/rare-document-generators/grower/generated-skill-tree-workspaces/goals/goals.mp3
+
+tts:
+	RUSTFLAGS=$(RUSTFLAGS) $(CARGO) run -p batch-mode-tts -- $(INPUT_FILE) $(OUTPUT_FILE)
+
+
 #----------------------------------------------[here are our rules]
 run:
 	RUSTFLAGS=$(RUSTFLAGS) $(CARGO) $(RUN) -p $(ACTIVE_PACKAGE) $(FEATURES)
+
+expand:
+	cargo expand --package $(EXPANSION_PACKAGE) --test $(EXPANSION_TEST)
+
+expand_to_file:
+	cargo expand --package $(EXPANSION_PACKAGE) --test $(EXPANSION_TEST) > $(EXPANSION_FILE)
 
 file_diff:
 	RUSTFLAGS=$(RUSTFLAGS) $(CARGO) $(RUN) --bin camel-case-token-file-difference -- --file-a $(FILE_A) --file-b $(FILE_B) --file-c $(FILE_C)

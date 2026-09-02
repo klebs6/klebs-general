@@ -1,0 +1,19 @@
+{
+    "crate_name": "workspacer-test-coverage",
+    "full_readme_markdown": "# workspacer-test-coverage\n\n## Overview\n\n`workspacer-test-coverage` is a robust Rust crate designed to facilitate the execution of tests with comprehensive code coverage analysis. It leverages asynchronous operations to seamlessly integrate into Rust workspaces, allowing users to gather detailed insights into their code's test coverage.\n\nBy using the `cargo tarpaulin` tool, this crate efficiently generates coverage reports in JSON format, which can be readily converted into structured `TestCoverageReport` instances for further processing and analysis. This crate aims to support developers seeking to improve code quality by identifying test coverage gaps effectively.\n\n## Key Features\n\n- **Asynchronous Coverage Execution:** Run tests and gather coverage data asynchronously, optimizing resource utilization during execution.\n- **Comprehensive Reporting:** Supports both JSON and plaintext coverage outputs, converting them into detailed reports with coverage metrics like total lines, covered lines, and missed lines.\n- **Error Handling:** Robust error management across test execution and report generation stages, including command execution failures and parsing errors.\n\n## Installation\n\nAdd the following to your `Cargo.toml` dependencies:\n\n```toml\n[dependencies]\nworkspacer-test-coverage = \"0.1.0\"\n```\n\n## Usage\n\nImplement the `RunTestsWithCoverage` trait for your workspace type to integrate test coverage functionality. Below is a basic example:\n\n```rust\nuse workspacer_test_coverage::{RunTestsWithCoverage, TestCoverageReport};\n\n#[tokio::main]\nasync fn main() {\n    let workspace = YourWorkspace::new();  // Implement your specific workspace logic\n    match workspace.run_tests_with_coverage().await {\n        Ok(report) => println!(\"Coverage: {:.2}%\", report.total_coverage()),\n        Err(e) => eprintln!(\"Failed to run tests with coverage: {:?}", e),\n    }\n}\n```\n\n## Important Structures\n\n### RunTestsWithCoverage Trait\nThis trait should be implemented by workspace types to enable test coverage runs.\n\n### TestCoverageReport\nRepresents a detailed report on code coverage, including fields for total coverage percentage, covered lines, missed lines, and total lines.\n\n## License\n\nThis project is licensed under [MIT License](LICENSE).\n\n## Contributions\n\nContributions and feedback are welcomed. Please open issues or submit pull requests to participate in improving this crate.",
+    "package_categories": [
+        "development-tools",
+        "testing",
+        "asynchronous",
+        "command-line-utilities",
+        "data-structures"
+    ],
+    "package_description": "A Rust crate that executes workspace tests with coverage analysis using cargo tarpaulin, providing detailed reporting via JSON.",
+    "package_keywords": [
+        "rust",
+        "test-coverage",
+        "workspace",
+        "asynchronous",
+        "testing"
+    ]
+}

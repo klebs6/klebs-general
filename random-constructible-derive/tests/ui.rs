@@ -1,4 +1,4 @@
-// ---------------- [ File: tests/ui.rs ]
+// ---------------- [ File: random-constructible-derive/tests/ui.rs ]
 #[test]
 fn ui_tests() {
     let t = trybuild::TestCases::new();

@@ -1,0 +1,104 @@
+Below is a suggested order of operations (a “triage” or “checklist”) for tackling the failures in a logical, incremental way. The underlying reason is that many of your test failures stem from the same handful of root causes—especially things like slight mismatches with the test suite’s expected token ordering, missing/extra spacing, or small logical differences in how booleans, options, enumerations, and doc strings get expanded.
+
+1. Fix Lower-Level Utility Discrepancies First
+(A) Ensure all is_* and extract_* utilities behave exactly as tests require.
+
+is_bool, is_numeric, is_string_type, extract_option_inner, extract_vec_inner, extract_hashmap_inner
+These appear in errors for e.g. build_option_schema, emit_schema_for_type, emit_schema_for_vec, etc.
+Action: Double-check each of these matches the test suite’s assumptions about how to classify types.
+
+compute_flat_type_for_stamped
+A few tests fail because of how we handle “unsupported” or “BadType” or empty type names.
+Action: Ensure that if the test expects a compile-time error for certain unflattenable types, we produce exactly the snippet it checks for (often a compile_error! or a syn::Error::new(...).to_compile_error()).
+
+Many of the test names referencing “_exhaustive” or “_test_error_path” revolve around these small classification quirks.
+
+2. Align the “Fallback Nested” Logic
+Several failing tests complain about how “fallback nested struct or enum” expansions differ from the test’s expectations. E.g.:
+
+emit_schema_for_fallback_nested (and the associated tests about enum_name, struct_name, or the final JSON snippet).
+
+emit_schema_for_hashmap with nested values.
+
+emit_schema_for_type with a custom nested type.
+
+Action: Harmonize your fallback expansions with exactly what the tests want in each scenario. For instance, if the tests want an "enum_name" key when it’s an enum, or a "struct_name" key when it’s a struct, ensure your expansion always checks the child’s to_template() (or AiJsonTemplate) for “enum_name” vs. “struct_name” keys, and then sets the top-level "type" accordingly.
+
+3. Standardize “Doc Strings” and the “generation_instructions” Key
+The test logs often show partial mismatches like obj.insert("generation_instructions".to_string(), ...) where your code might have a stray space or might not store the doc lines as the test expects.
+
+build_option_schema, build_string_schema, emit_schema_for_vec, etc.
+They rely on consistent usage of doc_str vs. doc_lit, consistent trimming, etc.
+Action: Confirm that your final expansions always do:
+
+rust
+Copy
+obj.insert("generation_instructions".to_string(), serde_json::Value::String(#doc_lit.to_string()));
+or the equivalent without extra spaces or string manipulation that the test code rejects.
+
+4. Clean Up “Required” Booleans and skip_self_just / skip_child_just Logic
+The next cluster of tests revolve around whether or not we add justification/confidence fields at the top level of a variant or for each field:
+
+build_top_level_justification_fields_for_variant, expand_named_variant_into_flat_justification, expand_unnamed_variant_into_flat_justification, etc.
+
+The function signatures mention skip_self_just and skip_child_just. The test suite is extremely picky about whether we do or don’t insert variant_justification, variant_confidence, or field_X_justification, etc.
+
+Action:
+
+In each expansion (named variant, unnamed variant, or unit variant), confirm you only skip justification fields if #[justify=false] is set (or if you detect some global skip).
+
+If skip_self_just == false, ensure you always generate those top-level variant_justification: String and variant_confidence: f32 fields in the final tokens (and the matching pattern arms).
+
+Check any leftover edge cases (like the first variant’s Default impl) that the tests specifically examine.
+
+5. Enforce the Exact map.insert(...) vs. map . insert(...) and Brace Spacing
+Many expansions fail substring checks because of spacing or punctuation in the final TokenStream. If your code is re-parsing or re-to_string()ing partial expansions, the spacing can shift. The tests do things like assert!(expanded.contains("map.insert(")) and fail if they see map . insert or if they see map . insert( with a space.
+
+finalize_flat_unnamed_variant_ts, finalize_from_arm_unnamed_variant_ts, generate_flat_variant_for_variant, etc.
+Action: Where possible, use syn::parse_quote! blocks so that the printed tokens match exactly, and avoid any string-based re-parsing that might re-insert spaces.
+Example approach: In places where you do a string replacement like " { }" => "{}", confirm you do it only once, or just build the final snippet at parse time so it prints with {} => and not { } =>.
+
+6. Check the Tests That Specifically Expect “compile_error!” for an Unsupported Type
+Look for the handful of failures specifically referencing “test_error_scenario_...” or “unsupported key type in HashMap<bool, _>.” The fix typically involves ensuring your expansions do:
+
+rust
+Copy
+compile_error!("HashMap<bool, _> is not supported by AiJsonTemplateWithJustification");
+or something extremely close to that. The test suite usually wants that snippet inserted as a top-level expression in place of a normal schema.
+
+7. Confirm the #[derive(Builder, Getters, Setters)] and “No pub Fields” Requirements
+A few tests might fail because they detect your expansions still have pub fields. In your posted code, you do appear to have removed pub from some expansions, but double-check all Justification and Confidence structs, and also the “FlatJustified*” expansions, so that no top-level named fields appear as pub. If the test suite checks the string expansions for pub struct X, that might fail. Or maybe the fields themselves must be private with #[getset(...)] used instead.
+
+8. Examine the “Newtype” or Edge Cases (Empty Enums, Single-Field Named Structs, etc.)
+create_flat_justification_idents_for_enum::test_empty_enum_name
+This might be a corner case if you have an enum with an empty string as an identifier or if the test mocks up something unusual. Possibly the test is verifying that you handle “no name” gracefully (or produce some fallback like “FlatJustified__”).
+
+build_option_schema::test_build_option_schema_exhaustive::returns_none_for_unsupported_inner_type
+Double-check the logic that says “if the inner type is UnsupportedType or triggers an error, we must return None or a compile error.”
+
+9. Once the Lower-Level Pieces Are Synchronized, Re-Check the Larger “Integration” Tests
+After you fix the small classification/spelling/spacing issues, many of the big multi-variant or multi-field failures (like in expand_ai_json_template_with_justification, generate_enum_justified, and so on) should resolve automatically. Re-run the entire suite each time you fix a chunk of the expansions, so you can see which 3–5 “downstream” tests also go green.
+
+Summary of the Overall Fix Strategy
+Classification & Extraction
+Make sure is_bool, is_numeric, extract_option_inner, etc., are precisely how the tests expect.
+
+Compile Error Branches
+Confirm all “unsupported type” tests produce exactly compile_error! with the exact text the test wants.
+
+Nested vs. Fallback
+Align your fallback expansions so that if the test sees something with "enum_name" or "struct_name", you set "type" = "nested_enum" or "nested_struct", etc.
+
+Justification & Confidence Fields
+Thoroughly handle #[justify=false] or #[justify_inner=false] so you only skip the correct expansions. Ensure the test logic about “skip_self_just” vs. “skip_child_just” matches exactly.
+
+Spacing & Token Consistency
+Use syn::parse_quote! to produce “map.insert(” exactly, and never “map . insert(” or “map . insert(”. Also fix brace spacing in match arms.
+
+Remove All pub
+Where the tests require fields to be private + #[getset(...)], confirm your expansions do just that.
+
+Finally
+Re-run the test suite. Each time you fix a known spacing or classification bug, you’ll typically clear several of the 68 failing tests at once.
+
+This sequence is usually the smoothest way to handle an entire block of 60+ failing tests, because so many revolve around the same handful of expansions. Good luck!

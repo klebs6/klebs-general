@@ -1,4 +1,4 @@
-// ---------------- [ File: src/derive_for_struct_unnamed_fields.rs ]
+// ---------------- [ File: random-constructible-derive/src/derive_for_struct_unnamed_fields.rs ]
 crate::ix!();
 
 pub fn derive_for_unnamed_fields(
@@ -63,7 +63,7 @@ pub fn derive_for_unnamed_fields(
                 Self(#(#field_random_initializers),*)
             }
 
-            fn random_with_rng<R: rand::Rng + ?Sized>(rng: &mut R) -> Self {
+            fn random_with_rng<R: rand_core::RngCore + ?Sized>(rng: &mut R) -> Self {
                 Self(#(
                     <#field_types as RandConstruct>::random_with_rng(rng)
                 ),*)

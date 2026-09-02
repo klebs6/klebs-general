@@ -23,3 +23,14 @@ macro_rules! ix {
         use crate::*;
     } 
 }
+
+#[macro_export]
+macro_rules! xt {
+    ($name:ident) => {
+        #[cfg(test)]
+        mod $name;
+
+        #[cfg(test)]
+        pub use $name::*;
+    };
+}

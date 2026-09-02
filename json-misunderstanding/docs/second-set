@@ -1,0 +1,193 @@
+Certainly! Here are additional subtle but realistic misunderstandings that often occur, especially with complex JSON schemas and nuanced language-model outputs:
+
+---
+
+### **16. Mixed-type Arrays (Heterogeneous Misplacement)**  
+- **Expected (homogeneous):**  
+  ```json
+  ["value1", "value2", "value3"]
+  ```
+- **Misunderstood as (heterogeneous):**  
+  ```json
+  ["value1", {"value": "value2"}, ["value3"]]
+  ```
+
+---
+
+### **17. Missing Array (Scalar to Array Misunderstanding)**  
+- **Expected:**  
+  ```json
+  {"tags": ["rust", "json", "serialization"]}
+  ```
+- **Misunderstood as:**  
+  ```json
+  {"tags": "rust, json, serialization"}
+  ```
+
+---
+
+### **18. Stringified JSON (Nested JSON as string)**  
+- **Expected:**  
+  ```json
+  {"meta": {"id": 1, "valid": true}}
+  ```
+- **Misunderstood as:**  
+  ```json
+  {"meta": "{\"id\":1,\"valid\":true}"}
+  ```
+
+---
+
+### **19. Misplaced Metadata (Data and Metadata confusion)**  
+- **Expected:**  
+  ```json
+  {"data": {"item": "A"}, "metadata": {"timestamp": 123456}}
+  ```
+- **Misunderstood as:**  
+  ```json
+  {"item": "A", "timestamp": 123456}
+  ```
+
+---
+
+### **20. Enumeration as Map (Enum variant confusion)**  
+- **Expected:**  
+  ```json
+  {"status": "Success"}
+  ```
+- **Misunderstood as:**  
+  ```json
+  {"status": {"Success": {}}}
+  ```
+
+---
+
+### **21. Deeply Nested Vector Overwrap**  
+- **Expected:**  
+  ```json
+  {"points": [{"x": 1, "y": 2}, {"x": 3, "y": 4}]}
+  ```
+- **Misunderstood as:**  
+  ```json
+  {"points": [[{"x": 1, "y": 2}], [{"x": 3, "y": 4}]]}
+  ```
+
+---
+
+### **22. Boolean represented as integers**  
+- **Expected:**  
+  ```json
+  {"enabled": true}
+  ```
+- **Misunderstood as:**  
+  ```json
+  {"enabled": 1}
+  ```
+
+---
+
+### **23. Key/Value Inversion in simple mappings**  
+- **Expected:**  
+  ```json
+  {"field_name": "description"}
+  ```
+- **Misunderstood as:**  
+  ```json
+  {"description": "field_name"}
+  ```
+
+---
+
+### **24. Incorrectly nested "data" wrapper**  
+- **Expected:**  
+  ```json
+  [{"name": "Item1"}, {"name": "Item2"}]
+  ```
+- **Misunderstood as:**  
+  ```json
+  {"data": [{"name": "Item1"}, {"name": "Item2"}]}
+  ```
+
+---
+
+### **25. Overly-verbose field representation**  
+- **Expected:**  
+  ```json
+  {"count": 3}
+  ```
+- **Misunderstood as:**  
+  ```json
+  {"count": {"value": 3}}
+  ```
+
+---
+
+### **26. Date formats (ISO vs Epoch confusion)**  
+- **Expected (ISO 8601):**  
+  ```json
+  {"date": "2025-04-29T00:00:00Z"}
+  ```
+- **Misunderstood as (Unix epoch):**  
+  ```json
+  {"date": 1745884800}
+  ```
+
+---
+
+### **27. Numeric keys misunderstanding**  
+- **Expected:**  
+  ```json
+  {"scores": {"user1": 10, "user2": 15}}
+  ```
+- **Misunderstood as:**  
+  ```json
+  {"scores": {"1": {"user": "user1", "score": 10}, "2": {"user": "user2", "score": 15}}}
+  ```
+
+---
+
+### **28. Redundant nesting of identical keys**  
+- **Expected:**  
+  ```json
+  {"config": {"timeout": 30}}
+  ```
+- **Misunderstood as:**  
+  ```json
+  {"config": {"config": {"timeout": 30}}}
+  ```
+
+---
+
+### **29. Flattened Objects into Arrays of Pairs**  
+- **Expected:**  
+  ```json
+  {"settings": {"volume": 80, "brightness": 60}}
+  ```
+- **Misunderstood as:**  
+  ```json
+  {"settings": [["volume", 80], ["brightness", 60]]}
+  ```
+
+---
+
+### **30. Scalar-to-array repetition**  
+- **Expected:**  
+  ```json
+  {"levels": [1, 2, 3]}
+  ```
+- **Misunderstood as:**  
+  ```json
+  {"levels": 1}
+  ```
+
+---
+
+### **Why these were added:**
+- Each addresses subtler semantic or structural errors frequently encountered in practice.
+- Expands coverage to handle deeper, more nuanced schema errors and subtle semantic misinterpretations.
+
+---
+
+These additions should significantly broaden the coverage of your `json-misunderstanding` crate, ensuring it can robustly handle the practical complexity found in real-world language-model outputs.
+
+Let me know if you need further refinement or more edge cases!

@@ -1,10 +1,10 @@
 [dependencies.batch-mode-3p]
 path = "../batch-mode-3p"
-version = "0.2.1"
+version = "0.2.2"
 
 [dependencies.batch-mode-token-expansion-traits]
 path = "../batch-mode-token-expansion-traits"
-version = "0.1.1"
+version = "0.1.2"
 
 [package]
 authors = ["klebs tpk3.mx@gmail.com"]
@@ -24,4 +24,4 @@ license-file = "OGPv1"
 name = "batch-mode-token-expansion-step"
 readme = "README.md"
 repository = "https://github.com/klebs6/klebs-general"
-version = "0.1.1"
+version = "0.1.2"

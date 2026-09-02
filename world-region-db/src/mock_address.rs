@@ -8,7 +8,7 @@ pub fn make_mock_address(
     street: &str
 ) -> WorldAddress {
     // We'll pick a region that can be validated. 
-    let region: WorldRegion = USRegion::UnitedState(UnitedState::Maryland).into();
+    let region: WorldRegion = USRegion::UnitedState(UnitedState::Florida).into();
     WorldAddressBuilder::default()
         .region(region)
         .postal_code(PostalCode::new(Country::USA, postcode).unwrap())
@@ -30,5 +30,5 @@ pub fn make_address_record_with_street(street_name: &str) -> AddressRecord {
 /// Constructs a typical region object for your tests. 
 /// In a real environment, pick the region that best matches your system (MD, VA, DC, etc.).
 pub fn example_region() -> WorldRegion {
-    USRegion::UnitedState(UnitedState::Maryland).into()
+    USRegion::UnitedState(UnitedState::Florida).into()
 }

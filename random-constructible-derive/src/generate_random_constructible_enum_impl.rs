@@ -1,4 +1,4 @@
-// ---------------- [ File: src/generate_random_constructible_enum_impl.rs ]
+// ---------------- [ File: random-constructible-derive/src/generate_random_constructible_enum_impl.rs ]
 crate::ix!();
 
 /// Generates the implementation block for the `RandConstructEnum` trait.
@@ -14,55 +14,75 @@ crate::ix!();
 ///
 /// A `TokenStream2` representing the implementation block.
 pub fn generate_random_constructible_enum_impl(
-    with_env:             bool,
-    name:                 &Ident,
-    variant_constructors: &[TokenStream2],
-    match_arms:           &[TokenStream2],
-    probs:                &[f64],
-
+    with_env:                       bool,
+    name:                           &Ident,
+    variant_constructors:           &[TokenStream2],
+    variant_constructors_with_rng:  &[TokenStream2],
+    match_arms:                     &[TokenStream2],
+    probs:                          &[f64],
 ) -> TokenStream2 {
+    // ── helper: fresh value every call ──────────────────────────────
+    let rng_match_arms = variant_constructors_with_rng
+        .iter()
+        .enumerate()
+        .map(|(idx, ctor)| {
+            quote! { #idx => { #ctor } }
+        });
 
-    let rand_construct_enum_impl = quote! {
+    // ── full impl block ─────────────────────────────────────────────
+    let core_impl = quote! {
         impl RandConstructEnum for #name {
+            /* all_variants & default_weight remain unchanged */
             fn all_variants() -> Vec<Self> {
-                vec![
-                    #(#variant_constructors),*
-                ]
+                vec![ #( #variant_constructors ),* ]
             }
 
             fn default_weight(&self) -> f64 {
                 match self {
-                    #(#match_arms)*
+                    #( #match_arms )*
                 }
             }
 
-            fn create_default_probability_map() -> std::sync::Arc<std::collections::HashMap<#name, f64>> {
+            fn create_default_probability_map(
+            ) -> std::sync::Arc<std::collections::HashMap<#name, f64>> {
                 use once_cell::sync::Lazy;
                 use std::sync::Arc;
                 use std::collections::HashMap;
-                static PROBABILITY_MAP: Lazy<Arc<HashMap<#name, f64>>> = Lazy::new(|| {
-                    let mut map = HashMap::new();
-                    #(
-                        map.insert(#variant_constructors, #probs);
-                    )*
-                    Arc::new(map)
-                });
 
-                Arc::clone(&PROBABILITY_MAP)
+                static MAP: Lazy<Arc<HashMap<#name, f64>>> = Lazy::new(|| {
+                    let mut m = HashMap::new();
+                    #( m.insert(#variant_constructors, #probs); )*
+                    Arc::new(m)
+                });
+                Arc::clone(&MAP)
+            }
+
+            /* ── FIX: *fresh* construction each time ─────────────── */
+            fn random_variant() -> Self {
+                let mut rng = rand::thread_rng();
+                <Self as RandConstructEnum>::random_enum_value_with_rng(&mut rng)
+            }
+
+            fn random_enum_value_with_rng<RNG: rand::Rng + ?Sized>(rng: &mut RNG) -> Self {
+                use rand::distributions::Distribution;
+                const WEIGHTS: &[f64] = &[ #( #probs ),* ];
+                let dist = rand::distributions::WeightedIndex::new(WEIGHTS).unwrap();
+                match dist.sample(rng) {
+                    #( #rng_match_arms, )*
+                    _ => unreachable!("WeightedIndex produced an out‑of‑range index"),
+                }
             }
         }
     };
 
-    match with_env {
-        true => quote!{
+    if with_env {
+        quote! {
             impl RandConstructEnumWithEnv for #name {}
-            #rand_construct_enum_impl
-        },
-        false => quote!{
-            #rand_construct_enum_impl
+            #core_impl
         }
+    } else {
+        quote! { #core_impl }
     }
-
 }
 
 #[cfg(test)]

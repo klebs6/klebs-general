@@ -25,10 +25,11 @@ pub(crate) use async_openai::{
         BatchEndpoint,
         BatchRequestInput,
         BatchRequestInputMethod,
-        ChatCompletionRequestUserMessageContentPart,
-        ChatCompletionRequestMessageContentPartText,
+        ChatCompletionRequestMessage,
         ChatCompletionRequestMessageContentPartImage,
+        ChatCompletionRequestMessageContentPartText,
         ChatCompletionRequestUserMessageContent,
+        ChatCompletionRequestUserMessageContentPart,
         Image,
         ImageDetail,
         ImageUrl,
@@ -37,4 +38,6 @@ pub(crate) use async_openai::{
 pub(crate) use std::slice::Chunks;
 pub(crate) use std::iter::Enumerate;
 pub(crate) use getset::*;
+pub(crate) use derive_builder::*;
 #[cfg(test)] pub(crate) use traced_test::*;
+ 

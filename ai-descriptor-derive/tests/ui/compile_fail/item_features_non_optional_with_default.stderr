@@ -1,6 +1,6 @@
 error: The `feature_if_none` attribute is only applicable to Option types
-  --> tests/ui/compile_fail/item_features_non_optional_with_default.rs:9:5
+  --> tests/ui/compile_fail/item_features_non_optional_with_default.rs:10:5
    |
-9  | /     #[ai(feature_if_none = "This should not be used and should cause an error.")]
-10 | |     effect: PotionEffect,
+10 | /     #[ai(feature_if_none = "This should not be used and should cause an error.")]
+11 | |     effect: PotionEffect,
    | |________________________^

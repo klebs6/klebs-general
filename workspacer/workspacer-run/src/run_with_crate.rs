@@ -10,7 +10,7 @@ crate::ix!();
 /// 4) Optionally re-validates the crate afterward.
 ///
 /// We define it in full below:
-#[tracing::instrument(level="trace", skip(operation))]
+#[instrument(level="trace", skip(operation))]
 pub async fn run_with_crate<R, F>(
     crate_path: PathBuf,
     skip_git_check: bool,

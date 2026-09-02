@@ -9,7 +9,7 @@ crate::ix!();
 /// we allow the compiler to see that "for any lifetime `'a`",
 /// the closure returns a future that *only* needs `'a` to remain valid.
 /// This avoids the "`'1` must outlive `'2`" error when returning the pinned future.
-#[tracing::instrument(level = "trace", skip(operation))]
+#[instrument(level = "trace", skip(operation))]
 pub async fn run_with_workspace_and_crate_name<R, F>(
     user_supplied_path: Option<PathBuf>,
     skip_git_check: bool,

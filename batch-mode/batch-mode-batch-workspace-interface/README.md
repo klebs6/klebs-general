@@ -43,6 +43,7 @@ impl GetInputFilenameAtIndex for MyBatchWorkspace {
     }
 }
 
+#[async_trait]
 impl BatchWorkspaceInterface for MyBatchWorkspace {}
 ```
 

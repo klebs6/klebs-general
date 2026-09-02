@@ -1,3 +1,4 @@
+// ---------------- [ File: ai-descriptor-derive/tests/ui/compile_fail/item_features_unnamed_fields.rs ]
 #![allow(unused_imports)]
 use ai_descriptor_derive::*;
 use ai_descriptor_trait::*;
@@ -24,4 +25,3 @@ impl ItemFeature for Duration {
 }
 
 fn main() {}
-

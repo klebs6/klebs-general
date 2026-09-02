@@ -1,6 +1,7 @@
 // ---------------- [ File: batch-mode-batch-workspace/src/interface.rs ]
 crate::ix!();
 
+#[async_trait]
 impl BatchWorkspaceInterface for BatchWorkspace {}
 
 impl GetDoneDirectory for BatchWorkspace {
@@ -35,6 +36,12 @@ impl GetMetadataFilenameAtIndex for BatchWorkspace {
 
     fn metadata_filename(&self, batch_idx: &BatchIndex) -> PathBuf {
         self.workdir().join(format!("batch_metadata_{}.jsonl", batch_idx))
+    }
+}
+
+impl GetSeedManifestFilenameAtIndex for BatchWorkspace {
+    fn seed_manifest_filename(&self, idx: &BatchIndex) -> PathBuf {
+        self.workdir().join(format!("batch_seed_manifest_{}.jsonl", idx))
     }
 }
 

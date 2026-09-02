@@ -1,7 +1,7 @@
 crate::ix!();
 
 /// Error type for postal code operations.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(thiserror::Error,Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum PostalCodeConstructionError {
     /// The provided country is not supported by this library.
     UnsupportedCountry {
@@ -20,6 +20,33 @@ pub enum PostalCodeConstructionError {
         /// The country whose regex failed initialization.
         country: Country,
     },
+}
+
+impl fmt::Display for PostalCodeConstructionError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            PostalCodeConstructionError::UnsupportedCountry { attempted_country } => {
+                write!(f, "Unsupported country: {}", attempted_country)
+            }
+            PostalCodeConstructionError::InvalidFormat { attempted_code, attempted_country } => {
+                match attempted_country {
+                    Some(country) => write!(
+                        f,
+                        "Invalid postal code format '{}' for country '{}'",
+                        attempted_code, country
+                    ),
+                    None => write!(
+                        f,
+                        "Invalid postal code format '{}', country unspecified",
+                        attempted_code
+                    ),
+                }
+            }
+            PostalCodeConstructionError::RegexInitializationError { country } => {
+                write!(f, "Regex initialization error for country '{}'", country)
+            }
+        }
+    }
 }
 
 impl From<derive_builder::UninitializedFieldError> for PostalCodeConstructionError {

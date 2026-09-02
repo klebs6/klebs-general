@@ -10,3 +10,4 @@ x!{handle_finish_reason_length}
 x!{handle_successful_response}
 x!{handle_failed_json_repair}
 x!{save_failed_entries}
+x!{deserialize_json_with_optional_fields_wrapper}

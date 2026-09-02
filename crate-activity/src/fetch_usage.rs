@@ -8,7 +8,7 @@ pub async fn fetch_usage(ignore_cache: bool, user_agent: &str, config_dir: &Path
 
     if !ignore_cache {
         if let Some(cached) = load_cached_response(config_dir,crate_name, today).await {
-            println!("Loaded cached data for {}", crate_name);
+            info!("Loaded cached data for {}", crate_name);
             return Ok(Some(cached));
         }
     }

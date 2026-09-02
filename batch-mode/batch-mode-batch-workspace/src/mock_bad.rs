@@ -9,10 +9,34 @@ crate::ix!();
 #[derive(Clone, Debug)]
 pub struct BadWorkspace;
 
+#[async_trait]
+impl LoadSeedByCustomId for BadWorkspace {
+    async fn load_seed_by_custom_id(
+        &self,
+        custom_id: &CustomRequestId,
+    ) -> Result<Box<dyn Named + Send + Sync>, BatchWorkspaceError> {
+        // In tests we fabricate a dummy that satisfies Named
+        #[derive(Debug)]
+        struct Dummy(String);
+        impl Named for Dummy {
+            fn name(&self) -> std::borrow::Cow<'_, str> {
+                std::borrow::Cow::Borrowed(&self.0)
+            }
+        }
+        Ok(Box::new(Dummy(custom_id.as_str().to_owned())))
+    }
+}
+
 /// Provide minimal stubs. We remove “workspace_dir()” usage entirely.
 impl GetInputFilenameAtIndex for BadWorkspace {
     fn input_filename(&self, idx: &BatchIndex) -> PathBuf {
         PathBuf::from(format!("/this/does/not/exist/bad_input_{:?}.json", idx))
+    }
+}
+
+impl GetSeedManifestFilenameAtIndex for BadWorkspace {
+    fn seed_manifest_filename(&self, batch_idx: &BatchIndex) -> PathBuf {
+        PathBuf::from("/this/path/does/not/exist/any_seed_manifest.json")
     }
 }
 
@@ -75,6 +99,7 @@ impl GetTargetPath for BadWorkspace {
     }
 }
 
+#[async_trait]
 impl BatchWorkspaceInterface for BadWorkspace {}
 impl GetTargetDir for BadWorkspace {
     fn get_target_dir(&self) -> PathBuf {

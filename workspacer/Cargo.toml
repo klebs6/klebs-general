@@ -73,8 +73,8 @@ members  = [
 resolver = "3"
 
 [workspace.dependencies]
-text-size               = { version = "*", features = [ "serde" ] }
-Inflector               = "*"
+text-size               = { version = "1.1.1", features = [ "serde" ] }
+Inflector               = "0.11.4"
 async-channel           = "2.3.1"
 async-trait             = "0.1.83"
 async-try-from          = "0.2.0"
@@ -111,12 +111,13 @@ tempfile                = "3.17.0"
 tokio-stream            = "0.1.16"
 tokio-util              = "0.7.12"
 toml                    = "0.8.19"
-tracing                 = "0.1.40"
+tracing                 = "0.1.41"
 which                   = "7.0.2"
+async-openai            = "=0.29.0" #higher versions break
 
 [workspace.dependencies.batch-mode]
 path = "../batch-mode/batch-mode"
-version = "0.2.2"
+#version = "0.2.5"
 
 [workspace.dependencies.rocket]
 features = [ "json" ]
@@ -146,3 +147,4 @@ version = "0.3"
 [workspace.dependencies.uuid]
 features = [ "v4" ]
 version = "1.10.0"
+

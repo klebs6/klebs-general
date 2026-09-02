@@ -50,6 +50,24 @@ pub struct MockBatchWorkspace {
     ephemeral_done_dir: PathBuf,
 }
 
+#[async_trait]
+impl LoadSeedByCustomId for MockBatchWorkspace {
+    async fn load_seed_by_custom_id(
+        &self,
+        custom_id: &CustomRequestId,
+    ) -> Result<Box<dyn Named + Send + Sync>, BatchWorkspaceError> {
+        // In tests we fabricate a dummy that satisfies Named
+        #[derive(Debug)]
+        struct Dummy(String);
+        impl Named for Dummy {
+            fn name(&self) -> std::borrow::Cow<'_, str> {
+                std::borrow::Cow::Borrowed(&self.0)
+            }
+        }
+        Ok(Box::new(Dummy(custom_id.as_str().to_owned())))
+    }
+}
+
 impl Default for MockBatchWorkspace {
     fn default() -> Self {
         let temp = tempfile::tempdir().expect("Could not create temp directory for MockBatchWorkspace");
@@ -117,6 +135,17 @@ impl GetMetadataFilenameAtIndex for MockBatchWorkspace {
             .path()
             .join(format!("mock_metadata_{}.json", batch_idx));
         trace!("Returning ephemeral metadata filename for batch {:?}: {:?}", batch_idx, path);
+        path
+    }
+}
+
+impl GetSeedManifestFilenameAtIndex for MockBatchWorkspace {
+    fn seed_manifest_filename(&self, batch_idx: &BatchIndex) -> PathBuf {
+        let path = self
+            .ephemeral_dir
+            .path()
+            .join(format!("mock_seed_manifest_{}.json", batch_idx));
+        trace!("Returning ephemeral seed_manifest filename for batch {:?}: {:?}", batch_idx, path);
         path
     }
 }
@@ -205,6 +234,7 @@ impl GetTargetPath for MockBatchWorkspace {
     }
 }
 
+#[async_trait]
 impl BatchWorkspaceInterface for MockBatchWorkspace {}
 
 impl GetTargetDir for MockBatchWorkspace {

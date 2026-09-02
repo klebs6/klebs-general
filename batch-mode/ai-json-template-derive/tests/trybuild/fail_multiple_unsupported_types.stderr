@@ -1,5 +1,0 @@
-error: Unsupported field type for AiJsonTemplate: i64
-  --> tests/trybuild/fail_multiple_unsupported_types.rs:20:15
-   |
-20 |     quantity: i64,
-   |               ^^^

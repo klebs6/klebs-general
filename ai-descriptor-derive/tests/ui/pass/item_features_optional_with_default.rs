@@ -1,3 +1,4 @@
+// ---------------- [ File: ai-descriptor-derive/tests/ui/pass/item_features_optional_with_default.rs ]
 use ai_descriptor_derive::*;
 use ai_descriptor_trait::*;
 use std::borrow::Cow;
@@ -17,4 +18,3 @@ impl ItemFeature for ExampleStruct {
 }
 
 fn main() {}
-

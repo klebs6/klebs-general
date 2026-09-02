@@ -48,13 +48,13 @@ mod test_process_and_validate_addresses {
     fn test_all_addresses_valid_returns_ok_true() {
         // 1) Create DataAccess + DB in a temp dir
         let (data_access, _db_arc, _temp_dir) = create_data_access::<Database>();
-        let region = USRegion::UnitedState(UnitedState::Maryland).into();
+        let region = USRegion::UnitedState(UnitedState::Florida).into();
 
         // 2) Lock the DB and insert all needed sets
         {
             let mut db_guard = data_access.db().lock().unwrap();
 
-            // (a) city-to-postal: Z2C:MD:11111 => {mockcity}, Z2C:MD:22222 => {mockcity2}
+            // (a) city-to-postal: Z2C:FL:11111 => {mockcity}, Z2C:FL:22222 => {mockcity2}
             let mut city_set1 = BTreeSet::new();
             city_set1.insert(CityName::new("mockcity").unwrap());
             db_guard.put(
@@ -69,7 +69,7 @@ mod test_process_and_validate_addresses {
                 compress_set_to_cbor(&city_set2),
             ).unwrap();
 
-            // (b) postal-to-street: S:MD:11111 => {mockstreet}, S:MD:22222 => {mockstreet2}
+            // (b) postal-to-street: S:FL:11111 => {mockstreet}, S:FL:22222 => {mockstreet2}
             let mut st_set1 = BTreeSet::new();
             st_set1.insert(StreetName::new("mockstreet").unwrap());
             db_guard.put(
@@ -84,7 +84,7 @@ mod test_process_and_validate_addresses {
                 compress_set_to_cbor(&st_set2),
             ).unwrap();
 
-            // (c) city-to-street: C2S:MD:mockcity => {mockstreet}, C2S:MD:mockcity2 => {mockstreet2}
+            // (c) city-to-street: C2S:FL:mockcity => {mockstreet}, C2S:FL:mockcity2 => {mockstreet2}
             let mut city2street1 = BTreeSet::new();
             city2street1.insert(StreetName::new("mockstreet").unwrap());
             db_guard.put(

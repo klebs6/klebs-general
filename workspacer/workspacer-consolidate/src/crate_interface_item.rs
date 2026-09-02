@@ -636,7 +636,7 @@ r#"{
     // (the user code references `MockItem` implementing `GenerateSignature`).
     // Here we add a trivial RehydrateFromSignature impl to enable round-trip.
     impl RehydrateFromSignature for MockItem {
-        #[tracing::instrument(level = "trace", skip(signature_source))]
+        #[instrument(level = "trace", skip(signature_source))]
         fn rehydrate_from_signature(signature_source: &str) -> Option<Self> {
             trace!("Attempting rehydration from signature: {}", signature_source);
             // Extremely naive approach: if it contains "fn ", we do so:

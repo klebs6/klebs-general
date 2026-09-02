@@ -1,57 +1,78 @@
+[[bin]]
+name = "workspacer-readme-writer"
+path = "src/bin/readme_writer.rs"
+
 [dependencies.derive_builder]
 workspace = true
+
 [dependencies.serde]
 workspace = true
+
 [dependencies.serde_derive]
 workspace = true
+
 [dependencies.serde_json]
 workspace = true
 
-[dependencies.tracing]
-workspace = true
 [dependencies.structopt]
 workspace = true
+
 [dependencies.sync-run-async]
 path = "../sync-run-async"
-version = "0.1.1"
+version = "0.1.2"
+
+[dependencies.tracing]
+workspace = true
+
 [dependencies.workspacer-3p]
 path = "../workspacer-3p"
-version = "0.5.1"
+version = "0.5.2"
+
 [dependencies.workspacer-config]
 path = "../workspacer-config"
-version = "0.1.1"
+version = "0.1.2"
+
 [dependencies.workspacer-consolidate]
 path = "../workspacer-consolidate"
-version = "0.5.2"
+version = "0.5.3"
+
 [dependencies.workspacer-crate]
 path = "../workspacer-crate"
-version = "0.5.1"
+version = "0.5.2"
+
 [dependencies.workspacer-crate-interface]
 path = "../workspacer-crate-interface"
-version = "0.1.1"
+version = "0.1.2"
+
 [dependencies.workspacer-errors]
 path = "../workspacer-errors"
-version = "0.1.1"
+version = "0.1.2"
+
 [dependencies.workspacer-prune-bad-category-slugs]
 path = "../workspacer-prune-bad-category-slugs"
-version = "0.1.0"
+version = "0.1.1"
+
 [dependencies.workspacer-toml-interface]
 path = "../workspacer-toml-interface"
-version = "0.1.2"
+version = "0.1.3"
+
 [dependencies.workspacer-workspace]
 path = "../workspacer-workspace"
-version = "0.1.1"
+version = "0.1.2"
+
 [dev-dependencies.workspacer-mock]
 path = "../workspacer-mock"
-version = "0.5.1"
+version = "0.5.2"
+
 [package]
-categories = [ "development-tools", "rust-patterns", "no-std" ]
+categories = [
+    "development-tools",
+    "rust-patterns",
+    "no-std",
+]
 description = "Automates the generation of README.md and Cargo.toml fields using AI to enhance documentation quality in Rust projects."
 edition = "2024"
 keywords = []
 license = "MIT"
 name = "workspacer-readme-writer"
-version = "0.1.2"
-[[bin]]
-name = "workspacer-readme-writer"
-path = "src/bin/readme_writer.rs"
+version = "0.1.4"

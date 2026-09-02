@@ -1,0 +1,878 @@
+
+gahh this is not correct!  what about these messages?
+
+```
+i want these names to be slightly clearer as to what they actually mean. we might instead want to decompose the problem into a set of flags.
+
+this is actually kindof tricky.
+
+however, there is one pattern we want to be sure to get right.
+
+main crate: either we have the full crate or we select one or more of these filters {subtract comments, subtract function bodies, subtract tests, subtract test bodies}
+
+
+probably something like this:
+--main-crate-no-comments
+--main-crate-no-fn-bodies
+--main-crate-no-tests
+--main-crate-no-test-bodies
+
+all of these are orthogonal and we should be able to specify any combination.
+
+dep crates: either we bring them in full, or subtract via these filters  {subtract comments, subtract function bodies, subtract tests, subtract test bodies}
+
+--dep-crates-no-comments
+--dep-crates-no-fn-bodies
+--dep-crates-no-tests
+--dep-crates-no-test-bodies
+
+we might also want to do this same filtering *per layer* but we dont want the syntax for per-layer filtering to be necessarily the default.
+
+i think the most likely sane thing we're going to want to do here is to distinguish the main crate from the inner layer and distinguish the inner layer from all of those layers beyond. any more than that is probably unnecessary complexity, though maybe there is a way to keep it flexible.
+
+for example: {
+- main crate: show full code with both comments and tests. show impls.
+- layer 0: show function bodies, omit test bodies, omit all comments
+- beyond layer zero: omit fn bodies, omit all tests, omit all comments
+}
+
+so we could do:
+--main-crate-no-comments
+--main-crate-no-fn-bodies
+--main-crate-no-tests
+--main-crate-no-test-bodies
+--dep-layer0-no-comments
+--dep-layer0-no-fn-bodies
+--dep-layer0-no-tests
+--dep-layer0-no-test-bodies
+--dep-layer1-no-comments
+--dep-layer1-no-fn-bodies
+--dep-layer1-no-tests
+--dep-layer1-no-test-bodies
+--dep-layer2-no-comments
+--dep-layer2-no-fn-bodies
+--dep-layer2-no-tests
+--dep-layer2-no-test-bodies
+
+
+i wonder whether baking the layer numbers into the flags is the way to go or if we could do something like this (from the makefile):
+
+--dep-layer-override-no-comments  $(LAYER_NUMBER)
+--dep-layer-override-no-fn-bodies $(LAYER_NUMBER)
+--dep-layer-override-no-tests $(LAYER_NUMBER)
+--dep-layer-override-no-test-bodies $(LAYER_NUMBER)
+
+keeping:
+--dep-crates-no-comments
+--dep-crates-with-fn-bodies
+--dep-crates-no-tests
+--dep-crates-no-test-bodies
+(for example)
+
+therefore, one possible design is that we could specify flags specifically per layer. this is a form of override over the default behavior.
+
+note also we would like to allow pruning the dep tree via specific names.
+
+for example: `--omit-deps dep1,dep2,dep3`
+or `--omit-dep-subtrees subtree1-top,subtree2-top,etc`
+
+what do you think?
+
+let's see the full flag specification which allows this as well as anything else we want to do here
+```
+
+
+to which you replied:
+
+```
+
+You’re thinking about this exactly the right way. This *is* tricky, and decomposing it into **orthogonal, subtractive filters** is the correct move. Let me reflect back what you’ve said, then propose a **clean, extensible flag contract** that:
+
+* stays explicit and readable
+* avoids flag explosion in common cases
+* supports layer-based overrides
+* supports subtree pruning
+* does **not** regress current behavior
+* does **not** require consolidator changes
+
+I’ll keep this at the **specification level only**, no code.
+
+---
+
+## 1. First: confirm the core mental model (we agree)
+
+You’ve converged on a very solid abstraction:
+
+### Every crate is rendered under a **visibility profile** consisting of four independent dimensions:
+
+1. comments (docs)
+2. function bodies
+3. tests
+4. test bodies
+
+Each dimension can be **subtracted**, never “added magically”.
+
+This is important:
+The flags should say what to *remove*, not what to *include*.
+
+That immediately yields clarity and composability.
+
+---
+
+## 2. Crate roles: the minimum set that matters
+
+You identified the correct boundary:
+
+> main crate
+> inner layer (layer 0 deps)
+> outer layers (layer ≥1 deps)
+
+That’s the sweet spot. Anything more granular than that *by default* would be complexity without payoff.
+
+So we define **three roles**, not N arbitrary layers by default:
+
+* **main**
+* **dep-direct** (layer 0)
+* **dep-transitive** (layer ≥1)
+
+Layer *numbers* still exist — but they’re used for **overrides**, not the primary interface.
+
+This keeps the common case simple.
+
+---
+
+## 3. Base flags: role-scoped subtractive filters
+
+### Main crate (orthogonal, explicit)
+
+These are exactly right and should exist as-is:
+
+```
+--main-no-comments
+--main-no-fn-bodies
+--main-no-tests
+--main-no-test-bodies
+```
+
+Properties:
+
+* fully orthogonal
+* order-independent
+* no ambiguity
+* no interaction surprises
+
+Default (no flags): **unchanged current behavior**
+
+---
+
+### Dependency crates (default behavior)
+
+These apply to *all dependency crates unless overridden*:
+
+```
+--deps-no-comments
+--deps-no-fn-bodies
+--deps-no-tests
+--deps-no-test-bodies
+```
+
+This already gets you very far:
+
+Examples:
+
+* “interfaces only deps”
+  → `--deps-no-comments --deps-no-fn-bodies --deps-no-tests`
+* “deps with fn signatures + impl headers, no bodies”
+  → `--deps-no-fn-bodies`
+
+This matches how humans think.
+
+---
+
+## 4. Role refinement: direct vs transitive deps
+
+Now we introduce the **one extra axis that matters**.
+
+### Direct dependency overrides (layer 0)
+
+```
+--dep-direct-no-comments
+--dep-direct-no-fn-bodies
+--dep-direct-no-tests
+--dep-direct-no-test-bodies
+```
+
+Semantics:
+
+* Apply only to layer-0 deps
+* Override `--deps-*` defaults
+
+### Transitive dependency overrides (layer ≥1)
+
+```
+--dep-transitive-no-comments
+--dep-transitive-no-fn-bodies
+--dep-transitive-no-tests
+--dep-transitive-no-test-bodies
+```
+
+This gives you your example cleanly:
+
+> main: full
+> layer 0: fn bodies yes, no test bodies, no comments
+> beyond: interfaces only
+
+Command:
+
+```
+--dep-direct-no-comments
+--dep-direct-no-test-bodies
+--dep-transitive-no-comments
+--dep-transitive-no-fn-bodies
+--dep-transitive-no-tests
+```
+
+No layer numbers needed. No confusion.
+
+---
+
+## 5. Layer-number overrides (advanced, optional)
+
+You were right to be cautious here. Baking layer numbers into flag *names* does not scale well.
+
+The better model is **override directives**.
+
+### Proposal: repeatable override flags
+
+```
+--dep-layer-no-comments <N>
+--dep-layer-no-fn-bodies <N>
+--dep-layer-no-tests <N>
+--dep-layer-no-test-bodies <N>
+```
+
+Properties:
+
+* repeatable
+* explicit
+* sparse (you only use them when you need them)
+* do not clutter the common path
+
+Example:
+
+```
+--deps-no-fn-bodies
+--dep-layer-no-fn-bodies 0
+```
+
+Or:
+
+```
+--deps-no-comments
+--dep-layer-no-comments 2
+```
+
+These act as **overrides on top of role defaults**.
+
+Precedence (important, predictable):
+
+```
+layer override > role override > global dep default > main default
+```
+
+---
+
+## 6. Subtree pruning (this is cleanly orthogonal)
+
+Two distinct but related needs:
+
+### A. Omit specific crates entirely
+
+```
+--omit-dep <crate-name>
+```
+
+Repeatable.
+
+Semantics:
+
+* Do not emit this crate
+* Do not emit its dependency subtree
+* Still allow other paths to resolve types by name
+
+### B. Omit entire subtrees explicitly
+
+This is semantically identical, but clearer for intent:
+
+```
+--omit-dep-subtree <crate-name>
+```
+
+In practice, you might implement both as the same thing internally, but having both names is *good UX*.
+
+---
+
+## 7. Layer pruning (coarse but powerful)
+
+This is complementary to subtree pruning:
+
+```
+--max-dep-layer <N>
+--min-dep-layer <N>
+--only-dep-layer <N>
+```
+
+Semantics:
+
+* Applied *after* dependency resolution
+* Acts like an implicit subtree prune
+* Plays very well with your layered architecture
+
+Example:
+
+```
+--only-dep-layer 0
+```
+
+---
+
+## 8. Backward compatibility (critical)
+
+All existing flags remain valid and unchanged.
+
+Notably:
+
+* `--for-ai`
+* `--for-ai-no-tests`
+* `--full`
+
+### How they fit now (important)
+
+They become **presets**, not special logic.
+
+For example:
+
+* `--for-ai-no-tests` expands to:
+
+  ```
+  --deps-no-tests
+  --deps-no-test-bodies
+  --main-no-comments
+  ```
+
+  (or whatever the *current* semantics are)
+
+This preserves behavior while letting power users escape the preset.
+
+---
+
+## 9. Resulting mental model (this is the win)
+
+The user now thinks in terms of:
+
+1. **Which crates are visible?**
+
+   * omit by name
+   * omit by subtree
+   * omit by layer
+
+2. **For visible crates, what do I subtract?**
+
+   * main
+   * direct deps
+   * transitive deps
+   * specific layers (rare)
+
+This exactly mirrors how *you* think about the problem.
+
+---
+
+## 10. Summary: the full flag surface (cleaned up)
+
+### Main crate
+
+```
+--main-no-comments
+--main-no-fn-bodies
+--main-no-tests
+--main-no-test-bodies
+```
+
+### Dependency defaults
+
+```
+--deps-no-comments
+--deps-no-fn-bodies
+--deps-no-tests
+--deps-no-test-bodies
+```
+
+### Direct deps (layer 0)
+
+```
+--dep-direct-no-comments
+--dep-direct-no-fn-bodies
+--dep-direct-no-tests
+--dep-direct-no-test-bodies
+```
+
+### Transitive deps (layer ≥1)
+
+```
+--dep-transitive-no-comments
+--dep-transitive-no-fn-bodies
+--dep-transitive-no-tests
+--dep-transitive-no-test-bodies
+```
+
+### Layer-specific overrides (advanced)
+
+```
+--dep-layer-no-comments <N>
+--dep-layer-no-fn-bodies <N>
+--dep-layer-no-tests <N>
+--dep-layer-no-test-bodies <N>
+```
+
+### Pruning
+
+```
+--omit-dep <crate>
+--omit-dep-subtree <crate>
+--max-dep-layer <N>
+--min-dep-layer <N>
+--only-dep-layer <N>
+```
+
+### Presets (existing)
+
+```
+--for-ai
+--for-ai-no-tests
+--full
+```
+
+---
+
+## Final assessment
+
+This design is:
+
+* expressive without being clever
+* explicit without being verbose
+* layered the same way your codebase is layered
+* future-proof without overengineering
+* safe to implement *purely in invocation logic*
+
+I think this is a **very strong contract**.
+
+If you want, next we can:
+
+* reduce this further into *exactly which flags must exist now vs later*, or
+* define the **precedence and conflict rules formally**, or
+* walk a concrete example end-to-end and ensure nothing feels awkward.
+```
+
+to which i replied:
+
+```
+i like slightly more verbose flags to increase clarity. i think possibly we should support the full set of flags for any of these categories. remember the full set of flags was this:
+
+:!ws show crate-tree --help
+[No write since last change]
+ws-show-crate-tree 0.1.3
+Show info for a single crate plus its internal deps, concatenating all consolidated interfaces into one final result
+
+USAGE:
+    ws show crate-tree [FLAGS] [OPTIONS]
+
+FLAGS:
+        --for-ai
+        --for-ai-no-tests
+        --full
+        --group-by-file              Group items by the file in which they were found
+    -h, --help                       Prints help information
+        --include-docs               Include doc items
+        --include-fn-bodies          Include function bodies
+        --include-private            Include private items
+        --include-test-bodies        Include test function bodies
+        --include-tests              Include test items
+        --just-adts                  Show only ADTs (enums + structs)
+        --just-aliases               Show only type aliases
+        --just-enums                 Show only enums
+        --just-fns                   Show only free functions (skips impls, structs, etc.)
+        --just-impls                 Show only impl blocks
+        --just-macros                Show only macros
+        --just-structs               Show only structs
+        --just-tests                 Show only test items (skips non-test)
+        --just-traits                Show only traits
+        --merge-crates               For `crate-tree` subcommand, do NOT merge all crates into one interface (the new
+                                     default). If false, merges them all
+        --show-items-with-no-data    If set, we show <no-data-for-crate> or <no-data-for-file> or <no-data> even if a
+                                     crate or file has no data
+    -V, --version                    Prints version information
+
+OPTIONS:
+        --path <path>    Path to the crate (or workspace root) you want to show
+
+we're almost there but we should be more verbose and fully specified.
+
+each flag should feel semantically correct, ie "transitive-deps" is more semantically correct than "dep-transitive"
+
+we can be verbose to ensure clarity.
+
+i see the benefit of adding a --max-dep-layer flag but --min-dep-layer and --only-dep-layer do not seem useful. i dont see a reason why we would want to show a crate and skip two layers of deps showing layers beyond, for example. let's keep it clean and simple.
+
+--max-dep-layer is useful, though. because sometimes we dont need to go out so far
+```
+
+to which you replied:
+
+```
+This is converging very cleanly. I agree with your instincts here: **clarity > terseness**, and the flag surface should read like a precise English contract.
+
+Below is a **fully specified, verbose, semantically clean flag design** that:
+
+* supports the *full existing filter set*,
+* cleanly distinguishes **main crate vs direct deps vs transitive deps**,
+* supports **layer cut-off** without unnecessary complexity,
+* supports **subtree pruning by name**,
+* preserves **all current behavior by default**,
+* and can be implemented entirely in *invocation logic*.
+
+I’ll structure this as a *formal CLI contract*, not an implementation sketch.
+
+---
+
+## 1. Fundamental model (explicit, user-facing)
+
+For `ws show crate-tree`, the output is determined by:
+
+1. **Which crates are included**
+2. **How deep dependency traversal goes**
+3. **How each category of crate is filtered**
+4. **How items inside each crate are filtered**
+
+Everything below maps cleanly onto those four axes.
+
+---
+
+## 2. Crate categories (explicit terminology)
+
+We define three **crate categories**, with names reflected directly in flags:
+
+* **main-crate**
+  The crate at `--path`
+
+* **direct-dependencies**
+  Crates at dependency layer 0
+
+* **transitive-dependencies**
+  Crates at dependency layer ≥ 1
+
+These names are long on purpose. They read correctly in help text and logs.
+
+---
+
+## 3. Per-category subtractive filters (full, orthogonal set)
+
+You correctly identified that we should support the **entire existing filter set** for each category. That’s the right call.
+
+### 3.1 Main crate filters
+
+```
+--main-crate-no-doc-comments
+--main-crate-no-function-bodies
+--main-crate-no-tests
+--main-crate-no-test-bodies
+--main-crate-no-private-items
+```
+
+Notes:
+
+* These *subtract* from the default behavior.
+* They compose freely.
+* Default = current behavior (unchanged).
+
+---
+
+### 3.2 Direct dependency filters (layer 0)
+
+```
+--direct-dependencies-no-doc-comments
+--direct-dependencies-no-function-bodies
+--direct-dependencies-no-tests
+--direct-dependencies-no-test-bodies
+--direct-dependencies-no-private-items
+```
+
+Semantics:
+
+* Apply **only** to layer-0 dependencies.
+* Override any global dependency defaults (see below).
+
+---
+
+### 3.3 Transitive dependency filters (layer ≥ 1)
+
+```
+--transitive-dependencies-no-doc-comments
+--transitive-dependencies-no-function-bodies
+--transitive-dependencies-no-tests
+--transitive-dependencies-no-test-bodies
+--transitive-dependencies-no-private-items
+```
+
+This gives you a very natural way to say:
+
+> “I want the inner ring richer than the outer rings.”
+
+---
+
+### 3.4 Optional: global dependency defaults (convenience)
+
+These apply to **all dependencies**, unless overridden by the more specific flags above:
+
+```
+--all-dependencies-no-doc-comments
+--all-dependencies-no-function-bodies
+--all-dependencies-no-tests
+--all-dependencies-no-test-bodies
+--all-dependencies-no-private-items
+```
+
+These are not strictly necessary, but they dramatically reduce verbosity in common cases.
+
+Precedence (clear and predictable):
+
+```
+main-crate flags
+> direct-dependencies flags
+> transitive-dependencies flags
+> all-dependencies flags
+> default behavior
+```
+
+---
+
+## 4. Dependency traversal depth (kept clean)
+
+I agree with you completely: **only one depth control is worth having**.
+
+### 4.1 Maximum dependency layer
+
+```
+--max-dependency-layer <N>
+```
+
+Semantics:
+
+* `0` → show only main crate
+* `1` → main + direct dependencies
+* `2` → main + direct + one transitive layer
+* etc.
+
+No `min`, no `only`. Clean, intuitive, sufficient.
+
+---
+
+## 5. Dependency pruning by name (subtrees)
+
+Two flags, both explicit and readable:
+
+### 5.1 Omit specific dependency crates entirely
+
+```
+--omit-dependency <crate-name>
+```
+
+* Repeatable
+* Removes that crate **and its entire dependency subtree** from output
+* Does *not* affect resolution of other branches
+
+### 5.2 Omit entire dependency subtrees by root
+
+```
+--omit-dependency-subtree <crate-name>
+```
+
+Semantics are the same as `--omit-dependency`, but the name communicates intent more clearly.
+
+(You may decide to keep only one internally; having both is fine UX.)
+
+---
+
+## 6. Layer-aware overrides (advanced, optional)
+
+You said this should *not* be the default interface, but should be available. I agree.
+
+### 6.1 Layer-specific overrides (repeatable)
+
+```
+--dependency-layer-no-doc-comments <layer>
+--dependency-layer-no-function-bodies <layer>
+--dependency-layer-no-tests <layer>
+--dependency-layer-no-test-bodies <layer>
+--dependency-layer-no-private-items <layer>
+```
+
+Semantics:
+
+* Apply only to that exact dependency layer
+* Override all broader dependency rules
+
+This lets you express very precise policies **without baking layer numbers into flag names**.
+
+---
+
+## 7. Presets (existing flags remain, now well-defined)
+
+The existing flags remain **unchanged**, but are now *documented as presets*.
+
+### 7.1 `--full`
+
+Equivalent to:
+
+```
+(show everything; no subtractive filters)
+```
+
+### 7.2 `--for-ai`
+
+Defined explicitly as a preset, for example:
+
+```
+--main-crate-no-doc-comments
+--all-dependencies-no-doc-comments
+```
+
+(Exact mapping = whatever current behavior is; the key is that it’s defined.)
+
+### 7.3 `--for-ai-no-tests`
+
+Example mapping:
+
+```
+--main-crate-no-doc-comments
+--main-crate-no-tests
+--main-crate-no-test-bodies
+--all-dependencies-no-doc-comments
+--all-dependencies-no-tests
+--all-dependencies-no-test-bodies
+```
+
+Users can still override any part of this with explicit flags.
+
+---
+
+## 8. Example invocations (sanity check)
+
+### Example 1: Your motivating case
+
+> main full
+> direct deps: fn bodies yes, no comments, no test bodies
+> transitive deps: interfaces only
+
+```
+ws show crate-tree \
+  --path icentral-color-map \
+  --direct-dependencies-no-doc-comments \
+  --direct-dependencies-no-test-bodies \
+  --transitive-dependencies-no-doc-comments \
+  --transitive-dependencies-no-function-bodies \
+  --transitive-dependencies-no-tests
+```
+
+This reads *exactly* like what it does.
+
+---
+
+### Example 2: AI-friendly, shallow, pruned
+
+```
+ws show crate-tree \
+  --path icentral-brandes \
+  --max-dependency-layer 1 \
+  --all-dependencies-no-doc-comments \
+  --all-dependencies-no-tests \
+  --all-dependencies-no-function-bodies \
+  --omit-dependency icentral-nodeid
+```
+
+---
+
+## 9. Why this specification is solid
+
+* Every flag name is **self-describing**
+* No boolean inversion confusion
+* No magical modes
+* No overfitting to layers, but layers are still usable
+* Maps perfectly to your existing architecture
+* Zero consolidator changes required
+* Easy to document and reason about six months from now
+
+This is a **clean, professional CLI contract**.
+
+If you want, the next logical step would be:
+
+* to formally write the **resolution algorithm** (“given flags → effective options per crate”), or
+* to decide which subset is *Phase 1* vs *Phase 2* so implementation can proceed incrementally without destabilizing `workspacer`.
+
+Either way, the conceptual design is now in very good shape.
+
+```
+
+to which i replied:
+
+```
+brilliant. we are converging on the right pattern here.
+
+a couple notes:
+
+--omit-dependency <crate-name> must be able to be specified multiple times. same with --omit-dependency-subtree
+
+we can write "deps" instead of "dependencies"
+
+i think we should leave --for-ai and --for-ai-no-tests alone.
+we can *add* presets for the following combination:
+--for-ai-with-sane-rings
+{
+--main-crate-no-doc-comments, --main-crate-no-tests, 
+--direct-deps-no-doc-comments, --direct-deps-no-tests, --direct-deps-no-private-items
+--transitive-deps-no-doc-comments, --transitive-deps-no-function-bodies, --transitive-deps-no-tests, --transitive-deps-no-private-items
+}
+
+we probably want a variation of this which allows the main crate to have tests. we probably want another variation of this which allows direct deps to have tests but no test bodies. and anotehr variation which allows the main, direct, or transitive deps to have doc comments.
+
+so maybe what we actually want is the ability to override preset behaviors with a specific flag:
+
+ie, we could do `--for-ai-with-sane-rings --direct-deps-include-tests`
+or `--for-ai-with-sane-rings --main-crate-include-tests`
+or `--for-ai-with-sane-rings --main-crate-with-doc-comments`
+etc.
+
+or --for-ai-with-sane-rings --max-dep-layer 3 --omit-dep-subtree <subtree-top-name>
+
+i think another preset we want is:
+--for-ai-with-first-layer-deps-only
+{
+--main-crate-no-doc-comments, --main-crate-no-tests, 
+--direct-deps-no-doc-comments, --direct-deps-no-tests, --direct-deps-no-private-items,
+--direct-deps-no-fn-bodies
+--max-dep-layer 0
+}
+and:
+
+--for-ai-with-dep-interfaces-only
+{
+--main-crate-no-doc-comments, --main-crate-no-tests, 
+--all-deps-no-doc-comments, --all-deps-no-tests, --all-deps-no-private-items,
+--all-deps-no-fn-bodies
+}
+
+there might be a few other useful presets.
+
+what do you think? how do we stand?
+```
+
+

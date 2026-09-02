@@ -83,6 +83,13 @@ pub trait WaitForBatchCompletion: Send + Sync {
     ) -> Result<Batch, Self::Error>;
 }
 
+#[async_trait]
+pub trait PreflightCheckOpenAIApiKey: Send + Sync {
+    type Error;
+
+    async fn preflight_check_openai_api_key(&self) -> Result<(), Self::Error>;
+}
+
 /*
    =========================================================
    Aggregator trait referencing ONLY the object-safe methods
@@ -97,6 +104,7 @@ pub trait WaitForBatchCompletion: Send + Sync {
 pub trait LanguageModelClientInterface<E: Debug>:
     RetrieveBatchById<Error = E>
     + GetBatchFileContent<Error = E>
+    + PreflightCheckOpenAIApiKey<Error = E>
     + UploadBatchFileCore<Error = E>
     + CreateBatch<Error = E>
     + WaitForBatchCompletion<Error = E>

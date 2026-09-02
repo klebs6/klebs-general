@@ -1,14 +1,17 @@
 // ---------------- [ File: batch-mode-batch-workspace-interface/src/workspace_interface.rs ]
 crate::ix!();
 
+#[async_trait]
 pub trait BatchWorkspaceInterface
 : GetInputFilenameAtIndex
++ LoadSeedByCustomId
 + GetTargetDir
 + GetTargetDirectoryFiles
 + FindSimilarTargetPath
 + GetOutputFilenameAtIndex
 + GetErrorFilenameAtIndex
 + GetMetadataFilenameAtIndex
++ GetSeedManifestFilenameAtIndex
 + GetDoneDirectory
 + GetFailedJsonRepairsDir
 + GetFailedItemsDir
@@ -20,12 +23,23 @@ pub trait BatchWorkspaceInterface
 + GetTargetPath<Item = Arc<dyn GetTargetPathForAIExpansion + Send + Sync + 'static>>
 {}
 
+#[async_trait]
+pub trait LoadSeedByCustomId {
+    /// Return the original seed whose request carried `custom_id`.
+    async fn load_seed_by_custom_id(
+        &self,
+        custom_id: &CustomRequestId,
+    ) -> Result<Box<dyn Named + Send + Sync>, BatchWorkspaceError>;
+}
+
 pub trait GetTargetDir {
+
     fn get_target_dir(&self) -> PathBuf;
 }
 
 //--------------------------------------------------
 pub trait GetTargetDirectoryFiles {
+
     fn get_target_directory_files(&self) -> Vec<PathBuf>;
 }
 
@@ -43,6 +57,7 @@ where W: GetTargetDir
 
 //--------------------------------------------------
 pub trait FindSimilarTargetPath {
+
     fn find_similar_target_path(&self, target_path: &Path) -> Option<PathBuf>;
 }
 
@@ -65,27 +80,39 @@ where W: GetTargetDirectoryFiles
 
 //--------------------------------------------------
 pub trait GetInputFilenameAtIndex {
-    fn input_filename(&self, batch_idx: &BatchIndex) -> PathBuf;
 
+    fn input_filename(&self, batch_idx: &BatchIndex) -> PathBuf;
 }
+
 pub trait GetOutputFilenameAtIndex {
+
     fn output_filename(&self, batch_idx: &BatchIndex) -> PathBuf;
 }
 
 pub trait GetErrorFilenameAtIndex {
+
     fn error_filename(&self, batch_idx: &BatchIndex) -> PathBuf;
 }
 
 pub trait GetMetadataFilenameAtIndex {
+
     fn metadata_filename(&self, batch_idx: &BatchIndex) -> PathBuf;
 }
 
+pub trait GetSeedManifestFilenameAtIndex {
+
+    fn seed_manifest_filename(&self, batch_idx: &BatchIndex) -> PathBuf;
+}
+
 pub trait GetDoneDirectory {
+
     fn get_done_directory(&self) -> &PathBuf;
 }
 
 pub trait GetTargetPath {
+
     type Item;
+
     fn target_path(
         &self,
         item:            &Self::Item, 
@@ -94,18 +121,22 @@ pub trait GetTargetPath {
 }
 
 pub trait GetFailedJsonRepairsDir {
+
     fn failed_json_repairs_dir(&self) -> PathBuf;
 }
 
 pub trait GetFailedItemsDir {
+
     fn failed_items_dir(&self) -> PathBuf;
 }
 
 pub trait GetTextStoragePath {
+
     fn text_storage_path(&self, batch_idx: &BatchIndex) -> PathBuf;
 }
 
 pub trait GetWorkdir {
+
     fn workdir(&self) -> PathBuf;
 }
 
@@ -141,6 +172,7 @@ impl<T:Named> GetTargetPathForAIExpansion for T {
 
 //-------------------------------------------------------
 pub trait HasAssociatedOutputName {
+
     fn associated_output_name(&self) -> std::borrow::Cow<'_, str>;
 }
 

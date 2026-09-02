@@ -16,7 +16,7 @@ impl Parse for NameValue {
     }
 }
 
-#[tracing::instrument(level = "trace", skip(attr))]
+#[instrument(level = "trace", skip(attr))]
 pub fn try_parse_name_value(attr: &Attribute) -> SynResult<Option<LitStr>> {
     /*
        Syn 2.0 no longer provides `attr.parse_meta()` or `attr.tokens`.

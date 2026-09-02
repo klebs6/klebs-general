@@ -1,5 +1,5 @@
 error: Unit variants must have an #[ai("...")] attribute
- --> tests/ui/compile_fail/item_feature_missing_ai.rs:7:5
+ --> tests/ui/compile_fail/item_feature_missing_ai.rs:8:5
   |
-7 |     Invisibility, // Missing #[ai("...")]
+8 |     Invisibility, // Missing #[ai("...")]
   |     ^^^^^^^^^^^^

@@ -42,7 +42,7 @@ pub use std::process::Stdio;
 pub use cargo_metadata::PackageId;
 pub use petgraph::{self,Incoming,Outgoing,Graph,graph::{DiGraph, NodeIndex}};
 pub use petgraph::algo::{Cycle,toposort,tarjan_scc};
-pub use petgraph::visit::EdgeRef;
+pub use petgraph::visit::{Bfs,EdgeRef};
 pub use std::fmt::{self,Display};
 pub use std::thread;
 pub use std::fmt::Result as FmtResult;

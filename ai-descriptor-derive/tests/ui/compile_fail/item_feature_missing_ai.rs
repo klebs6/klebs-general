@@ -1,3 +1,4 @@
+// ---------------- [ File: ai-descriptor-derive/tests/ui/compile_fail/item_feature_missing_ai.rs ]
 #![allow(unused_imports)]
 use ai_descriptor_derive::*;
 use ai_descriptor_trait::*;
@@ -10,4 +11,3 @@ enum PotionEffect {
 }
 
 fn main() {}
-

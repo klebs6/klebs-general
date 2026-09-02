@@ -1,4 +1,4 @@
-// ---------------- [ File: src/generate_variant_constructors.rs ]
+// ---------------- [ File: random-constructible-derive/src/generate_variant_constructors.rs ]
 crate::ix!();
 
 /// Generates constructors for each variant of an enum.
@@ -41,6 +41,42 @@ pub fn generate_variant_constructors(
                 quote! {
                     #enum_name::#ident {
                         #(#field_names: #field_values),*
+                    }
+                }
+            }
+        })
+        .collect()
+}
+
+/// Generates constructors **using the supplied RNG** so that every call
+/// yields fresh data.
+///
+/// These tokens are used exclusively inside the hand‑written
+/// `random_enum_value_with_rng` implementation we emit for every enum.
+pub fn generate_variant_constructors_with_rng(
+    enum_name:         &Ident,
+    variant_idents:    &[Ident],
+    variant_fields:    &[Fields],
+) -> Vec<TokenStream2> {
+    variant_idents
+        .iter()
+        .zip(variant_fields.iter())
+        .map(|(ident, fields)| match fields {
+            Fields::Unit => {
+                quote! { #enum_name::#ident }
+            }
+            Fields::Unnamed(fields_unnamed) => {
+                let tys = fields_unnamed.unnamed.iter().map(|f| &f.ty);
+                quote! {
+                    #enum_name::#ident( #( <#tys as RandConstruct>::random_with_rng(rng) ),* )
+                }
+            }
+            Fields::Named(fields_named) => {
+                let names = fields_named.named.iter().map(|f| f.ident.as_ref().unwrap());
+                let tys   = fields_named.named.iter().map(|f| &f.ty);
+                quote! {
+                    #enum_name::#ident {
+                        #( #names : <#tys as RandConstruct>::random_with_rng(rng) ),*
                     }
                 }
             }

@@ -2,9 +2,16 @@
 crate::ix!();
 
 error_tree!{
+
+    #[derive(PartialEq)]
     pub enum SaveLoadError {
+
+        #[cmp_neq]
         IoError(std::io::Error),
+
         JsonParseError(JsonParseError),
+
+        #[cmp_neq]
         SerdeJsonError(serde_json::Error),
 
         #[display("SaveLoadError: {dir:?} is an InvalidDirectory")]

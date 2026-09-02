@@ -1,11 +1,12 @@
+[dependencies.tracing]
+workspace = true
+
 [dependencies.workspacer-3p]
 path = "../workspacer-3p"
-version = "0.5.1"
+version = "0.5.2"
 
 [package]
-categories = [
-    "development-tools",
-]
+categories = ["development-tools"]
 description = "Trace and validate upgrade processes in workspace-style Rust projects, providing detailed execution profiles for improved refactoring workflows."
 edition = "2024"
 keywords = [
@@ -15,6 +16,6 @@ keywords = [
     "testing",
     "utility",
 ]
-name = "workspacer-upgrade-test-suite-tracing"
-version = "0.1.1"
 license = "MIT"
+name = "workspacer-upgrade-test-suite-tracing"
+version = "0.1.2"

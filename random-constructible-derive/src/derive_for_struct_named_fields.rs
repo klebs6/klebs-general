@@ -1,4 +1,4 @@
-// ---------------- [ File: src/derive_for_struct_named_fields.rs ]
+// ---------------- [ File: random-constructible-derive/src/derive_for_struct_named_fields.rs ]
 crate::ix!();
 
 /// UPDATED FUNCTION (FULL AST ITEM):
@@ -155,7 +155,7 @@ pub fn derive_for_named_fields(name: &Ident, fields_named: &FieldsNamed) -> Toke
                 }
             }
 
-            fn random_with_rng<R: rand::Rng + ?Sized>(rng: &mut R) -> Self {
+            fn random_with_rng<R: rand_core::RngCore + ?Sized>(rng: &mut R) -> Self {
                 tracing::trace!("Generating random instance of `{}` with a provided RNG", stringify!(#name));
                 Self {
                     #(

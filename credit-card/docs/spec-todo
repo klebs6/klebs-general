@@ -1,0 +1,866 @@
+-------------------------------[mark]
+- **Parties in Credit Card Transaction Flow**:
+
+  - **Cardholder (Consumer)**:
+    - Individual holding the card and responsible for charges incurred.
+    - Protected from fraudulent charges (e.g., U.S. regulations limit liability).
+
+  - **Card-Issuing Bank**:
+    - Institution issuing the credit card to the cardholder.
+    - Responsible for billing cardholders and bearing fraud risk.
+    - May issue cards domestically or internationally ("offshore" cards).
+    - Not obligated (U.S.) to notify cardholders when closing a credit account, even if balance remains.
+
+  - **Merchant**:
+    - Business or individual accepting card payments for goods or services.
+
+  - **Acquiring Bank**:
+    - Institution receiving transaction funds on behalf of the merchant.
+
+  - **Independent Sales Organization (ISO)**:
+    - Entity reselling acquiring bank services to merchants.
+
+  - **Merchant Account**:
+    - Entity directly managing merchant payment transactions; typically an acquiring bank or ISO.
+
+  - **Card Association**:
+    - Associations (Visa, MasterCard, American Express, Discover) establishing transaction standards and rules for banks and merchants.
+
+  - **Transaction Network**:
+    - Infrastructure enabling electronic credit card transaction processing; may be independent and support multiple networks.
+
+  - **Affinity Partner**:
+    - Organizations lending branding or endorsement to attract customers (e.g., universities, charities, retailers), typically compensated via fees or percentage of balances issued.
+
+  - **Insurance Providers**:
+    - Insurers underwriting card-based insurance benefits (e.g., travel insurance, purchase protection, car rental coverage).
+
+- **Transaction Interchange Flow**:
+  - The structured exchange of data and funds among these entities, mediated through card associations, follows defined procedural steps.
+
+### Functional Specification (Credit Card Transaction Lifecycle):
+
+- **Transaction Authorization**:
+  - Merchant initiates transaction by submitting:
+    - Credit card number
+    - Transaction type
+    - Transaction amount
+  - Acquiring bank forwards transaction details to card issuer.
+  - Issuer verifies card details, checks available credit, reserves (holds) transaction amount against the cardholder's credit limit.
+  - Upon successful verification, issuer generates an approval (authorization) code, which merchant retains for transaction reference.
+
+- **Transaction Batching**:
+  - Merchants aggregate authorized transactions into batches.
+  - Batch submission typically occurs daily (e.g., end-of-business day).
+  - Submission methods:
+    - Manual initiation by merchant.
+    - Automated submission via scheduled processing platforms.
+  - Authorization holds expire after a defined period (issuer-specified) if transaction not batched/submitted, restoring funds to cardholder’s available credit.
+  - Certain transactions (under merchant’s "floor limit," or forced transactions without prior successful authorization) may still be batched/submitted.
+
+- **Clearing and Settlement**:
+  - Acquirer submits batched transactions to the credit card association network.
+  - Association network debits issuers for transaction amounts and credits acquiring banks accordingly.
+  - Issuers reimburse acquiring banks for approved transactions.
+
+- **Funding (Merchant Payment)**:
+  - Acquirer disburses settled funds to merchant, deducting applicable processing fees:
+    - Fees classified into tiers ("discount rate," "mid-qualified rate," "non-qualified rate"), depending on merchant agreement and transaction qualification.
+
+- **Chargeback Handling**:
+  - Cardholders may dispute transactions, initiating a "chargeback":
+    - Issuer returns disputed transaction to acquiring bank for resolution.
+    - Acquirer forwards chargeback details to merchant.
+  - Merchant response options:
+    - Accept chargeback, relinquishing disputed funds.
+    - Contest chargeback, providing evidence/documentation supporting transaction legitimacy.
+  - Disputed funds held pending resolution outcome.
+
+### Functional Specification (Credit Card Transaction Register):
+
+- **Transaction Register Functionality**:
+  - Maintains a chronological record of individual credit card transactions:
+    - Purchases
+    - Payments
+    - Authorization holds (pending transactions)
+  - Provides visibility into current outstanding balance relative to credit limit.
+
+- **Key Fields in Register**:
+  - **Date** of transaction
+  - **Transaction description/details**
+  - **Transaction amount** (purchase, cash advance, or payment)
+  - **Transaction type/code** (identifying specific credit card used)
+  - **Deposit column**:
+    - Reflects available credit after transaction(s)
+  - **Payment column**:
+    - Reflects total amount owed at given time
+  - **Balance column**:
+    - Reflects funds available (credit limit minus total amount owed)
+  - Available credit plus total amount owed equals card's credit limit.
+
+- **Register Maintenance**:
+  - Transactions entered manually or electronically:
+    - Entries typically updated daily or multiple times per week.
+  - Each credit card may maintain an individual register for clear tracking when multiple cards are in use.
+
+- **Reconciliation and Budgeting**:
+  - Facilitates reconciliation of outstanding transactions.
+  - Provides historical transaction lookup capability for budgeting and financial tracking purposes.
+  - Ensures available credit visibility to avoid surpassing card limits, accounting for pending authorization holds and payments not yet cleared.
+
+### Functional Specification (Business Credit Cards):
+
+- **Business Credit Card Issuance and Usage**:
+  - Cards issued specifically in the name of a registered business entity.
+  - Restricted primarily or exclusively to transactions serving business purposes.
+
+- **Applicant Qualification and Evaluation**:
+  - Issuers typically assess the applicant’s personal credit score during the evaluation process.
+  - Qualification criteria may consider income from various sources, allowing accessibility for new or emerging businesses.
+
+- **Separation of Business and Personal Credit Activity**:
+  - Certain issuers isolate business credit activity from the cardholder’s personal credit history.
+  - Issuers may only report business credit account activity to personal credit bureaus under delinquency or default conditions.
+
+- **Business-Specific Rewards and Incentives**:
+  - Specialized rewards structures tailored to common business expenses, including:
+    - Shipping services
+    - Office supplies
+    - Business travel expenses
+    - Business technology products or services
+
+- **Issuers and Availability**:
+  - Offered by major card brands (American Express, Discover, Visa, MasterCard).
+  - Also available through select local banks and credit unions.
+
+### Functional Specification (Secured Credit Cards):
+
+- **Deposit-Backed Credit Limit**:
+  - Card credit limit is secured by a cash deposit from the cardholder.
+  - Required deposit typically ranges from 100% to 200% of the desired credit limit.
+    - Example: A deposit of $1,000 may yield a credit limit of $500 to $1,000.
+  - In some cases, issuers offer promotional lower deposit requirements (as low as 10% of the credit limit).
+
+- **Deposit Management**:
+  - Deposit funds held in a special savings account as collateral against default.
+  - Deposits generally remain untouched except in cases of severe delinquency or account closure.
+  - Deposits are typically used to offset outstanding balances only upon:
+    - Voluntary account closure by cardholder.
+    - Involuntary account closure due to severe delinquency (usually 150–180 days overdue).
+
+- **Regular Payment Obligations**:
+  - Cardholder must make regular payments according to standard credit card terms.
+  - Missing one or two payments typically does not trigger immediate seizure of the deposit; however, interest and fees will continue to accrue.
+
+- **Delinquency and Default Management**:
+  - Severe delinquency (150–180 days past due) can trigger seizure of the deposit to offset outstanding debt.
+  - Account balances can exceed original deposit due to accumulated interest and fees, resulting in additional liabilities beyond forfeited deposits.
+
+- **Credit Bureau Reporting**:
+  - Issuers regularly report secured card activity to major credit bureaus.
+  - Enables cardholders with poor or no credit history to establish or rebuild positive credit history through responsible usage.
+
+- **Costs and Fees**:
+  - Secured cards typically carry higher fees and service charges compared to standard unsecured cards.
+  - Particularly expensive for individuals with severe negative credit histories or prior charge-offs.
+
+- **Alternative Collateralization**:
+  - Some secured credit cards may also be collateralized by equity in the cardholder’s home.
+
+- **Documentation and Agreements**:
+  - Terms, conditions, fee structures, and policies governing deposits and delinquencies must be clearly outlined in the cardholder agreement provided upon account opening.
+
+### Functional Specification (Prepaid Credit Cards):
+
+- **Prepaid Card Mechanics**:
+  - Card functions similarly to standard credit cards, carrying a major card network brand (Visa, MasterCard, Discover, American Express, JCB).
+  - Cards require prior loading of funds (deposit by cardholder or third party); no credit is provided.
+  - Cardholders spend only the deposited amount, with no revolving credit available.
+
+- **Transaction Processing**:
+  - Typically do not require PIN entry for transactions.
+  - Exception: EMV chip-based prepaid cards require PIN for Chip-and-PIN transactions.
+
+- **Account Funding and Limits**:
+  - Cardholder loads funds up to a predetermined maximum card limit.
+  - No interest charged; cardholders can only spend deposited amounts.
+
+- **Fees and Costs**:
+  - Common fee structure includes:
+    - Initial purchase fee.
+    - Monthly maintenance fees after a defined period.
+    - Additional transactional or administrative fees.
+
+- **Market and Usage**:
+  - Often marketed toward teenagers and other users requiring financial discipline, limiting spending to deposited funds.
+  - Suitable for online purchases and financial education scenarios.
+
+- **International Usability**:
+  - Globally accepted wherever associated credit card brand is honored.
+  - Offers convenience and cost-effectiveness compared to international wire transfers or checks.
+
+- **Consumer Advisory and Compliance**:
+  - Financial consumer agencies (e.g., Financial Consumer Agency of Canada) note high cumulative fees and expenses, recommending clear disclosure of all associated costs to cardholders.
+
+### Functional Specification (Digital Cards, Charge Cards, Cardholder Benefits, Rewards and Protections):
+
+- **Digital Cards**:
+  - Cloud-hosted virtual representation of physical credit, payment, or identification cards.
+  - Usable for transactions similarly to physical cards without physical issuance or distribution.
+
+- **Charge Cards**:
+  - Specialized credit cards requiring full balance payment at each billing cycle.
+  - No revolving balance permitted; interest not typically applicable if terms are followed.
+
+- **Convenience and Short-Term Credit**:
+  - Allows immediate short-term borrowing for purchases without pre-transaction balance verification, provided charges stay within the authorized credit line.
+
+- **Grace Period and Interest-Free Purchases**:
+  - Interest charges waived if entire balance paid in full within defined grace period (commonly 21–25 days in the U.S.).
+
+- **Consumer Protection and Liability**:
+  - Country-specific consumer protections required:
+    - Example: U.K. banks jointly liable with merchants for defective product purchases over £100.
+    - Liability limits established for fraudulent transactions on lost/stolen cards (U.S., U.K., France).
+
+- **Cardholder Benefits and Perks**:
+  - Issuers may provide various ancillary benefits:
+    - Extended product warranties.
+    - Price protection (refunds for post-purchase price drops).
+    - Purchase protection (coverage for theft/damage post-purchase).
+  - Travel-related insurance coverages may include:
+    - Rental car insurance.
+    - Travel accident insurance.
+    - Baggage delay insurance.
+    - Trip delay/cancellation insurance.
+
+- **Loyalty and Rewards Programs**:
+  - Purchases generate rewards (cashback or points) based on spending.
+  - Points redeemable for gift cards, merchandise, or travel expenses (airline tickets, hotels).
+  - Certain cards permit transferring accrued points to hotel or airline loyalty programs.
+
+- **Economic and Regulatory Considerations**:
+  - Awareness of economic implications due to overly generous rewards programs causing increased merchant costs and higher consumer prices.
+  - Regulatory oversight may be considered to balance rewards programs and economic impact.
+
+### Functional Specification (Comparison of Credit Card Benefits):
+
+- **Return Extension**:
+  - MasterCard: 60 days, up to $250  
+  - Visa: 90 days, up to $250  
+  - American Express: 90 days, up to $300  
+  - Discover: Not specified
+
+- **Extended Warranty**:
+  - MasterCard: Double original warranty period, up to 1 additional year  
+  - Visa: Coverage terms vary by specific card  
+  - American Express: Adds 1 additional year (maximum total warranty 6 years)  
+  - Discover: Not specified
+
+- **Price Protection**:
+  - MasterCard: 60 days price protection  
+  - Visa: Varies by issuer/card  
+  - American Express: Not offered  
+  - Discover: Not available
+
+- **Loss/Damage Coverage**:
+  - MasterCard: 90 days  
+  - Visa: Coverage varies by issuer  
+  - American Express: 90 days, up to $1,000 per occurrence  
+  - Discover: Not specified
+
+- **Rental Car Insurance (Damage Waiver)**:
+  - MasterCard: Covers collision, theft, vandalism up to 15 days  
+  - Visa: Covers collision, theft up to 15 days  
+  - American Express: Covers collision, theft, vandalism up to 30 days  
+  - Discover: Not specified
+
+- **General Note**:
+  - Benefit details and coverage limits vary widely depending on card issuer and specific card offerings. Implementation should accommodate flexible, issuer-specific configurations.
+
+### Functional Specification (Cardholder Detriments and Risks):
+
+- **Interest Rate Dynamics**:
+  - Introductory (promotional) low interest rates:
+    - Applicable for limited periods (commonly 6–12 months).
+    - Automatically revert to higher standard rates after promotional period.
+  - Standard and penalty interest rates:
+    - Typical penalty APR ranges from 20–30% after missed payments.
+    - Fixed charges or penalty fees may apply independently of interest rate changes.
+  - Universal Default Provision:
+    - Default on unrelated accounts may trigger increased interest rates across multiple accounts with the same issuer.
+    - Risk of escalating debt ("snowball effect") from unexpected interest rate hikes.
+  - Arbitrary Rate Increases:
+    - Issuers may retain contractual rights to raise rates arbitrarily.
+    - Example of extreme interest rate (historically, First Premier Bank offered rates as high as 79.9%).
+
+- **Sub-optimal Agreement Selection**:
+  - Significant proportion of consumers (~40%) select sub-optimal credit agreements, incurring avoidable high-interest expenses.
+  - Issuers must transparently disclose all terms to facilitate informed consumer decisions.
+
+- **Fraud and Liability Risk**:
+  - Increased vulnerability to fraudulent transactions relative to other cashless payment methods.
+  - Liability considerations must comply with local regulations (limiting consumer responsibility for fraud losses).
+
+- **Psychological and Behavioral Risks**:
+  - Credit card usage may weaken consumer self-regulation:
+    - Increased spending behavior due to reduced psychological "pain of payment."
+    - Higher likelihood of impulsive or unnecessary expenditures.
+    - Potential correlation with increased unhealthy food consumption compared to cash transactions.
+
+- **Risk Management and Consumer Protection**:
+  - Implement clear and proactive communication regarding rates, fees, and default consequences.
+  - Provide budgeting and spending management tools to help mitigate consumer risk.
+  - Support regulatory compliance and consumer education initiatives to minimize detrimental outcomes.
+
+### Functional Specification (Societal Detriments of Credit Card Usage):
+
+- **Merchant Fees and Consumer Pricing**:
+  - Merchants incur interchange and discount fees for accepting credit cards (average fee approximately 2% per transaction in the U.S.).
+  - Contractual restrictions may prohibit merchants from directly passing these fees onto card users or imposing minimum transaction amounts.
+  - Resulting merchant practice:
+    - General price increases across all products and services to compensate for credit-card-related fees.
+    - Higher prices impact all consumers, including those paying with cash or debit cards.
+
+- **Economic Redistribution via Rewards Programs**:
+  - Credit card reward programs indirectly result in wealth transfer:
+    - Non-card users effectively subsidize card users through inflated general prices.
+    - Average annual transfer impact estimated at $1,282 from cash-paying consumers to credit-card-paying consumers.
+
+- **Aggregate Economic Impact**:
+  - Significant total fees collected (e.g., $48 billion in U.S. interchange fees in 2008, averaging $427 per household annually).
+  - Systematic pricing distortion across consumer markets due to merchant fee absorption. 
+
+- **Policy and Regulatory Implications**:
+  - Potential for public policy interventions addressing:
+    - Merchant fee disclosure and transparency.
+    - Contractual freedom for merchants to set minimum amounts or directly recover fees.
+    - Regulation of reward programs to mitigate indirect economic impacts.
+
+### Functional Specification (Merchant Benefits and Costs):
+
+- **Transaction Security and Payment Guarantee**:
+  - Card-based transactions offer higher security compared to cash or checks:
+    - Issuing bank guarantees merchant payment upon transaction authorization (excluding valid chargebacks).
+    - Reduced risk of theft due to lower physical cash handling.
+
+- **Reduced Payment Friction and Higher Sales Volume**:
+  - Card-based payments reduce consumer resistance compared to cash, enhancing merchant sales potential.
+  - Immediate purchasing capability regardless of customer's available cash or current bank balance encourages additional spending.
+
+- **Credit Risk Management Shift**:
+  - Banks perform consumer credit evaluations, relieving merchants from independently assessing individual consumer creditworthiness.
+  - Credit risk transferred from merchant to issuing bank.
+
+- **Operational Cost Reduction**:
+  - Lower merchant back-office costs associated with handling, processing, and depositing cash/check payments.
+
+- **Merchant Fees and Payment Delays**:
+  - Merchants incur processing fees ("discount fee") for accepting card transactions:
+    - Typically a combination of percentage-based fees and fixed transaction fees (interchange rate).
+  - Delays between transaction authorization and actual settlement/payment to merchant are possible.
+
+- **Marketing Advantage**:
+  - Merchants leverage immediate purchase capability enabled by credit cards in consumer marketing strategies.
+
+### Functional Specification (Merchant Costs of Accepting Credit Cards):
+
+- **Transaction Fees (Merchant Commission)**:
+  - Merchants pay a commission for each card transaction, typically between 0.5% to 4% of transaction value.
+  - Additional variable charges, known as "merchant discount rates," may also apply per transaction.
+
+- **Low-Value Transaction Risk**:
+  - High processing fees relative to transaction value can significantly reduce or eliminate profit margins, particularly on low-value transactions.
+  - Merchants selling items at very low or very high transaction values may be less inclined to accept credit cards.
+
+- **Credit Card Surcharges**:
+  - Merchants may impose additional fees ("credit card supplements" or "surcharges") on cardholders, either as a fixed amount or as a percentage of the transaction.
+  - Legal context:
+    - Previously prohibited by most U.S. card processing contracts until a 2013 legal settlement allowed surcharges.
+    - Despite legality, merchants often avoid surcharges to retain customer goodwill.
+
+- **Interchange Fee Regulation and Litigation**:
+  - Merchants have historically contested interchange fees via legal actions:
+    - Major antitrust lawsuit settlement in the U.S. (December 2013) awarded merchants $5.7 billion over claims of excessive interchange fees by Visa and MasterCard.
+    - Some large retailers (e.g., Wal-Mart, Amazon) opted out of the settlement to pursue continued litigation.
+  - Regulatory caps imposed in certain jurisdictions (e.g., European Union cap of 0.3% for credit cards, 0.2% for debit cards, as of April 2015).
+
+- **Processing Equipment Costs**:
+  - Merchants typically must lease or purchase dedicated card-processing hardware.
+  - Some payment processors provide necessary hardware free or subsidized as part of service agreements.
+
+- **Data Security Compliance**:
+  - Merchants must comply with strict, technical, and complex data security standards (e.g., PCI DSS compliance).
+  - Non-compliance risks fines, increased liability, and potential termination of processing privileges.
+
+- **Settlement Delay and Cash Flow**:
+  - Transaction funds typically take multiple days to clear and deposit into the merchant's bank account, affecting cash flow and liquidity.
+
+- **Chargeback Risk**:
+  - Merchants assume financial liability for disputed transactions ("chargebacks"), requiring dispute resolution processes or absorbing losses directly.
+
+- **Complexity and Small Merchant Disadvantage**:
+  - Credit card fee structures are complex, placing smaller merchants at a disadvantage due to reduced analytical resources and limited capacity for fee optimization.
+
+### Functional Specification (Credit Card Security):
+
+- **Card and Number Security**:
+  - Security depends on physical control of card and confidentiality of card number.
+  - Cards lost or stolen must be rapidly reported to limit potential fraud.
+  - Merchants typically require physical card presence and/or confirmed shipping addresses to mitigate fraudulent transactions.
+
+- **Transaction Verification Methods**:
+  - In-person transactions (especially in Europe) commonly require:
+    - Physical card presentation.
+    - Entry of a secure PIN for authentication.
+  - Mail-order/online transactions increasingly restricted to confirmed shipping addresses to reduce fraud risks.
+
+- **PCI DSS Compliance**:
+  - Merchants and acquiring banks must adhere to Payment Card Industry Data Security Standard (PCI DSS):
+    - Guidelines established by the Payment Card Industry Security Standards Council (PCI SSC).
+    - Defines standards for secure handling, storage, and transmission of cardholder data.
+
+- **Fraud Management Philosophy**:
+  - Objective is to minimize fraud to economically acceptable levels, balancing prevention measure costs against potential losses.
+  - High-cost, low-benefit fraud-prevention methods generally not pursued by issuers.
+
+- **Common Fraud Scenarios**:
+  - "Friendly fraud": unauthorized or unjustified chargeback claims initiated by cardholder.
+  - Data breaches caused by merchant security practices:
+    - Transmission of card data without sufficient encryption.
+    - Storing unencrypted cardholder information.
+    - Data theft by internal (employee) threats or compromised systems.
+
+- **Virtual Credit Card Numbers**:
+  - Issuers may provide single-use, controlled payment numbers (virtual/disposable cards) for secure remote transactions:
+    - Linked to primary credit account but without revealing actual account details.
+    - Valid for single use, limited monetary amounts, specified validity periods.
+    - Can be restricted to a specific merchant; any reuse attempts are rejected automatically.
+
+- **Security Standards for Merchants**:
+  - Merchants must implement secure handling practices, including end-to-end encrypted data processing.
+  - Clear avoidance of insecure data handling practices (e.g., emailing plaintext card data, storage in accessible forms) required.
+
+### Functional Specification (Physical Card Security Controls):
+
+- **Card-Level Security Controls**:
+  - Issuers can implement dynamic control parameters on individual credit cards, including:
+    - Temporal restrictions (time-based usage windows).
+    - Numerical restrictions (transaction amount limits).
+    - Geographical restrictions (country/region-based limitations).
+    - Usage-channel restrictions (e.g., online vs. physical transactions).
+  - Real-time alerts triggered by attempts violating card control parameters.
+
+- **Virtual Account Numbers (Integration)**:
+  - Physical card may be restricted from online transactions.
+  - Users can employ disposable virtual account numbers for online purchases, isolating primary card details from exposure.
+
+- **Physical Card Anti-Counterfeiting Features**:
+  - Security elements to mitigate card duplication include:
+    - Ultraviolet-sensitive watermarks fluorescing under UV light.
+    - Embedded holograms visible under specialized lighting conditions.
+    - Branded holographic symbols for major issuers (e.g., Visa's "V" symbol or MasterCard's "MC" letters) visible under UV conditions.
+  - Older card versions contain specific holographic patterns (eagle, dove, continent diagrams) as legacy anti-counterfeit measures.
+
+- **EMV Smart Card Integration**:
+  - Cards issued as tamper-resistant smart cards adhering to EMV (Europay, MasterCard, Visa) standards:
+    - Embedded integrated circuit (IC) chips with secure transaction processing capabilities.
+    - Intended to reduce physical card forgery and counterfeit fraud.
+
+- **Card Security Code (CSC/CVV)**:
+  - Additional 3- or 4-digit security code printed on the card's reverse side.
+  - Required for validating card-not-present transactions (online or phone transactions).
+
+- **Law Enforcement and Fraud Prosecution**:
+  - In the U.S., enforcement responsibility lies with:
+    - Department of Justice
+    - Secret Service
+    - Federal Bureau of Investigation (FBI)
+    - Immigration and Customs Enforcement (ICE)
+    - Postal Inspection Service
+  - Typical prosecution threshold is set at cases exceeding $5,000.
+
+- **Global Security Standards and Coordination**:
+  - Stakeholder collaboration (PCI DSS, Secure POS Vendor Alliance) working towards consistent global security standards.
+  - Integration of existing and emerging security technologies into standardized protocols for enhanced protection.
+
+### Functional Specification (Code 10 Fraud Verification Process):
+
+- **Code 10 Verification Procedure**:
+  - Merchants may initiate a "Code 10" verification call upon suspicion of card fraud or suspicious cardholder behavior.
+  - Call routed to the card issuer's security/fraud department for immediate handling.
+
+- **Structured Verification Protocol**:
+  - Fraud verification operator asks the merchant a predefined sequence of yes/no questions to assess legitimacy.
+  - Based on merchant responses, the issuer determines the risk and validity of the transaction.
+
+- **Card Retention and Reward Policy**:
+  - Merchant may be instructed to safely retain (confiscate) the suspicious card if possible.
+  - Merchants potentially rewarded by the issuing bank for successful retention and return of compromised cards, particularly if subsequent arrests result.
+
+- **Security and Safety Compliance**:
+  - Protocols require merchant safety prioritization, prohibiting forced card retention if doing so presents risk to merchant personnel or customers.
+  - Merchants must adhere strictly to issuer-provided guidelines during Code 10 interactions to ensure legal compliance and personal safety.
+
+### Functional Specification (Credit Card Issuer Costs):
+
+- **Charge-Off Costs**:
+  - Accounts severely delinquent (unpaid beyond defined periods) are declared "charge-offs."
+  - Charged-off debts remain legally collectible:
+    - Collection attempts via internal staff or external collection agencies.
+    - Legal action or arbitration possible for significant amounts.
+  - Charge-offs reflected in debtor's credit reports (e.g., Equifax "R9" status).
+
+- **Fraud Losses**:
+  - Card fraud represents minor overall loss (approximately 7 basis points of transaction value, historically).
+  - Issuers refund unauthorized charges to cardholders, losses typically borne by merchants in card-not-present scenarios.
+  - Merchant liability increases if identity verification measures (e.g., checking ID) were not employed.
+  - Issuers guarantee payment to merchants for legitimate authorized transactions regardless of subsequent cardholder default.
+
+- **Fraud Monitoring and Management**:
+  - Issuers employ dedicated fraud detection and investigation teams.
+  - Teams placed within "Risk Management," "Fraud and Authorization," or similar divisions.
+  - Responsibilities include active fraud monitoring, investigations, containment, and resolution.
+
+- **Interest Expenses (Cost of Funds)**:
+  - Issuers incur interest costs borrowing funds from financial markets or other institutions.
+  - Issuers lend at higher rates to cardholders, creating net interest spread.
+    - Example: Issuer borrowing at 5%, lending at 15%, nets a 10% interest spread.
+
+- **Operational Expenses**:
+  - Costs associated with managing the credit card portfolio:
+    - Executive and staff compensation.
+    - Card manufacturing (physical plastic production).
+    - Statement generation, printing, and mailing.
+    - IT infrastructure for transaction processing, balance tracking, and data storage.
+    - Customer service and support call center operations.
+    - Fraud protection systems and personnel.
+    - Marketing and promotional programs.
+
+- **Rewards Program Costs**:
+  - Issuers bear direct financial costs associated with maintaining loyalty/rewards programs (e.g., cashback, travel points).
+  - Costs vary based on program generosity and redemption patterns.
+
+### Functional Specification (Credit Card Issuer Revenues):
+
+- **Interchange Fees**:
+  - Revenue derived from merchants as a percentage fee for each card transaction.
+  - Typically represents approximately 25% of an issuer's total revenue.
+  - Rates typically range from 1% to 6%, varying by:
+    - Merchant type and size (large merchants negotiate lower rates).
+    - Card type (business/rewards cards carry higher fees).
+    - Card presence (physical vs. remote transactions).
+    - Transaction settlement timing and methods.
+    - Transaction amounts authorized and settled.
+  - Merchants may apply surcharges to customers to offset interchange fees, incentivizing alternative payment methods (cash, debit, check).
+  - Regulatory or policy changes affecting interchange rates may impact issuer revenue and fraud detection capability.
+
+- **Interest Income from Revolving Balances**:
+  - Significant revenue generated through interest on outstanding unpaid balances.
+  - Interest rates vary significantly among issuers:
+    - Promotional "teaser" rates (as low as 0% for introductory periods, typically 6–12 months).
+    - Regular annual percentage rates (APR) can range up to 40%.
+    - Late payments may trigger penalty interest rates, often retroactively applied (e.g., 23.99% APR).
+  - No U.S. federal limit on credit card interest or late fees; state-level regulations vary widely:
+    - Certain states (e.g., South Dakota, Delaware) impose minimal or no interest rate ceilings, incentivizing issuer operations in these jurisdictions.
+
+- **Revenue Impact of Promotional Rates**:
+  - Promotional introductory APR used strategically to attract customers.
+  - Issuers transition to significantly higher standard or penalty rates upon end of promotional periods or payment delinquencies.
+
+### Functional Specification (Transactors, Revolvors, and Revolving Accounts):
+
+- **Account Holder Classification**:
+  - Cardholders categorized into two usage types:
+    - **Transactors**: Pay outstanding balances in full each billing cycle (issuer earns interchange fees from merchants).
+    - **Revolvors**: Carry balances month-to-month, accruing interest charges (issuer earns interest revenue).
+
+- **Revolving Account Mechanics**:
+  - Enables cardholder to incur and carry debt without requiring immediate full repayment.
+  - Cardholder obligated to make at least the defined minimum monthly payment, calculated based on the outstanding balance.
+  - Cardholder may choose to pay any amount from minimum up to the full outstanding balance.
+
+- **Balance Carryover and Interest**:
+  - Unpaid balance at billing cycle end ("revolving balance") carries over ("revolves") into subsequent billing cycles.
+  - Interest charges accrue on the outstanding balance, added monthly to total balance owed.
+
+- **Credit Limits**:
+  - Most revolving accounts are subject to a predefined maximum credit limit.
+  - Some specialized cards may offer no predefined spending limit, subject instead to issuer discretion and periodic financial assessment.
+
+- **Alternate Meaning**:
+  - "Revolving account" can also refer to a designated savings fund set aside specifically for emergency financial use.
+
+### Functional Specification (Fees Charged to Cardholders):
+
+- **Membership Fees**:
+  - Issuers may charge cardholders periodic membership fees:
+    - Annual or monthly frequency.
+    - Fees may be fixed or percentage-based (e.g., percentage of credit limit).
+
+- **Cash Advance and Convenience Cheque Fees**:
+  - Typically assessed at approximately 3% of transaction amount.
+
+- **Over-Limit Fees**:
+  - Applied when cardholder transactions cause account balance to exceed predefined credit limit.
+  - Charged regardless of intentionality or error.
+
+- **Foreign Exchange and Currency Transaction Fees**:
+  - Foreign transactions typically incur additional fees (commonly up to 3% of transaction amount).
+  - Exchange rate variation ("loading fee") can significantly impact transaction costs (up to 10% variation reported).
+  - Fees may not always be transparently itemized on customer statements.
+
+- **Late or Overdue Payment Fees**:
+  - Assessed when payments are not received by due date.
+
+- **Returned Payment Fees**:
+  - Applied if payment method (e.g., cheque or ACH) fails or is returned unpaid.
+
+- **Payment Processing Fees**:
+  - Some issuers apply fees for specific payment channels or methods (e.g., payments made by phone).
+
+- **Finance Charges**:
+  - General term covering all costs associated with borrowing money on the card account, primarily interest charges.
+
+- **Excessive Usage Fees**:
+  - Issuers may impose additional fees on cardholders who exceed predefined monthly transaction caps, regardless of timely payments within the billing cycle.
+
+- **Negative Balance (Overpayment) Fees**:
+  - Certain issuers may charge cardholders for maintaining a negative balance (due to overpayment).
+
+- **Regulatory Compliance (U.S. CARD Act of 2009)**:
+  - Issuers required to notify cardholders 45 days prior to increasing or modifying certain fees (annual fees, cash advance fees, late payment fees).
+  - Compliance enforced by regulatory oversight to ensure transparency and fairness to consumers.
+
+### Functional Specification (Controversies and Hidden Costs):
+
+- **Trailing Interest (Residual Interest)**:
+  - Interest charges continue accruing on account balances between statement generation and full repayment.
+  - Such accrued interest is typically applied to the next monthly billing cycle, often surprising consumers.
+  - Regulatory attention (e.g., U.S. Senator Carl Levin hearings) has focused on transparency regarding trailing interest practices.
+  - U.S. Credit CARD Act (2009) introduced consumer protections addressing disclosure and transparency of such fees.
+
+- **Hidden and Undisclosed Fees**:
+  - Consumers have historically faced hidden, cryptic, or insufficiently disclosed charges.
+  - Regulatory requirements now emphasize clear disclosure to prevent consumer misunderstanding or unexpected costs.
+
+- **Merchant Surcharging**:
+  - Historically controversial practice where merchants charge additional fees ("surcharges") for accepting credit card payments:
+    - Previously prohibited by federal law (U.S.) until 1984; state laws continue restrictions in several states.
+    - Allowed briefly in the U.K. via Credit Cards (Price Discrimination) Order 1990, later removed by EU directives.
+  - Legal and regulatory contexts vary significantly by jurisdiction and evolve over time.
+
+- **Credit Card Saturation and Market Impact**:
+  - High consumer penetration of credit cards observed in countries like the U.S. and the U.K., increasing exposure to hidden fees and charges:
+    - U.K. (2007): Approximately 2.4 credit cards per consumer.
+    - U.S. (2006): Approximately 4–5 credit/debit cards per adult.
+
+- **Regulatory Environment and Consumer Protection**:
+  - Legislation (e.g., CARD Act in U.S.) introduced to ensure transparent disclosure, limit abusive fees, and protect consumers from misleading terms.
+  - Continued legislative oversight and intervention remain necessary to maintain fairness in issuer practices.
+
+### Functional Specification (Over-limit Charges, U.K.):
+
+- **Over-limit Fee Management**:
+  - Issuers may apply fees when cardholders exceed their predefined credit limits.
+  - Historically, over-limit fees in the U.K. exceeded £12 but were reduced following regulatory intervention.
+
+- **Regulatory Guidelines (U.K.)**:
+  - Office of Fair Trading (OFT) ruling established £12 as the presumed fair maximum for over-limit fees.
+  - Fees above £12 deemed potentially unfair; majority of issuers adjusted fees to comply with the £12 threshold.
+
+- **Cost and Profit Justification**:
+  - Original higher fees claimed by issuers to recover overall business costs and ensure profitability rather than directly offsetting actual over-limit processing costs (~£3–£4).
+  - Profiting excessively from consumer mistakes (such as limit breaches) potentially unlawful under:
+    - U.K. common law (penalties for breach of contract).
+    - Unfair Terms in Consumer Contracts Regulations 1999.
+
+- **Consumer Claims and Legal Challenges**:
+  - Consumers have pursued claims against issuers to recover over-limit charges exceeding £12 plus accrued interest.
+  - Claims for fees over £12 historically successful; claims at or below the £12 threshold remain contentious and less certain legally.
+
+- **Future Regulatory Outlook**:
+  - Current regulatory stance and legal precedent suggest limited likelihood of further test cases regarding fees set at or below £12.
+  - Issuers advised to maintain transparency and compliance with established OFT thresholds to mitigate legal and regulatory risks.
+
+### Functional Specification (Over-limit Charges by Country):
+
+- **United States (Over-limit Charges Regulation)**:
+  - The Credit CARD Act of 2009 mandates that consumers explicitly "opt in" to permit over-limit transaction fees.
+  - Card issuers must actively solicit and receive explicit consumer consent for applying over-limit fees.
+  - Issuers vary in approach:
+    - Some proactively solicit customer opt-ins, framing fees as beneficial (transaction authorization continuity).
+    - Others ceased charging over-limit fees entirely.
+  - Regardless of customer opt-in status, banks retain discretionary power to authorize or decline transactions exceeding credit limits.
+  - Only customers who explicitly opt-in to over-limit fees incur charges on approved over-limit transactions.
+  - Credit CARD Act compliance also requires monthly statements to clearly indicate estimated repayment timelines for outstanding balances.
+
+- **France (Credit Card and Over-limit Context)**:
+  - Traditional U.S.-style revolving credit cards (with monthly billing and revolving debt) are uncommon in French banking.
+  - Typical cards in France operate by:
+    - Immediate account debit ("debit cards"), or
+    - Automatic full monthly payment ("delayed debit"), eliminating risk of accumulating unpaid debt through missed payments.
+  - Specialized institutions (separate from conventional banks) issue U.S.-style revolving credit cards, typically with user-defined spending limits.
+  - France lacks centralized credit scoring and historical credit reporting:
+    - No unified system tracking consumer credit history across banks.
+    - Personal financial data sharing among banks restricted.
+    - Banque de France maintains limited centralized negative credit reporting only for bankruptcy, unpaid loans, or checks drawn on insufficient funds.
+
+### Functional Specification (Country-specific Regulations for Over-limit and Interchange Fees):
+
+- **Vietnam (Credit Limit and Over-limit Fees)**:
+  - Credit limit set individually by issuer based on applicant’s:
+    - Income
+    - Credit score and history
+    - Personal financial profile
+  - Credit limits adjustable upon mutual agreement between cardholder and issuer.
+  - Penalties for exceeding credit limits typically range from 1% to 5% monthly on the over-limit amount.
+  - Interest charges apply separately on amounts spent over the credit limit.
+
+- **European Union (Interchange Fee and Cross-border Transactions)**:
+  - Interchange fee caps established to limit fees banks charge each other on card transactions:
+    - **Debit cards (including universal debit/credit cards)**: capped at 0.2% of transaction amount.
+    - **Credit cards**: capped at 0.3% of transaction amount.
+  - These caps aim to ensure market fairness and prevent excessive interchange fees.
+
+- **EU Cross-border Transaction Fee Regulation**:
+  - EU regulations prohibit higher fees for transactions or cash withdrawals outside the cardholder’s home country within the EU.
+    - A transaction or ATM withdrawal in any EU member state must not incur additional fees compared to domestic transactions.
+  - Ensures transparency and uniformity of credit card usage costs throughout the EU.
+
+### Functional Specification (Canadian Credit Card Database and Interactive Comparison Tool):
+
+- **Database Maintenance and Update**:
+  - Centralized database maintained by the Government of Canada (Financial Consumer Agency of Canada - FCAC).
+  - Contains detailed, issuer-provided data on approximately 200 Canadian credit cards.
+  - Database information updated and published quarterly.
+
+- **Data Coverage**:
+  - Credit card information includes:
+    - Fees (annual/monthly, transaction fees, etc.)
+    - Interest rates (standard, introductory, penalty rates)
+    - Reward programs and incentives
+    - Card features (credit limits, insurance, benefits, restrictions)
+
+- **Data Publication Formats**:
+  - PDF-based comparison tables:
+    - Segmented by credit card type (e.g., student, business, rewards cards).
+    - Enables direct, detailed comparison of card-specific features.
+  
+  - Interactive Web-based Comparison Tool:
+    - Provides personalized credit card recommendations based on user-input profiles.
+    - User experience structured around interview-type questions regarding spending habits, card usage preferences, and financial needs.
+    - Dynamically filters and eliminates unsuitable credit card options.
+    - Offers detailed side-by-side comparison capabilities on narrowed-down card options:
+      - Reward program benefits and criteria
+      - Interest rate comparisons
+      - Fee structures
+      - Additional benefits or restrictions
+
+- **Accessibility and Consumer Support**:
+  - Designed to facilitate informed consumer decisions on credit card selection.
+  - Ensures transparency and ease of access to comprehensive credit card market data in Canada.
+
+### Functional Specification (Cash Advances and Payment Application):
+
+- **Cash Advance Functionality**:
+  - Credit cards commonly support cash withdrawals via ATMs, subject to card's available credit limit.
+  - Cash advance transactions typically incur immediate interest charges from the transaction date; no grace period applies.
+
+- **Interest and Fees on Cash Advances**:
+  - Interest rates on cash advances generally exceed standard purchase interest rates.
+  - Interest charges on cash advances accrue immediately and are not waived, even if the cardholder pays the full statement balance by the due date.
+  - Card issuers typically impose additional transaction fees (commissions), regardless of whether the ATM is owned by the issuing bank.
+
+- **Merchant Cashback Limitations**:
+  - Merchants typically do not offer cashback on credit card transactions due to associated commission fees.
+  - Notable Exception:
+    - Discover card allows cashback transactions up to $120 from participating merchants without additional fees, classifying such transactions as standard purchases rather than cash advances.
+
+- **Payment Application Practices (U.S.)**:
+  - Many U.S. issuers prioritize payment allocation to purchases and other lower-interest balances first, applying payments to higher-interest cash advances last.
+  - This results in extended, high-interest accrual on cash advances, even if cardholders regularly pay off monthly statements in full.
+
+- **Regulatory Variation (U.K.)**:
+  - U.K. regulations require issuers to apply cardholder payments first toward balances accruing the highest interest rate.
+  - This protects consumers from prolonged accumulation of high-interest debt (e.g., cash advances), ensuring more favorable payment allocation practices compared to the U.S.
+
+### Functional Specification (Acceptance Marks):
+
+- **Acceptance Mark Display**:
+  - Merchants and ATMs indicate card acceptance through visible logos ("acceptance marks").
+  - Acceptance marks clarify card scheme compatibility at transaction points (e.g., storefront decals, point-of-sale signage, advertisements).
+
+- **Purpose of Acceptance Marks**:
+  - Inform cardholders of card schemes accepted by a given merchant or ATM.
+  - Differentiate clearly between card product names (e.g., American Express Centurion) and card scheme marks (e.g., American Express logo).
+
+- **Card Scheme Correspondence**:
+  - Acceptance marks correspond directly to the logos shown on credit or debit cards indicating card scheme affiliation.
+
+- **Limitations and Exceptions**:
+  - Acceptance marks do not guarantee universal acceptance:
+    - Cards issued internationally might be rejected despite displaying the corresponding acceptance mark, due to:
+      - Contractual limitations.
+      - Legal/regulatory restrictions.
+      - Technical compatibility issues.
+
+- **Implementation Guidance**:
+  - Merchants and ATM operators should clearly display accurate and updated acceptance marks.
+  - Card issuers should inform users of potential limitations related to international acceptance.
+
+### Functional Specification (Cashback Reward Programs):
+
+- **Cashback Program Overview**:
+  - Credit card issuers offer incentive ("cashback") programs to encourage card use.
+  - Cardholders earn points or cash-points based on eligible spending activity.
+
+- **Reward Accrual and Redemption**:
+  - Points earned typically redeemable as:
+    - Gift cards
+    - Statement credits
+    - Direct cash deposits (cardholder’s bank account)
+    - Transfers into frequent flyer or loyalty programs
+  - Eligibility for points may vary:
+    - Some transactions (balance transfers, payday loans, cash advances) may be excluded.
+  - Points have no intrinsic cash value prior to redemption.
+
+- **Issuer Costs and Funding**:
+  - Rewards programs typically cost issuers between 0.25% and 2.0% of the transaction spread.
+  - Card networks (e.g., Visa, MasterCard) may increase merchant fees (interchange) to subsidize these reward programs.
+
+- **Reward Redemption Accessibility**:
+  - Issuers sometimes actively discourage or complicate redemption:
+    - Customer required to call customer service to redeem points.
+    - Online redemption functionality may be intentionally obscured or minimally accessible.
+
+- **Reward Rate and Rebate**:
+  - Typical annual rebate ranges from approximately 0.5% to 3% of net expenditures (total purchases minus refunds).
+  - Rebates provided as statement credits or direct cash payments.
+
+- **Unused or Expired Points ("Breakage")**:
+  - Unredeemed credit card points remain retained by issuer (no external regulatory allocation required).
+
+- **Economic and Policy Considerations**:
+  - Federal Reserve study (2010) concluded cashback rewards result in net economic transfer from lower-income to higher-income consumers.
+  - Elimination of cashback rewards could reduce merchant interchange fees, potentially leading to lower retail prices for all consumers in competitive markets.
+
+### Functional Specification (Merchant Costs of Rewards Programs):
+
+- **Merchant Transaction Costs**:
+  - Merchants incur fees (commissions) based on a percentage of the total transaction amount when accepting credit card payments.
+  - Rewards-based credit cards (e.g., cashback, points cards) typically charge higher interchange fees compared to standard credit cards.
+
+- **Issuer Revenue and Reward Funding**:
+  - Card issuers use a portion of the merchant-paid interchange fees to fund cardholder reward programs.
+  - Rewards (cashback, points) act as incentives to encourage greater card usage by cardholders.
+
+- **Consumer Cost Dynamics**:
+  - Rewards-based credit cards generally have higher annual percentage rates (APRs).
+  - Cardholders who pay off their balances monthly benefit from rewards without incurring additional interest.
+  - Consumers carrying balances from month to month typically pay more in interest charges, often negating the value of rewards.
+
+- **Merchant Impact**:
+  - Merchants indirectly bear the cost of consumer reward programs through higher interchange fees.
+  - Many consumers remain unaware that merchants incur higher costs when customers use rewards-based cards.
+

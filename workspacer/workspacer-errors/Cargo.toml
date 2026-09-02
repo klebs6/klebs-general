@@ -1,14 +1,17 @@
 [dependencies.get-file-size]
 path = "../get-file-size"
-version = "0.1.1"
+version = "0.1.2"
+
+[dependencies.tracing]
+workspace = true
 
 [dependencies.workspacer-3p]
 path = "../workspacer-3p"
-version = "0.5.1"
+version = "0.5.2"
 
 [dependencies.workspacer-config]
 path = "../workspacer-config"
-version = "0.1.1"
+version = "0.1.2"
 
 [package]
 categories = [
@@ -26,6 +29,6 @@ keywords = [
     "tokio",
     "workspace",
 ]
-name = "workspacer-errors"
-version = "0.1.1"
 license = "MIT"
+name = "workspacer-errors"
+version = "0.1.2"

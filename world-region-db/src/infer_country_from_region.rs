@@ -20,11 +20,11 @@ mod infer_country_from_region_tests {
     fn test_infer_country_from_known_region() {
         // Suppose a typical region => USRegion::UnitedState(UnitedState::Maryland)
         // => we expect Country::USA
-        let region: WorldRegion = USRegion::UnitedState(UnitedState::Maryland).into();
+        let region: WorldRegion = USRegion::UnitedState(UnitedState::Florida).into();
         let result = infer_country_from_region(&region);
         assert!(result.is_ok());
         let country = result.unwrap();
-        assert_eq!(country, Country::USA, "Maryland => USA");
+        assert_eq!(country, Country::USA, "Florida => USA");
     }
 
     #[traced_test]

@@ -78,8 +78,8 @@ pub fn derive_token_expander_axis(input: TokenStream) -> TokenStream {
     // plus building the aggregator’s axes() and the struct fields.
     let mut axis_name_matches = Vec::new();
     let mut axis_desc_matches = Vec::new();
-    let mut variant_idents = Vec::new();
-    let mut struct_fields = Vec::new();
+    let mut variant_idents    = Vec::new();
+    let mut struct_fields     = Vec::new();
 
     for variant in &data_enum.variants {
         let variant_ident = &variant.ident;
@@ -143,7 +143,7 @@ pub fn derive_token_expander_axis(input: TokenStream) -> TokenStream {
 
     // 2) The data-carrying struct: Expanded{Enum}
     let expanded_struct = quote! {
-        #[derive(getset::Getters, Debug, Clone, serde::Serialize, serde::Deserialize)]
+        #[derive(NamedItem,SaveLoad,AiJsonTemplate,Getters, Debug, Clone, Serialize, Deserialize)]
         #[getset(get="pub")]
         pub struct #expanded_struct_ident {
             #[serde(alias = "token_name")]
@@ -160,6 +160,7 @@ pub fn derive_token_expander_axis(input: TokenStream) -> TokenStream {
         }
     };
 
+    /*
     // 2a) Implement LoadFromFile if needed
     let load_from_file_impl = quote! {
         #[async_trait::async_trait]
@@ -177,6 +178,7 @@ pub fn derive_token_expander_axis(input: TokenStream) -> TokenStream {
             }
         }
     };
+    */
 
     // 3) The aggregator struct: e.g. EnumExpander
     let aggregator_struct = quote! {
@@ -233,7 +235,7 @@ pub fn derive_token_expander_axis(input: TokenStream) -> TokenStream {
 
         #expanded_impl_axis_traits
         #expanded_struct
-        #load_from_file_impl
+        //#load_from_file_impl
 
         #aggregator_struct
         #named_impl

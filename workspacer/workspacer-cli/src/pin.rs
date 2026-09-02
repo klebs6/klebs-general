@@ -7,12 +7,18 @@ pub enum PinSubcommand {
     Crate {
         #[structopt(long = "crate")]
         crate_name: PathBuf,
+
+        #[structopt(long = "skip-git-check")]
+        skip_git_check: bool,
     },
 
     /// Pin wildcard dependencies in an entire workspace
     Workspace {
         #[structopt(long = "path")]
         path: PathBuf,
+
+        #[structopt(long = "skip-git-check")]
+        skip_git_check: bool,
     },
 }
 
@@ -22,12 +28,12 @@ impl PinSubcommand {
             // ----------------------------------------------------
             // 1) Single crate
             // ----------------------------------------------------
-            PinSubcommand::Crate { crate_name } => {
+            PinSubcommand::Crate { crate_name, skip_git_check } => {
                 trace!("Pinning wildcard deps for single crate at '{}'", crate_name.display());
 
                 // We'll use the `run_with_crate` helper so we load the crate,
                 // optionally check Git, etc., then call `pin_all_wildcard_dependencies()`.
-                run_with_crate(crate_name.clone(), /*skip_git_check=*/false, |handle| {
+                run_with_crate(crate_name.clone(), *skip_git_check, |handle| {
                     Box::pin(async move {
 
                         // The `PinAllWildcardDependencies` trait is implemented for `CrateHandle`
@@ -46,12 +52,12 @@ impl PinSubcommand {
             // ----------------------------------------------------
             // 2) Entire workspace
             // ----------------------------------------------------
-            PinSubcommand::Workspace { path } => {
+            PinSubcommand::Workspace { path, skip_git_check } => {
                 trace!("Pinning wildcard deps for workspace at '{}'", path.display());
 
                 // We'll use `run_with_workspace` to load the workspace,
                 // optionally check Git, then call `pin_all_wildcard_dependencies()`.
-                run_with_workspace(Some(path.clone()), /*skip_git_check=*/false, |ws| {
+                run_with_workspace(Some(path.clone()), *skip_git_check, |ws| {
                     Box::pin(async move {
                         // The `PinAllWildcardDependencies` trait is implemented for `Workspace<P,H>`
                         ws.pin_all_wildcard_dependencies().await.map_err(|we| {

@@ -5,6 +5,30 @@ crate::ix!();
 #[derive(Default, Debug)]
 pub struct FailingWorkspace {}
 
+#[async_trait]
+impl LoadSeedByCustomId for FailingWorkspace {
+    async fn load_seed_by_custom_id(
+        &self,
+        custom_id: &CustomRequestId,
+    ) -> Result<Box<dyn Named + Send + Sync>, BatchWorkspaceError> {
+        // In tests we fabricate a dummy that satisfies Named
+        #[derive(Debug)]
+        struct Dummy(String);
+        impl Named for Dummy {
+            fn name(&self) -> std::borrow::Cow<'_, str> {
+                std::borrow::Cow::Borrowed(&self.0)
+            }
+        }
+        Ok(Box::new(Dummy(custom_id.as_str().to_owned())))
+    }
+}
+
+impl GetSeedManifestFilenameAtIndex for FailingWorkspace {
+    fn seed_manifest_filename(&self, batch_idx: &BatchIndex) -> PathBuf {
+        PathBuf::from("/this/path/does/not/exist/any_seed_manifest.json")
+    }
+}
+
 impl GetTargetDir for FailingWorkspace {
 
     fn get_target_dir(&self) -> PathBuf {
@@ -73,6 +97,7 @@ impl GetTargetPath for FailingWorkspace
         item.target_path_for_ai_json_expansion(&broken_dir, expected_content_type)
     }
 }
+#[async_trait]
 impl BatchWorkspaceInterface for FailingWorkspace {}
 
 #[cfg(test)]

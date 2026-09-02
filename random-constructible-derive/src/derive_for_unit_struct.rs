@@ -1,4 +1,4 @@
-// ---------------- [ File: src/derive_for_unit_struct.rs ]
+// ---------------- [ File: random-constructible-derive/src/derive_for_unit_struct.rs ]
 crate::ix!();
 
 pub fn derive_for_unit_struct(name: &Ident) -> TokenStream2 {
@@ -8,7 +8,7 @@ pub fn derive_for_unit_struct(name: &Ident) -> TokenStream2 {
                 Self
             }
 
-            fn random_with_rng<R: rand::Rng + ?Sized>(_rng: &mut R) -> Self {
+            fn random_with_rng<R: rand_core::RngCore + ?Sized>(_rng: &mut R) -> Self {
                 Self
             }
 
