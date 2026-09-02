@@ -4,9 +4,6 @@ workspace = true
 [dependencies.structopt]
 workspace = true
 
-[dependencies.tracing]
-workspace = true
-
 [dependencies.workspacer-3p]
 path = "../workspacer-3p"
 version = "0.5.2"
