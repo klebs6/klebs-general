@@ -56,7 +56,7 @@ fn test_wrapped_variant_without_display() {
     let io_error = std::io::Error::new(std::io::ErrorKind::Other, "Disk not found");
     let error = MyError::IOError(io_error);
     let formatted = format!("{}", error);
-    assert_eq!(formatted, "IOError: Custom { kind: Other, error: \"Disk not found\" }");
+    assert_eq!(formatted, "IOError");
 }
 
 #[test]

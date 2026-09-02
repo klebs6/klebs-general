@@ -44,6 +44,9 @@ workspace = true
 path = "../save-load-traits"
 version = "0.2.1"
 
+[dependencies.tracing]
+workspace = true
+
 [package]
 authors = ["klebs tpk3.mx@gmail.com"]
 description = "Provides functionality for executing and managing batch processing workflows, including file management, status monitoring, error handling, and output reconciliation in OpenAI batch operations."

@@ -59,6 +59,9 @@ workspace = true
 [dependencies.serde_json]
 workspace = true
 
+[dependencies.tracing]
+workspace = true
+
 [package]
 authors = ["klebs tpk3.mx@gmail.com"]
 description = "Handles batch responses, errors, and JSON repairs in a batch processing system."

@@ -21,6 +21,7 @@ tracing-subscriber = { version = "0.3", default-features = false, features = ["f
 
 [dev-dependencies]
 serde_json = "1.0.133"
+trybuild   = "1"
 uuid       = "1.11.0"
 
 [lib]
