@@ -47,6 +47,14 @@ pub struct MockLanguageModelClient<E> {
     #[getset(get = "pub", set = "pub")]
     fail_on_file_create_other_error: bool,
 
+    #[builder(default="false")]
+    #[getset(get = "pub", set = "pub")]
+    fail_on_preflight_openai_error: bool,
+
+    #[builder(default="false")]
+    #[getset(get = "pub", set = "pub")]
+    fail_on_preflight_other_error: bool,
+
     #[builder(default)]
     _error_marker: PhantomData<E>,
 
@@ -670,12 +678,53 @@ where
             object: "file".to_string(),
             status: Some("uploaded".to_string()),
             status_details: None,
+            //expires_at: None,
         };
 
         Ok(openai_file)
     }
 }
 
+#[async_trait]
+impl<E> PreflightCheckOpenAIApiKey for MockLanguageModelClient<E>
+where
+    E: From<OpenAIClientError> + From<std::io::Error> + Debug + Send + Sync,
+{
+    type Error = E;
+
+    async fn preflight_check_openai_api_key(&self) -> Result<(), Self::Error> {
+        info!("Mock: preflight_check_openai_api_key called");
+
+        if *self.fail_on_preflight_openai_error() {
+            warn!(
+                "Mock: failing preflight with simulated OpenAI API error (fail_on_preflight_openai_error=true)"
+            );
+
+            let openai_err = OpenAIClientError::ApiError(OpenAIApiError {
+                message: "Simulated OpenAI API key preflight failure".to_owned(),
+                r#type: None,
+                param: None,
+                code: None,
+            });
+
+            return Err(E::from(openai_err));
+        }
+
+        if *self.fail_on_preflight_other_error() {
+            warn!("Mock: failing preflight with simulated I/O error (fail_on_preflight_other_error=true)");
+
+            let io_err = std::io::Error::new(
+                std::io::ErrorKind::Other,
+                "Simulated non-OpenAI preflight error",
+            );
+
+            return Err(E::from(io_err));
+        }
+
+        info!("Mock: preflight succeeded");
+        Ok(())
+    }
+}
 
 // Finally, implement the aggregator trait itself:
 #[async_trait]

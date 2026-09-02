@@ -15,3 +15,4 @@ x!{errors}
 x!{batch_request_id}
 x!{custom_request_id}
 x!{construct_batches}
+x!{write_seed_manifest}

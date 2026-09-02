@@ -1,4 +1,5 @@
 pub(crate) use reqwest::Client;
+pub(crate) use tracing::{info,warn,debug,error,trace};
 pub(crate) use futures::{future,StreamExt, TryStreamExt};
 pub(crate) use serde::{Serialize,Deserialize};
 pub(crate) use std::collections::{VecDeque,HashSet,HashMap};

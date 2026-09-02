@@ -35,23 +35,27 @@ where
         assert!(self.output().is_none());
         assert!(self.error().is_none());
         assert!(self.associated_metadata().is_none());
+        assert!(self.seed_manifest().is_some());
 
         info!("executing fresh batch processing for triple {:#?}", self);
 
-        let input_filename    = self.effective_input_filename();
-        let output_filename   = self.effective_output_filename();
-        let error_filename    = self.effective_error_filename();
-        let metadata_filename = self.effective_metadata_filename();
+        let input_filename         = self.effective_input_filename();
+        let output_filename        = self.effective_output_filename();
+        let error_filename         = self.effective_error_filename();
+        let metadata_filename      = self.effective_metadata_filename();
+        let seed_manifest_filename = self.effective_seed_manifest_filename();
 
         info!("input_filename: {:?}",    input_filename);
         info!("output_filename: {:?}",   output_filename);
         info!("error_filename: {:?}",    error_filename);
         info!("metadata_filename: {:?}", metadata_filename);
+        info!("seed_manifest_filename: {:?}", seed_manifest_filename);
 
         assert!(input_filename.exists());
         assert!(!output_filename.exists());
         assert!(!error_filename.exists());
         assert!(!metadata_filename.exists());
+        assert!(seed_manifest_filename.exists());
 
         // Upload file
         let input_file = client.upload_batch_file_path(&input_filename).await?;

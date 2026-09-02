@@ -3,12 +3,15 @@ crate::ix!();
 
 pub trait OpenAIConfigInterface = async_openai::config::Config;
 
-#[derive(Debug)]
+#[derive(Getters,Debug)]
+#[getset(get="pub")]
 pub struct OpenAIClientHandle<E> 
 where
     E: Debug + Send + Sync + From<OpenAIClientError>,
 {
     client: async_openai::Client<OpenAIConfig>,
+
+    #[getset(skip)]
     _marker: std::marker::PhantomData<E>,
 }
 
@@ -49,10 +52,17 @@ where
         })
     }
 
+    pub async fn new_with_preflight_checks() -> Result<Arc<Self>, E> {
+        let handle = Self::new();
+        handle.preflight_check_openai_api_key().await?;
+        Ok(handle)
+    }
+
     delegate!{
         to self.client {
             pub fn batches(&self) -> async_openai::Batches<OpenAIConfig>;
             pub fn files(&self) -> async_openai::Files<OpenAIConfig>;
+            pub fn chat(&self) -> async_openai::Chat<OpenAIConfig>;
         }
     }
 }

@@ -1,20 +1,28 @@
 [dependencies.batch-mode-3p]
 path = "../batch-mode-3p"
-version = "0.2.1"
+version = "0.2.2"
 
 [dependencies.batch-mode-batch-index]
 path = "../batch-mode-batch-index"
-version = "0.2.1"
+version = "0.2.2"
+
+[dependencies.batch-mode-batch-scribe]
+path = "../batch-mode-batch-scribe"
+version = "0.1.8"
 
 [dependencies.camel-case-token-with-comment]
 path = "../camel-case-token-with-comment"
-version = "0.2.1"
+version = "0.2.2"
 
 [dependencies.derive_builder]
 workspace = true
 
 [dependencies.getset]
 workspace = true
+
+[dependencies.save-load-traits]
+path = "../save-load-traits"
+version = "0.2.2"
 
 [package]
 authors = ["klebs tpk3.mx@gmail.com"]
@@ -23,4 +31,4 @@ edition = "2024"
 license = "MIT"
 name = "batch-mode-batch-workspace-interface"
 repository = "https://github.com/klebs6/klebs-general"
-version = "0.2.1"
+version = "0.2.4"

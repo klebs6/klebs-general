@@ -26,3 +26,4 @@ pub use batch_mode_token_expansion_step::*;
 pub use batch_mode_token_expansion_traits::*;
 pub use instructed_language_model_at_coordinate::*;
 pub use language_model_token_expander::*;
+pub use batch_mode_tts::*;

@@ -7,28 +7,61 @@ pub enum PublishSubcommand {
     Crate {
         #[structopt(long = "crate")]
         crate_name: PathBuf,
+
+        #[structopt(long = "dry-run")]
+        dry_run: bool,
     },
 
     /// Publish all crates in a workspace, in topological order
     Workspace {
         #[structopt(long = "path")]
         path: PathBuf,
+
+        #[structopt(long = "dry-run")]
+        dry_run: bool,
+    },
+
+    /// Publish one crate **and every workspace crate it depends on**
+    CrateTree {
+        /// Path to the workspace root (directory that contains the workspace‑level Cargo.toml)
+        #[structopt(long = "path")]
+        path: PathBuf,
+
+        /// Name of the crate that should act as the tree’s *root*
+        #[structopt(long = "root")]
+        root: String,
+
+        #[structopt(long = "dry-run")]
+        dry_run: bool,
+    },
+
+    CrateList { 
+
+        #[structopt(long = "path")]
+        path: PathBuf, 
+
+        #[structopt(long = "crate-names")]
+        crate_names: Vec<String>, 
+
+        #[structopt(long = "dry-run")]
+        dry_run: bool 
     },
 }
 
 impl PublishSubcommand {
     pub async fn run(&self) -> Result<(), WorkspaceError> {
         match self {
-            PublishSubcommand::Crate { crate_name } => {
+            PublishSubcommand::Crate { crate_name, dry_run } => {
+                let dry_run = *dry_run;
                 trace!("Publishing single crate at '{}'", crate_name.display());
 
                 // Use `run_with_crate` to build a CrateHandle and optionally check Git, etc.
                 // Then call the `TryPublish` trait method on it.
-                run_with_crate(crate_name.clone(), /*skip_git_check=*/false, |handle| {
+                run_with_crate(crate_name.clone(), /*skip_git_check=*/false, move |handle| {
                     Box::pin(async move {
                         // If you want a `dry_run` or other flags, you can pass them here.
                         // For example, handle.try_publish(dry_run).await. We’ll use false for a real publish.
-                        handle.try_publish(false).await.map_err(|crate_err| {
+                        handle.try_publish(dry_run).await.map_err(|crate_err| {
                             error!("Could not publish crate='{}': {:?}", handle.name(), crate_err);
                             WorkspaceError::CrateError(crate_err)
                         })?;
@@ -40,15 +73,16 @@ impl PublishSubcommand {
                 .await
             }
 
-            PublishSubcommand::Workspace { path } => {
+            PublishSubcommand::Workspace { path, dry_run } => {
+                let dry_run = *dry_run;
                 trace!("Publishing entire workspace at '{}'", path.display());
 
                 // Use `run_with_workspace` to load the workspace, check Git, etc. Then call `TryPublish`.
-                run_with_workspace(Some(path.clone()), /*skip_git_check=*/false, |ws| {
+                run_with_workspace(Some(path.clone()), /*skip_git_check=*/false, move |ws| {
                     Box::pin(async move {
                         // If you want to do a "dry run" or pass flags, you can do that here.
                         // We'll do a real publish with `dry_run=false`.
-                        ws.try_publish(false).await.map_err(|err| {
+                        ws.try_publish(dry_run).await.map_err(|err| {
                             error!(
                                 "Could not publish workspace at '{}': {:?}",
                                 ws.as_ref().display(),
@@ -58,6 +92,66 @@ impl PublishSubcommand {
                         })?;
 
                         info!("Successfully published all crates in workspace at '{}'", ws.as_ref().display());
+                        Ok(())
+                    })
+                })
+                .await
+            }
+
+            PublishSubcommand::CrateTree { path, root, dry_run } => {
+                let dry_run = *dry_run;
+                trace!(
+                    "Publishing crate‑tree rooted at '{}' in workspace '{}'",
+                    root,
+                    path.display()
+                );
+
+                let root_clone = root.clone();
+                run_with_workspace(Some(path.clone()), /*skip_git_check=*/false, move |ws| {
+                    Box::pin(async move {
+                        ws.try_publish_crate_tree(&root_clone, dry_run).await.map_err(|err| {
+                            error!(
+                                "Could not publish crate‑tree rooted at '{}' in workspace '{}': {:?}",
+                                root_clone,
+                                ws.as_ref().display(),
+                                err
+                            );
+                            err
+                        })
+                    })
+                })
+                .await
+            }
+
+            PublishSubcommand::CrateList { path, crate_names, dry_run } => {
+                let dry_run_flag = *dry_run;
+                let workspace_path = path.clone();
+                let requested_crates = crate_names.clone();
+
+                trace!(
+                    "Publishing selected crate list {:?} in workspace '{}' (dry_run={})",
+                    requested_crates,
+                    workspace_path.display(),
+                    dry_run_flag
+                );
+
+                run_with_workspace(Some(workspace_path), /*skip_git_check=*/false, move |ws| {
+                    Box::pin(async move {
+                        ws.try_publish_crate_list(&requested_crates, dry_run_flag).await.map_err(|err| {
+                            error!(
+                                "Could not publish requested crate list {:?} in workspace '{}': {:?}",
+                                requested_crates,
+                                ws.as_ref().display(),
+                                err
+                            );
+                            err
+                        })?;
+
+                        info!(
+                            "Successfully completed publish for requested crate list {:?} in workspace '{}'",
+                            requested_crates,
+                            ws.as_ref().display()
+                        );
                         Ok(())
                     })
                 })

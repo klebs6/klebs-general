@@ -1,7 +1,7 @@
 // ---------------- [ File: workspacer-consolidate/src/gather_fn_item.rs ]
 crate::ix!();
 
-#[tracing::instrument(level = "trace", skip_all)]
+#[instrument(level = "trace", skip_all)]
 pub fn gather_fn_item(
     fn_ast:     &ast::Fn,
     options:    &ConsolidationOptions,
@@ -82,7 +82,7 @@ pub fn gather_fn_item(
 /// Allow scanning **any** amount of whitespace (including multiple newlines & indentation)
 /// as we go upward from `node.first_token()`, attaching consecutive `///` or `//!` lines.
 /// Stops only if we encounter non‐doc comments or other tokens.
-#[tracing::instrument(level = "trace", skip(node))]
+#[instrument(level = "trace", skip(node))]
 fn gather_preceding_doc_comments(node: &SyntaxNode) -> Option<String> {
     let first_token = node.first_token()?;
     let mut lines = Vec::new();
@@ -121,7 +121,7 @@ fn gather_preceding_doc_comments(node: &SyntaxNode) -> Option<String> {
 /// If `fn_ast.body()` is None, try to extract the function body manually
 /// by scanning the text after the param list / where clause and looking
 /// for the first `{ ... }` or `= expr;`.
-#[tracing::instrument(level = "trace", skip(fn_ast))]
+#[instrument(level = "trace", skip(fn_ast))]
 fn fallback_extract_fn_body(fn_ast: &ast::Fn) -> Option<String> {
     let full_fn_text = fn_ast.syntax().text().to_string();
     trace!("fallback_extract_fn_body => raw fn text:\n{full_fn_text}");

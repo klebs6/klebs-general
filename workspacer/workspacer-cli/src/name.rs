@@ -7,12 +7,18 @@ pub enum NameSubcommand {
     Crate {
         #[structopt(long = "crate")]
         crate_name: PathBuf,
+
+        #[structopt(long = "skip-git-check")]
+        skip_git_check: bool,
     },
 
     /// Name all files in an entire workspace (e.g., `--path some/path/to/workspace`)
     Workspace {
         #[structopt(long = "path")]
         path: PathBuf,
+
+        #[structopt(long = "skip-git-check")]
+        skip_git_check: bool,
     },
 }
 
@@ -22,12 +28,12 @@ impl NameSubcommand {
             // --------------------------------------
             // 1) Single Crate
             // --------------------------------------
-            NameSubcommand::Crate { crate_name } => {
+            NameSubcommand::Crate { crate_name, skip_git_check } => {
                 trace!("Naming all .rs files in single crate at '{}'", crate_name.display());
 
                 // We'll use our standard `run_with_crate` helper
                 // to construct a CrateHandle, optionally check Git, then run our closure.
-                run_with_crate(crate_name.clone(), /*skip_git_check=*/false, move |handle| {
+                run_with_crate(crate_name.clone(), *skip_git_check, move |handle| {
                     Box::pin(async move {
                         // Using the `NameAllFiles` trait implemented for CrateHandle
                         handle.name_all_files().await.map_err(|crate_err| {
@@ -46,12 +52,12 @@ impl NameSubcommand {
             // --------------------------------------
             // 2) Entire Workspace
             // --------------------------------------
-            NameSubcommand::Workspace { path } => {
+            NameSubcommand::Workspace { path, skip_git_check } => {
                 trace!("Naming all .rs files in workspace at '{}'", path.display());
 
                 // We'll use `run_with_workspace` so that we automatically load the workspace,
                 // optionally check Git cleanliness, etc.
-                run_with_workspace(Some(path.clone()), /*skip_git_check=*/false, move |ws| {
+                run_with_workspace(Some(path.clone()), *skip_git_check, move |ws| {
                     Box::pin(async move {
                         // The trait `NameAllFiles` is also impl’d for `Workspace<P,H>`.
                         ws.name_all_files().await.map_err(|we| {

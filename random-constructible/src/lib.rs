@@ -1,4 +1,5 @@
 // ---------------- [ File: random-constructible/src/lib.rs ]
+#![cfg_attr(feature = "specialization", feature(min_specialization,specialization))]
 #![allow(unused_imports)]
 
 #[macro_use] mod imports; use imports::*;

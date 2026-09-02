@@ -258,9 +258,9 @@ mod cli_tests {
     #[traced_test]
     #[serial]
     fn test_mock_scenario() {
-        // The default “mock” address is region=VA => city=calverton => postal=20138-9997 => street=catlett road
-        // So we store VA data so it’s valid:
-        let va_region = USRegion::UnitedState(UnitedState::Virginia).into();
+        // The default “mock” address is region=FL => city=miami => postal=33101 => street=biscayne blvd
+        // So we store FL data so it’s valid:
+        let fl_region = USRegion::UnitedState(UnitedState::Florida).into();
 
         // Use a temp directory to guarantee a fresh RocksDB
         let temp_dir = tempfile::TempDir::new().expect("failed to create temp dir");
@@ -268,17 +268,17 @@ mod cli_tests {
 
         {
             let mut db_guard = db.lock().unwrap();
-            let rr = RegionalRecords::mock_for_region(&va_region);
+            let rr = RegionalRecords::mock_for_region(&fl_region);
             rr.write_to_storage(&mut *db_guard).unwrap();
         }
 
-        let mock_addr = WorldAddress::mock(); // => region=VA, city=calverton, ...
+        let mock_addr = WorldAddress::mock(); // => region=FL, city=miami, ...
         let da = DataAccess::with_db(db.clone());
 
-        // Now it is valid because we have VA data in a fresh DB
+        // Now it is valid because we have FL data in a fresh DB
         assert!(
             mock_addr.validate_with(&da).is_ok(),
-            "VA mock address should be valid with fresh DB"
+            "FL mock address should be valid with fresh DB"
         );
     }
 }

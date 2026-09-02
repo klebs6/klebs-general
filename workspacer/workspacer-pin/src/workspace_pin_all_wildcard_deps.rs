@@ -48,6 +48,31 @@ where
             }
         };
 
+        {
+            let manifest_path: PathBuf = self.as_ref().join("Cargo.toml");
+            trace!("workspace_pin_all_wildcard_dependencies: processing workspace‑root manifest at {:?}", manifest_path);
+
+            if manifest_path.exists() {
+                // Read & parse
+                let src = fs::read_to_string(&manifest_path).await?;
+                let mut doc: TeDocument = TeDocument::from_str(&src).expect("expected to parse {manifest_path} as toml");
+
+                // Pin
+                pin_wildcards_in_doc(&mut doc, &lock_versions, self).await?;
+
+                // Write back only if mutated
+                let new_src = doc.to_string();
+                if new_src != src {
+                    fs::write(&manifest_path, new_src).await?;
+                    debug!("workspace_pin_all_wildcard_dependencies: updated workspace‑root Cargo.toml");
+                } else {
+                    trace!("workspace_pin_all_wildcard_dependencies: workspace‑root Cargo.toml unchanged");
+                }
+            } else {
+                trace!("workspace_pin_all_wildcard_dependencies: workspace‑root Cargo.toml not found – skipping");
+            }
+        }
+
         // For each crate in this workspace, do not hold the MutexGuard across .await
         for arc_crate in self.crates() {
             let crate_path = {

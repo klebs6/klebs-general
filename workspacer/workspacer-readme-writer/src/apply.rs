@@ -81,63 +81,107 @@ impl ApplyAiReadmeOutput for CrateHandle {
     async fn update_cargo_toml(
         &self,
         new_description: &str,
-        new_keywords: &[String],
-        new_categories: &[String],
-    ) -> Result<(), Self::Error> {
+        new_keywords:    &[String],
+        new_categories:  &[String]
+    ) -> Result<(), Self::Error>
+    {
+        trace!(
+            "update_cargo_toml: preparing to update Cargo.toml for crate at {:?}",
+            self.as_ref()
+        );
 
-        // 1) We create a local PathBuf by locking, extracting the path, and dropping the guard immediately:
         let cargo_path = {
-            let cargo_toml_arc = self.cargo_toml();    // Arc<Mutex<dyn CargoTomlInterface>>
+            let cargo_toml_arc = self.cargo_toml();
             let guard = cargo_toml_arc.lock().await;
             let path_buf = guard.as_ref().to_path_buf();
-            // guard goes out of scope here
             path_buf
         };
 
-        // 2) Now we can safely do async I/O without holding the MutexGuard.
+        debug!(
+            "update_cargo_toml: resolved cargo_toml_path={}",
+            cargo_path.display()
+        );
+
         let old_contents = tokio::fs::read_to_string(&cargo_path).await.map_err(|io_err| {
+            error!(
+                "update_cargo_toml: failed to read Cargo.toml at {}",
+                cargo_path.display()
+            );
             CrateError::IoError {
                 io_error: Arc::new(io_err),
-                context: format!("Failed to read file {}", cargo_path.display()),
+                context:  format!("Failed to read file {}", cargo_path.display()),
             }
         })?;
 
-        // 3) Parse with toml_edit
+        trace!(
+            "update_cargo_toml: read {} bytes from {}",
+            old_contents.len(),
+            cargo_path.display()
+        );
+
         let mut doc = old_contents.parse::<toml_edit::Document>().map_err(|parse_err| {
+            error!(
+                "update_cargo_toml: failed to parse Cargo.toml as toml_edit::Document at {}",
+                cargo_path.display()
+            );
             CrateError::CargoTomlError(
                 CargoTomlError::TomlEditError {
-                    cargo_toml_file: cargo_path.clone(),
+                    cargo_toml_file:  cargo_path.clone(),
                     toml_parse_error: parse_err,
                 }
             )
         })?;
 
-        // 4) Update the [package] table
-        if let Some(pkg) = doc.get_mut("package").and_then(|it| it.as_table_mut()) {
-            pkg["description"] = toml_edit::value(new_description);
+        let pkg = doc
+            .get_mut("package")
+            .and_then(|it| it.as_table_mut())
+            .ok_or_else(|| {
+                error!(
+                    "update_cargo_toml: missing [package] section in {}",
+                    cargo_path.display()
+                );
+                CrateError::CargoTomlError(
+                    CargoTomlError::MissingPackageSection {
+                        cargo_toml_file: cargo_path.clone(),
+                    }
+                )
+            })?;
 
-            let mut kw_array = toml_edit::Array::default();
-            for kw in new_keywords {
-                let cleaned = clean_cratesio_keyword(&kw);
-                kw_array.push(toml_edit::Value::from(cleaned.as_str()));
-            }
-            pkg["keywords"] = toml_edit::Item::Value(toml_edit::Value::Array(kw_array));
+        pkg["description"] = toml_edit::value(new_description);
 
-            let mut cat_array = toml_edit::Array::default();
-            for cat in new_categories.iter().filter(|item| LEGAL_CATEGORIES.contains(&item.as_str())) {
-                cat_array.push(toml_edit::Value::from(cat.as_str()));
-            }
-            pkg["categories"] = toml_edit::Item::Value(toml_edit::Value::Array(cat_array));
+        let mut kw_array = toml_edit::Array::default();
+        for kw in new_keywords {
+            let cleaned = clean_cratesio_keyword(kw);
+            kw_array.push(toml_edit::Value::from(cleaned.as_str()));
         }
+        pkg["keywords"] = toml_edit::Item::Value(toml_edit::Value::Array(kw_array));
 
-        // 5) Write it back
+        let mut cat_array = toml_edit::Array::default();
+        for cat in new_categories
+            .iter()
+            .filter(|item| LEGAL_CATEGORIES.contains(&item.as_str()))
+        {
+            cat_array.push(toml_edit::Value::from(cat.as_str()));
+        }
+        pkg["categories"] = toml_edit::Item::Value(toml_edit::Value::Array(cat_array));
+
         let new_text = doc.to_string();
+
         tokio::fs::write(&cargo_path, new_text).await.map_err(|io_err| {
+            error!(
+                "update_cargo_toml: failed to write updated Cargo.toml at {}",
+                cargo_path.display()
+            );
             CrateError::IoError {
                 io_error: Arc::new(io_err),
-                context: format!("Failed to write updated Cargo.toml at {}", cargo_path.display()),
+                context:  format!("Failed to write updated Cargo.toml at {}", cargo_path.display()),
             }
         })?;
+
+        info!(
+            "update_cargo_toml: successfully updated Cargo.toml for crate at {:?}",
+            self.as_ref()
+        );
 
         Ok(())
     }

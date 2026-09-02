@@ -20,6 +20,9 @@ pub struct BatchFileTriple {
     #[builder(default)]
     associated_metadata: Option<PathBuf>,
 
+    #[builder(default)]
+    seed_manifest:       Option<PathBuf>,
+
     workspace:           Arc<dyn BatchWorkspaceInterface>,
 }
 
@@ -35,6 +38,7 @@ impl Debug for BatchFileTriple {
             .field("output", &self.output)
             .field("error",  &self.error)
             .field("associated_metadata", &self.associated_metadata)
+            .field("seed_manifest", &self.seed_manifest)
             .finish()
     }
 }
@@ -58,6 +62,8 @@ impl PartialEq for BatchFileTriple {
         self.error.eq(&other.error) 
             &&
         self.associated_metadata.eq(&other.associated_metadata) 
+            &&
+        self.seed_manifest.eq(&other.seed_manifest) 
     }
 }
 
@@ -76,7 +82,7 @@ impl BatchFileTriple {
     pub fn new_for_test_with_workspace(workspace: Arc<dyn BatchWorkspaceInterface>) -> Self {
         trace!("Constructing a test triple with a custom workspace only");
         let index = BatchIndex::Usize(9999);
-        Self::new_direct(&index, None, None, None, None, workspace)
+        Self::new_direct(&index, None, None, None, None, None, workspace)
     }
 
     /// Some tests referred to “new_for_test_empty()”. We define it here 
@@ -85,7 +91,7 @@ impl BatchFileTriple {
     pub fn new_for_test_empty() -> Self {
         let index = BatchIndex::Usize(9999);
         let workspace = Arc::new(MockBatchWorkspace::default());
-        Self::new_direct(&index, None, None, None, None, workspace)
+        Self::new_direct(&index, None, None, None, None, None, workspace)
     }
 
     /// Some tests set the index after constructing. We add a trivial setter:
@@ -126,6 +132,14 @@ impl BatchFileTriple {
             self.workspace.metadata_filename(&self.index)
         }
     }
+
+    pub fn effective_seed_manifest_filename(&self) -> PathBuf {
+        if let Some(path) = self.seed_manifest() {
+            path.clone()
+        } else {
+            self.workspace.seed_manifest_filename(&self.index)
+        }
+    }
 }
 
 impl BatchFileTriple {
@@ -136,7 +150,7 @@ impl BatchFileTriple {
         let triple = BatchFileTriple::new_direct(
             // Or pick some new function signature. For now, we pass a mocked index:
             &BatchIndex::new(/*this is random uuid4 */),
-            None, None, None, None,
+            None, None, None, None, None,
             workspace,
         );
         
@@ -161,6 +175,7 @@ impl BatchFileTriple {
             None, // no forced output path
             None, // no forced error path
             Some(metadata_path.clone()),
+            None,
             std::sync::Arc::new(MockBatchWorkspace::default()), // or however you handle workspace
         );
         triple
@@ -192,6 +207,11 @@ impl BatchFileTriple {
         self.error = path;
     }
 
+    pub fn set_seed_manifest_path(&mut self, path: Option<PathBuf>) {
+        trace!("Setting 'seed_manifest' path to {:?}", path);
+        self.seed_manifest = path;
+    }
+
     pub fn all_are_none(&self) -> bool {
         trace!("Checking if input, output, and error are all None for batch index={:?}", self.index);
         self.input.is_none() && self.output.is_none() && self.error.is_none()
@@ -210,15 +230,22 @@ impl BatchFileTriple {
         let batch_output_filename   = workspace.output_filename(&index);
         let batch_error_filename    = workspace.error_filename(&index);
         let batch_metadata_filename = workspace.metadata_filename(&index);
+        let batch_seed_manifest_filename = workspace.seed_manifest_filename(&index);
 
         info!("Creating new batch input file at {:?} with {} requests", batch_input_filename, requests.len());
+
         batch_mode_batch_scribe::create_batch_input_file(&requests,&batch_input_filename)?;
+
+        trace!("Writing seed manifest at {:?}", batch_seed_manifest_filename);
+
+        batch_mode_batch_scribe::write_seed_manifest(&batch_seed_manifest_filename, requests)?;
 
         // dev-only checks
         assert!(batch_input_filename.exists());
         assert!(!batch_output_filename.exists());
         assert!(!batch_error_filename.exists());
         assert!(!batch_metadata_filename.exists());
+        assert!(batch_seed_manifest_filename.exists());
 
         Ok(Self {
             index,
@@ -226,6 +253,7 @@ impl BatchFileTriple {
             output:              None,
             error:               None,
             associated_metadata: None,
+            seed_manifest:       Some(batch_seed_manifest_filename),
             workspace,
         })
     }
@@ -236,6 +264,7 @@ impl BatchFileTriple {
         output:              Option<PathBuf>, 
         error:               Option<PathBuf>, 
         associated_metadata: Option<PathBuf>, 
+        seed_manifest:       Option<PathBuf>, 
         workspace:           Arc<dyn BatchWorkspaceInterface>
     ) -> Self {
         trace!(
@@ -248,6 +277,7 @@ impl BatchFileTriple {
             output, 
             error, 
             associated_metadata, 
+            seed_manifest, 
             workspace 
         }
     }
@@ -270,6 +300,7 @@ impl BatchFileTriple {
             None,                 // no output file
             None,                 // no error file
             Some(metadata_path),  // test sets an associated metadata path
+            None,
             workspace
         )
     }
@@ -303,6 +334,7 @@ impl BatchFileTriple {
             output,
             error,
             None,
+            None,
             workspace,
         )
     }
@@ -318,7 +350,7 @@ mod batch_file_triple_filename_accessors_exhaustive_tests {
         let workspace = Arc::new(MockBatchWorkspace::default());
         let triple = BatchFileTriple::new_direct(
             &BatchIndex::new(),
-            None,None,None,None,
+            None,None,None,None,None,
             workspace.clone()
         );
         let path = triple.effective_input_filename();
@@ -333,7 +365,7 @@ mod batch_file_triple_filename_accessors_exhaustive_tests {
         let workspace = Arc::new(MockBatchWorkspace::default());
         let triple = BatchFileTriple::new_direct(
             &BatchIndex::new(),
-            None,None,None,None,
+            None,None,None,None,None,
             workspace.clone()
         );
         let path = triple.effective_output_filename();
@@ -348,7 +380,7 @@ mod batch_file_triple_filename_accessors_exhaustive_tests {
         let workspace = Arc::new(MockBatchWorkspace::default());
         let triple = BatchFileTriple::new_direct(
             &BatchIndex::new(),
-            None,None,None,None,
+            None,None,None,None,None,
             workspace.clone()
         );
         let path = triple.effective_error_filename();
@@ -363,7 +395,7 @@ mod batch_file_triple_filename_accessors_exhaustive_tests {
         let workspace = Arc::new(MockBatchWorkspace::default());
         let triple = BatchFileTriple::new_direct(
             &BatchIndex::new(),
-            None,None,None,None,
+            None,None,None,None,None,
             workspace.clone()
         );
         let path = triple.effective_metadata_filename();
@@ -378,7 +410,7 @@ mod batch_file_triple_filename_accessors_exhaustive_tests {
         let workspace = Arc::new(MockBatchWorkspace::default());
         let mut triple = BatchFileTriple::new_direct(
             &BatchIndex::new(),
-            None,None,None,None,
+            None,None,None,None,None,
             workspace
         );
         let new_path = Some(PathBuf::from("test_output.json"));
@@ -394,7 +426,7 @@ mod batch_file_triple_filename_accessors_exhaustive_tests {
         let workspace = Arc::new(MockBatchWorkspace::default());
         let mut triple = BatchFileTriple::new_direct(
             &BatchIndex::new(),
-            None,None,None,None,
+            None,None,None,None,None,
             workspace
         );
         let new_path = Some(PathBuf::from("test_error.json"));
@@ -410,7 +442,7 @@ mod batch_file_triple_filename_accessors_exhaustive_tests {
         let workspace = Arc::new(MockBatchWorkspace::default());
         let triple = BatchFileTriple::new_direct(
             &BatchIndex::new(),
-            None,None,None,None,
+            None,None,None,None,None,
             workspace
         );
         debug!("Triple with all None: {:?}", triple);
@@ -425,7 +457,7 @@ mod batch_file_triple_filename_accessors_exhaustive_tests {
         let triple = BatchFileTriple::new_direct(
             &BatchIndex::new(),
             Some(PathBuf::from("some_input.json")),
-            None,None,None,
+            None,None,None,None,
             workspace
         );
         debug!("Triple with input path: {:?}", triple);
@@ -474,11 +506,12 @@ mod batch_file_triple_filename_accessors_exhaustive_tests {
         let output   = Some(PathBuf::from("output.json"));
         let error    = Some(PathBuf::from("error.json"));
         let metadata = Some(PathBuf::from("metadata.json"));
+        let seed_manifest = Some(PathBuf::from("seed_manifest.json"));
 
         let workspace = Arc::new(MockBatchWorkspace::default());
         let triple = BatchFileTriple::new_direct(
             &index,
-            input.clone(), output.clone(), error.clone(), metadata.clone(),
+            input.clone(), output.clone(), error.clone(), metadata.clone(), seed_manifest.clone(),
             workspace
         );
         debug!("Constructed triple: {:?}", triple);
@@ -499,12 +532,12 @@ mod batch_file_triple_filename_accessors_exhaustive_tests {
 
         let triple1 = BatchFileTriple::new_direct(
             &idx1,
-            None, None, None, None,
+            None, None, None, None, None,
             Arc::new(MockBatchWorkspace::default())
         );
         let triple2 = BatchFileTriple::new_direct(
             &idx2,
-            None, None, None, None,
+            None, None, None, None, None,
             Arc::new(MockBatchWorkspace::default())
         );
 

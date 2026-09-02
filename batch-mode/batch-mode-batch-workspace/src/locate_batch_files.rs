@@ -21,7 +21,7 @@ where
         };
 
         let pattern_str = format!(
-            "^batch_(?P<kind>input|output|error|metadata)_(?P<core>{core_str})(?P<suffix>.*)\\.jsonl$"
+            "^batch_(?P<kind>input|output|error|metadata|seed_manifest)_(?P<core>{core_str})(?P<suffix>.*)\\.jsonl$"
         );
 
         let pattern = Regex::new(&pattern_str)
@@ -32,6 +32,7 @@ where
         let mut output   = None;
         let mut error    = None;
         let mut metadata = None;
+        let mut seed_manifest = None;
 
         let mut entries = fs::read_dir(self.workdir()).await?;
         while let Some(entry) = entries.next_entry().await? {
@@ -133,6 +134,23 @@ where
                             }
                             metadata = Some(path);
                         }
+
+                        "seed_manifest" => {
+                            if seed_manifest.is_some() {
+                                error!(
+                                    "Multiple seed_manifest files found for index {:?} => old: {:?}, new: {:?}",
+                                    index,
+                                    seed_manifest.as_ref().unwrap(),
+                                    path
+                                );
+                                return Err(io::Error::new(
+                                    io::ErrorKind::InvalidData,
+                                    "Multiple seed_manifest files found"
+                                ).into());
+                            }
+                            seed_manifest = Some(path);
+                        }
+
                         unk => {
                             warn!("Ignoring unrecognized 'kind' capture='{}' in filename='{}'", unk, filename);
                         }
@@ -146,7 +164,7 @@ where
         }
 
         // If we found nothing at all, return None. Otherwise, build the triple.
-        if input.is_none() && output.is_none() && error.is_none() && metadata.is_none() {
+        if input.is_none() && output.is_none() && error.is_none() && metadata.is_none() && seed_manifest.is_none() {
             debug!(
                 "No matching files found for index={:?} => returning None",
                 index
@@ -154,8 +172,8 @@ where
             Ok(None)
         } else {
             debug!(
-                "Constructing BatchFileTriple => index={:?}, input={:?}, output={:?}, error={:?}, metadata={:?}",
-                index, input, output, error, metadata
+                "Constructing BatchFileTriple => index={:?}, input={:?}, output={:?}, error={:?}, metadata={:?}, seed_manifest={:?}",
+                index, input, output, error, metadata, seed_manifest
             );
             Ok(Some(BatchFileTriple::new_direct(
                 index,
@@ -163,6 +181,7 @@ where
                 output,
                 error,
                 metadata,
+                seed_manifest,
                 self.clone()
             )))
         }

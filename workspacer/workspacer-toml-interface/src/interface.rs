@@ -7,6 +7,7 @@ pub trait CargoTomlInterface
 + Sync
 + Versioned<Error=CargoTomlError>
 + GetContent
++ ReferencesDependencyInAnyTable
 //+ PinWildcardDependencies<Error=CargoTomlError>
 + CheckRequiredFieldsForPublishing<Error=CargoTomlError>
 + CheckVersionValidityForPublishing<Error=CargoTomlError>
@@ -35,6 +36,21 @@ pub trait CargoTomlInterface
 
 pub trait GetContent {
     fn get_content(&self) -> &toml::Value;
+}
+
+pub trait ReferencesDependencyInAnyTable {
+    /// Returns `true` if this manifest references `dep_name` in any of the
+    /// standard dependency tables (top-level or target-specific):
+    /// - `dependencies`
+    /// - `dev-dependencies`
+    /// - `build-dependencies`
+    ///
+    /// This is a read-only check; it does **not** inject or modify `version`
+    /// fields. It treats path/git/workspace-only entries as "referenced".
+    fn references_dependency_in_any_table(
+        &self,
+        dep_name: &str,
+    ) -> Result<bool, CargoTomlError>;
 }
 
 #[async_trait]

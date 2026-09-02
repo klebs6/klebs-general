@@ -1,0 +1,17 @@
+[package]
+name = "json-misunderstanding"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+export-magic       = "*"
+serde_json         = "*"
+serde              = { version = "*", features = [ "derive" ] }
+tracing            = { version = "*", features = ["log"] }
+tracing-subscriber = { version = "*", default-features = false, features = ["fmt", "std", "env-filter"] }
+traced-test        = "*"
+tracing-setup      = "*"
+derive_builder = "*"
+getset = "*"
+proptest = "*"
+chrono = "*"

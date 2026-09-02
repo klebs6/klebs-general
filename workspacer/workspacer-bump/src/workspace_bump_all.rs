@@ -38,7 +38,7 @@ macro_rules! gen_bump_all_for_workspace {
             async fn bump_all(&mut self, release: ReleaseType) 
                 -> Result<(), Self::Error> 
             {
-                tracing::trace!(
+                trace!(
                     "Entering blanket-impl bump_all for {} with release={:?}",
                     stringify!($ws_type),
                     release
@@ -107,7 +107,7 @@ macro_rules! gen_bump_all_for_workspace {
                         match cargo_toml.update_dependency_version(dep_name, new_ver) {
                             Ok(true) => {
                                 changed_any = true;
-                                tracing::trace!(
+                                trace!(
                                     "[2nd pass] crate='{}': updated dep='{}' => '{}'",
                                     crate_name, 
                                     dep_name, 

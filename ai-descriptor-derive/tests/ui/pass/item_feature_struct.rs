@@ -1,3 +1,4 @@
+// ---------------- [ File: ai-descriptor-derive/tests/ui/pass/item_feature_struct.rs ]
 use ai_descriptor_derive::*;
 use ai_descriptor_trait::*;
 

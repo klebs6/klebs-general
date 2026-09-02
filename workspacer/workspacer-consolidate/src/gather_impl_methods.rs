@@ -33,7 +33,7 @@ pub fn gather_impl_methods(
     out
 }
 
-#[tracing::instrument(level="trace", skip_all)]
+#[instrument(level="trace", skip_all)]
 fn should_skip_item_fn(fn_ast: &ast::Fn, options: &ConsolidationOptions) -> bool {
     let node = fn_ast.syntax().clone();
     let snippet = snippet_for_logging(&node);

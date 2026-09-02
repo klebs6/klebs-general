@@ -121,27 +121,103 @@ where
     }
 }
 
+#[tracing::instrument(level = "info", skip(writer, requests), fields(plant = plant, request_count = requests.len()))]
 pub async fn execute_ai_readme_writer_requests(
     writer:   &mut AiReadmeWriter,
     requests: &[AiReadmeWriterRequest<PathBuf>],
-    plant:    bool,
+    plant:    bool
 ) -> Result<(), AiReadmeWriterError>
 {
-    let unseen = writer.batch_workspace().calculate_unseen_inputs(&requests,&ExpectedContentType::Json);
-
-    info!("Gathering AI expansions from the workspace. unseen inputs={:#?}", unseen);
-
-    if plant {
-        writer.plant_seed_and_wait(&unseen).await?;
+    if requests.is_empty() {
+        info!("execute_ai_readme_writer_requests: no requests provided; nothing to do.");
+        return Ok(());
     }
 
-    let results = writer.gather_results(&unseen).await?;
+    let unseen = writer
+        .batch_workspace()
+        .calculate_unseen_inputs(requests, &ExpectedContentType::Json);
 
-    debug!("Gathered results={:#?}",results);
+    info!(
+        "execute_ai_readme_writer_requests: scanned batch workspace; total_requests={}, unseen_requests={}, plant={}",
+        requests.len(),
+        unseen.len(),
+        plant
+    );
+
+    if !unseen.is_empty() {
+        debug!(
+            "execute_ai_readme_writer_requests: unseen crate targets = {:?}",
+            unseen
+                .iter()
+                .map(|r| r.crate_name().clone())
+                .collect::<Vec<String>>()
+        );
+    }
+
+    if plant {
+        if unseen.is_empty() {
+            info!("execute_ai_readme_writer_requests: no unseen requests; skipping plant_seed_and_wait.");
+        } else {
+            info!(
+                "execute_ai_readme_writer_requests: planting {} unseen request(s) into batch workflow.",
+                unseen.len()
+            );
+            writer.plant_seed_and_wait(&unseen).await?;
+            info!("execute_ai_readme_writer_requests: plant_seed_and_wait completed.");
+        }
+    } else {
+        info!("execute_ai_readme_writer_requests: plant=false; will only apply results already present in the batch workspace.");
+    }
+
+    let results = writer.gather_results(requests).await?;
+
+    debug!(
+        "execute_ai_readme_writer_requests: gathered {} result(s) for {} request(s).",
+        results.len(),
+        requests.len()
+    );
+
+    let produced_crates: std::collections::HashSet<String> = results
+        .iter()
+        .map(|(seed, _output)| seed.crate_name().clone())
+        .collect();
+
+    let missing_crates: Vec<String> = requests
+        .iter()
+        .filter(|req| !produced_crates.contains(req.crate_name()))
+        .map(|req| req.crate_name().clone())
+        .collect();
+
+    if !missing_crates.is_empty() {
+        if plant {
+            error!(
+                "execute_ai_readme_writer_requests: missing AI outputs after planting. missing_count={}, missing_crates={:?}",
+                missing_crates.len(),
+                missing_crates
+            );
+        } else {
+            warn!(
+                "execute_ai_readme_writer_requests: some requested crates have no AI output available in the batch workspace (plant disabled). missing_count={}, missing_crates={:?}",
+                missing_crates.len(),
+                missing_crates
+            );
+        }
+    }
+
     for (request, response) in results {
+        let crate_name = request.crate_name().to_string();
+        let readme_len = response.full_readme_markdown().len();
+        let kw_len = response.package_keywords().len();
+        let cat_len = response.package_categories().len();
 
-        // Because request.crate_handle() => Arc<dyn ReadmeWritingCrateHandle<P>>
-        // that has .update_readme_md + .update_cargo_toml
+        info!(
+            "execute_ai_readme_writer_requests: applying AI output for crate='{}' (readme_chars={}, keywords={}, categories={})",
+            crate_name,
+            readme_len,
+            kw_len,
+            cat_len
+        );
+
         let handle = request.crate_handle();
         let guard  = handle.lock().await;
 
@@ -151,8 +227,27 @@ pub async fn execute_ai_readme_writer_requests(
             response.package_keywords(),
             response.package_categories(),
         ).await?;
+
+        info!(
+            "execute_ai_readme_writer_requests: successfully applied AI output for crate='{}'",
+            crate_name
+        );
     }
 
-    info!("Successfully completed execute_ai_readme_writer_requests.");
+    if plant && !missing_crates.is_empty() {
+        return Err(AiReadmeWriterError::ReadmeWriteError(
+            ReadmeWriteError::AiReadmeWriterError,
+        ));
+    }
+
+    if produced_crates.is_empty() {
+        warn!(
+            "execute_ai_readme_writer_requests: no AI outputs were applied. total_requests={}, plant={}",
+            requests.len(),
+            plant
+        );
+    }
+
+    info!("execute_ai_readme_writer_requests: completed.");
     Ok(())
 }

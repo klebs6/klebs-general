@@ -1,0 +1,23 @@
+[package]
+name = "credit-card"
+version = "0.1.0"
+authors = ["YourName <you@example.com>"]
+license = "MIT"
+edition = "2024"
+description = "todo: write a description here"
+
+# keywords = []
+# categories = []
+
+[dependencies]
+tktax-money.workspace        = true
+export-magic.workspace       = true
+getset.workspace             = true
+serde.workspace              = true
+tokio.workspace              = true
+uuid.workspace               = true
+derive_builder.workspace     = true
+error-tree.workspace         = true
+tracing-setup.workspace      = true
+tracing.workspace            = true
+tracing-subscriber.workspace = true

@@ -2,49 +2,49 @@
 crate::ix!();
 
 impl RehydrateFromSignature for ast::Fn {
-    #[tracing::instrument(level = "trace", skip(signature_source))]
+    #[instrument(level = "trace", skip(signature_source))]
     fn rehydrate_from_signature(signature_source: &str) -> Option<Self> {
         parse_exact_one_top_level_item_of_type(signature_source)
     }
 }
 
 impl RehydrateFromSignature for ast::Struct {
-    #[tracing::instrument(level = "trace", skip(signature_source))]
+    #[instrument(level = "trace", skip(signature_source))]
     fn rehydrate_from_signature(signature_source: &str) -> Option<Self> {
         parse_exact_one_top_level_item_of_type(signature_source)
     }
 }
 
 impl RehydrateFromSignature for ast::Enum {
-    #[tracing::instrument(level = "trace", skip(signature_source))]
+    #[instrument(level = "trace", skip(signature_source))]
     fn rehydrate_from_signature(signature_source: &str) -> Option<Self> {
         parse_exact_one_top_level_item_of_type(signature_source)
     }
 }
 
 impl RehydrateFromSignature for ast::Trait {
-    #[tracing::instrument(level = "trace", skip(signature_source))]
+    #[instrument(level = "trace", skip(signature_source))]
     fn rehydrate_from_signature(signature_source: &str) -> Option<Self> {
         parse_exact_one_top_level_item_of_type(signature_source)
     }
 }
 
 impl RehydrateFromSignature for ast::TypeAlias {
-    #[tracing::instrument(level = "trace", skip(signature_source))]
+    #[instrument(level = "trace", skip(signature_source))]
     fn rehydrate_from_signature(signature_source: &str) -> Option<Self> {
         parse_exact_one_top_level_item_of_type(signature_source)
     }
 }
 
 impl RehydrateFromSignature for ast::MacroRules {
-    #[tracing::instrument(level = "trace", skip(signature_source))]
+    #[instrument(level = "trace", skip(signature_source))]
     fn rehydrate_from_signature(signature_source: &str) -> Option<Self> {
         parse_exact_one_top_level_item_of_type(signature_source)
     }
 }
 
 impl RehydrateFromSignature for ast::MacroCall {
-    #[tracing::instrument(level = "trace", skip(signature_source))]
+    #[instrument(level = "trace", skip(signature_source))]
     fn rehydrate_from_signature(signature_source: &str) -> Option<Self> {
         parse_exact_one_top_level_item_of_type(signature_source)
     }
@@ -60,7 +60,7 @@ impl RehydrateFromSignature for ast::MacroCall {
 ///    or block comments. If we detect real tokens (e.g. code) after the item, we fail.
 ///
 /// If all checks pass, we return `Some(T)`. Otherwise, `None`.
-#[tracing::instrument(level = "trace", skip(signature_source))]
+#[instrument(level = "trace", skip(signature_source))]
 fn parse_exact_one_top_level_item_of_type<T: AstNode>(signature_source: &str) -> Option<T> {
     trace!("Parsing snippet:\n{}", signature_source);
 

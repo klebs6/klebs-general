@@ -6,6 +6,7 @@ error_tree!{
     pub enum BatchOutputProcessingError {
         ErrorSavingFailedBatchEntries(ErrorSavingFailedBatchEntries),
         JsonParseError(JsonParseError),
+        BatchWorkspaceError(BatchWorkspaceError),
         IoError(std::io::Error),
         SerializationError(serde_json::Error),
         MissingFilePath,

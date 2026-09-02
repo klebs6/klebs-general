@@ -1,18 +1,21 @@
+[dependencies.tracing]
+workspace = true
+
 [dependencies.workspacer-3p]
 path = "../workspacer-3p"
-version = "0.5.1"
+version = "0.5.2"
 
 [dependencies.workspacer-crate]
 path = "../workspacer-crate"
-version = "0.5.1"
+version = "0.5.2"
 
 [dependencies.workspacer-crate-interface]
 path = "../workspacer-crate-interface"
-version = "0.1.1"
+version = "0.1.2"
 
 [dependencies.workspacer-errors]
 path = "../workspacer-errors"
-version = "0.1.1"
+version = "0.1.2"
 
 [package]
 categories = [
@@ -30,6 +33,6 @@ keywords = [
     "private",
     "asynchronous",
 ]
-name = "workspacer-check-private"
-version = "0.1.1"
 license = "MIT"
+name = "workspacer-check-private"
+version = "0.1.2"

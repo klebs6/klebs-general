@@ -1,27 +1,41 @@
-[package]
-name = "workspacer-file-filter"
-version = "0.1.0"
-authors = ["YourName <you@example.com>"]
-license = "MIT"
-edition = "2024"
-description = "todo: write a description here"
+[dependencies.derive_builder]
+workspace = true
 
-[dependencies]
-derive_builder.workspace = true
-serde.workspace          = true
-serde_derive.workspace   = true
-serde_json.workspace     = true
-structopt.workspace      = true
+[dependencies.serde]
+workspace = true
+
+[dependencies.serde_derive]
+workspace = true
+
+[dependencies.serde_json]
+workspace = true
+
+[dependencies.structopt]
+workspace = true
 
 [dependencies.sync-run-async]
 path = "../sync-run-async"
-version = "0.1.1"
+version = "0.1.2"
+
+[dependencies.tracing]
+workspace = true
+
 [dependencies.workspacer-3p]
 path = "../workspacer-3p"
-version = "0.5.1"
+version = "0.5.2"
+
 [dependencies.workspacer-config]
 path = "../workspacer-config"
-version = "0.1.1"
+version = "0.1.2"
+
 [dependencies.workspacer-errors]
 path = "../workspacer-errors"
+version = "0.1.2"
+
+[package]
+authors = ["YourName <you@example.com>"]
+description = "todo: write a description here"
+edition = "2024"
+license = "MIT"
+name = "workspacer-file-filter"
 version = "0.1.1"

@@ -1,0 +1,15 @@
+#!/usr/bin/env sh
+
+echo "proof 1"
+rg 'async-openai\s*=' -n **/Cargo.toml
+
+echo "proof 2"
+cargo metadata --format-version 1 | jq '
+  .packages[]
+  | select(.dependencies[]?.name == "async-openai")
+  | { name, deps: [.dependencies[] | select(.name=="async-openai")] }
+'
+
+echo "bonus proof"
+cargo tree -i async-openai --edges normal
+

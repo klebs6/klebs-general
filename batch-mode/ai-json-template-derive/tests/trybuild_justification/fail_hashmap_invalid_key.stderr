@@ -1,0 +1,11 @@
+error: Unsupported key type in HashMap<bool, _> for AiJsonTemplate
+  --> tests/trybuild_justification/fail_hashmap_invalid_key.rs:28:17
+   |
+28 |     kv: HashMap<bool, String>,
+   |                 ^^^^
+
+error: Unsupported key type in HashMap<bool, _> for AiJsonTemplateWithJustification
+  --> tests/trybuild_justification/fail_hashmap_invalid_key.rs:28:17
+   |
+28 |     kv: HashMap<bool, String>,
+   |                 ^^^^

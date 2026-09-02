@@ -1,43 +1,99 @@
 // ---------------- [ File: batch-mode-process-response/src/process_output_data.rs ]
 crate::ix!();
 
-#[instrument(level="trace", skip_all)]
+#[instrument(level = "trace", skip_all)]
 pub async fn process_output_data<T>(
-    output_data:           &BatchOutputData,
-    workspace:             &dyn BatchWorkspaceInterface,
+    output_data: &BatchOutputData,
+    workspace: &dyn BatchWorkspaceInterface,
     expected_content_type: &ExpectedContentType,
-) -> Result<(), BatchOutputProcessingError> 
+) -> Result<(), BatchOutputProcessingError>
 where
-    // `'static + Send + Sync` ensures T can be held in `Arc<dyn ... + Send + Sync + 'static>`,
-    // and that the future is `Send`.
     T: 'static + Send + Sync + DeserializeOwned + Named + GetTargetPathForAIExpansion,
 {
-    trace!("entering process_output_data, output_data len = {}", output_data.responses().len());
+    trace!(
+        "Starting process_output_data with {} response record(s)",
+        output_data.responses().len()
+    );
 
     let mut failed_entries = Vec::new();
 
     for response_record in output_data.responses() {
-        info!("processing output data record with custom_id={}", response_record.custom_id());
+        let custom_id = response_record.custom_id();
+        trace!("Processing response record custom_id={}", custom_id);
 
-        if let Some(success_body) = response_record.response().body().as_success() {
-            if let Err(e) = handle_successful_response::<T>(success_body, workspace, expected_content_type).await {
-                eprintln!(
-                    "Failed to process response for request ID '{}', error: {:?}, response: {:?}",
-                    response_record.custom_id(),
-                    e,
-                    success_body
-                );
+        match response_record.response().body().as_success() {
+            Some(success_body) => {
+                trace!("Successfully extracted body for custom_id={}", custom_id);
+
+                match workspace.load_seed_by_custom_id(custom_id).await {
+                    Ok(seed_box) => {
+                        trace!(
+                            "Successfully loaded seed named '{}' for custom_id={}",
+                            seed_box.name(),
+                            custom_id
+                        );
+
+                        match handle_successful_response::<T>(
+                            success_body,
+                            workspace,
+                            expected_content_type,
+                            seed_box.as_ref(),
+                        )
+                        .await
+                        {
+                            Ok(()) => {
+                                debug!("Successfully handled response for custom_id={}", custom_id);
+                            }
+                            Err(e) => {
+                                error!(
+                                    "Error processing successful response for custom_id={}: {:?}",
+                                    custom_id, e
+                                );
+                                debug!("Problematic success_body for custom_id={}: {:?}", custom_id, success_body);
+                                failed_entries.push(response_record);
+                            }
+                        }
+                    }
+                    Err(e) => {
+                        error!(
+                            "Failed to load seed for custom_id={}, error: {:?}",
+                            custom_id, e
+                        );
+                        failed_entries.push(response_record);
+                    }
+                }
+            }
+            None => {
+                warn!("No success body for custom_id={}", custom_id);
                 failed_entries.push(response_record);
             }
         }
     }
 
     if !failed_entries.is_empty() {
-        warn!("some entries failed, saving them.");
-        save_failed_entries(workspace, &failed_entries).await?;
+        warn!(
+            "{} response record(s) failed, invoking save_failed_entries",
+            failed_entries.len()
+        );
+
+        if let Err(e) = save_failed_entries(workspace, &failed_entries).await {
+            error!(
+                "Failed to save {} failed entries: {:?}",
+                failed_entries.len(),
+                e
+            );
+            return Err(e.into());
+        } else {
+            info!("Successfully saved {} failed entries.", failed_entries.len());
+        }
     }
 
-    info!("process_output_data completed without fatal errors.");
+    info!(
+        "Finished process_output_data ({} succeeded, {} failed)",
+        output_data.responses().len() - failed_entries.len(),
+        failed_entries.len()
+    );
+
     Ok(())
 }
 

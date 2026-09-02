@@ -32,14 +32,12 @@ ACTIVE_PACKAGE := workspacer-linting
 ACTIVE_PACKAGE := workspacer-lock
 ACTIVE_PACKAGE := workspacer-metadata
 ACTIVE_PACKAGE := workspacer-mock
-ACTIVE_PACKAGE := workspacer-publish
 ACTIVE_PACKAGE := workspacer-rebuild-or-test
 ACTIVE_PACKAGE := workspacer-format-imports
 
 ACTIVE_PACKAGE := workspacer-test-coverage
 ACTIVE_PACKAGE := workspacer-toml
 ACTIVE_PACKAGE := workspacer-workspace
-#ACTIVE_PACKAGE := workspacer
 ACTIVE_PACKAGE := workspacer-scan-for-prefix-groups
 ACTIVE_PACKAGE := workspacer-register-internal-crate-in-prefix-group
 ACTIVE_PACKAGE := workspacer
@@ -52,7 +50,6 @@ ACTIVE_PACKAGE := workspacer-check-publish-ready
 ACTIVE_PACKAGE := workspacer-name-all-files
 ACTIVE_PACKAGE := workspacer-watch-and-reload
 #ACTIVE_PACKAGE := workspacer-add-new-crate-to-workspace
-#ACTIVE_PACKAGE := workspacer-bump
 #ACTIVE_PACKAGE := workspacer-check-crates-io
 #ACTIVE_PACKAGE := workspacer-check-private
 #ACTIVE_PACKAGE := workspacer-check-publish-ready
@@ -66,19 +63,25 @@ ACTIVE_PACKAGE := workspacer-watch-and-reload
 ACTIVE_PACKAGE := workspacer-toml-mock
 ACTIVE_PACKAGE := workspacer-crate-mock
 ACTIVE_PACKAGE := workspacer-publish
-ACTIVE_PACKAGE := workspacer-readme-writer
-ACTIVE_PACKAGE := workspacer-cli
 ACTIVE_PACKAGE := workspacer-add-internal-dep
 ACTIVE_PACKAGE := workspacer-show
 ACTIVE_PACKAGE := workspacer-tree
 ACTIVE_PACKAGE := workspacer-consolidate
 ACTIVE_PACKAGE := workspacer-file-filter
-#ACTIVE_PACKAGE := workspacer
+ACTIVE_PACKAGE := workspacer
 #ACTIVE_PACKAGE := workspacer-either
 #ACTIVE_PACKAGE := workspacer-syntax
 #ACTIVE_PACKAGE := workspacer-lossless-file
 #ACTIVE_PACKAGE := workspacer-organize
-#ACTIVE_PACKAGE := workspacer-topo
+ACTIVE_PACKAGE := workspacer-topo
+ACTIVE_PACKAGE := workspacer-pin
+ACTIVE_PACKAGE := workspacer
+ACTIVE_PACKAGE := workspacer-bump
+ACTIVE_PACKAGE := workspacer-publish
+ACTIVE_PACKAGE := workspacer-cli
+#ACTIVE_PACKAGE := workspacer-toml
+ACTIVE_PACKAGE := workspacer-readme-writer
+ACTIVE_PACKAGE := workspacer
 
 INDIVIDUAL_TEST := gather_leading_token_comments
 INDIVIDUAL_TEST := gather_leading_comment_lines
@@ -94,7 +97,7 @@ CONSOLIDATE_CRATE := workspacer-toml
 
 #-----------------------------------------------------[this section lets us choose how we want to test]
 DEFAULT := test
-#DEFAULT := build
+DEFAULT := build
 #DEFAULT := readme_writer
 #DEFAULT := readme_writer_all
 #DEFAULT := test_file
@@ -119,6 +122,10 @@ default: $(DEFAULT)
 
 README_WRITE_CRATE := workspacer-readme-writer
 README_WRITE_CRATE := workspacer-consolidate
+README_WRITE_CRATE := workspacer-topo
+
+README_WRITER_WORKSPACE :=  ../batch-mode
+README_WRITER_WORKSPACE :=  ../../rare-document-generators/simulizer
 
 #----------------------------------------------[here are our rules]
 
@@ -129,7 +136,7 @@ readme_writer:
 	RUSTFLAGS=$(RUSTFLAGS) $(CARGO) $(RUN) --bin workspacer-readme-writer -- single-crate $(README_WRITE_CRATE)
 
 readme_writer_all:
-	RUSTFLAGS=$(RUSTFLAGS) $(CARGO) $(RUN) --bin workspacer-readme-writer -- workspace ../batch-mode
+	RUSTFLAGS=$(RUSTFLAGS) $(CARGO) $(RUN) --bin workspacer-readme-writer -- workspace $(README_WRITER_WORKSPACE)
 
 pin_wildcard_deps:
 	RUSTFLAGS=$(RUSTFLAGS) $(CARGO) $(RUN) --bin workspacer-pin-wildcard-deps $(FEATURES)

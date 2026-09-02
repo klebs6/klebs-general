@@ -2,12 +2,6 @@
 name = "ws"
 path = "src/bin/workspacer.rs"
 
-[dependencies]
-workspacer-run = { path = "../workspacer-run" }
-workspacer-lossless-file = { path = "../workspacer-lossless-file" }
-workspacer-file-filter = { path = "../workspacer-file-filter" }
-workspacer-either = { path = "../workspacer-either" }
-
 [dependencies.structopt]
 workspace = true
 
@@ -16,14 +10,30 @@ workspace = true
 
 [dependencies.workspacer-3p]
 path = "../workspacer-3p"
-version = "0.5.1"
+version = "0.5.2"
 
 [dependencies.workspacer-cli]
 path = "../workspacer-cli"
+version = "0.1.2"
+
+[dependencies.workspacer-either]
+path = "../workspacer-either"
 version = "0.1.1"
 
 [dependencies.workspacer-export]
 path = "../workspacer-export"
+version = "0.1.5"
+
+[dependencies.workspacer-file-filter]
+path = "../workspacer-file-filter"
+version = "0.1.1"
+
+[dependencies.workspacer-lossless-file]
+path = "../workspacer-lossless-file"
+version = "0.1.1"
+
+[dependencies.workspacer-run]
+path = "../workspacer-run"
 version = "0.1.1"
 
 [package]
@@ -45,4 +55,4 @@ keywords = [
 license = "MIT OR Apache-2.0"
 name = "workspacer"
 repository = "https://github.com/klebs6/klebs-general"
-version = "0.6.1"
+version = "0.6.3"

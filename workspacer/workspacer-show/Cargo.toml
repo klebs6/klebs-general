@@ -1,17 +1,43 @@
-[dependencies]
-structopt.workspace = true
-derive_builder.workspace = true
-workspacer-consolidate = { path = "../workspacer-consolidate" }
-workspacer-crate-interface = { path = "../workspacer-crate-interface" }
-workspacer-errors = { path = "../workspacer-errors" }
-workspacer-workspace = { path = "../workspacer-workspace" }
-workspacer-crate = { path = "../workspacer-crate" }
-workspacer-run = { path = "../workspacer-run" }
-workspacer-mock = { path = "../workspacer-mock" }
+[dependencies.derive_builder]
+workspace = true
+
+[dependencies.structopt]
+workspace = true
+
+[dependencies.tracing]
+workspace = true
 
 [dependencies.workspacer-3p]
 path = "../workspacer-3p"
-version = "0.5.1"
+version = "0.5.2"
+
+[dependencies.workspacer-consolidate]
+path = "../workspacer-consolidate"
+version = "0.5.3"
+
+[dependencies.workspacer-crate]
+path = "../workspacer-crate"
+version = "0.5.2"
+
+[dependencies.workspacer-crate-interface]
+path = "../workspacer-crate-interface"
+version = "0.1.2"
+
+[dependencies.workspacer-errors]
+path = "../workspacer-errors"
+version = "0.1.2"
+
+[dependencies.workspacer-mock]
+path = "../workspacer-mock"
+version = "0.5.2"
+
+[dependencies.workspacer-run]
+path = "../workspacer-run"
+version = "0.1.1"
+
+[dependencies.workspacer-workspace]
+path = "../workspacer-workspace"
+version = "0.1.2"
 
 [dependencies.tracing]
 workspace = true
@@ -33,6 +59,6 @@ keywords = [
     "efficiency",
     "dynamic",
 ]
-name = "workspacer-show"
-version = "0.1.1"
 license = "MIT"
+name = "workspacer-show"
+version = "0.1.2"

@@ -1,19 +1,57 @@
-[dependencies]
-workspacer-topo = { path = "../workspacer-topo" }
-workspacer-mock = { path = "../workspacer-mock" }
-workspacer-workspace-mock = { path = "../workspacer-workspace-mock" }
-workspacer-crate-mock = { path = "../workspacer-crate-mock" }
-workspacer-crate-interface = { path = "../workspacer-crate-interface" }
-workspacer-workspace-interface = { path = "../workspacer-workspace-interface" }
-workspacer-workspace = { path = "../workspacer-workspace" }
-workspacer-crate = { path = "../workspacer-crate" }
-workspacer-name-all-files = { path = "../workspacer-name-all-files" }
-workspacer-register-crate-files = { path = "../workspacer-register-crate-files" }
-workspacer-format-imports = { path = "../workspacer-format-imports" }
-workspacer-lossless-file = { path = "../workspacer-lossless-file" }
+[dependencies.tracing]
+workspace = true
+
 [dependencies.workspacer-3p]
 path = "../workspacer-3p"
-version = "0.5.1"
+version = "0.5.2"
+
+[dependencies.workspacer-crate]
+path = "../workspacer-crate"
+version = "0.5.2"
+
+[dependencies.workspacer-crate-interface]
+path = "../workspacer-crate-interface"
+version = "0.1.2"
+
+[dependencies.workspacer-crate-mock]
+path = "../workspacer-crate-mock"
+version = "0.1.2"
+
+[dependencies.workspacer-format-imports]
+path = "../workspacer-format-imports"
+version = "0.1.2"
+
+[dependencies.workspacer-lossless-file]
+path = "../workspacer-lossless-file"
+version = "0.1.1"
+
+[dependencies.workspacer-mock]
+path = "../workspacer-mock"
+version = "0.5.2"
+
+[dependencies.workspacer-name-all-files]
+path = "../workspacer-name-all-files"
+version = "0.1.2"
+
+[dependencies.workspacer-register-crate-files]
+path = "../workspacer-register-crate-files"
+version = "0.1.3"
+
+[dependencies.workspacer-topo]
+path = "../workspacer-topo"
+version = "0.1.1"
+
+[dependencies.workspacer-workspace]
+path = "../workspacer-workspace"
+version = "0.1.2"
+
+[dependencies.workspacer-workspace-interface]
+path = "../workspacer-workspace-interface"
+version = "0.1.3"
+
+[dependencies.workspacer-workspace-mock]
+path = "../workspacer-workspace-mock"
+version = "0.1.2"
 
 [package]
 categories = [
@@ -31,6 +69,6 @@ keywords = [
     "productivity",
     "management",
 ]
-name = "workspacer-organize"
-version = "0.1.1"
 license = "MIT"
+name = "workspacer-organize"
+version = "0.1.2"

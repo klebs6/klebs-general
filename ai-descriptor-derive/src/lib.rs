@@ -1,3 +1,4 @@
+// ---------------- [ File: ai-descriptor-derive/src/lib.rs ]
 #![allow(dead_code)]
 #![allow(unused_imports)]
 extern crate proc_macro;
@@ -30,16 +31,6 @@ pub fn item_with_features_derive(input: TokenStream) -> TokenStream {
     // Parse the input tokens into a syntax tree
     let input = parse_macro_input!(input as DeriveInput);
 
-    // Ensure the input is a struct
-    let struct_data = match &input.data {
-        Data::Struct(data) => data,
-        _ => {
-            return Error::new_spanned(input.ident, "ItemWithFeatures can only be derived for structs")
-                .to_compile_error()
-                .into();
-        }
-    };
-
     // Generate the implementation
-    impl_item_with_features(&input, struct_data).into()
+    impl_item_with_features(&input).into()
 }

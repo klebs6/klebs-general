@@ -1,3 +1,4 @@
+// ---------------- [ File: ai-descriptor-derive/tests/ui/compile_fail/item_features_non_optional_with_default.rs ]
 #![allow(unused_imports)]
 use ai_descriptor_derive::*;
 use ai_descriptor_trait::*;
@@ -19,4 +20,3 @@ impl ItemFeature for PotionEffect {
 }
 
 fn main() {}
-

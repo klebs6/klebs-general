@@ -48,23 +48,23 @@ mod world_address_validation_tests {
     // -----------------------------
     #[traced_test]
     fn validate_address_happy_path() {
-        // 1) We use the default WorldAddress::mock() => region=VA, city=calverton, street=catlett road, postal=20138-9997.
-        //    Ensure your virginia_mock_records() includes (calverton, catlett road, 20138-9997).
-        let region_va: WorldRegion = USRegion::UnitedState(UnitedState::Virginia).into();
+        // 1) We use the default WorldAddress::mock() => region=FL, city=miami, street=biscayne_blvd, postal=33101.
+        //    Ensure your florida_mock_records() includes (miami, biscayne blvd, 33101).
+        let region_va: WorldRegion = USRegion::UnitedState(UnitedState::Florida).into();
 
-        // 2) Create DB, store the VA mock data.
+        // 2) Create DB, store the FL mock data.
         let temp_dir = TempDir::new().expect("temp dir");
         let db = Database::open(&temp_dir).unwrap();
         {
             let mut db_guard = db.lock().unwrap();
             let recs = RegionalRecords::mock_for_region(&region_va);
-            debug!("regional records for VA: {:#?}", recs);
+            debug!("regional records for FL: {:#?}", recs);
             recs.write_to_storage(&mut *db_guard).unwrap();
         }
 
         // 3) Validate the default mock address, which should now exist
         let da = DataAccess::with_db(db);
-        let address = WorldAddress::mock(); // => region=VA, city=calverton, etc.
+        let address = WorldAddress::mock(); // => region=FL, city=miami, etc.
 
         debug!("Testing address: {:#?}", address);
         let result = address.validate_with(&da);
@@ -242,13 +242,13 @@ mod world_address_validation_tests {
 
         let da = DataAccess::with_db(db.clone());
 
-        // region=VA => "calverton," "catlett road," "20138-9997" not in DB
+        // region=FL => "miami," "biscayne blvd" "33101" not in DB
         let addr = WorldAddress::mock();
         let res = addr.validate_with(&da);
         assert!(res.is_err());
         match res.unwrap_err() {
             InvalidWorldAddress::PostalCodeToCityKeyNotFoundForRegion { postal_code, .. } => {
-                assert_eq!(postal_code.code(), "20138-9997");
+                assert_eq!(postal_code.code(), "33101");
             }
             other => panic!("Expected PostalCodeToCityKeyNotFoundForRegion, got: {:?}", other),
         }

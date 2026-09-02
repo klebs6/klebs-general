@@ -6,7 +6,7 @@ crate::ix!();
 /// 2) Otherwise, if item.syntax_kind() is `None` (e.g. a mock in tests), we look at the generated signature:
 ///    - If the signature *starts* with something like `fn ` or `pub fn ` or `async fn `, treat it as function.
 /// This way, tests that pass in a mock item with a “fn signature” can still see the body displayed.
-#[tracing::instrument(level = "trace", skip(item, signature))]
+#[instrument(level = "trace", skip(item, signature))]
 pub fn guess_is_function<T: MaybeHasSyntaxKind>(item: &T, signature: &str) -> bool {
     // 1) If real AST kind says FN => definitely a function
     if let Some(kind) = item.syntax_kind() {

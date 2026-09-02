@@ -11,7 +11,7 @@ pub trait CalculateUnseenInputs<T> {
 
 impl<W,T> CalculateUnseenInputs<T> for W 
 where W: FindSimilarTargetPath + GetTargetDir,
-      T: GetTargetPathForAIExpansion + Clone + Debug + Display + Named,
+      T: GetTargetPathForAIExpansionFromSeed + Clone + Debug + Display + Named,
 {
     /// Internal helper. Identifies newly seen tokens.
     fn calculate_unseen_inputs(
@@ -20,43 +20,30 @@ where W: FindSimilarTargetPath + GetTargetDir,
         expected_content_type: &ExpectedContentType
 
     ) -> Vec<T> {
-
         let target_dir = self.get_target_dir();
-
         trace!("In target_dir={}, calculating unseen inputs:", target_dir.display());
-
         let mut unseen: Vec<T> = Vec::new();
-
         for tok in inputs {
-
-            let target_path = tok.target_path_for_ai_json_expansion(
+            let target_path = tok.target_path_for_ai_json_expansion_from_seed(
                 &target_dir,
                 expected_content_type
             );
-
             trace!("target_path={:?} for token={}", target_path, tok);
-
             if !target_path.exists() {
-
                 if let Some(similar_path) = self.find_similar_target_path(&target_path) {
-
                     warn!(
                         "Skipping token '{}': target path '{}' is similar to existing '{}'.",
                         tok.name(),
                         target_path.display(),
                         similar_path.display()
                     );
-
                     // Skip this token
                     continue;
                 }
-
                 unseen.push(tok.clone());
             }
         }
-
         info!("Unseen input tokens calculated: {:#?}",unseen);
-
         unseen
     }
 }

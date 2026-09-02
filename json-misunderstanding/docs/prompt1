@@ -1,0 +1,29 @@
+we're going to write a crate called `json-misunderstanding`. we already have
+a crate called `json-repair`. The point of json-repair is, as its name says, to
+repair broken json files. this crate is already 100% working and battle
+tested. super useful for salvaging problematic json which has been lightly
+corrupted in various ways. we use it especially in situations when we are
+working with older language models which are likely to emit slightly corrupted
+json.
+
+json-misunderstanding fills a slightly different niche. in
+json-misunderstanding, we can assert a *flawless* json file because we know for
+a fact the string will have been preprocessed with json-repair. json-repair is
+the first layer of defense.  json-misunderstanding, on the other hand, is
+designed for situations when we know for a fact that we receive a valid json
+file, its just that the language model or generator of that json file slightly
+misunderstood what the layout of the data structure was supposed to be. for
+example, we might want a vector of maps, each with the following three fields
+{name,descriptor,timestamp}. instead, the language model might send us a map of
+maps, with the keys being name, and the values being an object with
+{descriptor,timestamp}. this is a slight *misunderstanding*, but the data itself
+is not bad. it simply needs to be reshaped to fit inside the standard container
+we have waiting for it so that we can properly deserialize it. i can think of
+probably a dozen slight misunderstandings that the language models seem to be
+making when provided with a deliberate json schema to follow. it happens most
+frequently in cases when the emitted json files are frankly *super complicated*
+and large. current language models are good with small json emission, but
+sometimes take shortcuts when there is more data, leading to
+misunderstandings. first thing is first, can you help us come up with a good
+starting list of misunderstandings we will need to handle?
+`json-misunderstanding` will be the crate we use to take care of it

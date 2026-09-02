@@ -1,0 +1,59 @@
+
+thank you. this is a lot of code. i have not looked through all of it yet. the first thing i notice is the following:
+
+impl From<&ShowFlags> for ConsolidationOptions {
+    fn from(opts: &ShowFlags) -> ConsolidationOptions {
+        // Start with a default
+        let mut c = ConsolidationOptions::new();
+
+        if *opts.full() {
+            c = c.with_docs()
+                .with_private_items()
+                .with_test_items()
+                .with_fn_bodies()
+                .with_fn_bodies_in_tests();
+        } else if *opts.for_ai() {
+            c = c.with_private_items()
+                .with_test_items()
+                .with_fn_bodies()
+                .with_fn_bodies_in_tests();
+        } else if *opts.for_ai_no_tests() {
+            c = c.with_private_items().with_fn_bodies();
+        } else {
+            if *opts.include_docs() {
+                c = c.with_docs();
+            }
+            if *opts.include_private() {
+                c = c.with_private_items();
+            }
+            if *opts.include_tests() {
+                c = c.with_test_items();
+            }
+            if *opts.include_fn_bodies() {
+                c = c.with_fn_bodies();
+            }
+            if *opts.include_test_bodies() {
+                c = c.with_fn_bodies_in_tests();
+            }
+            if *opts.just_tests() {
+                c = c.with_only_test_items();
+            }
+        }
+
+        c.validate();
+        c
+    }
+}
+
+i dont think this is valid anymore and we should probably drop it. this backward compatability difference makes me think we should call this command `show2` for now.
+
+furthermore, i dont like the names you have chosen for the structs in this crate. they are not standalone and not descriptive enough. they should make sense regardless of context and be self contained.
+
+also, it looks like you are not properly using our existing `topo` implementation. 
+please dont recompute this kind of thing. 
+we have already solved the bugs in the `ws topo` subsystem and should not rehash them here.
+
+so, to summarize, i dont think i trust this implementation yet. i think we need to be more concrete.
+
+in effect, it think we need to do the following:
+instead of trying to implement this all in one shot, i think you should build a *full implementation spec* which includes everything a downstream AI *must* implement exactly. no hand waving or vagueness.

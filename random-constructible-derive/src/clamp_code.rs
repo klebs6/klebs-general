@@ -18,8 +18,8 @@ pub fn clamp_code(ty: &Type, maybe_min: Option<f64>, maybe_max: Option<f64>) -> 
     // If we do have min and/or max, we build the needed if-checks
     let min_check = if let Some(minv) = maybe_min {
         quote! {
-            if val < #minv as #ty {
-                val = #minv as #ty;
+            if v < #minv as #ty {
+                v = #minv as #ty;
             }
         }
     } else {
@@ -28,8 +28,8 @@ pub fn clamp_code(ty: &Type, maybe_min: Option<f64>, maybe_max: Option<f64>) -> 
 
     let max_check = if let Some(maxv) = maybe_max {
         quote! {
-            if val > #maxv as #ty {
-                val = #maxv as #ty;
+            if v > #maxv as #ty {
+                v = #maxv as #ty;
             }
         }
     } else {

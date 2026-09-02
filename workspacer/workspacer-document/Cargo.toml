@@ -1,6 +1,9 @@
+[dependencies.tracing]
+workspace = true
+
 [dependencies.workspacer-3p]
 path = "../workspacer-3p"
-version = "0.5.1"
+version = "0.5.2"
 
 [package]
 categories = [
@@ -19,6 +22,6 @@ keywords = [
     "optimization",
     "rust",
 ]
-name = "workspacer-document"
-version = "0.1.1"
 license = "MIT"
+name = "workspacer-document"
+version = "0.1.2"

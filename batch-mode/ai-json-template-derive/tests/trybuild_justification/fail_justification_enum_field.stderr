@@ -1,0 +1,28 @@
+error[E0412]: cannot find type `JustifiedBadEnum` in this scope
+  --> tests/trybuild_justification/fail_justification_enum_field.rs:31:11
+   |
+31 |     data: BadEnum,
+   |           ^^^^^^^ not found in this scope
+
+error[E0277]: the trait bound `BadEnum: ai_json_template::AiJsonTemplate` is not satisfied
+  --> tests/trybuild_justification/fail_justification_enum_field.rs:31:11
+   |
+31 |     data: BadEnum,
+   |           ^^^^^^^ the trait `ai_json_template::AiJsonTemplate` is not implemented for `BadEnum`
+   |
+   = help: the following other types implement trait `ai_json_template::AiJsonTemplate`:
+             ContainsEnum
+             HashMap<K, V>
+             Vec<T>
+             std::string::String
+
+error[E0277]: the trait bound `BadEnum: ai_json_template::AiJsonTemplateWithJustification` is not satisfied
+  --> tests/trybuild_justification/fail_justification_enum_field.rs:31:11
+   |
+31 |     data: BadEnum,
+   |           ^^^^^^^ the trait `ai_json_template::AiJsonTemplateWithJustification` is not implemented for `BadEnum`
+   |
+   = help: the following other types implement trait `ai_json_template::AiJsonTemplateWithJustification`:
+             ContainsEnum
+             HashMap<K, V>
+             Vec<T>

@@ -8,10 +8,9 @@ use country::*;
 
 #[tokio::test]
 async fn test_zip_codes_for_city_in_region_integration() {
+    // We'll now use Tennessee instead of Maryland
     let temp_dir = TempDir::new().expect("Failed to create temp dir");
-
-    let us_region = USRegion::UnitedState(UnitedState::Maryland);
-    // Convert to WorldRegion:
+    let us_region = USRegion::UnitedState(UnitedState::Tennessee);
     let world_region: WorldRegion = us_region.into();
 
     let db = Database::open(&temp_dir).expect("Failed to open DB");
@@ -24,32 +23,44 @@ async fn test_zip_codes_for_city_in_region_integration() {
 
     let da = DataAccess::with_db(db.clone());
 
-    // We'll check that "Baltimore" has postal code 21201 and
-    // that "Bethesda" has 20814, both from the mock_for_region data.
-    let city1 = CityName::new("Baltimore").unwrap();
-    let zips1 = da.postal_codes_for_city_in_region(&world_region, &city1);
-    assert!(zips1.is_some(), "Expected to find postal codes for Baltimore in MD");
-    let zips1_unwrapped = zips1.unwrap();
+    // Based on `tennessee_mock_records()`, we expect:
+    // Memphis => 38103, Knoxville => 37902, Nashville => 37201
+
+    // 1) Check Memphis => "38103"
+    let memphis = CityName::new("memphis").unwrap();
+    let zips_memphis = da.postal_codes_for_city_in_region(&world_region, &memphis);
+    assert!(zips_memphis.is_some(), "Expected postal codes for Memphis, TN");
+    let zips_memphis_unwrapped = zips_memphis.unwrap();
     assert!(
-        zips1_unwrapped.contains(&PostalCode::new(Country::USA,"21201").unwrap()),
-        "Expected to see 21201 in Baltimore's set"
+        zips_memphis_unwrapped.contains(&PostalCode::new(Country::USA,"38103").unwrap()),
+        "Expected to see 38103 in Memphis's set"
     );
 
-    // Also check that "Bethesda" returns 20814
-    let city2 = CityName::new("Bethesda").unwrap();
-    let zips2 = da.postal_codes_for_city_in_region(&world_region, &city2);
-    assert!(zips2.is_some(), "Expected to find postal codes for Bethesda in MD");
-    let zips2_unwrapped = zips2.unwrap();
+    // 2) Check Knoxville => "37902"
+    let knoxville = CityName::new("knoxville").unwrap();
+    let zips_knoxville = da.postal_codes_for_city_in_region(&world_region, &knoxville);
+    assert!(zips_knoxville.is_some(), "Expected postal codes for Knoxville, TN");
+    let zips_knoxville_unwrapped = zips_knoxville.unwrap();
     assert!(
-        zips2_unwrapped.contains(&PostalCode::new(Country::USA,"20814").unwrap()),
-        "Expected to see 20814 in Bethesda's set"
+        zips_knoxville_unwrapped.contains(&PostalCode::new(Country::USA,"37902").unwrap()),
+        "Expected to see 37902 in Knoxville's set"
     );
 
-    // Negative check: ensure that a random city not in the mock set has no postal codes
+    // 3) Check Nashville => "37201"
+    let nashville = CityName::new("nashville").unwrap();
+    let zips_nashville = da.postal_codes_for_city_in_region(&world_region, &nashville);
+    assert!(zips_nashville.is_some(), "Expected postal codes for Nashville, TN");
+    let zips_nashville_unwrapped = zips_nashville.unwrap();
+    assert!(
+        zips_nashville_unwrapped.contains(&PostalCode::new(Country::USA,"37201").unwrap()),
+        "Expected to see 37201 in Nashville's set"
+    );
+
+    // 4) Negative check: "ImaginaryCity" => no postal codes
     let city_unknown = CityName::new("ImaginaryCity").unwrap();
     let zips_none = da.postal_codes_for_city_in_region(&world_region, &city_unknown);
     assert!(
         zips_none.is_none(),
-        "CityName=ImaginaryCity should not exist in the MD mocks!"
+        "CityName=ImaginaryCity should not exist in the TN mocks!"
     );
 }

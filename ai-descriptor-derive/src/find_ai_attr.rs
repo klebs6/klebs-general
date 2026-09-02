@@ -1,3 +1,4 @@
+// ---------------- [ File: ai-descriptor-derive/src/find_ai_attr.rs ]
 crate::ix!();
 
 pub(crate) fn find_attr_with_tag(attrs: &[Attribute], tag: &str) -> Option<String> {

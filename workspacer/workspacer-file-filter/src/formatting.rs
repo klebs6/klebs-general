@@ -6,7 +6,7 @@ where
 {
     // Convert the entire path to a string for logging.
     let path_str = file_path.as_ref().to_string_lossy();
-    tracing::trace!("Processing path: {}", path_str);
+    trace!("Processing path: {}", path_str);
 
     // If the input path ends with a directory separator (e.g. "/" or "\"),
     // treat it as a directory and return an empty string.

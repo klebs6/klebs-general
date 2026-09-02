@@ -3,7 +3,7 @@ workspace = true
 
 [dependencies.get-file-size]
 path = "../get-file-size"
-version = "0.1.1"
+version = "0.1.2"
 
 [dependencies.serde]
 workspace = true
@@ -16,35 +16,38 @@ workspace = true
 
 [dependencies.sync-run-async]
 path = "../sync-run-async"
-version = "0.1.1"
+version = "0.1.2"
+
+[dependencies.tracing]
+workspace = true
 
 [dependencies.workspacer-3p]
 path = "../workspacer-3p"
-version = "0.5.1"
+version = "0.5.2"
 
 [dependencies.workspacer-crate-interface]
 path = "../workspacer-crate-interface"
-version = "0.1.1"
+version = "0.1.2"
 
 [dependencies.workspacer-errors]
 path = "../workspacer-errors"
-version = "0.1.1"
+version = "0.1.2"
 
 [dependencies.workspacer-interface]
 path = "../workspacer-interface"
-version = "0.5.2"
+version = "0.5.3"
 
 [dependencies.workspacer-syntax]
 path = "../workspacer-syntax"
-version = "0.5.1"
+version = "0.5.2"
 
 [dependencies.workspacer-toml]
 path = "../workspacer-toml"
-version = "0.5.1"
+version = "0.5.2"
 
 [dependencies.workspacer-toml-interface]
 path = "../workspacer-toml-interface"
-version = "0.1.2"
+version = "0.1.3"
 
 [package]
 authors = ["klebs tpk3.mx@gmail.com"]
@@ -65,4 +68,4 @@ keywords = [
 license = "MIT OR Apache-2.0"
 name = "workspacer-crate"
 repository = "https://github.com/klebs6/klebs-general"
-version = "0.5.1"
+version = "0.5.2"

@@ -285,7 +285,7 @@ mod download_and_parse_all_regions_tests {
     #[serial]
     async fn test_obtain_pbf_file_for_region_local_exists() {
         let calls = MockCalls::default();
-        let region: WorldRegion = USRegion::UnitedState(UnitedState::Maryland).into();
+        let region: WorldRegion = USRegion::UnitedState(UnitedState::Florida).into();
 
         // Insert behavior: local file = true, download fail = false
         {
@@ -305,7 +305,7 @@ mod download_and_parse_all_regions_tests {
     #[serial]
     async fn test_obtain_pbf_file_for_region_download() {
         let calls = MockCalls::default();
-        let region: WorldRegion = USRegion::UnitedState(UnitedState::Maryland).into();
+        let region: WorldRegion = USRegion::UnitedState(UnitedState::Florida).into();
 
         {
             let mut map = GLOBAL_REGION_BEHAVIOR.lock().unwrap();
@@ -324,7 +324,7 @@ mod download_and_parse_all_regions_tests {
     #[serial]
     async fn test_obtain_pbf_file_for_region_download_fail() {
         let calls = MockCalls::default();
-        let region: WorldRegion = USRegion::UnitedState(UnitedState::Maryland).into();
+        let region: WorldRegion = USRegion::UnitedState(UnitedState::Florida).into();
 
         {
             let mut map = GLOBAL_REGION_BEHAVIOR.lock().unwrap();
@@ -346,7 +346,7 @@ mod download_and_parse_all_regions_tests {
     #[serial]
     async fn test_download_and_parse_region_already_done() {
         let calls = MockCalls::default();
-        let region: WorldRegion = USRegion::UnitedState(UnitedState::Virginia).into();
+        let region: WorldRegion = USRegion::UnitedState(UnitedState::Florida).into();
         let temp_dir = tempfile::TempDir::new().unwrap();
 
         let db = Database::open(&temp_dir).unwrap();
@@ -380,7 +380,7 @@ mod download_and_parse_all_regions_tests {
     #[serial]
     async fn test_download_and_parse_region_happy_path() {
         let calls = MockCalls::default();
-        let region: WorldRegion = USRegion::UnitedState(UnitedState::Virginia).into();
+        let region: WorldRegion = USRegion::UnitedState(UnitedState::Florida).into();
         let temp_dir = tempfile::TempDir::new().unwrap();
 
         {
@@ -431,7 +431,7 @@ mod download_and_parse_all_regions_tests {
     #[serial]
     async fn test_download_and_parse_region_parse_fails() {
         let calls = MockCalls::default();
-        let region: WorldRegion = USRegion::UnitedState(UnitedState::Maryland).into();
+        let region: WorldRegion = USRegion::UnitedState(UnitedState::Florida).into();
         let temp_dir = tempfile::TempDir::new().unwrap();
 
         {
@@ -471,30 +471,30 @@ mod download_and_parse_all_regions_tests {
     async fn test_download_and_parse_regions_multiple() {
         // We do 2 regions: MD => skip building if region_done, VA => parse
         let calls = MockCalls::default();
-        let region_md: WorldRegion = USRegion::UnitedState(UnitedState::Maryland).into();
-        let region_va: WorldRegion = USRegion::UnitedState(UnitedState::Virginia).into();
+        let region_fl: WorldRegion = USRegion::UnitedState(UnitedState::Florida).into();
+        let region_tn: WorldRegion = USRegion::UnitedState(UnitedState::Tennessee).into();
         let temp_dir = tempfile::TempDir::new().unwrap();
 
         {
             let mut map = GLOBAL_REGION_BEHAVIOR.lock().unwrap();
             // MD => local or skip => let's just do local = false => must download
-            map.insert(region_md, (false, false));
+            map.insert(region_fl, (false, false));
             // VA => local = false => must download
-            map.insert(region_va, (false, false));
+            map.insert(region_tn, (false, false));
         }
 
         let db = Database::open(&temp_dir).unwrap();
         {
             let mut db_guard = db.lock().unwrap();
             // Mark MD done so we skip it
-            db_guard.mark_region_done(&region_md).unwrap();
+            db_guard.mark_region_done(&region_fl).unwrap();
         }
 
         {
             let mut db_guard = db.lock().unwrap();
             // We'll parse both => but for MD => skip. For VA => do parse
             let res = mock_download_and_parse_regions(
-                &[region_md, region_va],
+                &[region_fl, region_tn],
                 temp_dir.path(),
                 &mut *db_guard,
                 true,

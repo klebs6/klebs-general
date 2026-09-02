@@ -4,45 +4,48 @@ workspace = true
 [dependencies.getset]
 workspace = true
 
+[dependencies.tracing]
+workspace = true
+
 [dependencies.workspacer-3p]
 path = "../workspacer-3p"
-version = "0.5.1"
+version = "0.5.2"
 
 [dependencies.workspacer-crate]
 path = "../workspacer-crate"
-version = "0.5.1"
+version = "0.5.2"
 
 [dependencies.workspacer-crate-interface]
 path = "../workspacer-crate-interface"
-version = "0.1.1"
+version = "0.1.2"
 
 [dependencies.workspacer-crate-mock]
 path = "../workspacer-crate-mock"
-version = "0.1.1"
+version = "0.1.2"
 
 [dependencies.workspacer-errors]
 path = "../workspacer-errors"
-version = "0.1.1"
+version = "0.1.2"
 
 [dependencies.workspacer-toml]
 path = "../workspacer-toml"
-version = "0.5.1"
+version = "0.5.2"
 
 [dependencies.workspacer-toml-interface]
 path = "../workspacer-toml-interface"
-version = "0.1.2"
+version = "0.1.3"
 
 [dependencies.workspacer-toml-mock]
 path = "../workspacer-toml-mock"
-version = "0.1.1"
+version = "0.1.2"
 
 [dependencies.workspacer-workspace]
 path = "../workspacer-workspace"
-version = "0.1.1"
+version = "0.1.2"
 
 [dependencies.workspacer-workspace-interface]
 path = "../workspacer-workspace-interface"
-version = "0.1.2"
+version = "0.1.3"
 
 [package]
 categories = [
@@ -60,6 +63,6 @@ keywords = [
     "simulation",
     "testing",
 ]
-name = "workspacer-workspace-mock"
-version = "0.1.1"
 license = "MIT"
+name = "workspacer-workspace-mock"
+version = "0.1.2"

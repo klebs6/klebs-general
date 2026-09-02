@@ -14,7 +14,7 @@ impl SingleOrWorkspace {
     /// If so, return `SingleOrWorkspace::Workspace`.
     /// If the error is `ActuallyInSingleCrate`, fallback to single crate.
     /// Otherwise, return the original error.
-    #[tracing::instrument(level = "trace")]
+    #[instrument(level = "trace")]
     pub async fn detect(path: &Path) -> Result<Self, WorkspaceError> {
         // To handle relative vs. absolute paths, let's canonicalize if possible:
         let path_canon = match tokio::fs::canonicalize(path).await {
@@ -56,7 +56,7 @@ impl SingleOrWorkspace {
     /// `git status --porcelain` and verifying no output. This is the same
     /// logic you'd do for either single crate or entire workspace, so there's
     /// no difference inside here. 
-    #[tracing::instrument(level = "trace", skip(self))]
+    #[instrument(level = "trace", skip(self))]
     pub async fn ensure_git_clean(&self) -> Result<(), WorkspaceError> {
         // Just call `git status --porcelain`
         use std::process::Command;
@@ -94,7 +94,7 @@ impl SingleOrWorkspace {
     }
 
     /// Validate integrity for either a single crate or a workspace.
-    #[tracing::instrument(level="trace", skip(self))]
+    #[instrument(level="trace", skip(self))]
     pub async fn validate_integrity(&mut self) -> Result<(), WorkspaceError> {
         match self {
             SingleOrWorkspace::Single(ch) => {
@@ -126,7 +126,7 @@ impl SingleOrWorkspace {
     ///     Ok(())
     /// }).await?;
     /// ```
-    #[tracing::instrument(level="trace", skip(self, operation))]
+    #[instrument(level="trace", skip(self, operation))]
     pub async fn run_operation<R, F>(&mut self, operation: F) -> Result<R, WorkspaceError>
     where
         // Our user-defined closure's return type is `Result<R, WorkspaceError>`.

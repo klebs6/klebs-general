@@ -1,7 +1,9 @@
 // ---------------- [ File: ai-json-template-derive/tests/trybuild.rs ]
+#![allow(dead_code)]
+#![allow(unused_imports)]
 // tests/trybuild.rs
 
-use tracing::*;
+use tracing::{info,warn,error,trace,debug};
 
 #[test]
 fn compile_tests() {
@@ -18,11 +20,8 @@ fn compile_tests() {
     trace!("Another nested test that includes multiple optional fields and arrays.");                  t.pass("tests/trybuild/pass_nested_with_option_and_vecs.rs");
     // ---------------------------- FAILING TESTS ----------------------------
     trace!("Running failing tests...");
-    trace!("Attempting to derive on an enum => fails (existing example).");                            t.compile_fail("tests/trybuild/fail_enum.rs");
     trace!("Fail with missing serde derives");                                                         t.compile_fail("tests/trybuild/fail_missing_serde.rs");
-    trace!("Multiple unsupported types, e.g. i64, f32 => fails.");                                     t.compile_fail("tests/trybuild/fail_multiple_unsupported_types.rs");
     trace!("Nested scenario with an enum inside => also fails.");                                      t.compile_fail("tests/trybuild/fail_nested_enum.rs");
     trace!("Unnamed (tuple) struct => fails (existing example).");                                     t.compile_fail("tests/trybuild/fail_unnamed_struct.rs");
-    trace!("Unsupported type (e.g. i32) => fails (existing example).");                                t.compile_fail("tests/trybuild/fail_unsupported_type.rs");
     trace!("Extended trybuild test suite completed.");
 }

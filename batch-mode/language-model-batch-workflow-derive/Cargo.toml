@@ -1,6 +1,6 @@
 [dependencies.batch-mode-3p]
 path = "../batch-mode-3p"
-version = "0.2.1"
+version = "0.2.2"
 
 [dependencies.derive_builder]
 workspace = true
@@ -19,7 +19,7 @@ workspace = true
 
 [dependencies.save-load-traits]
 path = "../save-load-traits"
-version = "0.2.1"
+version = "0.2.2"
 
 [dependencies.syn]
 workspace = true
@@ -41,15 +41,15 @@ workspace = true
 
 [dev-dependencies.batch-mode-batch-workflow]
 path = "../batch-mode-batch-workflow"
-version = "0.1.1"
+version = "0.1.4"
 
 [dev-dependencies.batch-mode-batch-workspace-interface]
 path = "../batch-mode-batch-workspace-interface"
-version = "0.2.1"
+version = "0.2.4"
 
 [dev-dependencies.camel-case-token-with-comment]
 path = "../camel-case-token-with-comment"
-version = "0.2.1"
+version = "0.2.2"
 
 [dev-dependencies.serde]
 workspace = true
@@ -78,4 +78,4 @@ license-file = "OGPv1"
 name = "language-model-batch-workflow-derive"
 readme = "README.md"
 repository = "https://github.com/klebs6/klebs-general"
-version = "0.1.1"
+version = "0.1.4"
