@@ -1,5 +1,21 @@
 # `gpt-batch-scribe`
 
+> Historical crate: the implementation now lives in
+> [batch-mode-batch-scribe](../batch-mode/batch-mode-batch-scribe), a member of the
+> [batch-mode workspace](../batch-mode/Cargo.toml).
+
+This directory no longer contains a `Cargo.toml` or library source. Its remaining
+files are retained as historical reference, not as a buildable package. The API
+described below is the former API, not the replacement crate's current API.
+
+The obsolete `Cargo.lock` was removed because it described the retired package's
+dependencies, not the active batch-mode workspace. Inspect and audit the active
+workspace's `batch-mode/Cargo.lock` in the checkout that builds it. Removing this
+historical lockfile does not update an existing workspace lockfile, an installed
+binary, or any version previously published to crates.io.
+
+## Historical documentation
+
 A Rust crate for handling batch API requests to GPT models. This crate provides structures and enumerations to construct, serialize, and deserialize JSON requests and handle errors appropriately.
 
 ## Features
